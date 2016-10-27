@@ -26,11 +26,6 @@
 
   <head>
 
-    <style type="text/css">
-      #newsbox {margin: 0 0 0 0;}
-      #james-logo-slideshow {height:200px; width:500px;}
-    </style>
-
 <!--
     <script type="text/javascript" src="js/galleria/galleria.js"></script>
 -->
@@ -41,10 +36,6 @@
   </head>
 
   <body>
-
-  <table><tr><td>
-
-      <div style="min-width:550px;">
 
         <section name="Apache James Project">
 
@@ -132,174 +123,6 @@
 
            </subsection>
         </section>
-
-      </div>
-
-   </td>
-
-   <td>
-
-  <div id="newsboxspacer">
-
-     <div id="newsbox">
-
-      <script src="http://widgets.twimg.com/j/2/widget.js"></script>
-      <script>
-      new TWTR.Widget({
-        version: 2,
-        type: 'search',
-        search: 'from:ApacheJames OR #ApacheJames OR @ApacheJames',
-        interval: 6000,
-        title: 'Apache James Conversations',
-        subject: '',
-        width: 250,
-        height: 300,
-        theme: {
-          shell: {
-            background: '#525D76',
-            color: '#ffffff'
-          },
-          tweets: {
-            background: '#ffffff',
-            color: '#444444',
-            links: '#1985b5'
-          }
-        },
-        features: {
-          scrollbar: false,
-          loop: true,
-          live: true,
-          hashtags: true,
-          timestamp: true,
-          avatars: true,
-          toptweets: true,
-          behavior: 'default'
-        }
-      }).render().start();
-      </script>
-
-      <subsection name="News">
-        <ul>
-            <li>Nov/2016 - <ul>
-                <li><a href="newsarchive.html#20161101">James server 3.0.0-beta5 has been released.</a></li>
-            </ul>
-            </li>
-            <li>Oct/2016 - <ul>
-                <li><a href="newsarchive.html#20161001">We choosed a new logo! <img src='images/james-logo.png' alt='New James logo'/></a></li>
-            </ul>
-            </li>
-          <li>Sep/2016 - <ul>
-          <li><a href="newsarchive.html#20160901"><strong>Apache James Server 3.0</strong> We are currently working on the release.</a></li>
-          </ul>
-          </li>
-          <li>July/2016 - <ul>
-          <li><a href="newsarchive.html#20160702"><strong>JMAP implementation</strong> Full text search via JMAP.</a></li>
-          <li><a href="newsarchive.html#20160701"><strong>JMAP implementation</strong> Read and Send message with attachments.</a></li>
-          </ul>
-          </li>
-          <li>May/2016 - <ul>
-          <li><a href="newsarchive.html#20160501"><strong>JMAP implementation</strong> Support of all mailboxes operations.</a></li>
-          </ul>
-          </li>
-          <li>Feb/2016 - <ul>
-          <li><a href="newsarchive.html#20160210"><strong>JMAP implementation</strong> JMAP is being implemented into James.</a></li>
-          </ul>
-          </li>
-          <li>Feb/2016 - <ul>
-          <li><a href="newsarchive.html#20160208"><strong>Moving to GIT !</strong> All James projects has been migrated from SVN to GIT.</a></li>
-          </ul>
-          </li>
-          <li>Jan/2016 - <ul>
-          <li><a href="newsarchive.html#20160108"><strong>James modules merge into james-project</strong> Some of James modules were merged into james-project.</a></li>
-          </ul>
-          </li>
-          <li>Oct/2015 - <ul>
-          <li><a href="newsarchive.html#20151026"><strong>Guice injection for Cassandra backend</strong> Guice injection is now available in a new Java project.</a></li>
-          </ul>
-          </li>
-          <li>Sep/2015 - <ul>
-          <li><a href="newsarchive.html#20150926"><strong>Apache James Server 2.3.2.1</strong> fixes a security issue - Please upgrade!!!</a></li>
-          </ul>
-          </li>
-          <li>Jun/2012 - <ul>
-          <li><a href="newsarchive.html#120607"><strong>Apache James Hupa 0.0.2</strong> released</a></li>
-          </ul>
-          </li>
-          <li>April/2012 - <ul>
-          <li><a href="newsarchive.html#120417"><strong>Apache James Server 3.0-beta4</strong> released</a></li>
-          </ul>
-          </li>
-          <li>January/2012 - <ul>
-          <li><a href="newsarchive.html#120123"><strong>Apache James Protocols 1.6.1</strong> released</a></li>
-          </ul>
-          </li>
-          <li>January/2012 - <ul>
-          <li><a href="newsarchive.html#120118"><strong>Apache James Protocols 1.6.0</strong> released</a></li>
-          </ul>
-          </li>
-          <li>January/2012 - <ul>
-          <li><a href="newsarchive.html#120104"><strong>Apache James Mime4j 0.7.2</strong> released</a></li>
-          </ul>
-          </li>
-          <li>December/2011 - <ul>
-          <li><a href="newsarchive.html#111230"><strong>Apache James Protocols 1.6.0-RC1</strong> released</a></li>
-          </ul>
-          </li>
-          <li>November/2011 - <ul>
-          <li><a href="newsarchive.html#111101"><strong>Apache James jSPF 1.0.0</strong> released</a></li>
-          </ul>
-          </li>
-          <li>October/2011 - <ul>
-          <li><a href="newsarchive.html#111711"><strong>Apache James Mime4j 0.7.1</strong> released</a></li>
-          </ul>
-          </li>
-          <li>October/2011 - <ul>
-          <li><a href="newsarchive.html#111611"><strong>Apache James Protocols 1.6-beta1</strong> released</a></li>
-          </ul>
-          </li>
-          <li>Augustus/2011 - <ul>
-          <li><a href="newsarchive.html#082011"><strong>Apache James Server 3.0-beta3</strong> released</a></li>
-          </ul>
-          </li>
-          <li>July/2011 - <ul>
-          <li><a href="newsarchive.html#30072011"><strong>Apache James jDKIM 0.2</strong> released</a></li>
-          </ul>
-          </li>
-          <li>July/2011 - <ul>
-          <li><a href="newsarchive.html#25072011"><strong>Apache James Mime4J 0.7</strong> released</a></li>
-          </ul>
-          </li>
-          <li>July/2011 - <ul>
-          <li><a href="newsarchive.html#10072011"><strong>Apache James jSPF 0.9.9</strong> released</a></li>
-          </ul>
-          </li>
-          <li>June/2011 - <ul>
-          <li><a href="newsarchive.html#29062011"><strong>Apache James Protocols 1.5</strong> released</a></li>
-          </ul>
-          </li>
-          <li>May/2011 - <ul>
-          <li><a href="newsarchive.html#15052011"><strong>Apache James IMAP 0.2 and Mailbox 0.2</strong> released</a></li>
-          </ul>
-          </li>
-          <li>Dec/2010 - <ul>
-          <li><a href="newsarchive.html#06122010_1"><strong>Apache James Protocols 1.2</strong> released</a></li>
-          </ul>
-          </li>
-          <li>Nov/2010 - <ul>
-          <li><a href="newsarchive.html#06112010_1"><strong>Apache James Server 3.0-M2</strong> released</a></li>
-          </ul>
-          </li>
-        </ul>
-        <i>Read all the news in full in the <a href="newsarchive.html">News Archive</a></i><br/>
-      </subsection>
-
-      <br/>
-      <iframe src="http://www.apache.org/ads/bannerbar.html" style="border-width:0;" frameborder="0" scrolling="no" width="250" height="150"></iframe>
-      </div>
-
-   </div>
-
-   </td></tr></table>
 
      </body>
 
