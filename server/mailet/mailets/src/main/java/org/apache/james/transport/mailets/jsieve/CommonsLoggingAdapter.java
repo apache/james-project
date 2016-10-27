@@ -24,7 +24,7 @@ import org.apache.mailet.base.GenericMailet;
 /**
  * Adapts commons logging to mailet logging.
  */
-class CommonsLoggingAdapter implements Log {
+public class CommonsLoggingAdapter implements Log {
     
     public static final int TRACE = 6;
     public static final int DEBUG = 5;
