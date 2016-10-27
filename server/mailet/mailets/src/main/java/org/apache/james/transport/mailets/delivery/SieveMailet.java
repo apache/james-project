@@ -20,14 +20,12 @@ package org.apache.james.transport.mailets.delivery;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
-import javax.mail.Header;
 import javax.mail.MessagingException;
-import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -194,16 +192,17 @@ public class SieveMailet  extends GenericMailet implements Poster {
         }
 
         sieveMessage(recipient, mail);
-        String s;
-        if (sender != null) {
-            s = sender.toString();
-        } else {
-            s = "<>";
-        }
-        // If no exception was thrown the message was successfully stored in the
-        // mailbox
-        log.info("Local delivered mail " + mail.getName() + " sucessfully from " + s + " to " + recipient.toString()
+        // If no exception was thrown the message was successfully stored in the mailbox
+        log.info("Local delivered mail " + mail.getName() + " sucessfully from " + prettyPrint(sender) + " to " + prettyPrint(recipient)
                 + " in folder " + this.folder);
+    }
+
+    private String prettyPrint(MailAddress mailAddress) {
+        if (mailAddress != null) {
+            return  "<" + mailAddress.toString() + ">";
+        } else {
+            return  "<>";
+        }
     }
 
     @Override
@@ -334,47 +333,25 @@ public class SieveMailet  extends GenericMailet implements Poster {
         // message
         // This only works because there is a placeholder inserted by
         // MimeMessageWrapper
-        message.setHeader(RFC2822Headers.RETURN_PATH,
-            (mail.getSender() == null ? "<>" : "<" + mail.getSender()
-                + ">"));
+        message.setHeader(RFC2822Headers.RETURN_PATH, prettyPrint(mail.getSender()));
 
-        Enumeration headers;
-        InternetHeaders deliveredTo = new InternetHeaders();
+        List<String> deliveredToHeader = Collections.list(message.getMatchingHeaders(new String[] { DELIVERED_TO }));
+        message.removeHeader(DELIVERED_TO);
 
-        // Copy any Delivered-To headers from the message
-        headers = message
-            .getMatchingHeaders(new String[] { DELIVERED_TO });
-        while (headers.hasMoreElements()) {
-            Header header = (Header) headers.nextElement();
-            deliveredTo.addHeader(header.getName(), header.getValue());
-        }
-
-
-        for (Iterator<MailAddress> i = recipients.iterator(); i.hasNext();) {
-            MailAddress recipient = i.next();
+        for (MailAddress recipient : recipients) {
             try {
                 // Add qmail's de facto standard Delivered-To header
                 message.addHeader(DELIVERED_TO, recipient.toString());
-
                 storeMail(mail.getSender(), recipient, mail);
-
-                if (i.hasNext()) {
-                    // Remove headers but leave all placeholders
-                    message.removeHeader(DELIVERED_TO);
-                    headers = deliveredTo.getAllHeaders();
-                    // And restore any original Delivered-To headers
-                    while (headers.hasMoreElements()) {
-                        Header header = (Header) headers.nextElement();
-                        message.addHeader(header.getName(), header
-                            .getValue());
-                    }
-                }
+                message.removeHeader(DELIVERED_TO);
             } catch (Exception ex) {
                 log.error("Error while storing mail.", ex);
                 errors.add(recipient);
             }
         }
-
+        for (String deliveredTo : deliveredToHeader) {
+            message.addHeader(DELIVERED_TO, deliveredTo);
+        }
         if (!errors.isEmpty()) {
             // If there were errors, we redirect the email to the ERROR
             // processor.
@@ -383,8 +360,7 @@ public class SieveMailet  extends GenericMailet implements Poster {
             // the sender. Note that this email doesn't include any details
             // regarding the details of the failure(s).
             // In the future we may wish to address this.
-            getMailetContext().sendMail(mail.getSender(), errors,
-                mail.getMessage(), Mail.ERROR);
+            getMailetContext().sendMail(mail.getSender(), errors, mail.getMessage(), Mail.ERROR);
         }
         if (consume) {
             // Consume this message
