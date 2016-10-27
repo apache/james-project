@@ -19,10 +19,11 @@
 
 package org.apache.james.mailbox.model;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import org.apache.commons.lang.StringUtils;
 
 public class MailboxAnnotationKey {
     public static final String SLASH_CHARACTER = "/";
@@ -89,6 +90,17 @@ public class MailboxAnnotationKey {
 
     public String asString() {
         return key.toLowerCase();
+    }
+
+    public boolean isParentOrIsEqual(MailboxAnnotationKey key) {
+        int thatComponentsSize = key.countComponents();
+        int thisComponentsSize = this.countComponents();
+        return (thatComponentsSize == thisComponentsSize || thatComponentsSize == thisComponentsSize + 1)
+            && isAncestorOrIsEqual(key);
+    }
+
+    public boolean isAncestorOrIsEqual(MailboxAnnotationKey key) {
+        return asString().equals(key.asString()) || key.asString().startsWith(this.asString() + SLASH_CHARACTER);
     }
 
     @Override

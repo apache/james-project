@@ -133,11 +133,7 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
     private Stream<MailboxAnnotation> getAnnotationsByKeyWithOneDepth(CassandraId mailboxId, MailboxAnnotationKey key) {
         return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryLikeKey(mailboxId, key.asString())))
             .map(this::toAnnotation)
-            .filter(annotation -> isChild(key, annotation));
-    }
-
-    private boolean isChild(MailboxAnnotationKey key, MailboxAnnotation annotation) {
-        return annotation.getKey().countComponents() <= key.countComponents() + 1;
+            .filter(annotation -> key.isParentOf(annotation.getKey()));
     }
 
     @Override

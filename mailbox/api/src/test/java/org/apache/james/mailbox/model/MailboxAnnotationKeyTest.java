@@ -113,4 +113,99 @@ public class MailboxAnnotationKeyTest {
     public void keyVendorShouldOKWithFourComponents() throws Exception {
         new MailboxAnnotationKey("/shared/vendor/token/comment");
     }
+
+    @Test
+    public void isParentOrIsEqualShouldReturnTrueWhenSameKey() {
+        MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
+
+        assertThat(key1.isParentOrIsEqual(key1)).isTrue();
+    }
+
+    @Test
+    public void isParentOrIsEqualShouldReturnTrueWhenParent() {
+        MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
+        MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto");
+
+        assertThat(key1.isParentOrIsEqual(key2)).isTrue();
+    }
+
+    @Test
+    public void isParentOrIsEqualShouldReturnFalseWhenChild() {
+        MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
+        MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto");
+
+        assertThat(key2.isParentOrIsEqual(key1)).isFalse();
+    }
+
+    @Test
+    public void isParentOrIsEqualShouldReturnFalseWhenGrandParent() {
+        MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
+        MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto/tata");
+
+        assertThat(key1.isParentOrIsEqual(key2)).isFalse();
+    }
+
+    @Test
+    public void isParentOrIsEqualShouldReturnFalseWhenCousin() {
+        MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment/tutu");
+        MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto/tata");
+
+        assertThat(key1.isParentOrIsEqual(key2)).isFalse();
+    }
+
+
+    @Test
+    public void isAncestorOrIsEqualShouldReturnTrueWhenSameKey() {
+        MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
+
+        assertThat(key1.isAncestorOrIsEqual(key1)).isTrue();
+    }
+
+    @Test
+    public void isAncestorOrIsEqualShouldReturnTrueWhenParent() {
+        MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
+        MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto");
+
+        assertThat(key1.isAncestorOrIsEqual(key2)).isTrue();
+    }
+
+    @Test
+    public void isAncestorOrIsEqualShouldReturnFalseWhenChild() {
+        MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
+        MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto");
+
+        assertThat(key2.isAncestorOrIsEqual(key1)).isFalse();
+    }
+
+    @Test
+    public void isAncestorOrIsEqualShouldReturnTrueWhenGrandParent() {
+        MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
+        MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto/tata");
+
+        assertThat(key1.isAncestorOrIsEqual(key2)).isTrue();
+    }
+
+    @Test
+    public void isAncestorOrIsEqualShouldReturnFalseWhenCousin() {
+        MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment/tutu");
+        MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto/tata");
+
+        assertThat(key1.isAncestorOrIsEqual(key2)).isFalse();
+    }
+
+    @Test
+    public void isAncestorOrIsEqualShouldWorkOnCousinKeyUsingKeyAsAPrefix() {
+        MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment/tutu");
+        MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/tututata");
+
+        assertThat(key1.isAncestorOrIsEqual(key2)).isFalse();
+    }
+
+    @Test
+    public void isParentOrIsEqualShouldWorkOnCousinKeyUsingKeyAsAPrefix() {
+        MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment/tutu");
+        MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/tututata");
+
+        assertThat(key1.isParentOrIsEqual(key2)).isFalse();
+    }
 }
