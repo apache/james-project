@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.delivery;
+package org.apache.james.transport.mailets;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -26,7 +26,13 @@ import javax.mail.MessagingException;
 import org.apache.commons.logging.Log;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.transport.mailets.RecipientRewriteTable;
+import org.apache.james.transport.mailets.ResourceLocatorImpl;
+import org.apache.james.transport.mailets.delivery.MailDispatcher;
+import org.apache.james.transport.mailets.delivery.MailboxAppender;
+import org.apache.james.transport.mailets.delivery.SieveMailStorer;
+import org.apache.james.transport.mailets.delivery.SievePoster;
 import org.apache.james.transport.mailets.jsieve.CommonsLoggingAdapter;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
@@ -34,18 +40,24 @@ import org.apache.mailet.base.GenericMailet;
 
 /**
  * Receives a Mail from the Queue and takes care of delivery of the
- * message to local inboxes.
+ * message to local inboxes applying SIEVE rules.
  * 
  * This mailet is a composition of RecipientRewriteTable, SieveMailet 
  * and MailboxManager configured to mimic the old "LocalDelivery"
  * James 2.3 behavior.
  */
-public class LocalDelivery extends GenericMailet {
+public class SieveLocalDelivery extends GenericMailet {
     
     private org.apache.james.rrt.api.RecipientRewriteTable rrt;
     private UsersRepository usersRepository;
     private MailboxManager mailboxManager;
     private DomainList domainList;
+    private SieveRepository sieveRepository;
+
+    @Inject
+    public void setSieveRepository(SieveRepository sieveRepository) {
+        this.sieveRepository = sieveRepository;
+    }
 
     @Inject
     public void setRrt(org.apache.james.rrt.api.RecipientRewriteTable rrt) {
@@ -91,11 +103,14 @@ public class LocalDelivery extends GenericMailet {
             .quiet(getInitParameter("quiet", false))
             .verbose(getInitParameter("verbose", false))
             .build();
+        String folder = "INBOX";
         mailDispatcher = MailDispatcher.builder()
-            .mailStorer(SimpleMailStorer.builder()
-                .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext()))
+            .mailStorer(SieveMailStorer.builder()
+                .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, getMailetContext()), folder, usersRepository, getMailetContext()))
                 .usersRepository(usersRepository)
-                .folder("INBOX")
+                .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))
+                .mailetContext(getMailetContext())
+                .folder(folder)
                 .log(log)
                 .build())
             .consume(getInitParameter("consume", true))

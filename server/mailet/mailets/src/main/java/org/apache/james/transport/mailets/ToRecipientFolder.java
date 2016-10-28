@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.transport.mailets.delivery;
+package org.apache.james.transport.mailets;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -24,8 +24,9 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.transport.mailets.ResourceLocatorImpl;
+import org.apache.james.transport.mailets.delivery.MailDispatcher;
+import org.apache.james.transport.mailets.delivery.MailboxAppender;
+import org.apache.james.transport.mailets.delivery.SimpleMailStorer;
 import org.apache.james.transport.mailets.jsieve.CommonsLoggingAdapter;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
@@ -33,7 +34,7 @@ import org.apache.mailet.base.GenericMailet;
 
 /**
  * Receives a Mail from the Queue and takes care to deliver the message
- * to a defined folder of the recipient(s) applying SIEVE rules.
+ * to a defined folder of the recipient(s).
  * 
  * You have to define the folder name of the recipient(s).
  * The flag 'consume' will tell is the mail will be further
@@ -47,23 +48,17 @@ import org.apache.mailet.base.GenericMailet;
  * </pre>
  * 
  */
-public class SieveToRecipientFolder extends GenericMailet {
+public class ToRecipientFolder extends GenericMailet {
 
     public static final String FOLDER_PARAMETER = "folder";
     public static final String CONSUME_PARAMETER = "consume";
 
     private MailboxManager mailboxManager;
-    private SieveRepository sieveRepository;
     private UsersRepository usersRepository;
 
     @Inject
     public void setMailboxManager(@Named("mailboxmanager")MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
-    }
-
-    @Inject
-    public void setSieveRepository(SieveRepository sieveRepository) {
-        this.sieveRepository = sieveRepository;
     }
 
     @Inject
@@ -87,14 +82,11 @@ public class SieveToRecipientFolder extends GenericMailet {
             .quiet(getInitParameter("quiet", true))
             .verbose(getInitParameter("verbose", false))
             .build();
-        String folder = getInitParameter(FOLDER_PARAMETER, "INBOX");
         mailDispatcher = MailDispatcher.builder()
-            .mailStorer(SieveMailStorer.builder()
-                .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, getMailetContext()), folder, usersRepository, getMailetContext()))
+            .mailStorer(SimpleMailStorer.builder()
+                .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext()))
                 .usersRepository(usersRepository)
-                .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))
-                .mailetContext(getMailetContext())
-                .folder(folder)
+                .folder(getInitParameter(FOLDER_PARAMETER, "INBOX"))
                 .log(log)
                 .build())
             .consume(getInitParameter(CONSUME_PARAMETER, false))
@@ -105,7 +97,7 @@ public class SieveToRecipientFolder extends GenericMailet {
 
     @Override
     public String getMailetInfo() {
-        return SieveToRecipientFolder.class.getName() + " Mailet";
+        return ToRecipientFolder.class.getName() + " Mailet";
     }
 
 }

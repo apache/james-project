@@ -46,6 +46,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.sieverepository.api.SieveRepository;
+import org.apache.james.transport.mailets.SieveToRecipientFolder;
+import org.apache.james.transport.mailets.ToRecipientFolder;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;

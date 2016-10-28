@@ -16,39 +16,53 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
-package org.apache.james.transport.mailets.delivery;
+package org.apache.james.transport.mailets;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
-import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.transport.mailets.RecipientRewriteTable;
-import org.apache.james.transport.mailets.ResourceLocatorImpl;
+import org.apache.james.transport.mailets.delivery.MailDispatcher;
+import org.apache.james.transport.mailets.delivery.MailboxAppender;
+import org.apache.james.transport.mailets.delivery.SieveMailStorer;
+import org.apache.james.transport.mailets.delivery.SievePoster;
 import org.apache.james.transport.mailets.jsieve.CommonsLoggingAdapter;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
 /**
- * Receives a Mail from the Queue and takes care of delivery of the
- * message to local inboxes applying SIEVE rules.
+ * Receives a Mail from the Queue and takes care to deliver the message
+ * to a defined folder of the recipient(s) applying SIEVE rules.
  * 
- * This mailet is a composition of RecipientRewriteTable, SieveMailet 
- * and MailboxManager configured to mimic the old "LocalDelivery"
- * James 2.3 behavior.
+ * You have to define the folder name of the recipient(s).
+ * The flag 'consume' will tell is the mail will be further
+ * processed by the upcoming processor mailets, or not.
+ * 
+ * <pre>
+ * &lt;mailet match="RecipientIsLocal" class="ToRecipientFolder"&gt;
+ *    &lt;folder&gt; <i>Junk</i> &lt;/folder&gt;
+ *    &lt;consume&gt; <i>false</i> &lt;/consume&gt;
+ * &lt;/mailet&gt;
+ * </pre>
+ * 
  */
-public class SieveLocalDelivery extends GenericMailet {
-    
-    private org.apache.james.rrt.api.RecipientRewriteTable rrt;
-    private UsersRepository usersRepository;
+public class SieveToRecipientFolder extends GenericMailet {
+
+    public static final String FOLDER_PARAMETER = "folder";
+    public static final String CONSUME_PARAMETER = "consume";
+
     private MailboxManager mailboxManager;
-    private DomainList domainList;
     private SieveRepository sieveRepository;
+    private UsersRepository usersRepository;
+
+    @Inject
+    public void setMailboxManager(@Named("mailboxmanager")MailboxManager mailboxManager) {
+        this.mailboxManager = mailboxManager;
+    }
 
     @Inject
     public void setSieveRepository(SieveRepository sieveRepository) {
@@ -56,50 +70,27 @@ public class SieveLocalDelivery extends GenericMailet {
     }
 
     @Inject
-    public void setRrt(org.apache.james.rrt.api.RecipientRewriteTable rrt) {
-        this.rrt = rrt;
-    }
-
-    @Inject
     public void setUsersRepository(UsersRepository usersRepository) {
         this.usersRepository = usersRepository;
     }
-    
-    @Inject
-    public void setMailboxManager(@Named("mailboxmanager") MailboxManager mailboxManager) {
-        this.mailboxManager = mailboxManager;
-    }
-    
-    @Inject
-    public void setDomainList(DomainList domainList) {
-        this.domainList = domainList;
-    }
 
-    private MailDispatcher mailDispatcher;  // Mailet that actually stores the message
-    private RecipientRewriteTable recipientRewriteTable;  // Mailet that applies RecipientRewriteTable
+    private MailDispatcher mailDispatcher;
 
+    @Override
     public void service(Mail mail) throws MessagingException {
-        recipientRewriteTable.service(mail);
         if (!mail.getState().equals(Mail.GHOST)) {
             mailDispatcher.dispatch(mail);
         }
     }
 
-    public String getMailetInfo() {
-        return "Local Delivery Mailet";
-    }
-
+    @Override
     public void init() throws MessagingException {
-        recipientRewriteTable = new RecipientRewriteTable();
-        recipientRewriteTable.setDomainList(domainList);
-        recipientRewriteTable.setRecipientRewriteTable(rrt);
-        recipientRewriteTable.init(getMailetConfig());
         Log log = CommonsLoggingAdapter.builder()
             .mailet(this)
-            .quiet(getInitParameter("quiet", false))
+            .quiet(getInitParameter("quiet", true))
             .verbose(getInitParameter("verbose", false))
             .build();
-        String folder = "INBOX";
+        String folder = getInitParameter(FOLDER_PARAMETER, "INBOX");
         mailDispatcher = MailDispatcher.builder()
             .mailStorer(SieveMailStorer.builder()
                 .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, getMailetContext()), folder, usersRepository, getMailetContext()))
@@ -109,10 +100,15 @@ public class SieveLocalDelivery extends GenericMailet {
                 .folder(folder)
                 .log(log)
                 .build())
-            .consume(getInitParameter("consume", true))
+            .consume(getInitParameter(CONSUME_PARAMETER, false))
             .mailetContext(getMailetContext())
             .log(log)
             .build();
+    }
+
+    @Override
+    public String getMailetInfo() {
+        return SieveToRecipientFolder.class.getName() + " Mailet";
     }
 
 }
