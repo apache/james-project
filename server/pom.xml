@@ -703,6 +703,12 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-lucene</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.james.protocols</groupId>
                 <artifactId>protocols-imap</artifactId>
                 <version>${project.version}</version>
@@ -782,6 +788,12 @@
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-mailbox-jpa</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-jpa</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
@@ -1185,7 +1197,6 @@
                 <groupId>org.apache.openjpa</groupId>
                 <artifactId>openjpa</artifactId>
                 <version>${openjpa.version}</version>
-                <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.geronimo.specs</groupId>
