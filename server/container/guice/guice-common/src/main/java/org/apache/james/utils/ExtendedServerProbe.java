@@ -19,13 +19,22 @@
 
 package org.apache.james.utils;
 
-import org.apache.james.jmap.api.vacation.AccountId;
-import org.apache.james.jmap.api.vacation.Vacation;
-import org.apache.james.jmap.api.vacation.VacationPatch;
+import java.io.InputStream;
+import java.util.Date;
 
-public interface ExtendedJmapServerProbe extends ExtendedServerProbe {
+import javax.mail.Flags;
 
-    void modifyVacation(AccountId accountId, VacationPatch vacationPatch);
+import org.apache.james.cli.probe.ServerProbe;
+import org.apache.james.mailbox.exception.BadCredentialsException;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 
-    Vacation retrieveVacation(AccountId accountId);
+public interface ExtendedServerProbe extends ServerProbe {
+
+    void appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
+            throws BadCredentialsException, MailboxException;
+
+    Mailbox getMailbox(String namespace, String user, String name);
+
 }
