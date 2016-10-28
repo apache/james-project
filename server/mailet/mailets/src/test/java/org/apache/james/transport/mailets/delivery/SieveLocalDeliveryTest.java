@@ -55,105 +55,70 @@ import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
-public class LocalDeliveryTest {
+public class SieveLocalDeliveryTest {
 
     private UsersRepository usersRepository;
-    private RecipientRewriteTable recipientRewriteTable;
     private MailboxManager mailboxManager;
-    private DomainList domainList;
     private SieveRepository sieveRepository;
-    private LocalDelivery localDelivery;
+    private SieveLocalDelivery sieveLocalDelivery;
+    private MailboxSession.User user;
 
     @Before
     public void setUp() throws Exception {
         sieveRepository = mock(SieveRepository.class);
         usersRepository = mock(UsersRepository.class);
-        recipientRewriteTable = mock(RecipientRewriteTable.class);
         mailboxManager = mock(MailboxManager.class);
-        domainList = mock(DomainList.class);
+        RecipientRewriteTable recipientRewriteTable = mock(RecipientRewriteTable.class);
+        DomainList domainList = mock(DomainList.class);
+        user = mock(MailboxSession.User.class);
+        MailboxSession session = mock(MailboxSession.class);
 
-        localDelivery = new LocalDelivery();
-        localDelivery.setDomainList(domainList);
-        localDelivery.setMailboxManager(mailboxManager);
-        localDelivery.setRrt(recipientRewriteTable);
-        localDelivery.setUsersRepository(usersRepository);
-        localDelivery.setSieveRepository(sieveRepository);
+        sieveLocalDelivery = new SieveLocalDelivery();
+        sieveLocalDelivery.setDomainList(domainList);
+        sieveLocalDelivery.setMailboxManager(mailboxManager);
+        sieveLocalDelivery.setRrt(recipientRewriteTable);
+        sieveLocalDelivery.setUsersRepository(usersRepository);
+        sieveLocalDelivery.setSieveRepository(sieveRepository);
+
+        when(session.getPathDelimiter()).thenReturn('.');
+        when(mailboxManager.createSystemSession(any(String.class), any(Logger.class))).thenReturn(session);
+        when(session.getUser()).thenReturn(user);
     }
 
     @Test
-    public void mailShouldBeWellDeliveredByDefaultToUserWhenvirtualHostingIsTurnedOn() throws Exception {
-        when(usersRepository.supportVirtualHosting()).thenAnswer(new Answer<Boolean>() {
-            public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return true;
-            }
-        });
-        when(sieveRepository.getActive("receiver@domain.com")).thenThrow(new ScriptNotFoundException());
-        MailboxPath inbox = new MailboxPath("#private", "receiver@domain.com", "INBOX");
-        final MessageManager messageManager = mock(MessageManager.class);
-        when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenAnswer(new Answer<MessageManager>() {
-            public MessageManager answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return messageManager;
-            }
-        });
-        final MailboxSession session = mock(MailboxSession.class);
-        when(session.getPathDelimiter()).thenAnswer(new Answer<Character>() {
-            @Override
-            public Character answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return '.';
-            }
-        });
-        when(mailboxManager.createSystemSession(any(String.class), any(Logger.class))).thenAnswer(new Answer<MailboxSession>() {
-            @Override
-            public MailboxSession answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return session;
-            }
-        });
+    public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOn() throws Exception {
+        when(usersRepository.supportVirtualHosting()).thenReturn(true);
+        String username = "receiver@domain.com";
+        when(sieveRepository.getActive(username)).thenThrow(new ScriptNotFoundException());
+        MailboxPath inbox = new MailboxPath("#private", username, "INBOX");
+        MessageManager messageManager = mock(MessageManager.class);
+        when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
+        when(user.getUserName()).thenReturn(username);
 
         Mail mail = createMail();
 
-        localDelivery.init(new FakeMailetConfig());
-        localDelivery.service(mail);
+        sieveLocalDelivery.init(new FakeMailetConfig());
+        sieveLocalDelivery.service(mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
 
     @Test
-    public void mailShouldBeWellDeliveredByDefaultToUserWhenvirtualHostingIsTurnedOff() throws Exception {
-        when(usersRepository.supportVirtualHosting()).thenAnswer(new Answer<Boolean>() {
-            public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return false;
-            }
-        });
-        when(sieveRepository.getActive("receiver")).thenThrow(new ScriptNotFoundException());
-        MailboxPath inbox = new MailboxPath("#private", "receiver", "INBOX");
+    public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOff() throws Exception {
+        when(usersRepository.supportVirtualHosting()).thenReturn(false);
+        String username = "receiver";
+        when(sieveRepository.getActive(username)).thenThrow(new ScriptNotFoundException());
+        MailboxPath inbox = new MailboxPath("#private", username, "INBOX");
         final MessageManager messageManager = mock(MessageManager.class);
-        when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenAnswer(new Answer<MessageManager>() {
-            public MessageManager answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return messageManager;
-            }
-        });
-        final MailboxSession session = mock(MailboxSession.class);
-        when(session.getPathDelimiter()).thenAnswer(new Answer<Character>() {
-            @Override
-            public Character answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return '.';
-            }
-        });
-        when(mailboxManager.createSystemSession(any(String.class), any(Logger.class))).thenAnswer(new Answer<MailboxSession>() {
-            @Override
-            public MailboxSession answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return session;
-            }
-        });
+        when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
+        when(user.getUserName()).thenReturn(username);
 
         Mail mail = createMail();
 
-        localDelivery.init(new FakeMailetConfig());
-        localDelivery.service(mail);
+        sieveLocalDelivery.init(new FakeMailetConfig());
+        sieveLocalDelivery.service(mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }

@@ -24,6 +24,8 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.sieverepository.api.SieveRepository;
+import org.apache.james.transport.mailets.ResourceLocatorImpl;
 import org.apache.james.transport.mailets.jsieve.CommonsLoggingAdapter;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
@@ -31,7 +33,7 @@ import org.apache.mailet.base.GenericMailet;
 
 /**
  * Receives a Mail from the Queue and takes care to deliver the message
- * to a defined folder of the recipient(s).
+ * to a defined folder of the recipient(s) applying SIEVE rules.
  * 
  * You have to define the folder name of the recipient(s).
  * The flag 'consume' will tell is the mail will be further
@@ -45,17 +47,23 @@ import org.apache.mailet.base.GenericMailet;
  * </pre>
  * 
  */
-public class ToRecipientFolder extends GenericMailet {
+public class SieveToRecipientFolder extends GenericMailet {
 
     public static final String FOLDER_PARAMETER = "folder";
     public static final String CONSUME_PARAMETER = "consume";
 
     private MailboxManager mailboxManager;
+    private SieveRepository sieveRepository;
     private UsersRepository usersRepository;
 
     @Inject
     public void setMailboxManager(@Named("mailboxmanager")MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
+    }
+
+    @Inject
+    public void setSieveRepository(SieveRepository sieveRepository) {
+        this.sieveRepository = sieveRepository;
     }
 
     @Inject
@@ -79,11 +87,14 @@ public class ToRecipientFolder extends GenericMailet {
             .quiet(getInitParameter("quiet", true))
             .verbose(getInitParameter("verbose", false))
             .build();
+        String folder = getInitParameter(FOLDER_PARAMETER, "INBOX");
         mailDispatcher = MailDispatcher.builder()
-            .mailStorer(SimpleMailStorer.builder()
-                .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext()))
+            .mailStorer(SieveMailStorer.builder()
+                .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, getMailetContext()), folder, usersRepository, getMailetContext()))
                 .usersRepository(usersRepository)
-                .folder(getInitParameter(FOLDER_PARAMETER, "INBOX"))
+                .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))
+                .mailetContext(getMailetContext())
+                .folder(folder)
                 .log(log)
                 .build())
             .consume(getInitParameter(CONSUME_PARAMETER, false))
@@ -94,7 +105,7 @@ public class ToRecipientFolder extends GenericMailet {
 
     @Override
     public String getMailetInfo() {
-        return ToRecipientFolder.class.getName() + " Mailet";
+        return SieveToRecipientFolder.class.getName() + " Mailet";
     }
 
 }

@@ -26,9 +26,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.logging.Log;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.transport.mailets.RecipientRewriteTable;
-import org.apache.james.transport.mailets.ResourceLocatorImpl;
 import org.apache.james.transport.mailets.jsieve.CommonsLoggingAdapter;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
@@ -48,12 +46,6 @@ public class LocalDelivery extends GenericMailet {
     private UsersRepository usersRepository;
     private MailboxManager mailboxManager;
     private DomainList domainList;
-    private SieveRepository sieveRepository;
-
-    @Inject
-    public void setSieveRepository(SieveRepository sieveRepository) {
-        this.sieveRepository = sieveRepository;
-    }
 
     @Inject
     public void setRrt(org.apache.james.rrt.api.RecipientRewriteTable rrt) {
@@ -99,14 +91,11 @@ public class LocalDelivery extends GenericMailet {
             .quiet(getInitParameter("quiet", false))
             .verbose(getInitParameter("verbose", false))
             .build();
-        String folder = "INBOX";
         mailDispatcher = MailDispatcher.builder()
-            .mailStorer(SieveMailStorer.builder()
-                .sievePoster(new SievePoster(mailboxManager, folder, usersRepository, getMailetContext()))
+            .mailStorer(SimpleMailStorer.builder()
+                .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext()))
                 .usersRepository(usersRepository)
-                .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))
-                .mailetContext(getMailetContext())
-                .folder(folder)
+                .folder("INBOX")
                 .log(log)
                 .build())
             .consume(getInitParameter("consume", true))

@@ -57,16 +57,19 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-public class ToRecipientFolderTest {
+public class SieveToRecipientFolderTest {
 
-    public static final String USER = "receiver@domain.com";
+    public static final String USER_LOCAL_PART = "receiver";
+    public static final String USER = USER_LOCAL_PART + "@domain.com";
     public static final MailboxPath INBOX = new MailboxPath("#private", USER, "INBOX");
-    public static final MailboxPath JUNK = new MailboxPath("#private", "receiver", "Junk");
+    public static final MailboxPath JUNK = new MailboxPath("#private", USER_LOCAL_PART, "Junk");
     public static final MailboxPath JUNK_VIRTUAL_HOSTING = new MailboxPath("#private", USER, "Junk");
     private UsersRepository usersRepository;
     private MailboxManager mailboxManager;
-    private ToRecipientFolder recipientFolder;
+    private SieveToRecipientFolder recipientFolder;
     private FakeMailetConfig mailetConfig;
+    private MailboxSession.User user;
+    private MessageManager messageManager;
 
     @Before
     public void setUp() throws Exception {
@@ -75,10 +78,17 @@ public class ToRecipientFolderTest {
 
         mailetConfig = new FakeMailetConfig("RecipientFolderTest", FakeMailContext.defaultContext());
 
-        recipientFolder = new ToRecipientFolder();
+        recipientFolder = new SieveToRecipientFolder();
         recipientFolder.setMailboxManager(mailboxManager);
         recipientFolder.setUsersRepository(usersRepository);
         recipientFolder.setSieveRepository(mock(SieveRepository.class));
+
+        messageManager = mock(MessageManager.class);
+        MailboxSession session = mock(MailboxSession.class);
+        when(session.getPathDelimiter()).thenReturn('.');
+        when(mailboxManager.createSystemSession(any(String.class), any(Logger.class))).thenReturn(session);
+        user = mock(MailboxSession.User.class);
+        when(session.getUser()).thenReturn(user);
     }
 
     @Test
@@ -112,13 +122,9 @@ public class ToRecipientFolderTest {
 
     @Test
     public void folderParameterShouldIndicateDestinationFolder() throws Exception {
-        MessageManager messageManager = mock(MessageManager.class);
-        MailboxSession session = mock(MailboxSession.class);
-
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
         when(mailboxManager.getMailbox(eq(JUNK_VIRTUAL_HOSTING), any(MailboxSession.class))).thenReturn(messageManager);
-        when(session.getPathDelimiter()).thenReturn('.');
-        when(mailboxManager.createSystemSession(any(String.class), any(Logger.class))).thenReturn(session);
+        when(user.getUserName()).thenReturn(USER);
 
         mailetConfig.setProperty(ToRecipientFolder.FOLDER_PARAMETER, "Junk");
         recipientFolder.init(mailetConfig);
@@ -129,13 +135,9 @@ public class ToRecipientFolderTest {
 
     @Test
     public void folderParameterShouldBeInboxByDefault() throws Exception {
-        MessageManager messageManager = mock(MessageManager.class);
-        MailboxSession session = mock(MailboxSession.class);
-
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
         when(mailboxManager.getMailbox(eq(INBOX), any(MailboxSession.class))).thenReturn(messageManager);
-        when(session.getPathDelimiter()).thenReturn('.');
-        when(mailboxManager.createSystemSession(any(String.class), any(Logger.class))).thenReturn(session);
+        when(user.getUserName()).thenReturn(USER);
 
         recipientFolder.init(mailetConfig);
         recipientFolder.service(createMail());
@@ -145,13 +147,9 @@ public class ToRecipientFolderTest {
 
     @Test
     public void folderParameterShouldWorkWhenVirtualHostingIsTurnedOff() throws Exception {
-        MessageManager messageManager = mock(MessageManager.class);
-        MailboxSession session = mock(MailboxSession.class);
-
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
         when(mailboxManager.getMailbox(eq(JUNK), any(MailboxSession.class))).thenReturn(messageManager);
-        when(session.getPathDelimiter()).thenReturn('.');
-        when(mailboxManager.createSystemSession(any(String.class), any(Logger.class))).thenReturn(session);
+        when(user.getUserName()).thenReturn(USER_LOCAL_PART);
 
         mailetConfig.setProperty(ToRecipientFolder.FOLDER_PARAMETER, "Junk");
         recipientFolder.init(mailetConfig);

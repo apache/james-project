@@ -17,12 +17,8 @@
  * under the License.                                           *
  ****************************************************************/
 
-
 package org.apache.james.transport.mailets.delivery;
 
-import org.apache.commons.logging.Log;
-import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.MailAddress;
 
 public class DeliveryUtils {

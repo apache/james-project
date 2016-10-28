@@ -107,7 +107,7 @@ public class SieveIntegrationTest {
             .resourceLocator(resourceLocator)
             .usersRepository(usersRepository)
             .folder("INBOX")
-            .sievePoster(new SievePoster(mailboxManager, "INBOX", usersRepository, fakeMailContext))
+            .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, fakeMailContext), "INBOX", usersRepository, fakeMailContext))
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
             .build();
@@ -943,12 +943,15 @@ public class SieveIntegrationTest {
             ClassLoader.getSystemResourceAsStream(script)));
     }
 
-    private MessageManager prepareMessageManagerOn(MailboxPath inbox) throws MailboxException {
+    private MessageManager prepareMessageManagerOn(MailboxPath mailboxPath) throws MailboxException {
         final MessageManager messageManager = mock(MessageManager.class);
-        when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
+        when(mailboxManager.getMailbox(eq(mailboxPath), any(MailboxSession.class))).thenReturn(messageManager);
         final MailboxSession session = mock(MailboxSession.class);
         when(session.getPathDelimiter()).thenReturn('.');
         when(mailboxManager.createSystemSession(any(String.class), any(Logger.class))).thenReturn(session);
+        MailboxSession.User user = mock(MailboxSession.User.class);
+        when(session.getUser()).thenReturn(user);
+        when(user.getUserName()).thenReturn(mailboxPath.getUser());
         return messageManager;
     }
 
