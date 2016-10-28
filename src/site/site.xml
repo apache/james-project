@@ -180,7 +180,7 @@
                 <item name="Release Notes" href="/server/release-notes.html"/>
                 <item name="Javadoc" href="/server/apidocs/index.html" />
                 <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/JAMES" />
-                <item name="Sources on GitHub" href="https://github.com/apache/james-project" />
+                <item name="Sources" href="https://github.com/apache/james-project" />
                 <item name="RFCs" href="/server/rfcs.html"/>
                 <item name="Other versions" href="other-versions.html"/>
                 <item name="Download releases" href="http://james.apache.org/download.cgi#Apache_James_Server" />
