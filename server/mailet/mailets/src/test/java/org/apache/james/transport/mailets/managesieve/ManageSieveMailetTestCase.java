@@ -538,7 +538,11 @@ public class ManageSieveMailetTestCase {
     }
 
     private MimeMessage verifyHeaders(String subject) throws MessagingException {
-        assertThat(fakeMailContext.getSentMails()).containsOnly(new FakeMailContext.SentMail(new MailAddress(SIEVE_LOCALHOST), Lists.newArrayList(new MailAddress(USER)), null));
+        FakeMailContext.SentMail sentMail = new FakeMailContext.SentMail.Builder()
+            .recipients(Lists.newArrayList(new MailAddress(USER)))
+            .sender(new MailAddress(SIEVE_LOCALHOST))
+            .build();
+        assertThat(fakeMailContext.getSentMails()).containsOnly(sentMail);
         MimeMessage result = fakeMailContext.getSentMails().get(0).getMsg();
         assertThat(result.getSubject()).isEqualTo(subject);
         assertThat(result.getRecipients(RecipientType.TO)).containsOnly(new InternetAddress(USER));

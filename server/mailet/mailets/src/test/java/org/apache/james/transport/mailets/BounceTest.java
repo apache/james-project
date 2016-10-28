@@ -77,10 +77,9 @@ public class BounceTest {
 
         bounce.service(mail);
 
-        FakeMailContext.SentMail expected = new FakeMailContext.SentMail(null,
-            Lists.newArrayList(senderMailAddress),
-            null,
-            ImmutableMap.<String, Serializable>of());
+        FakeMailContext.SentMail expected = new FakeMailContext.SentMail.Builder()
+            .recipients(Lists.newArrayList(senderMailAddress))
+            .build();
         assertThat(fakeMailContext.getSentMails()).containsOnly(expected);
     }
 

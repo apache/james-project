@@ -443,8 +443,12 @@ public class SieveIntegrationTest {
         testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verifyZeroInteractions(mailboxManager);
+        FakeMailContext.SentMail expectedSentMail = new FakeMailContext.SentMail.Builder()
+            .sender(new MailAddress("sender@any.com"))
+            .recipients(Lists.newArrayList(new MailAddress("redirect@apache.org")))
+            .build();
         assertThat(fakeMailContext.getSentMails())
-            .containsExactly(new FakeMailContext.SentMail(new MailAddress("sender@any.com"), Lists.newArrayList(new MailAddress("redirect@apache.org")), null));
+            .containsExactly(expectedSentMail);
     }
 
     @Test
@@ -841,7 +845,11 @@ public class SieveIntegrationTest {
         testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
-        assertThat(fakeMailContext.getSentMails()).containsExactly(new FakeMailContext.SentMail(new MailAddress(RECEIVER_DOMAIN_COM), Lists.newArrayList(new MailAddress("sender@any.com")), null));
+        FakeMailContext.SentMail expectedSentMail = new FakeMailContext.SentMail.Builder()
+            .sender(new MailAddress(RECEIVER_DOMAIN_COM))
+            .recipients(Lists.newArrayList(new MailAddress("sender@any.com")))
+            .build();
+        assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
     }
 
     @Test
@@ -898,7 +906,11 @@ public class SieveIntegrationTest {
         testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
-        assertThat(fakeMailContext.getSentMails()).containsExactly(new FakeMailContext.SentMail(new MailAddress(RECEIVER_DOMAIN_COM), Lists.newArrayList(new MailAddress("sender@any.com")), null));
+        FakeMailContext.SentMail expectedSentMail = new FakeMailContext.SentMail.Builder()
+            .sender(new MailAddress(RECEIVER_DOMAIN_COM))
+            .recipients(Lists.newArrayList(new MailAddress("sender@any.com")))
+            .build();
+        assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
     }
 
     @Test
@@ -909,7 +921,11 @@ public class SieveIntegrationTest {
         testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
-        assertThat(fakeMailContext.getSentMails()).containsExactly(new FakeMailContext.SentMail(new MailAddress(RECEIVER_DOMAIN_COM), Lists.newArrayList(new MailAddress("sender@any.com")), null));
+        FakeMailContext.SentMail expectedSentMail = new FakeMailContext.SentMail.Builder()
+            .sender(new MailAddress(RECEIVER_DOMAIN_COM))
+            .recipients(Lists.newArrayList(new MailAddress("sender@any.com")))
+            .build();
+        assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
     }
 
     @Test
@@ -920,7 +936,11 @@ public class SieveIntegrationTest {
         testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
-        assertThat(fakeMailContext.getSentMails()).containsExactly(new FakeMailContext.SentMail(new MailAddress("benwa@apache.org"), Lists.newArrayList(new MailAddress("sender@any.com")), null));
+        FakeMailContext.SentMail expectedSentMail = new FakeMailContext.SentMail.Builder()
+            .sender(new MailAddress("benwa@apache.org"))
+            .recipients(Lists.newArrayList(new MailAddress("sender@any.com")))
+            .build();
+        assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
     }
 
     @Test
@@ -931,7 +951,11 @@ public class SieveIntegrationTest {
         testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
-        assertThat(fakeMailContext.getSentMails()).containsExactly(new FakeMailContext.SentMail(new MailAddress(RECEIVER_DOMAIN_COM), Lists.newArrayList(new MailAddress("sender@any.com")), null));
+        FakeMailContext.SentMail expectedSentMail = new FakeMailContext.SentMail.Builder()
+            .sender(new MailAddress(RECEIVER_DOMAIN_COM))
+            .recipients(Lists.newArrayList(new MailAddress("sender@any.com")))
+            .build();
+        assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
     }
 
     private void prepareTestUsingScript(final String script) throws Exception {

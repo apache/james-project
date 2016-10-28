@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.delivery;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
@@ -32,11 +32,13 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.RFC2822Headers;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public class MailDispatcher {
 
     public static final String DELIVERED_TO = "Delivered-To";
+    public static final String[] NO_HEADERS = {};
 
     public static Builder builder() {
         return new Builder();
@@ -111,7 +113,7 @@ public class MailDispatcher {
         // This only works because there is a placeholder inserted by MimeMessageWrapper
         message.setHeader(RFC2822Headers.RETURN_PATH, DeliveryUtils.prettyPrint(mail.getSender()));
 
-        List<String> deliveredToHeader = Collections.list(message.getMatchingHeaders(new String[] { DELIVERED_TO }));
+        List<String> deliveredToHeader = Arrays.asList(Optional.fromNullable(message.getHeader(DELIVERED_TO)).or(NO_HEADERS));
         message.removeHeader(DELIVERED_TO);
 
         dispatchNeedingSavedDeliveredToHeader(mail, errors, message);

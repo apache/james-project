@@ -71,20 +71,56 @@ public class FakeMailContext implements MailetContext {
 
     public static class SentMail {
 
+        public static class Builder {
+            private MailAddress sender;
+            private Optional<Collection<MailAddress>> recipients = Optional.absent();
+            private MimeMessage msg;
+            private Optional<Map<String, Serializable>> attributes = Optional.absent();
+            private Optional<String> state = Optional.absent();
+
+            public Builder sender(MailAddress sender) {
+                this.sender = sender;
+                return this;
+            }
+
+            public Builder recipients(Collection<MailAddress> recipients) {
+                this.recipients = Optional.of(recipients);
+                return this;
+            }
+
+            public Builder message(MimeMessage mimeMessage) {
+                this.msg = mimeMessage;
+                return this;
+            }
+
+            public Builder attributes(Map<String, Serializable> attributes) {
+                this.attributes = Optional.of(attributes);
+                return this;
+            }
+
+            public Builder state(String state) {
+                this.state = Optional.of(state);
+                return this;
+            }
+
+            public SentMail build() {
+                return new SentMail(sender, recipients.or(ImmutableList.<MailAddress>of()), msg,
+                    attributes.or(ImmutableMap.<String, Serializable>of()), state.or(Mail.DEFAULT));
+            }
+        }
+
         private final MailAddress sender;
         private final Collection<MailAddress> recipients;
         private final MimeMessage msg;
         private final Map<String, Serializable> attributes;
+        private final String state;
 
-        public SentMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg, Map<String, Serializable> attributes) {
+        private SentMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg, Map<String, Serializable> attributes, String state) {
             this.sender = sender;
             this.recipients = ImmutableList.copyOf(recipients);
             this.msg = msg;
             this.attributes = ImmutableMap.copyOf(attributes);
-        }
-
-        public SentMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg) {
-            this(sender, recipients, msg, ImmutableMap.<String, Serializable>of());
+            this.state = state;
         }
 
         public MailAddress getSender() {
@@ -99,6 +135,10 @@ public class FakeMailContext implements MailetContext {
             return msg;
         }
 
+        public String getState() {
+            return state;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (!(o instanceof SentMail)) {
@@ -109,12 +149,13 @@ public class FakeMailContext implements MailetContext {
 
             return Objects.equal(this.sender, sentMail.sender)
                 && Objects.equal(this.recipients, sentMail.recipients)
-                && Objects.equal(this.attributes, sentMail.attributes);
+                && Objects.equal(this.attributes, sentMail.attributes)
+                && Objects.equal(this.state, sentMail.state);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(sender, recipients, attributes);
+            return Objects.hashCode(sender, recipients, attributes, state);
         }
 
         @Override
@@ -123,6 +164,7 @@ public class FakeMailContext implements MailetContext {
                 .add("recipients", recipients)
                 .add("sender", sender)
                 .add("attributeNames", attributes)
+                .add("state", state)
                 .toString();
         }
     }
@@ -211,19 +253,36 @@ public class FakeMailContext implements MailetContext {
     }
 
     public void sendMail(MimeMessage mimemessage) throws MessagingException {
-        sentMails.add(new SentMail(null, new ArrayList<MailAddress>(), mimemessage));
+        sentMails.add(new SentMail.Builder()
+            .message(mimemessage)
+            .build());
     }
 
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg) throws MessagingException {
-        sentMails.add(new SentMail(sender, recipients, msg));
+        sentMails.add(new SentMail.Builder()
+            .recipients(recipients)
+            .sender(sender)
+            .message(msg)
+            .build());
     }
 
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg, String state) throws MessagingException {
-        sentMails.add(new SentMail(sender, recipients, msg));
+        sentMails.add(new SentMail.Builder()
+            .recipients(recipients)
+            .message(msg)
+            .state(state)
+            .sender(sender)
+            .build());
     }
 
     public void sendMail(Mail mail) throws MessagingException {
-        sentMails.add(new SentMail(mail.getSender(), mail.getRecipients(), mail.getMessage(), buildAttributesMap(mail)));
+        sentMails.add(new SentMail.Builder()
+            .sender(mail.getSender())
+            .recipients(mail.getRecipients())
+            .message(mail.getMessage())
+            .state(mail.getState())
+            .attributes(buildAttributesMap(mail))
+            .build());
     }
 
     private ImmutableMap<String, Serializable> buildAttributesMap(Mail mail) {
