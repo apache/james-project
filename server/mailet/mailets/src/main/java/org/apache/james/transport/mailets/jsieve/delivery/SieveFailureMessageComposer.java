@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.delivery;
+package org.apache.james.transport.mailets.jsieve.delivery;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;

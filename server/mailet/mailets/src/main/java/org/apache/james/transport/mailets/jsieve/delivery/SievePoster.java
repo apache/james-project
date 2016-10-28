@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.delivery;
+package org.apache.james.transport.mailets.jsieve.delivery;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -25,6 +25,8 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.transport.mailets.delivery.DeliveryUtils;
+import org.apache.james.transport.mailets.delivery.MailboxAppender;
 import org.apache.james.transport.mailets.jsieve.Poster;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;

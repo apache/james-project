@@ -18,7 +18,7 @@
  ****************************************************************/
 
 
-package org.apache.james.transport.mailets.delivery;
+package org.apache.james.transport.mailets.jsieve.delivery;
 
 import java.io.IOException;
 
@@ -26,6 +26,8 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.logging.Log;
+import org.apache.james.transport.mailets.delivery.DeliveryUtils;
+import org.apache.james.transport.mailets.delivery.MailStorer;
 import org.apache.james.transport.mailets.jsieve.ActionDispatcher;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.transport.mailets.jsieve.SieveMailAdapter;
