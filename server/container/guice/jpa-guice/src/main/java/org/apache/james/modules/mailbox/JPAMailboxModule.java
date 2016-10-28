@@ -44,6 +44,7 @@ import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
@@ -52,6 +53,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.modules.Names;
 import org.apache.james.utils.MailboxManagerDefinition;
 import org.apache.james.utils.PropertiesProvider;
@@ -77,11 +79,13 @@ public class JPAMailboxModule extends AbstractModule {
         bind(JPAId.Factory.class).in(Scopes.SINGLETON);
         bind(SimpleGroupMembershipResolver.class).in(Scopes.SINGLETON);
         bind(UnionMailboxACLResolver.class).in(Scopes.SINGLETON);
+        bind(DefaultMessageId.Factory.class).in(Scopes.SINGLETON);
 
         bind(MessageMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
         bind(MailboxMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
         bind(AttachmentMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
         bind(MailboxSessionMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
+        bind(MessageId.Factory.class).to(DefaultMessageId.Factory.class);
 
         bind(ModSeqProvider.class).to(JPAModSeqProvider.class);
         bind(UidProvider.class).to(JPAUidProvider.class);
