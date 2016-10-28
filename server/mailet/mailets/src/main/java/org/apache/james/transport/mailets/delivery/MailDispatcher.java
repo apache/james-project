@@ -34,9 +34,6 @@ import org.apache.mailet.base.RFC2822Headers;
 
 import com.google.common.base.Preconditions;
 
-/**
- * Contains resource bindings.
- */
 public class MailDispatcher {
 
     public static final String DELIVERED_TO = "Delivered-To";
@@ -92,45 +89,9 @@ public class MailDispatcher {
         this.mailetContext = mailetContext;
     }
 
-    /**
-     * Delivers a mail to a local mailbox.
-     *
-     * @param mail
-     *            the mail being processed
-     *
-     * @throws MessagingException
-     *             if an error occurs while storing the mail
-     */
-    @SuppressWarnings("unchecked")
     public void dispatch(Mail mail) throws MessagingException {
-        Collection<MailAddress> recipients = mail.getRecipients();
         Collection<MailAddress> errors = new Vector<MailAddress>();
-
-        MimeMessage message = mail.getMessage();
-
-        // Set Return-Path and remove all other Return-Path headers from the
-        // message
-        // This only works because there is a placeholder inserted by
-        // MimeMessageWrapper
-        message.setHeader(RFC2822Headers.RETURN_PATH, DeliveryUtils.prettyPrint(mail.getSender()));
-
-        List<String> deliveredToHeader = Collections.list(message.getMatchingHeaders(new String[] { DELIVERED_TO }));
-        message.removeHeader(DELIVERED_TO);
-
-        for (MailAddress recipient : recipients) {
-            try {
-                // Add qmail's de facto standard Delivered-To header
-                message.addHeader(DELIVERED_TO, recipient.toString());
-                mailStorer.storeMail(mail.getSender(), recipient, mail);
-                message.removeHeader(DELIVERED_TO);
-            } catch (Exception ex) {
-                log.error("Error while storing mail.", ex);
-                errors.add(recipient);
-            }
-        }
-        for (String deliveredTo : deliveredToHeader) {
-            message.addHeader(DELIVERED_TO, deliveredTo);
-        }
+        dispatchNeedingErrorsManaged(mail, errors);
         if (!errors.isEmpty()) {
             // If there were errors, we redirect the email to the ERROR
             // processor.
@@ -140,6 +101,37 @@ public class MailDispatcher {
             // regarding the details of the failure(s).
             // In the future we may wish to address this.
             mailetContext.sendMail(mail.getSender(), errors, mail.getMessage(), Mail.ERROR);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void dispatchNeedingErrorsManaged(Mail mail, Collection<MailAddress> errors) throws MessagingException {
+        MimeMessage message = mail.getMessage();
+        // Set Return-Path and remove all other Return-Path headers from the message
+        // This only works because there is a placeholder inserted by MimeMessageWrapper
+        message.setHeader(RFC2822Headers.RETURN_PATH, DeliveryUtils.prettyPrint(mail.getSender()));
+
+        List<String> deliveredToHeader = Collections.list(message.getMatchingHeaders(new String[] { DELIVERED_TO }));
+        message.removeHeader(DELIVERED_TO);
+
+        dispatchNeedingSavedDeliveredToHeader(mail, errors, message);
+
+        for (String deliveredTo : deliveredToHeader) {
+            message.addHeader(DELIVERED_TO, deliveredTo);
+        }
+    }
+
+    private void dispatchNeedingSavedDeliveredToHeader(Mail mail, Collection<MailAddress> errors, MimeMessage message) {
+        for (MailAddress recipient : mail.getRecipients()) {
+            try {
+                // Add qmail's de facto standard Delivered-To header
+                message.addHeader(DELIVERED_TO, recipient.toString());
+                mailStorer.storeMail(mail.getSender(), recipient, mail);
+                message.removeHeader(DELIVERED_TO);
+            } catch (Exception ex) {
+                log.error("Error while storing mail.", ex);
+                errors.add(recipient);
+            }
         }
         if (consume) {
             // Consume this message
