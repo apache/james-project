@@ -35,7 +35,7 @@ import java.util.Date;
 
 import javax.mail.Flags;
 
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJmapJamesServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -54,11 +54,11 @@ public abstract class GetMailboxesMethodTest {
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
 
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract GuiceJmapJamesServer createJmapServer();
 
     private AccessToken accessToken;
     private String username;
-    private GuiceJamesServer jmapServer;
+    private GuiceJmapJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {

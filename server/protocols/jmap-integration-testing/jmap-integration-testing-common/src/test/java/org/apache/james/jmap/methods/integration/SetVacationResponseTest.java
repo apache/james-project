@@ -28,7 +28,7 @@ import static org.hamcrest.Matchers.equalTo;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJmapJamesServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
@@ -53,12 +53,12 @@ public abstract class SetVacationResponseTest {
     public static final String PASSWORD = "password";
     public static final String SUBJECT = "subject";
 
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract GuiceJmapJamesServer createJmapServer();
 
     protected abstract void await();
 
     private AccessToken accessToken;
-    private GuiceJamesServer jmapServer;
+    private GuiceJmapJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {

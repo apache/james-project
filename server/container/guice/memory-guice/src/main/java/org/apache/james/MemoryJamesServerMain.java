@@ -39,7 +39,7 @@ public class MemoryJamesServerMain {
         new MemoryMailQueueModule());
 
     public static void main(String[] args) throws Exception {
-        new GuiceJamesServer()
+        new GuiceJmapJamesServer()
             .combineWith(inMemoryServerModule, new JMXServerModule())
             .start();
     }

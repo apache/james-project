@@ -42,7 +42,7 @@ import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
 
-public class GuiceJamesServer {
+public class GuiceJmapJamesServer {
 
     private final Module module;
     private Stager<PreDestroy> preDestroy;
@@ -50,23 +50,23 @@ public class GuiceJamesServer {
     private Optional<Integer> jmapPort;
     private Optional<Port> webadminPort;
 
-    public GuiceJamesServer() {
+    public GuiceJmapJamesServer() {
         this(Modules.combine(
                         new CommonServicesModule(),
                         new ProtocolsModule(),
                         new MailetProcessingModule()));
     }
 
-    public GuiceJamesServer(Module module) {
+    public GuiceJmapJamesServer(Module module) {
         this.module = module;
     }
     
-    public GuiceJamesServer combineWith(Module... modules) {
-        return new GuiceJamesServer(Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
+    public GuiceJmapJamesServer combineWith(Module... modules) {
+        return new GuiceJmapJamesServer(Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
     }
     
-    public GuiceJamesServer overrideWith(Module... overrides) {
-        return new GuiceJamesServer(Modules.override(module).with(overrides));
+    public GuiceJmapJamesServer overrideWith(Module... overrides) {
+        return new GuiceJmapJamesServer(Modules.override(module).with(overrides));
     }
     
     public void start() throws Exception {

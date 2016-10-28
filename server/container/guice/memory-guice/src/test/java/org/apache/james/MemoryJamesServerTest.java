@@ -31,8 +31,8 @@ public class MemoryJamesServerTest extends AbstractJamesServerTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Override
-    protected GuiceJamesServer createJamesServer() {
-        return new GuiceJamesServer()
+    protected GuiceJmapJamesServer createJamesServer() {
+        return new GuiceJmapJamesServer()
                 .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                 .overrideWith(new TestFilesystemModule(temporaryFolder),
                         new TestJMAPServerModule(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT));

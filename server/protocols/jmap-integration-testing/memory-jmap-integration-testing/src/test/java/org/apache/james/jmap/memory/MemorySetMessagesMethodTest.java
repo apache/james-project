@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.memory;
 
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJmapJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.methods.integration.SetMessagesMethodTest;
 import org.apache.james.jmap.servers.MemoryJmapServerModule;
@@ -32,8 +32,8 @@ public class MemorySetMessagesMethodTest extends SetMessagesMethodTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Override
-    protected GuiceJamesServer createJmapServer() {
-        return new GuiceJamesServer()
+    protected GuiceJmapJamesServer createJmapServer() {
+        return new GuiceJmapJamesServer()
                     .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                     .overrideWith(new MemoryJmapServerModule(temporaryFolder));
     }

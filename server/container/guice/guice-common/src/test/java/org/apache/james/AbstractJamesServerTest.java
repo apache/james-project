@@ -49,7 +49,7 @@ public abstract class AbstractJamesServerTest {
     private static final int LMTP_PORT = 1024;
     private static final int JMAP_PORT = 1080;
 
-    private GuiceJamesServer server;
+    private GuiceJmapJamesServer server;
     private SocketChannel socketChannel;
 
     @Before
@@ -67,7 +67,7 @@ public abstract class AbstractJamesServerTest {
         		.build();
     }
 
-    protected abstract GuiceJamesServer createJamesServer();
+    protected abstract GuiceJmapJamesServer createJamesServer();
 
     protected abstract void clean();
 

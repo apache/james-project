@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJmapJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.VacationPatch;
@@ -62,9 +62,9 @@ public abstract class VacationIntegrationTest {
     public static final String ORIGINAL_MESSAGE_TEXT_BODY = "Hello someone, and thank you for joining example.com!";
 
     private ConditionFactory calmlyAwait;
-    private GuiceJamesServer guiceJamesServer;
+    private GuiceJmapJamesServer guiceJamesServer;
 
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract GuiceJmapJamesServer createJmapServer();
 
     protected abstract void await();
 

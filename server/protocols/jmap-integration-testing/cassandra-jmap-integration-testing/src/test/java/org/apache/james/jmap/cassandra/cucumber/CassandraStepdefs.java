@@ -24,7 +24,7 @@ import java.util.Arrays;
 import javax.inject.Inject;
 
 import org.apache.james.CassandraJamesServerMain;
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJmapJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
@@ -54,7 +54,7 @@ public class CassandraStepdefs {
     public void init() throws Exception {
         temporaryFolder.create();
         embeddedElasticSearch.before();
-        mainStepdefs.jmapServer = new GuiceJamesServer()
+        mainStepdefs.jmapServer = new GuiceJmapJamesServer()
                 .combineWith(CassandraJamesServerMain.cassandraServerModule)
                 .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra));
         mainStepdefs.awaitMethod = () -> embeddedElasticSearch.awaitForElasticSearch();

@@ -45,8 +45,8 @@ public class CassandraJamesServerTest extends AbstractJamesServerTest {
     public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
 
     @Override
-    protected GuiceJamesServer createJamesServer() {
-        return new GuiceJamesServer()
+    protected GuiceJmapJamesServer createJamesServer() {
+        return new GuiceJmapJamesServer()
                 .combineWith(CassandraJamesServerMain.cassandraServerModule)
                 .overrideWith(new TestElasticSearchModule(embeddedElasticSearch),
                         new TestFilesystemModule(temporaryFolder),

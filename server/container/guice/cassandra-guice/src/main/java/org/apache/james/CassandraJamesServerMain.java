@@ -50,7 +50,7 @@ public class CassandraJamesServerMain {
 
 
     public static void main(String[] args) throws Exception {
-        GuiceJamesServer server = new GuiceJamesServer()
+        GuiceJmapJamesServer server = new GuiceJmapJamesServer()
                     .combineWith(cassandraServerModule, new JMXServerModule());
         server.start();
     }

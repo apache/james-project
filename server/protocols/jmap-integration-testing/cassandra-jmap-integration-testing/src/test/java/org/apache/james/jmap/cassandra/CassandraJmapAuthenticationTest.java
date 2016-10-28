@@ -19,7 +19,7 @@
 package org.apache.james.jmap.cassandra;
 
 import org.apache.james.CassandraJamesServerMain;
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJmapJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.JMAPAuthenticationTest;
@@ -42,8 +42,8 @@ public class CassandraJmapAuthenticationTest extends JMAPAuthenticationTest {
         .around(embeddedElasticSearch);
 
     @Override
-    protected GuiceJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) {
-        return new GuiceJamesServer()
+    protected GuiceJmapJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) {
+        return new GuiceJmapJamesServer()
                     .combineWith(CassandraJamesServerMain.cassandraServerModule)
                     .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra),
                             (binder) -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));

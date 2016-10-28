@@ -36,7 +36,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJmapJamesServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -58,13 +58,13 @@ public abstract class SetMailboxesMethodTest {
     private static final String ARGUMENTS = "[0][1]";
     private static final String USERS_DOMAIN = "domain.tld";
 
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract GuiceJmapJamesServer createJmapServer();
 
     protected abstract void await();
 
     private AccessToken accessToken;
     private String username;
-    private GuiceJamesServer jmapServer;
+    private GuiceJmapJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {

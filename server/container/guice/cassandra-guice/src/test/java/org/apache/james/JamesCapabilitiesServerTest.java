@@ -46,7 +46,7 @@ import com.google.inject.Singleton;
 
 public class JamesCapabilitiesServerTest {
 
-    private GuiceJamesServer server;
+    private GuiceJmapJamesServer server;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
 
@@ -58,10 +58,10 @@ public class JamesCapabilitiesServerTest {
         server.stop();
     }
     
-    private GuiceJamesServer createCassandraJamesServer(final MailboxManager mailboxManager) {
+    private GuiceJmapJamesServer createCassandraJamesServer(final MailboxManager mailboxManager) {
         Module mockMailboxManager = (binder) -> binder.bind(MailboxManager.class).toInstance(mailboxManager);
         
-        return new GuiceJamesServer()
+        return new GuiceJmapJamesServer()
             .combineWith(CassandraJamesServerMain.cassandraServerModule)
             .overrideWith(new TestElasticSearchModule(embeddedElasticSearch),
                 new TestFilesystemModule(temporaryFolder),

@@ -20,7 +20,7 @@
 package org.apache.james.jmap.cassandra;
 
 import org.apache.james.CassandraJamesServerMain;
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJmapJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.methods.integration.GetMessageListMethodTest;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
@@ -41,8 +41,8 @@ public class CassandraGetMessageListMethodTest extends GetMessageListMethodTest 
         .around(embeddedElasticSearch);
     
     @Override
-    protected GuiceJamesServer createJmapServer() {
-        return new GuiceJamesServer()
+    protected GuiceJmapJamesServer createJmapServer() {
+        return new GuiceJmapJamesServer()
                 .combineWith(CassandraJamesServerMain.cassandraServerModule)
                 .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra));
     }
