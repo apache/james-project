@@ -32,6 +32,7 @@ import org.apache.james.transport.mailets.jsieve.ActionDispatcher;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.transport.mailets.jsieve.SieveMailAdapter;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.jsieve.ConfigurationManager;
 import org.apache.jsieve.SieveConfigurationException;
 import org.apache.jsieve.SieveFactory;
@@ -137,9 +138,8 @@ public class SieveMailStorer implements MailStorer {
     }
 
     protected void sieveMessage(MailAddress recipient, Mail aMail, Log log) throws MessagingException {
-        String username = DeliveryUtils.getUsername(recipient, usersRepos, log);
         try {
-            final ResourceLocator.UserSieveInformation userSieveInformation = resourceLocator.get(getScriptUri(recipient, log));
+            ResourceLocator.UserSieveInformation userSieveInformation = resourceLocator.get(getScriptUri(recipient));
             sieveMessageEvaluate(recipient, aMail, userSieveInformation, log);
         } catch (Exception ex) {
             // SIEVE is a mail filtering protocol.
@@ -147,7 +147,7 @@ public class SieveMailStorer implements MailStorer {
             // seems very unfriendly.
             // So just log and store in INBOX
             log.error("Cannot evaluate Sieve script. Storing mail in user INBOX.", ex);
-            storeMessageInbox(username, aMail.getMessage());
+            storeMessageInbox(recipient, aMail.getMessage());
         }
     }
 
@@ -158,29 +158,42 @@ public class SieveMailStorer implements MailStorer {
                 userSieveInformation.getScriptInterpretationDate(), recipient);
             aMailAdapter.setLog(log);
             // This logging operation is potentially costly
-            log.debug("Evaluating " + aMailAdapter.toString() + "against \"" + getScriptUri(recipient, log) + "\"");
+            log.debug("Evaluating " + aMailAdapter.toString() + "against \"" + getScriptUri(recipient) + "\"");
             factory.evaluate(aMailAdapter, factory.parse(userSieveInformation.getScriptContent()));
         } catch (SieveException ex) {
-            handleFailure(recipient, aMail, ex, log);
+            handleFailure(recipient, aMail, ex);
         }
         catch (ParseException ex) {
-            handleFailure(recipient, aMail, ex, log);
+            handleFailure(recipient, aMail, ex);
         }
         catch (TokenMgrError ex) {
-            handleFailure(recipient, aMail, new SieveException(ex), log);
+            handleFailure(recipient, aMail, new SieveException(ex));
         }
     }
 
-    protected String getScriptUri(MailAddress m, Log log) {
-        return "//" + DeliveryUtils.getUsername(m, usersRepos, log) + "/sieve";
+    protected String getScriptUri(MailAddress m) {
+        return "//" + retrieveUserNameUsedForScriptStorage(m) + "/sieve";
     }
 
-    protected void handleFailure(MailAddress recipient, Mail aMail, Exception ex, Log log) throws MessagingException, IOException {
-        String user = DeliveryUtils.getUsername(recipient, usersRepos, log);
-        storeMessageInbox(user, SieveFailureMessageComposer.composeMessage(aMail, ex, user));
+    protected void handleFailure(MailAddress recipient, Mail aMail, Exception ex) throws MessagingException, IOException {
+        storeMessageInbox(recipient, SieveFailureMessageComposer.composeMessage(aMail, ex, recipient.toString()));
     }
 
-    protected void storeMessageInbox(String username, MimeMessage message) throws MessagingException {
-        sievePoster.post("mailbox://" + username + "/", message);
+    protected void storeMessageInbox(MailAddress mailAddress, MimeMessage message) throws MessagingException {
+        sievePoster.post("mailbox://" + mailAddress + "/", message);
+    }
+
+    public String retrieveUserNameUsedForScriptStorage(MailAddress m) {
+        try {
+            if (usersRepos.supportVirtualHosting()) {
+                return m.toString();
+            } else {
+                return m.getLocalPart() + "@localhost";
+            }
+        } catch (UsersRepositoryException e) {
+            log.error("Unable to access UsersRepository", e);
+            return m.getLocalPart() + "@localhost";
+
+        }
     }
 }

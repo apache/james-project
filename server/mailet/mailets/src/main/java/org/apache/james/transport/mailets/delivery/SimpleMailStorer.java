@@ -23,6 +23,7 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
@@ -83,11 +84,24 @@ public class SimpleMailStorer implements MailStorer {
 
     @Override
     public void storeMail(MailAddress sender, MailAddress recipient, Mail mail) throws MessagingException {
-        String username = DeliveryUtils.getUsername(recipient, usersRepository, log);
+        String username = computeUsername(recipient);
 
         mailboxAppender.append(mail.getMessage(), username, folder);
 
         log.info("Local delivered mail " + mail.getName() + " sucessfully from " + DeliveryUtils.prettyPrint(sender)
             + " to " + DeliveryUtils.prettyPrint(recipient) + " in folder " + this.folder);
+    }
+
+    private String computeUsername(MailAddress recipient) throws MessagingException {
+        try {
+            if (usersRepository.supportVirtualHosting()) {
+                return recipient.toString();
+            } else {
+                return recipient.getLocalPart();
+            }
+        } catch (UsersRepositoryException e) {
+            log.error("Unable to access UsersRepository", e);
+            return recipient.toString();
+        }
     }
 }

@@ -23,20 +23,6 @@ import org.apache.mailet.MailAddress;
 
 public class DeliveryUtils {
 
-    public static String getUsername(MailAddress m, UsersRepository usersRepository, Log log) {
-        try {
-            if (usersRepository.supportVirtualHosting()) {
-                return m.toString();
-            } else {
-                return m.getLocalPart() + "@localhost";
-            }
-        } catch (UsersRepositoryException e) {
-            log.error("Unable to access UsersRepository", e);
-            return m.getLocalPart() + "@localhost";
-
-        }
-    }
-
     public static String prettyPrint(MailAddress mailAddress) {
         if (mailAddress != null) {
             return  "<" + mailAddress.toString() + ">";
