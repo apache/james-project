@@ -41,7 +41,8 @@ public class MainStepdefs {
         return new URIBuilder()
                 .setScheme("http")
                 .setHost("localhost")
-                .setPort(jmapServer.getJmapPort())
+                .setPort(jmapServer.getJmapPort()
+                        .orElseThrow(() -> new RuntimeException("Unable to locate JMAP port")))
                 .setCharset(Charsets.UTF_8);
     }
     

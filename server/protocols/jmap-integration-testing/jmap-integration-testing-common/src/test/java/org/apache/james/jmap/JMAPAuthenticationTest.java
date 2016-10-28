@@ -63,7 +63,8 @@ public abstract class JMAPAuthenticationTest {
         jmapServer.start();
         RestAssured.requestSpecification = new RequestSpecBuilder()
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(jmapServer.getJmapPort())
+        		.setPort(jmapServer.getJmapPort()
+                        .orElseThrow(() -> new RuntimeException("Unable to locate JMAP port")))
         		.build();
         
         userCredentials = UserCredentials.builder()

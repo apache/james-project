@@ -31,6 +31,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,6 +47,7 @@ public abstract class AbstractJamesServerTest {
     private static final int POP3_PORT = 1110;
     private static final int SMTP_PORT = 1025;
     private static final int LMTP_PORT = 1024;
+    private static final int JMAP_PORT = 1080;
 
     private GuiceJamesServer server;
     private SocketChannel socketChannel;
@@ -60,7 +62,8 @@ public abstract class AbstractJamesServerTest {
         		.setContentType(ContentType.JSON)
         		.setAccept(ContentType.JSON)
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(server.getJmapPort())
+        		.setPort(server.getJmapPort()
+        		        .orElse(JMAP_PORT))
         		.build();
     }
 
@@ -122,6 +125,7 @@ public abstract class AbstractJamesServerTest {
 
     @Test
     public void connectJMAPServerShouldRespondBadRequest() throws Exception {
+        Assume.assumeTrue(server.getJmapPort().isPresent());
         given()
             .body("{\"badAttributeName\": \"value\"}")
         .when()

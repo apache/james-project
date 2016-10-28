@@ -73,7 +73,8 @@ public abstract class GetMessageListMethodTest {
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
                 .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-                .setPort(jmapServer.getJmapPort())
+                .setPort(jmapServer.getJmapPort()
+                        .orElseThrow(() -> new RuntimeException("Unable to locate JMAP port")))
                 .build();
 
         this.domain = "domain.tld";

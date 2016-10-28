@@ -87,7 +87,8 @@ public abstract class VacationIntegrationTest {
         		.setContentType(ContentType.JSON)
         		.setAccept(ContentType.JSON)
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(guiceJamesServer.getJmapPort())
+        		.setPort(guiceJamesServer.getJmapPort()
+                        .orElseThrow(() -> new RuntimeException("Unable to locate JMAP port")))
         		.build();
 
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;

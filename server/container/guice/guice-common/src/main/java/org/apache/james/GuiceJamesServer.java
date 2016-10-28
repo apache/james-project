@@ -47,7 +47,7 @@ public class GuiceJamesServer {
     private final Module module;
     private Stager<PreDestroy> preDestroy;
     private GuiceServerProbe serverProbe;
-    private int jmapPort;
+    private Optional<Integer> jmapPort;
     private Optional<Port> webadminPort;
 
     public GuiceJamesServer() {
@@ -57,7 +57,7 @@ public class GuiceJamesServer {
                         new MailetProcessingModule()));
     }
 
-    private GuiceJamesServer(Module module) {
+    public GuiceJamesServer(Module module) {
         this.module = module;
     }
     
@@ -74,8 +74,16 @@ public class GuiceJamesServer {
         preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {}));
         injector.getInstance(ConfigurationsPerformer.class).initModules();
         serverProbe = injector.getInstance(GuiceServerProbe.class);
-        jmapPort = injector.getInstance(JMAPServer.class).getPort();
+        jmapPort = locateJMAPPort(injector);
         webadminPort =locateWebAdminPort(injector);
+    }
+
+    private Optional<Integer> locateJMAPPort(Injector injector) {
+        try {
+            return Optional.of(injector.getInstance(JMAPServer.class).getPort());
+        } catch(Exception e) {
+            return Optional.empty();
+        }
     }
 
     private Optional<Port> locateWebAdminPort(Injector injector) {
@@ -96,7 +104,7 @@ public class GuiceJamesServer {
         return serverProbe;
     }
 
-    public int getJmapPort() {
+    public Optional<Integer> getJmapPort() {
         return jmapPort;
     }
 
