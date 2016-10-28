@@ -59,9 +59,9 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class GuiceServerProbe implements ExtendedJmapServerProbe {
+public class JmapGuiceServerProbe implements ExtendedJmapServerProbe {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GuiceServerProbe.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JmapGuiceServerProbe.class);
 
     private final MailboxManager mailboxManager;
     private final MailboxMapperFactory mailboxMapperFactory;
@@ -72,7 +72,7 @@ public class GuiceServerProbe implements ExtendedJmapServerProbe {
     private final VacationRepository vacationRepository;
 
     @Inject
-    private GuiceServerProbe(MailboxManager mailboxManager, MailboxMapperFactory mailboxMapperFactory,
+    private JmapGuiceServerProbe(MailboxManager mailboxManager, MailboxMapperFactory mailboxMapperFactory,
                              DomainList domainList, UsersRepository usersRepository, SieveRepository sieveRepository,
                              RecipientRewriteTable recipientRewriteTable, VacationRepository vacationRepository) {
         this.mailboxManager = mailboxManager;

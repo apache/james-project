@@ -30,7 +30,7 @@ import org.apache.james.modules.ProtocolsModule;
 import org.apache.james.onami.lifecycle.Stager;
 import org.apache.james.utils.ConfigurationsPerformer;
 import org.apache.james.utils.ExtendedJmapServerProbe;
-import org.apache.james.utils.GuiceServerProbe;
+import org.apache.james.utils.JmapGuiceServerProbe;
 import org.apache.james.webadmin.Port;
 import org.apache.james.webadmin.WebAdminServer;
 
@@ -46,7 +46,7 @@ public class GuiceJamesServer {
 
     private final Module module;
     private Stager<PreDestroy> preDestroy;
-    private GuiceServerProbe serverProbe;
+    private JmapGuiceServerProbe serverProbe;
     private Optional<Integer> jmapPort;
     private Optional<Port> webadminPort;
 
@@ -73,7 +73,7 @@ public class GuiceJamesServer {
         Injector injector = Guice.createInjector(module);
         preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {}));
         injector.getInstance(ConfigurationsPerformer.class).initModules();
-        serverProbe = injector.getInstance(GuiceServerProbe.class);
+        serverProbe = injector.getInstance(JmapGuiceServerProbe.class);
         jmapPort = locateJMAPPort(injector);
         webadminPort =locateWebAdminPort(injector);
     }
