@@ -225,6 +225,7 @@
                 <item name="Source Code" href="/protocols/source-code.html" />
                 <item name="Javadoc" href="/protocols/apidocs/index.html" />
                 <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/PROTOCOLS" />
+                <item name="Download Releases" href="http://james.apache.org/download.cgi#Apache_James_Protocols" />
             </item>
             <item name="MPT" href="/mpt/index.html" collapse="true">
                 <item name="Releases" href="/mpt/release-notes.html">
