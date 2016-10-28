@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
@@ -346,7 +347,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     private boolean suffixMatch = false;
 
-    
+    @Inject
     public LuceneMessageSearchIndex(MessageMapperFactory factory, MailboxId.Factory mailboxIdFactory, Directory directory) throws CorruptIndexException, LockObtainFailedException, IOException {
         this(factory, mailboxIdFactory, directory, false, true);
     }

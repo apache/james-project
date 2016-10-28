@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa;
 
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
@@ -47,6 +48,7 @@ public class JPAMailboxSessionMapperFactory extends MailboxSessionMapperFactory 
     private final UidProvider uidProvider;
     private final ModSeqProvider modSeqProvider;
 
+    @Inject
     public JPAMailboxSessionMapperFactory(EntityManagerFactory entityManagerFactory, UidProvider uidProvider, ModSeqProvider modSeqProvider) {
         this.entityManagerFactory = entityManagerFactory;
         this.uidProvider = uidProvider;

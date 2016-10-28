@@ -20,6 +20,8 @@
 package org.apache.james.mailbox.jpa.openjpa;
 
 
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -67,6 +69,7 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
         }
     }
     
+    @Inject
     public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, 
             MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, 
             MessageParser messageParser, MessageId.Factory messageIdFactory) {

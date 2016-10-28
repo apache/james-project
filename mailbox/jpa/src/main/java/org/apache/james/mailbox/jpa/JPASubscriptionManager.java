@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa;
 
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.jpa.user.model.JPASubscription;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
@@ -29,6 +31,7 @@ import org.apache.james.mailbox.store.user.model.Subscription;
  */
 public class JPASubscriptionManager extends StoreSubscriptionManager {
     
+    @Inject
     public JPASubscriptionManager(JPAMailboxSessionMapperFactory mapperFactory) {
         super(mapperFactory);
     }
