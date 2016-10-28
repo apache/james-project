@@ -32,7 +32,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.utils.ExtendedServerProbe;
+import org.apache.james.utils.ExtendedJmapServerProbe;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.collect.ImmutableList;
@@ -76,7 +76,7 @@ public class TemporaryJamesServer {
         jamesServer.stop();
     }
 
-    public ExtendedServerProbe getServerProbe() {
+    public ExtendedJmapServerProbe getServerProbe() {
         return jamesServer.serverProbe();
     }
 }

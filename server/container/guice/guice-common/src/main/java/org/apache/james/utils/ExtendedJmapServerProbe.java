@@ -33,7 +33,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
-public interface ExtendedServerProbe extends ServerProbe {
+public interface ExtendedJmapServerProbe extends ServerProbe {
 
     void appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
             throws BadCredentialsException, MailboxException;

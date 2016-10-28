@@ -35,8 +35,8 @@ import org.apache.james.adapter.mailbox.SerializableQuota;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
-import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.api.vacation.VacationPatch;
+import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -59,7 +59,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class GuiceServerProbe implements ExtendedServerProbe {
+public class GuiceServerProbe implements ExtendedJmapServerProbe {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GuiceServerProbe.class);
 
