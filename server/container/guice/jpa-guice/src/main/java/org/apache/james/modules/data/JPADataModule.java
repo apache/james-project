@@ -16,34 +16,17 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.modules.data;
 
-package org.apache.james.modules.mailbox;
+import com.google.inject.AbstractModule;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-
-import javax.annotation.PreDestroy;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Provider;
-
-@VisibleForTesting
-class ScheduledExecutorServiceProvider implements Provider<ScheduledExecutorService> {
-
-    private final ScheduledExecutorService scheduler;
-
-    @VisibleForTesting
-    ScheduledExecutorServiceProvider() {
-        scheduler = Executors.newSingleThreadScheduledExecutor();
-    }
+public class JPADataModule extends AbstractModule {
 
     @Override
-    public ScheduledExecutorService get() {
-        return scheduler;
+    protected void configure() {
+        install(new JPAUsersRepositoryModule());
+        install(new JPADomainListModule());
+        install(new JPARecipientRewriteTableModule());
     }
 
-    @PreDestroy
-    private void stop() {
-        scheduler.shutdown();
-    }
 }

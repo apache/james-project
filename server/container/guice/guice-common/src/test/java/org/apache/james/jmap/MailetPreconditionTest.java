@@ -25,6 +25,7 @@ import java.util.Properties;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
+import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.transport.mailets.Null;
 import org.apache.james.transport.mailets.RemoveMimeHeader;
 import org.apache.james.transport.matchers.All;
@@ -71,12 +72,12 @@ public class MailetPreconditionTest {
 
     @Test(expected = ConfigurationException.class)
     public void bccMailetCheckShouldThrowOnEmptyList() throws Exception {
-        new JMAPModule.BccMailetCheck().check(Lists.newArrayList());
+        new CamelMailetContainerModule.BccMailetCheck().check(Lists.newArrayList());
     }
 
     @Test(expected = NullPointerException.class)
     public void bccMailetCheckShouldThrowOnNullList() throws Exception {
-        new JMAPModule.BccMailetCheck().check(null);
+        new CamelMailetContainerModule.BccMailetCheck().check(null);
     }
 
     @Test(expected = ConfigurationException.class)

@@ -19,13 +19,8 @@
 
 package org.apache.james;
 
-import org.apache.james.modules.CommonServicesModule;
-import org.apache.james.modules.MailetProcessingWithoutCamelModule;
-import org.apache.james.modules.ProtocolsModuleWithoutJMAP;
-import org.apache.james.modules.data.JPADataJmapModule;
-import org.apache.james.modules.data.JPADomainListModule;
-import org.apache.james.modules.data.JPARecipientRewriteTableModule;
-import org.apache.james.modules.data.JPAUsersRepositoryModule;
+import org.apache.james.modules.data.JPADataModule;
+import org.apache.james.modules.data.JPASieveRepositoryModule;
 import org.apache.james.modules.mailbox.JPAMailboxModule;
 import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
@@ -36,25 +31,19 @@ import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
 public class JPAJamesServerMain {
-    public static final Module mainServerModule = Modules.combine(
-            new CommonServicesModule(),
-            new ProtocolsModuleWithoutJMAP(),
-            new MailetProcessingWithoutCamelModule());
 
     public static final Module jpaServerModule = Modules.combine(
         new JPAMailboxModule(),
-        new JPAUsersRepositoryModule(),
-        new JPADomainListModule(),
-        new JPARecipientRewriteTableModule(),
-        new JPADataJmapModule(),
-        new LuceneSearchMailboxModule(),
+        new JPADataModule(),
+        new JPASieveRepositoryModule(),
         new QuotaModule(),
         new ActiveMQQueueModule());
 
-
     public static void main(String[] args) throws Exception {
-        GuiceJamesServer server = new GuiceJamesServer(mainServerModule)
-                    .combineWith(jpaServerModule, new JMXServerModule());
+        GuiceJamesServer server = new GuiceJamesServer()
+                    .combineWith(jpaServerModule, 
+                            new JMXServerModule(), 
+                            new LuceneSearchMailboxModule());
         server.start();
     }
 

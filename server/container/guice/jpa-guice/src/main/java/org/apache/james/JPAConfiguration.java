@@ -19,6 +19,7 @@
 package org.apache.james;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 
 public class JPAConfiguration {
     public static Builder builder() {
@@ -40,6 +41,8 @@ public class JPAConfiguration {
         }
 
         public JPAConfiguration build() {
+            Preconditions.checkNotNull(driverName);
+            Preconditions.checkNotNull(driverURL);
             return new JPAConfiguration(driverName, driverURL);
         }
     }

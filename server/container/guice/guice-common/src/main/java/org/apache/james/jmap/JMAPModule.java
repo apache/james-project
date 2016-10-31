@@ -38,8 +38,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.modules.server.CamelMailetContainerModule;
-import org.apache.james.transport.mailets.RemoveMimeHeader;
-import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.PropertiesProvider;
@@ -71,7 +69,6 @@ public class JMAPModule extends AbstractModule {
 
         Multibinder<CamelMailetContainerModule.TransportProcessorCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.TransportProcessorCheck.class);
         transportProcessorChecks.addBinding().to(VacationMailetCheck.class);
-        transportProcessorChecks.addBinding().to(BccMailetCheck.class);
         
         bind(SystemMailboxesProvider.class).to(SystemMailboxesProviderImpl.class);
     }
@@ -134,16 +131,4 @@ public class JMAPModule extends AbstractModule {
         }
     }
 
-    public static class BccMailetCheck implements CamelMailetContainerModule.TransportProcessorCheck {
-        @Override
-        public void check(List<MatcherMailetPair> pairs) throws ConfigurationException {
-            Preconditions.checkNotNull(pairs);
-            pairs.stream()
-                .filter(pair -> pair.getMailet().getClass().equals(RemoveMimeHeader.class))
-                .filter(pair -> pair.getMatcher().getClass().equals(All.class))
-                .filter(pair -> pair.getMailet().getMailetConfig().getInitParameter("name").equals("bcc"))
-                .findAny()
-                .orElseThrow(() -> new ConfigurationException("Missing RemoveMimeHeader in mailets configuration (mailetcontainer -> processors -> transport). Should be configured to remove Bcc header"));
-        }
-    }
 }

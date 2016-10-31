@@ -25,7 +25,7 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
-public class MemoryJamesServerTest extends AbstractJamesServerTest {
+public class MemoryJamesServerTest extends AbstractJmapJamesServerTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();

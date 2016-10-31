@@ -22,11 +22,9 @@ package org.apache.james.modules.mailbox;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -42,9 +40,6 @@ public class LuceneSearchMailboxModule extends AbstractModule {
         bind(LuceneMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(MessageSearchIndex.class).to(LuceneMessageSearchIndex.class);
         bind(ListeningMessageSearchIndex.class).to(LuceneMessageSearchIndex.class);
-
-        bind(TikaTextExtractor.class).in(Scopes.SINGLETON);
-        bind(TextExtractor.class).to(TikaTextExtractor.class);
     }
 
     @Provides

@@ -46,8 +46,8 @@ import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
+import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
@@ -71,7 +71,7 @@ public class JPAMailboxModule extends AbstractModule {
     protected void configure() {
         bind(JPAMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(OpenJPAMailboxManager.class).in(Scopes.SINGLETON);
-        bind(NoMailboxPathLocker.class).in(Scopes.SINGLETON);
+        bind(JVMMailboxPathLocker.class).in(Scopes.SINGLETON);
         bind(JPASubscriptionManager.class).in(Scopes.SINGLETON);
         bind(JPAModSeqProvider.class).in(Scopes.SINGLETON);
         bind(JPAUidProvider.class).in(Scopes.SINGLETON);
@@ -90,7 +90,7 @@ public class JPAMailboxModule extends AbstractModule {
         bind(ModSeqProvider.class).to(JPAModSeqProvider.class);
         bind(UidProvider.class).to(JPAUidProvider.class);
         bind(SubscriptionManager.class).to(JPASubscriptionManager.class);
-        bind(MailboxPathLocker.class).to(NoMailboxPathLocker.class);
+        bind(MailboxPathLocker.class).to(JVMMailboxPathLocker.class);
         bind(Authenticator.class).to(UserRepositoryAuthenticator.class);
         bind(MailboxManager.class).to(OpenJPAMailboxManager.class);
         bind(MailboxId.Factory.class).to(JPAId.Factory.class);
@@ -122,7 +122,7 @@ public class JPAMailboxModule extends AbstractModule {
         properties.put("openjpa.ConnectionDriverName", jpaConfiguration.getDriverName());
         properties.put("openjpa.ConnectionURL", jpaConfiguration.getDriverURL());
 
-        return Persistence.createEntityManagerFactory("James", properties);
+        return Persistence.createEntityManagerFactory("Global", properties);
 
     }
 

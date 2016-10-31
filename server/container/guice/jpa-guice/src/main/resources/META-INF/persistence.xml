@@ -23,13 +23,16 @@
     xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
     version="2.0">
 
-    <persistence-unit name="James" transaction-type="JTA">
-       <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
-        <jta-data-source>osgi:service/javax.sql.DataSource/(osgi.jndi.service.name=jdbc/james)</jta-data-source>
+    <persistence-unit name="Global" transaction-type="RESOURCE_LOCAL">
+        <class>org.apache.james.mailbox.jpa.mail.model.JPAMailbox</class>
+        <class>org.apache.james.mailbox.jpa.mail.model.JPAUserFlag</class>
+        <class>org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage</class>
+        <class>org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage</class>
+        <class>org.apache.james.mailbox.jpa.mail.model.JPAProperty</class>
+        <class>org.apache.james.mailbox.jpa.user.model.JPASubscription</class>
         <class>org.apache.james.domainlist.jpa.model.JPADomain</class>
         <class>org.apache.james.user.jpa.model.JPAUser</class>
         <class>org.apache.james.rrt.jpa.model.JPARecipientRewrite</class>
-        <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)"/>
             <property name="openjpa.jdbc.MappingDefaults" value="ForeignKeyDeleteAction=cascade, JoinForeignKeyDeleteAction=cascade"/>

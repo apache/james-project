@@ -30,8 +30,8 @@ import com.google.inject.Provides;
 
 public class TestJPAConfigurationModule extends AbstractModule {
 
-    private static final String JDBC_EMBEDDED_URL = "jdbc:derby:../var/store/derby;create=true";
-    private static final String JDBC_EMBEDDED_DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
+    private static final String JDBC_EMBEDDED_URL = "jdbc:derby:memory:mailboxintegration;create=true";
+    private static final String JDBC_EMBEDDED_DRIVER = org.apache.derby.jdbc.EmbeddedDriver.class.getName();
 
     @Override
     protected void configure() {
@@ -45,5 +45,4 @@ public class TestJPAConfigurationModule extends AbstractModule {
                 .driverURL(JDBC_EMBEDDED_URL)
                 .build();
     }
-
 }

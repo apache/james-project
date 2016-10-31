@@ -23,14 +23,13 @@ import java.util.Optional;
 
 import javax.annotation.PreDestroy;
 
-import org.apache.james.jmap.JMAPServer;
 import org.apache.james.modules.CommonServicesModule;
 import org.apache.james.modules.MailetProcessingModule;
-import org.apache.james.modules.ProtocolsModule;
+import org.apache.james.modules.ProtocolsModuleWithoutJMAP;
 import org.apache.james.onami.lifecycle.Stager;
 import org.apache.james.utils.ConfigurationsPerformer;
-import org.apache.james.utils.ExtendedJmapServerProbe;
-import org.apache.james.utils.JmapGuiceServerProbe;
+import org.apache.james.utils.ExtendedServerProbe;
+import org.apache.james.utils.GuiceServerProbe;
 import org.apache.james.webadmin.Port;
 import org.apache.james.webadmin.WebAdminServer;
 
@@ -42,48 +41,37 @@ import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
 
-public class GuiceJmapJamesServer {
-
+public class GuiceJamesServer {
     private final Module module;
     private Stager<PreDestroy> preDestroy;
-    private JmapGuiceServerProbe serverProbe;
-    private Optional<Integer> jmapPort;
+    private GuiceServerProbe serverProbe;
     private Optional<Port> webadminPort;
 
-    public GuiceJmapJamesServer() {
+    public GuiceJamesServer() {
         this(Modules.combine(
                         new CommonServicesModule(),
-                        new ProtocolsModule(),
+                        new ProtocolsModuleWithoutJMAP(),
                         new MailetProcessingModule()));
     }
 
-    private GuiceJmapJamesServer(Module module) {
+    private GuiceJamesServer(Module module) {
         this.module = module;
     }
     
-    public GuiceJmapJamesServer combineWith(Module... modules) {
-        return new GuiceJmapJamesServer(Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
+    public GuiceJamesServer combineWith(Module... modules) {
+        return new GuiceJamesServer(Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
     }
     
-    public GuiceJmapJamesServer overrideWith(Module... overrides) {
-        return new GuiceJmapJamesServer(Modules.override(module).with(overrides));
+    public GuiceJamesServer overrideWith(Module... overrides) {
+        return new GuiceJamesServer(Modules.override(module).with(overrides));
     }
     
     public void start() throws Exception {
         Injector injector = Guice.createInjector(module);
         preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {}));
         injector.getInstance(ConfigurationsPerformer.class).initModules();
-        serverProbe = injector.getInstance(JmapGuiceServerProbe.class);
-        jmapPort = locateJMAPPort(injector);
+        serverProbe = injector.getInstance(GuiceServerProbe.class);
         webadminPort =locateWebAdminPort(injector);
-    }
-
-    private Optional<Integer> locateJMAPPort(Injector injector) {
-        try {
-            return Optional.of(injector.getInstance(JMAPServer.class).getPort());
-        } catch(Exception e) {
-            return Optional.empty();
-        }
     }
 
     private Optional<Port> locateWebAdminPort(Injector injector) {
@@ -100,15 +88,12 @@ public class GuiceJmapJamesServer {
         }
     }
 
-    public ExtendedJmapServerProbe serverProbe() {
+    public ExtendedServerProbe serverProbe() {
         return serverProbe;
-    }
-
-    public Optional<Integer> getJmapPort() {
-        return jmapPort;
     }
 
     public Optional<Port> getWebadminPort() {
         return webadminPort;
     }
+
 }

@@ -33,7 +33,6 @@ import org.apache.james.modules.server.AsyncTasksExecutorModule;
 import org.apache.james.modules.server.ConfigurationProviderModule;
 import org.apache.james.modules.server.DNSServiceModule;
 import org.apache.james.onami.lifecycle.PreDestroyModule;
-import org.apache.james.utils.JmapGuiceServerProbe;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -55,7 +54,6 @@ public class CommonServicesModule extends AbstractModule {
         install(new AsyncTasksExecutorModule());
 
         bind(FileSystemImpl.class).in(Scopes.SINGLETON);
-        bind(JmapGuiceServerProbe.class).in(Scopes.SINGLETON);
 
         bind(FileSystem.class).to(FileSystemImpl.class);
     }

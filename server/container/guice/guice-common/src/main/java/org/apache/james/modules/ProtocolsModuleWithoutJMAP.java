@@ -7,8 +7,10 @@ import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.WebAdminServerModule;
+import org.apache.james.utils.GuiceServerProbe;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 
 public class ProtocolsModuleWithoutJMAP extends AbstractModule {
     @Override
@@ -20,6 +22,9 @@ public class ProtocolsModuleWithoutJMAP extends AbstractModule {
         install(new LMTPServerModule());
         install(new ManageSieveServerModule());
         install(new WebAdminServerModule());
+
+        bind(GuiceServerProbe.class).in(Scopes.SINGLETON);
+
     }
 
 }

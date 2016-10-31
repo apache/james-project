@@ -191,11 +191,11 @@
                 </plugins>
             </build>
             <dependencies>
-<!--                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-backends-cassandra</artifactId>
-                    <type>test-jar</type>
-                </dependency>-->
+                 <dependency>
+                    <groupId>org.apache.derby</groupId>
+                    <artifactId>derby</artifactId>
+                    <scope>test</scope>
+                </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-mailbox-jpa</artifactId>
@@ -209,12 +209,6 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-mailbox-lucene</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-lucene</artifactId>
-                    <type>test-jar</type>
-                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
