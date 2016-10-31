@@ -88,7 +88,7 @@ public class SimpleMailStorer implements MailStorer {
 
         mailboxAppender.append(mail.getMessage(), username, folder);
 
-        log.info("Local delivered mail " + mail.getName() + " sucessfully from " + DeliveryUtils.prettyPrint(sender)
+        log.info("Local delivered mail " + mail.getName() + " successfully from " + DeliveryUtils.prettyPrint(sender)
             + " to " + DeliveryUtils.prettyPrint(recipient) + " in folder " + this.folder);
     }
 
