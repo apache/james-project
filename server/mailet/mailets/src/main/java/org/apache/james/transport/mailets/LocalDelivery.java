@@ -49,6 +49,8 @@ public class LocalDelivery extends GenericMailet {
     private UsersRepository usersRepository;
     private MailboxManager mailboxManager;
     private DomainList domainList;
+    private MailDispatcher mailDispatcher;
+    private RecipientRewriteTable recipientRewriteTable;
 
     @Inject
     public void setRrt(org.apache.james.rrt.api.RecipientRewriteTable rrt) {
@@ -69,9 +71,6 @@ public class LocalDelivery extends GenericMailet {
     public void setDomainList(DomainList domainList) {
         this.domainList = domainList;
     }
-
-    private MailDispatcher mailDispatcher;  // Mailet that actually stores the message
-    private RecipientRewriteTable recipientRewriteTable;  // Mailet that applies RecipientRewriteTable
 
     public void service(Mail mail) throws MessagingException {
         recipientRewriteTable.service(mail);

@@ -51,6 +51,8 @@ public class SieveLocalDelivery extends GenericMailet {
     private MailboxManager mailboxManager;
     private DomainList domainList;
     private SieveRepository sieveRepository;
+    private MailDispatcher mailDispatcher;
+    private RecipientRewriteTable recipientRewriteTable;
 
     @Inject
     public void setSieveRepository(SieveRepository sieveRepository) {
@@ -77,9 +79,6 @@ public class SieveLocalDelivery extends GenericMailet {
         this.domainList = domainList;
     }
 
-    private MailDispatcher mailDispatcher;  // Mailet that actually stores the message
-    private RecipientRewriteTable recipientRewriteTable;  // Mailet that applies RecipientRewriteTable
-
     public void service(Mail mail) throws MessagingException {
         recipientRewriteTable.service(mail);
         if (!mail.getState().equals(Mail.GHOST)) {
@@ -88,7 +87,7 @@ public class SieveLocalDelivery extends GenericMailet {
     }
 
     public String getMailetInfo() {
-        return "Local Delivery Mailet";
+        return "Sieve Local Delivery Mailet";
     }
 
     public void init() throws MessagingException {
