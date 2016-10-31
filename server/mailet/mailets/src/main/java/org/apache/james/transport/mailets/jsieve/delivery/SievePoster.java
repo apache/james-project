@@ -22,39 +22,30 @@ package org.apache.james.transport.mailets.jsieve.delivery;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.transport.mailets.delivery.DeliveryUtils;
 import org.apache.james.transport.mailets.delivery.MailboxAppender;
 import org.apache.james.transport.mailets.jsieve.Poster;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.mailet.MailetContext;
-
-import com.google.common.base.Strings;
 
 public class SievePoster implements Poster {
 
     private final MailboxAppender mailboxAppender;
     private final String folder;
     private final UsersRepository usersRepos;
-    private final MailetContext mailetContext;
 
-    public SievePoster(MailboxAppender mailboxAppender, String folder, UsersRepository usersRepos, MailetContext mailetContext) {
+    public SievePoster(MailboxAppender mailboxAppender, String folder, UsersRepository usersRepos) {
         this.mailboxAppender = mailboxAppender;
         this.folder = folder;
         this.usersRepos = usersRepos;
-        this.mailetContext = mailetContext;
     }
 
     @Override
     public void post(String url, MimeMessage mail) throws MessagingException {
-        final int endOfScheme = url.indexOf(':');
+        int endOfScheme = url.indexOf(':');
         if (endOfScheme < 0) {
             throw new MessagingException("Malformed URI");
         } else {
-            final String scheme = url.substring(0, endOfScheme);
+            String scheme = url.substring(0, endOfScheme);
             if (scheme.equals("mailbox")) {
                 handleMailboxProtocol(url, mail, endOfScheme);
             } else {
@@ -81,14 +72,12 @@ public class SievePoster implements Poster {
     }
 
     private String parseUrlPath(String url, int endOfHost) {
-        String urlPath;
         int length = url.length();
         if (endOfHost + 1 == length) {
-            urlPath = this.folder;
+            return this.folder;
         } else {
-            urlPath = url.substring(endOfHost, length);
+            return url.substring(endOfHost, length);
         }
-        return urlPath;
     }
 
     private String parseUser(String url, int startOfUser, int endOfUser, String host) throws MessagingException {
