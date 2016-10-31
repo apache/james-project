@@ -55,7 +55,10 @@ public class CommonsLoggingAdapter implements Log {
 
         public CommonsLoggingAdapter build() {
             Preconditions.checkNotNull(genericMailet);
-            return new CommonsLoggingAdapter(genericMailet, computeLogLevel(quiet.or(false), verbose.or(false)));
+            Boolean quietParameter = quiet.or(false);
+            Boolean verboseParameter = verbose.or(false);
+            Preconditions.checkState(!(verboseParameter && quietParameter), "You can not specify a logger both verbose and quiet");
+            return new CommonsLoggingAdapter(genericMailet, computeLogLevel(quietParameter, verboseParameter));
         }
 
         private int computeLogLevel(boolean quiet, boolean verbose) {
@@ -134,27 +137,27 @@ public class CommonsLoggingAdapter implements Log {
     }
 
     public boolean isDebugEnabled() {
-        return level <= DEBUG;
+        return level >= DEBUG;
     }
 
     public boolean isErrorEnabled() {
-        return level <= ERROR;
+        return level >= ERROR;
     }
 
     public boolean isFatalEnabled() {
-        return level <= FATAL;
+        return level >= FATAL;
     }
 
     public boolean isInfoEnabled() {
-        return level <= INFO;
+        return level >= INFO;
     }
 
     public boolean isTraceEnabled() {
-        return level <= TRACE;
+        return level >= TRACE;
     }
 
     public boolean isWarnEnabled() {
-        return level <= WARN;
+        return level >= WARN;
     }
 
     public void trace(Object message) {
