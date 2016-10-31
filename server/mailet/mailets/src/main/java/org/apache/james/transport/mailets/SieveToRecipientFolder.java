@@ -86,7 +86,7 @@ public class SieveToRecipientFolder extends GenericMailet {
     @Override
     public void init() throws MessagingException {
         Log log = CommonsLoggingAdapter.builder()
-            .mailet(this)
+            .wrappedLogger(getMailetContext().getLogger())
             .quiet(getInitParameter("quiet", true))
             .verbose(getInitParameter("verbose", false))
             .build();

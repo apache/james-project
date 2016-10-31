@@ -97,7 +97,7 @@ public class SieveLocalDelivery extends GenericMailet {
         recipientRewriteTable.setRecipientRewriteTable(rrt);
         recipientRewriteTable.init(getMailetConfig());
         Log log = CommonsLoggingAdapter.builder()
-            .mailet(this)
+            .wrappedLogger(getMailetContext().getLogger())
             .quiet(getInitParameter("quiet", false))
             .verbose(getInitParameter("verbose", false))
             .build();

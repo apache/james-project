@@ -25,14 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import javax.mail.MessagingException;
-
-import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMailet;
-import org.apache.mailet.base.test.FakeMailContext;
-import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -41,11 +34,11 @@ import org.slf4j.Logger;
 public class CommonsLoggingAdapterTest {
 
     @Rule public ExpectedException expectedException = ExpectedException.none();
-    private GenericMailet genericMailet;
+    private Logger logger;
 
     @Before
     public void setUp() {
-        genericMailet = mock(GenericMailet.class);
+        logger = mock(Logger.class);
     }
 
     @Test
@@ -58,7 +51,7 @@ public class CommonsLoggingAdapterTest {
     @Test
     public void buildShouldDefaultToLogLevelWarn() {
         CommonsLoggingAdapter loggingAdapter = CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .build();
 
         assertThat(loggingAdapter.isTraceEnabled()).isFalse();
@@ -73,7 +66,7 @@ public class CommonsLoggingAdapterTest {
     @Test
     public void buildShouldUseFatalWithQuiet() {
         CommonsLoggingAdapter loggingAdapter = CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .quiet(true)
             .build();
 
@@ -88,7 +81,7 @@ public class CommonsLoggingAdapterTest {
     @Test
     public void buildShouldUseTraceWithVerbose() {
         CommonsLoggingAdapter loggingAdapter = CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .verbose(true)
             .build();
 
@@ -105,7 +98,7 @@ public class CommonsLoggingAdapterTest {
         expectedException.expect(IllegalStateException.class);
 
         CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .verbose(true)
             .quiet(true)
             .build();
@@ -115,12 +108,12 @@ public class CommonsLoggingAdapterTest {
     public void simpleLoggingInVerboseModeShouldWorkInDebug() {
         String message = "Message";
         CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .verbose(true)
             .build()
             .debug(message);
 
-        verify(genericMailet).log(message);
+        verify(logger).debug(message);
     }
 
     @Test
@@ -128,23 +121,23 @@ public class CommonsLoggingAdapterTest {
         Exception exception = new Exception();
         String message = "Message";
         CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .verbose(true)
             .build()
             .debug(message, exception);
 
-        verify(genericMailet).log(message, exception);
+        verify(logger).debug(message, exception);
     }
 
     @Test
     public void simpleLoggingInInfoModeShouldNotWorkByDefault() {
         String message = "Message";
         CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .build()
             .info(message);
 
-        verifyNoMoreInteractions(genericMailet);
+        verifyNoMoreInteractions(logger);
     }
 
     @Test
@@ -152,22 +145,22 @@ public class CommonsLoggingAdapterTest {
         Exception exception = new Exception();
         String message = "Message";
         CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .build()
             .info(message, exception);
 
-        verifyNoMoreInteractions(genericMailet);
+        verifyNoMoreInteractions(logger);
     }
 
     @Test
     public void simpleLoggingInWarnModeShouldWorkByDefault() {
         String message = "Message";
         CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .build()
             .warn(message);
 
-        verify(genericMailet).log(message);
+        verify(logger).warn(message);
     }
 
     @Test
@@ -175,23 +168,23 @@ public class CommonsLoggingAdapterTest {
         Exception exception = new Exception();
         String message = "Message";
         CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .build()
             .warn(message, exception);
 
-        verify(genericMailet).log(message, exception);
+        verify(logger).warn(message, exception);
     }
 
     @Test
     public void simpleLoggingInErrorModeShouldNotWorkWithQuiet() {
         String message = "Message";
         CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .quiet(true)
             .build()
             .error(message);
 
-        verifyNoMoreInteractions(genericMailet);
+        verifyNoMoreInteractions(logger);
     }
 
     @Test
@@ -199,24 +192,24 @@ public class CommonsLoggingAdapterTest {
         Exception exception = new Exception();
         String message = "Message";
         CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .quiet(true)
             .build()
             .error(message, exception);
 
-        verifyNoMoreInteractions(genericMailet);
+        verifyNoMoreInteractions(logger);
     }
 
     @Test
     public void simpleLoggingInFatalModeShouldWorkWithQuiet() {
         String message = "Message";
         CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .quiet(true)
             .build()
             .fatal(message);
 
-        verify(genericMailet).log(message);
+        verify(logger).error(message);
     }
 
     @Test
@@ -224,63 +217,43 @@ public class CommonsLoggingAdapterTest {
         Exception exception = new Exception();
         String message = "Message";
         CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .quiet(true)
             .build()
             .fatal(message, exception);
 
-        verify(genericMailet).log(message, exception);
-    }
-
-    @Ignore("Mailet logging choose log level based on arguments")
-    @Test
-    public void logIsUsingWrongLogLevelReported() throws Exception {
-        GenericMailet genericMailet = new GenericMailet() {
-            @Override
-            public void service(Mail mail) throws MessagingException {
-
-            }
-        };
-        Logger logger = mock(Logger.class);
-        genericMailet.init(new FakeMailetConfig("name", FakeMailContext.builder()
-            .logger(logger)
-            .build()));
-
-        String message = "Fatal";
-        CommonsLoggingAdapter.builder().mailet(genericMailet).build().error(message);
-
-        verify(logger).info(message);
+        verify(logger).error(message, exception);
     }
 
     @Test
     public void logShouldHandleNullValue() {
         CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .build()
             .fatal(null);
 
-        verify(genericMailet).log("NULL");
+        verify(logger).error("NULL");
     }
 
     @Test
     public void logShouldHandleNullValueWithException() {
         Exception exception = new Exception();
         CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .build()
             .fatal(null, exception);
 
-        verify(genericMailet).log("NULL", exception);
+        verify(logger).error("NULL", exception);
     }
 
 
     @Test
     public void logShouldHandleNullException() {
         CommonsLoggingAdapter.builder()
-            .mailet(genericMailet)
+            .wrappedLogger(logger)
             .build()
             .fatal(null, null);
 
-        verify(genericMailet).log("NULL", null);
+        verify(logger).error("NULL", (Throwable) null);
     }
 }

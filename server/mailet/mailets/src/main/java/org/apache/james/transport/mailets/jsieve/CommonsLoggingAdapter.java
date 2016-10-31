@@ -19,7 +19,7 @@
 package org.apache.james.transport.mailets.jsieve;
 
 import org.apache.commons.logging.Log;
-import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -36,10 +36,10 @@ public class CommonsLoggingAdapter implements Log {
     public static class Builder {
         private Optional<Boolean> verbose = Optional.absent();
         private Optional<Boolean> quiet = Optional.absent();
-        private GenericMailet genericMailet;
+        private Logger logger;
 
-        public Builder mailet(GenericMailet genericMailet) {
-            this.genericMailet = genericMailet;
+        public Builder wrappedLogger(Logger logger) {
+            this.logger = logger;
             return this;
         }
 
@@ -54,11 +54,11 @@ public class CommonsLoggingAdapter implements Log {
         }
 
         public CommonsLoggingAdapter build() {
-            Preconditions.checkNotNull(genericMailet);
+            Preconditions.checkNotNull(logger);
             Boolean quietParameter = quiet.or(false);
             Boolean verboseParameter = verbose.or(false);
             Preconditions.checkState(!(verboseParameter && quietParameter), "You can not specify a logger both verbose and quiet");
-            return new CommonsLoggingAdapter(genericMailet, computeLogLevel(quietParameter, verboseParameter));
+            return new CommonsLoggingAdapter(logger, computeLogLevel(quietParameter, verboseParameter));
         }
 
         private int computeLogLevel(boolean quiet, boolean verbose) {
@@ -79,60 +79,60 @@ public class CommonsLoggingAdapter implements Log {
     public static final int ERROR = 2;
     public static final int FATAL = 1;
     
-    private final GenericMailet mailet;
+    private final Logger logger;
     private final int level;
     
-    public CommonsLoggingAdapter(final GenericMailet mailet, final int level) {
+    private CommonsLoggingAdapter(Logger logger, final int level) {
         super();
-        this.mailet = mailet;
+        this.logger = logger;
         this.level = level;
     }
 
     public void debug(Object message) {
         if (isDebugEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString());
+            logger.debug(message == null ? "NULL" : message.toString());
         }
     }
 
     public void debug(Object message, Throwable t) {
         if (isDebugEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString(), t);
+            logger.debug(message == null ? "NULL" : message.toString(), t);
         } 
     }
 
     public void error(Object message) {
         if (isErrorEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString());
+            logger.error(message == null ? "NULL" : message.toString());
         }
     }
 
     public void error(Object message, Throwable t) {
         if (isErrorEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString(), t);
+            logger.error(message == null ? "NULL" : message.toString(), t);
         }
     }
 
     public void fatal(Object message) {
         if (isFatalEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString());
+            logger.error(message == null ? "NULL" : message.toString());
         }
     }
 
     public void fatal(Object message, Throwable t) {
         if (isFatalEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString(), t);
+            logger.error(message == null ? "NULL" : message.toString(), t);
         }
     }
 
     public void info(Object message) {
         if (isInfoEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString());
+            logger.info(message == null ? "NULL" : message.toString());
         }
     }
 
     public void info(Object message, Throwable t) {
         if (isInfoEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString(), t);
+            logger.info(message == null ? "NULL" : message.toString(), t);
         }
     }
 
@@ -162,27 +162,26 @@ public class CommonsLoggingAdapter implements Log {
 
     public void trace(Object message) {
         if (isTraceEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString());
+            logger.debug(message == null ? "NULL" : message.toString());
         }
     }
 
     public void trace(Object message, Throwable t) {
         if (isTraceEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString(), t);
+            logger.debug(message == null ? "NULL" : message.toString(), t);
         }
     }
 
     public void warn(Object message) {
         if (isWarnEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString());
+            logger.warn(message == null ? "NULL" : message.toString());
         }
     }
 
     public void warn(Object message, Throwable t) {
         if (isWarnEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString(), t);
+            logger.warn(message == null ? "NULL" : message.toString(), t);
         }
     }
-    
-    
+
 }
