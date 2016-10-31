@@ -84,7 +84,7 @@ public class ToRecipientFolder extends GenericMailet {
             .build();
         mailDispatcher = MailDispatcher.builder()
             .mailStorer(SimpleMailStorer.builder()
-                .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext()))
+                .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext().getLogger()))
                 .usersRepository(usersRepository)
                 .folder(getInitParameter(FOLDER_PARAMETER, "INBOX"))
                 .log(log)

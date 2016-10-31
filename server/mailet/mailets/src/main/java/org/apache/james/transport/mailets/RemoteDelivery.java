@@ -65,7 +65,6 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.james.transport.util.MailetContextLog;
 import org.apache.james.transport.util.Patterns;
 import org.apache.james.util.TimeConverter;
 import org.apache.mailet.HostAddress;
@@ -73,6 +72,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
 
 /**
  * <p>The RemoteDelivery mailet delivers messages to a remote SMTP server able to deliver or forward messages to their final
@@ -250,7 +250,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 
     private String heloName;
 
-    private MailetContextLog logAdapter;
+    private Logger logger;
 
     private boolean usePriority;
 
@@ -280,7 +280,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
         // Set isDebug flag.
         isDebug = (getInitParameter("debug") == null) ? false : Boolean.valueOf(getInitParameter("debug"));
 
-        logAdapter = new MailetContextLog(getMailetContext(), isDebug);
+        logger = getMailetContext().getLogger();
 
         // Create list of Delay Times.
         ArrayList<Delay> delayTimesList = new ArrayList<Delay>();
@@ -897,7 +897,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 
                 // Lookup the possible targets
                 try {
-                    targetServers = new MXHostAddressIterator(dnsServer.findMXRecords(host).iterator(), dnsServer, false, logAdapter);
+                    targetServers = new MXHostAddressIterator(dnsServer.findMXRecords(host).iterator(), dnsServer, false, logger);
                 } catch (TemporaryResolutionException e) {
                     log("Temporary problem looking up mail server for host: " + host);
                     String exceptionBuffer = "Temporary problem looking up mail server for host: " + host + ".  I cannot determine where to send this message.";
@@ -1614,7 +1614,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
     private Iterator<HostAddress> getGatewaySMTPHostAddresses(Collection<String> gatewayServers) {
         Iterator<String> gateways = gatewayServers.iterator();
 
-        return new MXHostAddressIterator(gateways, dnsServer, false, logAdapter);
+        return new MXHostAddressIterator(gateways, dnsServer, false, logger);
     }
 
     protected String getHeloName() {

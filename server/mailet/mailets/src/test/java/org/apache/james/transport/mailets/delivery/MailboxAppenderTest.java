@@ -86,8 +86,7 @@ public class MailboxAppenderTest {
         integrationResources = new InMemoryIntegrationResources();
         integrationResources.init();
         mailboxManager = new ManagerTestResources(integrationResources).getMailboxManager();
-        MailetContext mailetContext = mock(MailetContext.class);
-        testee = new MailboxAppender(mailboxManager, mailetContext);
+        testee = new MailboxAppender(mailboxManager, mock(Logger.class));
 
         session = mailboxManager.createSystemSession("TEST", LOGGER);
     }

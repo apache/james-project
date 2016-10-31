@@ -32,7 +32,6 @@ import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.transport.util.MailetContextLog;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
@@ -99,7 +98,7 @@ public class ToSenderFolder extends GenericMailet {
 
         final MailboxSession session;
         try {
-            session = mailboxManager.createSystemSession(username, new MailetContextLog(getMailetContext()));
+            session = mailboxManager.createSystemSession(username, getMailetContext().getLogger());
         } catch (BadCredentialsException e) {
             throw new MessagingException("Unable to authenticate to mailbox", e);
         } catch (MailboxException e) {

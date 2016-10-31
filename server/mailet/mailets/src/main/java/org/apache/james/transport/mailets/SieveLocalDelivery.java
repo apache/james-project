@@ -104,7 +104,7 @@ public class SieveLocalDelivery extends GenericMailet {
         String folder = "INBOX";
         mailDispatcher = MailDispatcher.builder()
             .mailStorer(SieveMailStorer.builder()
-                .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, getMailetContext()), folder, usersRepository, getMailetContext()))
+                .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, getMailetContext().getLogger()), folder, usersRepository, getMailetContext()))
                 .usersRepository(usersRepository)
                 .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))
                 .mailetContext(getMailetContext())

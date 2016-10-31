@@ -93,7 +93,7 @@ public class SieveToRecipientFolder extends GenericMailet {
         String folder = getInitParameter(FOLDER_PARAMETER, "INBOX");
         mailDispatcher = MailDispatcher.builder()
             .mailStorer(SieveMailStorer.builder()
-                .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, getMailetContext()), folder, usersRepository, getMailetContext()))
+                .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, getMailetContext().getLogger()), folder, usersRepository, getMailetContext()))
                 .usersRepository(usersRepository)
                 .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))
                 .mailetContext(getMailetContext())

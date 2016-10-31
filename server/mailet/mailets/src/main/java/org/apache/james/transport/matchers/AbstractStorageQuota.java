@@ -38,7 +38,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.transport.util.MailetContextLog;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
@@ -83,8 +82,6 @@ abstract public class AbstractStorageQuota extends AbstractQuotaMatcher {
      */
     private UsersRepository localUsers;
 
-    private MailetContextLog log;
-
     /**
      * Checks the recipient.<br>
      * Does a <code>super.isRecipientChecked</code> and checks that the
@@ -98,14 +95,6 @@ abstract public class AbstractStorageQuota extends AbstractQuotaMatcher {
     protected boolean isRecipientChecked(MailAddress recipient) throws MessagingException {
         MailetContext mailetContext = getMailetContext();
         return super.isRecipientChecked(recipient) && (mailetContext.isLocalEmail(recipient));
-    }
-
-    @Override
-    public void init() throws MessagingException {
-        super.init();
-
-        // init the log
-        log = new MailetContextLog(getMailetContext());
     }
 
     /**
@@ -133,7 +122,7 @@ abstract public class AbstractStorageQuota extends AbstractQuotaMatcher {
             catch (UsersRepositoryException e) {
                 throw new MessagingException("Unable to access UsersRepository", e);
             }
-            session = manager.createSystemSession(username, log);
+            session = manager.createSystemSession(username, getMailetContext().getLogger());
             manager.startProcessingRequest(session);
 
             // get all mailboxes for the user to calculate the size

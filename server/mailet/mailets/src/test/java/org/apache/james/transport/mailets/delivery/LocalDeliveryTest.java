@@ -58,7 +58,9 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -146,6 +148,12 @@ public class LocalDeliveryTest {
 
     @Parameterized.Parameter
     public Parameter parameter;
+    private FakeMailetConfig config;
+
+    @Before
+    public void setUp() {
+        config = new FakeMailetConfig("Local delivery", FakeMailContext.builder().logger(mock(Logger.class)).build());
+    }
 
     @Test
     public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOn() throws Exception {
@@ -161,7 +169,7 @@ public class LocalDeliveryTest {
 
         // When
         Mail mail = createMail();
-        parameter.getMailet().init(new FakeMailetConfig());
+        parameter.getMailet().init(config);
         parameter.getMailet().service(mail);
 
         // Then
@@ -181,7 +189,7 @@ public class LocalDeliveryTest {
 
         // When
         Mail mail = createMail();
-        parameter.getMailet().init(new FakeMailetConfig());
+        parameter.getMailet().init(config);
         parameter.getMailet().service(mail);
 
         // Then

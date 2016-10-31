@@ -151,7 +151,7 @@ public class ToRecipientFolderTest {
 
     @Before
     public void setUp() throws Exception {
-        mailetConfig = new FakeMailetConfig("RecipientFolderTest", FakeMailContext.defaultContext());
+        mailetConfig = new FakeMailetConfig("RecipientFolderTest", FakeMailContext.builder().logger(mock(Logger.class)).build());
         messageManager = mock(MessageManager.class);
     }
 

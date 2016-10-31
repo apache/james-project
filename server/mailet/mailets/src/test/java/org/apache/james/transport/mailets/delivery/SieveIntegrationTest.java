@@ -109,7 +109,7 @@ public class SieveIntegrationTest {
             .resourceLocator(resourceLocator)
             .usersRepository(usersRepository)
             .folder("INBOX")
-            .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, fakeMailContext), "INBOX", usersRepository, fakeMailContext))
+            .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, mock(Logger.class)), "INBOX", usersRepository, fakeMailContext))
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
             .build();

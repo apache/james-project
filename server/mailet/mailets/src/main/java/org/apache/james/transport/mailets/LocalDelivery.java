@@ -96,7 +96,7 @@ public class LocalDelivery extends GenericMailet {
             .build();
         mailDispatcher = MailDispatcher.builder()
             .mailStorer(SimpleMailStorer.builder()
-                .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext()))
+                .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext().getLogger()))
                 .usersRepository(usersRepository)
                 .folder("INBOX")
                 .log(log)
