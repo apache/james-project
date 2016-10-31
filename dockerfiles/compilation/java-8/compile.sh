@@ -44,9 +44,9 @@ git checkout $SHA1
 # Compilation
 
 if [ "$SKIPTESTS" = "skipTests" ]; then
-   mvn package -DskipTests -Pcassandra,elasticsearch,inmemory,exclude-lucene,with-assembly,with-jetm
+   mvn package -DskipTests -Pcassandra,elasticsearch,inmemory,with-assembly,with-jetm
 else
-   mvn package -Pcassandra,inmemory,elasticsearch,exclude-lucene,with-assembly,with-jetm
+   mvn package -Pcassandra,inmemory,elasticsearch,with-assembly,with-jetm
 fi
 
 # Retrieve result
