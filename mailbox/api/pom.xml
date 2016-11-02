@@ -23,7 +23,7 @@
     <parent>
         <artifactId>apache-james-mailbox</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-beta5</version>
+        <version>3.0.0-beta6-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 

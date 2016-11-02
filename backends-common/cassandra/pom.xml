@@ -24,7 +24,7 @@
     <parent>
         <artifactId>james-backends-common</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-beta5</version>
+        <version>3.0.0-beta6-SNAPSHOT</version>
     </parent>
 
     <artifactId>apache-james-backends-cassandra</artifactId>
