@@ -17,16 +17,13 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project
-    xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <artifactId>apache-james-mpt</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-beta5-SNAPSHOT</version>
+        <version>3.0.0-beta5</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -86,22 +83,11 @@ to the library requiring no extra coding.</description>
                         </goals>
                         <configuration>
                             <tasks>
-                                <ant
-                                    antfile="src/test/resources/build.xml"
-                                    inheritAll="false"
-                                    inheritRefs="false">
-                                    <property
-                                        name="jar.name"
-                                        location="${project.build.outputDirectory}" />
-                                    <property
-                                        name="base.dir"
-                                        location="${basedir}" />
-                                    <property
-                                        name="test.skipped"
-                                        value="${maven.test.skip}" />
-                                    <property
-                                        name="test.classpath"
-                                        refid="maven.test.classpath" />
+                                <ant antfile="src/test/resources/build.xml" inheritAll="false" inheritRefs="false">
+                                    <property name="jar.name" location="${project.build.outputDirectory}" />
+                                    <property name="base.dir" location="${basedir}" />
+                                    <property name="test.skipped" value="${maven.test.skip}" />
+                                    <property name="test.classpath" refid="maven.test.classpath" />
                                 </ant>
                             </tasks>
                         </configuration>
