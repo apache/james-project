@@ -33,6 +33,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.MailAddressFixture;
+import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
@@ -236,6 +237,206 @@ public class SpecialAddressesUtilsTest {
         Collection<MailAddress> addresses = testee.replaceSpecialAddresses(mail, ImmutableList.of(SpecialAddress.DELETE));
 
         MailAddress expected = new MailAddress("delete", "address.marker");
+        assertThat(addresses).containsOnly(expected);
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnEmptyWhenEmptyList() throws Exception {
+        FakeMail mail = FakeMail.builder()
+                .build();
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.<InternetAddress> of());
+
+        assertThat(addresses).isEmpty();
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnSameContentWhenAddressesDoesntMatchAddressMarkerDomain() throws Exception {
+        FakeMail mail = FakeMail.builder()
+                .build();
+
+        InternetAddress internetAddress = new InternetAddress("user@addres.marker");
+        InternetAddress internetAddress2 = new InternetAddress("user2@address.mar");
+        ImmutableList<InternetAddress> list = ImmutableList.of(internetAddress, internetAddress2);
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, list);
+
+        assertThat(addresses).containsOnly(internetAddress, internetAddress2);
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchSender() throws Exception {
+        MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
+        FakeMail mail = FakeMail.builder()
+                .sender(sender)
+                .build();
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.SENDER.toInternetAddress()));
+
+        assertThat(addresses).containsOnly(sender.toInternetAddress());
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnFromWhenAddressesMatchFrom() throws Exception {
+        MailAddress from = MailAddressFixture.ANY_AT_JAMES;
+        MailAddress from2 = MailAddressFixture.OTHER_AT_JAMES;
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        message.addFrom(new InternetAddress[] { from.toInternetAddress(), from2.toInternetAddress() });
+        FakeMail mail = FakeMail.from(message);
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.FROM.toInternetAddress()));
+
+        assertThat(addresses).containsOnly(from.toInternetAddress(), from2.toInternetAddress());
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchFromAndNoFrom() throws Exception {
+        MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
+        FakeMail mail = FakeMail.builder()
+                .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
+                .sender(sender)
+                .build();
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.FROM.toInternetAddress()));
+
+        assertThat(addresses).containsOnly(sender.toInternetAddress());
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchSenderAndSenderIsNull() throws Exception {
+        FakeMail mail = FakeMail.builder()
+                .build();
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.SENDER.toInternetAddress()));
+
+        assertThat(addresses).isEmpty();
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchReplyToAndReplyToIsNull() throws Exception {
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        FakeMail mail = FakeMail.from(message);
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
+
+        assertThat(addresses).isEmpty();
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnReplyToWhenAddressesMatchReplyTo() throws Exception {
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        message.setReplyTo(InternetAddress.parse(MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES.toString()));
+        FakeMail mail = FakeMail.from(message);
+
+        MailAddress expectedReplyTo = MailAddressFixture.ANY_AT_JAMES;
+        MailAddress expectedReplyTo2 = MailAddressFixture.OTHER_AT_JAMES;
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
+
+        assertThat(addresses).containsOnly(expectedReplyTo.toInternetAddress(), expectedReplyTo2.toInternetAddress());
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchReplyToAndNoReplyTo() throws Exception {
+        MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
+        FakeMail mail = FakeMail.builder()
+                .sender(sender)
+                .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
+                .build();
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
+
+        assertThat(addresses).containsOnly(sender.toInternetAddress());
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchReversePath() throws Exception {
+        MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
+        FakeMail mail = FakeMail.builder()
+                .sender(sender)
+                .build();
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress()));
+
+        assertThat(addresses).containsOnly(sender.toInternetAddress());
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchReversePathAndNoSender() throws Exception {
+        FakeMail mail = FakeMail.builder()
+                .build();
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress()));
+
+        assertThat(addresses).isEmpty();
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnToWhenAddressesMatchRecipients() throws Exception {
+        MailAddress to = MailAddressFixture.ANY_AT_JAMES;
+        MailAddress to2 = MailAddressFixture.OTHER_AT_JAMES;
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        message.addHeader(RFC2822Headers.TO, MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES.toString());
+        FakeMail mail = FakeMail.from(message);
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.RECIPIENTS.toInternetAddress()));
+
+        assertThat(addresses).containsOnly(to.toInternetAddress(), to2.toInternetAddress());
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnToWhenAddressesMatchTo() throws Exception {
+        MailAddress to = MailAddressFixture.ANY_AT_JAMES;
+        MailAddress to2 = MailAddressFixture.OTHER_AT_JAMES;
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        message.addHeader(RFC2822Headers.TO, MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES);
+        FakeMail mail = FakeMail.from(message);
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.TO.toInternetAddress()));
+
+        assertThat(addresses).containsOnly(to.toInternetAddress(), to2.toInternetAddress());
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchUnaltered() throws Exception {
+        FakeMail mail = FakeMail.builder()
+                .build();
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.UNALTERED.toInternetAddress()));
+
+        assertThat(addresses).isEmpty();
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchNull() throws Exception {
+        FakeMail mail = FakeMail.builder()
+                .build();
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.NULL.toInternetAddress()));
+
+        assertThat(addresses).isEmpty();
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnSameAddressWhenAddressesDoesntMatch() throws Exception {
+        FakeMail mail = FakeMail.builder()
+                .build();
+
+        MailAddress address = new MailAddress("user", "address.marker");
+        MailAddress address2 = new MailAddress("user2", "address.marker");
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(address.toInternetAddress(), address2.toInternetAddress()));
+
+        assertThat(addresses).containsOnly(address.toInternetAddress(), address2.toInternetAddress());
+    }
+
+    @Test
+    public void replaceInternetAddressesShouldReturnSameListWhenAddressesMatchDelete() throws Exception {
+        FakeMail mail = FakeMail.builder()
+                .build();
+
+        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.DELETE.toInternetAddress()));
+
+        InternetAddress expected = new InternetAddress("delete@address.marker");
         assertThat(addresses).containsOnly(expected);
     }
 }

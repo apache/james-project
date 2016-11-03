@@ -30,6 +30,7 @@ import org.apache.james.transport.mailets.redirect.SpecialAddressKind;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
+import org.apache.mailet.base.RFC2822Headers;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -141,5 +142,115 @@ public class SpecialAddressesUtils {
             }
         }
         return builder.build();
+    }
+
+    /**
+     * Returns a new Collection built over <i>list</i> replacing special
+     * addresses with real <code>InternetAddress</code>-es.<br>
+     * Manages <code>SpecialAddress.SENDER</code>,
+     * <code>SpecialAddress.REVERSE_PATH</code>,
+     * <code>SpecialAddress.FROM</code>, <code>SpecialAddress.REPLY_TO</code>,
+     * <code>SpecialAddress.RECIPIENTS</code>, <code>SpecialAddress.TO</code>,
+     * <code>SpecialAddress.NULL</code> and
+     * <code>SpecialAddress.UNALTERED</code>.<br>
+     * <code>SpecialAddress.RECIPIENTS</code> is made equivalent to
+     * <code>SpecialAddress.TO</code>.<br>
+     * <code>SpecialAddress.FROM</code> uses the From header if available,
+     * otherwise the Sender header if available, otherwise the return-path.<br>
+     * <code>SpecialAddress.REPLY_TO</code> uses the ReplyTo header if
+     * available, otherwise the From header if available, otherwise the Sender
+     * header if available, otherwise the return-path.<br>
+     * <code>SpecialAddress.UNALTERED</code> is ignored.<br>
+     * Any other address is not replaced.<br>
+     */
+    public List<InternetAddress> replaceInternetAddresses(Mail mailWithReplacementAddresses, List<InternetAddress> internetAddresses) throws MessagingException {
+        ImmutableList.Builder<InternetAddress> builder = ImmutableList.builder();
+        for (InternetAddress internetAddress : internetAddresses) {
+            MailAddress mailAddress = new MailAddress(internetAddress);
+            if (!SpecialAddress.isSpecialAddress(mailAddress)) {
+                builder.add(internetAddress);
+                continue;
+            }
+
+            SpecialAddressKind specialAddressKind = SpecialAddressKind.forValue(mailAddress.getLocalPart());
+            if (specialAddressKind == null) {
+                builder.add(mailAddress.toInternetAddress());
+                continue;
+            }
+
+            switch (specialAddressKind) {
+            case SENDER:
+                MailAddress sender = mailWithReplacementAddresses.getSender();
+                if (sender != null) {
+                    builder.add(sender.toInternetAddress());
+                }
+                break;
+            case REVERSE_PATH:
+                MailAddress reversePath = mailWithReplacementAddresses.getSender();
+                if (reversePath != null) {
+                    builder.add(reversePath.toInternetAddress());
+                }
+                break;
+            case FROM:
+                try {
+                    InternetAddress[] fromArray = (InternetAddress[]) mailWithReplacementAddresses.getMessage().getFrom();
+                    builder.addAll(allOrSender(mailWithReplacementAddresses, fromArray));
+                } catch (MessagingException me) {
+                    genericMailet.log("Unable to parse the \"FROM\" header in the original message; ignoring.");
+                }
+                break;
+            case REPLY_TO:
+                try {
+                    InternetAddress[] replyToArray = (InternetAddress[]) mailWithReplacementAddresses.getMessage().getReplyTo();
+                    builder.addAll(allOrSender(mailWithReplacementAddresses, replyToArray));
+                } catch (MessagingException me) {
+                    genericMailet.log("Unable to parse the \"REPLY_TO\" header in the original message; ignoring.");
+                }
+                break;
+            case TO:
+            case RECIPIENTS:
+                builder.addAll(toHeaders(mailWithReplacementAddresses));
+                break;
+            case NULL:
+            case UNALTERED:
+                break;
+            case DELETE:
+                builder.add(internetAddress);
+                break;
+            }
+        }
+        return builder.build();
+    }
+
+    private ImmutableSet<InternetAddress> allOrSender(Mail mail, InternetAddress[] addresses) {
+        if (addresses != null) {
+            return ImmutableSet.copyOf(addresses);
+        } else {
+            MailAddress reversePath = mail.getSender();
+            if (reversePath != null) {
+                return ImmutableSet.of(reversePath.toInternetAddress());
+            }
+        }
+        return ImmutableSet.of();
+    }
+
+    private ImmutableSet<InternetAddress> toHeaders(Mail mail) {
+        try {
+            String[] toHeaders = mail.getMessage().getHeader(RFC2822Headers.TO);
+            if (toHeaders != null) {
+                for (String toHeader : toHeaders) {
+                    try {
+                        InternetAddress[] originalToInternetAddresses = InternetAddress.parse(toHeader, false);
+                        return ImmutableSet.copyOf(originalToInternetAddresses);
+                    } catch (MessagingException ae) {
+                        genericMailet.log("Unable to parse a \"TO\" header address in the original message: " + toHeader + "; ignoring.");
+                    }
+                }
+            }
+            return ImmutableSet.of();
+        } catch (MessagingException ae) {
+            genericMailet.log("Unable to parse the \"TO\" header  in the original message; ignoring.");
+            return ImmutableSet.of();
+        }
     }
 }
