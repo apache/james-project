@@ -23,6 +23,9 @@ package org.apache.james.mailbox.acl;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
 
 /**
  * In memory {@link GroupMembershipResolver} implementation. There is no
@@ -31,38 +34,36 @@ import java.util.Set;
  */
 public class SimpleGroupMembershipResolver implements GroupMembershipResolver {
 
-    private static class Membership {
+    public static class Membership {
         private final String group;
-        private final int hash;
         private final String user;
 
         public Membership(String user, String group) {
-            super();
             this.group = group;
             this.user = user;
-
-            final int PRIME = 31;
-            this.hash = PRIME * this.group.hashCode() + this.user.hashCode();
         }
 
         @Override
         public boolean equals(Object o) {
             if (o instanceof Membership) {
-                Membership other = (Membership) o;
-                return this.group == other.group || (this.group != null && this.group.equals(other.group)) && this.user == other.user || (this.user != null && this.user.equals(other.user));
-
+                Membership that = (Membership) o;
+                
+                return Objects.equal(this.user, that.user) && Objects.equal(this.group, that.group);
             }
             return false;
         }
 
         @Override
         public int hashCode() {
-            return hash;
+            return Objects.hashCode(group, user);
         }
 
         @Override
         public String toString() {
-            return group + ": " + user;
+            return MoreObjects.toStringHelper(this)
+                .add("group", group)
+                .add("user", user)
+                .toString();
         }
 
     }
