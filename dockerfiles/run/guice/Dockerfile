@@ -19,10 +19,10 @@ EXPOSE 25 110 143 465 587 993 8000
 WORKDIR /root
 
 # Get data we need to run James : build results and configuration
-ADD destination/james-server-cassandra-guice-*.jar /root/james-server.jar
-ADD destination/james-server-cassandra-guice-3.0.0-beta5-SNAPSHOT.lib /root/james-server-cassandra-guice-3.0.0-beta5-SNAPSHOT.lib
-ADD destination/james-server-cli-3.0.0-beta5-SNAPSHOT.jar /root/james-cli.jar
-ADD destination/james-server-cli-3.0.0-beta5-SNAPSHOT.lib /root/james-server-cli-3.0.0-beta5-SNAPSHOT.lib
+ADD destination/james-server-cassandra-guice-3.0.0-beta6-SNAPSHOT.jar /root/james-server.jar
+ADD destination/james-server-cassandra-guice-3.0.0-beta6-SNAPSHOT.lib /root/james-server-cassandra-guice-3.0.0-beta6-SNAPSHOT.lib
+ADD destination/james-server-cli-3.0.0-beta6-SNAPSHOT.jar /root/james-cli.jar
+ADD destination/james-server-cli-3.0.0-beta6-SNAPSHOT.lib /root/james-server-cli-3.0.0-beta6-SNAPSHOT.lib
 ADD destination/conf /root/conf
 
 VOLUME /logs
