@@ -42,7 +42,6 @@
         <javax.version>1.4.4</javax.version>
         <junit.version>4.10</junit.version>
         <activation.version>1.1.1</activation.version>
-        <bcmail-jdk16.version>1.46</bcmail-jdk16.version>
         <commons-collections.version>3.2.1</commons-collections.version>
         <commons-io.version>2.4</commons-io.version>
         <commons-lang.version>2.6</commons-lang.version>
@@ -98,8 +97,8 @@
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcmail-jdk16</artifactId>
-                <version>${bcmail-jdk16.version}</version>
+                <artifactId>bcmail-jdk15on</artifactId>
+                <version>1.52</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven.artifact</groupId>

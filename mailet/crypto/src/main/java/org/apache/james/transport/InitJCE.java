@@ -65,7 +65,6 @@ public class InitJCE {
             CommandMap.setDefaultCommandMap(mailcap);
             
             initialized = true;
-        } else {
         }
     }
 }

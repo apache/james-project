@@ -46,9 +46,16 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 
+import org.bouncycastle.cert.jcajce.JcaCertStoreBuilder;
+import org.bouncycastle.cert.selector.X509CertificateHolderSelector;
+import org.bouncycastle.cert.selector.jcajce.JcaX509CertSelectorConverter;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
+import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.mail.smime.SMIMESigned;
+
+import com.google.common.base.Preconditions;
 
 /**
  * This class is used to handle in a simple way a keystore that contains a set
@@ -59,7 +66,9 @@ import org.bouncycastle.mail.smime.SMIMESigned;
  * 
  */
 public class KeyStoreHolder {
-    
+
+    private static final String BC = BouncyCastleProvider.PROVIDER_NAME;
+
     protected KeyStore keyStore;
     
     public KeyStoreHolder () throws IOException, GeneralSecurityException {
@@ -114,9 +123,12 @@ public class KeyStoreHolder {
      * @throws Exception
      * @throws MessagingException
      */
-    @SuppressWarnings("deprecation")
-    public List<SMIMESignerInfo> verifySignatures(SMIMESigned signed) throws Exception, MessagingException {
-        CertStore certs = signed.getCertificatesAndCRLs("Collection", "BC");
+    public List<SMIMESignerInfo> verifySignatures(SMIMESigned signed) throws Exception {
+
+        CertStore certs = new JcaCertStoreBuilder()
+            .addCertificates(signed.getCertificates())
+            .addCRLs(signed.getCRLs())
+            .build();
         SignerInformationStore siginfo = signed.getSignerInfos();
         @SuppressWarnings("unchecked")
         Collection<SignerInformation> sigCol = siginfo.getSigners();
@@ -126,8 +138,10 @@ public class KeyStoreHolder {
         // on the message are valid.
         for (SignerInformation info: sigCol) {
             // I get the signer's certificate
+            X509CertificateHolderSelector x509CertificateHolderSelector = new X509CertificateHolderSelector(info.getSID().getSubjectKeyIdentifier());
+            X509CertSelector certSelector = new JcaX509CertSelectorConverter().getCertSelector(x509CertificateHolderSelector);
             @SuppressWarnings("unchecked")
-            Collection<X509Certificate> certCollection = (Collection<X509Certificate>) certs.getCertificates(info.getSID());
+            Collection<X509Certificate> certCollection = (Collection<X509Certificate>) certs.getCertificates(certSelector);
             if (!certCollection.isEmpty()) {
                 X509Certificate signerCert = certCollection.iterator().next();
                 // The issuer's certifcate is searched in the list of trusted certificate.
@@ -143,7 +157,7 @@ public class KeyStoreHolder {
                     // certificate can be trusted (it can be connected 
                     // by a chain of trust to a trusted certificate), null
                     // otherwise.
-                    if (info.verify(signerCert, "BC")) {
+                    if (info.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider(BC).build(signerCert))) {
                         result.add(new SMIMESignerInfo(signerCert, path, true));
                     }
                 } catch (Exception e) { 
@@ -171,9 +185,11 @@ public class KeyStoreHolder {
      */
     private static CertPath verifyCertificate(X509Certificate cert, CertStore store, KeyStore trustedStore) 
         throws InvalidAlgorithmParameterException, KeyStoreException, MessagingException, CertPathBuilderException {
-        
-        if (cert == null || store == null || trustedStore == null) throw new IllegalArgumentException("cert == "+cert+", store == "+store+", trustedStore == "+trustedStore);
-        
+
+        Preconditions.checkNotNull(cert);
+        Preconditions.checkNotNull(store);
+        Preconditions.checkNotNull(trustedStore);
+
         CertPathBuilder pathBuilder;
         
         // I create the CertPathBuilder object. It will be used to find a

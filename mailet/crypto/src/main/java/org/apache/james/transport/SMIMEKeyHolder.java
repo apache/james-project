@@ -34,6 +34,7 @@ import java.security.PrivateKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertStore;
 import java.security.cert.CertStoreException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CollectionCertStoreParameters;
 import java.security.cert.X509Certificate;
@@ -45,8 +46,12 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import org.bouncycastle.cert.jcajce.JcaCertStore;
+import org.bouncycastle.cms.SignerInfoGenerator;
+import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoGeneratorBuilder;
 import org.bouncycastle.mail.smime.SMIMEException;
 import org.bouncycastle.mail.smime.SMIMESignedGenerator;
+import org.bouncycastle.operator.OperatorCreationException;
 
 /**
  * <p>Loads a {@link java.security.KeyStore} in memory and keeps it ready for the
@@ -58,7 +63,9 @@ import org.bouncycastle.mail.smime.SMIMESignedGenerator;
  * @since 3.0
  */
 public class SMIMEKeyHolder implements KeyHolder{
-    
+
+    private final JcaCertStore jcaCertStore;
+
     /**
      * Returns the default keystore type as specified in the Java security properties file,
      * or the string "jks" (acronym for "Java keystore") if no such property exists.
@@ -105,7 +112,7 @@ public class SMIMEKeyHolder implements KeyHolder{
      * @see java.security.KeyStore#getCertificate
      */
     public SMIMEKeyHolder(String keyStoreFileName, String keyStorePassword, String keyAlias, String keyAliasPassword, String keyStoreType)
-    throws KeyStoreException, FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidAlgorithmParameterException,
+    throws KeyStoreException, IOException, NoSuchAlgorithmException, InvalidAlgorithmParameterException,
     CertificateException, UnrecoverableKeyException, NoSuchProviderException {
         
         try {
@@ -169,7 +176,9 @@ public class SMIMEKeyHolder implements KeyHolder{
         // in the signature
         this.certStore = CertStore.getInstance("Collection",
         new CollectionCertStoreParameters(certList), "BC");
-        
+
+        jcaCertStore = new JcaCertStore(certList);
+
     }
     
     /**
@@ -195,24 +204,27 @@ public class SMIMEKeyHolder implements KeyHolder{
     public CertStore getCertStore() {
         return this.certStore;
     }
-    
+
     /**
      * Creates an <CODE>SMIMESignedGenerator</CODE>. Includes a signer private key and certificate,
      * and a pool of certs and cerls (if any) to go with the signature.
      * @return The generated SMIMESignedGenerator.
-     */    
-    @SuppressWarnings("deprecation")
-    public SMIMESignedGenerator createGenerator() throws CertStoreException, SMIMEException {
+     */
+    public SMIMESignedGenerator createGenerator() throws CertStoreException, SMIMEException, OperatorCreationException,
+        CertificateEncodingException {
         
         // create the generator for creating an smime/signed message
         SMIMESignedGenerator generator = new SMIMESignedGenerator();
         
         // add a signer to the generator - this specifies we are using SHA1
         // the encryption algorithm used is taken from the key
-        generator.addSigner(this.privateKey, this.certificate, SMIMESignedGenerator.DIGEST_SHA1);
+        SignerInfoGenerator signerInfoGenerator = new JcaSimpleSignerInfoGeneratorBuilder()
+            .setProvider("BC")
+            .build("SHA1withRSA", privateKey, certificate);
+        generator.addSignerInfoGenerator(signerInfoGenerator);
         
         // add our pool of certs and cerls (if any) to go with the signature
-        generator.addCertificatesAndCRLs(this.certStore);
+        generator.addCertificates(jcaCertStore);
         
         return generator;
         
@@ -223,14 +235,14 @@ public class SMIMEKeyHolder implements KeyHolder{
      * @param message The message to sign.
      * @return The signed <CODE>MimeMultipart</CODE>.
      */    
-    public MimeMultipart generate(MimeMessage message) throws CertStoreException,
-    NoSuchAlgorithmException, NoSuchProviderException, SMIMEException {
+    public MimeMultipart generate(MimeMessage message) throws CertStoreException, NoSuchAlgorithmException, NoSuchProviderException,
+        SMIMEException, OperatorCreationException, CertificateEncodingException {
         
         // create the generator for creating an smime/signed MimeMultipart
         SMIMESignedGenerator generator = createGenerator();
         
         // do it
-        return generator.generate(message, "BC");
+        return generator.generate(message);
         
     }
     
@@ -238,16 +250,15 @@ public class SMIMEKeyHolder implements KeyHolder{
      * Generates a signed MimeMultipart from a MimeBodyPart.
      * @param content The content to sign.
      * @return The signed <CODE>MimeMultipart</CODE>.
-     */    
-    @SuppressWarnings("deprecation")
-    public MimeMultipart generate(MimeBodyPart content) throws CertStoreException,
-    NoSuchAlgorithmException, NoSuchProviderException, SMIMEException {
+     */
+    public MimeMultipart generate(MimeBodyPart content) throws CertStoreException, NoSuchAlgorithmException, NoSuchProviderException,
+        SMIMEException, OperatorCreationException, CertificateEncodingException {
         
         // create the generator for creating an smime/signed MimeMultipart
         SMIMESignedGenerator generator = createGenerator();
         
         // do it
-        return generator.generate(content, "BC");
+        return generator.generate(content);
         
     }
 

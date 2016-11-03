@@ -26,21 +26,21 @@ import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.transport.SMIMEKeyHolder;
-import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
+import org.apache.mailet.base.GenericMailet;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.RecipientId;
 import org.bouncycastle.cms.RecipientInformation;
+import org.bouncycastle.cms.RecipientInformationStore;
+import org.bouncycastle.cms.jcajce.JceKeyTransEnvelopedRecipient;
 import org.bouncycastle.mail.smime.SMIMEEnveloped;
 import org.bouncycastle.mail.smime.SMIMEUtil;
 
@@ -113,28 +113,29 @@ public class SMIMEDecrypt extends GenericMailet {
         if (message.isMimeType("application/x-pkcs7-mime") || message.isMimeType("application/pkcs7-mime")) {
             try {
                 SMIMEEnveloped env = new SMIMEEnveloped(message);
+                RecipientInformationStore informationStore = env.getRecipientInfos();
                 @SuppressWarnings("unchecked")
-                Collection<RecipientInformation> recipients = env.getRecipientInfos().getRecipients();
-                Iterator<RecipientInformation> iter = recipients.iterator();
-                while (iter.hasNext()) {
-                    RecipientInformation info = iter.next();
+                Collection<RecipientInformation> recipients = informationStore.getRecipients();
+                for (RecipientInformation info : recipients) {
                     RecipientId id = info.getRID();
                     if (id.match(keyHolder.getCertificate())) {
                         try {
-                            @SuppressWarnings("deprecation")
-                            MimeBodyPart part = SMIMEUtil.toMimeBodyPart(info.getContent(keyHolder.getPrivateKey(), "BC"));
+                            JceKeyTransEnvelopedRecipient recipient = new JceKeyTransEnvelopedRecipient(keyHolder.getPrivateKey());
                             // strippedMessage contains the decrypted message.
-                            strippedMessage = part;
+                            strippedMessage = SMIMEUtil.toMimeBodyPart(info.getContent(recipient));
                             log("Encrypted message decrypted");
                         } catch (Exception e) {
-                            throw new MessagingException("Error during the decryption of the message", e); }
+                            throw new MessagingException("Error during the decryption of the message", e);
+                        }
                     } else {
                         log("Found an encrypted message but it isn't encrypted for the supplied key");
                     }
                 }
-            } catch (CMSException e) { throw new MessagingException("Error during the decryption of the message",e); }
+            } catch (CMSException e) {
+                throw new MessagingException("Error during the decryption of the message",e);
+            }
         }
-        
+
         // if the decryption has been successful..
         if (strippedMessage != null) {
             // I put the private key's public certificate as a mailattribute.
