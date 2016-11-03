@@ -19,7 +19,6 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.Collection;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -111,7 +110,7 @@ public class Forward extends AbstractRedirect {
     }
 
     @Override
-    protected Collection<MailAddress> getRecipients() throws MessagingException {
+    protected List<MailAddress> getRecipients() throws MessagingException {
         ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
         for (InternetAddress address : extractAddresses(getForwardTo())) {
             builder.add(toMailAddress(address));

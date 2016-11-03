@@ -19,9 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -39,7 +37,6 @@ import org.apache.mailet.MailetConfig;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * <p>
@@ -116,7 +113,7 @@ public class NotifySender extends AbstractRedirect {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[]{
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "to" };
-    private static final Set<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableSet.of(SpecialAddress.SENDER);
+    private static final List<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableList.of(SpecialAddress.SENDER);
     private static final List<String> ALLOWED_SPECIALS = ImmutableList.of("sender", "unaltered", "from");
 
     private Optional<String> to = Optional.absent();
@@ -148,7 +145,7 @@ public class NotifySender extends AbstractRedirect {
     }
 
     @Override
-    protected Collection<MailAddress> getRecipients() {
+    protected List<MailAddress> getRecipients() {
         return RECIPIENT_MAIL_ADDRESSES;
     }
 

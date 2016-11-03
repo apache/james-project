@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.transport.util;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import javax.mail.MessagingException;
@@ -31,6 +31,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 public class SpecialAddressesUtils {
@@ -64,8 +65,8 @@ public class SpecialAddressesUtils {
      * <code>SpecialAddress.UNALTERED</code> are ignored.<br>
      * Any other address is not replaced.
      */
-    public Collection<MailAddress> replaceSpecialAddresses(Mail mailWithReplacementAddresses, Collection<MailAddress> mailAddresses) {
-        ImmutableSet.Builder<MailAddress> builder = ImmutableSet.builder();
+    public List<MailAddress> replaceSpecialAddresses(Mail mailWithReplacementAddresses, List<MailAddress> mailAddresses) {
+        ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
         for (MailAddress mailAddress : mailAddresses) {
             if (!SpecialAddress.isSpecialAddress(mailAddress)) {
                 builder.add(mailAddress);

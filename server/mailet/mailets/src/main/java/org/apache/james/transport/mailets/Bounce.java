@@ -19,7 +19,6 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.Collection;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -138,7 +137,7 @@ public class Bounce extends AbstractRedirect {
     }
 
     @Override
-    protected Collection<MailAddress> getRecipients() {
+    protected List<MailAddress> getRecipients() {
         return RECIPIENTS;
     }
 

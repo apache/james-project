@@ -19,7 +19,6 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.Collection;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -38,7 +37,6 @@ import org.apache.mailet.MailetConfig;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * <p>
@@ -147,8 +145,8 @@ public class NotifyPostmaster extends AbstractRedirect {
     }
 
     @Override
-    protected Collection<MailAddress> getRecipients() {
-        return ImmutableSet.of(getMailetContext().getPostmaster());
+    protected List<MailAddress> getRecipients() {
+        return ImmutableList.of(getMailetContext().getPostmaster());
     }
 
     @Override

@@ -21,10 +21,8 @@ package org.apache.james.transport.mailets;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
@@ -49,7 +47,6 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.mail.MimeMultipartReport;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * <p>
@@ -94,7 +91,7 @@ import com.google.common.collect.ImmutableSet;
 public class DSNBounce extends AbstractRedirect {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[]{ "debug", "passThrough", "messageString", "attachment", "sender", "prefix" };
-    private static final Set<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableSet.of(SpecialAddress.REVERSE_PATH);
+    private static final List<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH);
     private static final InternetAddress[] TO_INTERNET_ADDRESSES = new InternetAddress[] { SpecialAddress.REVERSE_PATH.toInternetAddress() };
 
     private static final String LOCALHOST = "127.0.0.1";
@@ -132,7 +129,7 @@ public class DSNBounce extends AbstractRedirect {
     }
 
     @Override
-    protected Collection<MailAddress> getRecipients() {
+    protected List<MailAddress> getRecipients() {
         return RECIPIENT_MAIL_ADDRESSES;
     }
 

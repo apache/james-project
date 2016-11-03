@@ -19,7 +19,6 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.Collection;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -318,7 +317,7 @@ public class Redirect extends AbstractRedirect {
     }
 
     @Override
-    protected Collection<MailAddress> getRecipients() throws MessagingException {
+    protected List<MailAddress> getRecipients() throws MessagingException {
         String recipientsOrTo = getRecipientsOrTo();
         if (recipientsOrTo == null) {
             return null;
