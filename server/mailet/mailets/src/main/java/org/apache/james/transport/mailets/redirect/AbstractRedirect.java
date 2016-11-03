@@ -35,12 +35,12 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import javax.mail.internet.ParseException;
 
 import org.apache.james.core.MailImpl;
 import org.apache.james.core.MimeMessageUtil;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.Redirect;
+import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.DateFormats;
@@ -210,7 +210,7 @@ public abstract class AbstractRedirect extends GenericMailet {
             if (containsOnlyUnalteredOrRecipients(recipients)) {
                 return null;
             }
-            return replaceMailAddresses(originalMail, recipients);
+            return SpecialAddressesUtils.from(this).replaceSpecialAddresses(originalMail, recipients);
         }
         return null;
     }
@@ -840,96 +840,6 @@ public abstract class AbstractRedirect extends GenericMailet {
         return !getInitParameters().getFakeDomainCheck()
                 || mail.getSender() == null
                 || !getMailetContext().getMailServers(mail.getSender().getDomain()).isEmpty();
-    }
-
-    /**
-     * Returns a new Collection built over <i>list</i> replacing special
-     * addresses with real <code>MailAddress</code>-es.<br>
-     * Manages <code>SpecialAddress.SENDER</code>,
-     * <code>SpecialAddress.REVERSE_PATH</code>,
-     * <code>SpecialAddress.FROM</code>, <code>SpecialAddress.REPLY_TO</code>,
-     * <code>SpecialAddress.RECIPIENTS</code>, <code>SpecialAddress.TO</code>,
-     * <code>SpecialAddress.NULL</code> and
-     * <code>SpecialAddress.UNALTERED</code>.<br>
-     * <code>SpecialAddress.FROM</code> is made equivalent to
-     * <code>SpecialAddress.SENDER</code>; <code>SpecialAddress.TO</code> is
-     * made equivalent to <code>SpecialAddress.RECIPIENTS</code>.<br>
-     * <code>SpecialAddress.REPLY_TO</code> uses the ReplyTo header if
-     * available, otherwise the From header if available, otherwise the Sender
-     * header if available, otherwise the return-path.<br>
-     * <code>SpecialAddress.NULL</code> and
-     * <code>SpecialAddress.UNALTERED</code> are ignored.<br>
-     * Any other address is not replaced.
-     */
-    protected Collection<MailAddress> replaceMailAddresses(Mail mail, Collection<MailAddress> list) {
-        ImmutableSet.Builder<MailAddress> builder = ImmutableSet.builder();
-        for (MailAddress mailAddress : list) {
-            if (!SpecialAddress.isSpecialAddress(mailAddress)) {
-                builder.add(mailAddress);
-                continue;
-            }
-
-            SpecialAddressKind specialAddressKind = SpecialAddressKind.forValue(mailAddress.getLocalPart());
-            if (specialAddressKind == null) {
-                builder.add(mailAddress);
-                continue;
-            }
-            switch (specialAddressKind) {
-            case SENDER:
-            case FROM:
-                MailAddress sender = mail.getSender();
-                if (sender != null) {
-                    builder.add(sender);
-                }
-                break;
-            case REPLY_TO:
-                addReplyToFromMail(builder, mail);
-                break;
-            case REVERSE_PATH:
-                MailAddress reversePath = mail.getSender();
-                if (reversePath != null) {
-                    builder.add(reversePath);
-                }
-                break;
-            case RECIPIENTS:
-            case TO:
-                builder.addAll(mail.getRecipients());
-                break;
-            case UNALTERED:
-            case NULL:
-                break;
-            case DELETE:
-                builder.add(mailAddress);
-                break;
-            }
-        }
-        return builder.build();
-    }
-
-    private void addReplyToFromMail(ImmutableSet.Builder<MailAddress> set, Mail mail) {
-        try {
-            InternetAddress[] replyToArray = (InternetAddress[]) mail.getMessage().getReplyTo();
-            if (replyToArray == null || replyToArray.length == 0) {
-                MailAddress sender = mail.getSender();
-                if (sender != null) {
-                    set.add(sender);
-                }
-            } else {
-                addReplyTo(set, replyToArray);
-            }
-        } catch (MessagingException ae) {
-            log("Unable to parse the \"REPLY_TO\" header in the original message; ignoring.");
-        }
-    }
-
-    private void addReplyTo(ImmutableSet.Builder<MailAddress> set, InternetAddress[] replyToArray) {
-        for (InternetAddress replyTo : replyToArray) {
-            try {
-                set.add(new MailAddress(replyTo));
-            } catch (ParseException pe) {
-                log("Unable to parse a \"REPLY_TO\" header address in the original message: " + replyTo + "; ignoring.");
-            }
-        }
     }
 
     /**
