@@ -26,5 +26,6 @@ ADD destination/james-server-cli-3.0.0-beta6-SNAPSHOT.lib /root/james-server-cli
 ADD destination/conf /root/conf
 
 VOLUME /logs
+VOLUME /root/conf
 
 ENTRYPOINT java -Dlogback.configurationFile=/root/conf/logback.xml -Dworking.directory=/root/ -jar james-server.jar 
