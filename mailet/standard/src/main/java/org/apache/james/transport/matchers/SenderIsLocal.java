@@ -32,7 +32,14 @@ import org.apache.mailet.base.GenericMatcher;
 public class SenderIsLocal extends GenericMatcher {
 
     public final Collection<MailAddress> match(Mail mail) throws MessagingException {
-        return (getMailetContext().isLocalEmail(mail.getSender())) ? mail.getRecipients(): null;
+        if (isLocal(mail.getSender())) {
+            return mail.getRecipients();
+        }
+        return null;
+    }
+
+    private boolean isLocal(MailAddress mailAddress) {
+        return getMailetContext().isLocalEmail(mailAddress);
     }
 
 }
