@@ -95,4 +95,14 @@ public class TransactionalAnnotationMapper implements AnnotationMapper {
             Throwables.propagate(e);
         }
     }
+
+    @Override
+    public boolean exist(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
+        return wrapped.exist(mailboxId, mailboxAnnotation);
+    }
+
+    @Override
+    public int countAnnotations(MailboxId mailboxId) {
+        return wrapped.countAnnotations(mailboxId);
+    }
 }

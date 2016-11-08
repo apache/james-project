@@ -837,7 +837,7 @@ public class StoreMailboxManager implements MailboxManager {
                 for (MailboxAnnotation annotation : mailboxAnnotations) {
                     if (annotation.isNil()) {
                         annotationMapper.deleteAnnotation(mailboxId, annotation.getKey());
-                    } else {
+                    } else if (canInsertOrUpdate(mailboxId, annotation, annotationMapper)) {
                         annotationMapper.insertAnnotation(mailboxId, annotation);
                     }
                 }

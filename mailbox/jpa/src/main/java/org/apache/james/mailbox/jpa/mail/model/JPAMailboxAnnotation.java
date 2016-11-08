@@ -35,6 +35,7 @@ import com.google.common.base.Objects;
 @NamedQueries({
     @NamedQuery(name = "retrieveAllAnnotations", query = "SELECT annotation FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam"),
     @NamedQuery(name = "retrieveByKey", query = "SELECT annotation FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam AND annotation.key = :keyParam"),
+    @NamedQuery(name= "countAnnotationsInMailbox", query = "SELECT COUNT(annotation) FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam"),
     @NamedQuery(name = "retrieveByKeyLike", query = "SELECT annotation FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam AND annotation.key LIKE :keyParam")})
 @IdClass(JPAMailboxAnnotation.JPAMailboxAnnotationId.class)
 public class JPAMailboxAnnotation {
@@ -87,7 +88,7 @@ public class JPAMailboxAnnotation {
     private String key;
 
     @Basic()
-    @Column(name = VALUE, length = 200)
+    @Column(name = VALUE)
     private String value;
 
     public JPAMailboxAnnotation() {
