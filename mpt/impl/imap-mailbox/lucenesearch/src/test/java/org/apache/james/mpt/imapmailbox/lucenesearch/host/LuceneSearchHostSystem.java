@@ -52,8 +52,10 @@ import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.jpa.user.model.JPASubscription;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
@@ -155,8 +157,9 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
             MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
             MessageParser messageParser = new MessageParser();
+            MessageId.Factory messageIdFactory = new DefaultMessageId.Factory();
 
-            mailboxManager = new OpenJPAMailboxManager(factory, userManager, locker, false, aclResolver, groupMembershipResolver, messageParser);
+            mailboxManager = new OpenJPAMailboxManager(factory, userManager, locker, false, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
             mailboxManager.setMessageSearchIndex(searchIndex);
 
             mailboxManager.init();
