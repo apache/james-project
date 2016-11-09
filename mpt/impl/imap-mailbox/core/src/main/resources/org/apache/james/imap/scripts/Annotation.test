@@ -80,7 +80,8 @@ C: s2 SETMETADATA INBOX (/shared/comment "The shared comment")
 S: s2 OK SETMETADATA completed.
 
 C: g3 GETMETADATA "INBOX" (/shared/comment /private/comment)
-S: \* METADATA "INBOX" \(\/private\/comment "My own comment" \/shared\/comment "The shared comment"\)
+# Regex used to be order agnostic. Annotation1 Annotation2 OR Annotation2 Annotation1
+S: \* METADATA "INBOX" \((\/private\/comment "My own comment" \/shared\/comment "The shared comment"|\/shared\/comment "The shared comment" \/private\/comment "My own comment")\)
 S: g3 OK GETMETADATA completed.
 
 C: g4 GETMETADATA "INBOX"

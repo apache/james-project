@@ -156,10 +156,9 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
     public void deleteAnnotation(MailboxId mailboxId, MailboxAnnotationKey key) {
         try {
             JPAId jpaId = (JPAId) mailboxId;
-            getEntityManager().createNamedQuery("deleteAnnotation")
-                .setParameter("idParam", jpaId.getRawId())
-                .setParameter("key", key.asString())
-                .executeUpdate();
+            JPAMailboxAnnotation jpaMailboxAnnotation = getEntityManager()
+                .find(JPAMailboxAnnotation.class, new JPAMailboxAnnotation.JPAMailboxAnnotationId(jpaId.getRawId(), key.asString()));
+            getEntityManager().remove(jpaMailboxAnnotation);
         } catch (NoResultException e) {
             LOGGER.debug("Mailbox annotation not found for ID {} and key {}", mailboxId.serialize(), key.asString());
         } catch (PersistenceException pe) {
