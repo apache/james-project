@@ -29,7 +29,6 @@ import java.util.Collection;
 import javax.mail.MessagingException;
 
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -119,8 +118,8 @@ public class ForwardTest {
     }
 
     @Test
-    public void getToShouldReturnNull() throws Exception {
-        assertThat(forward.getTo()).isNull();
+    public void getToShouldReturnEmpty() throws Exception {
+        assertThat(forward.getTo()).isEmpty();
     }
 
     @Test

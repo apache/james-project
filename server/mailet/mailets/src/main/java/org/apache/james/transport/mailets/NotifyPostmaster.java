@@ -150,17 +150,17 @@ public class NotifyPostmaster extends AbstractRedirect {
     }
 
     @Override
-    protected InternetAddress[] getTo() throws MessagingException {
+    protected List<InternetAddress> getTo() throws MessagingException {
         if (to.isPresent()) {
             Optional<MailAddress> specialAddress = AddressExtractor.withContext(getMailetContext())
                     .allowedSpecials(ALLOWED_SPECIALS)
                     .getSpecialAddress(to.get());
             if (specialAddress.isPresent()) {
-                return new InternetAddress[] { specialAddress.get().toInternetAddress() };
+                return ImmutableList.of(specialAddress.get().toInternetAddress());
             }
             log("\"to\" parameter ignored, set to postmaster");
         }
-        return new InternetAddress[] { getMailetContext().getPostmaster().toInternetAddress() };
+        return ImmutableList.of(getMailetContext().getPostmaster().toInternetAddress());
     }
 
     @Override

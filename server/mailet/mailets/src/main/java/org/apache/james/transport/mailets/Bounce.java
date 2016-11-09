@@ -114,7 +114,7 @@ public class Bounce extends AbstractRedirect {
     private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError" };
     private static final List<MailAddress> RECIPIENTS = ImmutableList.of(SpecialAddress.REVERSE_PATH);
-    private static final InternetAddress[] TO = new InternetAddress[] { SpecialAddress.REVERSE_PATH.toInternetAddress() };
+    private static final List<InternetAddress> TO = ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress());
 
     @Override
     public String getMailetInfo() {
@@ -142,7 +142,7 @@ public class Bounce extends AbstractRedirect {
     }
 
     @Override
-    protected InternetAddress[] getTo() {
+    protected List<InternetAddress> getTo() {
         return TO;
     }
 

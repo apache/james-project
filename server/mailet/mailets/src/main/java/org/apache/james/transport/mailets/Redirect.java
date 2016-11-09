@@ -30,13 +30,13 @@ import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
+import org.apache.james.transport.util.MailAddressUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 /**
  * <p>
@@ -340,22 +340,18 @@ public class Redirect extends AbstractRedirect {
     }
 
     @Override
-    protected InternetAddress[] getTo() throws MessagingException {
+    protected List<InternetAddress> getTo() throws MessagingException {
         String toOrRecipients = getToOrRecipients();
         if (toOrRecipients == null) {
-            return null;
+            return ImmutableList.of();
         }
         if (toOrRecipients.isEmpty()) {
             throw new MessagingException("Failed to initialize \"recipients\" list; empty <recipients> init parameter found.");
         }
-        List<InternetAddress> list = Lists.newArrayList();
-        List<MailAddress> mailAddresses = AddressExtractor.withContext(getMailetContext())
-                .allowedSpecials(ALLOWED_SPECIALS)
-                .extract(toOrRecipients);
-        for (MailAddress address : mailAddresses) {
-            list.add(address.toInternetAddress());
-        }
-        return list.toArray(new InternetAddress[list.size()]);
+        return MailAddressUtils.toInternetAddresses(
+                AddressExtractor.withContext(getMailetContext())
+                    .allowedSpecials(ALLOWED_SPECIALS)
+                    .extract(toOrRecipients));
     }
 
     private String getToOrRecipients() throws MessagingException {

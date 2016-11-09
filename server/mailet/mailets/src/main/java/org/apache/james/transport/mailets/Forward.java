@@ -149,8 +149,8 @@ public class Forward extends AbstractRedirect {
     }
 
     @Override
-    protected InternetAddress[] getTo() throws MessagingException {
-        return null;
+    protected List<InternetAddress> getTo() throws MessagingException {
+        return ImmutableList.of();
     }
 
     @Override

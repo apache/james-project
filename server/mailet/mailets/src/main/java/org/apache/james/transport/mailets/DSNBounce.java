@@ -92,7 +92,7 @@ public class DSNBounce extends AbstractRedirect {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[]{ "debug", "passThrough", "messageString", "attachment", "sender", "prefix" };
     private static final List<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH);
-    private static final InternetAddress[] TO_INTERNET_ADDRESSES = new InternetAddress[] { SpecialAddress.REVERSE_PATH.toInternetAddress() };
+    private static final List<InternetAddress> TO_INTERNET_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress());
 
     private static final String LOCALHOST = "127.0.0.1";
     private static final Pattern DIAG_PATTERN = Patterns.compilePatternUncheckedException("^\\d{3}\\s.*$");
@@ -134,7 +134,7 @@ public class DSNBounce extends AbstractRedirect {
     }
 
     @Override
-    protected InternetAddress[] getTo() {
+    protected List<InternetAddress> getTo() {
         return TO_INTERNET_ADDRESSES;
     }
 

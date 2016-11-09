@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.ParseException;
 
@@ -163,18 +164,18 @@ public class SpecialAddressesUtils {
      * <code>SpecialAddress.UNALTERED</code> is ignored.<br>
      * Any other address is not replaced.<br>
      */
-    public List<InternetAddress> replaceInternetAddresses(Mail mailWithReplacementAddresses, List<InternetAddress> internetAddresses) throws MessagingException {
-        ImmutableList.Builder<InternetAddress> builder = ImmutableList.builder();
+    public List<MailAddress> replaceInternetAddresses(Mail mailWithReplacementAddresses, List<InternetAddress> internetAddresses) throws MessagingException {
+        ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
         for (InternetAddress internetAddress : internetAddresses) {
             MailAddress mailAddress = new MailAddress(internetAddress);
             if (!SpecialAddress.isSpecialAddress(mailAddress)) {
-                builder.add(internetAddress);
+                builder.add(new MailAddress(internetAddress));
                 continue;
             }
 
             SpecialAddressKind specialAddressKind = SpecialAddressKind.forValue(mailAddress.getLocalPart());
             if (specialAddressKind == null) {
-                builder.add(mailAddress.toInternetAddress());
+                builder.add(mailAddress);
                 continue;
             }
 
@@ -182,13 +183,13 @@ public class SpecialAddressesUtils {
             case SENDER:
                 MailAddress sender = mailWithReplacementAddresses.getSender();
                 if (sender != null) {
-                    builder.add(sender.toInternetAddress());
+                    builder.add(sender);
                 }
                 break;
             case REVERSE_PATH:
                 MailAddress reversePath = mailWithReplacementAddresses.getSender();
                 if (reversePath != null) {
-                    builder.add(reversePath.toInternetAddress());
+                    builder.add(reversePath);
                 }
                 break;
             case FROM:
@@ -215,42 +216,42 @@ public class SpecialAddressesUtils {
             case UNALTERED:
                 break;
             case DELETE:
-                builder.add(internetAddress);
+                builder.add(new MailAddress(internetAddress));
                 break;
             }
         }
         return builder.build();
     }
 
-    private ImmutableSet<InternetAddress> allOrSender(Mail mail, InternetAddress[] addresses) {
+    private List<MailAddress> allOrSender(Mail mail, InternetAddress[] addresses) throws AddressException {
         if (addresses != null) {
-            return ImmutableSet.copyOf(addresses);
+            return MailAddressUtils.from(addresses);
         } else {
             MailAddress reversePath = mail.getSender();
             if (reversePath != null) {
-                return ImmutableSet.of(reversePath.toInternetAddress());
+                return ImmutableList.of(reversePath);
             }
         }
-        return ImmutableSet.of();
+        return ImmutableList.of();
     }
 
-    private ImmutableSet<InternetAddress> toHeaders(Mail mail) {
+    private List<MailAddress> toHeaders(Mail mail) {
         try {
             String[] toHeaders = mail.getMessage().getHeader(RFC2822Headers.TO);
             if (toHeaders != null) {
                 for (String toHeader : toHeaders) {
                     try {
                         InternetAddress[] originalToInternetAddresses = InternetAddress.parse(toHeader, false);
-                        return ImmutableSet.copyOf(originalToInternetAddresses);
+                        return MailAddressUtils.from(originalToInternetAddresses);
                     } catch (MessagingException ae) {
                         genericMailet.log("Unable to parse a \"TO\" header address in the original message: " + toHeader + "; ignoring.");
                     }
                 }
             }
-            return ImmutableSet.of();
+            return ImmutableList.of();
         } catch (MessagingException ae) {
             genericMailet.log("Unable to parse the \"TO\" header  in the original message; ignoring.");
-            return ImmutableSet.of();
+            return ImmutableList.of();
         }
     }
 }

@@ -40,6 +40,7 @@ import org.apache.james.core.MailImpl;
 import org.apache.james.core.MimeMessageUtil;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.Redirect;
+import org.apache.james.transport.util.MailAddressUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -244,7 +245,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> or
      *         <code>SpecialAddress.TO</code> or <code>null</code> if missing
      */
-    protected abstract InternetAddress[] getTo() throws MessagingException;
+    protected abstract List<InternetAddress> getTo() throws MessagingException;
 
     /**
      * Gets the <code>to</code> property, built dynamically using the original
@@ -254,33 +255,34 @@ public abstract class AbstractRedirect extends GenericMailet {
      *
      * @return {@link #replaceInternetAddresses} on {@link #getRecipients()},
      */
-    protected InternetAddress[] getTo(Mail originalMail) throws MessagingException {
-        InternetAddress[] apparentlyTo = getTo();
-        if (apparentlyTo != null) {
+    protected List<MailAddress> getTo(Mail originalMail) throws MessagingException {
+        List<InternetAddress> apparentlyTo = getTo();
+        if (!apparentlyTo.isEmpty()) {
             if (containsOnlyUnalteredOrTo(apparentlyTo)) {
                 return null;
             }
-            Collection<InternetAddress> addresses = SpecialAddressesUtils.from(this).replaceInternetAddresses(originalMail, ImmutableList.copyOf(apparentlyTo));
-            return addresses.toArray(new InternetAddress[addresses.size()]);
+            return SpecialAddressesUtils.from(this).replaceInternetAddresses(originalMail, apparentlyTo);
         }
 
         return null;
     }
 
-    private boolean containsOnlyUnalteredOrTo(InternetAddress[] to) {
-        return to.length == 1 && 
-                (to[0].equals(SpecialAddress.UNALTERED.toInternetAddress()) || to[0].equals(SpecialAddress.RECIPIENTS.toInternetAddress()));
+    private boolean containsOnlyUnalteredOrTo(List<InternetAddress> apparentlyTo) {
+        return apparentlyTo.size() == 1 && 
+                (apparentlyTo.get(0).equals(SpecialAddress.UNALTERED.toInternetAddress()) 
+                        || apparentlyTo.get(0).equals(SpecialAddress.RECIPIENTS.toInternetAddress()));
     }
 
     /**
      * Sets the "To:" header of <i>newMail</i> to <i>to</i>. If the requested
      * value is null does nothing. Is a "setX(Mail, Tx, Mail)" method.
      */
-    protected void setTo(Mail newMail, InternetAddress[] to, Mail originalMail) throws MessagingException {
-        if (to != null) {
-            newMail.getMessage().setRecipients(Message.RecipientType.TO, to);
+    protected void setTo(Mail newMail, List<MailAddress> mailAddresses, Mail originalMail) throws MessagingException {
+        if (mailAddresses != null) {
+            InternetAddress[] internetAddresses = MailAddressUtils.toInternetAddressArray(mailAddresses);
+            newMail.getMessage().setRecipients(Message.RecipientType.TO, internetAddresses);
             if (getInitParameters().isDebug()) {
-                log("apparentlyTo set to: " + arrayToString(to));
+                log("apparentlyTo set to: " + internetAddresses);
             }
         }
     }

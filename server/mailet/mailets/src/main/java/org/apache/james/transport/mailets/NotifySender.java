@@ -150,17 +150,17 @@ public class NotifySender extends AbstractRedirect {
     }
 
     @Override
-    protected InternetAddress[] getTo() throws MessagingException {
+    protected List<InternetAddress> getTo() throws MessagingException {
         if (to.isPresent()) {
             Optional<MailAddress> specialAddress = AddressExtractor.withContext(getMailetContext())
                     .allowedSpecials(ALLOWED_SPECIALS)
                     .getSpecialAddress(to.get());
             if (specialAddress.isPresent()) {
-                return new InternetAddress[] { specialAddress.get().toInternetAddress() };
+                return ImmutableList.of(specialAddress.get().toInternetAddress());
             }
             log("\"to\" parameter ignored, set to sender");
         }
-        return new InternetAddress[] { SpecialAddress.SENDER.toInternetAddress() };
+        return ImmutableList.of(SpecialAddress.SENDER.toInternetAddress());
     }
 
     @Override

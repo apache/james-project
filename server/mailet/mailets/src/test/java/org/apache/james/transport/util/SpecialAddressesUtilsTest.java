@@ -21,6 +21,7 @@ package org.apache.james.transport.util;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 
 import javax.mail.MessagingException;
@@ -245,7 +246,7 @@ public class SpecialAddressesUtilsTest {
         FakeMail mail = FakeMail.builder()
                 .build();
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.<InternetAddress> of());
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.<InternetAddress> of());
 
         assertThat(addresses).isEmpty();
     }
@@ -259,9 +260,9 @@ public class SpecialAddressesUtilsTest {
         InternetAddress internetAddress2 = new InternetAddress("user2@address.mar");
         ImmutableList<InternetAddress> list = ImmutableList.of(internetAddress, internetAddress2);
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, list);
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, list);
 
-        assertThat(addresses).containsOnly(internetAddress, internetAddress2);
+        assertThat(addresses).containsOnly(new MailAddress(internetAddress), new MailAddress(internetAddress2));
     }
 
     @Test
@@ -271,9 +272,9 @@ public class SpecialAddressesUtilsTest {
                 .sender(sender)
                 .build();
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.SENDER.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.SENDER.toInternetAddress()));
 
-        assertThat(addresses).containsOnly(sender.toInternetAddress());
+        assertThat(addresses).containsOnly(sender);
     }
 
     @Test
@@ -284,9 +285,9 @@ public class SpecialAddressesUtilsTest {
         message.addFrom(new InternetAddress[] { from.toInternetAddress(), from2.toInternetAddress() });
         FakeMail mail = FakeMail.from(message);
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.FROM.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.FROM.toInternetAddress()));
 
-        assertThat(addresses).containsOnly(from.toInternetAddress(), from2.toInternetAddress());
+        assertThat(addresses).containsOnly(from, from2);
     }
 
     @Test
@@ -297,9 +298,9 @@ public class SpecialAddressesUtilsTest {
                 .sender(sender)
                 .build();
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.FROM.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.FROM.toInternetAddress()));
 
-        assertThat(addresses).containsOnly(sender.toInternetAddress());
+        assertThat(addresses).containsOnly(sender);
     }
 
     @Test
@@ -307,7 +308,7 @@ public class SpecialAddressesUtilsTest {
         FakeMail mail = FakeMail.builder()
                 .build();
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.SENDER.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.SENDER.toInternetAddress()));
 
         assertThat(addresses).isEmpty();
     }
@@ -317,7 +318,7 @@ public class SpecialAddressesUtilsTest {
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         FakeMail mail = FakeMail.from(message);
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
 
         assertThat(addresses).isEmpty();
     }
@@ -331,9 +332,9 @@ public class SpecialAddressesUtilsTest {
         MailAddress expectedReplyTo = MailAddressFixture.ANY_AT_JAMES;
         MailAddress expectedReplyTo2 = MailAddressFixture.OTHER_AT_JAMES;
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
 
-        assertThat(addresses).containsOnly(expectedReplyTo.toInternetAddress(), expectedReplyTo2.toInternetAddress());
+        assertThat(addresses).containsOnly(expectedReplyTo, expectedReplyTo2);
     }
 
     @Test
@@ -344,9 +345,9 @@ public class SpecialAddressesUtilsTest {
                 .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
                 .build();
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
 
-        assertThat(addresses).containsOnly(sender.toInternetAddress());
+        assertThat(addresses).containsOnly(sender);
     }
 
     @Test
@@ -356,9 +357,9 @@ public class SpecialAddressesUtilsTest {
                 .sender(sender)
                 .build();
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress()));
 
-        assertThat(addresses).containsOnly(sender.toInternetAddress());
+        assertThat(addresses).containsOnly(sender);
     }
 
     @Test
@@ -366,7 +367,7 @@ public class SpecialAddressesUtilsTest {
         FakeMail mail = FakeMail.builder()
                 .build();
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress()));
 
         assertThat(addresses).isEmpty();
     }
@@ -379,9 +380,9 @@ public class SpecialAddressesUtilsTest {
         message.addHeader(RFC2822Headers.TO, MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES.toString());
         FakeMail mail = FakeMail.from(message);
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.RECIPIENTS.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.RECIPIENTS.toInternetAddress()));
 
-        assertThat(addresses).containsOnly(to.toInternetAddress(), to2.toInternetAddress());
+        assertThat(addresses).containsOnly(to, to2);
     }
 
     @Test
@@ -392,9 +393,9 @@ public class SpecialAddressesUtilsTest {
         message.addHeader(RFC2822Headers.TO, MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES);
         FakeMail mail = FakeMail.from(message);
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.TO.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.TO.toInternetAddress()));
 
-        assertThat(addresses).containsOnly(to.toInternetAddress(), to2.toInternetAddress());
+        assertThat(addresses).containsOnly(to, to2);
     }
 
     @Test
@@ -402,7 +403,7 @@ public class SpecialAddressesUtilsTest {
         FakeMail mail = FakeMail.builder()
                 .build();
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.UNALTERED.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.UNALTERED.toInternetAddress()));
 
         assertThat(addresses).isEmpty();
     }
@@ -412,7 +413,7 @@ public class SpecialAddressesUtilsTest {
         FakeMail mail = FakeMail.builder()
                 .build();
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.NULL.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.NULL.toInternetAddress()));
 
         assertThat(addresses).isEmpty();
     }
@@ -424,9 +425,9 @@ public class SpecialAddressesUtilsTest {
 
         MailAddress address = new MailAddress("user", "address.marker");
         MailAddress address2 = new MailAddress("user2", "address.marker");
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(address.toInternetAddress(), address2.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(address.toInternetAddress(), address2.toInternetAddress()));
 
-        assertThat(addresses).containsOnly(address.toInternetAddress(), address2.toInternetAddress());
+        assertThat(addresses).containsOnly(address, address2);
     }
 
     @Test
@@ -434,9 +435,9 @@ public class SpecialAddressesUtilsTest {
         FakeMail mail = FakeMail.builder()
                 .build();
 
-        Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.DELETE.toInternetAddress()));
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.DELETE.toInternetAddress()));
 
-        InternetAddress expected = new InternetAddress("delete@address.marker");
+        MailAddress expected = new MailAddress("delete@address.marker");
         assertThat(addresses).containsOnly(expected);
     }
 }

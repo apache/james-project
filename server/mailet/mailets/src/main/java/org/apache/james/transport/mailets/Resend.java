@@ -29,10 +29,10 @@ import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
+import org.apache.james.transport.util.MailAddressUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
@@ -309,16 +309,11 @@ public class Resend extends AbstractRedirect {
     }
 
     @Override
-    protected InternetAddress[] getTo() throws MessagingException {
-      ImmutableList.Builder<InternetAddress> builder = ImmutableList.builder();
-      List<MailAddress> mailAddresses = AddressExtractor.withContext(getMailetContext())
-              .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
-              .extract(getInitParameters().getTo());
-      for (MailAddress address : mailAddresses) {
-          builder.add(address.toInternetAddress());
-      }
-      ImmutableList<InternetAddress> addresses = builder.build();
-      return addresses.toArray(new InternetAddress[addresses.size()]);
+    protected List<InternetAddress> getTo() throws MessagingException {
+      return MailAddressUtils.toInternetAddresses(
+              AddressExtractor.withContext(getMailetContext())
+                  .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
+                  .extract(getInitParameters().getTo()));
     }
 
     @Override
