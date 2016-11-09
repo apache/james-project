@@ -187,16 +187,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.RECIPIENTS</code> or <code>null</code> if
      *         missing
      */
-    protected List<MailAddress> getRecipients() throws MessagingException {
-        ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
-        List<MailAddress> mailAddresses = AddressExtractor.withContext(getMailetContext())
-                .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
-                .extract(getInitParameters().getRecipients());
-        for (MailAddress address : mailAddresses) {
-            builder.add(address);
-        }
-        return builder.build();
-    }
+    protected abstract List<MailAddress> getRecipients() throws MessagingException; 
 
     /**
      * Gets the <code>recipients</code> property, built dynamically using the

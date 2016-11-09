@@ -333,6 +333,18 @@ public class Resend extends AbstractRedirect {
     }
 
     @Override
+    protected List<MailAddress> getRecipients() throws MessagingException {
+          ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
+          List<MailAddress> mailAddresses = AddressExtractor.withContext(getMailetContext())
+                  .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
+                  .extract(getInitParameters().getRecipients());
+          for (MailAddress address : mailAddresses) {
+              builder.add(address);
+          }
+          return builder.build();
+      }
+
+    @Override
     protected MailAddress getReversePath(Mail originalMail) throws MessagingException {
         MailAddress reversePath = getReversePath();
         if (reversePath != null) {
