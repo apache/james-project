@@ -43,6 +43,7 @@
         <module>jcr</module>
         <module>jpa</module>
         <module>maildir</module>
+        <module>lucenesearch</module>
     </modules>
     
     <dependencyManagement>
@@ -98,6 +99,12 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>apache-james-mpt-imapmailbox-elasticsearch</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-imapmailbox-jpa-lucene</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>

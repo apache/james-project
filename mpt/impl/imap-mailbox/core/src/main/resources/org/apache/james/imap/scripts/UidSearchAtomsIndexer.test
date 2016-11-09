@@ -2111,7 +2111,7 @@ S: \* 2 FETCH \(FLAGS \(\\Answered \\Deleted \\Flagged \\Recent \\Seen\)\)
 S: \* 3 FETCH \(FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Recent\)\)
 S: A99 OK STORE completed\.
 
-LOG INFO Waiting for ElasticSearch to index data
+LOG INFO Waiting for Indexer to index data
 
 WAIT 5000
 
@@ -2314,7 +2314,7 @@ S: \* 1 EXISTS
 S: \* 1 RECENT
 S: A202 OK (\[.+\] )?APPEND completed\.
 
-LOG INFO Waiting for ElasticSearch to index data
+LOG INFO Waiting for Indexer to index data
 
 WAIT 1000
 

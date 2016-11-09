@@ -19,5 +19,5 @@
  -->
 
 <indexer>
-  <provider>lazyIndex</provider>
+  <provider>luceneIndex</provider>
 </indexer>

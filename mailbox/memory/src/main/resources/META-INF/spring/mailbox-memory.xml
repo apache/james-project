@@ -23,6 +23,8 @@
        xsi:schemaLocation="
           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
+    <bean id="memory-mailboxIdFactory" class="org.apache.james.mailbox.inmemory.InMemoryId.Factory" />
+
     <!-- 
       Mailbox Memory
      -->

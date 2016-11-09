@@ -56,6 +56,9 @@ public class IndexerConfigurationBeanFactoryPostProcessor implements BeanFactory
             } else if (provider.equalsIgnoreCase("elasticsearch")) {
                 indexer = "elasticsearch-listener";
                 reIndexer = "reindexer-impl";
+            } else if (provider.equalsIgnoreCase("luceneIndex")) {
+                indexer = "luceneIndex";
+                reIndexer = "fake-reindexer";
             }
 
             if (indexer == null)

@@ -52,16 +52,19 @@ public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactory
             String subscription = null;
             String messageMapperFactory = null;
             String mailboxIdDeserializer = null;
+            String mailboxIdFactory = null;
             if (provider.equalsIgnoreCase("jpa")) {
                 mailbox = "jpa-mailboxmanager";
                 subscription = "jpa-subscriptionManager";
                 messageMapperFactory = "jpa-sessionMapperFactory";
                 mailboxIdDeserializer = "jpa-mailbox-id-deserializer";
+                mailboxIdFactory = "jpa-mailboxIdFactory";
             } else if (provider.equalsIgnoreCase("memory")) {
                 mailbox = "memory-mailboxmanager";
                 subscription = "memory-subscriptionManager";
                 messageMapperFactory = "memory-sessionMapperFactory";
                 mailboxIdDeserializer = "memory-mailbox-id-deserializer";
+                mailboxIdFactory = "memory-mailboxIdFactory";
             } else if (provider.equalsIgnoreCase("jcr")) {
                 mailbox = "jcr-mailboxmanager";
                 subscription = "jcr-subscriptionManager";
@@ -82,6 +85,7 @@ public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactory
                 subscription = "cassandra-subscriptionManager";
                 messageMapperFactory = "cassandra-sessionMapperFactory";
                 mailboxIdDeserializer = "cassandra-mailbox-id-deserializer";
+                mailboxIdFactory = "cassandra-mailboxIdFactory";
             }
 
             if (mailbox == null)
@@ -90,6 +94,7 @@ public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactory
             registry.registerAlias(subscription, "subscriptionManager");
             registry.registerAlias(messageMapperFactory, "messageMapperFactory");
             registry.registerAlias(mailboxIdDeserializer, "mailbox-id-deserializer");
+            registry.registerAlias(mailboxIdFactory, "mailboxIdFactory");
 
         } catch (ConfigurationException e) {
             throw new FatalBeanException("Unable to config the mailboxmanager", e);

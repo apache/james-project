@@ -16,18 +16,27 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.app.spring;
 
-import org.hamcrest.CoreMatchers;
-import org.junit.Assume;
-import org.junit.Test;
+package org.apache.james.mpt.imapmailbox.lucenesearch;
 
-public class JamesAppSpringMainTest {
+import org.apache.james.mpt.api.HostSystem;
+import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.lucenesearch.host.LuceneSearchHostSystem;
 
-    @Test
-    public void testServer() throws Exception {
-        Assume.assumeThat(System.getProperty("java.version"), CoreMatchers.startsWith("1.6"));
-        JamesAppSpringMain.main(null);
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+
+public class LuceneSearchMailboxTestModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        bind(HostSystem.class).to(ImapHostSystem.class);
+    }
+
+    @Provides
+    @Singleton
+    public ImapHostSystem provideImapHostSystem() throws Exception {
+        return new LuceneSearchHostSystem();
     }
 
 }
