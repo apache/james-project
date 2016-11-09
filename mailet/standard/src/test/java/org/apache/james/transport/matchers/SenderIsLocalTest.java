@@ -20,6 +20,7 @@
 package org.apache.james.transport.matchers;
 
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
+import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES2;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -46,6 +47,7 @@ public class SenderIsLocalTest {
     public void setUp() throws MessagingException {
         MailetContext mailContext = mock(MailetContext.class);
         when(mailContext.isLocalEmail(ANY_AT_JAMES)).thenReturn(true);
+        when(mailContext.isLocalEmail(OTHER_AT_JAMES)).thenReturn(false);
         when(mailContext.isLocalEmail(ANY_AT_JAMES2)).thenReturn(false);
         
         matcher = new SenderIsLocal();
@@ -65,9 +67,22 @@ public class SenderIsLocalTest {
         //Then
         assertThat(actual).containsExactly(ANY_AT_JAMES2);
     }
+    
+    @Test
+    public void shouldNotMatchWhenSenderIsUnknown() throws MessagingException {
+        //Given
+        Mail mail = FakeMail.builder()
+            .sender(OTHER_AT_JAMES)
+            .recipient(ANY_AT_JAMES2)
+            .build();
+        //When
+        Collection<MailAddress> actual = matcher.match(mail);
+        //Then
+        assertThat(actual).isNull();
+    }
 
     @Test
-    public void shouldNotMatchWhenSenderIsNotLocal() throws MessagingException {
+    public void shouldNotMatchWhenHostIsNotLocal() throws MessagingException {
         //Given
         Mail mail = FakeMail.builder()
             .sender(ANY_AT_JAMES2)
