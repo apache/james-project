@@ -183,54 +183,13 @@ Do not promote snapshots, See JAMES-1558
 
       <ul>
         <li>Source code <a href="https://github.com/apache/james-project/releases/tag/james-project-3.0-beta5">on GitHub</a></li>
-        <li>Compiled artifacts will be made available in the coming days, after upload</li>
+
+        <li>Binary (ZIP Format): <a
+                href="http://www.apache.org/dist/james/server/james-server-app-3.0.0-beta5-SNAPSHOT-app.zip">apache-james-3.0-beta5-app.zip</a> [<a
+                href="http://www.apache.org/dist/james/server/james-server-app-3.0.0-beta5-SNAPSHOT-app.zip.asc">PGP</a>]</li>
+
       </ul>
 
-    </subsection>
-  
-    <subsection name="Apache James 3.0-beta4 is for early adopters">
-    
-      <p>This release is the first milestone based on 
-         release.  See the <a
-         href="http://james.apache.org/server/3/release-notes.html">Release Notes</a>
-         for a detailed list of changes.</p>
-      
-      <div class="ui-widget">
-        <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
-          <p>
-            <span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
-            Apache James Server 3 uses third party cryptography software
-            including
-          </p>
-          <ul>
-            <li><code>bcmail</code> and <code>bcprov</code> libraries by "The Legion of the Bouncy
-              Castle" <a href='http://www.bouncycastle.org'>http://www.bouncycastle.org</a>,</li>
-            <li><code>jasypt</code> library by "Jasypt.org" <a href='http://www.jasypt.org/'>http://www.jasypt.org/</a></li>
-            <li>and the <a href='http://www.java.com/'>Java Runtime Environment</a>.</li>
-          </ul>
-        </div>
-      </div>
-      
-      <ul>
-      
-        <li>Binary (Unix TAR): <a
-            href="[preferred]/james/apache-james/3.0beta4/apache-james-3.0-beta4-app.tar.gz">apache-james-3.0-beta4-app.tar.gz</a> [<a
-            href="http://www.apache.org/dist/james/apache-james/3.0beta4/apache-james-3.0-beta4-app.tar.gz.asc">PGP</a>]</li>
-      
-        <li>Binary (ZIP Format): <a
-            href="[preferred]/james/apache-james/3.0beta4/apache-james-3.0-beta4-app.zip">apache-james-3.0-beta4-app.zip</a> [<a
-            href="http://www.apache.org/dist/james/apache-james/3.0beta4/apache-james-3.0-beta4-app.zip.asc">PGP</a>]</li>
-<!--       
-          <li>Source (Unix TAR): <a
-              href="[preferred]/james/apache-james/3.0beta4/apache-james-3.0-beta4-source-release.tar.gz">apache-james-3.0-beta4-source-release.tar.gz</a> [<a
-              href="http://www.apache.org/dist/james/apache-james/3.0beta4/apache-james-3.0-beta4-source-release.tar.gz.asc">PGP</a>]</li>
--->      
-          <li>Source (ZIP Format): <a
-              href="[preferred]/james/apache-james/3.0beta4/apache-james-3.0-beta4-source-release.zip">apache-james-3.0-beta4-source-release.zip</a> [<a
-              href="http://www.apache.org/dist/james/apache-james/3.0beta4/apache-james-3.0-beta4-source-release.zip.asc">PGP</a>]</li>
-      
-      </ul>
-    
     </subsection>
     
     <subsection name="Apache James 2.3.2.1 is the stable version">

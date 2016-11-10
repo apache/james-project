@@ -36,6 +36,14 @@
 
    <subsection name='2016'>
 
+     <a name="20161101"><h4>Nov 2016 - Apache James Server 3.0</h4></a>
+     <p>James server 3.0.0-beta5 has been released.</p>
+     <p>Early adopters can <a href="http://james.apache.org/download.cgi#Apache_James_Server">download it</a>, any
+         issue can be reported on our issue <a href="https://issues.apache.org/jira/browse/JAMES">tracker</a></p>
+
+     <a name="20161001"><h4>Oct 2016 - Apache James Server 3.0</h4></a>
+     <p>We choosed a new logo! <img src='images/james-logo.png' alt='New James logo'/></p>
+
      <a name="20160901"><h4>Sep 2016 - Apache James Server 3.0</h4></a>
      <p>We are currently working on the release.</p>
      <p>Keep an eye on the <a href="http://james.apache.org/newsarchive.html">news</a>, we are planning to release the next version in November.</p>
