@@ -21,14 +21,17 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.base.GenericMatcher;
+import java.util.Collection;
+import java.util.Locale;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMatcher;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Locale;
-import java.util.StringTokenizer;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * <p>Checkes the sender's displayed domain name against a supplied list.</p>
@@ -43,24 +46,21 @@ import java.util.StringTokenizer;
  * @version 1.0.0, 2002-09-10
  */
 public class SenderHostIs extends GenericMatcher {
-    /**
-     * The collection of host names to match against.
-     */
+
     private Collection<String> senderHosts;
-
-    /**
-     * Initialize the mailet.
-     */
+    
     public void init()  {
-        //Parse the condition...
-        StringTokenizer st = new StringTokenizer(getCondition(), ", ", false);
+        String condition = getCondition();
+        Preconditions.checkNotNull(condition, "'condition' should not be null");
 
-        //..into a vector of domain names.
-        senderHosts = new java.util.HashSet<String>();
-        while (st.hasMoreTokens()) {
-            senderHosts.add(st.nextToken().toLowerCase(Locale.US));
-        }
-        senderHosts = Collections.unmodifiableCollection(senderHosts);
+        senderHosts = parseDomainsList(condition);
+    }
+
+    @VisibleForTesting Collection<String> parseDomainsList(String condition) {
+        return ImmutableSet
+                .copyOf(Splitter.onPattern("(, |,| )")
+                        .omitEmptyStrings()
+                        .split(condition));
     }
 
     /**
