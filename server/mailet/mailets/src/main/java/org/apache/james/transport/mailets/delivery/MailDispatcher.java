@@ -45,13 +45,14 @@ public class MailDispatcher {
     }
 
     public static class Builder {
+        public static final boolean CONSUME_DEFAULT_VALUE = true;
         private MailStore mailStore;
-        private boolean consume;
+        private Optional<Boolean> consume = Optional.absent();
         private MailetContext mailetContext;
         private Log log;
 
         public Builder consume(boolean consume) {
-            this.consume = consume;
+            this.consume = Optional.of(consume);
             return this;
         }
 
@@ -74,7 +75,7 @@ public class MailDispatcher {
             Preconditions.checkNotNull(mailStore);
             Preconditions.checkNotNull(log);
             Preconditions.checkNotNull(mailetContext);
-            return new MailDispatcher(mailStore, consume, log, mailetContext);
+            return new MailDispatcher(mailStore, consume.or(CONSUME_DEFAULT_VALUE), log, mailetContext);
         }
 
     }
