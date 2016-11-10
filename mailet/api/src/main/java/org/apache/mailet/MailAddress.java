@@ -279,6 +279,15 @@ public class MailAddress implements java.io.Serializable {
         return localPart + "@" + domain;
     }
 
+    public String print() {
+        return localPart + "@" + domain;
+    }
+
+
+    public String prettyPrint() {
+        return '<' + print() + '>';
+    }
+
     /**
      * Returns an InternetAddress representing the same address
      * as this MailAddress.
