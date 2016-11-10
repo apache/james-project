@@ -137,7 +137,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, LogEna
     @Override
     public String getUser(MailAddress mailAddress) throws UsersRepositoryException {
         if (supportVirtualHosting()) {
-            return mailAddress.print();
+            return mailAddress.asString();
         } else {
             return mailAddress.getLocalPart();
         }

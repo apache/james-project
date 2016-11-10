@@ -25,9 +25,9 @@ public class DeliveryUtils {
 
     public static String prettyPrint(MailAddress mailAddress) {
         if (mailAddress != null) {
-            return  mailAddress.prettyPrint();
+            return mailAddress.asPrettyString();
         } else {
-            return  "<>";
+            return "<>";
         }
     }
 

@@ -119,18 +119,10 @@ public class LocalDeliveryTest {
         RecipientRewriteTable recipientRewriteTable = mock(RecipientRewriteTable.class);
         DomainList domainList = mock(DomainList.class);
 
-        SieveLocalDelivery sieveLocalDelivery = new SieveLocalDelivery();
-        sieveLocalDelivery.setDomainList(domainList);
-        sieveLocalDelivery.setMailboxManager(mailboxManager);
-        sieveLocalDelivery.setRrt(recipientRewriteTable);
-        sieveLocalDelivery.setUsersRepository(usersRepository);
-        sieveLocalDelivery.setSieveRepository(sieveRepository);
+        SieveLocalDelivery sieveLocalDelivery = new SieveLocalDelivery(usersRepository, mailboxManager, sieveRepository,
+            recipientRewriteTable, domainList);
 
-        LocalDelivery localDelivery = new LocalDelivery();
-        localDelivery.setDomainList(domainList);
-        localDelivery.setRrt(recipientRewriteTable);
-        localDelivery.setMailboxManager(mailboxManager);
-        localDelivery.setUsersRepository(usersRepository);
+        LocalDelivery localDelivery = new LocalDelivery(recipientRewriteTable, usersRepository, mailboxManager, domainList);
 
         MailboxSession.User user = mock(MailboxSession.User.class);
         MailboxSession session = mock(MailboxSession.class);

@@ -24,6 +24,7 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.transport.mailets.delivery.MailDispatcher;
 import org.apache.james.transport.mailets.delivery.MailboxAppender;
 import org.apache.james.transport.mailets.delivery.SimpleMailStore;
@@ -53,20 +54,15 @@ public class ToRecipientFolder extends GenericMailet {
     public static final String FOLDER_PARAMETER = "folder";
     public static final String CONSUME_PARAMETER = "consume";
 
-    private MailboxManager mailboxManager;
-    private UsersRepository usersRepository;
+    private final MailboxManager mailboxManager;
+    private final UsersRepository usersRepository;
+    private MailDispatcher mailDispatcher;
 
     @Inject
-    public void setMailboxManager(@Named("mailboxmanager")MailboxManager mailboxManager) {
+    public ToRecipientFolder(@Named("mailboxmanager")MailboxManager mailboxManager, UsersRepository usersRepository) {
         this.mailboxManager = mailboxManager;
-    }
-
-    @Inject
-    public void setUsersRepository(UsersRepository usersRepository) {
         this.usersRepository = usersRepository;
     }
-
-    private MailDispatcher mailDispatcher;
 
     @Override
     public void service(Mail mail) throws MessagingException {
@@ -86,7 +82,7 @@ public class ToRecipientFolder extends GenericMailet {
             .mailStorer(SimpleMailStore.builder()
                 .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext().getLogger()))
                 .usersRepository(usersRepository)
-                .folder(getInitParameter(FOLDER_PARAMETER, "INBOX"))
+                .folder(getInitParameter(FOLDER_PARAMETER, MailboxConstants.INBOX))
                 .log(log)
                 .build())
             .consume(getInitParameter(CONSUME_PARAMETER, false))

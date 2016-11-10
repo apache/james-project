@@ -116,15 +116,19 @@ public class SieveMailStore implements MailStore {
         this.sievePoster = sievePoster;
         this.folder = folder;
         this.resourceLocator = resourceLocator;
+        factory = createFactory(log);
+        this.actionDispatcher = new ActionDispatcher();
+        this.log = log;
+    }
+
+    private SieveFactory createFactory(Log log) throws MessagingException {
         try {
             final ConfigurationManager configurationManager = new ConfigurationManager();
             configurationManager.setLog(log);
-            factory = configurationManager.build();
+            return configurationManager.build();
         } catch (SieveConfigurationException e) {
             throw new MessagingException("Failed to load standard Sieve configuration.", e);
         }
-        this.actionDispatcher = new ActionDispatcher();
-        this.log = log;
     }
 
     public void storeMail(MailAddress sender, MailAddress recipient, Mail mail) throws MessagingException {
@@ -186,12 +190,12 @@ public class SieveMailStore implements MailStore {
     public String retrieveUserNameUsedForScriptStorage(MailAddress mailAddress) {
         try {
             if (usersRepos.supportVirtualHosting()) {
-                return mailAddress.print();
+                return mailAddress.asString();
             } else {
                 return mailAddress.getLocalPart() + "@localhost";
             }
         } catch (UsersRepositoryException e) {
-            log.error("Unable to access UsersRepository", e);
+            log.warn("Can not determine if virtual hosting is used for " + mailAddress.asPrettyString(), e);
             return mailAddress.getLocalPart() + "@localhost";
         }
     }

@@ -278,14 +278,9 @@ public class MailAddress implements java.io.Serializable {
     public String toString() {
         return localPart + "@" + domain;
     }
-
-    public String print() {
-        return localPart + "@" + domain;
-    }
-
-
-    public String prettyPrint() {
-        return '<' + print() + '>';
+    
+    public String asPrettyString() {
+        return '<' + asString() + '>';
     }
 
     /**

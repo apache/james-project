@@ -120,14 +120,9 @@ public class ToRecipientFolderTest {
         UsersRepository usersRepository = mock(UsersRepository.class);
         MailboxManager mailboxManager = mock(MailboxManager.class);
 
-        SieveToRecipientFolder sieveToRecipientFolder = new SieveToRecipientFolder();
-        sieveToRecipientFolder.setMailboxManager(mailboxManager);
-        sieveToRecipientFolder.setUsersRepository(usersRepository);
-        sieveToRecipientFolder.setSieveRepository(sieveRepository);
+        SieveToRecipientFolder sieveToRecipientFolder = new SieveToRecipientFolder(mailboxManager, sieveRepository, usersRepository);
 
-        ToRecipientFolder toRecipientFolder = new ToRecipientFolder();
-        toRecipientFolder.setMailboxManager(mailboxManager);
-        toRecipientFolder.setUsersRepository(usersRepository);
+        ToRecipientFolder toRecipientFolder = new ToRecipientFolder(mailboxManager, usersRepository);
 
         MailboxSession.User user = mock(MailboxSession.User.class);
         MailboxSession session = mock(MailboxSession.class);

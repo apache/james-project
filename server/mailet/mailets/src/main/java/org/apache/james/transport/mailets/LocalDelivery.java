@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
 
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.transport.mailets.delivery.MailDispatcher;
 import org.apache.james.transport.mailets.delivery.MailboxAppender;
 import org.apache.james.transport.mailets.delivery.SimpleMailStore;
@@ -44,32 +45,20 @@ import org.apache.mailet.base.GenericMailet;
  * James 2.3 behavior.
  */
 public class LocalDelivery extends GenericMailet {
-    
-    private org.apache.james.rrt.api.RecipientRewriteTable rrt;
-    private UsersRepository usersRepository;
-    private MailboxManager mailboxManager;
-    private DomainList domainList;
+
+    private final UsersRepository usersRepository;
+    private final MailboxManager mailboxManager;
+    private final RecipientRewriteTable recipientRewriteTable;
     private MailDispatcher mailDispatcher;
-    private RecipientRewriteTable recipientRewriteTable;
 
     @Inject
-    public void setRrt(org.apache.james.rrt.api.RecipientRewriteTable rrt) {
-        this.rrt = rrt;
-    }
-
-    @Inject
-    public void setUsersRepository(UsersRepository usersRepository) {
+    public LocalDelivery(org.apache.james.rrt.api.RecipientRewriteTable rrt, UsersRepository usersRepository,
+                         @Named("mailboxmanager") MailboxManager mailboxManager, DomainList domainList) {
         this.usersRepository = usersRepository;
-    }
-    
-    @Inject
-    public void setMailboxManager(@Named("mailboxmanager") MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
-    }
-    
-    @Inject
-    public void setDomainList(DomainList domainList) {
-        this.domainList = domainList;
+        this.recipientRewriteTable = new RecipientRewriteTable();
+        recipientRewriteTable.setDomainList(domainList);
+        recipientRewriteTable.setRecipientRewriteTable(rrt);
     }
 
     public void service(Mail mail) throws MessagingException {
@@ -84,20 +73,19 @@ public class LocalDelivery extends GenericMailet {
     }
 
     public void init() throws MessagingException {
-        recipientRewriteTable = new RecipientRewriteTable();
-        recipientRewriteTable.setDomainList(domainList);
-        recipientRewriteTable.setRecipientRewriteTable(rrt);
         recipientRewriteTable.init(getMailetConfig());
+
         Log log = CommonsLoggingAdapter.builder()
             .wrappedLogger(getMailetContext().getLogger())
             .quiet(getInitParameter("quiet", false))
             .verbose(getInitParameter("verbose", false))
             .build();
+
         mailDispatcher = MailDispatcher.builder()
             .mailStorer(SimpleMailStore.builder()
                 .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext().getLogger()))
                 .usersRepository(usersRepository)
-                .folder("INBOX")
+                .folder(MailboxConstants.INBOX)
                 .log(log)
                 .build())
             .consume(getInitParameter("consume", true))

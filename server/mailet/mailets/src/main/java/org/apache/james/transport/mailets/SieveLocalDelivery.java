@@ -26,6 +26,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.logging.Log;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.transport.mailets.delivery.MailDispatcher;
 import org.apache.james.transport.mailets.delivery.MailboxAppender;
@@ -46,37 +47,21 @@ import org.apache.mailet.base.GenericMailet;
  */
 public class SieveLocalDelivery extends GenericMailet {
     
-    private org.apache.james.rrt.api.RecipientRewriteTable rrt;
-    private UsersRepository usersRepository;
-    private MailboxManager mailboxManager;
-    private DomainList domainList;
-    private SieveRepository sieveRepository;
+    private final UsersRepository usersRepository;
+    private final MailboxManager mailboxManager;
+    private final SieveRepository sieveRepository;
+    private final RecipientRewriteTable recipientRewriteTable;
     private MailDispatcher mailDispatcher;
-    private RecipientRewriteTable recipientRewriteTable;
 
     @Inject
-    public void setSieveRepository(SieveRepository sieveRepository) {
-        this.sieveRepository = sieveRepository;
-    }
-
-    @Inject
-    public void setRrt(org.apache.james.rrt.api.RecipientRewriteTable rrt) {
-        this.rrt = rrt;
-    }
-
-    @Inject
-    public void setUsersRepository(UsersRepository usersRepository) {
+    public SieveLocalDelivery(UsersRepository usersRepository, @Named("mailboxmanager") MailboxManager mailboxManager,
+                              SieveRepository sieveRepository, org.apache.james.rrt.api.RecipientRewriteTable rrt, DomainList domainList) {
         this.usersRepository = usersRepository;
-    }
-    
-    @Inject
-    public void setMailboxManager(@Named("mailboxmanager") MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
-    }
-    
-    @Inject
-    public void setDomainList(DomainList domainList) {
-        this.domainList = domainList;
+        this.sieveRepository = sieveRepository;
+        this.recipientRewriteTable = new RecipientRewriteTable();
+        this.recipientRewriteTable.setDomainList(domainList);
+        this.recipientRewriteTable.setRecipientRewriteTable(rrt);
     }
 
     public void service(Mail mail) throws MessagingException {
@@ -91,23 +76,24 @@ public class SieveLocalDelivery extends GenericMailet {
     }
 
     public void init() throws MessagingException {
-        recipientRewriteTable = new RecipientRewriteTable();
-        recipientRewriteTable.setDomainList(domainList);
-        recipientRewriteTable.setRecipientRewriteTable(rrt);
         recipientRewriteTable.init(getMailetConfig());
+
         Log log = CommonsLoggingAdapter.builder()
             .wrappedLogger(getMailetContext().getLogger())
             .quiet(getInitParameter("quiet", false))
             .verbose(getInitParameter("verbose", false))
             .build();
-        String folder = "INBOX";
+
         mailDispatcher = MailDispatcher.builder()
             .mailStorer(SieveMailStore.builder()
-                .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, getMailetContext().getLogger()), folder, usersRepository))
+                .sievePoster(new SievePoster(
+                    new MailboxAppender(mailboxManager, getMailetContext().getLogger()),
+                    MailboxConstants.INBOX,
+                    usersRepository))
                 .usersRepository(usersRepository)
                 .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))
                 .mailetContext(getMailetContext())
-                .folder(folder)
+                .folder(MailboxConstants.INBOX)
                 .log(log)
                 .build())
             .consume(getInitParameter("consume", true))

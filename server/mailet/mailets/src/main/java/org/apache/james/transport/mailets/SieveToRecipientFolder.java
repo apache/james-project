@@ -24,6 +24,7 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.transport.mailets.delivery.MailDispatcher;
 import org.apache.james.transport.mailets.delivery.MailboxAppender;
@@ -55,26 +56,18 @@ public class SieveToRecipientFolder extends GenericMailet {
     public static final String FOLDER_PARAMETER = "folder";
     public static final String CONSUME_PARAMETER = "consume";
 
-    private MailboxManager mailboxManager;
-    private SieveRepository sieveRepository;
-    private UsersRepository usersRepository;
+    private final MailboxManager mailboxManager;
+    private final SieveRepository sieveRepository;
+    private final UsersRepository usersRepository;
+    private MailDispatcher mailDispatcher;
 
     @Inject
-    public void setMailboxManager(@Named("mailboxmanager")MailboxManager mailboxManager) {
+    public SieveToRecipientFolder(@Named("mailboxmanager")MailboxManager mailboxManager, SieveRepository sieveRepository,
+                                  UsersRepository usersRepository) {
         this.mailboxManager = mailboxManager;
-    }
-
-    @Inject
-    public void setSieveRepository(SieveRepository sieveRepository) {
         this.sieveRepository = sieveRepository;
-    }
-
-    @Inject
-    public void setUsersRepository(UsersRepository usersRepository) {
         this.usersRepository = usersRepository;
     }
-
-    private MailDispatcher mailDispatcher;
 
     @Override
     public void service(Mail mail) throws MessagingException {
@@ -90,7 +83,7 @@ public class SieveToRecipientFolder extends GenericMailet {
             .quiet(getInitParameter("quiet", true))
             .verbose(getInitParameter("verbose", false))
             .build();
-        String folder = getInitParameter(FOLDER_PARAMETER, "INBOX");
+        String folder = getInitParameter(FOLDER_PARAMETER, MailboxConstants.INBOX);
         mailDispatcher = MailDispatcher.builder()
             .mailStorer(SieveMailStore.builder()
                 .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, getMailetContext().getLogger()), folder, usersRepository))

@@ -81,13 +81,13 @@ public class SimpleMailStoreTest {
     public void storeMailShouldUseFullMailAddressWhenSupportsVirtualHosting() throws Exception {
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
-        when(usersRepository.getUser(recipient)).thenReturn(recipient.print());
+        when(usersRepository.getUser(recipient)).thenReturn(recipient.asString());
         FakeMail mail = FakeMail.builder()
             .mimeMessage(mimeMessage)
             .build();
         testee.storeMail(sender, recipient, mail);
 
-        verify(mailboxAppender).append(any(MimeMessage.class), eq(recipient.print()), eq(FOLDER));
+        verify(mailboxAppender).append(any(MimeMessage.class), eq(recipient.asString()), eq(FOLDER));
     }
 
     @Test

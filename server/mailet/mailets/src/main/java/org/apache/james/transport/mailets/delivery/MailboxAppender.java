@@ -77,28 +77,23 @@ public class MailboxAppender {
         } catch (MailboxException e) {
             throw new MessagingException("Unable to access mailbox.", e);
         } finally {
-            session.close();
-            try {
-                try {
-                    mailboxManager.logout(session, true);
-                } catch (MailboxException e) {
-                    throw new MessagingException("Can logout from mailbox", e);
-                }
-            } finally {
-                mailboxManager.endProcessingRequest(session);
-            }
+            closeProcessing(session);
         }
     }
 
     private void appendMessageToMailbox(MimeMessage mail, MailboxSession session, MailboxPath path) throws MailboxException, MessagingException {
-        if (!mailboxManager.mailboxExists(path, session)) {
-            mailboxManager.createMailbox(path, session);
-        }
+        createMailboxIfNotExist(session, path);
         final MessageManager mailbox = mailboxManager.getMailbox(path, session);
         if (mailbox == null) {
             throw new MessagingException("Mailbox " + path + " for user " + session.getUser().getUserName() + " was not found on this server.");
         }
         mailbox.appendMessage(new MimeMessageInputStream(mail), new Date(), session, IS_RECENT, FLAGS);
+    }
+
+    private void createMailboxIfNotExist(MailboxSession session, MailboxPath path) throws MailboxException {
+        if (!mailboxManager.mailboxExists(path, session)) {
+            mailboxManager.createMailbox(path, session);
+        }
     }
 
     public MailboxSession createMailboxSession(String user) throws MessagingException {
@@ -111,5 +106,17 @@ public class MailboxAppender {
         }
     }
 
+    private void closeProcessing(MailboxSession session) throws MessagingException {
+        session.close();
+        try {
+            try {
+                mailboxManager.logout(session, true);
+            } catch (MailboxException e) {
+                throw new MessagingException("Can logout from mailbox", e);
+            }
+        } finally {
+            mailboxManager.endProcessingRequest(session);
+        }
+    }
 
 }

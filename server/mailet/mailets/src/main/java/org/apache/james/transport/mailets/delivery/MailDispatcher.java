@@ -93,8 +93,7 @@ public class MailDispatcher {
     }
 
     public void dispatch(Mail mail) throws MessagingException {
-        Collection<MailAddress> errors = new Vector<MailAddress>();
-        dispatchNeedingErrorsManaged(mail, errors);
+        Collection<MailAddress> errors =  customizeHeadersAndDeliver(mail);
         if (!errors.isEmpty()) {
             // If there were errors, we redirect the email to the ERROR
             // processor.
@@ -105,10 +104,13 @@ public class MailDispatcher {
             // In the future we may wish to address this.
             mailetContext.sendMail(mail.getSender(), errors, mail.getMessage(), Mail.ERROR);
         }
+        if (consume) {
+            // Consume this message
+            mail.setState(Mail.GHOST);
+        }
     }
 
-    @SuppressWarnings("unchecked")
-    private void dispatchNeedingErrorsManaged(Mail mail, Collection<MailAddress> errors) throws MessagingException {
+    private Collection<MailAddress> customizeHeadersAndDeliver(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
         // Set Return-Path and remove all other Return-Path headers from the message
         // This only works because there is a placeholder inserted by MimeMessageWrapper
@@ -117,14 +119,16 @@ public class MailDispatcher {
         List<String> deliveredToHeader = Arrays.asList(Optional.fromNullable(message.getHeader(DELIVERED_TO)).or(NO_HEADERS));
         message.removeHeader(DELIVERED_TO);
 
-        dispatchNeedingSavedDeliveredToHeader(mail, errors, message);
+        Collection<MailAddress> errors = deliver(mail, message);
 
         for (String deliveredTo : deliveredToHeader) {
             message.addHeader(DELIVERED_TO, deliveredTo);
         }
+        return errors;
     }
 
-    private void dispatchNeedingSavedDeliveredToHeader(Mail mail, Collection<MailAddress> errors, MimeMessage message) {
+    private Collection<MailAddress> deliver(Mail mail, MimeMessage message) {
+        Collection<MailAddress> errors = new Vector<MailAddress>();
         for (MailAddress recipient : mail.getRecipients()) {
             try {
                 // Add qmail's de facto standard Delivered-To header
@@ -136,9 +140,6 @@ public class MailDispatcher {
                 errors.add(recipient);
             }
         }
-        if (consume) {
-            // Consume this message
-            mail.setState(Mail.GHOST);
-        }
+        return errors;
     }
 }
