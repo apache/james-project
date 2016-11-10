@@ -23,12 +23,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
+import org.apache.mailet.MailAddress;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -299,6 +303,25 @@ public abstract class AbstractUsersRepositoryTest {
         usersRepository.updateUser(user);
     }
 
+    @Test
+    public void virtualHostedUsersRepositoryShouldUseFullMailAddressAsUsername() throws Exception {
+        usersRepository.setEnableVirtualHosting(true);
+
+        // Some implementations do not support changing virtual hosting value
+        Assume.assumeTrue(usersRepository.supportVirtualHosting());
+
+        assertThat(usersRepository.getUser(new MailAddress("local@domain"))).isEqualTo("local@domain");
+    }
+
+    @Test
+    public void nonVirtualHostedUsersRepositoryShouldUseLocalPartAsUsername() throws Exception {
+        usersRepository.setEnableVirtualHosting(false);
+
+        // Some implementations do not support changing virtual hosting value
+        Assume.assumeFalse(usersRepository.supportVirtualHosting());
+
+        assertThat(usersRepository.getUser(new MailAddress("local@domain"))).isEqualTo("local");
+    }
 
     protected void disposeUsersRepository() throws UsersRepositoryException {
         LifecycleUtil.dispose(this.usersRepository);

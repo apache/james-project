@@ -258,16 +258,11 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
     @Override
     public boolean isLocalEmail(MailAddress mailAddress) {
         if (mailAddress != null) {
-            String userName = mailAddress.toString().toLowerCase();
             if (!isLocalServer(mailAddress.getDomain().toLowerCase())) {
                 return false;
             }
             try {
-                if (!localusers.supportVirtualHosting()) {
-                    userName = mailAddress.getLocalPart().toLowerCase();
-                }
-                return localusers.contains(userName);
-
+                return localusers.contains(localusers.getUser(mailAddress));
             } catch (UsersRepositoryException e) {
                 log("Unable to access UsersRepository", e);
             }

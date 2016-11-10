@@ -79,11 +79,14 @@ public class MailboxAppender {
         } finally {
             session.close();
             try {
-                mailboxManager.logout(session, true);
-            } catch (MailboxException e) {
-                throw new MessagingException("Can logout from mailbox", e);
+                try {
+                    mailboxManager.logout(session, true);
+                } catch (MailboxException e) {
+                    throw new MessagingException("Can logout from mailbox", e);
+                }
+            } finally {
+                mailboxManager.endProcessingRequest(session);
             }
-            mailboxManager.endProcessingRequest(session);
         }
     }
 
@@ -93,7 +96,7 @@ public class MailboxAppender {
         }
         final MessageManager mailbox = mailboxManager.getMailbox(path, session);
         if (mailbox == null) {
-            throw new MessagingException("Mailbox for user " + session.getUser().getUserName() + " was not found on this server.");
+            throw new MessagingException("Mailbox " + path + " for user " + session.getUser().getUserName() + " was not found on this server.");
         }
         mailbox.appendMessage(new MimeMessageInputStream(mail), new Date(), session, IS_RECENT, FLAGS);
     }

@@ -118,6 +118,7 @@ public class SieveIntegrationTest {
     @Test
     public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOn() throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
+        when(usersRepository.getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(RECEIVER_DOMAIN_COM);
         when(resourceLocator.get(RECEIVER_DOMAIN_COM)).thenThrow(new ScriptNotFoundException());
         final MessageManager messageManager = prepareMessageManagerOn(new MailboxPath("#private", RECEIVER_DOMAIN_COM, "INBOX"));
 
@@ -129,6 +130,7 @@ public class SieveIntegrationTest {
     @Test
     public void mailShouldBeWellDeliveredByDefaultToUserWhenvirtualHostingIsTurnedOff() throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
+        when(usersRepository.getUser(new MailAddress("receiver@localhost"))).thenReturn("receiver");
         when(resourceLocator.get("receiver")).thenThrow(new ScriptNotFoundException());
         final MessageManager messageManager = prepareMessageManagerOn(INBOX);
 
@@ -964,6 +966,7 @@ public class SieveIntegrationTest {
 
     private void prepareTestUsingScriptAndDates(String script, DateTime scriptCreationDate, DateTime scriptExecutionDate) throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
+        when(usersRepository.getUser(new MailAddress("receiver@localhost"))).thenReturn("receiver");
         when(resourceLocator.get("//receiver@localhost/sieve")).thenReturn(new ResourceLocator.UserSieveInformation(scriptCreationDate,
             scriptExecutionDate,
             ClassLoader.getSystemResourceAsStream(script)));

@@ -79,24 +79,22 @@ public class SimpleMailStorerTest {
 
     @Test
     public void storeMailShouldUseFullMailAddressWhenSupportsVirtualHosting() throws Exception {
-        when(usersRepository.supportVirtualHosting()).thenReturn(true);
-
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
+        when(usersRepository.getUser(recipient)).thenReturn(recipient.print());
         FakeMail mail = FakeMail.builder()
             .mimeMessage(mimeMessage)
             .build();
         testee.storeMail(sender, recipient, mail);
 
-        verify(mailboxAppender).append(any(MimeMessage.class), eq(recipient.toString()), eq(FOLDER));
+        verify(mailboxAppender).append(any(MimeMessage.class), eq(recipient.print()), eq(FOLDER));
     }
 
     @Test
     public void storeMailShouldUseLocalPartWhenSupportsVirtualHosting() throws Exception {
-        when(usersRepository.supportVirtualHosting()).thenReturn(false);
-
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
+        when(usersRepository.getUser(recipient)).thenReturn(recipient.getLocalPart());
         FakeMail mail = FakeMail.builder()
             .mimeMessage(mimeMessage)
             .build();
@@ -107,10 +105,9 @@ public class SimpleMailStorerTest {
 
     @Test
     public void storeMailShouldUseFullMailAddressWhenErrorReadingUsersRepository() throws Exception {
-        when(usersRepository.supportVirtualHosting()).thenThrow(new UsersRepositoryException("Any message"));
-
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
+        when(usersRepository.getUser(recipient)).thenThrow(new UsersRepositoryException("Any message"));
         FakeMail mail = FakeMail.builder()
             .mimeMessage(mimeMessage)
             .build();

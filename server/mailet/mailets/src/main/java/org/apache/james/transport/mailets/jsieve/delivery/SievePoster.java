@@ -26,6 +26,7 @@ import org.apache.james.transport.mailets.delivery.MailboxAppender;
 import org.apache.james.transport.mailets.jsieve.Poster;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.mailet.MailAddress;
 
 public class SievePoster implements Poster {
 
@@ -86,10 +87,7 @@ public class SievePoster implements Poster {
         String user = url.substring(startOfUser, endOfUser).toLowerCase();
         // Check if we should use the full email address as username
         try {
-            if (usersRepos.supportVirtualHosting()) {
-                return user + "@" + host;
-            }
-            return user;
+            return usersRepos.getUser(new MailAddress(user, host));
         } catch (UsersRepositoryException e) {
             throw new MessagingException("Unable to accessUsersRepository", e);
         }

@@ -187,6 +187,7 @@ public class ToRecipientFolderTest {
     @Test
     public void folderParameterShouldIndicateDestinationFolder() throws Exception {
         when(parameter.getUsersRepository().supportVirtualHosting()).thenReturn(true);
+        when(parameter.getUsersRepository().getUser(new MailAddress(USER))).thenReturn(USER);
         when(parameter.getMailboxManager().getMailbox(eq(JUNK_VIRTUAL_HOSTING), any(MailboxSession.class))).thenReturn(messageManager);
         when(parameter.getUser().getUserName()).thenReturn(USER);
 
@@ -200,6 +201,7 @@ public class ToRecipientFolderTest {
     @Test
     public void folderParameterShouldBeInboxByDefault() throws Exception {
         when(parameter.getUsersRepository().supportVirtualHosting()).thenReturn(true);
+        when(parameter.getUsersRepository().getUser(new MailAddress(USER))).thenReturn(USER);
         when(parameter.getMailboxManager().getMailbox(eq(INBOX), any(MailboxSession.class))).thenReturn(messageManager);
         when(parameter.getUser().getUserName()).thenReturn(USER);
 
@@ -212,6 +214,8 @@ public class ToRecipientFolderTest {
     @Test
     public void folderParameterShouldWorkWhenVirtualHostingIsTurnedOff() throws Exception {
         when(parameter.getUsersRepository().supportVirtualHosting()).thenReturn(false);
+        when(parameter.getUsersRepository().getUser(new MailAddress(USER_LOCAL_PART + "@localhost"))).thenReturn(USER_LOCAL_PART);
+        when(parameter.getUsersRepository().getUser(new MailAddress(USER))).thenReturn(USER_LOCAL_PART);
         when(parameter.getMailboxManager().getMailbox(eq(JUNK), any(MailboxSession.class))).thenReturn(messageManager);
         when(parameter.getUser().getUserName()).thenReturn(USER_LOCAL_PART);
 

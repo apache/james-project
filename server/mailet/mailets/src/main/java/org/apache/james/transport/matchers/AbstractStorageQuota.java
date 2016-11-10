@@ -112,12 +112,7 @@ abstract public class AbstractStorageQuota extends AbstractQuotaMatcher {
             try {
                 // see if we need use the full email address as username or not.
                 // See JAMES-1197
-                if (localUsers.supportVirtualHosting()) {
-                    username = recipient.toString().toLowerCase(Locale.US);
-                }
-                else {
-                    username = recipient.getLocalPart().toLowerCase(Locale.US);
-                }
+                username = localUsers.getUser(recipient).toLowerCase(Locale.US);
             }
             catch (UsersRepositoryException e) {
                 throw new MessagingException("Unable to access UsersRepository", e);

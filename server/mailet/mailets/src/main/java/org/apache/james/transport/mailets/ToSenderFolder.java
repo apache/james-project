@@ -84,17 +84,7 @@ public class ToSenderFolder extends GenericMailet {
     private void doService(Mail mail) throws MessagingException {
 
         final MailAddress sender = mail.getSender();
-        String username;
-        try {
-            if (usersRepository.supportVirtualHosting()) {
-                username = sender.toString();
-            }
-            else {
-                username = sender.getLocalPart();
-            }
-        } catch (UsersRepositoryException e) {
-            throw new MessagingException(e.getMessage());
-        }
+        String username = retrieveUser(sender);
 
         final MailboxSession session;
         try {
@@ -138,6 +128,14 @@ public class ToSenderFolder extends GenericMailet {
 
         }
 
+    }
+
+    private String retrieveUser(MailAddress sender) throws MessagingException {
+        try {
+            return usersRepository.getUser(sender);
+        } catch (UsersRepositoryException e) {
+            throw new MessagingException(e.getMessage());
+        }
     }
 
     /* (non-Javadoc)

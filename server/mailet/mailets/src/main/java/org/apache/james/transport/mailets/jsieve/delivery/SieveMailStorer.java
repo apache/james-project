@@ -180,20 +180,19 @@ public class SieveMailStorer implements MailStorer {
     }
 
     protected void storeMessageInbox(MailAddress mailAddress, MimeMessage message) throws MessagingException {
-        sievePoster.post("mailbox://" + mailAddress + "/", message);
+        sievePoster.post("mailbox://" + retrieveUserNameUsedForScriptStorage(mailAddress) + "/", message);
     }
 
-    public String retrieveUserNameUsedForScriptStorage(MailAddress m) {
+    public String retrieveUserNameUsedForScriptStorage(MailAddress mailAddress) {
         try {
             if (usersRepos.supportVirtualHosting()) {
-                return m.toString();
+                return mailAddress.print();
             } else {
-                return m.getLocalPart() + "@localhost";
+                return mailAddress.getLocalPart() + "@localhost";
             }
         } catch (UsersRepositoryException e) {
             log.error("Unable to access UsersRepository", e);
-            return m.getLocalPart() + "@localhost";
-
+            return mailAddress.getLocalPart() + "@localhost";
         }
     }
 }

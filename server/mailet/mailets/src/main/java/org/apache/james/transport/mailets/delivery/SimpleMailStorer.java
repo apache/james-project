@@ -94,11 +94,7 @@ public class SimpleMailStorer implements MailStorer {
 
     private String computeUsername(MailAddress recipient) throws MessagingException {
         try {
-            if (usersRepository.supportVirtualHosting()) {
-                return recipient.toString();
-            } else {
-                return recipient.getLocalPart();
-            }
+            return usersRepository.getUser(recipient);
         } catch (UsersRepositoryException e) {
             log.error("Unable to access UsersRepository", e);
             return recipient.toString();

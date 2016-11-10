@@ -72,6 +72,8 @@ import com.google.common.collect.ImmutableList;
 @RunWith(Parameterized.class)
 public class LocalDeliveryTest {
 
+    public static final String RECEIVER_DOMAIN_COM = "receiver@domain.com";
+
     public static class Parameter {
         private final UsersRepository usersRepository;
         private final MailboxManager mailboxManager;
@@ -163,6 +165,7 @@ public class LocalDeliveryTest {
         MessageManager messageManager = mock(MessageManager.class);
 
         when(parameter.getUsersRepository().supportVirtualHosting()).thenReturn(true);
+        when(parameter.getUsersRepository().getUser(new MailAddress(username))).thenReturn(username);
         doThrow(new ScriptNotFoundException()).when(parameter.getSieveRepository()).getActive(username);
         when(parameter.getMailboxManager().getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
         when(parameter.getUser().getUserName()).thenReturn(username);
@@ -183,6 +186,8 @@ public class LocalDeliveryTest {
         MailboxPath inbox = new MailboxPath("#private", username, "INBOX");
         MessageManager messageManager = mock(MessageManager.class);
         when(parameter.getUsersRepository().supportVirtualHosting()).thenReturn(false);
+        when(parameter.getUsersRepository().getUser(new MailAddress("receiver@localhost"))).thenReturn(username);
+        when(parameter.getUsersRepository().getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(username);
         doThrow(new ScriptNotFoundException()).when(parameter.getSieveRepository()).getActive(username);
         when(parameter.getMailboxManager().getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
         when(parameter.getUser().getUserName()).thenReturn(username);
@@ -200,7 +205,7 @@ public class LocalDeliveryTest {
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         message.setSubject("Subject");
         message.setSender(new InternetAddress("sender@any.com"));
-        message.setRecipient(MimeMessage.RecipientType.TO, new InternetAddress("receiver@domain.com"));
+        message.setRecipient(MimeMessage.RecipientType.TO, new InternetAddress(RECEIVER_DOMAIN_COM));
         MimeMultipart multipart = new MimeMultipart();
         MimeBodyPart scriptPart = new MimeBodyPart();
         scriptPart.setDataHandler(
