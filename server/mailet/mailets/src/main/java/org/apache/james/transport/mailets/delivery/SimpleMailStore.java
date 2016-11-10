@@ -29,7 +29,7 @@ import org.apache.mailet.MailAddress;
 
 import com.google.common.base.Preconditions;
 
-public class SimpleMailStorer implements MailStorer {
+public class SimpleMailStore implements MailStore {
 
     public static Builder builder() {
         return new Builder();
@@ -61,12 +61,12 @@ public class SimpleMailStorer implements MailStorer {
             return this;
         }
 
-        public SimpleMailStorer build() throws MessagingException {
+        public SimpleMailStore build() throws MessagingException {
             Preconditions.checkNotNull(usersRepos);
             Preconditions.checkNotNull(folder);
             Preconditions.checkNotNull(log);
             Preconditions.checkNotNull(mailboxAppender);
-            return new SimpleMailStorer(mailboxAppender, usersRepos, log, folder);
+            return new SimpleMailStore(mailboxAppender, usersRepos, log, folder);
         }
     }
 
@@ -75,7 +75,7 @@ public class SimpleMailStorer implements MailStorer {
     private final Log log;
     private final String folder;
 
-    private SimpleMailStorer(MailboxAppender mailboxAppender, UsersRepository usersRepository, Log log, String folder) {
+    private SimpleMailStore(MailboxAppender mailboxAppender, UsersRepository usersRepository, Log log, String folder) {
         this.mailboxAppender = mailboxAppender;
         this.usersRepository = usersRepository;
         this.log = log;

@@ -51,7 +51,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
-import org.apache.james.transport.mailets.jsieve.delivery.SieveMailStorer;
+import org.apache.james.transport.mailets.jsieve.delivery.SieveMailStore;
 import org.apache.james.transport.mailets.jsieve.delivery.SievePoster;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
@@ -90,7 +90,7 @@ public class SieveIntegrationTest {
     public static final MailboxPath SELECTED_MAILBOX = new MailboxPath("#private", "receiver", "INBOX.select");
     public static final MailboxPath INBOX = new MailboxPath("#private", "receiver", "INBOX");
 
-    private MailStorer testee;
+    private MailStore testee;
     private UsersRepository usersRepository;
     private MailboxManager mailboxManager;
     private ResourceLocator resourceLocator;
@@ -105,7 +105,7 @@ public class SieveIntegrationTest {
         fakeMailContext = FakeMailContext.defaultContext();
         sender = new MailAddress("sender@any");
 
-        testee = SieveMailStorer.builder()
+        testee = SieveMailStore.builder()
             .resourceLocator(resourceLocator)
             .usersRepository(usersRepository)
             .folder("INBOX")

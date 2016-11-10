@@ -45,7 +45,7 @@ public class MailDispatcher {
     }
 
     public static class Builder {
-        private MailStorer mailStorer;
+        private MailStore mailStore;
         private boolean consume;
         private MailetContext mailetContext;
         private Log log;
@@ -55,8 +55,8 @@ public class MailDispatcher {
             return this;
         }
 
-        public Builder mailStorer(MailStorer mailStorer) {
-            this.mailStorer = mailStorer;
+        public Builder mailStorer(MailStore mailStore) {
+            this.mailStore = mailStore;
             return this;
         }
 
@@ -71,21 +71,21 @@ public class MailDispatcher {
         }
 
         public MailDispatcher build() throws MessagingException {
-            Preconditions.checkNotNull(mailStorer);
+            Preconditions.checkNotNull(mailStore);
             Preconditions.checkNotNull(log);
             Preconditions.checkNotNull(mailetContext);
-            return new MailDispatcher(mailStorer, consume, log, mailetContext);
+            return new MailDispatcher(mailStore, consume, log, mailetContext);
         }
 
     }
 
-    private final MailStorer mailStorer;
+    private final MailStore mailStore;
     private final boolean consume;
     private final MailetContext mailetContext;
     private final Log log;
 
-    private MailDispatcher(MailStorer mailStorer, boolean consume, Log log, MailetContext mailetContext) {
-        this.mailStorer = mailStorer;
+    private MailDispatcher(MailStore mailStore, boolean consume, Log log, MailetContext mailetContext) {
+        this.mailStore = mailStore;
         this.consume = consume;
         this.log = log;
         this.mailetContext = mailetContext;
@@ -128,7 +128,7 @@ public class MailDispatcher {
             try {
                 // Add qmail's de facto standard Delivered-To header
                 message.addHeader(DELIVERED_TO, recipient.toString());
-                mailStorer.storeMail(mail.getSender(), recipient, mail);
+                mailStore.storeMail(mail.getSender(), recipient, mail);
                 message.removeHeader(DELIVERED_TO);
             } catch (Exception ex) {
                 log.error("Error while storing mail.", ex);

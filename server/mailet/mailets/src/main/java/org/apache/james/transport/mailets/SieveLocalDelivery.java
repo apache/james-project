@@ -29,7 +29,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.transport.mailets.delivery.MailDispatcher;
 import org.apache.james.transport.mailets.delivery.MailboxAppender;
-import org.apache.james.transport.mailets.jsieve.delivery.SieveMailStorer;
+import org.apache.james.transport.mailets.jsieve.delivery.SieveMailStore;
 import org.apache.james.transport.mailets.jsieve.delivery.SievePoster;
 import org.apache.james.transport.mailets.jsieve.CommonsLoggingAdapter;
 import org.apache.james.user.api.UsersRepository;
@@ -102,7 +102,7 @@ public class SieveLocalDelivery extends GenericMailet {
             .build();
         String folder = "INBOX";
         mailDispatcher = MailDispatcher.builder()
-            .mailStorer(SieveMailStorer.builder()
+            .mailStorer(SieveMailStore.builder()
                 .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, getMailetContext().getLogger()), folder, usersRepository))
                 .usersRepository(usersRepository)
                 .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))

@@ -44,10 +44,10 @@ import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SimpleMailStorerTest {
+public class SimpleMailStoreTest {
 
     public static final String FOLDER = "FOLDER";
-    private SimpleMailStorer testee;
+    private SimpleMailStore testee;
     private MailboxAppender mailboxAppender;
     private UsersRepository usersRepository;
     private MimeMessage mimeMessage;
@@ -56,7 +56,7 @@ public class SimpleMailStorerTest {
     public void setUp() throws Exception {
         mailboxAppender = mock(MailboxAppender.class);
         usersRepository = mock(UsersRepository.class);
-        testee = SimpleMailStorer.builder()
+        testee = SimpleMailStore.builder()
             .usersRepository(usersRepository)
             .mailboxAppender(mailboxAppender)
             .folder(FOLDER)

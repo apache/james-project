@@ -56,12 +56,12 @@ import com.google.common.collect.ImmutableList;
 
 public class MailDispatcherTest {
     private FakeMailContext fakeMailContext;
-    private MailStorer mailStorer;
+    private MailStore mailStore;
 
     @Before
     public void setUp() throws Exception {
         fakeMailContext = FakeMailContext.defaultContext();
-        mailStorer = mock(MailStorer.class);
+        mailStore = mock(MailStore.class);
     }
 
     @Test
@@ -69,7 +69,7 @@ public class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
-            .mailStorer(mailStorer)
+            .mailStorer(mailStore)
             .consume(true)
             .build();
 
@@ -81,9 +81,9 @@ public class MailDispatcherTest {
             .build();
         testee.dispatch(mail);
 
-        verify(mailStorer).storeMail(MailAddressFixture.OTHER_AT_JAMES, MailAddressFixture.ANY_AT_JAMES, mail);
-        verify(mailStorer).storeMail(MailAddressFixture.OTHER_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2, mail);
-        verifyNoMoreInteractions(mailStorer);
+        verify(mailStore).storeMail(MailAddressFixture.OTHER_AT_JAMES, MailAddressFixture.ANY_AT_JAMES, mail);
+        verify(mailStore).storeMail(MailAddressFixture.OTHER_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2, mail);
+        verifyNoMoreInteractions(mailStore);
     }
 
     @Test
@@ -91,7 +91,7 @@ public class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
-            .mailStorer(mailStorer)
+            .mailStorer(mailStore)
             .consume(true)
             .build();
 
@@ -110,7 +110,7 @@ public class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
-            .mailStorer(mailStorer)
+            .mailStorer(mailStore)
             .consume(false)
             .build();
 
@@ -130,11 +130,11 @@ public class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
-            .mailStorer(mailStorer)
+            .mailStorer(mailStore)
             .consume(true)
             .build();
         doThrow(new MessagingException())
-            .when(mailStorer)
+            .when(mailStore)
             .storeMail(any(MailAddress.class), any(MailAddress.class), any(Mail.class));
 
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
@@ -173,7 +173,7 @@ public class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
-            .mailStorer(mailStorer)
+            .mailStorer(mailStore)
             .consume(false)
             .build();
 
@@ -186,7 +186,7 @@ public class MailDispatcherTest {
         testee.dispatch(mail);
 
         ArgumentCaptor<Mail> mailCaptor = ArgumentCaptor.forClass(Mail.class);
-        verify(mailStorer).storeMail(any(MailAddress.class), any(MailAddress.class), mailCaptor.capture());
+        verify(mailStore).storeMail(any(MailAddress.class), any(MailAddress.class), mailCaptor.capture());
 
         assertThat(mailCaptor.getValue().getMessage().getHeader(RFC2822Headers.RETURN_PATH))
             .containsExactly("<" + MailAddressFixture.OTHER_AT_JAMES +">");
@@ -197,7 +197,7 @@ public class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
-            .mailStorer(mailStorer)
+            .mailStorer(mailStore)
             .consume(false)
             .build();
 
@@ -219,7 +219,7 @@ public class MailDispatcherTest {
 
     @Test
     public void dispatchShouldCustomizeDeliveredToHeader() throws Exception {
-        AccumulatorDeliveredToHeaderMailStorer accumulator = new AccumulatorDeliveredToHeaderMailStorer();
+        AccumulatorDeliveredToHeaderMailStore accumulator = new AccumulatorDeliveredToHeaderMailStore();
         MailDispatcher testee = MailDispatcher.builder()
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
@@ -240,10 +240,10 @@ public class MailDispatcherTest {
                 new String[]{MailAddressFixture.ANY_AT_JAMES2.toString()});
     }
 
-    public static class AccumulatorDeliveredToHeaderMailStorer implements MailStorer {
+    public static class AccumulatorDeliveredToHeaderMailStore implements MailStore {
         public final List<String[]> deliveredToHeaderValues;
 
-        public AccumulatorDeliveredToHeaderMailStorer() {
+        public AccumulatorDeliveredToHeaderMailStore() {
             this.deliveredToHeaderValues = new ArrayList<String[]>();
         }
 

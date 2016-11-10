@@ -27,7 +27,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.logging.Log;
 import org.apache.james.transport.mailets.delivery.DeliveryUtils;
-import org.apache.james.transport.mailets.delivery.MailStorer;
+import org.apache.james.transport.mailets.delivery.MailStore;
 import org.apache.james.transport.mailets.jsieve.ActionDispatcher;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.transport.mailets.jsieve.SieveMailAdapter;
@@ -45,7 +45,7 @@ import org.apache.mailet.MailetContext;
 
 import com.google.common.base.Preconditions;
 
-public class SieveMailStorer implements MailStorer {
+public class SieveMailStore implements MailStore {
 
     public static Builder builder() {
         return new Builder();
@@ -89,14 +89,14 @@ public class SieveMailStorer implements MailStorer {
             return this;
         }
 
-        public SieveMailStorer build() throws MessagingException {
+        public SieveMailStore build() throws MessagingException {
             Preconditions.checkNotNull(mailetContext);
             Preconditions.checkNotNull(usersRepos);
             Preconditions.checkNotNull(folder);
             Preconditions.checkNotNull(resourceLocator);
             Preconditions.checkNotNull(log);
             Preconditions.checkNotNull(sievePoster);
-            return new SieveMailStorer(mailetContext, usersRepos, sievePoster, folder, resourceLocator, log);
+            return new SieveMailStore(mailetContext, usersRepos, sievePoster, folder, resourceLocator, log);
         }
     }
 
@@ -109,8 +109,8 @@ public class SieveMailStorer implements MailStorer {
     private final ActionDispatcher actionDispatcher;
     private final Log log;
 
-    public SieveMailStorer(MailetContext mailetContext, UsersRepository usersRepos, SievePoster sievePoster, String folder,
-                           ResourceLocator resourceLocator, Log log) throws MessagingException {
+    public SieveMailStore(MailetContext mailetContext, UsersRepository usersRepos, SievePoster sievePoster, String folder,
+                          ResourceLocator resourceLocator, Log log) throws MessagingException {
         this.mailetContext = mailetContext;
         this.usersRepos = usersRepos;
         this.sievePoster = sievePoster;

@@ -24,6 +24,6 @@ import javax.mail.MessagingException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
-public interface MailStorer {
+public interface MailStore {
     void storeMail(MailAddress sender, MailAddress recipient, Mail mail) throws MessagingException;
 }
