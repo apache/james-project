@@ -50,6 +50,8 @@ public class MemoryDataModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new SieveFileRepositoryModule());
+
         bind(MemoryDomainList.class).in(Scopes.SINGLETON);
         bind(DomainList.class).to(MemoryDomainList.class);
 
@@ -58,9 +60,6 @@ public class MemoryDataModule extends AbstractModule {
 
         bind(MemoryUsersRepository.class).toInstance(MemoryUsersRepository.withVirtualHosting());
         bind(UsersRepository.class).to(MemoryUsersRepository.class);
-
-        bind(SieveFileRepository.class).in(Scopes.SINGLETON);
-        bind(SieveRepository.class).to(SieveFileRepository.class);
 
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MemoryDataConfigurationPerformer.class);
     }

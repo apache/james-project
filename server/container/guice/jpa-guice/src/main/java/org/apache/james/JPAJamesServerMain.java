@@ -20,7 +20,7 @@
 package org.apache.james;
 
 import org.apache.james.modules.data.JPADataModule;
-import org.apache.james.modules.data.JPASieveRepositoryModule;
+import org.apache.james.modules.data.SieveFileRepositoryModule;
 import org.apache.james.modules.mailbox.JPAMailboxModule;
 import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
@@ -35,7 +35,7 @@ public class JPAJamesServerMain {
     public static final Module jpaServerModule = Modules.combine(
         new JPAMailboxModule(),
         new JPADataModule(),
-        new JPASieveRepositoryModule(),
+        new SieveFileRepositoryModule(),
         new QuotaModule(),
         new ActiveMQQueueModule());
 
