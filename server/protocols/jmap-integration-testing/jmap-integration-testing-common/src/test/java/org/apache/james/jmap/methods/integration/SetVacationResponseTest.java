@@ -28,13 +28,16 @@ import static org.hamcrest.Matchers.equalTo;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import org.apache.james.GuiceJmapJamesServer;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JmapServer;
+import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.util.ValuePatch;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +47,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-public abstract class SetVacationResponseTest {
+public abstract class SetVacationResponseTest<T extends GuiceJamesServer & JmapServer & WebAdminServer> {
 
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
@@ -52,24 +55,26 @@ public abstract class SetVacationResponseTest {
     public static final String USER = "username@" + USERS_DOMAIN;
     public static final String PASSWORD = "password";
     public static final String SUBJECT = "subject";
+    private JmapGuiceProbe jmapGuiceProbe;
 
-    protected abstract GuiceJmapJamesServer createJmapServer();
+    protected abstract T createJmapServer();
 
     protected abstract void await();
 
     private AccessToken accessToken;
-    private GuiceJmapJamesServer jmapServer;
+    private T jmapServer;
 
     @Before
     public void setup() throws Throwable {
         jmapServer = createJmapServer();
         jmapServer.start();
+        jmapGuiceProbe = jmapServer.getJmapProbe();
         RestAssured.requestSpecification = new RequestSpecBuilder()
         		.setContentType(ContentType.JSON)
         		.setAccept(ContentType.JSON)
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(jmapServer.getJmapPort()
-                        .orElseThrow(() -> new RuntimeException("Unable to locate JMAP port")))
+        		.setPort(jmapGuiceProbe
+                    .getJmapPort())
         		.build();
 
         jmapServer.serverProbe().addDomain(USERS_DOMAIN);
@@ -200,7 +205,7 @@ public abstract class SetVacationResponseTest {
             .body(NAME, equalTo("vacationResponseSet"))
             .body(ARGUMENTS + ".updated[0]", equalTo("singleton"));
 
-        Vacation vacation = jmapServer.serverProbe().retrieveVacation(AccountId.fromString(USER));
+        Vacation vacation = jmapGuiceProbe.retrieveVacation(AccountId.fromString(USER));
         assertThat(vacation.getTextBody()).contains("Message explaining my wonderful vacations");
         assertThat(vacation.getHtmlBody()).contains("<p>Here is the HTML version</p>");
         assertThat(vacation.isEnabled()).isTrue();
@@ -211,7 +216,7 @@ public abstract class SetVacationResponseTest {
 
     @Test
     public void setVacationResponseShouldAllowResets() {
-        jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
+        jmapGuiceProbe.modifyVacation(AccountId.fromString(USER),
             VacationPatch.builder()
                 .textBody(ValuePatch.modifyTo("any value"))
                 .build());
@@ -239,7 +244,7 @@ public abstract class SetVacationResponseTest {
             .body(NAME, equalTo("vacationResponseSet"))
             .body(ARGUMENTS + ".updated[0]", equalTo("singleton"));
 
-        assertThat(jmapServer.serverProbe().retrieveVacation(AccountId.fromString(USER)))
+        assertThat(jmapGuiceProbe.retrieveVacation(AccountId.fromString(USER)))
             .isEqualTo(Vacation.builder()
                 .enabled(false)
                 .build());
@@ -249,7 +254,7 @@ public abstract class SetVacationResponseTest {
     public void setVacationResponseShouldNotAlterAbsentProperties() {
         String textBody = "any value";
         String subject = "any subject";
-        jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
+        jmapGuiceProbe.modifyVacation(AccountId.fromString(USER),
             VacationPatch.builder()
                 .textBody(ValuePatch.modifyTo(textBody))
                 .build());
@@ -279,7 +284,7 @@ public abstract class SetVacationResponseTest {
             .body(NAME, equalTo("vacationResponseSet"))
             .body(ARGUMENTS + ".updated[0]", equalTo("singleton"));
 
-        assertThat(jmapServer.serverProbe().retrieveVacation(AccountId.fromString(USER)))
+        assertThat(jmapGuiceProbe.retrieveVacation(AccountId.fromString(USER)))
             .isEqualTo(Vacation.builder()
                 .enabled(false)
                 .subject(Optional.of(subject))
@@ -289,7 +294,7 @@ public abstract class SetVacationResponseTest {
 
     @Test
     public void setVacationResponseShouldAllowPartialUpdates() {
-        jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
+        jmapGuiceProbe.modifyVacation(AccountId.fromString(USER),
             VacationPatch.builder()
                 .textBody(ValuePatch.modifyTo("any value"))
                 .build());
@@ -318,7 +323,7 @@ public abstract class SetVacationResponseTest {
             .body(NAME, equalTo("vacationResponseSet"))
             .body(ARGUMENTS + ".updated[0]", equalTo("singleton"));
 
-        assertThat(jmapServer.serverProbe().retrieveVacation(AccountId.fromString(USER)))
+        assertThat(jmapGuiceProbe.retrieveVacation(AccountId.fromString(USER)))
             .isEqualTo(Vacation.builder()
                 .enabled(false)
                 .textBody(newTextBody)
@@ -353,7 +358,7 @@ public abstract class SetVacationResponseTest {
             .body(NAME, equalTo("vacationResponseSet"))
             .body(ARGUMENTS + ".updated[0]", equalTo("singleton"));
 
-        Vacation vacation = jmapServer.serverProbe().retrieveVacation(AccountId.fromString(USER));
+        Vacation vacation = jmapGuiceProbe.retrieveVacation(AccountId.fromString(USER));
         assertThat(vacation.getTextBody()).contains("Message explaining my wonderful vacations");
         assertThat(vacation.isEnabled()).isTrue();
         assertThat(vacation.getFromDate()).contains(ZonedDateTime.parse("2016-04-03T02:01+07:00[Asia/Vientiane]"));

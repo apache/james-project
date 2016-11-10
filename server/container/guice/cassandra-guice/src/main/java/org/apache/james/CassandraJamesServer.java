@@ -16,31 +16,43 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james;
 
-package org.apache.james.jmap.memory;
+import java.util.Arrays;
 
-import org.apache.james.MemoryJamesServer;
-import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.jmap.methods.integration.GetVacationResponseTest;
-import org.apache.james.jmap.servers.MemoryJmapServerModule;
-import org.apache.james.util.date.ZonedDateTimeProvider;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import org.apache.james.utils.JmapGuiceProbe;
+import org.apache.james.utils.WebAdminGuiceProbe;
 
-public class MemoryGetVacationResponseMethodTest extends GetVacationResponseTest<MemoryJamesServer> {
+import com.google.common.collect.Iterables;
+import com.google.inject.Module;
+import com.google.inject.util.Modules;
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+public class CassandraJamesServer extends GuiceJamesServer implements JmapServer, WebAdminServer {
+
+    public CassandraJamesServer() {
+        super();
+    }
+
+    public CassandraJamesServer(Module module) {
+        super(module);
+    }
+
+    public CassandraJamesServer combineWith(Module... modules) {
+        return new CassandraJamesServer(Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
+    }
+
+    public CassandraJamesServer overrideWith(Module... overrides) {
+        return new CassandraJamesServer(Modules.override(module).with(overrides));
+    }
 
     @Override
-    protected MemoryJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) {
-        return new MemoryJamesServer()
-                    .combineWith(MemoryJamesServerMain.inMemoryServerModule)
-                    .overrideWith(new MemoryJmapServerModule(temporaryFolder),
-                        binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
+    public JmapGuiceProbe getJmapProbe() {
+        return getGuiceProbeProvider().getProbe(JmapGuiceProbe.class);
     }
-    
+
     @Override
-    protected void await() {
+    public WebAdminGuiceProbe getWebAdminProbe() {
+        return getGuiceProbeProvider().getProbe(WebAdminGuiceProbe.class);
     }
+
 }

@@ -24,6 +24,7 @@ import java.util.Optional;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.google.inject.multibindings.Multibinder;
 import org.apache.commons.cli.MissingArgumentException;
 import org.apache.james.core.JamesServerResourceLoader;
 import org.apache.james.core.filesystem.FileSystemImpl;
@@ -37,6 +38,8 @@ import org.apache.james.onami.lifecycle.PreDestroyModule;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import org.apache.james.utils.GuiceProbe;
+import org.apache.james.utils.GuiceServerProbe;
 
 public class CommonServicesModule extends AbstractModule {
     
@@ -56,6 +59,7 @@ public class CommonServicesModule extends AbstractModule {
         bind(FileSystemImpl.class).in(Scopes.SINGLETON);
 
         bind(FileSystem.class).to(FileSystemImpl.class);
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(GuiceServerProbe.class);
     }
 
     @Provides @Singleton @Named(CONFIGURATION_PATH)

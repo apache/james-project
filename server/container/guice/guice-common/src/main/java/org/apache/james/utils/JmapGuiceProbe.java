@@ -17,30 +17,40 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory;
+package org.apache.james.utils;
 
-import org.apache.james.MemoryJamesServer;
-import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.jmap.methods.integration.GetVacationResponseTest;
-import org.apache.james.jmap.servers.MemoryJmapServerModule;
-import org.apache.james.util.date.ZonedDateTimeProvider;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import org.apache.james.jmap.JMAPServer;
+import org.apache.james.jmap.api.vacation.AccountId;
+import org.apache.james.jmap.api.vacation.Vacation;
+import org.apache.james.jmap.api.vacation.VacationPatch;
+import org.apache.james.jmap.api.vacation.VacationRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class MemoryGetVacationResponseMethodTest extends GetVacationResponseTest<MemoryJamesServer> {
+import javax.inject.Inject;
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+public class JmapGuiceProbe implements GuiceProbe {
 
-    @Override
-    protected MemoryJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) {
-        return new MemoryJamesServer()
-                    .combineWith(MemoryJamesServerMain.inMemoryServerModule)
-                    .overrideWith(new MemoryJmapServerModule(temporaryFolder),
-                        binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
+    private static final Logger LOGGER = LoggerFactory.getLogger(JmapGuiceProbe.class);
+
+    private final VacationRepository vacationRepository;
+    private final JMAPServer jmapServer;
+
+    @Inject
+    private JmapGuiceProbe(VacationRepository vacationRepository, JMAPServer jmapServer) {
+        this.vacationRepository = vacationRepository;
+        this.jmapServer = jmapServer;
     }
-    
-    @Override
-    protected void await() {
+
+    public int getJmapPort() {
+        return jmapServer.getPort();
+    }
+
+    public void modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
+        vacationRepository.modifyVacation(accountId, vacationPatch).join();
+    }
+
+    public Vacation retrieveVacation(AccountId accountId) {
+        return vacationRepository.retrieveVacation(accountId).join();
     }
 }

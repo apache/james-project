@@ -48,9 +48,10 @@ import java.util.stream.Collectors;
 
 import javax.mail.Flags;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.commons.io.IOUtils;
-import org.apache.james.GuiceJmapJamesServer;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JmapServer;
+import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.model.mailbox.Role;
@@ -60,6 +61,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.util.ZeroedInputStream;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -68,6 +70,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
@@ -78,7 +81,7 @@ import com.jayway.restassured.builder.ResponseSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.specification.ResponseSpecification;
 
-public abstract class SetMessagesMethodTest {
+public abstract class SetMessagesMethodTest<T extends GuiceJamesServer & JmapServer & WebAdminServer> {
 
     private static final int _1MB = 1024*1024;
     private static final String NAME = "[0][0]";
@@ -90,13 +93,13 @@ public abstract class SetMessagesMethodTest {
 
     private ConditionFactory calmlyAwait;
 
-    protected abstract GuiceJmapJamesServer createJmapServer();
+    protected abstract T createJmapServer();
 
     protected abstract void await();
 
     private AccessToken accessToken;
     private String username;
-    private GuiceJmapJamesServer jmapServer;
+    private T jmapServer;
 
     @Before
     public void setup() throws Throwable {
@@ -106,8 +109,8 @@ public abstract class SetMessagesMethodTest {
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
                 .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-                .setPort(jmapServer.getJmapPort()
-                        .orElseThrow(() -> new RuntimeException("Unable to locate JMAP port")))
+                .setPort(jmapServer.getJmapProbe()
+                    .getJmapPort())
                 .build();
 
         username = "username@" + USERS_DOMAIN;

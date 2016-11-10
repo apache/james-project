@@ -28,11 +28,12 @@ import java.util.Arrays;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.io.IOUtils;
-import org.apache.james.GuiceJmapJamesServer;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.MemoryJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.utils.ExtendedJmapServerProbe;
+import org.apache.james.utils.GuiceServerProbe;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.collect.ImmutableList;
@@ -44,13 +45,13 @@ public class TemporaryJamesServer {
 
     private static final int LIMIT_TO_3_MESSAGES = 3;
 
-    private final GuiceJmapJamesServer jamesServer;
+    private final MemoryJamesServer jamesServer;
 
 
     public TemporaryJamesServer(TemporaryFolder temporaryFolder, MailetContainer mailetContainer, Module... additionalModules) throws Exception {
         appendMailetConfigurations(temporaryFolder, mailetContainer);
 
-        jamesServer = new GuiceJmapJamesServer()
+        jamesServer = new MemoryJamesServer()
             .combineWith(MemoryJamesServerMain.inMemoryServerModule)
             .overrideWith(ImmutableList.<Module>builder().addAll(Arrays.asList(additionalModules))
                 .add(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
@@ -76,7 +77,7 @@ public class TemporaryJamesServer {
         jamesServer.stop();
     }
 
-    public ExtendedJmapServerProbe getServerProbe() {
+    public GuiceServerProbe getServerProbe() {
         return jamesServer.serverProbe();
     }
 }

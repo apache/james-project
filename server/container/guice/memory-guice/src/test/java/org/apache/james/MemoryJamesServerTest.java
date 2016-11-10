@@ -25,14 +25,14 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
-public class MemoryJamesServerTest extends AbstractJmapJamesServerTest {
+public class MemoryJamesServerTest extends AbstractJmapJamesServerTest<MemoryJamesServer> {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Override
-    protected GuiceJmapJamesServer createJamesServer() {
-        return new GuiceJmapJamesServer()
+    protected MemoryJamesServer createJamesServer() {
+        return new MemoryJamesServer()
                 .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                 .overrideWith(new TestFilesystemModule(temporaryFolder),
                         new TestJMAPServerModule(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT));

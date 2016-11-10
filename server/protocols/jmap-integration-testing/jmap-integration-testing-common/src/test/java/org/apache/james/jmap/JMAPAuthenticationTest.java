@@ -32,8 +32,11 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
-import org.apache.james.GuiceJmapJamesServer;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JmapServer;
+import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.model.ContinuationToken;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,17 +46,17 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-public abstract class JMAPAuthenticationTest {
+public abstract class JMAPAuthenticationTest<T extends GuiceJamesServer & JmapServer & WebAdminServer> {
 
     private static final ZonedDateTime oldDate = ZonedDateTime.parse("2011-12-03T10:15:30+01:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     private static final ZonedDateTime newDate = ZonedDateTime.parse("2011-12-03T10:16:30+01:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     private static final ZonedDateTime afterExpirationDate = ZonedDateTime.parse("2011-12-03T10:30:31+01:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
-    protected abstract GuiceJmapJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider);
+    protected abstract T createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider);
 
     private UserCredentials userCredentials;
     private FixedDateZonedDateTimeProvider zonedDateTimeProvider;
-    private GuiceJmapJamesServer jmapServer;
+    private T jmapServer;
 
     @Before
     public void setup() throws Throwable {
@@ -63,8 +66,8 @@ public abstract class JMAPAuthenticationTest {
         jmapServer.start();
         RestAssured.requestSpecification = new RequestSpecBuilder()
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(jmapServer.getJmapPort()
-                        .orElseThrow(() -> new RuntimeException("Unable to locate JMAP port")))
+        		.setPort(jmapServer.getJmapProbe()
+                    .getJmapPort())
         		.build();
         
         userCredentials = UserCredentials.builder()

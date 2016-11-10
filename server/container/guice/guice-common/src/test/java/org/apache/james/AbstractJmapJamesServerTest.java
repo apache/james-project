@@ -30,6 +30,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
+import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,7 +40,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-public abstract class AbstractJmapJamesServerTest {
+public abstract class AbstractJmapJamesServerTest<T extends GuiceJamesServer & JmapServer & WebAdminServer> {
 
     private static final int IMAP_PORT = 1143; // You need to be root (superuser) to bind to ports under 1024.
     private static final int IMAP_PORT_SSL = 1993;
@@ -47,7 +48,7 @@ public abstract class AbstractJmapJamesServerTest {
     private static final int SMTP_PORT = 1025;
     private static final int LMTP_PORT = 1024;
 
-    private GuiceJmapJamesServer server;
+    private T server;
     private SocketChannel socketChannel;
 
     @Before
@@ -60,12 +61,12 @@ public abstract class AbstractJmapJamesServerTest {
         		.setContentType(ContentType.JSON)
         		.setAccept(ContentType.JSON)
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(server.getJmapPort()
-                        .orElseThrow(() -> new RuntimeException("Unable to locate JMAP port")))
+        		.setPort(server.getJmapProbe()
+                    .getJmapPort())
         		.build();
     }
 
-    protected abstract GuiceJmapJamesServer createJamesServer();
+    protected abstract T createJamesServer();
 
     protected abstract void clean();
 

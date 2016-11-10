@@ -19,21 +19,21 @@
 
 package org.apache.james.jmap.memory;
 
-import org.apache.james.GuiceJmapJamesServer;
+import org.apache.james.MemoryJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.methods.integration.GetMailboxesMethodTest;
 import org.apache.james.jmap.servers.MemoryJmapServerModule;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
-public class MemoryGetMailboxesMethodTest extends GetMailboxesMethodTest {
+public class MemoryGetMailboxesMethodTest extends GetMailboxesMethodTest<MemoryJamesServer> {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Override
-    protected GuiceJmapJamesServer createJmapServer() {
-        return new GuiceJmapJamesServer()
+    protected MemoryJamesServer createJmapServer() {
+        return new MemoryJamesServer()
                 .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                 .overrideWith(new MemoryJmapServerModule(temporaryFolder));
     }

@@ -19,6 +19,27 @@
 
 package org.apache.james.jmap.methods.integration;
 
+import com.google.common.base.Charsets;
+import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.builder.RequestSpecBuilder;
+import com.jayway.restassured.http.ContentType;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JmapServer;
+import org.apache.james.WebAdminServer;
+import org.apache.james.jmap.JmapAuthentication;
+import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.utils.JmapGuiceProbe;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import javax.mail.Flags;
+import java.io.ByteArrayInputStream;
+import java.util.Date;
+
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
@@ -30,35 +51,15 @@ import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
-import java.io.ByteArrayInputStream;
-import java.util.Date;
-
-import javax.mail.Flags;
-
-import org.apache.james.GuiceJmapJamesServer;
-import org.apache.james.jmap.JmapAuthentication;
-import org.apache.james.jmap.api.access.AccessToken;
-import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.google.common.base.Charsets;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
-
-public abstract class GetMailboxesMethodTest {
+public abstract class GetMailboxesMethodTest<T extends GuiceJamesServer & JmapServer & WebAdminServer> {
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
 
-    protected abstract GuiceJmapJamesServer createJmapServer();
+    protected abstract T createJmapServer();
 
     private AccessToken accessToken;
     private String username;
-    private GuiceJmapJamesServer jmapServer;
+    private T jmapServer;
 
     @Before
     public void setup() throws Throwable {
@@ -69,8 +70,8 @@ public abstract class GetMailboxesMethodTest {
         		.setContentType(ContentType.JSON)
         		.setAccept(ContentType.JSON)
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(jmapServer.getJmapPort()
-                        .orElseThrow(() -> new RuntimeException("Unable to locate JMAP port")))
+        		.setPort(jmapServer.getJmapProbe()
+                    .getJmapPort())
         		.build();
 
         String domain = "domain.tld";

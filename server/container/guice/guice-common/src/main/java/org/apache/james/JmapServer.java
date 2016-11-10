@@ -17,15 +17,10 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james;
 
-import org.apache.james.jmap.api.vacation.AccountId;
-import org.apache.james.jmap.api.vacation.Vacation;
-import org.apache.james.jmap.api.vacation.VacationPatch;
+import org.apache.james.utils.JmapGuiceProbe;
 
-public interface ExtendedJmapServerProbe extends ExtendedServerProbe {
-
-    void modifyVacation(AccountId accountId, VacationPatch vacationPatch);
-
-    Vacation retrieveVacation(AccountId accountId);
+public interface JmapServer {
+    JmapGuiceProbe getJmapProbe();
 }

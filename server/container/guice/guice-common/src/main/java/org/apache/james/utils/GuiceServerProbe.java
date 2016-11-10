@@ -54,9 +54,9 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class GuiceServerProbe implements ExtendedServerProbe {
+public class GuiceServerProbe implements ExtendedServerProbe, GuiceProbe {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JmapGuiceServerProbe.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JmapGuiceProbe.class);
 
     private final MailboxManager mailboxManager;
     private final MailboxMapperFactory mailboxMapperFactory;

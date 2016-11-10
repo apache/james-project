@@ -17,30 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory;
+package org.apache.james.utils;
 
-import org.apache.james.MemoryJamesServer;
-import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.jmap.methods.integration.GetVacationResponseTest;
-import org.apache.james.jmap.servers.MemoryJmapServerModule;
-import org.apache.james.util.date.ZonedDateTimeProvider;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Preconditions;
 
-public class MemoryGetVacationResponseMethodTest extends GetVacationResponseTest<MemoryJamesServer> {
+import javax.inject.Inject;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+public class GuiceProbeProvider {
+    private final Map<Class<GuiceProbe>, GuiceProbe> registry;
 
-    @Override
-    protected MemoryJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) {
-        return new MemoryJamesServer()
-                    .combineWith(MemoryJamesServerMain.inMemoryServerModule)
-                    .overrideWith(new MemoryJmapServerModule(temporaryFolder),
-                        binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
+    @Inject
+    public GuiceProbeProvider(Set<GuiceProbe> guiceProbes) {
+        this.registry = guiceProbes.stream()
+            .collect(Guavate.toImmutableMap(guiceProbe -> (Class<GuiceProbe>) guiceProbe.getClass()));
     }
-    
-    @Override
-    protected void await() {
+
+    public <T extends GuiceProbe> T getProbe(Class<T> clazz) {
+        Preconditions.checkNotNull(clazz);
+        return Optional.ofNullable(registry.get(clazz))
+            .map(probe -> (T) probe)
+            .orElseThrow(() -> new RuntimeException("No probe registered for class: " + clazz));
     }
 }

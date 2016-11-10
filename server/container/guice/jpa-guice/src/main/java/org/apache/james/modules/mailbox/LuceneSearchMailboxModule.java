@@ -22,6 +22,10 @@ package org.apache.james.modules.mailbox;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.james.core.JamesServerResourceLoader;
+import org.apache.james.core.filesystem.FileSystemImpl;
+import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -44,7 +48,7 @@ public class LuceneSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    Directory provideDirectory() throws IOException {
-        return FSDirectory.open(new File("Lucene"));
+    Directory provideDirectory(FileSystem fileSystem) throws IOException {
+        return FSDirectory.open(fileSystem.getBasedir());
     }
 }

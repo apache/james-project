@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.cassandra;
 
+import org.apache.james.CassandraJamesServer;
 import org.apache.james.CassandraJamesServerMain;
-import org.apache.james.GuiceJmapJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.methods.integration.GetVacationResponseTest;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
@@ -30,7 +30,7 @@ import org.junit.Rule;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
-public class CassandraGetVacationResponseTest extends GetVacationResponseTest {
+public class CassandraGetVacationResponseTest extends GetVacationResponseTest<CassandraJamesServer> {
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
@@ -42,8 +42,8 @@ public class CassandraGetVacationResponseTest extends GetVacationResponseTest {
         .around(embeddedElasticSearch);
 
     @Override
-    protected GuiceJmapJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) {
-        return new GuiceJmapJamesServer()
+    protected CassandraJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) {
+        return new CassandraJamesServer()
                     .combineWith(CassandraJamesServerMain.cassandraServerModule)
                     .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra),
                         binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));

@@ -29,7 +29,9 @@ import java.util.List;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.PropertiesProvider;
+import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.FixedPort;
 import org.apache.james.webadmin.Port;
 import org.apache.james.webadmin.Routes;
@@ -62,6 +64,7 @@ public class WebAdminServerModule extends AbstractModule {
         routesMultibinder.addBinding().to(UserMailboxesRoutes.class);
 
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(WebAdminServerModuleConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(WebAdminGuiceProbe.class);
     }
 
     @Provides

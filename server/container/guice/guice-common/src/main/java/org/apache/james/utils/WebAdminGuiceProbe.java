@@ -17,30 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory;
+package org.apache.james.utils;
 
-import org.apache.james.MemoryJamesServer;
-import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.jmap.methods.integration.GetVacationResponseTest;
-import org.apache.james.jmap.servers.MemoryJmapServerModule;
-import org.apache.james.util.date.ZonedDateTimeProvider;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import javax.inject.Inject;
 
-public class MemoryGetVacationResponseMethodTest extends GetVacationResponseTest<MemoryJamesServer> {
+import org.apache.james.webadmin.WebAdminServer;
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+public class WebAdminGuiceProbe implements GuiceProbe {
+    private final WebAdminServer webAdminServer;
 
-    @Override
-    protected MemoryJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) {
-        return new MemoryJamesServer()
-                    .combineWith(MemoryJamesServerMain.inMemoryServerModule)
-                    .overrideWith(new MemoryJmapServerModule(temporaryFolder),
-                        binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
+    @Inject
+    public WebAdminGuiceProbe(WebAdminServer webAdminServer) {
+        this.webAdminServer = webAdminServer;
     }
-    
-    @Override
-    protected void await() {
+
+    public int getWebAdminPort() {
+        return webAdminServer.getPort().toInt();
     }
 }

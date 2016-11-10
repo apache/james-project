@@ -31,11 +31,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.GuiceJmapJamesServer;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JmapServer;
+import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +51,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-public abstract class VacationIntegrationTest {
+public abstract class VacationIntegrationTest<T extends GuiceJamesServer & JmapServer & WebAdminServer> {
 
     private static final String ARGUMENTS = "[0][1]";
     private static final String SECOND_NAME = "[1][0]";
@@ -62,9 +65,10 @@ public abstract class VacationIntegrationTest {
     public static final String ORIGINAL_MESSAGE_TEXT_BODY = "Hello someone, and thank you for joining example.com!";
 
     private ConditionFactory calmlyAwait;
-    private GuiceJmapJamesServer guiceJamesServer;
+    private T guiceJamesServer;
+    private JmapGuiceProbe jmapGuiceProbe;
 
-    protected abstract GuiceJmapJamesServer createJmapServer();
+    protected abstract T createJmapServer();
 
     protected abstract void await();
 
@@ -83,12 +87,13 @@ public abstract class VacationIntegrationTest {
         guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, "INBOX");
         await();
 
+        jmapGuiceProbe = guiceJamesServer.getJmapProbe();
         RestAssured.requestSpecification = new RequestSpecBuilder()
         		.setContentType(ContentType.JSON)
         		.setAccept(ContentType.JSON)
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(guiceJamesServer.getJmapPort()
-                        .orElseThrow(() -> new RuntimeException("Unable to locate JMAP port")))
+        		.setPort(jmapGuiceProbe
+                    .getJmapPort())
         		.build();
 
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
@@ -134,7 +139,7 @@ public abstract class VacationIntegrationTest {
         // Given
         AccessToken user1AccessToken = JmapAuthentication.authenticateJamesUser(USER_1, PASSWORD);
         AccessToken user2AccessToken = JmapAuthentication.authenticateJamesUser(USER_2, PASSWORD);
-        guiceJamesServer.serverProbe().modifyVacation(
+        jmapGuiceProbe.modifyVacation(
             AccountId.fromString(USER_1),
             VacationPatch.builder()
                 .isEnabled(true)

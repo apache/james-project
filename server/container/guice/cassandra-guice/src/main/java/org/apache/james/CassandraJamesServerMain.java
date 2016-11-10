@@ -27,6 +27,7 @@ import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
 import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
+import org.apache.james.modules.protocols.JMAPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.QuotaModule;
@@ -37,6 +38,7 @@ import com.google.inject.util.Modules;
 public class CassandraJamesServerMain {
 
     public static final Module cassandraServerModule = Modules.combine(
+        new JMAPServerModule(),
         new CassandraUsersRepositoryModule(),
         new CassandraDomainListModule(),
         new CassandraRecipientRewriteTableModule(),
@@ -50,7 +52,7 @@ public class CassandraJamesServerMain {
 
 
     public static void main(String[] args) throws Exception {
-        GuiceJmapJamesServer server = new GuiceJmapJamesServer()
+        GuiceJamesServer server = new GuiceJamesServer()
                     .combineWith(cassandraServerModule, new JMXServerModule());
         server.start();
     }
