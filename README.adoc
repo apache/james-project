@@ -196,6 +196,9 @@ $ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/spring/dest
 Then we need to build james container :
 $ docker build -t james_run dockerfiles/run/spring/
 
+The provisioned james images bases on pre-build james server which is "linagora/james-project-spring-jpa". If we need to build james container with the default initial data (initial domain: james.local and initial users: user01, user02, user03):
+$ docker build -t james_run dockerfiles/run/spring/provisioned/
+
 To run this container :
 $ docker run --hostname HOSTNAME -p "25:25" -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --name james_run -t james_run
 
