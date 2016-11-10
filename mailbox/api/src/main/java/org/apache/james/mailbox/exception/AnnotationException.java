@@ -17,45 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
+package org.apache.james.mailbox.exception;
 
-package org.apache.james.mpt.imapmailbox.suite;
-
-import java.util.Locale;
-
-import javax.inject.Inject;
-
-import org.apache.james.mpt.api.ImapFeatures;
-import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedInbox;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
-
-public class MailboxAnnotation extends BaseSelectedInbox {
-    @Inject
-    private static ImapHostSystem system;
-
-    public MailboxAnnotation() throws Exception {
-        super(system);
+public class AnnotationException extends MailboxException {
+    public AnnotationException() {
+        super();
     }
 
-    @Before
-    public void setup() throws Exception {
-        Assume.assumeTrue(system.supports(ImapFeatures.Feature.ANNOTATION_SUPPORT));
+    public AnnotationException(String message) {
+        super(message);
     }
 
-    @Test
-    public void testAnnotationUS() throws Exception {
-        scriptTest("Annotation", Locale.US);
-    }
-
-    @Test
-    public void testAnnotationWithLimitationUS() throws Exception {
-        scriptTest("AnnotationWithLimitation", Locale.US);
-    }
-
-    @Test
-    public void testAnnotationWithBinaryValue() throws Exception {
-        scriptTest("AnnotationWithBinaryData", Locale.US);
+    public AnnotationException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

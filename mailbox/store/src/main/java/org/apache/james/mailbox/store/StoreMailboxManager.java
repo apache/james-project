@@ -45,6 +45,7 @@ import org.apache.james.mailbox.RequestAware;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
+import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -130,11 +131,28 @@ public class StoreMailboxManager implements MailboxManager {
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
 
+    private final int limitOfAnnotations;
+
+    private final int limitAnnotationSize;
 
     @Inject
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, 
             MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, 
             MessageParser messageParser, MessageId.Factory messageIdFactory) {
+        this(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
+                MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+    }
+
+    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, 
+            MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser,
+            MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize) {
+        this(mailboxSessionMapperFactory, authenticator, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
+                MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+    }
+
+    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, 
+            MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser,
+            MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize) {
         this.authenticator = authenticator;
         this.locker = locker;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
@@ -142,12 +160,8 @@ public class StoreMailboxManager implements MailboxManager {
         this.groupMembershipResolver = groupMembershipResolver;
         this.messageParser = messageParser;
         this.messageIdFactory = messageIdFactory;
-    }
-
-    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, 
-            MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser,
-            MessageId.Factory messageIdFactory) {
-        this(mailboxSessionMapperFactory, authenticator, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
+        this.limitOfAnnotations = limitOfAnnotations;
+        this.limitAnnotationSize = limitAnnotationSize;
     }
 
     protected Factory getMessageIdFactory() {
@@ -823,12 +837,23 @@ public class StoreMailboxManager implements MailboxManager {
                 for (MailboxAnnotation annotation : mailboxAnnotations) {
                     if (annotation.isNil()) {
                         annotationMapper.deleteAnnotation(mailboxId, annotation.getKey());
-                    } else {
+                    } else if (canInsertOrUpdate(mailboxId, annotation, annotationMapper)) {
                         annotationMapper.insertAnnotation(mailboxId, annotation);
                     }
                 }
             }
         });
+    }
+
+    private boolean canInsertOrUpdate(MailboxId mailboxId, MailboxAnnotation annotation, AnnotationMapper annotationMapper) throws AnnotationException {
+        if (annotation.size() > limitAnnotationSize) {
+            throw new AnnotationException("annotation too big.");
+        }
+        if (!annotationMapper.exist(mailboxId, annotation)
+            && annotationMapper.countAnnotations(mailboxId) >= limitOfAnnotations) {
+            throw new AnnotationException("too many annotations.");
+        }
+        return true;
     }
 
     @Override

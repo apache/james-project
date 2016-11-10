@@ -207,4 +207,31 @@ public class AnnotationMapperTest<T extends MapperProvider> {
 
         assertThat(annotationMapper.getAllAnnotations(mailboxId)).containsOnly(PRIVATE_ANNOTATION_WITH_KEY_UPPER);
     }
+
+    @ContractTest
+    public void isExistedShouldReturnTrueIfAnnotationIsStored() throws Exception {
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
+
+        assertThat(annotationMapper.exist(mailboxId, PRIVATE_ANNOTATION)).isTrue();
+    }
+
+    @ContractTest
+    public void isExistedShouldReturnFalseIfAnnotationIsNotStored() throws Exception {
+        assertThat(annotationMapper.exist(mailboxId, PRIVATE_ANNOTATION)).isFalse();
+    }
+
+    @ContractTest
+    public void countAnnotationShouldReturnZeroIfNoMoreAnnotationBelongToMailbox() throws Exception {
+        assertThat(annotationMapper.countAnnotations(mailboxId)).isEqualTo(0);
+    }
+
+    @ContractTest
+    public void countAnnotationShouldReturnNumberOfAnnotationBelongToMailbox() throws Exception {
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION_UPDATE);
+        annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_USER_ANNOTATION);
+
+        assertThat(annotationMapper.countAnnotations(mailboxId)).isEqualTo(3);
+    }
 }

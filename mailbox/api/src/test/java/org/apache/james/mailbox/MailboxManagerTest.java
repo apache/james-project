@@ -28,10 +28,16 @@ import java.util.List;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxManager.MailboxCapabilities;
+import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxManager;
-import org.apache.james.mailbox.model.*;
+import org.apache.james.mailbox.model.MailboxAnnotation;
+import org.apache.james.mailbox.model.MailboxAnnotationKey;
+import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxMetaData;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MailboxQuery;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -45,7 +51,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * Test the {@link StoreMailboxManager} methods that 
+ * Test the {@link StoreMailboxManager} methods that
  * are not covered by the protocol-tester suite.
  * 
  * This class needs to be extended by the different mailbox 
@@ -273,8 +279,8 @@ public class MailboxManagerTest<T extends MailboxManager> {
 
     @ContractTest
     public void updateAnnotationsShouldThrowExceptionIfMailboxDoesNotExist() throws MailboxException {
-        expected.expect(MailboxException.class);
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+        expected.expect(MailboxException.class);
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
         MailboxPath inbox = MailboxPath.inbox(session);
 
@@ -305,8 +311,8 @@ public class MailboxManagerTest<T extends MailboxManager> {
 
     @ContractTest
     public void getAllAnnotationsShouldThrowExceptionIfMailboxDoesNotExist() throws MailboxException {
-        expected.expect(MailboxException.class);
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+        expected.expect(MailboxException.class);
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
         MailboxPath inbox = MailboxPath.inbox(session);
 
@@ -328,8 +334,8 @@ public class MailboxManagerTest<T extends MailboxManager> {
 
     @ContractTest
     public void getAnnotationsByKeysShouldThrowExceptionIfMailboxDoesNotExist() throws MailboxException {
-        expected.expect(MailboxException.class);
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+        expected.expect(MailboxException.class);
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
         MailboxPath inbox = MailboxPath.inbox(session);
 
@@ -351,8 +357,8 @@ public class MailboxManagerTest<T extends MailboxManager> {
 
     @ContractTest
     public void getAnnotationsByKeysWithAllDepthShouldThrowExceptionWhenMailboxDoesNotExist() throws BadCredentialsException, MailboxException {
-        expected.expect(MailboxException.class);
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+        expected.expect(MailboxException.class);
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
         MailboxPath inbox = MailboxPath.inbox(session);
 
@@ -372,4 +378,45 @@ public class MailboxManagerTest<T extends MailboxManager> {
             .contains(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION);
     }
 
-}
+    @ContractTest
+    public void updateAnnotationsShouldThrowExceptionIfAnnotationDataIsOverLimitation() throws MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+        expected.expect(AnnotationException.class);
+        session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
+        MailboxPath inbox = MailboxPath.inbox(session);
+        mailboxManager.createMailbox(inbox, session);
+
+        mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(MailboxAnnotation.newInstance(PRIVATE_KEY, "The limitation of data is less than 30")));
+    }
+
+    @ContractTest
+    public void shouldUpdateAnnotationWhenRequestCreatesNewAndMailboxIsNotOverLimit() throws MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+        session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
+        MailboxPath inbox = MailboxPath.inbox(session);
+        mailboxManager.createMailbox(inbox, session);
+
+        ImmutableList.Builder<MailboxAnnotation> builder = ImmutableList.builder();
+        builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment1"), "AnyValue"));
+        builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment2"), "AnyValue"));
+        builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment3"), "AnyValue"));
+
+        mailboxManager.updateAnnotations(inbox, session, builder.build());
+    }
+
+    @ContractTest
+    public void updateAnnotationsShouldThrowExceptionIfRequestCreateNewButMailboxIsOverLimit() throws MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+        expected.expect(MailboxException.class);
+        session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
+        MailboxPath inbox = MailboxPath.inbox(session);
+        mailboxManager.createMailbox(inbox, session);
+
+        ImmutableList.Builder<MailboxAnnotation> builder = ImmutableList.builder();
+        builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment1"), "AnyValue"));
+        builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment2"), "AnyValue"));
+        builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment3"), "AnyValue"));
+        builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment4"), "AnyValue"));
+
+        mailboxManager.updateAnnotations(inbox, session, builder.build());
+    }}

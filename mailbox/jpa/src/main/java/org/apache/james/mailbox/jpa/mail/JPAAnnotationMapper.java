@@ -26,6 +26,8 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPATransactionalMapper;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailboxAnnotation;
@@ -156,20 +158,18 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
     public void deleteAnnotation(MailboxId mailboxId, MailboxAnnotationKey key) {
         try {
             JPAId jpaId = (JPAId) mailboxId;
-            getEntityManager().createNamedQuery("deleteAnnotation")
-                .setParameter("idParam", jpaId.getRawId())
-                .setParameter("key", key.asString())
-                .executeUpdate();
+            JPAMailboxAnnotation jpaMailboxAnnotation = getEntityManager()
+                .find(JPAMailboxAnnotation.class, new JPAMailboxAnnotation.JPAMailboxAnnotationId(jpaId.getRawId(), key.asString()));
+            getEntityManager().remove(jpaMailboxAnnotation);
         } catch (NoResultException e) {
             LOGGER.debug("Mailbox annotation not found for ID {} and key {}", mailboxId.serialize(), key.asString());
         } catch (PersistenceException pe) {
-            pe.printStackTrace();
+            throw Throwables.propagate(pe);
         }
     }
 
     @Override
     public void insertAnnotation(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
-        Preconditions.checkArgument(!mailboxAnnotation.isNil());
         JPAId jpaId = (JPAId) mailboxId;
         if (getAnnotationsByKeys(mailboxId, ImmutableSet.of(mailboxAnnotation.getKey())).isEmpty()) {
             getEntityManager().persist(
@@ -180,6 +180,25 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
             getEntityManager().find(JPAMailboxAnnotation.class,
                 new JPAMailboxAnnotation.JPAMailboxAnnotationId(jpaId.getRawId(), mailboxAnnotation.getKey().asString()))
                 .setValue(mailboxAnnotation.getValue().orNull());
+        }
+    }
+
+    @Override
+    public boolean exist(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
+        JPAId jpaId = (JPAId) mailboxId;
+        Optional<JPAMailboxAnnotation> row = Optional.fromNullable(getEntityManager().find(JPAMailboxAnnotation.class,
+            new JPAMailboxAnnotation.JPAMailboxAnnotationId(jpaId.getRawId(), mailboxAnnotation.getKey().asString())));
+        return row.isPresent();
+    }
+
+    @Override
+    public int countAnnotations(MailboxId mailboxId) {
+        try {
+            JPAId jpaId = (JPAId) mailboxId;
+            return ((Long)getEntityManager().createNamedQuery("countAnnotationsInMailbox")
+                .setParameter("idParam", jpaId.getRawId()).getSingleResult()).intValue();
+        } catch (PersistenceException pe) {
+            throw Throwables.propagate(pe);
         }
     }
 }

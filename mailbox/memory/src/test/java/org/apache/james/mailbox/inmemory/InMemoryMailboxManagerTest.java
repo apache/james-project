@@ -25,7 +25,6 @@ import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -40,6 +39,8 @@ import com.google.common.base.Throwables;
 @RunWith(ContractSuite.class)
 @ContractImpl(InMemoryMailboxManager.class)
 public class InMemoryMailboxManagerTest {
+    private static final int LIMIT_ANNOTATIONS = 3;
+    private static final int LIMIT_ANNOTATION_SIZE = 30;
 
     private IProducer<InMemoryMailboxManager> producer = new IProducer<InMemoryMailboxManager>() {
 
@@ -50,9 +51,10 @@ public class InMemoryMailboxManagerTest {
             MessageParser messageParser = new MessageParser();
 
             InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
+
             MessageId.Factory messageIdFactory = new DefaultMessageId.Factory();
             InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, new FakeAuthenticator(), 
-                    new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
+                    aclResolver, groupMembershipResolver, messageParser, messageIdFactory, LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
 
             try {
                 mailboxManager.init();

@@ -40,6 +40,7 @@ import org.apache.james.mailbox.jpa.JPASubscriptionManager;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
+import org.apache.james.mailbox.jpa.mail.model.JPAMailboxAnnotation;
 import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
 import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage;
@@ -63,7 +64,7 @@ import org.slf4j.LoggerFactory;
 public class JPAHostSystem extends JamesImapHostSystem {
 
     public static final String META_DATA_DIRECTORY = "target/user-meta-data";
-    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT, Feature.USER_FLAGS_SUPPORT);
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT, Feature.USER_FLAGS_SUPPORT, Feature.ANNOTATION_SUPPORT);
 
     public static JamesImapHostSystem build() throws Exception {
         return new JPAHostSystem();
@@ -111,7 +112,8 @@ public class JPAHostSystem extends JamesImapHostSystem {
                 JPAMailboxMessage.class.getName() + ";" +
                 JPAProperty.class.getName() + ";" +
                 JPAUserFlag.class.getName() + ";" + 
-                JPASubscription.class.getName() + ")");
+                JPASubscription.class.getName() + ";" +
+                JPAMailboxAnnotation.class.getName() + ")");
         
         userManager = new FakeAuthenticator();
         entityManagerFactory = OpenJPAPersistence.getEntityManagerFactory(properties);

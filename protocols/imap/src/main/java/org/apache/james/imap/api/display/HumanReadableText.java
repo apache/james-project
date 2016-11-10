@@ -169,6 +169,8 @@ public class HumanReadableText {
     public static final String UNDEFINED_QUOTA_ROOT_KEY = "org.apache.james.imap.UNDEFINED_QUOTA_ROOT_KEY";
     public static final String UNDEFINED_QUOTA_ROOT_DEFAULT_VALUE = "The Quota Root {0} does not exist.";
 
+    public static final String MAILBOX_ANNOTATION_KEY = "org.apache.james.imap.ANNOTATION_ERROR_KEY";
+
     private final String defaultValue;
 
     private final String key;

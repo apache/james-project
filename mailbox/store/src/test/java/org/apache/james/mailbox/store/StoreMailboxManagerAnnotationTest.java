@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -26,8 +27,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
 import java.util.List;
@@ -39,6 +38,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -49,7 +49,6 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
@@ -82,7 +81,6 @@ public class StoreMailboxManagerAnnotationTest {
     @Mock private MailboxId mailboxId;
     @Mock private MessageId.Factory messageIdFactory;
 
-    @InjectMocks
     private StoreMailboxManager storeMailboxManager;
 
 
@@ -102,7 +100,8 @@ public class StoreMailboxManagerAnnotationTest {
             }
         });
 
-        storeMailboxManager = spy(new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, aclResolver, groupMembershipResolver, messageParser, messageIdFactory));
+        storeMailboxManager = spy(new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, aclResolver, groupMembershipResolver, 
+                messageParser, messageIdFactory, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE));
         storeMailboxManager.init();
     }
 

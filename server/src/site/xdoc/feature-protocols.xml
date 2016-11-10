@@ -78,6 +78,20 @@
         Note that MOVE extension (RFC-6851) needs a MailboxManager implementing the move function. For now, this is only done with
         the CassandraMailboxManager
       </p>
+      <p>
+        It supports the METADATA extension (RFC-5464):
+        <ul>
+          <li>
+            It does not support the server's metadata so far.
+          </li>
+          <li>
+            It does not support permission on metadata because the ACL extension is not present.
+          </li>
+          <li>
+            The quota limitations on MailboxAnnotations are hardcoded. They concern the number of annotations per mailbox (10), as well as the size of an annotation (1024 bytes)
+          </li>
+        </ul>
+      </p>
     </subsection>
     
     <subsection name="POP3 Protocol">

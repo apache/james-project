@@ -40,4 +40,10 @@ public interface MailboxConstants {
     /** The name of the INBOX */
     String INBOX = "INBOX";
 
+    /** The limitation of annotation data */
+    int DEFAULT_LIMIT_ANNOTATION_SIZE = 1024;
+
+    /** The maximum number of annotations on a mailbox */
+    int DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX = 10;
+
 }

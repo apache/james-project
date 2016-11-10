@@ -160,4 +160,15 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
         }
     }
 
+    @Override
+    public boolean exist(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
+        return mailboxesAnnotations.contains((InMemoryId)mailboxId, mailboxAnnotation.getKey().asString());
+    }
+
+    @Override
+    public int countAnnotations(MailboxId mailboxId) {
+        return mailboxesAnnotations.row((InMemoryId)mailboxId).size();
+    }
+
+
 }

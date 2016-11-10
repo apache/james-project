@@ -45,6 +45,12 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
         super(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
     }
 
+    public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, MailboxACLResolver aclResolver, 
+            GroupMembershipResolver groupMembershipResolver, MessageParser messageParser,
+            MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize) {
+        super(mailboxSessionMapperFactory, authenticator, aclResolver, groupMembershipResolver, messageParser, messageIdFactory, limitOfAnnotations, limitAnnotationSize);
+    }
+
     @Override
     public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
         return EnumSet.of(MailboxCapabilities.Move, MailboxCapabilities.UserFlag, MailboxCapabilities.Namespace, MailboxCapabilities.Annotation);
