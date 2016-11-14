@@ -53,7 +53,8 @@ public class TemporaryFilesystemModule extends AbstractModule {
             "pop3server.xml",
             "recipientrewritetable.xml",
             "smtpserver.xml",
-            "usersrepository.xml");
+            "usersrepository.xml",
+            "smime_1.p12");
 
     private final Supplier<File> workingDirectory;
 

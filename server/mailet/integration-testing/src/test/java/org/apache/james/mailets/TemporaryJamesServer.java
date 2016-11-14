@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.io.IOUtils;
@@ -34,6 +35,9 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.utils.ExtendedServerProbe;
 import org.junit.rules.TemporaryFolder;
 
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Module;
+
 public class TemporaryJamesServer {
 
     private static final String MAILETCONTAINER_CONFIGURATION_FILENAME = "mailetcontainer.xml";
@@ -43,13 +47,16 @@ public class TemporaryJamesServer {
     private final GuiceJamesServer jamesServer;
 
 
-    public TemporaryJamesServer(TemporaryFolder temporaryFolder, MailetContainer mailetContainer) throws Exception {
+    public TemporaryJamesServer(TemporaryFolder temporaryFolder, MailetContainer mailetContainer, Module... additionalModules) throws Exception {
         appendMailetConfigurations(temporaryFolder, mailetContainer);
 
         jamesServer = new GuiceJamesServer()
             .combineWith(MemoryJamesServerMain.inMemoryServerModule)
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES),
-                    new TemporaryFilesystemModule(temporaryFolder));
+            .overrideWith(ImmutableList.<Module>builder().addAll(Arrays.asList(additionalModules))
+                .add(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
+                .add(new TemporaryFilesystemModule(temporaryFolder))
+                .build()
+                .toArray(new Module[additionalModules.length + 2]));
 
         jamesServer.start();
     }

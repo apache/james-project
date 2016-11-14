@@ -19,21 +19,17 @@
 
 package org.apache.james.mailets;
 
-import java.io.IOException;
-import java.nio.channels.SocketChannel;
-
-import org.apache.commons.net.imap.IMAPClient;
-import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetContainer;
+import org.apache.james.mailets.utils.IMAPMessageReader;
+import org.apache.james.mailets.utils.SMTPMessageSender;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.base.Throwables;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
@@ -90,54 +86,11 @@ public class CommonMailetConfigurationTest {
         jamesServer.getServerProbe().addUser(recipient, PASSWORD);
         jamesServer.getServerProbe().createMailbox(MailboxConstants.USER_NAMESPACE, recipient, "INBOX");
 
-        SMTPClient smtpClient = new SMTPClient();
-        try (SocketChannel socketChannel = SocketChannel.open()) {
-            smtpClient.connect(LOCALHOST_IP, SMTP_PORT);
-            sendMessage(smtpClient, from, recipient);
-
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> messageHasBeenSent(smtpClient));
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> userReceivedMessage(recipient));
-        } finally {
-            smtpClient.disconnect();
-        }
-    }
-
-    private void sendMessage(SMTPClient smtpClient, String from, String recipient) {
-        try {
-            smtpClient.helo(DEFAULT_DOMAIN);
-            smtpClient.setSender(from);
-            smtpClient.rcpt("<" + recipient + ">");
-            smtpClient.sendShortMessageData("subject: test\r\n" +
-                    "\r\n" +
-                    "content\r\n" +
-                    ".\r\n");
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
-    }
-
-    private boolean messageHasBeenSent(SMTPClient smtpClient) throws IOException {
-        return smtpClient.getReplyString()
-            .contains("250 2.6.0 Message received");
-    }
-
-    private boolean userReceivedMessage(String user) {
-        IMAPClient imapClient = new IMAPClient();
-        try {
-            imapClient.connect(LOCALHOST_IP, IMAP_PORT);
-            imapClient.login(user, PASSWORD);
-            imapClient.select("INBOX");
-            imapClient.fetch("1:1", "ALL");
-            String replyString = imapClient.getReplyString();
-            return replyString.contains("OK FETCH completed");
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        } finally {
-            try {
-                imapClient.close();
-            } catch (IOException e) {
-                throw Throwables.propagate(e);
-            }
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN);
+             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+            messageSender.sendMessage(from, recipient);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(recipient, PASSWORD));
         }
     }
 }
