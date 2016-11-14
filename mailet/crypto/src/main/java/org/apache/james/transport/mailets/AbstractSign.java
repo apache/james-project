@@ -23,11 +23,14 @@ package org.apache.james.transport.mailets;
 
 import org.apache.james.transport.KeyHolder;
 import org.apache.james.transport.SMIMEAttributeNames;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.RFC2822Headers;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
@@ -39,6 +42,9 @@ import javax.mail.internet.ParseException;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.lang.reflect.Constructor;
+
+import com.google.common.base.Objects;
+import com.google.common.base.Throwables;
 
 /**
  * <P>Abstract mailet providing common SMIME signature services.
@@ -142,6 +148,9 @@ public abstract class AbstractSign extends GenericMailet {
      * Holds value of property signerName.
      */
     private String signerName;
+
+    @Inject
+    private UsersRepository usersRepository;
     
     /**
      * Gets the expected init parameters.
@@ -564,20 +573,19 @@ public abstract class AbstractSign extends GenericMailet {
         
         // Is it a bounce?
         if (reversePath == null) {
-            log("Can not sign : no sender");
+            log("Can not sign: no sender");
             return false;
         }
         
         String authUser = (String) mail.getAttribute("org.apache.james.SMTPAuthUser");
         // was the sender user SMTP authorized?
         if (authUser == null) {
-            log("Can not sign mail for sender " + mail.getSender() + " as he is not a SMTP authenticated user");
+            log("Can not sign mail for sender <" + mail.getSender() + "> as he is not a SMTP authenticated user");
             return false;
         }
         
         // The sender is the postmaster?
-        if (getMailetContext().getPostmaster() != null &&
-            getMailetContext().getPostmaster().equals(reversePath)) {
+        if (Objects.equal(getMailetContext().getPostmaster(), reversePath)) {
             // should not sign postmaster sent messages?
             if (!isPostmasterSigns()) {
                 log("Can not sign mails for postmaster");
@@ -585,8 +593,9 @@ public abstract class AbstractSign extends GenericMailet {
             }
         } else {
             // is the reverse-path user different from the SMTP authorized user?
-            if (!reversePath.getLocalPart().equals(authUser)) {
-                log("SMTP logged in as " + authUser + " but pretend to be sender " + mail.getSender());
+            String username = getUsername(reversePath);
+            if (!username.equals(authUser)) {
+                log("SMTP logged in as <" + authUser + "> but pretend to be sender <" + username + ">");
                 return false;
             }
             // is there no "From:" address same as the reverse-path?
@@ -606,7 +615,18 @@ public abstract class AbstractSign extends GenericMailet {
         return !isAlreadySigned;
 
     }
-    
+
+    private String getUsername(MailAddress mailAddress) {
+        try {
+            if (usersRepository.supportVirtualHosting()) {
+                return mailAddress.asString();
+            }
+            return mailAddress.getLocalPart();
+        } catch (UsersRepositoryException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
     /**
      * Creates the {@link javax.mail.internet.MimeBodyPart} that will be signed.
      * For example, may attach a text file explaining the meaning of the signature,

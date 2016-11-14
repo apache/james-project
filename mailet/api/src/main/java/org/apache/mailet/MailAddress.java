@@ -270,6 +270,10 @@ public class MailAddress implements java.io.Serializable {
         return localPart;
     }
 
+    public String asString() {
+        return localPart + "@" + domain;
+    }
+
     @Override
     public String toString() {
         return localPart + "@" + domain;

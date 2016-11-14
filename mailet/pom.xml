@@ -40,6 +40,7 @@
         <sourceReleaseAssemblyDescriptor>project</sourceReleaseAssemblyDescriptor>
         <plugin.mailetdocs.version>0.1</plugin.mailetdocs.version>
         <javax.version>1.4.4</javax.version>
+        <javax.inject.version>1</javax.inject.version>
         <junit.version>4.10</junit.version>
         <activation.version>1.1.1</activation.version>
         <commons-collections.version>3.2.1</commons-collections.version>
@@ -94,6 +95,11 @@
                 <groupId>javax.activation</groupId>
                 <artifactId>activation</artifactId>
                 <version>${activation.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.inject</groupId>
+                <artifactId>javax.inject</artifactId>
+                <version>${javax.inject.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
