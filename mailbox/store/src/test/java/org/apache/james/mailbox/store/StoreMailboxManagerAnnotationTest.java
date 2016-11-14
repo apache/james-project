@@ -84,6 +84,7 @@ public class StoreMailboxManagerAnnotationTest {
     private StoreMailboxManager storeMailboxManager;
 
 
+    @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
@@ -95,7 +96,7 @@ public class StoreMailboxManagerAnnotationTest {
         when(annotationMapper.execute(any(Mapper.Transaction.class))).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                Mapper.Transaction transaction = (Mapper.Transaction) invocationOnMock.getArguments()[0];
+                Mapper.Transaction<?> transaction = (Mapper.Transaction<?>) invocationOnMock.getArguments()[0];
                 return transaction.run();
             }
         });

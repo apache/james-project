@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imap.decode.main;
 
-import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.display.HumanReadableText;
