@@ -576,7 +576,8 @@ public abstract class AbstractSign extends GenericMailet {
         }
         
         // The sender is the postmaster?
-        if (getMailetContext().getPostmaster().equals(reversePath)) {
+        if (getMailetContext().getPostmaster() != null &&
+            getMailetContext().getPostmaster().equals(reversePath)) {
             // should not sign postmaster sent messages?
             if (!isPostmasterSigns()) {
                 log("Can not sign mails for postmaster");
