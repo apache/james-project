@@ -564,12 +564,14 @@ public abstract class AbstractSign extends GenericMailet {
         
         // Is it a bounce?
         if (reversePath == null) {
+            log("Can not sign : no sender");
             return false;
         }
         
         String authUser = (String) mail.getAttribute("org.apache.james.SMTPAuthUser");
         // was the sender user SMTP authorized?
         if (authUser == null) {
+            log("Can not sign mail for sender " + mail.getSender() + " as he is not a SMTP authenticated user");
             return false;
         }
         
@@ -577,24 +579,30 @@ public abstract class AbstractSign extends GenericMailet {
         if (getMailetContext().getPostmaster().equals(reversePath)) {
             // should not sign postmaster sent messages?
             if (!isPostmasterSigns()) {
+                log("Can not sign mails for postmaster");
                 return false;
             }
         } else {
             // is the reverse-path user different from the SMTP authorized user?
             if (!reversePath.getLocalPart().equals(authUser)) {
+                log("SMTP logged in as " + authUser + " but pretend to be sender " + mail.getSender());
                 return false;
             }
             // is there no "From:" address same as the reverse-path?
             if (!fromAddressSameAsReverse(mail)) {
+                log("Can not sign mails with empty FROM header field");
                 return false;
             }
         }
-        
-        
+
         // if already signed return false
         MimeMessage mimeMessage = mail.getMessage();
-        return !(mimeMessage.isMimeType("multipart/signed")
-                || mimeMessage.isMimeType("application/pkcs7-mime"));
+        boolean isAlreadySigned = mimeMessage.isMimeType("multipart/signed")
+            || mimeMessage.isMimeType("application/pkcs7-mime");
+        if (isAlreadySigned) {
+            log("Can not sign a mail already signed");
+        }
+        return !isAlreadySigned;
 
     }
     
