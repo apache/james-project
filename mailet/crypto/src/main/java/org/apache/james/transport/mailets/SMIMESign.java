@@ -127,7 +127,7 @@ public class SMIMESign extends Sign {
      * Hardcodes it to {@link org.apache.james.transport.SMIMEKeyHolder}.
      */
     protected void initKeyHolderClass() throws MessagingException {
-        String keyHolderClassName = "org.apache.james.security.SMIMEKeyHolder";
+        String keyHolderClassName = "org.apache.james.transport.SMIMEKeyHolder";
         try {
             setKeyHolderClass(Class.forName(keyHolderClassName));
         } catch (ClassNotFoundException cnfe) {
