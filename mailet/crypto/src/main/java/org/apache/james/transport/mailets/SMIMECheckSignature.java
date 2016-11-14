@@ -19,7 +19,7 @@
 
 
 
-package org.apache.james.transport.mailet;
+package org.apache.james.transport.mailets;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;

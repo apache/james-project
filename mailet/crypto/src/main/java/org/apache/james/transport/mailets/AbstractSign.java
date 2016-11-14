@@ -19,7 +19,7 @@
 
 
 
-package org.apache.james.transport.mailet;
+package org.apache.james.transport.mailets;
 
 import org.apache.james.transport.KeyHolder;
 import org.apache.james.transport.SMIMEAttributeNames;
