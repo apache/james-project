@@ -302,7 +302,7 @@ public class Redirect extends AbstractRedirect {
     }
 
     @Override
-    protected InitParameters getInitParameters() {
+    public InitParameters getInitParameters() {
         return RedirectMailetInitParameters.from(this, Optional.<TypeCode> absent(), Optional.of(TypeCode.BODY));
     }
 

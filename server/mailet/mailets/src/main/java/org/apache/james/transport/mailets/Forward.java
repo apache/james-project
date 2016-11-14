@@ -95,7 +95,7 @@ public class Forward extends AbstractRedirect {
     }
 
     @Override
-    protected InitParameters getInitParameters() {
+    public InitParameters getInitParameters() {
         return RedirectMailetInitParameters.from(this, Optional.of(TypeCode.NONE), Optional.<TypeCode> absent());
     }
 

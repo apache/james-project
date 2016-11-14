@@ -30,6 +30,7 @@ import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.util.MailAddressUtils;
+import org.apache.james.transport.util.ReversePathUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
@@ -294,7 +295,7 @@ public class Resend extends AbstractRedirect {
     }
 
     @Override
-    protected InitParameters getInitParameters() {
+    public InitParameters getInitParameters() {
         return RedirectMailetInitParameters.from(this);
     }
 
@@ -343,6 +344,11 @@ public class Resend extends AbstractRedirect {
           }
           return builder.build();
       }
+
+    @Override
+    protected MailAddress getReversePath() throws MessagingException {
+        return ReversePathUtils.from(this).getReversePath();
+    }
 
     @Override
     protected MailAddress getReversePath(Mail originalMail) throws MessagingException {

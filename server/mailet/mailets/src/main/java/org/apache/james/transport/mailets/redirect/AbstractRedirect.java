@@ -154,7 +154,7 @@ public abstract class AbstractRedirect extends GenericMailet {
 
     private static final char LINE_BREAK = '\n';
 
-    protected abstract InitParameters getInitParameters();
+    public abstract InitParameters getInitParameters();
 
     protected abstract String[] getAllowedInitParameters();
 
@@ -342,20 +342,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> or <code>null</code> if
      *         missing
      */
-    protected MailAddress getReversePath() throws MessagingException {
-        String reversePath = getInitParameters().getReversePath();
-        if (Strings.isNullOrEmpty(reversePath)) {
-            return null;
-        }
-
-        List<MailAddress> extractAddresses = AddressExtractor.withContext(getMailetContext())
-                .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
-                .extract(reversePath);
-        if (extractAddresses.isEmpty()) {
-            return null;
-        }
-        return extractAddresses.get(0);
-    }
+    protected abstract MailAddress getReversePath() throws MessagingException; 
 
     /**
      * Gets the <code>reversePath</code> property, built dynamically using the
