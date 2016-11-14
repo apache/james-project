@@ -2111,7 +2111,7 @@ S: \* 2 FETCH \(FLAGS \(\\Answered \\Deleted \\Flagged \\Recent \\Seen\)\)
 S: \* 3 FETCH \(FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Recent\)\)
 S: A99 OK STORE completed\.
 
-LOG INFO Waiting for ElasticSearch to index data
+LOG INFO Waiting for Indexer to index data
 
 WAIT 5000
 
@@ -2133,8 +2133,8 @@ C: A105 UID SEARCH BCC example.org
 S: \* SEARCH
 S: A105 OK SEARCH completed\.
 
-C: A103 UID SEARCH BODY "nothing worthy prove"
-S: \* SEARCH 30 31 32 38 39
+C: A103 UID SEARCH BODY "limping sway"
+S: \* SEARCH 31
 S: A103 OK SEARCH completed\.
 
 C: A104 UID SEARCH CC tim
@@ -2233,16 +2233,16 @@ C: A127 UID SEARCH SMALLER 20000
 S: \* SEARCH 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41
 S: A127 OK SEARCH completed\.
 
-C: A128 UID SEARCH SUBJECT the
-S: \* SEARCH
+C: A128 UID SEARCH SUBJECT "hello"
+S: \* SEARCH 26 27
 S: A128 OK SEARCH completed\.
 
 C: A129 UID SEARCH SUBJECT "William Shakespeare"
 S: \* SEARCH 30 32 38 39
 S: A129 OK SEARCH completed\.
 
-C: A130 UID SEARCH TEXT "nothing worthy prove"
-S: \* SEARCH 30 31 32 37 38 39
+C: A130 UID SEARCH TEXT "limping sway"
+S: \* SEARCH 31
 S: A130 OK SEARCH completed\.
 
 C: A131 UID SEARCH UID 1:4
@@ -2314,7 +2314,7 @@ S: \* 1 EXISTS
 S: \* 1 RECENT
 S: A202 OK (\[.+\] )?APPEND completed\.
 
-LOG INFO Waiting for ElasticSearch to index data
+LOG INFO Waiting for Indexer to index data
 
 WAIT 1000
 

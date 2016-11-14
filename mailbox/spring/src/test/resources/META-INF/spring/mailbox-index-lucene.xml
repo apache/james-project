@@ -31,14 +31,13 @@
         <constructor-arg index="0" ref="luceneIndex"/>
     </bean>
     <bean id="luceneIndex" class="org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex">
-        <constructor-arg index="0" ref="maildir-sessionMapperFactory"/>
-        <constructor-arg index="1" ref="ramDirectory"/>
-        <constructor-arg index="2" value="false"/>
-        <constructor-arg index="3" value="true"/>
+        <constructor-arg index="0" ref="messageMapperFactory"/>
+        <constructor-arg index="1" ref="mailboxIdFactory"/>
+        <constructor-arg index="2" type="org.apache.lucene.store.Directory" ref="fsDirectory"/>
         <property name="enableSuffixMatch" value="true"/>
     </bean>
-    <bean id="ramDirectory"  class="org.apache.lucene.store.FSDirectory" factory-method="open">
-        <constructor-arg index="0" value="target/var/store/lucene"/>
+    <bean id="fsDirectory"  class="org.apache.lucene.store.FSDirectory" factory-method="open">
+        <constructor-arg index="0" value="../var/store/lucene"/>
     </bean>
- 
+    <alias name="jpa-mailboxIdFactory" alias="mailboxIdFactory"/>
 </beans>

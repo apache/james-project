@@ -23,6 +23,7 @@
        xsi:schemaLocation="
           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
+    <bean id="cassandra-mailboxIdFactory" class="org.apache.james.mailbox.cassandra.CassandraId.Factory" />
     <!-- 
       Mailbox Cassandra
     -->

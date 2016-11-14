@@ -29,6 +29,8 @@
 
     <bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor"/>
 
+    <bean id="jpa-mailboxIdFactory" class="org.apache.james.mailbox.jpa.JPAId.Factory" />
+
     <bean id="jpa-mailboxmanager" class="org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager" init-method="init">
         <constructor-arg index="0" ref="jpa-sessionMapperFactory"/>
         <constructor-arg index="1" ref="authenticator"/>

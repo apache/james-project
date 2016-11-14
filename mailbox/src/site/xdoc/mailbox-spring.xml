@@ -49,7 +49,6 @@
                 <li>spring-mailbox-jpa.xml</li>
                 <li>spring-mailbox-authenticator.xml</li>
                 <li>spring-mailbox-locker.xml</li>
-                <li>spring-mailbox-lucene.xml</li>
             </ul>
             
             <p>Each mailbox configuration file is used to declare beans that will instantiate all components 

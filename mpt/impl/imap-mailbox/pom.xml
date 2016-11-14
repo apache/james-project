@@ -43,6 +43,7 @@
         <module>jcr</module>
         <module>jpa</module>
         <module>maildir</module>
+        <module>lucenesearch</module>
     </modules>
     
     <dependencyManagement>
@@ -101,6 +102,12 @@
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-imapmailbox-jpa-lucene</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -113,6 +120,7 @@
         <maildir.includes>empty</maildir.includes>
         <cyrus.includes>empty</cyrus.includes>
         <elasticsearch.includes>empty</elasticsearch.includes>
+        <jpa-lucene.includes>empty</jpa-lucene.includes>
     </properties>
 
     <profiles>
@@ -147,6 +155,12 @@
             </properties>
         </profile>
         <profile>
+            <id>jpa-lucene</id>
+            <properties>
+                <jpa-lucene.includes>**/lucenesearch/**/*.java</jpa-lucene.includes>
+            </properties>
+        </profile>
+        <profile>
             <id>maildir</id>
             <properties>
                 <maildir.includes>**/maildir/**/*.java</maildir.includes>
@@ -178,7 +192,8 @@
                            <exclude>**/suite/**/*.java</exclude>
                        </excludes>
                        <includes>
-                           <include>${cassandra.includes}, ${hbase.includes}, ${inmemory.includes}, ${jcr.includes}, ${jpa.includes}, ${maildir.includes}, ${cyrus.includes}, ${elasticsearch.includes}</include>
+                           <include>${cassandra.includes}, ${hbase.includes}, ${inmemory.includes}, ${jcr.includes}, ${jpa.includes}, ${maildir.includes}, ${cyrus.includes}, 
+${elasticsearch.includes}, ${jpa-lucene.includes}</include>
                        </includes>
                     </configuration>
                 </plugin>
