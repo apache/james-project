@@ -354,7 +354,7 @@ public class Resend extends AbstractRedirect {
     protected MailAddress getReversePath(Mail originalMail) throws MessagingException {
         MailAddress reversePath = getReversePath();
         if (reversePath != null) {
-            if (isUnalteredOrReversePathOrSender(reversePath)) {
+            if (MailAddressUtils.isUnalteredOrReversePathOrSender(reversePath)) {
                 return null;
             }
         }

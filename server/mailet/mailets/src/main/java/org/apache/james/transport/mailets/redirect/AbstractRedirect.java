@@ -357,12 +357,6 @@ public abstract class AbstractRedirect extends GenericMailet {
      */
     protected abstract MailAddress getReversePath(Mail originalMail) throws MessagingException;
 
-    protected boolean isUnalteredOrReversePathOrSender(MailAddress reversePath) {
-        return reversePath.equals(SpecialAddress.UNALTERED)
-                || reversePath.equals(SpecialAddress.REVERSE_PATH)
-                || reversePath.equals(SpecialAddress.SENDER);
-    }
-
     /**
      * Sets the "reverse-path" of <i>newMail</i> to <i>reversePath</i>. If the
      * requested value is <code>SpecialAddress.NULL</code> sets it to "<>". If

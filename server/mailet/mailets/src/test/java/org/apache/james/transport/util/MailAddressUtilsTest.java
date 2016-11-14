@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.mail.internet.InternetAddress;
 
+import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.MailAddress;
 import org.junit.Rule;
 import org.junit.Test;
@@ -97,5 +98,75 @@ public class MailAddressUtilsTest {
         List<InternetAddress> internetAddresses = MailAddressUtils.toInternetAddresses(ImmutableList.of(new MailAddress("user", "james.org"), new MailAddress("user2", "apache.org")));
 
         assertThat(internetAddresses).containsOnly(new InternetAddress("user@james.org"), new InternetAddress("user2@apache.org"));
+    }
+
+    @Test
+    public void isUnalteredOrReversePathOrSenderShouldReturnTrueWhenMailAddressIsSpecialUnaltered() {
+        boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.UNALTERED);
+
+        assertThat(unalteredOrReversePathOrSender).isTrue();
+    }
+
+    @Test
+    public void isUnalteredOrReversePathOrSenderShouldReturnTrueWhenMailAddressIsSpecialReversePath() {
+        boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.REVERSE_PATH);
+
+        assertThat(unalteredOrReversePathOrSender).isTrue();
+    }
+
+    @Test
+    public void isUnalteredOrReversePathOrSenderShouldReturnTrueWhenMailAddressIsSpecialSender() {
+        boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.SENDER);
+
+        assertThat(unalteredOrReversePathOrSender).isTrue();
+    }
+
+    @Test
+    public void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialDelete() {
+        boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.DELETE);
+
+        assertThat(unalteredOrReversePathOrSender).isFalse();
+    }
+
+    @Test
+    public void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialFrom() {
+        boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.FROM);
+
+        assertThat(unalteredOrReversePathOrSender).isFalse();
+    }
+
+    @Test
+    public void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialNull() {
+        boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.NULL);
+
+        assertThat(unalteredOrReversePathOrSender).isFalse();
+    }
+
+    @Test
+    public void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialRecipients() {
+        boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.RECIPIENTS);
+
+        assertThat(unalteredOrReversePathOrSender).isFalse();
+    }
+
+    @Test
+    public void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialReplyTo() {
+        boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.REPLY_TO);
+
+        assertThat(unalteredOrReversePathOrSender).isFalse();
+    }
+
+    @Test
+    public void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialTo() {
+        boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.TO);
+
+        assertThat(unalteredOrReversePathOrSender).isFalse();
+    }
+
+    @Test
+    public void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsNotSpecial() throws Exception {
+        boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(new MailAddress("common", "james.org"));
+
+        assertThat(unalteredOrReversePathOrSender).isFalse();
     }
 }

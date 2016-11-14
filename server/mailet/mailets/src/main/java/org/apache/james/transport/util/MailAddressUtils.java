@@ -23,6 +23,7 @@ import java.util.List;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
+import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.MailAddress;
 
 import com.google.common.base.Function;
@@ -62,5 +63,11 @@ public class MailAddressUtils {
                     return mailAddress.toInternetAddress();
                 }
             });
+    }
+
+    public static boolean isUnalteredOrReversePathOrSender(MailAddress mailAddress) {
+        return mailAddress.equals(SpecialAddress.UNALTERED) 
+                || mailAddress.equals(SpecialAddress.REVERSE_PATH) 
+                || mailAddress.equals(SpecialAddress.SENDER);
     }
 }

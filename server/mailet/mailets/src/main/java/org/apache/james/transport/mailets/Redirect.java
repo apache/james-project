@@ -399,7 +399,7 @@ public class Redirect extends AbstractRedirect {
     private MailAddress retrieveReversePath() throws MessagingException {
         MailAddress reversePath = getReversePath();
         if (reversePath != null) {
-            if (isUnalteredOrReversePathOrSender(reversePath)) {
+            if (MailAddressUtils.isUnalteredOrReversePathOrSender(reversePath)) {
                 return null;
             }
         }
