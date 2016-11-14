@@ -32,6 +32,7 @@ import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.util.ReversePathUtils;
+import org.apache.james.transport.util.SenderUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetConfig;
@@ -177,6 +178,11 @@ public class NotifySender extends AbstractRedirect {
     @Override
     protected MailAddress getReversePath(Mail originalMail) throws MessagingException {
         return getSender(originalMail);
+    }
+
+    @Override
+    protected MailAddress getSender() throws MessagingException {
+        return SenderUtils.from(this).getSender();
     }
 
     @Override

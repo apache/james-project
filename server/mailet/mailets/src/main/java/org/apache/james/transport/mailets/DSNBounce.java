@@ -41,6 +41,7 @@ import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.util.Patterns;
 import org.apache.james.transport.util.ReversePathUtils;
+import org.apache.james.transport.util.SenderUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.DateFormats;
@@ -152,6 +153,11 @@ public class DSNBounce extends AbstractRedirect {
     @Override
     protected MailAddress getReversePath(Mail originalMail) {
         return SpecialAddress.NULL;
+    }
+
+    @Override
+    protected MailAddress getSender() throws MessagingException {
+        return SenderUtils.from(this).getSender();
     }
 
     @Override

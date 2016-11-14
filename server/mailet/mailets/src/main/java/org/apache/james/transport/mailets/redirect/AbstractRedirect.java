@@ -48,9 +48,6 @@ import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-
 /**
  * <p>
  * Abstract mailet providing configurable redirection services.<br>
@@ -388,20 +385,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> or <code>null</code> if
      *         missing
      */
-    protected MailAddress getSender() throws MessagingException {
-        String sender = getInitParameters().getSender();
-        if (Strings.isNullOrEmpty(sender)) {
-            return null;
-        }
-
-        List<MailAddress> extractAddresses = AddressExtractor.withContext(getMailetContext())
-                .allowedSpecials(ImmutableList.of("postmaster", "sender", "unaltered"))
-                .extract(sender);
-        if (extractAddresses.isEmpty()) {
-            return null;
-        }
-        return extractAddresses.get(0);
-    }
+    protected abstract MailAddress getSender() throws MessagingException; 
 
     /**
      * Gets the <code>sender</code> property, built dynamically using the
