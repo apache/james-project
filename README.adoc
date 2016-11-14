@@ -209,7 +209,7 @@ Useful commands
 The base command is different whether you choose guice flavor or spring :
 
   * guice use : `docker exec james_run java -jar /root/james-cli.jar`
-  * spring use : `docker exec james_run /root/james-server-app-3.0.0-beta5-SNAPSHOT/bin/james-cli.sh`
+  * spring use : `docker exec james_run /root/james-server-app-3.0.0-beta6-SNAPSHOT/bin/james-cli.sh`
 
 ** How to add a domain ?
 # Add DOMAIN to 127.0.0.1 in your host /etc/hosts
@@ -244,7 +244,7 @@ To activate a script for a user, you need the following combinaison :
 Some james data ( those non related to mailbox, eg : mail queue, domains, users, rrt, SIEVE scripts, mail repositories ) are not yet supported by our Cassandra implementation.
 
 To keep these data when you run a new container, you can mount the following volume :
- -v /root/james-server-app-3.0.0-beta5-SNAPSHOT/var:WORKDIR/destination/var
+ -v /root/james-server-app-3.0.0-beta6-SNAPSHOT/var:WORKDIR/destination/var
 
 Where :
 - WORKDIR: is the absolute path to your james-parent workdir.
