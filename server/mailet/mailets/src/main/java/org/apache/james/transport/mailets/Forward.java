@@ -106,7 +106,7 @@ public class Forward extends AbstractRedirect {
     }
 
     @Override
-    protected String getMessage(Mail originalMail) throws MessagingException {
+    public String getMessage(Mail originalMail) throws MessagingException {
         return getInitParameters().getMessage();
     }
 

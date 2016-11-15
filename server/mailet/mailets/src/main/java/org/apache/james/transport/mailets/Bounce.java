@@ -136,7 +136,7 @@ public class Bounce extends AbstractRedirect {
     }
 
     @Override
-    protected String getMessage(Mail originalMail) throws MessagingException {
+    public String getMessage(Mail originalMail) throws MessagingException {
         return new NotifyMailetsMessage().generateMessage(getInitParameters().getMessage(), originalMail);
     }
 

@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.utils;
 
+import java.util.Enumeration;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -68,4 +70,17 @@ public class MimeMessageUtils {
         return Optional.fromNullable(newSubject).or(originalSubject);
     }
 
+    /**
+     * Utility method for obtaining a string representation of a Message's
+     * headers
+     */
+    public String getMessageHeaders() throws MessagingException {
+        @SuppressWarnings("unchecked")
+        Enumeration<String> heads = message.getAllHeaderLines();
+        StringBuilder headBuffer = new StringBuilder(1024);
+        while (heads.hasMoreElements()) {
+            headBuffer.append(heads.nextElement()).append("\r\n");
+        }
+        return headBuffer.toString();
+    }
 }

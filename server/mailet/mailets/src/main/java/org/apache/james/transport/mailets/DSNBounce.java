@@ -129,7 +129,7 @@ public class DSNBounce extends AbstractRedirect {
     }
 
     @Override
-    protected String getMessage(Mail originalMail) throws MessagingException {
+    public String getMessage(Mail originalMail) throws MessagingException {
         return new NotifyMailetsMessage().generateMessage(getInitParameters().getMessage(), originalMail);
     }
 
@@ -376,7 +376,7 @@ public class DSNBounce extends AbstractRedirect {
         MimeMessage originalMessage = originalMail.getMessage();
 
         if (attachmentType.equals(TypeCode.HEADS)) {
-            part.setContent(getMessageHeaders(originalMessage), "text/plain");
+            part.setContent(new MimeMessageUtils(originalMessage).getMessageHeaders(), "text/plain");
             part.setHeader("Content-Type", "text/rfc822-headers");
         } else {
             part.setContent(originalMessage, "message/rfc822");

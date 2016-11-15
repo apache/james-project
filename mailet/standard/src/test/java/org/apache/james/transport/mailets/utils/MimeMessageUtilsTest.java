@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets.utils;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.guava.api.Assertions.assertThat;
 
 import java.util.Properties;
@@ -26,7 +27,6 @@ import java.util.Properties;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Test;
 
@@ -132,5 +132,24 @@ public class MimeMessageUtilsTest {
         Optional<String> newSubject = new MimeMessageUtils(message).buildNewSubject(prefix, originalSubject, subject);
 
         assertThat(newSubject).contains(prefix);
+    }
+
+    @Test
+    public void getMessageHeadersShouldReturnEmptyStringWhenNoHeaders() throws Exception {
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        String messageHeaders = new MimeMessageUtils(message).getMessageHeaders();
+
+        assertThat(messageHeaders).isEmpty();
+    }
+
+    @Test
+    public void getMessageHeadersShouldHeadersWhenSome() throws Exception {
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        message.addHeader("first", "value");
+        message.addHeader("second", "value2");
+        String messageHeaders = new MimeMessageUtils(message).getMessageHeaders();
+
+        String expectedHeaders = "first: value\r\nsecond: value2\r\n";
+        assertThat(messageHeaders).isEqualTo(expectedHeaders);
     }
 }

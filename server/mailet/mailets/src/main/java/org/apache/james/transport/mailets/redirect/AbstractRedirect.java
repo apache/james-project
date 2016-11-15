@@ -19,21 +19,15 @@
 
 package org.apache.james.transport.mailets.redirect;
 
-import java.io.ByteArrayOutputStream;
-import java.util.Enumeration;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 
 import org.apache.james.core.MailImpl;
-import org.apache.james.core.MimeMessageUtil;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.Redirect;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
@@ -41,7 +35,6 @@ import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
-import org.apache.mailet.base.RFC2822Headers;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -147,7 +140,6 @@ import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractRedirect extends GenericMailet {
 
-    private static final char LINE_BREAK = '\n';
     public static final List<String> REVERSE_PATH_ALLOWED_SPECIALS = ImmutableList.of("postmaster", "sender", "null", "unaltered");
     public static final List<String> SENDER_ALLOWED_SPECIALS = ImmutableList.of("postmaster", "sender", "unaltered");
 
@@ -168,7 +160,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *
      * @return {@link #getMessage()}
      */
-    protected abstract String getMessage(Mail originalMail) throws MessagingException;
+    public abstract String getMessage(Mail originalMail) throws MessagingException;
 
     /**
      * Gets the <code>recipients</code> property. Returns the collection of
@@ -388,7 +380,11 @@ public abstract class AbstractRedirect extends GenericMailet {
                 newMail.setMessage(new MimeMessage(Session.getDefaultInstance(System.getProperties(), null)));
 
                 // handle the new message if altered
-                buildAlteredMessage(newMail, originalMail);
+                AlteredMailUtils.builder()
+                    .mailet(this)
+                    .originalMail(originalMail)
+                    .build()
+                    .buildAlteredMessage(newMail);
 
             } else {
                 // if we need the original, create a copy of this message to
@@ -446,183 +442,6 @@ public abstract class AbstractRedirect extends GenericMailet {
     }
 
     protected abstract MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException;
-
-    /**
-     * Utility method for obtaining a string representation of a Message's
-     * headers
-     */
-    protected String getMessageHeaders(MimeMessage message) throws MessagingException {
-        @SuppressWarnings("unchecked")
-        Enumeration<String> heads = message.getAllHeaderLines();
-        StringBuilder headBuffer = new StringBuilder(1024);
-        while (heads.hasMoreElements()) {
-            headBuffer.append(heads.nextElement().toString()).append("\r\n");
-        }
-        return headBuffer.toString();
-    }
-
-    /**
-     * Utility method for obtaining a string representation of a Message's body
-     */
-    private String getMessageBody(MimeMessage message) throws Exception {
-        ByteArrayOutputStream bodyOs = new ByteArrayOutputStream();
-        MimeMessageUtil.writeMessageBodyTo(message, bodyOs);
-        return bodyOs.toString();
-    }
-
-    /**
-     * Builds the message of the newMail in case it has to be altered.
-     *
-     * @param originalMail the original Mail object
-     * @param newMail      the Mail object to build
-     */
-    protected void buildAlteredMessage(Mail newMail, Mail originalMail) throws MessagingException {
-
-        MimeMessage originalMessage = originalMail.getMessage();
-        MimeMessage newMessage = newMail.getMessage();
-
-        // Copy the relevant headers
-        copyRelevantHeaders(originalMessage, newMessage);
-
-        String head = getMessageHeaders(originalMessage);
-        try {
-            // Create the message body
-            MimeMultipart multipart = new MimeMultipart("mixed");
-
-            // Create the message
-            MimeMultipart mpContent = new MimeMultipart("alternative");
-            mpContent.addBodyPart(getBodyPart(originalMail, originalMessage, head));
-
-            MimeBodyPart contentPartRoot = new MimeBodyPart();
-            contentPartRoot.setContent(mpContent);
-
-            multipart.addBodyPart(contentPartRoot);
-
-            if (getInitParameters().isDebug()) {
-                log("attachmentType:" + getInitParameters().getAttachmentType());
-            }
-            if (!getInitParameters().getAttachmentType().equals(TypeCode.NONE)) {
-                multipart.addBodyPart(getAttachmentPart(originalMail, originalMessage, head));
-            }
-
-            if (getInitParameters().isAttachError() && originalMail.getErrorMessage() != null) {
-                multipart.addBodyPart(getErrorPart(originalMail));
-            }
-            newMail.getMessage().setContent(multipart);
-            newMail.getMessage().setHeader(RFC2822Headers.CONTENT_TYPE, multipart.getContentType());
-
-        } catch (Exception ioe) {
-            throw new MessagingException("Unable to create multipart body", ioe);
-        }
-    }
-
-    private BodyPart getBodyPart(Mail originalMail, MimeMessage originalMessage, String head) throws MessagingException, Exception {
-        MimeBodyPart part = new MimeBodyPart();
-        part.setText(getText(originalMail, originalMessage, head));
-        part.setDisposition("inline");
-        return part;
-    }
-
-    private MimeBodyPart getAttachmentPart(Mail originalMail, MimeMessage originalMessage, String head) throws MessagingException, Exception {
-        MimeBodyPart attachmentPart = new MimeBodyPart();
-        switch (getInitParameters().getAttachmentType()) {
-            case HEADS:
-                attachmentPart.setText(head);
-                break;
-            case BODY:
-                try {
-                    attachmentPart.setText(getMessageBody(originalMessage));
-                } catch (Exception e) {
-                    attachmentPart.setText("body unavailable");
-                }
-                break;
-            case ALL:
-                attachmentPart.setText(head + "\r\nMessage:\r\n" + getMessageBody(originalMessage));
-                break;
-            case MESSAGE:
-                attachmentPart.setContent(originalMessage, "message/rfc822");
-                break;
-            case NONE:
-                break;
-            case UNALTERED:
-                break;
-        }
-        if ((originalMessage.getSubject() != null) && (originalMessage.getSubject().trim().length() > 0)) {
-            attachmentPart.setFileName(originalMessage.getSubject().trim());
-        } else {
-            attachmentPart.setFileName("No Subject");
-        }
-        attachmentPart.setDisposition("Attachment");
-        return attachmentPart;
-    }
-
-    private MimeBodyPart getErrorPart(Mail originalMail) throws MessagingException {
-        MimeBodyPart errorPart = new MimeBodyPart();
-        errorPart.setContent(originalMail.getErrorMessage(), "text/plain");
-        errorPart.setHeader(RFC2822Headers.CONTENT_TYPE, "text/plain");
-        errorPart.setFileName("Reasons");
-        errorPart.setDisposition(javax.mail.Part.ATTACHMENT);
-        return errorPart;
-    }
-
-    private String getText(Mail originalMail, MimeMessage originalMessage, String head) throws MessagingException {
-        StringBuilder builder = new StringBuilder();
-
-        String messageText = getMessage(originalMail);
-        if (messageText != null) {
-            builder.append(messageText)
-                .append(LINE_BREAK);
-        }
-
-        if (getInitParameters().isDebug()) {
-            log("inline:" + getInitParameters().getInLineType());
-        }
-        boolean all = false;
-        switch (getInitParameters().getInLineType()) {
-            case ALL:
-                all = true;
-            case HEADS:
-                builder.append("Message Headers:")
-                    .append(LINE_BREAK)
-                    .append(head)
-                    .append(LINE_BREAK);
-                if (!all) {
-                    break;
-                }
-            case BODY:
-                appendBody(builder, originalMessage);
-                break;
-            case NONE:
-                break;
-            case MESSAGE:
-                break;
-            case UNALTERED:
-                break;
-        }
-        return builder.toString();
-    }
-
-    private void appendBody(StringBuilder builder, MimeMessage originalMessage) {
-        builder.append("Message:")
-            .append(LINE_BREAK);
-        try {
-            builder.append(getMessageBody(originalMessage))
-                .append(LINE_BREAK);
-        } catch (Exception e) {
-            builder.append("body unavailable")
-                .append(LINE_BREAK);
-        }
-    }
-
-    private void copyRelevantHeaders(MimeMessage originalMessage, MimeMessage newMessage) throws MessagingException {
-        @SuppressWarnings("unchecked")
-        Enumeration<String> headerEnum = originalMessage.getMatchingHeaderLines(
-                new String[] { RFC2822Headers.DATE, RFC2822Headers.FROM, RFC2822Headers.REPLY_TO, RFC2822Headers.TO, 
-                        RFC2822Headers.SUBJECT, RFC2822Headers.RETURN_PATH });
-        while (headerEnum.hasMoreElements()) {
-            newMessage.addHeaderLine(headerEnum.nextElement());
-        }
-    }
 
     /**
      * <p>
