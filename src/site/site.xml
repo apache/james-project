@@ -171,13 +171,13 @@
                 <item name="Download releases" href="http://james.apache.org/download.cgi#Apache_James_Server" />
             </item>
             <item name="Mailets" href="/mailet/index.html" collapse="true">
-                <item name="Quick Start" href="quickstart.html"/>
-                <item name="Mailet API" href="/mailet/api"/>
-                <item name="Mailet AI" href="/mailet/ai"/>
-                <item name="Basic Mailet Toolkit" href="/mailet/base"/>
-                <item name="Crypto Mailets" href="/mailet/crypto"/>
-                <item name="MailetDocs" href="/mailet/mailetdocs-maven-plugin"/>
-                <item name="Standard Mailets" href="/mailet/standard"/>
+                <item name="Quick Start" href="/mailet/quickstart.html"/>
+                <item name="Mailet API" href="/mailet/api/index.html"/>
+                <item name="Mailet AI" href="/mailet/ai/index.html"/>
+                <item name="Basic Mailet Toolkit" href="/mailet/base/index.html"/>
+                <item name="Crypto Mailets" href="/mailet/crypto/index.html"/>
+                <item name="MailetDocs" href="/mailet/mailetdocs-maven-plugin/index.html"/>
+                <item name="Standard Mailets" href="/mailet/standard/index.html"/>
                 <item name="Mailing Lists" href="/mail.html#Mailet_API_List" />
                 <item name="Release Notes" href="/mailet/release-notes.html"/>
                 <item name="Java Docs" href="/mailet/apidocs"/>
