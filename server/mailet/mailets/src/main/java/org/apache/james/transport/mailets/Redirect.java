@@ -23,6 +23,7 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.james.transport.mailets.redirect.AbstractRedirect;
 import org.apache.james.transport.mailets.redirect.AddressExtractor;
@@ -30,6 +31,7 @@ import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
+import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.james.transport.util.MailAddressUtils;
 import org.apache.james.transport.util.RecipientsUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
@@ -414,8 +416,9 @@ public class Redirect extends AbstractRedirect {
 
     @Override
     protected void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
-        new MimeMessageModifier(newMail.getMessage())
-            .setSubjectPrefix(newMail, subjectPrefix, originalMail, getInitParameters().getSubject());
+        MimeMessage message = newMail.getMessage();
+        new MimeMessageModifier(message)
+            .replaceSubject(new MimeMessageUtils(message).subjectWithPrefix(subjectPrefix, originalMail, getInitParameters().getSubject()));
     }
 
 }

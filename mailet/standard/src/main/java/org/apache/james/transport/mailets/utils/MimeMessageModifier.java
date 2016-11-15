@@ -22,13 +22,8 @@ package org.apache.james.transport.mailets.utils;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.mailet.Mail;
-
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 
 public class MimeMessageModifier {
 
@@ -38,44 +33,10 @@ public class MimeMessageModifier {
         this.message = message;
     }
 
-    public void addSubjectPrefix(String subjectPrefix) throws MessagingException {
-        String newSubject = prefixSubject(message.getSubject(), subjectPrefix);
-        replaceSubject(message, newSubject);
-    }
-    
-    private void replaceSubject(MimeMessage message, String newSubject) throws MessagingException {
-        message.setSubject(null);
-        message.setSubject(newSubject, Charsets.UTF_8.displayName());
-    }
-
-    private static String prefixSubject(String subject, String subjectPrefix) throws MessagingException {
-        if (!Strings.isNullOrEmpty(subject)) {
-            return Joiner.on(' ').join(subjectPrefix, subject);
-        } else {
-            return subjectPrefix;
-        }
-    }
-
-    public void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail, String subject) throws MessagingException {
-        Optional<String> newSubject = buildNewSubject(subjectPrefix, originalMail.getMessage().getSubject(), subject);
+    public void replaceSubject(Optional<String> newSubject) throws MessagingException {
         if (newSubject.isPresent()) {
-            replaceSubject(newMail.getMessage(), newSubject.get());
+            message.setSubject(null);
+            message.setSubject(newSubject.get(), Charsets.UTF_8.displayName());
         }
-    }
-
-    @VisibleForTesting Optional<String> buildNewSubject(String subjectPrefix, String originalSubject, String subject) throws MessagingException {
-        String nullablePrefix = Strings.emptyToNull(subjectPrefix);
-        if (nullablePrefix == null && subject == null) {
-            return Optional.absent();
-        }
-        if (nullablePrefix == null) {
-            return Optional.of(subject);
-        }
-        String chosenSubject = chooseSubject(subject, originalSubject);
-        return Optional.of(prefixSubject(chosenSubject, nullablePrefix));
-    }
-
-    private static String chooseSubject(String newSubject, String originalSubject) {
-        return Optional.fromNullable(newSubject).or(originalSubject);
     }
 }

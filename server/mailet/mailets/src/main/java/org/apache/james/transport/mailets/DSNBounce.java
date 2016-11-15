@@ -39,6 +39,7 @@ import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
+import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.james.transport.util.Patterns;
 import org.apache.james.transport.util.RecipientsUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
@@ -169,7 +170,9 @@ public class DSNBounce extends AbstractRedirect {
 
     @Override
     protected void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
-        new MimeMessageModifier(originalMail.getMessage()).addSubjectPrefix(subjectPrefix);
+        MimeMessage message = originalMail.getMessage();
+        new MimeMessageModifier(message)
+            .replaceSubject(new MimeMessageUtils(message).subjectWithPrefix(subjectPrefix));
     }
 
     @Override

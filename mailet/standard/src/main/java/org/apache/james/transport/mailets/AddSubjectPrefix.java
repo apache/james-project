@@ -21,8 +21,10 @@
 package org.apache.james.transport.mailets;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
+import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
@@ -53,7 +55,9 @@ public class AddSubjectPrefix extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        new MimeMessageModifier(mail.getMessage()).addSubjectPrefix(subjectPrefix);
+        MimeMessage message = mail.getMessage();
+        new MimeMessageModifier(message)
+            .replaceSubject(new MimeMessageUtils(message).subjectWithPrefix(subjectPrefix));
     }
 
     @Override
