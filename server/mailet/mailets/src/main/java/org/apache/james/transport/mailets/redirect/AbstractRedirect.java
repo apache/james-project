@@ -20,14 +20,11 @@
 package org.apache.james.transport.mailets.redirect;
 
 import java.io.ByteArrayOutputStream;
-import java.net.UnknownHostException;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
 import javax.inject.Inject;
 import javax.mail.BodyPart;
-import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
@@ -40,11 +37,9 @@ import org.apache.james.core.MimeMessageUtil;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.Redirect;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
-import org.apache.james.transport.util.MailAddressUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
-import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 
@@ -200,19 +195,6 @@ public abstract class AbstractRedirect extends GenericMailet {
     protected abstract List<MailAddress> getRecipients(Mail originalMail) throws MessagingException; 
 
     /**
-     * Sets the recipients of <i>newMail</i> to <i>recipients</i>. If the
-     * requested value is null does nothing. Is a "setX(Mail, Tx, Mail)" method.
-     */
-    protected void setRecipients(Mail newMail, List<MailAddress> recipients, Mail originalMail) {
-        if (!recipients.isEmpty()) {
-            newMail.setRecipients(recipients);
-            if (getInitParameters().isDebug()) {
-                log("recipients set to: " + arrayToString(recipients.toArray()));
-            }
-        }
-    }
-
-    /**
      * Gets the <code>to</code> property. Returns the "To:" recipients of the
      * new message. or null if no change is requested. Is a "getX()" method.
      *
@@ -253,20 +235,6 @@ public abstract class AbstractRedirect extends GenericMailet {
     }
 
     /**
-     * Sets the "To:" header of <i>newMail</i> to <i>to</i>. If the requested
-     * value is null does nothing. Is a "setX(Mail, Tx, Mail)" method.
-     */
-    protected void setTo(Mail newMail, List<MailAddress> mailAddresses, Mail originalMail) throws MessagingException {
-        if (mailAddresses != null) {
-            InternetAddress[] internetAddresses = MailAddressUtils.toInternetAddressArray(mailAddresses);
-            newMail.getMessage().setRecipients(Message.RecipientType.TO, internetAddresses);
-            if (getInitParameters().isDebug()) {
-                log("apparentlyTo set to: " + internetAddresses);
-            }
-        }
-    }
-
-    /**
      * Gets the <code>replyto</code> property. Returns the Reply-To address of
      * the new message, or null if no change is requested. Is a "getX()" method.
      *
@@ -297,30 +265,6 @@ public abstract class AbstractRedirect extends GenericMailet {
     }
 
     /**
-     * <p>
-     * Sets the "Reply-To:" header of <i>newMail</i> to <i>replyTo</i>.
-     * </p>
-     * If the requested value is <code>SpecialAddress.NULL</code> will remove
-     * the "Reply-To:" header. If the requested value is null does nothing.</p>
-     * Is a "setX(Mail, Tx, Mail)" method.
-     */
-    protected void setReplyTo(Mail newMail, MailAddress replyTo, Mail originalMail) throws MessagingException {
-        if (replyTo != null) {
-            if (replyTo.equals(SpecialAddress.NULL)) {
-                newMail.getMessage().setReplyTo(null);
-                if (getInitParameters().isDebug()) {
-                    log("replyTo set to: null");
-                }
-            } else {
-                newMail.getMessage().setReplyTo(new InternetAddress[] { replyTo.toInternetAddress() });
-                if (getInitParameters().isDebug()) {
-                    log("replyTo set to: " + replyTo);
-                }
-            }
-        }
-    }
-
-    /**
      * Gets the <code>reversePath</code> property. Returns the reverse-path of
      * the new message, or null if no change is requested. Is a "getX()" method.
      *
@@ -344,28 +288,6 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         handled by {@link #setReversePath}
      */
     protected abstract MailAddress getReversePath(Mail originalMail) throws MessagingException;
-
-    /**
-     * Sets the "reverse-path" of <i>newMail</i> to <i>reversePath</i>. If the
-     * requested value is <code>SpecialAddress.NULL</code> sets it to "<>". If
-     * the requested value is null does nothing. Is a "setX(Mail, Tx, Mail)"
-     * method.
-     */
-    protected void setReversePath(MailImpl newMail, MailAddress reversePath, Mail originalMail) {
-        if (reversePath != null) {
-            if (reversePath.equals(SpecialAddress.NULL)) {
-                newMail.setSender(null);
-                if (getInitParameters().isDebug()) {
-                    log("reversePath set to: null");
-                }
-            } else {
-                newMail.setSender(reversePath);
-                if (getInitParameters().isDebug()) {
-                    log("reversePath set to: " + reversePath);
-                }
-            }
-        }
-    }
 
     /**
      * Gets the <code>sender</code> property. Returns the new sender as a
@@ -401,41 +323,11 @@ public abstract class AbstractRedirect extends GenericMailet {
     }
 
     /**
-     * Sets the "From:" header of <i>newMail</i> to <i>sender</i>. If the
-     * requested value is null does nothing. Is a "setX(Mail, Tx, Mail)" method.
-     */
-    protected void setSender(Mail newMail, MailAddress sender, Mail originalMail) throws MessagingException {
-        if (sender != null) {
-            newMail.getMessage().setFrom(sender.toInternetAddress());
-
-            if (getInitParameters().isDebug()) {
-                log("sender set to: " + sender);
-            }
-        }
-    }
-
-    /**
      * Builds the subject of <i>newMail</i> appending the subject of
      * <i>originalMail</i> to <i>subjectPrefix</i>. Is a "setX(Mail, Tx, Mail)"
      * method.
      */
     protected abstract Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException;
-
-    /**
-     * Sets the "In-Reply-To:" header of <i>newMail</i> to the "Message-Id:" of
-     * <i>originalMail</i>, if <i>isReply</i> is true.
-     */
-    protected void setIsReply(Mail newMail, boolean isReply, Mail originalMail) throws MessagingException {
-        if (isReply) {
-            String messageId = originalMail.getMessage().getMessageID();
-            if (messageId != null) {
-                newMail.getMessage().setHeader(RFC2822Headers.IN_REPLY_TO, messageId);
-                if (getInitParameters().isDebug()) {
-                    log("IN_REPLY_TO set to: " + messageId);
-                }
-            }
-        }
-    }
 
     /**
      * Mailet initialization routine. Will setup static values for each "x"
@@ -475,8 +367,13 @@ public abstract class AbstractRedirect extends GenericMailet {
         // the original untouched
         MailImpl newMail = new MailImpl(originalMail);
         try {
-            setRemoteAddr(newMail);
-            setRemoteHost(newMail);
+            MailModifier mailModifier = MailModifier.builder()
+                    .mailet(this)
+                    .mail(newMail)
+                    .dns(dns)
+                    .build();
+            mailModifier.setRemoteAddr();
+            mailModifier.setRemoteHost();
 
             if (getInitParameters().isDebug()) {
                 log("New mail - sender: " + newMail.getSender() + ", recipients: " + arrayToString(newMail.getRecipients().toArray()) + ", name: " + newMail.getName() + ", remoteHost: " + newMail.getRemoteHost() + ", remoteAddr: " + newMail.getRemoteAddr() + ", state: " + newMail.getState()
@@ -515,30 +412,21 @@ public abstract class AbstractRedirect extends GenericMailet {
 
             // Set additional headers
 
-            setRecipients(newMail, getRecipients(originalMail), originalMail);
-
-            setTo(newMail, getTo(originalMail), originalMail);
-
-            getMimeMessageModifier(newMail, originalMail).replaceSubject(getSubjectPrefix(newMail, getInitParameters().getSubjectPrefix(), originalMail));
-
-            if (newMail.getMessage().getHeader(RFC2822Headers.DATE) == null) {
-                newMail.getMessage().setHeader(RFC2822Headers.DATE, DateFormats.RFC822_DATE_FORMAT.format(new Date()));
+            mailModifier.setRecipients(getRecipients(originalMail));
+            mailModifier.setTo(getTo(originalMail));
+            mailModifier.setSubjectPrefix(originalMail);
+            mailModifier.setReplyTo(getReplyTo(originalMail), originalMail);
+            mailModifier.setReversePath(getReversePath(originalMail), originalMail);
+            mailModifier.setIsReply(getInitParameters().isReply(), originalMail);
+            mailModifier.setSender(getSender(originalMail), originalMail);
+            mailModifier.initializeDateIfNotPresent();
+            if (keepMessageId) {
+                mailModifier.setMessageId(originalMail);
             }
-
-            setReplyTo(newMail, getReplyTo(originalMail), originalMail);
-
-            setReversePath(newMail, getReversePath(originalMail), originalMail);
-
-            setSender(newMail, getSender(originalMail), originalMail);
-
-            setIsReply(newMail, getInitParameters().isReply(), originalMail);
+            newMail =  mailModifier.getMail();
 
             newMail.getMessage().saveChanges();
             newMail.removeAllAttributes();
-
-            if (keepMessageId) {
-                setMessageId(newMail, originalMail);
-            }
 
             if (senderDomainIsValid(newMail)) {
                 // Send it off...
@@ -558,22 +446,6 @@ public abstract class AbstractRedirect extends GenericMailet {
     }
 
     protected abstract MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException;
-
-    private void setRemoteAddr(MailImpl newMail) {
-        try {
-            newMail.setRemoteAddr(dns.getLocalHost().getHostAddress());
-        } catch (UnknownHostException e) {
-            newMail.setRemoteAddr("127.0.0.1");
-        }
-    }
-
-    private void setRemoteHost(MailImpl newMail) {
-        try {
-            newMail.setRemoteHost(dns.getLocalHost().getHostName());
-        } catch (UnknownHostException e) {
-            newMail.setRemoteHost("localhost");
-        }
-    }
 
     /**
      * Utility method for obtaining a string representation of a Message's
@@ -749,16 +621,6 @@ public abstract class AbstractRedirect extends GenericMailet {
                         RFC2822Headers.SUBJECT, RFC2822Headers.RETURN_PATH });
         while (headerEnum.hasMoreElements()) {
             newMessage.addHeaderLine(headerEnum.nextElement());
-        }
-    }
-
-    private void setMessageId(Mail newMail, Mail originalMail) throws MessagingException {
-        String messageId = originalMail.getMessage().getMessageID();
-        if (messageId != null) {
-            newMail.getMessage().setHeader(RFC2822Headers.MESSAGE_ID, messageId);
-            if (getInitParameters().isDebug()) {
-                log("MESSAGE_ID restored to: " + messageId);
-            }
         }
     }
 

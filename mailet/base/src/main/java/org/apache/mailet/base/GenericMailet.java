@@ -291,7 +291,7 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
     /**
      * Utility method for obtaining a string representation of an array of Objects.
      */
-    protected final String arrayToString(Object[] array) {
+    public final String arrayToString(Object[] array) {
         if (array == null) {
             return "null";
         }

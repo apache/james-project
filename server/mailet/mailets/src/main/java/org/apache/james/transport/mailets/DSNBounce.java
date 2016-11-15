@@ -34,6 +34,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailImpl;
 import org.apache.james.transport.mailets.redirect.AbstractRedirect;
 import org.apache.james.transport.mailets.redirect.InitParameters;
+import org.apache.james.transport.mailets.redirect.MailModifier;
 import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
@@ -201,14 +202,21 @@ public class DSNBounce extends AbstractRedirect {
             newMail.setMessage(createBounceMessage(originalMail));
 
             // Set additional headers
-            setRecipients(newMail, getRecipients(originalMail), originalMail);
-            setTo(newMail, getTo(originalMail), originalMail);
-            getMimeMessageModifier(newMail, originalMail).replaceSubject(getSubjectPrefix(newMail, getInitParameters().getSubjectPrefix(), originalMail));
+            MailModifier mailModifier = MailModifier.builder()
+                    .mailet(this)
+                    .mail(newMail)
+                    .dns(dns)
+                    .build();
+            mailModifier.setRecipients(getRecipients(originalMail));
+            mailModifier.setTo(getTo(originalMail));
+            mailModifier.setSubjectPrefix(originalMail);
+            mailModifier.setReplyTo(getReplyTo(originalMail), originalMail);
+            mailModifier.setReversePath(getReversePath(originalMail), originalMail);
+            mailModifier.setIsReply(getInitParameters().isReply(), originalMail);
+            mailModifier.setSender(getSender(originalMail), originalMail);
+            newMail =  mailModifier.getMail();
+
             newMail.getMessage().setHeader(RFC2822Headers.DATE, getDateHeader(originalMail));
-            setReplyTo(newMail, getReplyTo(originalMail), originalMail);
-            setReversePath(newMail, getReversePath(originalMail), originalMail);
-            setSender(newMail, getSender(originalMail), originalMail);
-            setIsReply(newMail, getInitParameters().isReply(), originalMail);
 
             newMail.getMessage().saveChanges();
             getMailetContext().sendMail(newMail);
