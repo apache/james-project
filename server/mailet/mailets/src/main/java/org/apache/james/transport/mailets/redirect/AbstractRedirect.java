@@ -39,6 +39,7 @@ import org.apache.james.core.MailImpl;
 import org.apache.james.core.MimeMessageUtil;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.Redirect;
+import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.util.MailAddressUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.mailet.Mail;
@@ -47,6 +48,7 @@ import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -417,7 +419,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      * <i>originalMail</i> to <i>subjectPrefix</i>. Is a "setX(Mail, Tx, Mail)"
      * method.
      */
-    protected abstract void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException;
+    protected abstract Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException;
 
     /**
      * Sets the "In-Reply-To:" header of <i>newMail</i> to the "Message-Id:" of
@@ -517,7 +519,7 @@ public abstract class AbstractRedirect extends GenericMailet {
 
             setTo(newMail, getTo(originalMail), originalMail);
 
-            setSubjectPrefix(newMail, getInitParameters().getSubjectPrefix(), originalMail);
+            getMimeMessageModifier(newMail, originalMail).replaceSubject(getSubjectPrefix(newMail, getInitParameters().getSubjectPrefix(), originalMail));
 
             if (newMail.getMessage().getHeader(RFC2822Headers.DATE) == null) {
                 newMail.getMessage().setHeader(RFC2822Headers.DATE, DateFormats.RFC822_DATE_FORMAT.format(new Date()));
@@ -554,6 +556,8 @@ public abstract class AbstractRedirect extends GenericMailet {
             originalMail.setState(Mail.GHOST);
         }
     }
+
+    protected abstract MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException;
 
     private void setRemoteAddr(MailImpl newMail) {
         try {

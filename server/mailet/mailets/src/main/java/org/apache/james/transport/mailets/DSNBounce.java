@@ -49,6 +49,7 @@ import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.mail.MimeMultipartReport;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -169,10 +170,8 @@ public class DSNBounce extends AbstractRedirect {
     }
 
     @Override
-    protected void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
-        MimeMessage message = originalMail.getMessage();
-        new MimeMessageModifier(message)
-            .replaceSubject(new MimeMessageUtils(message).subjectWithPrefix(subjectPrefix));
+    protected Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
+        return new MimeMessageUtils(originalMail.getMessage()).subjectWithPrefix(subjectPrefix);
     }
 
     @Override
@@ -204,7 +203,7 @@ public class DSNBounce extends AbstractRedirect {
             // Set additional headers
             setRecipients(newMail, getRecipients(originalMail), originalMail);
             setTo(newMail, getTo(originalMail), originalMail);
-            setSubjectPrefix(newMail, getInitParameters().getSubjectPrefix(), originalMail);
+            getMimeMessageModifier(newMail, originalMail).replaceSubject(getSubjectPrefix(newMail, getInitParameters().getSubjectPrefix(), originalMail));
             newMail.getMessage().setHeader(RFC2822Headers.DATE, getDateHeader(originalMail));
             setReplyTo(newMail, getReplyTo(originalMail), originalMail);
             setReversePath(newMail, getReversePath(originalMail), originalMail);
@@ -382,5 +381,10 @@ public class DSNBounce extends AbstractRedirect {
         }
         part.setDisposition("Attachment");
         return part;
+    }
+
+    @Override
+    protected MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException {
+        return new MimeMessageModifier(originalMail.getMessage());
     }
 }

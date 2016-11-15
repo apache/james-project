@@ -23,7 +23,6 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.james.transport.mailets.redirect.AbstractRedirect;
 import org.apache.james.transport.mailets.redirect.InitParameters;
@@ -37,6 +36,7 @@ import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -178,10 +178,8 @@ public class Bounce extends AbstractRedirect {
     }
 
     @Override
-    protected void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
-        MimeMessage message = originalMail.getMessage();
-        new MimeMessageModifier(message)
-            .replaceSubject(new MimeMessageUtils(message).subjectWithPrefix(subjectPrefix));
+    protected Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
+        return new MimeMessageUtils(originalMail.getMessage()).subjectWithPrefix(subjectPrefix);
     }
 
     @Override
@@ -203,5 +201,10 @@ public class Bounce extends AbstractRedirect {
         if (!getInitParameters().getPassThrough()) {
             originalMail.setState(Mail.GHOST);
         }
+    }
+
+    @Override
+    protected MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException {
+        return new MimeMessageModifier(originalMail.getMessage());
     }
 }
