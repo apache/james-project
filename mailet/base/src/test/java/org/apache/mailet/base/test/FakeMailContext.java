@@ -156,6 +156,7 @@ public class FakeMailContext implements MailetContext {
         private final MailAddress sender;
         private final Collection<MailAddress> recipients;
         private final MimeMessage msg;
+        private final Optional<String> subject;
         private final Map<String, Serializable> attributes;
         private final String state;
 
@@ -163,8 +164,17 @@ public class FakeMailContext implements MailetContext {
             this.sender = sender;
             this.recipients = ImmutableList.copyOf(recipients);
             this.msg = msg;
+            this.subject = getSubject(msg);
             this.attributes = ImmutableMap.copyOf(attributes);
             this.state = state;
+        }
+
+        private Optional<String> getSubject(MimeMessage msg) {
+            try {
+                return Optional.fromNullable(msg.getSubject());
+            } catch (Exception e) {
+                return Optional.absent();
+            }
         }
 
         public MailAddress getSender() {
@@ -181,6 +191,10 @@ public class FakeMailContext implements MailetContext {
 
         public String getState() {
             return state;
+        }
+
+        public Optional<String> getSubject() {
+            return subject;
         }
 
         @Override

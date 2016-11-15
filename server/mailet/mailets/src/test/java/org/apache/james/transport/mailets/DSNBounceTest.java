@@ -38,6 +38,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.mail.MimeMultipartReport;
 import org.apache.mailet.base.test.FakeMail;
@@ -471,5 +472,24 @@ public class DSNBounceTest {
         assertThat(sentMail.getRecipients()).containsOnly(senderMailAddress);
         MimeMessage sentMessage = sentMail.getMsg();
         assertThat(sentMessage.getHeader(RFC2822Headers.DATE)[0]).isEqualTo(expectedDate);
+    }
+
+    @Test
+    public void dsnBounceShouldAddPrefixToSubjectWhenPrefixIsConfigured() throws Exception {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        mailetConfig.setProperty("prefix", "pre");
+        dsnBounce.init(mailetConfig);
+
+        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        mimeMessage.setSubject("My subject");
+        FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(MailAddressFixture.ANY_AT_JAMES)
+                .mimeMessage(mimeMessage)
+                .build();
+
+        dsnBounce.service(mail);
+
+        assertThat(mail.getMessage().getSubject()).isEqualTo("pre My subject");
     }
 }

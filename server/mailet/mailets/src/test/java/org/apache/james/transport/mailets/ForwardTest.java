@@ -25,12 +25,16 @@ import static org.mockito.Mockito.when;
 
 import java.net.UnknownHostException;
 import java.util.Collection;
+import java.util.Properties;
 
 import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.MailAddressFixture;
+import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
@@ -170,5 +174,25 @@ public class ForwardTest {
         forward.init(mailetConfig);
 
         assertThat(forward.getRecipients()).containsOnly(postmaster);
+    }
+
+    @Test
+    public void forwardShouldNotModifySubject() throws Exception {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        mailetConfig.setProperty("forwardTo", "other@james.org");
+        forward.init(mailetConfig);
+
+        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        String expectedSubject = "My subject";
+        mimeMessage.setSubject(expectedSubject);
+        FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(MailAddressFixture.ANY_AT_JAMES)
+                .mimeMessage(mimeMessage)
+                .build();
+
+        forward.service(mail);
+
+        assertThat(mail.getMessage().getSubject()).isEqualTo(expectedSubject);
     }
 }

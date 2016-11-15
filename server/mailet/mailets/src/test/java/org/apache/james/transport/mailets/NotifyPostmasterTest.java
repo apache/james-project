@@ -24,12 +24,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.net.UnknownHostException;
+import java.util.Properties;
 
 import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.MailAddressFixture;
+import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
@@ -121,5 +126,24 @@ public class NotifyPostmasterTest {
         notifyPostmaster.init(mailetConfig);
 
         assertThat(notifyPostmaster.getTo()).containsOnly(postmaster.toInternetAddress());
+    }
+
+    @Test
+    public void notifyPostmasterShouldAddPrefixToSubjectWhenPrefixIsConfigured() throws Exception {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        mailetConfig.setProperty("prefix", "pre");
+        notifyPostmaster.init(mailetConfig);
+
+        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        mimeMessage.setSubject("My subject");
+        FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(MailAddressFixture.ANY_AT_JAMES)
+                .mimeMessage(mimeMessage)
+                .build();
+
+        notifyPostmaster.service(mail);
+
+        assertThat(mail.getMessage().getSubject()).isEqualTo("pre My subject");
     }
 }

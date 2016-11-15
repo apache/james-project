@@ -20,17 +20,23 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.guava.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.net.UnknownHostException;
+import java.util.Properties;
 
 import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.transport.mailets.Resend;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.MailAddressFixture;
+import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
+import org.apache.mailet.base.test.FakeMailContext.SentMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Rule;
@@ -98,4 +104,50 @@ public class ResendTest {
         resend.init(mailetConfig);
     }
 
+    @Test
+    public void resendShouldNotModifyOriginalSubject() throws Exception {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        mailetConfig.setProperty("subject", "subj");
+        mailetConfig.setProperty("prefix", "pref");
+        mailetConfig.setProperty("recipients", "user@james.org, user2@james.org");
+        mailetConfig.setProperty("to", "to@james.org");
+        resend.init(mailetConfig);
+
+        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        mimeMessage.setSubject("My subject");
+        mimeMessage.setText("content");
+        FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(MailAddressFixture.ANY_AT_JAMES)
+                .mimeMessage(mimeMessage)
+                .build();
+
+        resend.service(mail);
+
+        assertThat(mail.getMessage().getSubject()).isEqualTo("My subject");
+    }
+
+    @Test
+    public void resendShouldAddPrefixAndSubjectToSentMail() throws Exception {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        mailetConfig.setProperty("subject", "subj");
+        mailetConfig.setProperty("prefix", "pre");
+        mailetConfig.setProperty("recipients", "user@james.org, user2@james.org");
+        mailetConfig.setProperty("to", "to@james.org");
+        resend.init(mailetConfig);
+
+        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        mimeMessage.setSubject("My subject");
+        mimeMessage.setText("content");
+        FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(MailAddressFixture.ANY_AT_JAMES)
+                .mimeMessage(mimeMessage)
+                .build();
+
+        resend.service(mail);
+
+        SentMail newMail = fakeMailContext.getSentMails().get(0);
+        assertThat(newMail.getSubject()).contains("pre subj");
+    }
 }
