@@ -10,7 +10,8 @@ printUsage() {
 }
 
 ORIGIN=/origin
-DESTINATION=/destination
+CASSANDRA_DESTINATION=/cassandra/destination
+JPA_DESTINATION=/jpa/destination
 
 for arg in "$@"
 do
@@ -44,17 +45,27 @@ git checkout $SHA1
 # Compilation
 
 if [ "$SKIPTESTS" = "skipTests" ]; then
-   mvn package -DskipTests -Pcassandra,elasticsearch,inmemory,with-assembly,with-jetm
+   mvn package -DskipTests -Pcassandra,inmemory,jpa,elasticsearch,lucene,with-assembly,with-jetm
 else
-   mvn package -Pcassandra,inmemory,elasticsearch,with-assembly,with-jetm
+   mvn package -Pcassandra,inmemory,jpa,elasticsearch,lucene,with-assembly,with-jetm
 fi
 
 # Retrieve result
 
 if [ $? -eq 0 ]; then
-   cp server/app/target/james-server-app-*-app.zip $DESTINATION
-   cp server/container/guice/cassandra-guice/target/james-server-cassandra-guice-*-SNAPSHOT.jar $DESTINATION
-   cp -r server/container/guice/cassandra-guice/target/james-server-cassandra-guice-*-SNAPSHOT.lib $DESTINATION
-   cp server/container/cli/target/james-server-cli-*.jar $DESTINATION
-   cp -r server/container/cli/target/james-server-cli-*.lib $DESTINATION
+   if [ -d "$CASSANDRA_DESTINATION" ]; then
+      cp server/app/target/james-server-app-*-app.zip $CASSANDRA_DESTINATION || true
+      cp server/container/guice/cassandra-guice/target/james-server-cassandra-guice-*-SNAPSHOT.jar $CASSANDRA_DESTINATION || true
+      cp -r server/container/guice/cassandra-guice/target/james-server-cassandra-guice-*-SNAPSHOT.lib $CASSANDRA_DESTINATION || true
+      cp server/container/cli/target/james-server-cli-*.jar $CASSANDRA_DESTINATION || true
+      cp -r server/container/cli/target/james-server-cli-*.lib $CASSANDRA_DESTINATION || true
+   fi
+
+   if [ -d "$JPA_DESTINATION" ]; then
+      cp server/app/target/james-server-app-*-app.zip $JPA_DESTINATION || true
+      cp server/container/guice/jpa-guice/target/james-server-jpa-guice-*-SNAPSHOT.jar $JPA_DESTINATION || true
+      cp -r server/container/guice/jpa-guice/target/james-server-jpa-guice-*-SNAPSHOT.lib $JPA_DESTINATION || true
+      cp server/container/cli/target/james-server-cli-*.jar $JPA_DESTINATION || true
+      cp -r server/container/cli/target/james-server-cli-*.lib $JPA_DESTINATION || true
+   fi
 fi

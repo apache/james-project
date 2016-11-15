@@ -136,12 +136,12 @@ Run James with Java 8 + Guice + Cassandra + ElasticSearch
 =========================================================
 
 ## Requirements
-Built artifacts should be in ./dockerfiles/run/guice/destination folder.
+Built artifacts should be in ./dockerfiles/run/guice/cassandra/destination folder for cassandra.
 If you haven't already:
 ```bash
 $ docker build -t james/project dockerfiles/compilation/java-8
 $ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
-  -v $PWD/dockerfiles/run/guice/destination:/destination \
+  -v $PWD/dockerfiles/run/guice/cassandra/destination:/cassandra/destination \
   -t james/project -s HEAD
 ```
 
@@ -158,19 +158,58 @@ $ docker run -d --name=elasticsearch elasticsearch:2.2.1
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
-Copy your TLS keys to `destination/run/guice/conf/keystore` or generate it using the following command. The password must be `james72laBalle` to match default configuration.
+Copy your TLS keys to `run/guice/cassandra/destination/conf/keystore` or generate it using the following command. The password must be `james72laBalle` to match default configuration.
 ```bash
-$ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/guice/destination/conf/keystore
+$ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/guice/cassandra/destination/conf/keystore
 ```
 
 Then we need to build james container :
 ```bash
-$ docker build -t james_run dockerfiles/run/guice/
+$ docker build -t james_run dockerfiles/run/guice/cassandra
 ```
 
 To run this container :
 ```bash
 $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --name james_run -t james_run
+```
+
+Where :
+- HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
+
+You can add an optional port binding to port 8000, to expose the webadmin server. Please note that users are not authenticated on webadmin server, thus you should avoid exposing it in production.
+
+To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
+
+
+Run James with Java 8 + Guice + JPA + Lucene
+=========================================================
+
+## Requirements
+Built artifacts should be in ./dockerfiles/run/guice/jpa/destination folder for jpa.
+If you haven't already:
+```bash
+$ docker build -t james/project dockerfiles/compilation/java-8
+$ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
+  -v $PWD/dockerfiles/run/guice/jpa/destination:/jpa/destination \
+  -t james/project -s HEAD
+```
+
+## Howto ?
+We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
+
+Copy your TLS keys to `run/guice/jpa/destination/conf/keystore` or generate it using the following command. The password must be `james72laBalle` to match default configuration.
+```bash
+$ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/guice/jpa/destination/conf/keystore
+```
+
+Then we need to build james container :
+```bash
+$ docker build -t james_run dockerfiles/run/guice/jpa
+```
+
+To run this container :
+```bash
+$ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --name james_run -t james_run
 ```
 
 Where :
