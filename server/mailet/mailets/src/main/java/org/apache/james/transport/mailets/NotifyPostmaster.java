@@ -31,6 +31,7 @@ import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
+import org.apache.james.transport.util.RecipientsUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -146,8 +147,13 @@ public class NotifyPostmaster extends AbstractRedirect {
     }
 
     @Override
-    protected List<MailAddress> getRecipients() {
+    public List<MailAddress> getRecipients() {
         return ImmutableList.of(getMailetContext().getPostmaster());
+    }
+
+    @Override
+    protected List<MailAddress> getRecipients(Mail originalMail) throws MessagingException {
+        return RecipientsUtils.from(this).getRecipients(originalMail);
     }
 
     @Override

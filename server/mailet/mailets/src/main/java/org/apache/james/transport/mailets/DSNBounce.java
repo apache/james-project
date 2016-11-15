@@ -40,6 +40,7 @@ import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.util.Patterns;
+import org.apache.james.transport.util.RecipientsUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -130,8 +131,13 @@ public class DSNBounce extends AbstractRedirect {
     }
 
     @Override
-    protected List<MailAddress> getRecipients() {
+    public List<MailAddress> getRecipients() {
         return RECIPIENT_MAIL_ADDRESSES;
+    }
+
+    @Override
+    protected List<MailAddress> getRecipients(Mail originalMail) throws MessagingException {
+        return RecipientsUtils.from(this).getRecipients(originalMail);
     }
 
     @Override

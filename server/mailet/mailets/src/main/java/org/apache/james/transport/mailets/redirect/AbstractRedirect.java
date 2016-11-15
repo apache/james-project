@@ -21,7 +21,6 @@ package org.apache.james.transport.mailets.redirect;
 
 import java.io.ByteArrayOutputStream;
 import java.net.UnknownHostException;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
@@ -188,7 +187,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.RECIPIENTS</code> or <code>null</code> if
      *         missing
      */
-    protected abstract List<MailAddress> getRecipients() throws MessagingException; 
+    public abstract List<MailAddress> getRecipients() throws MessagingException; 
 
     /**
      * Gets the <code>recipients</code> property, built dynamically using the
@@ -196,28 +195,14 @@ public abstract class AbstractRedirect extends GenericMailet {
      *
      * @return {@link #replaceMailAddresses} on {@link #getRecipients()},
      */
-    protected List<MailAddress> getRecipients(Mail originalMail) throws MessagingException {
-        List<MailAddress> recipients = getRecipients();
-        if (recipients != null) {
-            if (containsOnlyUnalteredOrRecipients(recipients)) {
-                return null;
-            }
-            return SpecialAddressesUtils.from(this).replaceSpecialAddresses(originalMail, recipients);
-        }
-        return null;
-    }
-
-    private boolean containsOnlyUnalteredOrRecipients(Collection<MailAddress> recipients) {
-        return recipients.size() == 1 && 
-                (recipients.contains(SpecialAddress.UNALTERED) || recipients.contains(SpecialAddress.RECIPIENTS));
-    }
+    protected abstract List<MailAddress> getRecipients(Mail originalMail) throws MessagingException; 
 
     /**
      * Sets the recipients of <i>newMail</i> to <i>recipients</i>. If the
      * requested value is null does nothing. Is a "setX(Mail, Tx, Mail)" method.
      */
-    protected void setRecipients(Mail newMail, Collection<MailAddress> recipients, Mail originalMail) {
-        if (recipients != null) {
+    protected void setRecipients(Mail newMail, List<MailAddress> recipients, Mail originalMail) {
+        if (!recipients.isEmpty()) {
             newMail.setRecipients(recipients);
             if (getInitParameters().isDebug()) {
                 log("recipients set to: " + arrayToString(recipients.toArray()));

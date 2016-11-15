@@ -31,6 +31,7 @@ import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.util.MailAddressUtils;
+import org.apache.james.transport.util.RecipientsUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -318,10 +319,10 @@ public class Redirect extends AbstractRedirect {
     }
 
     @Override
-    protected List<MailAddress> getRecipients() throws MessagingException {
+    public List<MailAddress> getRecipients() throws MessagingException {
         String recipientsOrTo = getRecipientsOrTo();
         if (recipientsOrTo == null) {
-            return null;
+            return ImmutableList.of();
         }
         if (recipientsOrTo.isEmpty()) {
             throw new MessagingException("Failed to initialize \"recipients\" list; empty <recipients> init parameter found.");
@@ -338,6 +339,11 @@ public class Redirect extends AbstractRedirect {
 
     private String getRecipientsOrTo() throws MessagingException {
         return getInitParameter("recipients", getInitParameter("to"));
+    }
+
+    @Override
+    protected List<MailAddress> getRecipients(Mail originalMail) throws MessagingException {
+        return RecipientsUtils.from(this).getRecipients(originalMail);
     }
 
     @Override

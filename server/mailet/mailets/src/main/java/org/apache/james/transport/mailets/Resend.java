@@ -30,6 +30,7 @@ import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.util.MailAddressUtils;
+import org.apache.james.transport.util.RecipientsUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -334,7 +335,7 @@ public class Resend extends AbstractRedirect {
     }
 
     @Override
-    protected List<MailAddress> getRecipients() throws MessagingException {
+    public List<MailAddress> getRecipients() throws MessagingException {
           ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
           List<MailAddress> mailAddresses = AddressExtractor.withContext(getMailetContext())
                   .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
@@ -344,6 +345,11 @@ public class Resend extends AbstractRedirect {
           }
           return builder.build();
       }
+
+    @Override
+    protected List<MailAddress> getRecipients(Mail originalMail) throws MessagingException {
+        return RecipientsUtils.from(this).getRecipients(originalMail);
+    }
 
     @Override
     protected MailAddress getReversePath() throws MessagingException {
