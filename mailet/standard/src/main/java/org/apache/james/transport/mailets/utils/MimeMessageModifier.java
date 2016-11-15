@@ -24,6 +24,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -62,7 +63,7 @@ public class MimeMessageModifier {
         }
     }
 
-    public static Optional<String> buildNewSubject(String subjectPrefix, String originalSubject, String subject) throws MessagingException {
+    @VisibleForTesting Optional<String> buildNewSubject(String subjectPrefix, String originalSubject, String subject) throws MessagingException {
         String nullablePrefix = Strings.emptyToNull(subjectPrefix);
         if (nullablePrefix == null && subject == null) {
             return Optional.absent();

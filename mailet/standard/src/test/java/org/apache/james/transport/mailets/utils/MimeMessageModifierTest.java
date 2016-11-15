@@ -83,49 +83,54 @@ public class MimeMessageModifierTest {
 
     @Test
     public void buildNewSubjectShouldPrefixOriginalSubjectWhenSubjectIsNull() throws Exception {
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         String prefix = "prefix";
         String originalSubject = "original subject";
-        Optional<String> newSubject = MimeMessageModifier.buildNewSubject(prefix, originalSubject, null);
+        Optional<String> newSubject = new MimeMessageModifier(message).buildNewSubject(prefix, originalSubject, null);
 
         assertThat(newSubject.get()).isEqualTo(prefix + " " + originalSubject);
     }
 
     @Test
     public void buildNewSubjectShouldPrefixNewSubjectWhenSubjectIsGiven() throws Exception {
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         String prefix = "prefix";
         String originalSubject = "original subject";
         String subject = "new subject";
-        Optional<String> newSubject = MimeMessageModifier.buildNewSubject(prefix, originalSubject, subject);
+        Optional<String> newSubject = new MimeMessageModifier(message).buildNewSubject(prefix, originalSubject, subject);
 
         assertThat(newSubject.get()).isEqualTo(prefix + " " + subject);
     }
 
     @Test
     public void buildNewSubjectShouldReplaceSubjectWhenPrefixIsNull() throws Exception {
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         String prefix = null;
         String originalSubject = "original subject";
         String subject = "new subject";
-        Optional<String> newSubject = MimeMessageModifier.buildNewSubject(prefix, originalSubject, subject);
+        Optional<String> newSubject = new MimeMessageModifier(message).buildNewSubject(prefix, originalSubject, subject);
 
         assertThat(newSubject.get()).isEqualTo(subject);
     }
 
     @Test
     public void buildNewSubjectShouldReplaceSubjectWhenPrefixIsEmpty() throws Exception {
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         String prefix = "";
         String originalSubject = "original subject";
         String subject = "new subject";
-        Optional<String> newSubject = MimeMessageModifier.buildNewSubject(prefix, originalSubject, subject);
+        Optional<String> newSubject = new MimeMessageModifier(message).buildNewSubject(prefix, originalSubject, subject);
 
         assertThat(newSubject.get()).isEqualTo(subject);
     }
 
     @Test
     public void buildNewSubjectShouldReplaceSubjectWithPrefixWhenSubjectIsEmpty() throws Exception {
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         String prefix = "prefix";
         String originalSubject = "original subject";
         String subject = "";
-        Optional<String> newSubject = MimeMessageModifier.buildNewSubject(prefix, originalSubject, subject);
+        Optional<String> newSubject = new MimeMessageModifier(message).buildNewSubject(prefix, originalSubject, subject);
 
         assertThat(newSubject.get()).isEqualTo(prefix);
     }
