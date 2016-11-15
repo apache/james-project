@@ -31,8 +31,7 @@ import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
-import org.apache.james.transport.util.ReversePathUtils;
-import org.apache.james.transport.util.SenderUtils;
+import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetConfig;
@@ -172,7 +171,8 @@ public class NotifySender extends AbstractRedirect {
 
     @Override
     protected MailAddress getReversePath() throws MessagingException {
-        return ReversePathUtils.from(this).getReversePath();
+        return SpecialAddressesUtils.from(this)
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getReversePath(), AbstractRedirect.REVERSE_PATH_ALLOWED_SPECIALS);
     }
 
     @Override
@@ -182,7 +182,8 @@ public class NotifySender extends AbstractRedirect {
 
     @Override
     protected MailAddress getSender() throws MessagingException {
-        return SenderUtils.from(this).getSender();
+        return SpecialAddressesUtils.from(this)
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), AbstractRedirect.SENDER_ALLOWED_SPECIALS);
     }
 
     @Override

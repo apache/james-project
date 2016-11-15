@@ -19,6 +19,8 @@
 package org.apache.james.transport.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.List;
@@ -32,6 +34,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.RFC2822Headers;
@@ -43,12 +46,23 @@ import com.google.common.collect.ImmutableList;
 
 public class SpecialAddressesUtilsTest {
 
+    private MailAddress postmaster;
     private SpecialAddressesUtils testee;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+        final MailetContext mailetContext = mock(MailetContext.class);
+        postmaster = new MailAddress("postmaster@james.org");
+        when(mailetContext.getPostmaster())
+            .thenReturn(postmaster);
+
         testee = SpecialAddressesUtils.from(new GenericMailet() {
             
+            @Override
+            public MailetContext getMailetContext() {
+                return mailetContext;
+            }
+
             @Override
             public void service(Mail mail) throws MessagingException {
             }
@@ -439,5 +453,50 @@ public class SpecialAddressesUtilsTest {
 
         MailAddress expected = new MailAddress("delete@address.marker");
         assertThat(addresses).containsOnly(expected);
+    }
+
+    @Test
+    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnNullWhenSenderInitParameterIsNull() throws Exception {
+        MailAddress sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(null, ImmutableList.of("postmaster", "sender", "unaltered"));
+
+        assertThat(sender).isNull();
+    }
+
+    @Test
+    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnNullWhenSenderInitParameterIsEmpty() throws Exception {
+        MailAddress sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress("", ImmutableList.of("postmaster", "sender", "unaltered"));
+
+        assertThat(sender).isNull();
+    }
+
+    @Test
+    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnGivenAddressWhenNoSpecialAddressMatches() throws Exception {
+        MailAddress sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress("test@james.org", ImmutableList.of("postmaster", "sender", "unaltered"));
+
+        MailAddress expectedMailAddress = new MailAddress("test", "james.org");
+        assertThat(sender).isEqualTo(expectedMailAddress);
+    }
+
+    @Test
+    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnFirstSpecialAddressWhenMatching() throws Exception {
+        MailAddress sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress("postmaster", ImmutableList.of("postmaster", "sender", "unaltered"));
+
+        assertThat(sender).isEqualTo(postmaster);
+    }
+
+    @Test
+    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnSecondSpecialAddressWhenMatching() throws Exception {
+        MailAddress sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress("sender", ImmutableList.of("postmaster", "sender", "unaltered"));
+
+        MailAddress expectedMailAddress = SpecialAddress.SENDER;
+        assertThat(sender).isEqualTo(expectedMailAddress);
+    }
+
+    @Test
+    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnLastSpecialAddressWhenMatching() throws Exception {
+        MailAddress sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress("unaltered", ImmutableList.of("postmaster", "sender", "unaltered"));
+
+        MailAddress expectedMailAddress = SpecialAddress.UNALTERED;
+        assertThat(sender).isEqualTo(expectedMailAddress);
     }
 }

@@ -31,7 +31,7 @@ import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.util.MailAddressUtils;
-import org.apache.james.transport.util.SenderUtils;
+import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
@@ -377,15 +377,8 @@ public class Redirect extends AbstractRedirect {
 
     @Override
     protected MailAddress getReversePath() throws MessagingException {
-        String addressString = getInitParameter("reversePath");
-        if (addressString == null) {
-            return null;
-        }
-
-        List<MailAddress> mailAddress = AddressExtractor.withContext(getMailetContext())
-                .allowedSpecials(ImmutableList.of("postmaster", "sender", "null"))
-                .extract(addressString);
-        return mailAddress.get(0);
+        return SpecialAddressesUtils.from(this)
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getReversePath(), ImmutableList.of("postmaster", "sender", "null"));
     }
 
     @Override
@@ -409,7 +402,8 @@ public class Redirect extends AbstractRedirect {
 
     @Override
     protected MailAddress getSender() throws MessagingException {
-        return SenderUtils.from(this).getSender();
+        return SpecialAddressesUtils.from(this)
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), AbstractRedirect.SENDER_ALLOWED_SPECIALS);
     }
 
     @Override

@@ -26,6 +26,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.ParseException;
 
+import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.redirect.SpecialAddressKind;
 import org.apache.mailet.Mail;
@@ -33,6 +34,8 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -253,5 +256,21 @@ public class SpecialAddressesUtils {
             genericMailet.log("Unable to parse the \"TO\" header  in the original message; ignoring.");
             return ImmutableList.of();
         }
+    }
+
+    /**
+     * If the givenAddress matches one of the allowedSpecials SpecialAddresses, then it's returned
+     * else the givenAddress is returned.
+     */
+    public MailAddress getFirstSpecialAddressIfMatchingOrGivenAddress(String givenAddress, List<String> allowedSpecials) throws MessagingException {
+        if (Strings.isNullOrEmpty(givenAddress)) {
+            return null;
+        }
+
+        List<MailAddress> extractAddresses = AddressExtractor
+                .withContext(genericMailet.getMailetContext())
+                .allowedSpecials(allowedSpecials)
+                .extract(givenAddress);
+        return FluentIterable.from(extractAddresses).first().orNull();
     }
 }

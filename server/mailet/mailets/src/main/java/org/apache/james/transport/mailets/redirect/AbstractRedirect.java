@@ -48,6 +48,8 @@ import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * <p>
  * Abstract mailet providing configurable redirection services.<br>
@@ -150,6 +152,8 @@ import org.apache.mailet.base.RFC2822Headers;
 public abstract class AbstractRedirect extends GenericMailet {
 
     private static final char LINE_BREAK = '\n';
+    public static final List<String> REVERSE_PATH_ALLOWED_SPECIALS = ImmutableList.of("postmaster", "sender", "null", "unaltered");
+    public static final List<String> SENDER_ALLOWED_SPECIALS = ImmutableList.of("postmaster", "sender", "unaltered");
 
     public abstract InitParameters getInitParameters();
 
