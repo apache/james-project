@@ -46,6 +46,8 @@ import org.apache.james.cli.type.CmdType;
 import org.apache.james.cli.utils.ValueWithUnit;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.rrt.lib.Mappings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -60,6 +62,7 @@ public class ServerCmd {
     public static final String PORT_OPT_SHORT = "p";
 
     private static final int DEFAULT_PORT = 9999;
+    private static final Logger LOG = LoggerFactory.getLogger(ServerCmd.class);
 
     private static Options createOptions() {
         Options options = new Options();
@@ -102,7 +105,8 @@ public class ServerCmd {
         } catch (IOException ioe) {
             failWithMessage("Error connecting to remote JMX agent : " + ioe.getMessage());
         } catch (Exception e) {
-            failWithMessage("Error while executing command:" + e.getMessage());
+            LOG.error("Error on command: {}", e);
+            failWithMessage("Error " + e.getClass() + " while executing command:" + e.getMessage());
         }
 
     }
