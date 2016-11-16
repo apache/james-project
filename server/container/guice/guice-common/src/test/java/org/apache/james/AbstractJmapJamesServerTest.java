@@ -39,7 +39,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-public abstract class AbstractJmapJamesServerTest<T extends GuiceJamesServerImpl & JmapServer & WebAdminServer> {
+public abstract class AbstractJmapJamesServerTest<T extends JmapJamesServer> {
 
     private static final int IMAP_PORT = 1143; // You need to be root (superuser) to bind to ports under 1024.
     private static final int IMAP_PORT_SSL = 1993;

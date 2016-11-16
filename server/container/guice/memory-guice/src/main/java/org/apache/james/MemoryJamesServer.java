@@ -27,7 +27,7 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
-public class MemoryJamesServer extends GuiceJamesServerImpl implements JmapServer, WebAdminServer {
+public class MemoryJamesServer extends GuiceJamesServerImpl implements JmapJamesServer {
     public MemoryJamesServer() {
         super();
     }

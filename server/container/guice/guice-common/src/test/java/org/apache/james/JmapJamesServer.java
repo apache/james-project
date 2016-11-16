@@ -18,41 +18,6 @@
  ****************************************************************/
 package org.apache.james;
 
-import java.util.Arrays;
-
-import org.apache.james.utils.JmapGuiceProbe;
-import org.apache.james.utils.WebAdminGuiceProbe;
-
-import com.google.common.collect.Iterables;
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
-
-public class CassandraJamesServer extends GuiceJamesServerImpl implements JmapJamesServer {
-
-    public CassandraJamesServer() {
-        super();
-    }
-
-    public CassandraJamesServer(Module module) {
-        super(module);
-    }
-
-    public CassandraJamesServer combineWith(Module... modules) {
-        return new CassandraJamesServer(Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
-    }
-
-    public CassandraJamesServer overrideWith(Module... overrides) {
-        return new CassandraJamesServer(Modules.override(module).with(overrides));
-    }
-
-    @Override
-    public JmapGuiceProbe getJmapProbe() {
-        return getGuiceProbeProvider().getProbe(JmapGuiceProbe.class);
-    }
-
-    @Override
-    public WebAdminGuiceProbe getWebAdminProbe() {
-        return getGuiceProbeProvider().getProbe(WebAdminGuiceProbe.class);
-    }
+public interface JmapJamesServer extends GuiceJamesServer, JmapServer, WebAdminServer {
 
 }
