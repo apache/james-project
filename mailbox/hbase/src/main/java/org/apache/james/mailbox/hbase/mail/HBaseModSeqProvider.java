@@ -24,6 +24,7 @@ import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOX_HIGHEST_MODSEQ;
 
 import java.io.IOException;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
@@ -101,5 +102,11 @@ public class HBaseModSeqProvider implements ModSeqProvider {
                 }
             }
         }
+    }
+
+
+    @Override
+    public long highestModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        throw new NotImplementedException();
     }
 }

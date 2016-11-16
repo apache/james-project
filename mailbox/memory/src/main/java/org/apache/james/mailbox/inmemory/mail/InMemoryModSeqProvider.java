@@ -48,6 +48,12 @@ public class InMemoryModSeqProvider implements ModSeqProvider {
     public long highestModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
         return getHighest((InMemoryId) mailbox.getMailboxId()).get();
     }
+
+    @Override
+    public long highestModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        return getHighest((InMemoryId) mailboxId).get();
+    }
+
     private AtomicLong getHighest(InMemoryId id) {
         AtomicLong uid = map.get(id);
         if (uid == null) {

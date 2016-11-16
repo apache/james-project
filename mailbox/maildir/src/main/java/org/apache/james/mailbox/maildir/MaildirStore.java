@@ -309,4 +309,8 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
         throw new NotImplementedException();
     }
 
+    @Override
+    public long highestModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        throw new NotImplementedException();
+    }
 }

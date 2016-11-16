@@ -22,11 +22,13 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jcr.MailboxSessionJCRRepository;
 import org.apache.james.mailbox.jcr.mail.model.JCRMailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AbstractLockingModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
@@ -63,6 +65,11 @@ public class JCRModSeqProvider extends AbstractLockingModSeqProvider{
         } catch (RepositoryException e) {
             throw new MailboxException("Unable to consume next uid for mailbox " + mailbox, e);
         }
+    }
+
+    @Override
+    public long highestModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        throw new NotImplementedException();
     }
 
 }
