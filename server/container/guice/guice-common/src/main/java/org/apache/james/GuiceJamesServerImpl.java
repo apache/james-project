@@ -38,7 +38,7 @@ import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
 
-public class GuiceJamesServerImpl {
+public class GuiceJamesServerImpl implements GuiceJamesServer {
     protected final Module module;
     private Stager<PreDestroy> preDestroy;
     private GuiceProbeProvider guiceProbeProvider;
@@ -62,6 +62,7 @@ public class GuiceJamesServerImpl {
         return new GuiceJamesServerImpl(Modules.override(module).with(overrides));
     }
 
+    @Override
     public void start() throws Exception {
         Injector injector = Guice.createInjector(module);
         preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {}));
@@ -69,12 +70,14 @@ public class GuiceJamesServerImpl {
         guiceProbeProvider = injector.getInstance(GuiceProbeProvider.class);
     }
 
+    @Override
     public void stop() {
         if (preDestroy != null) {
             preDestroy.stage();
         }
     }
 
+    @Override
     public GuiceServerProbe serverProbe() {
         return guiceProbeProvider.getProbe(GuiceServerProbe.class);
     }
