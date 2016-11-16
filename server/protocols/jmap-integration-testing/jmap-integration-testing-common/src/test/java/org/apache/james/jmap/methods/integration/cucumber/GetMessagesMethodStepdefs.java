@@ -38,6 +38,9 @@ import javax.mail.Flags;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JmapServer;
+import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.methods.integration.cucumber.util.TableRow;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -57,7 +60,7 @@ import cucumber.api.java.en.When;
 import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
-public class GetMessagesMethodStepdefs {
+public class GetMessagesMethodStepdefs <T extends GuiceJamesServer & JmapServer & WebAdminServer> {
 
     private static final Optional<Map<String, String>> NO_HEADERS = Optional.empty();
     private static final String NAME = "[0][0]";
@@ -68,14 +71,14 @@ public class GetMessagesMethodStepdefs {
     private static final String SECOND_ATTACHMENT = ATTACHMENTS + "[1]";
 
 
-    private final MainStepdefs mainStepdefs;
-    private final UserStepdefs userStepdefs;
+    private final MainStepdefs<T> mainStepdefs;
+    private final UserStepdefs<T> userStepdefs;
 
     private HttpResponse response;
     private DocumentContext jsonPath;
 
     @Inject
-    private GetMessagesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs) {
+    private GetMessagesMethodStepdefs(MainStepdefs<T> mainStepdefs, UserStepdefs<T> userStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
     }

@@ -28,7 +28,6 @@ import java.util.Arrays;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.io.IOUtils;
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.configuration.MailetContainer;

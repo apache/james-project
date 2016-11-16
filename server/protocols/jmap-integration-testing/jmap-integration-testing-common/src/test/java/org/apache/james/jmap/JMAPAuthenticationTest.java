@@ -36,7 +36,6 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.JmapServer;
 import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.model.ContinuationToken;
-import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

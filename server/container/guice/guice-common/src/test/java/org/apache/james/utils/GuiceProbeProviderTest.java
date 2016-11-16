@@ -19,13 +19,12 @@
 package org.apache.james.utils;
 import static  org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableSet;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static org.junit.Assert.*;
+import com.google.common.collect.ImmutableSet;
 
 public class GuiceProbeProviderTest {
 

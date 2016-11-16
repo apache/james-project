@@ -61,7 +61,6 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.util.ZeroedInputStream;
-import org.apache.james.utils.JmapGuiceProbe;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.After;

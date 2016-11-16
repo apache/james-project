@@ -27,6 +27,9 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JmapServer;
+import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -41,9 +44,9 @@ import cucumber.api.java.en.Given;
 import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
-public class UserStepdefs {
+public class UserStepdefs <T extends GuiceJamesServer & JmapServer & WebAdminServer>{
 
-    private final MainStepdefs mainStepdefs;
+    private final MainStepdefs<T> mainStepdefs;
     
     protected Map<String, String> passwordByUser;
     protected Set<String> domains;
@@ -51,7 +54,7 @@ public class UserStepdefs {
     protected String lastConnectedUser;
     
     @Inject
-    private UserStepdefs(MainStepdefs mainStepdefs) {
+    private UserStepdefs(MainStepdefs<T> mainStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.domains = new HashSet<>();
         this.passwordByUser = new HashMap<>();

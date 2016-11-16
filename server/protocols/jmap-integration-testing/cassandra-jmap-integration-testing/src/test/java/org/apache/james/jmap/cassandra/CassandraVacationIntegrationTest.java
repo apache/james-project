@@ -21,7 +21,6 @@ package org.apache.james.jmap.cassandra;
 
 import org.apache.james.CassandraJamesServer;
 import org.apache.james.CassandraJamesServerMain;
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.VacationIntegrationTest;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;

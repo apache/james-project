@@ -34,11 +34,11 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 @ScenarioScoped
 public class MemoryStepdefs {
 
-    private final MainStepdefs mainStepdefs;
+    private final MainStepdefs<MemoryJamesServer> mainStepdefs;
     private final TemporaryFolder temporaryFolder;
 
     @Inject
-    private MemoryStepdefs(MainStepdefs mainStepdefs) {
+    private MemoryStepdefs(MainStepdefs<MemoryJamesServer> mainStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.temporaryFolder = new TemporaryFolder();
     }

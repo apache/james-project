@@ -19,19 +19,15 @@
 
 package org.apache.james.utils;
 
+import javax.inject.Inject;
+
 import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.jmap.api.vacation.VacationRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
 
 public class JmapGuiceProbe implements GuiceProbe {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(JmapGuiceProbe.class);
 
     private final VacationRepository vacationRepository;
     private final JMAPServer jmapServer;

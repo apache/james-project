@@ -30,12 +30,14 @@ import java.util.Set;
 public class GuiceProbeProvider {
     private final Map<Class<GuiceProbe>, GuiceProbe> registry;
 
+    @SuppressWarnings("unchecked")
     @Inject
     public GuiceProbeProvider(Set<GuiceProbe> guiceProbes) {
         this.registry = guiceProbes.stream()
             .collect(Guavate.toImmutableMap(guiceProbe -> (Class<GuiceProbe>) guiceProbe.getClass()));
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends GuiceProbe> T getProbe(Class<T> clazz) {
         Preconditions.checkNotNull(clazz);
         return Optional.ofNullable(registry.get(clazz))

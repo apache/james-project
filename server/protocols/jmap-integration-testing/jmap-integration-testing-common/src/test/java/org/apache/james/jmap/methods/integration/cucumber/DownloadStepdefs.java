@@ -37,6 +37,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JmapServer;
+import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.model.AttachmentAccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -56,7 +59,7 @@ import cucumber.api.java.en.When;
 import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
-public class DownloadStepdefs {
+public class DownloadStepdefs <T extends GuiceJamesServer & JmapServer & WebAdminServer> {
 
     private static final String ONE_ATTACHMENT_EML_ATTACHEMENT_BLOB_ID = "4000c5145f633410b80be368c44e1c394bff9437";
     private static final String EXPIRED_ATTACHMENT_TOKEN = "usera@domain.tld_"
@@ -67,15 +70,15 @@ public class DownloadStepdefs {
             + "DiZa0O14MjLWrAA8P6MG35Gt5CBp7mt5U1EH/M++rIoZK7nlGJ4dPW0dvZD7h4m3o5b/Yd8DXU5x2x4+s0HOOKzD7X0RMlsU7JHJMNLvTvRGWF/C+MUyC8Zce7DtnRVPEQX2uAZhL2PBABV07Vpa8kH+NxoS9CL955Bc1Obr4G+KN2JorADlocFQA6ElXryF5YS/HPZSvq1MTC6aJIP0ku8WRpRnbwgwJnn26YpcHXcJjbkCBtd9/BhlMV6xNd2hTBkfZmYdoNo+UKBaXWzLxAlbLuxjpxwvDNJfOEyWFPgHDoRvzP+G7KzhVWjanHAHrhF0GilEa/MKpOI1qHBSwA==";
     private static final String UTF8_CONTENT_DIPOSITION_START = "Content-Disposition: attachment; filename*=\"";
 
-    private final UserStepdefs userStepdefs;
-    private final MainStepdefs mainStepdefs;
+    private final UserStepdefs<T> userStepdefs;
+    private final MainStepdefs<T> mainStepdefs;
     private HttpResponse response;
     private Multimap<String, String> attachmentsByMessageId;
     private Map<String, String> blobIdByAttachmentId;
     private Map<AttachmentAccessTokenKey, AttachmentAccessToken> attachmentAccessTokens;
 
     @Inject
-    private DownloadStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs) {
+    private DownloadStepdefs(MainStepdefs<T> mainStepdefs, UserStepdefs<T> userStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
         this.attachmentsByMessageId = ArrayListMultimap.create();

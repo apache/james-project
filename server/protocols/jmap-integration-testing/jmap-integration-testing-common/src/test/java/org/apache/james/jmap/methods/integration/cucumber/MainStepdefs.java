@@ -23,9 +23,9 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JmapServer;
 import org.apache.james.WebAdminServer;
-import org.apache.james.utils.JmapGuiceProbe;
 
 import com.google.common.base.Charsets;
+
 import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
