@@ -40,7 +40,7 @@ public class JPAJamesServerMain {
         new ActiveMQQueueModule());
 
     public static void main(String[] args) throws Exception {
-        GuiceJamesServer server = new GuiceJamesServer()
+        GuiceJamesServerImpl server = new GuiceJamesServerImpl()
                     .combineWith(jpaServerModule, 
                             new JMXServerModule(), 
                             new LuceneSearchMailboxModule());

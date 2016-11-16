@@ -49,7 +49,7 @@ public class JamesCapabilitiesServerTest {
     private GuiceJamesServer createJPAJamesServer(final MailboxManager mailboxManager) {
         Module mockMailboxManager = (binder) -> binder.bind(MailboxManager.class).toInstance(mailboxManager);
         
-        return new GuiceJamesServer()
+        return new GuiceJamesServerImpl()
             .combineWith(JPAJamesServerMain.jpaServerModule)
             .overrideWith(
                 new TestFilesystemModule(temporaryFolder),
