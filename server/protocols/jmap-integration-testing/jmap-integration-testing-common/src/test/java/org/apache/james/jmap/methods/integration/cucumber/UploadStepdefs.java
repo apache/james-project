@@ -32,9 +32,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.james.GuiceJamesServerImpl;
-import org.apache.james.JmapServer;
-import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.util.ZeroedInputStream;
 
@@ -47,18 +44,18 @@ import cucumber.api.java.en.When;
 import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
-public class UploadStepdefs <T extends GuiceJamesServerImpl & JmapServer & WebAdminServer>{
+public class UploadStepdefs {
     private static final String _1M_ZEROED_FILE_BLOB_ID = "3b71f43ff30f4b15b5cd85dd9e95ebc7e84eb5a3";
     private static final int _1M = 1024 * 1024;
     private static final int _10M = 10 * _1M;
 
-    private final UserStepdefs<T> userStepdefs;
-    private final MainStepdefs<T> mainStepdefs;
+    private final UserStepdefs userStepdefs;
+    private final MainStepdefs mainStepdefs;
     private final URI uploadUri;
     private HttpResponse response;
 
     @Inject
-    private UploadStepdefs(UserStepdefs<T> userStepdefs, MainStepdefs<T> mainStepdefs) throws URISyntaxException {
+    private UploadStepdefs(UserStepdefs userStepdefs, MainStepdefs mainStepdefs) throws URISyntaxException {
         this.userStepdefs = userStepdefs;
         this.mainStepdefs = mainStepdefs;
         uploadUri = mainStepdefs.baseUri().setPath("/upload").build();

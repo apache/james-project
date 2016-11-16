@@ -20,18 +20,16 @@
 package org.apache.james.jmap.methods.integration.cucumber;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.GuiceJamesServerImpl;
-import org.apache.james.JmapServer;
-import org.apache.james.WebAdminServer;
+import org.apache.james.JmapJamesServer;
 
 import com.google.common.base.Charsets;
 
 import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
-public class MainStepdefs<T extends GuiceJamesServerImpl & JmapServer & WebAdminServer> {
+public class MainStepdefs {
 
-    public T jmapServer;
+    public JmapJamesServer jmapServer;
     public Runnable awaitMethod = () -> {};
 
     public void init() throws Exception {

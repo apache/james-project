@@ -40,13 +40,13 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 @ScenarioScoped
 public class CassandraStepdefs {
 
-    private final MainStepdefs<CassandraJamesServer> mainStepdefs;
+    private final MainStepdefs mainStepdefs;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
     private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
 
     @Inject
-    private CassandraStepdefs(MainStepdefs<CassandraJamesServer> mainStepdefs) {
+    private CassandraStepdefs(MainStepdefs mainStepdefs) {
         this.mainStepdefs = mainStepdefs;
     }
 

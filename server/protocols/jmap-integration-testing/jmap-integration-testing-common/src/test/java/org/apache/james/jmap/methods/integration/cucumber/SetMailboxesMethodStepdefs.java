@@ -32,9 +32,6 @@ import javax.mail.Flags;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
-import org.apache.james.GuiceJamesServerImpl;
-import org.apache.james.JmapServer;
-import org.apache.james.WebAdminServer;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -50,16 +47,16 @@ import cucumber.api.java.en.When;
 import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
-public class SetMailboxesMethodStepdefs <T extends GuiceJamesServerImpl & JmapServer & WebAdminServer> {
+public class SetMailboxesMethodStepdefs {
 
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
 
-    private final MainStepdefs<T> mainStepdefs;
-    private final UserStepdefs<T> userStepdefs;
+    private final MainStepdefs mainStepdefs;
+    private final UserStepdefs userStepdefs;
 
     @Inject
-    private SetMailboxesMethodStepdefs(MainStepdefs<T> mainStepdefs, UserStepdefs<T> userStepdefs) {
+    private SetMailboxesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
     }
