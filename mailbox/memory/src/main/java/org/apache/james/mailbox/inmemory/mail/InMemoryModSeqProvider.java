@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
@@ -39,9 +40,20 @@ public class InMemoryModSeqProvider implements ModSeqProvider {
     }
 
     @Override
+    public long nextModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        return getHighest((InMemoryId) mailboxId).incrementAndGet();
+    }
+
+    @Override
     public long highestModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
         return getHighest((InMemoryId) mailbox.getMailboxId()).get();
     }
+
+    @Override
+    public long highestModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        return getHighest((InMemoryId) mailboxId).get();
+    }
+
     private AtomicLong getHighest(InMemoryId id) {
         AtomicLong uid = map.get(id);
         if (uid == null) {
