@@ -70,12 +70,12 @@ public abstract class SetVacationResponseTest<T extends GuiceJamesServer & JmapS
         jmapServer.start();
         jmapGuiceProbe = jmapServer.getJmapProbe();
         RestAssured.requestSpecification = new RequestSpecBuilder()
-        		.setContentType(ContentType.JSON)
-        		.setAccept(ContentType.JSON)
-        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(jmapGuiceProbe
+                .setContentType(ContentType.JSON)
+                .setAccept(ContentType.JSON)
+                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+                .setPort(jmapGuiceProbe
                     .getJmapPort())
-        		.build();
+                .build();
 
         jmapServer.serverProbe().addDomain(USERS_DOMAIN);
         jmapServer.serverProbe().addUser(USER, PASSWORD);

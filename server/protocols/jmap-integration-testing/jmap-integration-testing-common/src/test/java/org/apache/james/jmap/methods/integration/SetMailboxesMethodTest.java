@@ -75,12 +75,12 @@ public abstract class SetMailboxesMethodTest<T extends GuiceJamesServer & JmapSe
         jmapServer.start();
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
-        		.setContentType(ContentType.JSON)
-        		.setAccept(ContentType.JSON)
-        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(jmapServer.getJmapProbe()
+                .setContentType(ContentType.JSON)
+                .setAccept(ContentType.JSON)
+                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+                .setPort(jmapServer.getJmapProbe()
                     .getJmapPort())
-        		.build();
+                .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
 
         username = "username@" + USERS_DOMAIN;

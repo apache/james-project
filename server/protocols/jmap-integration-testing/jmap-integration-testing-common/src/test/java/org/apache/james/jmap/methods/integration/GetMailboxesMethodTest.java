@@ -67,12 +67,12 @@ public abstract class GetMailboxesMethodTest<T extends GuiceJamesServer & JmapSe
         jmapServer.start();
         
         RestAssured.requestSpecification = new RequestSpecBuilder()
-        		.setContentType(ContentType.JSON)
-        		.setAccept(ContentType.JSON)
-        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(jmapServer.getJmapProbe()
+                .setContentType(ContentType.JSON)
+                .setAccept(ContentType.JSON)
+                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+                .setPort(jmapServer.getJmapProbe()
                     .getJmapPort())
-        		.build();
+                .build();
 
         String domain = "domain.tld";
         username = "username@" + domain;
