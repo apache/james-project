@@ -33,6 +33,7 @@ import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.james.transport.util.MailAddressUtils;
 import org.apache.james.transport.util.RecipientsUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
+import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
@@ -313,11 +314,16 @@ public class Resend extends AbstractRedirect {
     }
 
     @Override
-    protected List<InternetAddress> getTo() throws MessagingException {
+    public List<InternetAddress> getTo() throws MessagingException {
       return MailAddressUtils.toInternetAddresses(
               AddressExtractor.withContext(getMailetContext())
                   .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
                   .extract(getInitParameters().getTo()));
+    }
+
+    @Override
+    protected List<MailAddress> getTo(Mail originalMail) throws MessagingException {
+        return TosUtils.from(this).getTo(originalMail);
     }
 
     @Override

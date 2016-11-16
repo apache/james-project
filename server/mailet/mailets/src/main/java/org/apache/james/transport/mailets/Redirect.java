@@ -34,6 +34,7 @@ import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.james.transport.util.MailAddressUtils;
 import org.apache.james.transport.util.RecipientsUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
+import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
@@ -348,7 +349,7 @@ public class Redirect extends AbstractRedirect {
     }
 
     @Override
-    protected List<InternetAddress> getTo() throws MessagingException {
+    public List<InternetAddress> getTo() throws MessagingException {
         String toOrRecipients = getToOrRecipients();
         if (toOrRecipients == null) {
             return ImmutableList.of();
@@ -364,6 +365,11 @@ public class Redirect extends AbstractRedirect {
 
     private String getToOrRecipients() throws MessagingException {
         return getInitParameter("to", getInitParameter("recipients"));
+    }
+
+    @Override
+    protected List<MailAddress> getTo(Mail originalMail) throws MessagingException {
+        return TosUtils.from(this).getTo(originalMail);
     }
 
     @Override

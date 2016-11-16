@@ -34,6 +34,7 @@ import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.james.transport.util.RecipientsUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
+import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetConfig;
@@ -158,7 +159,7 @@ public class NotifySender extends AbstractRedirect {
     }
 
     @Override
-    protected List<InternetAddress> getTo() throws MessagingException {
+    public List<InternetAddress> getTo() throws MessagingException {
         if (to.isPresent()) {
             Optional<MailAddress> specialAddress = AddressExtractor.withContext(getMailetContext())
                     .allowedSpecials(ALLOWED_SPECIALS)
@@ -169,6 +170,11 @@ public class NotifySender extends AbstractRedirect {
             log("\"to\" parameter ignored, set to sender");
         }
         return ImmutableList.of(SpecialAddress.SENDER.toInternetAddress());
+    }
+
+    @Override
+    protected List<MailAddress> getTo(Mail originalMail) throws MessagingException {
+        return TosUtils.from(this).getTo(originalMail);
     }
 
     @Override

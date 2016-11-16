@@ -31,7 +31,6 @@ import org.apache.james.core.MailImpl;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.Redirect;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
-import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
@@ -198,7 +197,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> or
      *         <code>SpecialAddress.TO</code> or <code>null</code> if missing
      */
-    protected abstract List<InternetAddress> getTo() throws MessagingException;
+    public abstract List<InternetAddress> getTo() throws MessagingException;
 
     /**
      * Gets the <code>to</code> property, built dynamically using the original
@@ -208,23 +207,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *
      * @return {@link #replaceInternetAddresses} on {@link #getRecipients()},
      */
-    protected List<MailAddress> getTo(Mail originalMail) throws MessagingException {
-        List<InternetAddress> apparentlyTo = getTo();
-        if (!apparentlyTo.isEmpty()) {
-            if (containsOnlyUnalteredOrTo(apparentlyTo)) {
-                return null;
-            }
-            return SpecialAddressesUtils.from(this).replaceInternetAddresses(originalMail, apparentlyTo);
-        }
-
-        return null;
-    }
-
-    private boolean containsOnlyUnalteredOrTo(List<InternetAddress> apparentlyTo) {
-        return apparentlyTo.size() == 1 && 
-                (apparentlyTo.get(0).equals(SpecialAddress.UNALTERED.toInternetAddress()) 
-                        || apparentlyTo.get(0).equals(SpecialAddress.RECIPIENTS.toInternetAddress()));
-    }
+    protected abstract List<MailAddress> getTo(Mail originalMail) throws MessagingException;
 
     /**
      * Gets the <code>replyto</code> property. Returns the Reply-To address of

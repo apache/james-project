@@ -112,7 +112,7 @@ public class MailModifier {
     }
 
     public void setTo(List<MailAddress> mailAddresses) throws MessagingException {
-        if (mailAddresses != null) {
+        if (!mailAddresses.isEmpty()) {
             InternetAddress[] internetAddresses = MailAddressUtils.toInternetAddressArray(mailAddresses);
             mail.getMessage().setRecipients(Message.RecipientType.TO, internetAddresses);
             if (mailet.getInitParameters().isDebug()) {

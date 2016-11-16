@@ -44,6 +44,7 @@ import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.james.transport.util.Patterns;
 import org.apache.james.transport.util.RecipientsUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
+import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.DateFormats;
@@ -144,8 +145,13 @@ public class DSNBounce extends AbstractRedirect {
     }
 
     @Override
-    protected List<InternetAddress> getTo() {
+    public List<InternetAddress> getTo() {
         return TO_INTERNET_ADDRESSES;
+    }
+
+    @Override
+    protected List<MailAddress> getTo(Mail originalMail) throws MessagingException {
+        return TosUtils.from(this).getTo(originalMail);
     }
 
     @Override

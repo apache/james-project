@@ -33,6 +33,7 @@ import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.james.transport.util.RecipientsUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
+import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
@@ -151,8 +152,13 @@ public class Bounce extends AbstractRedirect {
     }
 
     @Override
-    protected List<InternetAddress> getTo() {
+    public List<InternetAddress> getTo() {
         return TO;
+    }
+
+    @Override
+    protected List<MailAddress> getTo(Mail originalMail) throws MessagingException {
+        return TosUtils.from(this).getTo(originalMail);
     }
 
     @Override
