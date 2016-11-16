@@ -28,7 +28,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 
 import java.time.ZonedDateTime;
 
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJamesServerImpl;
 import org.apache.james.JmapServer;
 import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
@@ -47,7 +47,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-public abstract class GetVacationResponseTest<T extends GuiceJamesServer & JmapServer & WebAdminServer> {
+public abstract class GetVacationResponseTest<T extends GuiceJamesServerImpl & JmapServer & WebAdminServer> {
 
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";

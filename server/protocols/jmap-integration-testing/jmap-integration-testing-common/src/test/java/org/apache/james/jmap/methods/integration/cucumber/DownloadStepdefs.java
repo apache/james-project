@@ -37,7 +37,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJamesServerImpl;
 import org.apache.james.JmapServer;
 import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -59,7 +59,7 @@ import cucumber.api.java.en.When;
 import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
-public class DownloadStepdefs <T extends GuiceJamesServer & JmapServer & WebAdminServer> {
+public class DownloadStepdefs <T extends GuiceJamesServerImpl & JmapServer & WebAdminServer> {
 
     private static final String ONE_ATTACHMENT_EML_ATTACHEMENT_BLOB_ID = "4000c5145f633410b80be368c44e1c394bff9437";
     private static final String EXPIRED_ATTACHMENT_TOKEN = "usera@domain.tld_"

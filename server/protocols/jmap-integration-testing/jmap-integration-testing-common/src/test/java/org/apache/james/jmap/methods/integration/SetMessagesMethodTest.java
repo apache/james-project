@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 import javax.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJamesServerImpl;
 import org.apache.james.JmapServer;
 import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.JmapAuthentication;
@@ -80,7 +80,7 @@ import com.jayway.restassured.builder.ResponseSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.specification.ResponseSpecification;
 
-public abstract class SetMessagesMethodTest<T extends GuiceJamesServer & JmapServer & WebAdminServer> {
+public abstract class SetMessagesMethodTest<T extends GuiceJamesServerImpl & JmapServer & WebAdminServer> {
 
     private static final int _1MB = 1024*1024;
     private static final String NAME = "[0][0]";

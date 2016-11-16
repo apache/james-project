@@ -27,7 +27,7 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
-public class CassandraJamesServer extends GuiceJamesServer implements JmapServer, WebAdminServer {
+public class CassandraJamesServer extends GuiceJamesServerImpl implements JmapServer, WebAdminServer {
 
     public CassandraJamesServer() {
         super();

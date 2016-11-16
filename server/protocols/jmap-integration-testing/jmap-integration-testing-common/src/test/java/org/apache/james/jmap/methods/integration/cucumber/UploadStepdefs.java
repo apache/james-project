@@ -32,7 +32,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJamesServerImpl;
 import org.apache.james.JmapServer;
 import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -47,7 +47,7 @@ import cucumber.api.java.en.When;
 import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
-public class UploadStepdefs <T extends GuiceJamesServer & JmapServer & WebAdminServer> {
+public class UploadStepdefs <T extends GuiceJamesServerImpl & JmapServer & WebAdminServer>{
     private static final String _1M_ZEROED_FILE_BLOB_ID = "3b71f43ff30f4b15b5cd85dd9e95ebc7e84eb5a3";
     private static final int _1M = 1024 * 1024;
     private static final int _10M = 10 * _1M;

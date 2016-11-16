@@ -38,28 +38,28 @@ import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
 
-public class GuiceJamesServer {
+public class GuiceJamesServerImpl {
     protected final Module module;
     private Stager<PreDestroy> preDestroy;
     private GuiceProbeProvider guiceProbeProvider;
 
-    public GuiceJamesServer() {
+    public GuiceJamesServerImpl() {
         this(Modules.combine(
                         new CommonServicesModule(),
                         new ProtocolsModule(),
                         new MailetProcessingModule()));
     }
 
-    protected GuiceJamesServer(Module module) {
+    protected GuiceJamesServerImpl(Module module) {
         this.module = module;
     }
     
-    public GuiceJamesServer combineWith(Module... modules) {
-        return new GuiceJamesServer(Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
+    public GuiceJamesServerImpl combineWith(Module... modules) {
+        return new GuiceJamesServerImpl(Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
     }
 
-    public GuiceJamesServer overrideWith(Module... overrides) {
-        return new GuiceJamesServer(Modules.override(module).with(overrides));
+    public GuiceJamesServerImpl overrideWith(Module... overrides) {
+        return new GuiceJamesServerImpl(Modules.override(module).with(overrides));
     }
 
     public void start() throws Exception {

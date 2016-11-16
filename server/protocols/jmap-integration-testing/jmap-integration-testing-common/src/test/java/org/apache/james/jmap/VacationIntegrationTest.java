@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJamesServerImpl;
 import org.apache.james.JmapServer;
 import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -51,7 +51,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-public abstract class VacationIntegrationTest<T extends GuiceJamesServer & JmapServer & WebAdminServer> {
+public abstract class VacationIntegrationTest<T extends GuiceJamesServerImpl & JmapServer & WebAdminServer> {
 
     private static final String ARGUMENTS = "[0][1]";
     private static final String SECOND_NAME = "[1][0]";

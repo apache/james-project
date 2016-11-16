@@ -27,7 +27,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJamesServerImpl;
 import org.apache.james.JmapServer;
 import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.HttpJmapAuthentication;
@@ -44,7 +44,7 @@ import cucumber.api.java.en.Given;
 import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
-public class UserStepdefs <T extends GuiceJamesServer & JmapServer & WebAdminServer>{
+public class UserStepdefs <T extends GuiceJamesServerImpl & JmapServer & WebAdminServer>{
 
     private final MainStepdefs<T> mainStepdefs;
     

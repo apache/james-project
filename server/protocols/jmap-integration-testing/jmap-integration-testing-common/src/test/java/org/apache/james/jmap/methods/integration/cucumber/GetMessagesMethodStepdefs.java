@@ -38,7 +38,7 @@ import javax.mail.Flags;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJamesServerImpl;
 import org.apache.james.JmapServer;
 import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.methods.integration.cucumber.util.TableRow;
@@ -60,7 +60,7 @@ import cucumber.api.java.en.When;
 import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
-public class GetMessagesMethodStepdefs <T extends GuiceJamesServer & JmapServer & WebAdminServer> {
+public class GetMessagesMethodStepdefs <T extends GuiceJamesServerImpl & JmapServer & WebAdminServer> {
 
     private static final Optional<Map<String, String>> NO_HEADERS = Optional.empty();
     private static final String NAME = "[0][0]";
