@@ -47,6 +47,7 @@ import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
 import org.apache.james.mime4j.message.MessageBuilder;
 import org.apache.james.mime4j.stream.Field;
+import org.apache.james.mime4j.stream.MimeConfig;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
@@ -56,6 +57,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimaps;
 
 public class MessageFactory {
+
+    private static final int NO_LINE_LENGTH_LIMIT_PARSING = -1;
 
     public static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
 
@@ -100,7 +103,10 @@ public class MessageFactory {
 
     private org.apache.james.mime4j.dom.Message parse(MetaDataWithContent message) throws MailboxException {
         try {
-            return MessageBuilder.read(message.getContent())
+            return MessageBuilder
+                    .create()
+                    .use(MimeConfig.custom().setMaxLineLen(NO_LINE_LENGTH_LIMIT_PARSING).build())
+                    .parse(message.getContent())
                     .setDate(message.getInternalDate(), TimeZone.getTimeZone(UTC_ZONE_ID))
                     .build();
         } catch (IOException e) {

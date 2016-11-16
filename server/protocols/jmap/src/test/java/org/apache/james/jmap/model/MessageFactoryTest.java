@@ -30,6 +30,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.mailbox.MessageUid;
@@ -292,4 +293,24 @@ public class MessageFactoryTest {
         assertThat(testee.getCc()).contains(usercc);
         assertThat(testee.getBcc()).contains(userbcc);
     }
+
+    @Test
+    public void mailWithBigLinesShouldBeLoadedIntoMessage() throws Exception {
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+                .uid(MessageUid.of(2))
+                .flags(new Flags(Flag.SEEN))
+                .size(1010)
+                .internalDate(INTERNAL_DATE)
+                .content(new ByteArrayInputStream((StringUtils.repeat("0123456789", 101).getBytes(Charsets.UTF_8))))
+                .attachments(ImmutableList.of())
+                .mailboxId(MAILBOX_ID)
+                .messageId(MessageId.of("test|test|2"))
+                .build();
+
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+        assertThat(testee)
+            .extracting(Message::getPreview, Message::getSize, Message::getSubject, Message::getHeaders, Message::getDate)
+            .containsExactly("(Empty)", 1010L, "", ImmutableMap.of("Date", "Tue, 14 Jul 2015 12:30:42 +0000", "MIME-Version", "1.0"), ZONED_DATE);
+    }
+
 }
