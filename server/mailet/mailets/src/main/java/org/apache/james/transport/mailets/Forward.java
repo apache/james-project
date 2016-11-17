@@ -33,6 +33,7 @@ import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.util.RecipientsUtils;
 import org.apache.james.transport.util.ReplyToUtils;
+import org.apache.james.transport.util.SenderUtils;
 import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -187,8 +188,13 @@ public class Forward extends AbstractRedirect {
     }
 
     @Override
-    protected MailAddress getSender() throws MessagingException {
+    public MailAddress getSender() throws MessagingException {
         return null;
+    }
+
+    @Override
+    protected Optional<MailAddress> getSender(Mail originalMail) throws MessagingException {
+        return SenderUtils.from(getSender()).getSender(originalMail);
     }
 
     @Override

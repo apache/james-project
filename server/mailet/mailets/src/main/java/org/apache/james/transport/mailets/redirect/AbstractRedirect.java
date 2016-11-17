@@ -264,7 +264,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> or <code>null</code> if
      *         missing
      */
-    protected abstract MailAddress getSender() throws MessagingException; 
+    public abstract MailAddress getSender() throws MessagingException; 
 
     /**
      * Gets the <code>sender</code> property, built dynamically using the
@@ -274,19 +274,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> and
      *         <code>SpecialAddress.SENDER</code> if applicable with null
      */
-    protected MailAddress getSender(Mail originalMail) throws MessagingException {
-        MailAddress sender = getSender();
-        if (sender != null) {
-            if (isUnalteredOrSender(sender)) {
-                return null;
-            }
-        }
-        return sender;
-    }
-
-    private boolean isUnalteredOrSender(MailAddress sender) {
-        return sender.equals(SpecialAddress.UNALTERED) || sender.equals(SpecialAddress.SENDER);
-    }
+    protected abstract Optional<MailAddress> getSender(Mail originalMail) throws MessagingException;
 
     /**
      * Builds the subject of <i>newMail</i> appending the subject of
@@ -354,11 +342,10 @@ public abstract class AbstractRedirect extends GenericMailet {
                 newMail.setMessage(new MimeMessage(Session.getDefaultInstance(System.getProperties(), null)));
 
                 // handle the new message if altered
-                AlteredMailUtils.builder()
-                    .mailet(this)
+                MailMessageAlteringUtils.from(this)
                     .originalMail(originalMail)
-                    .build()
-                    .buildAlteredMessage(newMail);
+                    .newMail(newMail)
+                    .alterNewMessage();
 
             } else {
                 // if we need the original, create a copy of this message to

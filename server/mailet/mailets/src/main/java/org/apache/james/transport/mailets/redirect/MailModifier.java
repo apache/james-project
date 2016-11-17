@@ -34,6 +34,7 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.RFC2822Headers;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public class MailModifier {
@@ -186,9 +187,9 @@ public class MailModifier {
         }
     }
 
-    public void setSender(MailAddress sender, Mail originalMail) throws MessagingException {
-        if (sender != null) {
-            mail.getMessage().setFrom(sender.toInternetAddress());
+    public void setSender(Optional<MailAddress> sender, Mail originalMail) throws MessagingException {
+        if (sender.isPresent()) {
+            mail.getMessage().setFrom(sender.get().toInternetAddress());
 
             if (mailet.getInitParameters().isDebug()) {
                 mailet.log("sender set to: " + sender);
