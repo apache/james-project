@@ -28,6 +28,7 @@ import org.apache.james.transport.mailets.redirect.AbstractRedirect;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
+import org.apache.james.transport.mailets.redirect.ProcessRedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.mailets.utils.MimeMessageUtils;
@@ -208,7 +209,7 @@ public class Bounce extends AbstractRedirect {
             if (getInitParameters().isDebug()) {
                 log("Processing a bounce request for a message with a reverse path.  The bounce will be sent to " + originalMail.getSender().toString());
             }
-            super.service(originalMail);
+            ProcessRedirectNotify.from(this).process(originalMail);
         }
     }
 

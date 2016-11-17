@@ -27,6 +27,7 @@ import javax.mail.internet.InternetAddress;
 import org.apache.james.transport.mailets.redirect.AbstractRedirect;
 import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.InitParameters;
+import org.apache.james.transport.mailets.redirect.ProcessRedirectNotify;
 import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
@@ -439,5 +440,10 @@ public class Redirect extends AbstractRedirect {
     @Override
     protected MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException {
         return new MimeMessageModifier(newMail.getMessage());
+    }
+
+    @Override
+    public void service(Mail originalMail) throws MessagingException {
+        ProcessRedirectNotify.from(this).process(originalMail);
     }
 }

@@ -29,6 +29,7 @@ import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
+import org.apache.james.transport.mailets.redirect.ProcessRedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.mailets.utils.MimeMessageUtils;
@@ -219,5 +220,10 @@ public class NotifyPostmaster extends AbstractRedirect {
     @Override
     protected MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException {
         return new MimeMessageModifier(originalMail.getMessage());
+    }
+
+    @Override
+    public void service(Mail originalMail) throws MessagingException {
+        ProcessRedirectNotify.from(this).process(originalMail);
     }
 }
