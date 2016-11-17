@@ -23,6 +23,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
+import com.google.common.base.Joiner;
+
 /**
  * Collects useful string utility methods.
  */
@@ -106,5 +108,19 @@ public final class StringUtils {
             prevCh = ch;
         }
         return res.toString();
+    }
+    
+    /**
+     * Utility method for obtaining a string representation of an array of Objects.
+     */
+    public static String arrayToString(Object[] array) {
+        if (array == null) {
+            return "null";
+        }
+        StringBuilder sb = new StringBuilder(1024);
+        sb.append("[");
+        sb.append(Joiner.on(",").join(array));
+        sb.append("]");
+        return sb.toString();
     }
 }

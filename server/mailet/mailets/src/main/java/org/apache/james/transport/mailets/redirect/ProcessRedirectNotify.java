@@ -24,6 +24,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailImpl;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.StringUtils;
 
 public class ProcessRedirectNotify {
 
@@ -53,8 +54,8 @@ public class ProcessRedirectNotify {
             mailModifier.setRemoteAddr();
             mailModifier.setRemoteHost();
 
-            if (isDebug) {
-                mailet.log("New mail - sender: " + newMail.getSender() + ", recipients: " + mailet.arrayToString(newMail.getRecipients().toArray()) + ", name: " + newMail.getName() + ", remoteHost: " + newMail.getRemoteHost() + ", remoteAddr: " + newMail.getRemoteAddr() + ", state: " + newMail.getState()
+            if (mailet.getInitParameters().isDebug()) {
+                mailet.log("New mail - sender: " + newMail.getSender() + ", recipients: " + StringUtils.arrayToString(newMail.getRecipients().toArray()) + ", name: " + newMail.getName() + ", remoteHost: " + newMail.getRemoteHost() + ", remoteAddr: " + newMail.getRemoteAddr() + ", state: " + newMail.getState()
                         + ", lastUpdated: " + newMail.getLastUpdated() + ", errorMessage: " + newMail.getErrorMessage());
             }
 

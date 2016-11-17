@@ -33,6 +33,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.RFC2822Headers;
+import org.apache.mailet.base.StringUtils;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -107,7 +108,7 @@ public class MailModifier {
         if (!recipients.isEmpty()) {
             mail.setRecipients(recipients);
             if (mailet.getInitParameters().isDebug()) {
-                mailet.log("recipients set to: " + mailet.arrayToString(recipients.toArray()));
+                mailet.log("recipients set to: " + StringUtils.arrayToString(recipients.toArray()));
             }
         }
     }
