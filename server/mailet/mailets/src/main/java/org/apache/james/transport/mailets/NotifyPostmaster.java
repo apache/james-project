@@ -33,6 +33,7 @@ import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.james.transport.util.RecipientsUtils;
+import org.apache.james.transport.util.ReplyToUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
@@ -178,8 +179,13 @@ public class NotifyPostmaster extends AbstractRedirect {
     }
 
     @Override
-    protected MailAddress getReplyTo() throws MessagingException {
+    public MailAddress getReplyTo() throws MessagingException {
         return SpecialAddress.NULL;
+    }
+
+    @Override
+    protected MailAddress getReplyTo(Mail originalMail) throws MessagingException {
+        return ReplyToUtils.from(getReplyTo()).getReplyTo(originalMail);
     }
 
     @Override

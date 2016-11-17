@@ -218,7 +218,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> or
      *         <code>SpecialAddress.NULL</code> or <code>null</code> if missing
      */
-    protected abstract MailAddress getReplyTo() throws MessagingException;
+    public abstract MailAddress getReplyTo() throws MessagingException;
 
     /**
      * Gets the <code>replyTo</code> property, built dynamically using the
@@ -228,16 +228,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> if applicable with null and
      *         <code>SpecialAddress.SENDER</code> with the original mail sender
      */
-    protected MailAddress getReplyTo(Mail originalMail) throws MessagingException {
-        MailAddress replyTo = getReplyTo();
-        if (replyTo != null) {
-            if (replyTo.equals(SpecialAddress.UNALTERED)) {
-                return null;
-            }
-            return originalMail.getSender();
-        }
-        return null;
-    }
+    protected abstract MailAddress getReplyTo(Mail originalMail) throws MessagingException;
 
     /**
      * Gets the <code>reversePath</code> property. Returns the reverse-path of
