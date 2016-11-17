@@ -26,16 +26,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
-import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
-import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
-import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
@@ -56,17 +54,10 @@ public class SpecialAddressesUtilsTest {
         when(mailetContext.getPostmaster())
             .thenReturn(postmaster);
 
-        testee = SpecialAddressesUtils.from(new GenericMailet() {
-            
-            @Override
-            public MailetContext getMailetContext() {
-                return mailetContext;
-            }
-
-            @Override
-            public void service(Mail mail) throws MessagingException {
-            }
-        });
+        RedirectNotify mailet = mock(RedirectNotify.class);
+        when(mailet.getMailetContext())
+            .thenReturn(mailetContext);
+        testee = SpecialAddressesUtils.from(mailet);
     }
 
     @Test

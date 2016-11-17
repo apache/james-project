@@ -21,7 +21,6 @@ package org.apache.james.transport.mailets.redirect;
 
 import java.util.List;
 
-import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
@@ -30,7 +29,8 @@ import org.apache.james.transport.mailets.Redirect;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
-import org.apache.mailet.base.GenericMailet;
+import org.apache.mailet.Mailet;
+import org.apache.mailet.MailetConfig;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -134,21 +134,21 @@ import com.google.common.collect.ImmutableList;
  * @since 2.2.0
  */
 
-public abstract class RedirectNotify extends GenericMailet {
+public interface RedirectNotify extends Mailet, MailetConfig {
 
-    public static final List<String> REVERSE_PATH_ALLOWED_SPECIALS = ImmutableList.of("postmaster", "sender", "null", "unaltered");
-    public static final List<String> SENDER_ALLOWED_SPECIALS = ImmutableList.of("postmaster", "sender", "unaltered");
+    List<String> REVERSE_PATH_ALLOWED_SPECIALS = ImmutableList.of("postmaster", "sender", "null", "unaltered");
+    List<String> SENDER_ALLOWED_SPECIALS = ImmutableList.of("postmaster", "sender", "unaltered");
 
-    public abstract InitParameters getInitParameters();
+    InitParameters getInitParameters();
 
-    protected abstract String[] getAllowedInitParameters();
+    String[] getAllowedInitParameters();
 
-    protected DNSService dns;
+    void setDNSService(DNSService dns);
 
-    @Inject
-    public void setDNSService(DNSService dns) {
-        this.dns = dns;
-    }
+    DNSService getDNSService();
+
+    void log(String message);
+    void log(String message, Throwable t);
 
     /**
      * Gets the <code>message</code> property, built dynamically using the
@@ -156,7 +156,7 @@ public abstract class RedirectNotify extends GenericMailet {
      *
      * @return {@link #getMessage()}
      */
-    public abstract String getMessage(Mail originalMail) throws MessagingException;
+    String getMessage(Mail originalMail) throws MessagingException;
 
     /**
      * Gets the <code>recipients</code> property. Returns the collection of
@@ -172,7 +172,7 @@ public abstract class RedirectNotify extends GenericMailet {
      *         <code>SpecialAddress.RECIPIENTS</code> or <code>null</code> if
      *         missing
      */
-    public abstract List<MailAddress> getRecipients() throws MessagingException; 
+    List<MailAddress> getRecipients() throws MessagingException; 
 
     /**
      * Gets the <code>recipients</code> property, built dynamically using the
@@ -180,7 +180,7 @@ public abstract class RedirectNotify extends GenericMailet {
      *
      * @return {@link #replaceMailAddresses} on {@link #getRecipients()},
      */
-    protected abstract List<MailAddress> getRecipients(Mail originalMail) throws MessagingException; 
+    List<MailAddress> getRecipients(Mail originalMail) throws MessagingException; 
 
     /**
      * Gets the <code>to</code> property. Returns the "To:" recipients of the
@@ -194,7 +194,7 @@ public abstract class RedirectNotify extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> or
      *         <code>SpecialAddress.TO</code> or <code>null</code> if missing
      */
-    public abstract List<InternetAddress> getTo() throws MessagingException;
+    List<InternetAddress> getTo() throws MessagingException;
 
     /**
      * Gets the <code>to</code> property, built dynamically using the original
@@ -204,7 +204,7 @@ public abstract class RedirectNotify extends GenericMailet {
      *
      * @return {@link #replaceInternetAddresses} on {@link #getRecipients()},
      */
-    protected abstract List<MailAddress> getTo(Mail originalMail) throws MessagingException;
+    List<MailAddress> getTo(Mail originalMail) throws MessagingException;
 
     /**
      * Gets the <code>replyto</code> property. Returns the Reply-To address of
@@ -215,7 +215,7 @@ public abstract class RedirectNotify extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> or
      *         <code>SpecialAddress.NULL</code> or <code>null</code> if missing
      */
-    public abstract MailAddress getReplyTo() throws MessagingException;
+    MailAddress getReplyTo() throws MessagingException;
 
     /**
      * Gets the <code>replyTo</code> property, built dynamically using the
@@ -225,7 +225,7 @@ public abstract class RedirectNotify extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> if applicable with null and
      *         <code>SpecialAddress.SENDER</code> with the original mail sender
      */
-    protected abstract MailAddress getReplyTo(Mail originalMail) throws MessagingException;
+    MailAddress getReplyTo(Mail originalMail) throws MessagingException;
 
     /**
      * Gets the <code>reversePath</code> property. Returns the reverse-path of
@@ -237,7 +237,7 @@ public abstract class RedirectNotify extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> or <code>null</code> if
      *         missing
      */
-    protected abstract MailAddress getReversePath() throws MessagingException; 
+    MailAddress getReversePath() throws MessagingException; 
 
     /**
      * Gets the <code>reversePath</code> property, built dynamically using the
@@ -250,7 +250,7 @@ public abstract class RedirectNotify extends GenericMailet {
      *         but not replacing <code>SpecialAddress.NULL</code> that will be
      *         handled by {@link #setReversePath}
      */
-    protected abstract MailAddress getReversePath(Mail originalMail) throws MessagingException;
+    MailAddress getReversePath(Mail originalMail) throws MessagingException;
 
     /**
      * Gets the <code>sender</code> property. Returns the new sender as a
@@ -261,7 +261,7 @@ public abstract class RedirectNotify extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> or <code>null</code> if
      *         missing
      */
-    public abstract MailAddress getSender() throws MessagingException; 
+    MailAddress getSender() throws MessagingException; 
 
     /**
      * Gets the <code>sender</code> property, built dynamically using the
@@ -271,36 +271,14 @@ public abstract class RedirectNotify extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> and
      *         <code>SpecialAddress.SENDER</code> if applicable with null
      */
-    protected abstract Optional<MailAddress> getSender(Mail originalMail) throws MessagingException;
+    Optional<MailAddress> getSender(Mail originalMail) throws MessagingException;
 
     /**
      * Builds the subject of <i>newMail</i> appending the subject of
      * <i>originalMail</i> to <i>subjectPrefix</i>. Is a "setX(Mail, Tx, Mail)"
      * method.
      */
-    protected abstract Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException;
-
-    /**
-     * Mailet initialization routine. Will setup static values for each "x"
-     * initialization parameter in config.xml, using getX(), if
-     * {@link #isStatic()} returns true.
-     */
-    @Override
-    public void init() throws MessagingException {
-        if (getInitParameters().isDebug()) {
-            log("Initializing");
-        }
-
-        // check that all init parameters have been declared in
-        // allowedInitParameters
-        checkInitParameters(getAllowedInitParameters());
-
-        if (getInitParameters().isStatic()) {
-            if (getInitParameters().isDebug()) {
-                log(getInitParameters().asString());
-            }
-        }
-    }
+    Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException;
 
     /**
      * Service does the hard work,and redirects the originalMail in the form
@@ -310,7 +288,7 @@ public abstract class RedirectNotify extends GenericMailet {
      * @throws MessagingException if a problem arises formulating the redirected mail
      */
     @Override
-    public abstract void service(Mail originalMail) throws MessagingException;
+    void service(Mail originalMail) throws MessagingException;
 
-    protected abstract MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException;
+    MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException;
 }

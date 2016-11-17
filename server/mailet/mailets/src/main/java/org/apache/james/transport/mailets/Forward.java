@@ -21,15 +21,17 @@ package org.apache.james.transport.mailets;
 
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import org.apache.james.transport.mailets.redirect.RedirectNotify;
+import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.ProcessRedirectNotify;
 import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
+import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.util.RecipientsUtils;
@@ -38,6 +40,7 @@ import org.apache.james.transport.util.SenderUtils;
 import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMailet;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -87,12 +90,13 @@ import com.google.common.collect.ImmutableList;
  * for backward compatibility.
  * </p>
  */
-public class Forward extends RedirectNotify {
+public class Forward extends GenericMailet implements RedirectNotify {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
             "debug", "passThrough", "fakeDomainCheck", "forwardto", "forwardTo" };
     private static final List<String> ALLOWED_SPECIALS = ImmutableList.of(
             "postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null");
+    private DNSService dns;
 
     @Override
     public String getMailetInfo() {
@@ -105,8 +109,36 @@ public class Forward extends RedirectNotify {
     }
 
     @Override
-    protected String[] getAllowedInitParameters() {
+    public String[] getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
+    }
+
+    @Inject
+    @Override
+    public void setDNSService(DNSService dns) {
+        this.dns = dns;
+    }
+
+    @Override
+    public DNSService getDNSService() {
+        return dns;
+    }
+
+    @Override
+    public void init() throws MessagingException {
+        if (getInitParameters().isDebug()) {
+            log("Initializing");
+        }
+
+        // check that all init parameters have been declared in
+        // allowedInitParameters
+        checkInitParameters(getAllowedInitParameters());
+
+        if (getInitParameters().isStatic()) {
+            if (getInitParameters().isDebug()) {
+                log(getInitParameters().asString());
+            }
+        }
     }
 
     @Override
@@ -124,7 +156,7 @@ public class Forward extends RedirectNotify {
     }
 
     @Override
-    protected List<MailAddress> getRecipients(Mail originalMail) throws MessagingException {
+    public List<MailAddress> getRecipients(Mail originalMail) throws MessagingException {
         return RecipientsUtils.from(this).getRecipients(originalMail);
     }
 
@@ -164,7 +196,7 @@ public class Forward extends RedirectNotify {
     }
 
     @Override
-    protected List<MailAddress> getTo(Mail originalMail) throws MessagingException {
+    public List<MailAddress> getTo(Mail originalMail) throws MessagingException {
         return TosUtils.from(this).getTo(originalMail);
     }
 
@@ -174,17 +206,17 @@ public class Forward extends RedirectNotify {
     }
 
     @Override
-    protected MailAddress getReplyTo(Mail originalMail) throws MessagingException {
+    public MailAddress getReplyTo(Mail originalMail) throws MessagingException {
         return ReplyToUtils.from(getReplyTo()).getReplyTo(originalMail);
     }
 
     @Override
-    protected MailAddress getReversePath() throws MessagingException {
+    public MailAddress getReversePath() throws MessagingException {
         return null;
     }
 
     @Override
-    protected MailAddress getReversePath(Mail originalMail) throws MessagingException {
+    public MailAddress getReversePath(Mail originalMail) throws MessagingException {
         return null;
     }
 
@@ -194,17 +226,17 @@ public class Forward extends RedirectNotify {
     }
 
     @Override
-    protected Optional<MailAddress> getSender(Mail originalMail) throws MessagingException {
+    public Optional<MailAddress> getSender(Mail originalMail) throws MessagingException {
         return SenderUtils.from(getSender()).getSender(originalMail);
     }
 
     @Override
-    protected Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
+    public Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
         return Optional.absent();
     }
 
     @Override
-    protected MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException {
+    public MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException {
         return new MimeMessageModifier(newMail.getMessage());
     }
 

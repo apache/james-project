@@ -49,7 +49,7 @@ public class ProcessRedirectNotify {
             MailModifier mailModifier = MailModifier.builder()
                     .mailet(mailet)
                     .mail(newMail)
-                    .dns(mailet.dns)
+                    .dns(mailet.getDNSService())
                     .build();
             mailModifier.setRemoteAddr();
             mailModifier.setRemoteHost();

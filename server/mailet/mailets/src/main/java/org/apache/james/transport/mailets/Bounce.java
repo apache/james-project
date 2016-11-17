@@ -21,14 +21,16 @@ package org.apache.james.transport.mailets;
 
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
-import org.apache.james.transport.mailets.redirect.RedirectNotify;
+import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
 import org.apache.james.transport.mailets.redirect.ProcessRedirectNotify;
+import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.mailets.utils.MimeMessageUtils;
@@ -39,6 +41,7 @@ import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMailet;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -117,12 +120,13 @@ import com.google.common.collect.ImmutableList;
  *
  * @since 2.2.0
  */
-public class Bounce extends RedirectNotify {
+public class Bounce extends GenericMailet implements RedirectNotify {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError" };
     private static final List<MailAddress> RECIPIENTS = ImmutableList.of(SpecialAddress.REVERSE_PATH);
     private static final List<InternetAddress> TO = ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress());
+    private DNSService dns;
 
     @Override
     public String getMailetInfo() {
@@ -135,8 +139,36 @@ public class Bounce extends RedirectNotify {
     }
 
     @Override
-    protected String[] getAllowedInitParameters() {
+    public String[] getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
+    }
+
+    @Inject
+    @Override
+    public void setDNSService(DNSService dns) {
+        this.dns = dns;
+    }
+
+    @Override
+    public DNSService getDNSService() {
+        return dns;
+    }
+
+    @Override
+    public void init() throws MessagingException {
+        if (getInitParameters().isDebug()) {
+            log("Initializing");
+        }
+
+        // check that all init parameters have been declared in
+        // allowedInitParameters
+        checkInitParameters(getAllowedInitParameters());
+
+        if (getInitParameters().isStatic()) {
+            if (getInitParameters().isDebug()) {
+                log(getInitParameters().asString());
+            }
+        }
     }
 
     @Override
@@ -150,7 +182,7 @@ public class Bounce extends RedirectNotify {
     }
 
     @Override
-    protected List<MailAddress> getRecipients(Mail originalMail) throws MessagingException {
+    public List<MailAddress> getRecipients(Mail originalMail) throws MessagingException {
         return RecipientsUtils.from(this).getRecipients(originalMail);
     }
 
@@ -160,7 +192,7 @@ public class Bounce extends RedirectNotify {
     }
 
     @Override
-    protected List<MailAddress> getTo(Mail originalMail) throws MessagingException {
+    public List<MailAddress> getTo(Mail originalMail) throws MessagingException {
         return TosUtils.from(this).getTo(originalMail);
     }
 
@@ -170,17 +202,17 @@ public class Bounce extends RedirectNotify {
     }
 
     @Override
-    protected MailAddress getReplyTo(Mail originalMail) throws MessagingException {
+    public MailAddress getReplyTo(Mail originalMail) throws MessagingException {
         return ReplyToUtils.from(getReplyTo()).getReplyTo(originalMail);
     }
 
     @Override
-    protected MailAddress getReversePath(Mail originalMail) {
+    public MailAddress getReversePath(Mail originalMail) {
         return SpecialAddress.NULL;
     }
 
     @Override
-    protected MailAddress getReversePath() throws MessagingException {
+    public MailAddress getReversePath() throws MessagingException {
         return SpecialAddressesUtils.from(this)
                 .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getReversePath(), RedirectNotify.REVERSE_PATH_ALLOWED_SPECIALS);
     }
@@ -192,12 +224,12 @@ public class Bounce extends RedirectNotify {
     }
 
     @Override
-    protected Optional<MailAddress> getSender(Mail originalMail) throws MessagingException {
+    public Optional<MailAddress> getSender(Mail originalMail) throws MessagingException {
         return SenderUtils.from(getSender()).getSender(originalMail);
     }
 
     @Override
-    protected Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
+    public Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
         return new MimeMessageUtils(originalMail.getMessage()).subjectWithPrefix(subjectPrefix);
     }
 
@@ -223,7 +255,7 @@ public class Bounce extends RedirectNotify {
     }
 
     @Override
-    protected MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException {
+    public MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException {
         return new MimeMessageModifier(originalMail.getMessage());
     }
 }
