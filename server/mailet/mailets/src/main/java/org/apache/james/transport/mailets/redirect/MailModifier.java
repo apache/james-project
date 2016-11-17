@@ -47,14 +47,14 @@ public class MailModifier {
 
     public static class Builder {
 
-        private AbstractRedirect mailet;
+        private RedirectNotify mailet;
         private MailImpl mail;
         private DNSService dns;
 
         private Builder() {
         }
 
-        public Builder mailet(AbstractRedirect mailet) {
+        public Builder mailet(RedirectNotify mailet) {
             this.mailet = mailet;
             return this;
         }
@@ -77,11 +77,11 @@ public class MailModifier {
         }
     }
 
-    private final AbstractRedirect mailet;
+    private final RedirectNotify mailet;
     private final MailImpl mail;
     private final DNSService dns;
 
-    private MailModifier(AbstractRedirect mailet, MailImpl mail, DNSService dns) {
+    private MailModifier(RedirectNotify mailet, MailImpl mail, DNSService dns) {
         this.mailet = mailet;
         this.mail = mail;
         this.dns = dns;

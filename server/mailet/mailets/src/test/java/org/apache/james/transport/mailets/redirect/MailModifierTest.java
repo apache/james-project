@@ -43,7 +43,7 @@ public class MailModifierTest {
         expectedException.expect(NullPointerException.class);
         expectedException.expectMessage("'mail' is mandatory");
         MailModifier.builder()
-            .mailet(mock(AbstractRedirect.class))
+            .mailet(mock(RedirectNotify.class))
             .build();
     }
 
@@ -52,7 +52,7 @@ public class MailModifierTest {
         expectedException.expect(NullPointerException.class);
         expectedException.expectMessage("'dns' is mandatory");
         MailModifier.builder()
-            .mailet(mock(AbstractRedirect.class))
+            .mailet(mock(RedirectNotify.class))
             .mail(mock(MailImpl.class))
             .build();
     }
@@ -60,7 +60,7 @@ public class MailModifierTest {
     @Test
     public void buildShouldWorkWhenEverythingProvided() {
         MailModifier.builder()
-            .mailet(mock(AbstractRedirect.class))
+            .mailet(mock(RedirectNotify.class))
             .mail(mock(MailImpl.class))
             .dns(mock(DNSService.class))
             .build();

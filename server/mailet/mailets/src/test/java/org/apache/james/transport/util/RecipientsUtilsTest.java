@@ -29,7 +29,7 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMessage.RecipientType;
 
-import org.apache.james.transport.mailets.redirect.AbstractRedirect;
+import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
@@ -40,12 +40,12 @@ import com.google.common.collect.ImmutableList;
 
 public class RecipientsUtilsTest {
 
-    private AbstractRedirect mailet;
+    private RedirectNotify mailet;
     private RecipientsUtils testee;
 
     @Before
     public void setup() {
-        mailet = mock(AbstractRedirect.class);
+        mailet = mock(RedirectNotify.class);
         testee = RecipientsUtils.from(mailet);
     }
 

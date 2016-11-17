@@ -24,7 +24,7 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
-import org.apache.james.transport.mailets.redirect.AbstractRedirect;
+import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.ProcessRedirectNotify;
@@ -296,7 +296,7 @@ import com.google.common.collect.ImmutableList;
  * </p>
  */
 
-public class Redirect extends AbstractRedirect {
+public class Redirect extends RedirectNotify {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
             "static", "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };
@@ -424,7 +424,7 @@ public class Redirect extends AbstractRedirect {
     @Override
     public MailAddress getSender() throws MessagingException {
         return SpecialAddressesUtils.from(this)
-                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), AbstractRedirect.SENDER_ALLOWED_SPECIALS);
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), RedirectNotify.SENDER_ALLOWED_SPECIALS);
     }
 
     @Override

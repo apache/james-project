@@ -25,7 +25,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import org.apache.james.transport.mailets.redirect.AbstractRedirect;
+import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.ProcessRedirectNotify;
@@ -87,7 +87,7 @@ import com.google.common.collect.ImmutableList;
  * for backward compatibility.
  * </p>
  */
-public class Forward extends AbstractRedirect {
+public class Forward extends RedirectNotify {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
             "debug", "passThrough", "fakeDomainCheck", "forwardto", "forwardTo" };

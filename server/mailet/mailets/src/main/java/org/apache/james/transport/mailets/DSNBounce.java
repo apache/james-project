@@ -32,7 +32,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailImpl;
-import org.apache.james.transport.mailets.redirect.AbstractRedirect;
+import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.MailModifier;
 import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
@@ -96,7 +96,7 @@ import com.google.common.collect.ImmutableList;
  * @see org.apache.james.transport.mailets.AbstractNotify
  */
 
-public class DSNBounce extends AbstractRedirect {
+public class DSNBounce extends RedirectNotify {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[]{ "debug", "passThrough", "messageString", "attachment", "sender", "prefix" };
     private static final List<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH);
@@ -169,7 +169,7 @@ public class DSNBounce extends AbstractRedirect {
     @Override
     protected MailAddress getReversePath() throws MessagingException {
         return SpecialAddressesUtils.from(this)
-                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getReversePath(), AbstractRedirect.REVERSE_PATH_ALLOWED_SPECIALS);
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getReversePath(), RedirectNotify.REVERSE_PATH_ALLOWED_SPECIALS);
     }
 
     @Override
@@ -180,7 +180,7 @@ public class DSNBounce extends AbstractRedirect {
     @Override
     public MailAddress getSender() throws MessagingException {
         return SpecialAddressesUtils.from(this)
-                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), AbstractRedirect.SENDER_ALLOWED_SPECIALS);
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), RedirectNotify.SENDER_ALLOWED_SPECIALS);
     }
 
     @Override

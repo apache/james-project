@@ -24,7 +24,7 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
-import org.apache.james.transport.mailets.redirect.AbstractRedirect;
+import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
@@ -117,7 +117,7 @@ import com.google.common.collect.ImmutableList;
  * are kept for backward compatibility.
  * </p>
  */
-public class NotifyPostmaster extends AbstractRedirect {
+public class NotifyPostmaster extends RedirectNotify {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[]{
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "to" };
@@ -193,7 +193,7 @@ public class NotifyPostmaster extends AbstractRedirect {
     @Override
     protected MailAddress getReversePath() throws MessagingException {
         return SpecialAddressesUtils.from(this)
-                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getReversePath(), AbstractRedirect.REVERSE_PATH_ALLOWED_SPECIALS);
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getReversePath(), RedirectNotify.REVERSE_PATH_ALLOWED_SPECIALS);
     }
 
     @Override
@@ -204,7 +204,7 @@ public class NotifyPostmaster extends AbstractRedirect {
     @Override
     public MailAddress getSender() throws MessagingException {
         return SpecialAddressesUtils.from(this)
-                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), AbstractRedirect.SENDER_ALLOWED_SPECIALS);
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), RedirectNotify.SENDER_ALLOWED_SPECIALS);
     }
 
     @Override

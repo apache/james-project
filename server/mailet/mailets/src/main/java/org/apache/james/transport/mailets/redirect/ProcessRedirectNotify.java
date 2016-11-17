@@ -27,14 +27,14 @@ import org.apache.mailet.Mail;
 
 public class ProcessRedirectNotify {
 
-    public static ProcessRedirectNotify from(AbstractRedirect mailet) {
+    public static ProcessRedirectNotify from(RedirectNotify mailet) {
         return new ProcessRedirectNotify(mailet);
     }
 
-    private final AbstractRedirect mailet;
+    private final RedirectNotify mailet;
     private final boolean isDebug;
 
-    private ProcessRedirectNotify(AbstractRedirect mailet) {
+    private ProcessRedirectNotify(RedirectNotify mailet) {
         this.mailet = mailet;
         this.isDebug = mailet.getInitParameters().isDebug();
     }

@@ -134,7 +134,7 @@ import com.google.common.collect.ImmutableList;
  * @since 2.2.0
  */
 
-public abstract class AbstractRedirect extends GenericMailet {
+public abstract class RedirectNotify extends GenericMailet {
 
     public static final List<String> REVERSE_PATH_ALLOWED_SPECIALS = ImmutableList.of("postmaster", "sender", "null", "unaltered");
     public static final List<String> SENDER_ALLOWED_SPECIALS = ImmutableList.of("postmaster", "sender", "unaltered");

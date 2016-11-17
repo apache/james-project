@@ -39,17 +39,17 @@ public class MailMessageAlteringUtils {
 
     private static final char LINE_BREAK = '\n';
 
-    public static Builder from(AbstractRedirect mailet) {
+    public static Builder from(RedirectNotify mailet) {
         return new Builder(mailet);
     }
 
     public static class Builder {
 
-        private AbstractRedirect mailet;
+        private RedirectNotify mailet;
         private Mail originalMail;
         private Mail newMail;
 
-        private Builder(AbstractRedirect mailet) {
+        private Builder(RedirectNotify mailet) {
             this.mailet = mailet;
         }
 
@@ -75,11 +75,11 @@ public class MailMessageAlteringUtils {
         }
     }
 
-    private final AbstractRedirect mailet;
+    private final RedirectNotify mailet;
     private final Mail originalMail;
     private final Mail newMail;
 
-    private MailMessageAlteringUtils(AbstractRedirect mailet, Mail originalMail, Mail newMail) {
+    private MailMessageAlteringUtils(RedirectNotify mailet, Mail originalMail, Mail newMail) {
         this.mailet = mailet;
         this.originalMail = originalMail;
         this.newMail = newMail;

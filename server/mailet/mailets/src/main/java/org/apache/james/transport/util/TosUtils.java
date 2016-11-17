@@ -23,7 +23,7 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
-import org.apache.james.transport.mailets.redirect.AbstractRedirect;
+import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -32,13 +32,13 @@ import com.google.common.collect.ImmutableList;
 
 public class TosUtils {
 
-    public static TosUtils from(AbstractRedirect mailet) {
+    public static TosUtils from(RedirectNotify mailet) {
         return new TosUtils(mailet);
     }
 
-    private final AbstractRedirect mailet;
+    private final RedirectNotify mailet;
 
-    private TosUtils(AbstractRedirect mailet) {
+    private TosUtils(RedirectNotify mailet) {
         this.mailet = mailet;
     }
 
