@@ -26,6 +26,7 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
@@ -199,5 +200,15 @@ public class UpdatedFlags {
     @Override
     public int hashCode() {
         return Objects.hashCode(uid, oldFlags, newFlags, modSeq);
+    }
+    
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(UpdatedFlags.class)
+                .add("uid", uid)
+                .add("oldFlags", oldFlags)
+                .add("newFlags", newFlags)
+                .add("modSeq", modSeq)
+                .toString();
     }
 }
