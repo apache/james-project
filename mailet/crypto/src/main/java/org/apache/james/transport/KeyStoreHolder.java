@@ -130,7 +130,6 @@ public class KeyStoreHolder {
             .addCRLs(signed.getCRLs())
             .build();
         SignerInformationStore siginfo = signed.getSignerInfos();
-        @SuppressWarnings("unchecked")
         Collection<SignerInformation> sigCol = siginfo.getSigners();
         List<SMIMESignerInfo> result = new ArrayList<SMIMESignerInfo>(sigCol.size());
         // I iterate over the signer collection 

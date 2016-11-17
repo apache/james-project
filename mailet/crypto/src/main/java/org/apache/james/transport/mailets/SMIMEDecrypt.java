@@ -106,6 +106,7 @@ public class SMIMEDecrypt extends GenericMailet {
     /**
      * @see org.apache.mailet.Mailet#service(org.apache.mailet.Mail)
      */
+    @SuppressWarnings("unchecked")
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
         Part strippedMessage = null;
@@ -114,7 +115,6 @@ public class SMIMEDecrypt extends GenericMailet {
             try {
                 SMIMEEnveloped env = new SMIMEEnveloped(message);
                 RecipientInformationStore informationStore = env.getRecipientInfos();
-                @SuppressWarnings("unchecked")
                 Collection<RecipientInformation> recipients = informationStore.getRecipients();
                 for (RecipientInformation info : recipients) {
                     RecipientId id = info.getRID();
