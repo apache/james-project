@@ -26,6 +26,8 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.mailet.Mail;
 
+import com.google.common.base.Strings;
+
 public class SieveFailureMessageComposer {
 
     public static MimeMessage composeMessage(Mail aMail, Exception ex, String user) throws MessagingException {
@@ -40,7 +42,7 @@ public class SieveFailureMessageComposer {
 
         MimeBodyPart originalPart = new MimeBodyPart();
         originalPart.setContent(originalMessage, "message/rfc822");
-        if ((originalMessage.getSubject() != null) && (!originalMessage.getSubject().trim().isEmpty())) {
+        if (Strings.isNullOrEmpty(originalMessage.getSubject())) {
             originalPart.setFileName(originalMessage.getSubject().trim());
         } else {
             originalPart.setFileName("No Subject");
