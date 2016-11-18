@@ -20,11 +20,11 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.base.GenericMatcher;
+import java.util.Collection;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
-
-import java.util.Collection;
+import org.apache.mailet.base.GenericMatcher;
 
 /**
  * Checks the sender's displayed domain name against a the hosts serviced by
@@ -38,12 +38,16 @@ import java.util.Collection;
  */
 public class SenderHostIsLocal extends GenericMatcher {
     public Collection<MailAddress> match(Mail mail) {
-        if (mail.getSender() != null
-                && this.getMailetContext().isLocalServer(
-                        mail.getSender().getDomain().toLowerCase())) {
+        if (mail.getSender() != null && isLocalServer(mail)) {
             return mail.getRecipients();
         }
         return null;
-
+        
     }
+
+    private boolean isLocalServer(Mail mail) {
+        return this.getMailetContext().isLocalServer(
+                mail.getSender().getDomain().toLowerCase());
+    }
+
 }

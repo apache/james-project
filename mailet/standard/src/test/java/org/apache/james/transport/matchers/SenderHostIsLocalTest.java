@@ -17,11 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
+
 package org.apache.james.transport.matchers;
 
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
-import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES2;
+import static org.apache.mailet.base.MailAddressFixture.JAMES2_APACHE_ORG;
+import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -39,24 +41,23 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SenderIsLocalTest {
+public class SenderHostIsLocalTest {
 
     private Matcher matcher;
-
+    
     @Before
     public void setUp() throws MessagingException {
         MailetContext mailContext = mock(MailetContext.class);
-        when(mailContext.isLocalEmail(ANY_AT_JAMES)).thenReturn(true);
-        when(mailContext.isLocalEmail(OTHER_AT_JAMES)).thenReturn(false);
-        when(mailContext.isLocalEmail(ANY_AT_JAMES2)).thenReturn(false);
+        when(mailContext.isLocalServer(JAMES_APACHE_ORG)).thenReturn(true);
+        when(mailContext.isLocalServer(JAMES2_APACHE_ORG)).thenReturn(false);
         
-        matcher = new SenderIsLocal();
-        FakeMatcherConfig mci = new FakeMatcherConfig("SenderIsLocal", mailContext);
+        matcher = new SenderHostIsLocal();
+        FakeMatcherConfig mci= new FakeMatcherConfig("SenderHostIsLocal", mailContext);
         matcher.init(mci);
     }
 
     @Test
-    public void shouldMatchWhenLocalSender() throws MessagingException {
+    public void shouldMatchWhenSenderHostIsLocal() throws MessagingException {
         //Given
         Mail mail = FakeMail.builder()
             .sender(ANY_AT_JAMES)
@@ -69,20 +70,7 @@ public class SenderIsLocalTest {
     }
     
     @Test
-    public void shouldNotMatchWhenSenderIsUnknown() throws MessagingException {
-        //Given
-        Mail mail = FakeMail.builder()
-            .sender(OTHER_AT_JAMES)
-            .recipient(ANY_AT_JAMES2)
-            .build();
-        //When
-        Collection<MailAddress> actual = matcher.match(mail);
-        //Then
-        assertThat(actual).isNull();
-    }
-
-    @Test
-    public void shouldNotMatchWhenHostIsNotLocal() throws MessagingException {
+    public void shouldNotMatchWhenSenderHostIsNotLocal() throws MessagingException {
         //Given
         Mail mail = FakeMail.builder()
             .sender(ANY_AT_JAMES2)
