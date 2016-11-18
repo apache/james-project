@@ -23,7 +23,6 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.endsWith;
@@ -37,6 +36,8 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.ZonedDateTime;
@@ -49,9 +50,7 @@ import java.util.stream.Collectors;
 import javax.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.GuiceJamesServerImpl;
-import org.apache.james.JmapServer;
-import org.apache.james.WebAdminServer;
+import org.apache.james.JmapJamesServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.model.mailbox.Role;
@@ -80,7 +79,7 @@ import com.jayway.restassured.builder.ResponseSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.specification.ResponseSpecification;
 
-public abstract class SetMessagesMethodTest<T extends GuiceJamesServerImpl & JmapServer & WebAdminServer> {
+public abstract class SetMessagesMethodTest {
 
     private static final int _1MB = 1024*1024;
     private static final String NAME = "[0][0]";
@@ -92,13 +91,13 @@ public abstract class SetMessagesMethodTest<T extends GuiceJamesServerImpl & Jma
 
     private ConditionFactory calmlyAwait;
 
-    protected abstract T createJmapServer();
+    protected abstract JmapJamesServer createJmapServer();
 
     protected abstract void await();
 
     private AccessToken accessToken;
     private String username;
-    private T jmapServer;
+    private JmapJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {

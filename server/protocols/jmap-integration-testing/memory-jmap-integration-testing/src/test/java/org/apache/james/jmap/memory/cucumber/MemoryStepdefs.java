@@ -21,7 +21,7 @@ package org.apache.james.jmap.memory.cucumber;
 
 import javax.inject.Inject;
 
-import org.apache.james.MemoryJamesServer;
+import org.apache.james.JmapJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.jmap.servers.MemoryJmapServerModule;
@@ -46,7 +46,7 @@ public class MemoryStepdefs {
     @Before
     public void init() throws Exception {
         temporaryFolder.create();
-        mainStepdefs.jmapServer = new MemoryJamesServer()
+        mainStepdefs.jmapServer = new JmapJamesServer()
                 .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                 .overrideWith(new MemoryJmapServerModule(temporaryFolder));
         mainStepdefs.init();

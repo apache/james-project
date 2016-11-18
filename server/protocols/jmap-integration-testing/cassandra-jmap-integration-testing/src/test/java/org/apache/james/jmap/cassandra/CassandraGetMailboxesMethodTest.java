@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.cassandra;
 
-import org.apache.james.CassandraJamesServer;
 import org.apache.james.CassandraJamesServerMain;
+import org.apache.james.JmapJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.methods.integration.GetMailboxesMethodTest;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
@@ -30,7 +30,7 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 
-public class CassandraGetMailboxesMethodTest extends GetMailboxesMethodTest<CassandraJamesServer> {
+public class CassandraGetMailboxesMethodTest extends GetMailboxesMethodTest {
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
@@ -42,8 +42,8 @@ public class CassandraGetMailboxesMethodTest extends GetMailboxesMethodTest<Cass
         .around(embeddedElasticSearch);
 
     @Override
-    protected CassandraJamesServer createJmapServer() {
-        return new CassandraJamesServer()
+    protected JmapJamesServer createJmapServer() {
+        return new JmapJamesServer()
                     .combineWith(CassandraJamesServerMain.cassandraServerModule)
                     .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra));
     }

@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.memory;
 
-import org.apache.james.MemoryJamesServer;
+import org.apache.james.JmapJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.JMAPAuthenticationTest;
@@ -28,14 +28,14 @@ import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
-public class MemoryJmapAuthenticationTest extends JMAPAuthenticationTest<MemoryJamesServer> {
+public class MemoryJmapAuthenticationTest extends JMAPAuthenticationTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Override
-    protected MemoryJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) {
-        return new MemoryJamesServer()
+    protected JmapJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) {
+        return new JmapJamesServer()
                 .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                 .overrideWith(new MemoryJmapServerModule(temporaryFolder),
                              (binder) -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));

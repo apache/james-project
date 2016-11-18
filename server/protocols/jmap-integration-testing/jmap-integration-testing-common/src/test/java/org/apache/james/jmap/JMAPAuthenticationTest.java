@@ -32,9 +32,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
-import org.apache.james.GuiceJamesServerImpl;
-import org.apache.james.JmapServer;
-import org.apache.james.WebAdminServer;
+import org.apache.james.JmapJamesServer;
 import org.apache.james.jmap.model.ContinuationToken;
 import org.junit.After;
 import org.junit.Before;
@@ -45,17 +43,17 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-public abstract class JMAPAuthenticationTest<T extends GuiceJamesServerImpl & JmapServer & WebAdminServer> {
+public abstract class JMAPAuthenticationTest {
 
     private static final ZonedDateTime oldDate = ZonedDateTime.parse("2011-12-03T10:15:30+01:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     private static final ZonedDateTime newDate = ZonedDateTime.parse("2011-12-03T10:16:30+01:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     private static final ZonedDateTime afterExpirationDate = ZonedDateTime.parse("2011-12-03T10:30:31+01:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
-    protected abstract T createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider);
+    protected abstract JmapJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider);
 
     private UserCredentials userCredentials;
     private FixedDateZonedDateTimeProvider zonedDateTimeProvider;
-    private T jmapServer;
+    private JmapJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {

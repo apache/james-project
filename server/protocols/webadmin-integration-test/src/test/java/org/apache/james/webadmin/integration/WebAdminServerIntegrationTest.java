@@ -24,11 +24,12 @@ import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 
-import org.apache.james.CassandraJamesServer;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.CassandraJamesServerMain;
+import org.apache.james.JmapJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.CassandraJmapServerModule;
@@ -65,11 +66,11 @@ public class WebAdminServerIntegrationTest {
         .outerRule(temporaryFolder)
         .around(embeddedElasticSearch);
 
-    private CassandraJamesServer guiceJamesServer;
+    private JmapJamesServer guiceJamesServer;
 
     @Before
     public void setUp() throws Exception {
-        guiceJamesServer = new CassandraJamesServer()
+        guiceJamesServer = new JmapJamesServer()
             .combineWith(CassandraJamesServerMain.cassandraServerModule)
             .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra),
                 new WebAdminConfigurationModule());

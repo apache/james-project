@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.memory;
 
-import org.apache.james.MemoryJamesServer;
+import org.apache.james.JmapJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.methods.integration.GetVacationResponseTest;
 import org.apache.james.jmap.servers.MemoryJmapServerModule;
@@ -27,14 +27,14 @@ import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
-public class MemoryGetVacationResponseMethodTest extends GetVacationResponseTest<MemoryJamesServer> {
+public class MemoryGetVacationResponseMethodTest extends GetVacationResponseTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Override
-    protected MemoryJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) {
-        return new MemoryJamesServer()
+    protected JmapJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) {
+        return new JmapJamesServer()
                     .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                     .overrideWith(new MemoryJmapServerModule(temporaryFolder),
                         binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));

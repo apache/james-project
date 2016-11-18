@@ -39,7 +39,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-public abstract class AbstractJmapJamesServerTest<T extends JmapJamesServer> {
+public abstract class AbstractJmapJamesServerTest {
 
     private static final int IMAP_PORT = 1143; // You need to be root (superuser) to bind to ports under 1024.
     private static final int IMAP_PORT_SSL = 1993;
@@ -47,7 +47,7 @@ public abstract class AbstractJmapJamesServerTest<T extends JmapJamesServer> {
     private static final int SMTP_PORT = 1025;
     private static final int LMTP_PORT = 1024;
 
-    private T server;
+    private JmapJamesServer server;
     private SocketChannel socketChannel;
 
     @Before
@@ -65,7 +65,7 @@ public abstract class AbstractJmapJamesServerTest<T extends JmapJamesServer> {
         		.build();
     }
 
-    protected abstract T createJamesServer();
+    protected abstract JmapJamesServer createJamesServer();
 
     protected abstract void clean();
 

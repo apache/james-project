@@ -36,9 +36,7 @@ import java.util.List;
 
 import javax.mail.Flags;
 
-import org.apache.james.GuiceJamesServerImpl;
-import org.apache.james.JmapServer;
-import org.apache.james.WebAdminServer;
+import org.apache.james.JmapJamesServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -54,18 +52,18 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-public abstract class GetMessageListMethodTest<T extends GuiceJamesServerImpl & JmapServer & WebAdminServer> {
+public abstract class GetMessageListMethodTest {
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
 
-    protected abstract T createJmapServer();
+    protected abstract JmapJamesServer createJmapServer();
 
     protected abstract void await();
 
     private AccessToken accessToken;
     private String username;
     private String domain;
-    private T jmapServer;
+    private JmapJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {

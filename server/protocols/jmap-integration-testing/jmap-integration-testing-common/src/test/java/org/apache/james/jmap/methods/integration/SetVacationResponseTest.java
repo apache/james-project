@@ -22,15 +22,14 @@ package org.apache.james.jmap.methods.integration;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import org.apache.james.GuiceJamesServerImpl;
-import org.apache.james.JmapServer;
-import org.apache.james.WebAdminServer;
+import org.apache.james.JmapJamesServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
@@ -47,7 +46,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-public abstract class SetVacationResponseTest<T extends GuiceJamesServerImpl & JmapServer & WebAdminServer> {
+public abstract class SetVacationResponseTest {
 
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
@@ -57,12 +56,12 @@ public abstract class SetVacationResponseTest<T extends GuiceJamesServerImpl & J
     public static final String SUBJECT = "subject";
     private JmapGuiceProbe jmapGuiceProbe;
 
-    protected abstract T createJmapServer();
+    protected abstract JmapJamesServer createJmapServer();
 
     protected abstract void await();
 
     private AccessToken accessToken;
-    private T jmapServer;
+    private JmapJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {

@@ -41,7 +41,7 @@ public class MemoryJamesServerMain {
         new MemoryMailQueueModule());
 
     public static void main(String[] args) throws Exception {
-        new MemoryJamesServer()
+        new JmapJamesServer()
             .combineWith(inMemoryServerModule, new JMXServerModule())
             .start();
     }
