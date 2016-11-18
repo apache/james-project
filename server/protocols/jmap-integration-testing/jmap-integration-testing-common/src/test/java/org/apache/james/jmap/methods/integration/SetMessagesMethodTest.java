@@ -48,9 +48,10 @@ import java.util.stream.Collectors;
 
 import javax.mail.Flags;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.commons.io.IOUtils;
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJamesServerImpl;
+import org.apache.james.JmapServer;
+import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.model.mailbox.Role;
@@ -68,6 +69,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
@@ -78,7 +80,7 @@ import com.jayway.restassured.builder.ResponseSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.specification.ResponseSpecification;
 
-public abstract class SetMessagesMethodTest {
+public abstract class SetMessagesMethodTest<T extends GuiceJamesServerImpl & JmapServer & WebAdminServer> {
 
     private static final int _1MB = 1024*1024;
     private static final String NAME = "[0][0]";
@@ -90,13 +92,13 @@ public abstract class SetMessagesMethodTest {
 
     private ConditionFactory calmlyAwait;
 
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract T createJmapServer();
 
     protected abstract void await();
 
     private AccessToken accessToken;
     private String username;
-    private GuiceJamesServer jmapServer;
+    private T jmapServer;
 
     @Before
     public void setup() throws Throwable {
@@ -106,7 +108,8 @@ public abstract class SetMessagesMethodTest {
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
                 .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-                .setPort(jmapServer.getJmapPort())
+                .setPort(jmapServer.getJmapProbe()
+                    .getJmapPort())
                 .build();
 
         username = "username@" + USERS_DOMAIN;

@@ -22,7 +22,7 @@ package org.apache.james.mpt.smtp.host;
 import java.util.Iterator;
 
 import org.apache.james.CassandraJamesServerMain;
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJamesServerImpl;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
@@ -42,7 +42,7 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
     private EmbeddedCassandra embeddedCassandra;
     private EmbeddedElasticSearch embeddedElasticSearch;
 
-    private GuiceJamesServer jamesServer;
+    private GuiceJamesServerImpl jamesServer;
     private InMemoryDNSService inMemoryDNSService;
 
 
@@ -104,8 +104,8 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
         return inMemoryDNSService;
     }
 
-    protected GuiceJamesServer createJamesServer() {
-        return new GuiceJamesServer()
+    protected GuiceJamesServerImpl createJamesServer() {
+        return new GuiceJamesServerImpl()
             .combineWith(CassandraJamesServerMain.cassandraServerModule)
             .overrideWith(new CassandraJmapServerModule(folder::getRoot, embeddedElasticSearch, embeddedCassandra),
                 (binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));

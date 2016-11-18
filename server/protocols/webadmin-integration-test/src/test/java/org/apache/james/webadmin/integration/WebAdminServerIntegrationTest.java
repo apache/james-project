@@ -27,8 +27,8 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 
+import org.apache.james.CassandraJamesServer;
 import org.apache.james.CassandraJamesServerMain;
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.CassandraJmapServerModule;
@@ -65,11 +65,11 @@ public class WebAdminServerIntegrationTest {
         .outerRule(temporaryFolder)
         .around(embeddedElasticSearch);
 
-    private GuiceJamesServer guiceJamesServer;
+    private CassandraJamesServer guiceJamesServer;
 
     @Before
     public void setUp() throws Exception {
-        guiceJamesServer = new GuiceJamesServer()
+        guiceJamesServer = new CassandraJamesServer()
             .combineWith(CassandraJamesServerMain.cassandraServerModule)
             .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra),
                 new WebAdminConfigurationModule());
@@ -79,10 +79,7 @@ public class WebAdminServerIntegrationTest {
         		.setContentType(ContentType.JSON)
         		.setAccept(ContentType.JSON)
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(guiceJamesServer
-        					.getWebadminPort()
-				            .orElseThrow(() -> new RuntimeException("Unable to locate Web Admin port"))
-				            .toInt())
+        		.setPort(guiceJamesServer.getWebAdminProbe().getWebAdminPort())
         		.build();
     }
 

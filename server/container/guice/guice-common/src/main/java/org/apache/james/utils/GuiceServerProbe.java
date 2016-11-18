@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.utils;
 
 import java.io.IOException;
@@ -33,10 +32,6 @@ import javax.mail.Flags;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.adapter.mailbox.SerializableQuota;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.jmap.api.vacation.AccountId;
-import org.apache.james.jmap.api.vacation.Vacation;
-import org.apache.james.jmap.api.vacation.VacationRepository;
-import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -59,9 +54,9 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class GuiceServerProbe implements ExtendedServerProbe {
+public class GuiceServerProbe implements ExtendedServerProbe, GuiceProbe {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GuiceServerProbe.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JmapGuiceProbe.class);
 
     private final MailboxManager mailboxManager;
     private final MailboxMapperFactory mailboxMapperFactory;
@@ -69,19 +64,17 @@ public class GuiceServerProbe implements ExtendedServerProbe {
     private final UsersRepository usersRepository;
     private final SieveRepository sieveRepository;
     private final RecipientRewriteTable recipientRewriteTable;
-    private final VacationRepository vacationRepository;
 
     @Inject
     private GuiceServerProbe(MailboxManager mailboxManager, MailboxMapperFactory mailboxMapperFactory,
                              DomainList domainList, UsersRepository usersRepository, SieveRepository sieveRepository,
-                             RecipientRewriteTable recipientRewriteTable, VacationRepository vacationRepository) {
+                             RecipientRewriteTable recipientRewriteTable) {
         this.mailboxManager = mailboxManager;
         this.mailboxMapperFactory = mailboxMapperFactory;
         this.domainList = domainList;
         this.usersRepository = usersRepository;
         this.sieveRepository = sieveRepository;
         this.recipientRewriteTable = recipientRewriteTable;
-        this.vacationRepository = vacationRepository;
     }
 
     @Override
@@ -356,13 +349,4 @@ public class GuiceServerProbe implements ExtendedServerProbe {
         sieveRepository.removeQuota(user);
     }
 
-    @Override
-    public void modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
-        vacationRepository.modifyVacation(accountId, vacationPatch).join();
-    }
-
-    @Override
-    public Vacation retrieveVacation(AccountId accountId) {
-        return vacationRepository.retrieveVacation(accountId).join();
-    }
 }

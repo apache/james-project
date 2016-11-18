@@ -44,7 +44,6 @@ import com.sun.net.httpserver.HttpServer;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
-@SuppressWarnings("restriction")
 @RunWith(JUnitParamsRunner.class)
 public abstract class AbstractFileSystemTest {
     private static final String FAKE_DIRECTORY = "b7b73e3a-5234-11e5-87f2-9b171f273b49/";

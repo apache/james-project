@@ -34,19 +34,15 @@
     <bean id="jpa-mailboxmanager" class="org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager" init-method="init">
         <constructor-arg index="0" ref="jpa-sessionMapperFactory"/>
         <constructor-arg index="1" ref="authenticator"/>
-        <constructor-arg index="2" ref="jpa-locker"/>
-        <constructor-arg index="3" type="boolean" value="false"/>
-        <constructor-arg index="4" ref="aclResolver"/>
-        <constructor-arg index="5" ref="groupMembershipResolver"/>
-        <constructor-arg index="6" ref="messageParser"/>
-        <constructor-arg index="7" ref="jpa-messageIdFactory" />
+        <constructor-arg index="2" ref="aclResolver"/>
+        <constructor-arg index="3" ref="groupMembershipResolver"/>
+        <constructor-arg index="4" ref="messageParser"/>
+        <constructor-arg index="5" ref="messageIdFactory"/>
         <property name="quotaManager" ref="quotaManager"/>
         <property name="quotaRootResolver" ref="quotaRootResolver"/>
         <property name="quotaUpdater" ref="quotaUpdater"/>
         <property name="delegatingMailboxListener" ref="delegating-listener"/>
     </bean>
-    
-    <bean id="jpa-messageIdFactory" class="org.apache.james.mailbox.store.mail.model.DefaultMessageId.Factory" />
     
     <bean id ="jpa-subscriptionManager" class="org.apache.james.mailbox.jpa.JPASubscriptionManager">
         <constructor-arg index="0" ref="jpa-sessionMapperFactory"/>

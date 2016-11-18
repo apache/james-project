@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.BufferedInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -36,8 +38,6 @@ import org.apache.james.util.ZeroedInputStream;
 import com.google.common.base.Charsets;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;

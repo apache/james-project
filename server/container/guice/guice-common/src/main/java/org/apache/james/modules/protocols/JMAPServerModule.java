@@ -27,6 +27,8 @@ import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.crypto.JamesSignatureHandler;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.GuiceProbe;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import com.google.common.base.Throwables;
@@ -42,6 +44,7 @@ public class JMAPServerModule extends AbstractModule {
     protected void configure() {
         install(new JMAPModule());
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(JMAPModuleConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(JmapGuiceProbe.class);
     }
 
     @Singleton

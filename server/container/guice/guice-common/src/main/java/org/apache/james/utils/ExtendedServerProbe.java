@@ -25,9 +25,6 @@ import java.util.Date;
 import javax.mail.Flags;
 
 import org.apache.james.cli.probe.ServerProbe;
-import org.apache.james.jmap.api.vacation.AccountId;
-import org.apache.james.jmap.api.vacation.Vacation;
-import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -40,7 +37,4 @@ public interface ExtendedServerProbe extends ServerProbe {
 
     Mailbox getMailbox(String namespace, String user, String name);
 
-    void modifyVacation(AccountId accountId, VacationPatch vacationPatch);
-
-    Vacation retrieveVacation(AccountId accountId);
 }

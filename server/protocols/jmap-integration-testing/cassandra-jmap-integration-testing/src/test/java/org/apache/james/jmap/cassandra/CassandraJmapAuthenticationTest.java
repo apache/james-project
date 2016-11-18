@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.cassandra;
 
+import org.apache.james.CassandraJamesServer;
 import org.apache.james.CassandraJamesServerMain;
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.JMAPAuthenticationTest;
@@ -30,7 +30,7 @@ import org.junit.Rule;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
-public class CassandraJmapAuthenticationTest extends JMAPAuthenticationTest {
+public class CassandraJmapAuthenticationTest extends JMAPAuthenticationTest<CassandraJamesServer> {
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
@@ -42,8 +42,8 @@ public class CassandraJmapAuthenticationTest extends JMAPAuthenticationTest {
         .around(embeddedElasticSearch);
 
     @Override
-    protected GuiceJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) {
-        return new GuiceJamesServer()
+    protected CassandraJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) {
+        return new CassandraJamesServer()
                     .combineWith(CassandraJamesServerMain.cassandraServerModule)
                     .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra),
                             (binder) -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));

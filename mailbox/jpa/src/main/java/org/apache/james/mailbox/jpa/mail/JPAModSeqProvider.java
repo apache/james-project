@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa.mail;
 
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
@@ -34,6 +35,7 @@ public class JPAModSeqProvider extends AbstractLockingModSeqProvider {
 
     private final EntityManagerFactory factory;
 
+    @Inject
     public JPAModSeqProvider(MailboxPathLocker locker, EntityManagerFactory factory) {
         super(locker);
         this.factory = factory;

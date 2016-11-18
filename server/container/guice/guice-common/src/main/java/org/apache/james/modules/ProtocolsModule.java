@@ -19,7 +19,6 @@
 package org.apache.james.modules;
 
 import org.apache.james.modules.protocols.IMAPServerModule;
-import org.apache.james.modules.protocols.JMAPServerModule;
 import org.apache.james.modules.protocols.LMTPServerModule;
 import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
@@ -33,7 +32,6 @@ public class ProtocolsModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new JMAPServerModule());
         install(new IMAPServerModule());
         install(new ProtocolHandlerModule());
         install(new POP3ServerModule());

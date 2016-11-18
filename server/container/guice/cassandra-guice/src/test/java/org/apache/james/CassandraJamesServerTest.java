@@ -35,7 +35,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
-public class CassandraJamesServerTest extends AbstractJamesServerTest {
+public class CassandraJamesServerTest extends AbstractJmapJamesServerTest<CassandraJamesServer> {
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
@@ -45,8 +45,8 @@ public class CassandraJamesServerTest extends AbstractJamesServerTest {
     public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
 
     @Override
-    protected GuiceJamesServer createJamesServer() {
-        return new GuiceJamesServer()
+    protected CassandraJamesServer createJamesServer() {
+        return new CassandraJamesServer()
                 .combineWith(CassandraJamesServerMain.cassandraServerModule)
                 .overrideWith(new TestElasticSearchModule(embeddedElasticSearch),
                         new TestFilesystemModule(temporaryFolder),

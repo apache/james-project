@@ -25,7 +25,7 @@ public class JPAId implements MailboxId {
     public static class Factory implements MailboxId.Factory {
         @Override
         public JPAId fromString(String serialized) {
-            return of(Long.parseLong(serialized));
+            return of(Long.valueOf(serialized));
         }
     }
 

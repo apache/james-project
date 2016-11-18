@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Iterator;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -52,6 +53,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      * @param entityManagerFactory
      *            the entityManager to set
      */
+    @Inject
     @PersistenceUnit(unitName="James")
     public final void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
         this.entityManagerFactory = entityManagerFactory;

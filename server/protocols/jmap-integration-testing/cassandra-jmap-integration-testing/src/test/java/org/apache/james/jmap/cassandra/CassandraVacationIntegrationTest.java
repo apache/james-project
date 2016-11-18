@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.cassandra;
 
+import org.apache.james.CassandraJamesServer;
 import org.apache.james.CassandraJamesServerMain;
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.VacationIntegrationTest;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
@@ -29,7 +29,7 @@ import org.junit.Rule;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
-public class CassandraVacationIntegrationTest extends VacationIntegrationTest {
+public class CassandraVacationIntegrationTest extends VacationIntegrationTest<CassandraJamesServer> {
 
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -42,8 +42,8 @@ public class CassandraVacationIntegrationTest extends VacationIntegrationTest {
         .around(embeddedElasticSearch);
 
     @Override
-    protected GuiceJamesServer createJmapServer() {
-        return new GuiceJamesServer()
+    protected CassandraJamesServer createJmapServer() {
+        return new CassandraJamesServer()
             .combineWith(CassandraJamesServerMain.cassandraServerModule)
             .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra));
     }

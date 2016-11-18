@@ -27,8 +27,6 @@ import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
-import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.sieverepository.file.SieveFileRepository;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
@@ -50,6 +48,8 @@ public class MemoryDataModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new SieveFileRepositoryModule());
+
         bind(MemoryDomainList.class).in(Scopes.SINGLETON);
         bind(DomainList.class).to(MemoryDomainList.class);
 
@@ -58,9 +58,6 @@ public class MemoryDataModule extends AbstractModule {
 
         bind(MemoryUsersRepository.class).toInstance(MemoryUsersRepository.withVirtualHosting());
         bind(UsersRepository.class).to(MemoryUsersRepository.class);
-
-        bind(SieveFileRepository.class).in(Scopes.SINGLETON);
-        bind(SieveRepository.class).to(SieveFileRepository.class);
 
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MemoryDataConfigurationPerformer.class);
     }

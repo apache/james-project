@@ -18,89 +18,13 @@
  ****************************************************************/
 package org.apache.james;
 
-import java.util.Arrays;
-import java.util.Optional;
-
-import javax.annotation.PreDestroy;
-
-import org.apache.james.jmap.JMAPServer;
-import org.apache.james.modules.CommonServicesModule;
-import org.apache.james.modules.MailetProcessingModule;
-import org.apache.james.modules.ProtocolsModule;
-import org.apache.james.onami.lifecycle.Stager;
-import org.apache.james.utils.ConfigurationsPerformer;
-import org.apache.james.utils.ExtendedServerProbe;
 import org.apache.james.utils.GuiceServerProbe;
-import org.apache.james.webadmin.Port;
-import org.apache.james.webadmin.WebAdminServer;
 
-import com.google.common.collect.Iterables;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.Module;
-import com.google.inject.TypeLiteral;
-import com.google.inject.util.Modules;
+public interface GuiceJamesServer {
 
-public class GuiceJamesServer {
+    void start() throws Exception;
 
-    private final Module module;
-    private Stager<PreDestroy> preDestroy;
-    private GuiceServerProbe serverProbe;
-    private int jmapPort;
-    private Optional<Port> webadminPort;
+    void stop();
 
-    public GuiceJamesServer() {
-        this(Modules.combine(
-                        new CommonServicesModule(),
-                        new ProtocolsModule(),
-                        new MailetProcessingModule()));
-    }
-
-    private GuiceJamesServer(Module module) {
-        this.module = module;
-    }
-    
-    public GuiceJamesServer combineWith(Module... modules) {
-        return new GuiceJamesServer(Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
-    }
-    
-    public GuiceJamesServer overrideWith(Module... overrides) {
-        return new GuiceJamesServer(Modules.override(module).with(overrides));
-    }
-    
-    public void start() throws Exception {
-        Injector injector = Guice.createInjector(module);
-        preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {}));
-        injector.getInstance(ConfigurationsPerformer.class).initModules();
-        serverProbe = injector.getInstance(GuiceServerProbe.class);
-        jmapPort = injector.getInstance(JMAPServer.class).getPort();
-        webadminPort =locateWebAdminPort(injector);
-    }
-
-    private Optional<Port> locateWebAdminPort(Injector injector) {
-        try {
-            return Optional.of(injector.getInstance(WebAdminServer.class).getPort());
-        } catch(Exception e) {
-            return Optional.empty();
-        }
-    }
-
-    public void stop() {
-        if (preDestroy != null) {
-            preDestroy.stage();
-        }
-    }
-
-    public ExtendedServerProbe serverProbe() {
-        return serverProbe;
-    }
-
-    public int getJmapPort() {
-        return jmapPort;
-    }
-
-    public Optional<Port> getWebadminPort() {
-        return webadminPort;
-    }
+    GuiceServerProbe serverProbe();
 }

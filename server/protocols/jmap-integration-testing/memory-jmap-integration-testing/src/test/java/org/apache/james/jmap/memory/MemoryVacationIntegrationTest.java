@@ -19,21 +19,21 @@
 
 package org.apache.james.jmap.memory;
 
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.MemoryJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.VacationIntegrationTest;
 import org.apache.james.jmap.servers.MemoryJmapServerModule;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
-public class MemoryVacationIntegrationTest extends VacationIntegrationTest {
+public class MemoryVacationIntegrationTest extends VacationIntegrationTest<MemoryJamesServer> {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Override
-    protected GuiceJamesServer createJmapServer() {
-        return new GuiceJamesServer()
+    protected MemoryJamesServer createJmapServer() {
+        return new MemoryJamesServer()
             .combineWith(MemoryJamesServerMain.inMemoryServerModule)
             .overrideWith(new MemoryJmapServerModule(temporaryFolder));
     }

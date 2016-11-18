@@ -36,7 +36,9 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceJamesServerImpl;
+import org.apache.james.JmapServer;
+import org.apache.james.WebAdminServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -52,19 +54,19 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-public abstract class SetMailboxesMethodTest {
+public abstract class SetMailboxesMethodTest<T extends GuiceJamesServerImpl & JmapServer & WebAdminServer> {
 
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
     private static final String USERS_DOMAIN = "domain.tld";
 
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract T createJmapServer();
 
     protected abstract void await();
 
     private AccessToken accessToken;
     private String username;
-    private GuiceJamesServer jmapServer;
+    private T jmapServer;
 
     @Before
     public void setup() throws Throwable {
@@ -72,11 +74,12 @@ public abstract class SetMailboxesMethodTest {
         jmapServer.start();
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
-        		.setContentType(ContentType.JSON)
-        		.setAccept(ContentType.JSON)
-        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(jmapServer.getJmapPort())
-        		.build();
+                .setContentType(ContentType.JSON)
+                .setAccept(ContentType.JSON)
+                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+                .setPort(jmapServer.getJmapProbe()
+                    .getJmapPort())
+                .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
 
         username = "username@" + USERS_DOMAIN;

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -50,6 +51,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
      * 
      * @param entityManagerFactory
      */
+    @Inject
     @PersistenceUnit(unitName="James")
     public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
         this.entityManagerFactory = entityManagerFactory;

@@ -38,14 +38,12 @@
         <constructor-arg index="3" ref="aclResolver"/>
         <constructor-arg index="4" ref="groupMembershipResolver"/>
         <constructor-arg index="5" ref="messageParser"/>
-        <constructor-arg index="6" ref="memory-messageIdFactory" />
+        <constructor-arg index="6" ref="messageIdFactory" />
 <!--         <property name="messageSearchIndex" ref="lazyIndex"/> -->
         <property name="quotaManager" ref="quotaManager"/>
         <property name="quotaRootResolver" ref="quotaRootResolver"/>
         <property name="quotaUpdater" ref="quotaUpdater"/>
     </bean>
-
-    <bean id="memory-messageIdFactory" class="org.apache.james.mailbox.store.mail.model.DefaultMessageId.Factory" />
 
     <bean id ="memory-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
         <constructor-arg index="0" ref="memory-sessionMapperFactory"/>
