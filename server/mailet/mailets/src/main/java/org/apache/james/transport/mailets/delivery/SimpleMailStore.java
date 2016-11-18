@@ -83,12 +83,12 @@ public class SimpleMailStore implements MailStore {
     }
 
     @Override
-    public void storeMail(MailAddress sender, MailAddress recipient, Mail mail) throws MessagingException {
+    public void storeMail(MailAddress recipient, Mail mail) throws MessagingException {
         String username = computeUsername(recipient);
 
         mailboxAppender.append(mail.getMessage(), username, folder);
 
-        log.info("Local delivered mail " + mail.getName() + " successfully from " + DeliveryUtils.prettyPrint(sender)
+        log.info("Local delivered mail " + mail.getName() + " successfully from " + DeliveryUtils.prettyPrint(mail.getSender())
             + " to " + DeliveryUtils.prettyPrint(recipient) + " in folder " + this.folder);
     }
 

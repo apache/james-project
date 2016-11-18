@@ -81,8 +81,8 @@ public class MailDispatcherTest {
             .build();
         testee.dispatch(mail);
 
-        verify(mailStore).storeMail(MailAddressFixture.OTHER_AT_JAMES, MailAddressFixture.ANY_AT_JAMES, mail);
-        verify(mailStore).storeMail(MailAddressFixture.OTHER_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2, mail);
+        verify(mailStore).storeMail(MailAddressFixture.ANY_AT_JAMES, mail);
+        verify(mailStore).storeMail(MailAddressFixture.ANY_AT_JAMES2, mail);
         verifyNoMoreInteractions(mailStore);
     }
 
@@ -135,7 +135,7 @@ public class MailDispatcherTest {
             .build();
         doThrow(new MessagingException())
             .when(mailStore)
-            .storeMail(any(MailAddress.class), any(MailAddress.class), any(Mail.class));
+            .storeMail(any(MailAddress.class), any(Mail.class));
 
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
         Multipart multipart = new MimeMultipart();
@@ -186,7 +186,7 @@ public class MailDispatcherTest {
         testee.dispatch(mail);
 
         ArgumentCaptor<Mail> mailCaptor = ArgumentCaptor.forClass(Mail.class);
-        verify(mailStore).storeMail(any(MailAddress.class), any(MailAddress.class), mailCaptor.capture());
+        verify(mailStore).storeMail(any(MailAddress.class), mailCaptor.capture());
 
         assertThat(mailCaptor.getValue().getMessage().getHeader(RFC2822Headers.RETURN_PATH))
             .containsExactly("<" + MailAddressFixture.OTHER_AT_JAMES +">");
@@ -248,7 +248,7 @@ public class MailDispatcherTest {
         }
 
         @Override
-        public void storeMail(MailAddress sender, MailAddress recipient, Mail mail) throws MessagingException {
+        public void storeMail(MailAddress recipient, Mail mail) throws MessagingException {
             deliveredToHeaderValues.add(mail.getMessage().getHeader(MailDispatcher.DELIVERED_TO));
         }
 

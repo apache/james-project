@@ -131,13 +131,13 @@ public class SieveMailStore implements MailStore {
         }
     }
 
-    public void storeMail(MailAddress sender, MailAddress recipient, Mail mail) throws MessagingException {
+    public void storeMail(MailAddress recipient, Mail mail) throws MessagingException {
         Preconditions.checkNotNull(recipient, "Recipient for mail to be spooled cannot be null.");
         Preconditions.checkNotNull(mail.getMessage(), "Mail message to be spooled cannot be null.");
 
         sieveMessage(recipient, mail, log);
         // If no exception was thrown the message was successfully stored in the mailbox
-        log.info("Local delivered mail " + mail.getName() + " sucessfully from " + DeliveryUtils.prettyPrint(sender) + " to " + DeliveryUtils.prettyPrint(recipient)
+        log.info("Local delivered mail " + mail.getName() + " sucessfully from " + DeliveryUtils.prettyPrint(mail.getSender()) + " to " + DeliveryUtils.prettyPrint(recipient)
             + " in folder " + this.folder);
     }
 

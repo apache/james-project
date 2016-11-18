@@ -141,7 +141,7 @@ public class MailDispatcher {
             try {
                 // Add qmail's de facto standard Delivered-To header
                 message.addHeader(DELIVERED_TO, recipient.toString());
-                mailStore.storeMail(mail.getSender(), recipient, mail);
+                mailStore.storeMail(recipient, mail);
                 message.removeHeader(DELIVERED_TO);
             } catch (Exception ex) {
                 log.error("Error while storing mail.", ex);

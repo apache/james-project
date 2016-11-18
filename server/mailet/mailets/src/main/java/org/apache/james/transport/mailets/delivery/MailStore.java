@@ -25,5 +25,5 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
 public interface MailStore {
-    void storeMail(MailAddress sender, MailAddress recipient, Mail mail) throws MessagingException;
+    void storeMail(MailAddress recipient, Mail mail) throws MessagingException;
 }
