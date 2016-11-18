@@ -86,10 +86,18 @@ public class SimpleMailStore implements MailStore {
     public void storeMail(MailAddress recipient, Mail mail) throws MessagingException {
         String username = computeUsername(recipient);
 
-        mailboxAppender.append(mail.getMessage(), username, folder);
+        String locatedFolder = locateFolder(username, mail);
+        mailboxAppender.append(mail.getMessage(), username, locatedFolder);
 
         log.info("Local delivered mail " + mail.getName() + " successfully from " + DeliveryUtils.prettyPrint(mail.getSender())
-            + " to " + DeliveryUtils.prettyPrint(recipient) + " in folder " + this.folder);
+            + " to " + DeliveryUtils.prettyPrint(recipient) + " in folder " + locatedFolder);
+    }
+
+    private String locateFolder(String username, Mail mail) {
+        if (mail.getAttribute(DELIVERY_PATH_PREFIX + username) instanceof String) {
+            return (String) mail.getAttribute(DELIVERY_PATH_PREFIX + username);
+        }
+        return folder;
     }
 
     private String computeUsername(MailAddress recipient) throws MessagingException {

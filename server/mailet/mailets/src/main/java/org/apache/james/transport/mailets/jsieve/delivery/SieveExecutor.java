@@ -23,11 +23,9 @@ package org.apache.james.transport.mailets.jsieve.delivery;
 import java.io.IOException;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.logging.Log;
 import org.apache.james.transport.mailets.delivery.DeliveryUtils;
-import org.apache.james.transport.mailets.delivery.MailStore;
 import org.apache.james.transport.mailets.jsieve.ActionDispatcher;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.transport.mailets.jsieve.SieveMailAdapter;
@@ -44,8 +42,9 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
-public class SieveMailStore implements MailStore {
+public class SieveExecutor {
 
     public static Builder builder() {
         return new Builder();
@@ -55,14 +54,8 @@ public class SieveMailStore implements MailStore {
         private MailetContext mailetContext;
         private UsersRepository usersRepos;
         private SievePoster sievePoster;
-        private String folder;
         private ResourceLocator resourceLocator;
         private Log log;
-
-        public Builder folder(String folder) {
-            this.folder = folder;
-            return this;
-        }
 
         public Builder usersRepository(UsersRepository usersRepository) {
             this.usersRepos = usersRepository;
@@ -89,32 +82,29 @@ public class SieveMailStore implements MailStore {
             return this;
         }
 
-        public SieveMailStore build() throws MessagingException {
+        public SieveExecutor build() throws MessagingException {
             Preconditions.checkNotNull(mailetContext);
             Preconditions.checkNotNull(usersRepos);
-            Preconditions.checkNotNull(folder);
             Preconditions.checkNotNull(resourceLocator);
             Preconditions.checkNotNull(log);
             Preconditions.checkNotNull(sievePoster);
-            return new SieveMailStore(mailetContext, usersRepos, sievePoster, folder, resourceLocator, log);
+            return new SieveExecutor(mailetContext, usersRepos, sievePoster, resourceLocator, log);
         }
     }
 
     private final MailetContext mailetContext;
     private final UsersRepository usersRepos;
     private final SievePoster sievePoster;
-    private final String folder;
     private final ResourceLocator resourceLocator;
     private final SieveFactory factory;
     private final ActionDispatcher actionDispatcher;
     private final Log log;
 
-    public SieveMailStore(MailetContext mailetContext, UsersRepository usersRepos, SievePoster sievePoster, String folder,
-                          ResourceLocator resourceLocator, Log log) throws MessagingException {
+    public SieveExecutor(MailetContext mailetContext, UsersRepository usersRepos, SievePoster sievePoster,
+                         ResourceLocator resourceLocator, Log log) throws MessagingException {
         this.mailetContext = mailetContext;
         this.usersRepos = usersRepos;
         this.sievePoster = sievePoster;
-        this.folder = folder;
         this.resourceLocator = resourceLocator;
         factory = createFactory(log);
         this.actionDispatcher = new ActionDispatcher();
@@ -131,7 +121,7 @@ public class SieveMailStore implements MailStore {
         }
     }
 
-    public void storeMail(MailAddress recipient, Mail mail) throws MessagingException {
+    public void execute(MailAddress recipient, Mail mail) throws MessagingException {
         Preconditions.checkNotNull(recipient, "Recipient for mail to be spooled cannot be null.");
         Preconditions.checkNotNull(mail.getMessage(), "Mail message to be spooled cannot be null.");
 
@@ -151,7 +141,7 @@ public class SieveMailStore implements MailStore {
             // seems very unfriendly.
             // So just log and store in INBOX
             log.error("Cannot evaluate Sieve script. Storing mail in user INBOX.", ex);
-            storeMessageInbox(recipient, aMail.getMessage());
+            storeMessageInbox(recipient, aMail);
         }
     }
 
@@ -180,11 +170,11 @@ public class SieveMailStore implements MailStore {
     }
 
     protected void handleFailure(MailAddress recipient, Mail aMail, Exception ex) throws MessagingException, IOException {
-        storeMessageInbox(recipient, SieveFailureMessageComposer.composeMessage(aMail, ex, recipient.toString()));
+        mailetContext.sendMail(recipient, ImmutableList.of(recipient), SieveFailureMessageComposer.composeMessage(aMail, ex, recipient.toString()));
     }
 
-    protected void storeMessageInbox(MailAddress mailAddress, MimeMessage message) throws MessagingException {
-        sievePoster.post("mailbox://" + retrieveUserNameUsedForScriptStorage(mailAddress) + "/", message);
+    protected void storeMessageInbox(MailAddress mailAddress, Mail mail) throws MessagingException {
+        sievePoster.post("mailbox://" + retrieveUserNameUsedForScriptStorage(mailAddress) + "/", mail);
     }
 
     public String retrieveUserNameUsedForScriptStorage(MailAddress mailAddress) {

@@ -52,7 +52,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
 
 public class MailDispatcherTest {
     private FakeMailContext fakeMailContext;

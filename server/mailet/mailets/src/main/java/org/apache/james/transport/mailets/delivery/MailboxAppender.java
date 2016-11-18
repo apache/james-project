@@ -50,18 +50,13 @@ public class MailboxAppender {
 
     public void append(MimeMessage mail, String user, String folder) throws MessagingException {
         MailboxSession session = createMailboxSession(user);
-        append(mail, user, folder, session);
+        append(mail, user, useSlashAsSeparator(folder, session), session);
     }
 
-    public void appendAndUseSlashAsSeparator(MimeMessage mail, String user, String folder, String fallbackFolder) throws MessagingException {
-        MailboxSession session = createMailboxSession(user);
-        append(mail, user, useSlashAsSeparator(folder, session, fallbackFolder));
-    }
-
-    private String useSlashAsSeparator(String urlPath, MailboxSession session, String fallbackFolder) {
+    private String useSlashAsSeparator(String urlPath, MailboxSession session) throws MessagingException {
         String destination = urlPath.replace('/', session.getPathDelimiter());
         if (Strings.isNullOrEmpty(destination)) {
-            destination = fallbackFolder;
+            throw new MessagingException("Mail can not be delivered to empty folder");
         }
         if (destination.charAt(0) == session.getPathDelimiter()) {
             destination = destination.substring(1);

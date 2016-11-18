@@ -24,6 +24,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.logging.Log;
+import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.joda.time.DateTime;
 
@@ -62,7 +63,7 @@ public interface ActionContext {
      * the value should be mailbox://<user>@localhost/<mailbox-path>
      * @param mail not null
      */
-    public void post(String uri, MimeMessage mail) throws MessagingException;
+    public void post(String uri, Mail mail) throws MessagingException;
 
     /**
      * Posts the given mail.

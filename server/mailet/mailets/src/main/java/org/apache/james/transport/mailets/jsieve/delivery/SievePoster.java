@@ -20,28 +20,25 @@
 package org.apache.james.transport.mailets.jsieve.delivery;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
-import org.apache.james.transport.mailets.delivery.MailboxAppender;
+import org.apache.james.transport.mailets.delivery.MailStore;
 import org.apache.james.transport.mailets.jsieve.Poster;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
 public class SievePoster implements Poster {
-
-    private final MailboxAppender mailboxAppender;
     private final String folder;
-    private final UsersRepository usersRepos;
+    private final UsersRepository usersRepository;
 
-    public SievePoster(MailboxAppender mailboxAppender, String folder, UsersRepository usersRepos) {
-        this.mailboxAppender = mailboxAppender;
+    public SievePoster(UsersRepository usersRepository, String folder) {
+        this.usersRepository = usersRepository;
         this.folder = folder;
-        this.usersRepos = usersRepos;
     }
 
     @Override
-    public void post(String url, MimeMessage mail) throws MessagingException {
+    public void post(String url, Mail mail) throws MessagingException {
         int endOfScheme = url.indexOf(':');
         if (endOfScheme < 0) {
             throw new MessagingException("Malformed URI");
@@ -49,7 +46,8 @@ public class SievePoster implements Poster {
             String scheme = url.substring(0, endOfScheme);
             if (scheme.equals("mailbox")) {
                 UserAndPath userAndPath = retrieveUserAndPath(url, endOfScheme);
-                mailboxAppender.appendAndUseSlashAsSeparator(mail, userAndPath.user, userAndPath.path, folder);
+
+                mail.setAttribute(MailStore.DELIVERY_PATH_PREFIX + userAndPath.user, userAndPath.path);
             } else {
                 throw new MessagingException("Unsupported protocol");
             }
@@ -88,7 +86,7 @@ public class SievePoster implements Poster {
         String user = url.substring(startOfUser, endOfUser).toLowerCase();
         // Check if we should use the full email address as username
         try {
-            return usersRepos.getUser(new MailAddress(user, host));
+            return usersRepository.getUser(new MailAddress(user, host));
         } catch (UsersRepositoryException e) {
             throw new MessagingException("Unable to accessUsersRepository", e);
         }

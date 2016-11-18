@@ -21,14 +21,12 @@ package org.apache.james.transport.mailets.delivery;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Properties;
 
@@ -49,82 +47,39 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.rrt.api.RecipientRewriteTable;
-import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.LocalDelivery;
-import org.apache.james.transport.mailets.SieveLocalDelivery;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
-import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 
-@RunWith(Parameterized.class)
 public class LocalDeliveryTest {
 
     public static final String RECEIVER_DOMAIN_COM = "receiver@domain.com";
+    private UsersRepository usersRepository;
+    private MailboxManager mailboxManager;
+    private MailboxSession.User user;
+    private FakeMailetConfig config;
+    private LocalDelivery testee;
 
-    public static class Parameter {
-        private final UsersRepository usersRepository;
-        private final MailboxManager mailboxManager;
-        private final SieveRepository sieveRepository;
-        private final Mailet mailet;
-        private final MailboxSession.User user;
-
-        public Parameter(UsersRepository usersRepository, MailboxManager mailboxManager, SieveRepository sieveRepository,
-                         Mailet mailet, MailboxSession.User user) {
-            this.usersRepository = usersRepository;
-            this.mailboxManager = mailboxManager;
-            this.sieveRepository = sieveRepository;
-            this.mailet = mailet;
-            this.user = user;
-        }
-
-        public UsersRepository getUsersRepository() {
-            return usersRepository;
-        }
-
-        public MailboxManager getMailboxManager() {
-            return mailboxManager;
-        }
-
-        public SieveRepository getSieveRepository() {
-            return sieveRepository;
-        }
-
-        public Mailet getMailet() {
-            return mailet;
-        }
-
-        public MailboxSession.User getUser() {
-            return user;
-        }
-    }
-
-    @Parameterized.Parameters
-    public static Collection<Object[]> getLocalDeliveryClasses() {
-        SieveRepository sieveRepository = mock(SieveRepository.class);
-        UsersRepository usersRepository = mock(UsersRepository.class);
-        MailboxManager mailboxManager = mock(MailboxManager.class);
+    @Before
+    public void setUp() {
+        usersRepository = mock(UsersRepository.class);
+        mailboxManager = mock(MailboxManager.class);
         RecipientRewriteTable recipientRewriteTable = mock(RecipientRewriteTable.class);
         DomainList domainList = mock(DomainList.class);
 
-        SieveLocalDelivery sieveLocalDelivery = new SieveLocalDelivery(usersRepository, mailboxManager, sieveRepository,
-            recipientRewriteTable, domainList);
 
-        LocalDelivery localDelivery = new LocalDelivery(recipientRewriteTable, usersRepository, mailboxManager, domainList);
+        testee = new LocalDelivery(recipientRewriteTable, usersRepository, mailboxManager, domainList);
 
-        MailboxSession.User user = mock(MailboxSession.User.class);
+        user = mock(MailboxSession.User.class);
         MailboxSession session = mock(MailboxSession.class);
         when(session.getPathDelimiter()).thenReturn('.');
         try {
@@ -134,18 +89,6 @@ public class LocalDeliveryTest {
         }
         when(session.getUser()).thenReturn(user);
 
-        return ImmutableList.of(
-            new Object[]{new Parameter(usersRepository, mailboxManager, sieveRepository, sieveLocalDelivery, user)},
-            new Object[]{new Parameter(usersRepository, mailboxManager, sieveRepository, localDelivery, user)}
-        );
-    }
-
-    @Parameterized.Parameter
-    public Parameter parameter;
-    private FakeMailetConfig config;
-
-    @Before
-    public void setUp() {
         config = new FakeMailetConfig("Local delivery", FakeMailContext.builder().logger(mock(Logger.class)).build());
     }
 
@@ -156,16 +99,15 @@ public class LocalDeliveryTest {
         MailboxPath inbox = new MailboxPath("#private", username, "INBOX");
         MessageManager messageManager = mock(MessageManager.class);
 
-        when(parameter.getUsersRepository().supportVirtualHosting()).thenReturn(true);
-        when(parameter.getUsersRepository().getUser(new MailAddress(username))).thenReturn(username);
-        doThrow(new ScriptNotFoundException()).when(parameter.getSieveRepository()).getActive(username);
-        when(parameter.getMailboxManager().getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
-        when(parameter.getUser().getUserName()).thenReturn(username);
+        when(usersRepository.supportVirtualHosting()).thenReturn(true);
+        when(usersRepository.getUser(new MailAddress(username))).thenReturn(username);
+        when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
+        when(user.getUserName()).thenReturn(username);
 
         // When
         Mail mail = createMail();
-        parameter.getMailet().init(config);
-        parameter.getMailet().service(mail);
+        testee.init(config);
+        testee.service(mail);
 
         // Then
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
@@ -177,17 +119,16 @@ public class LocalDeliveryTest {
         String username = "receiver";
         MailboxPath inbox = new MailboxPath("#private", username, "INBOX");
         MessageManager messageManager = mock(MessageManager.class);
-        when(parameter.getUsersRepository().supportVirtualHosting()).thenReturn(false);
-        when(parameter.getUsersRepository().getUser(new MailAddress("receiver@localhost"))).thenReturn(username);
-        when(parameter.getUsersRepository().getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(username);
-        doThrow(new ScriptNotFoundException()).when(parameter.getSieveRepository()).getActive(username);
-        when(parameter.getMailboxManager().getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
-        when(parameter.getUser().getUserName()).thenReturn(username);
+        when(usersRepository.supportVirtualHosting()).thenReturn(false);
+        when(usersRepository.getUser(new MailAddress("receiver@localhost"))).thenReturn(username);
+        when(usersRepository.getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(username);
+        when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
+        when(user.getUserName()).thenReturn(username);
 
         // When
         Mail mail = createMail();
-        parameter.getMailet().init(config);
-        parameter.getMailet().service(mail);
+        testee.init(config);
+        testee.service(mail);
 
         // Then
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));

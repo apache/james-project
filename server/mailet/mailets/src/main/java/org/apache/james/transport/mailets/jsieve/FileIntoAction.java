@@ -77,7 +77,6 @@ public class FileIntoAction implements MailAction {
         try
         {
             recipient = ActionUtils.getSoleRecipient(aMail);
-            MimeMessage localMessage = createMimeMessage(aMail, recipient);
             
             if (!(destinationMailbox.length() > 0 
                     && destinationMailbox.charAt(0) == HIERARCHY_DELIMITER)) {
@@ -85,15 +84,9 @@ public class FileIntoAction implements MailAction {
             }
             
             final String mailbox = destinationMailbox.replace(HIERARCHY_DELIMITER, '/');
-            final String host;
-            if (mailbox.charAt(0) == '/') {
-                host = "@localhost";
-            } else {
-                host = "@localhost/";
-            }
-            final String url = "mailbox://" + recipient.getUser() + host + mailbox;
+            final String url = "mailbox://" + recipient.asString() + mailbox;
             //TODO: copying this message so many times seems a waste
-            context.post(url, localMessage);
+            context.post(url, aMail);
             delivered = true;
         }
         catch (MessagingException ex)
@@ -103,11 +96,6 @@ public class FileIntoAction implements MailAction {
                 log.debug("Error while storing mail into. "+destinationMailbox, ex);
             }
             throw ex;
-        }
-        finally
-        {
-            // Ensure the mail is always ghosted
-            aMail.setState(Mail.GHOST);
         }
         if (delivered)
         {
@@ -119,24 +107,5 @@ public class FileIntoAction implements MailAction {
                     + destinationMailbox + "\"");
             }
         }
-    }
-    
-    private static MimeMessage createMimeMessage(Mail aMail, MailAddress recipient) throws MessagingException {
-        // Adapted from LocalDelivery Mailet
-        // Add qmail's de facto standard Delivered-To header
-        MimeMessage localMessage = new MimeMessage(aMail.getMessage())
-        {
-            protected void updateHeaders() throws MessagingException
-            {
-                if (getMessageID() == null)
-                    super.updateHeaders();
-                else
-                    modified = false;
-            }
-        };
-        localMessage.addHeader("Delivered-To", recipient.toString());
-
-        localMessage.saveChanges();
-        return localMessage;
     }
 }

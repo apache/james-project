@@ -85,7 +85,7 @@ public class SimpleMailStoreTest {
         FakeMail mail = FakeMail.builder()
             .mimeMessage(mimeMessage)
             .build();
-        testee.storeMail(sender, recipient, mail);
+        testee.storeMail(recipient, mail);
 
         verify(mailboxAppender).append(any(MimeMessage.class), eq(recipient.asString()), eq(FOLDER));
     }
@@ -98,7 +98,7 @@ public class SimpleMailStoreTest {
         FakeMail mail = FakeMail.builder()
             .mimeMessage(mimeMessage)
             .build();
-        testee.storeMail(sender, recipient, mail);
+        testee.storeMail(recipient, mail);
 
         verify(mailboxAppender).append(any(MimeMessage.class), eq(recipient.getLocalPart()), eq(FOLDER));
     }
@@ -111,7 +111,7 @@ public class SimpleMailStoreTest {
         FakeMail mail = FakeMail.builder()
             .mimeMessage(mimeMessage)
             .build();
-        testee.storeMail(sender, recipient, mail);
+        testee.storeMail(recipient, mail);
 
         verify(mailboxAppender).append(any(MimeMessage.class), eq(recipient.toString()), eq(FOLDER));
     }

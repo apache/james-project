@@ -430,6 +430,7 @@ Regards, Postmaster XXX.YYY
 	     </mailet>
 	
        <!-- Is the recipient is for a local account, deliver it locally -->
+       <mailet match="RecipientIsLocal" class="Sieve"/>
        <mailet match="RecipientIsLocal" class="LocalDelivery"/>
 
        <!-- If the host is handled by this server and it did not get -->

@@ -37,4 +37,6 @@ public interface ExtendedServerProbe extends ServerProbe {
 
     Mailbox getMailbox(String namespace, String user, String name);
 
+    void addActiveSieveScript(String user, String name, String script) throws Exception;
+
 }

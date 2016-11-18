@@ -26,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import java.util.Properties;
 
 import javax.activation.DataHandler;
+import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Session;
 import javax.mail.internet.MimeBodyPart;
@@ -57,7 +58,6 @@ public class MailboxAppenderTest {
 
     public static final String USER = "user";
     public static final String FOLDER = "folder";
-    public static final String FALLBACK_FOLDER = "fallback_folder";
     public static final String EMPTY_FOLDER = "";
 
     @Rule public ExpectedException expectedException = ExpectedException.none();
@@ -107,17 +107,6 @@ public class MailboxAppenderTest {
     }
 
     @Test
-    public void appendAndUseSlashAsSeparatorShouldAddMessageToDesiredMailbox() throws Exception {
-        testee.appendAndUseSlashAsSeparator(mimeMessage, USER, FOLDER, FALLBACK_FOLDER);
-
-        MessageResultIterator messages = mailboxManager.getMailbox(new MailboxPath("#private", USER, FOLDER), session)
-            .getMessages(MessageRange.all(), new FetchGroupImpl(MessageResult.FetchGroup.FULL_CONTENT), session);
-
-        assertThat(messages).hasSize(1);
-    }
-
-
-    @Test
     public void appendShouldAddMessageToDesiredMailboxWhenMailboxExists() throws Exception {
         MailboxPath mailboxPath = new MailboxPath("#private", USER, FOLDER);
         mailboxManager.createMailbox(mailboxPath, session);
@@ -131,43 +120,27 @@ public class MailboxAppenderTest {
     }
 
     @Test
-    public void appendAndUseSlashAsSeparatorShouldAddMessageToDesiredMailboxWhenMailboxExists() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath("#private", USER, FOLDER);
-        mailboxManager.createMailbox(mailboxPath, session);
+    public void appendShouldNotAppendToEmptyFolder() throws Exception {
+        expectedException.expect(MessagingException.class);
 
-        testee.appendAndUseSlashAsSeparator(mimeMessage, USER, FOLDER, FALLBACK_FOLDER);
-
-        MessageResultIterator messages = mailboxManager.getMailbox(mailboxPath, session)
-            .getMessages(MessageRange.all(), new FetchGroupImpl(MessageResult.FetchGroup.FULL_CONTENT), session);
-
-        assertThat(messages).hasSize(1);
+        testee.append(mimeMessage, USER, EMPTY_FOLDER);
     }
 
     @Test
-    public void appendAndUseSlashAsSeparatorShouldNotAppendToEmptyFolder() throws Exception {
-        testee.appendAndUseSlashAsSeparator(mimeMessage, USER, EMPTY_FOLDER, FALLBACK_FOLDER);
-
-        expectedException.expect(MailboxNotFoundException.class);
-
-        mailboxManager.getMailbox(new MailboxPath("#private", USER, EMPTY_FOLDER), session);
-    }
-
-
-    @Test
-    public void appendAndUseSlashAsSeparatorShouldAppendToFallback() throws Exception {
-        testee.appendAndUseSlashAsSeparator(mimeMessage, USER, EMPTY_FOLDER, FALLBACK_FOLDER);
-
-        MessageResultIterator messages = mailboxManager.getMailbox(new MailboxPath("#private", USER, FALLBACK_FOLDER), session)
-            .getMessages(MessageRange.all(), new FetchGroupImpl(MessageResult.FetchGroup.FULL_CONTENT), session);
-
-        assertThat(messages).hasSize(1);
-    }
-
-    @Test
-    public void appendAndUseSlashAsSeparatorShouldRemovePathSeparatorAsFirstChar() throws Exception {
-        testee.appendAndUseSlashAsSeparator(mimeMessage, USER, "." + FOLDER, FALLBACK_FOLDER);
+    public void appendShouldRemovePathSeparatorAsFirstChar() throws Exception {
+        testee.append(mimeMessage, USER, "." + FOLDER);
 
         MessageResultIterator messages = mailboxManager.getMailbox(new MailboxPath("#private", USER, FOLDER), session)
+            .getMessages(MessageRange.all(), new FetchGroupImpl(MessageResult.FetchGroup.FULL_CONTENT), session);
+
+        assertThat(messages).hasSize(1);
+    }
+
+    @Test
+    public void appendShouldReplaceSlashBySeparator() throws Exception {
+        testee.append(mimeMessage, USER, FOLDER + "/any");
+
+        MessageResultIterator messages = mailboxManager.getMailbox(new MailboxPath("#private", USER, FOLDER + ".any"), session)
             .getMessages(MessageRange.all(), new FetchGroupImpl(MessageResult.FetchGroup.FULL_CONTENT), session);
 
         assertThat(messages).hasSize(1);

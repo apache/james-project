@@ -34,8 +34,12 @@ public class IMAPMessageReader implements Closeable {
     }
 
     public boolean userReceivedMessage(String user, String password) throws IOException {
+        return userReceivedMessageInMailbox(user, password, "INBOX");
+    }
+
+    public boolean userReceivedMessageInMailbox(String user, String password, String mailbox) throws IOException {
         imapClient.login(user, password);
-        imapClient.select("INBOX");
+        imapClient.select(mailbox);
         imapClient.fetch("1:1", "ALL");
         return imapClient.getReplyString()
             .contains("OK FETCH completed");

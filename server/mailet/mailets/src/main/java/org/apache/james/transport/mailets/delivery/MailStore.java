@@ -25,5 +25,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
 public interface MailStore {
+    String DELIVERY_PATH_PREFIX = "DeliveryPath_";
+
     void storeMail(MailAddress recipient, Mail mail) throws MessagingException;
 }
