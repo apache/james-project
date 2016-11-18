@@ -159,9 +159,9 @@ public class MailDispatcherTest {
         testee.dispatch(mail);
 
         List<FakeMailContext.SentMail> actual = fakeMailContext.getSentMails();
-        FakeMailContext.SentMail expected = new FakeMailContext.SentMail.Builder()
+        FakeMailContext.SentMail expected = FakeMailContext.sentMailBuilder()
             .sender(MailAddressFixture.OTHER_AT_JAMES)
-            .recipients(ImmutableList.of(MailAddressFixture.ANY_AT_JAMES))
+            .recipient(MailAddressFixture.ANY_AT_JAMES)
             .state(Mail.ERROR).build();
         assertThat(actual).containsOnly(expected);
         assertThat(IOUtils.toString(actual.get(0).getMsg().getInputStream(), Charsets.UTF_8))

@@ -122,7 +122,7 @@ public class SieveIntegrationTest {
         when(resourceLocator.get(RECEIVER_DOMAIN_COM)).thenThrow(new ScriptNotFoundException());
         final MessageManager messageManager = prepareMessageManagerOn(new MailboxPath("#private", RECEIVER_DOMAIN_COM, "INBOX"));
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -134,7 +134,7 @@ public class SieveIntegrationTest {
         when(resourceLocator.get("receiver")).thenThrow(new ScriptNotFoundException());
         final MessageManager messageManager = prepareMessageManagerOn(INBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -144,7 +144,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/keep.script");
         final MessageManager messageManager = prepareMessageManagerOn(INBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -153,7 +153,7 @@ public class SieveIntegrationTest {
     public void discardScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/discard.script");
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verifyNoMoreInteractions(mailboxManager);
     }
@@ -163,7 +163,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/fileinto.script");
         final MessageManager messageManager = prepareMessageManagerOn(new MailboxPath("#private", "receiver", "INBOX.any"));
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -173,7 +173,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/allofAllFalse.script");
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -183,7 +183,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/allofOneFalse.script");
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -193,7 +193,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/allofAllTrue.script");
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -203,7 +203,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/anyofAllFalse.script");
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -213,7 +213,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/false.script");
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -223,7 +223,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/true.script");
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -233,7 +233,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/notFalse.script");
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -243,7 +243,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/notTrue.script");
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -253,7 +253,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/anyofOneFalse.script");
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -263,7 +263,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/anyofAllTrue.script");
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -273,7 +273,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/stop.script");
         final MessageManager messageManager = prepareMessageManagerOn(INBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -283,7 +283,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/header.script");
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -294,7 +294,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubject("JAMES-1620 revolution");
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -306,7 +306,7 @@ public class SieveIntegrationTest {
 
         FakeMail mail = createMail();
         mail.setMessageSize(100);
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -318,7 +318,7 @@ public class SieveIntegrationTest {
 
         FakeMail mail = createMail();
         mail.setMessageSize(100);
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -330,7 +330,7 @@ public class SieveIntegrationTest {
 
         FakeMail mail = createMail();
         mail.setMessageSize(1000);
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -342,7 +342,7 @@ public class SieveIntegrationTest {
 
         FakeMail mail = createMail();
         mail.setMessageSize(1000);
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -353,7 +353,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@any.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -365,7 +365,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source1@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -377,7 +377,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source1@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -389,7 +389,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.org"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -400,7 +400,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -411,7 +411,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Bcc", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -422,7 +422,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Bcc", "source2@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -433,7 +433,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Bcc", "source@domain.org"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -442,12 +442,12 @@ public class SieveIntegrationTest {
     public void redirectShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/redirect.script");
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verifyZeroInteractions(mailboxManager);
-        FakeMailContext.SentMail expectedSentMail = new FakeMailContext.SentMail.Builder()
+        FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
             .sender(new MailAddress("sender@any.com"))
-            .recipients(Lists.newArrayList(new MailAddress("redirect@apache.org")))
+            .recipient(new MailAddress("redirect@apache.org"))
             .build();
         assertThat(fakeMailContext.getSentMails())
             .containsExactly(expectedSentMail);
@@ -459,7 +459,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-From", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -470,7 +470,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -481,7 +481,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source2@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -492,7 +492,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.org"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -503,7 +503,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -514,7 +514,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -525,7 +525,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source2@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -536,7 +536,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source@domain.org"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -547,7 +547,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resent-To", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -558,7 +558,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -569,7 +569,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source2@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -580,7 +580,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source@domain.org"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -591,7 +591,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -602,7 +602,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Sender", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -613,7 +613,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Sender", "source2@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -624,7 +624,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Sender", "source@domain.org"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -635,7 +635,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -646,7 +646,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-From", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -657,7 +657,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-From", "source2@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -668,7 +668,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-From", "source@domain.org"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -679,7 +679,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -690,7 +690,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-To", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -701,7 +701,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-To", "source2@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -712,7 +712,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-To", "source@domain.org"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -723,7 +723,7 @@ public class SieveIntegrationTest {
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source@domain.com"));
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -733,7 +733,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/envelopeFromOtherSender.script");
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -743,7 +743,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/envelopeTo.script");
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -753,7 +753,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/envelopeToOtherReceiver.script");
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -763,7 +763,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyRawInvalid.script");
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -773,7 +773,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyRawMatch.script");
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -783,7 +783,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyContentMatch.script");
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -793,7 +793,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyContentInvalid.script");
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -803,7 +803,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyContentWrongContentType.script");
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -813,7 +813,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyTextInvalid.script");
         final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -823,7 +823,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyTextMatch.script");
         final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
@@ -833,7 +833,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/doubleVacation.script");
         MessageManager messageManager = prepareMessageManagerOn(INBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
         assertThat(fakeMailContext.getSentMails()).isEmpty();
@@ -844,12 +844,12 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
         MessageManager messageManager = prepareMessageManagerOn(INBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
-        FakeMailContext.SentMail expectedSentMail = new FakeMailContext.SentMail.Builder()
+        FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
             .sender(new MailAddress(RECEIVER_DOMAIN_COM))
-            .recipients(Lists.newArrayList(new MailAddress("sender@any.com")))
+            .recipient(new MailAddress("sender@any.com"))
             .build();
         assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
     }
@@ -861,7 +861,7 @@ public class SieveIntegrationTest {
         Mail mail = createMail();
         mail.getMessage().addHeader("List-Id", "0123456789");
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), mail);
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), mail);
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
         assertThat(fakeMailContext.getSentMails()).isEmpty();
@@ -872,7 +872,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationReason.script", DATE_OLD, DATE_NEW);
         MessageManager messageManager = prepareMessageManagerOn(INBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
         assertThat(fakeMailContext.getSentMails()).isEmpty();
@@ -883,7 +883,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationReasonAndFileInto.script", DATE_OLD, DATE_NEW);
         MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
         assertThat(fakeMailContext.getSentMails()).isEmpty();
@@ -894,7 +894,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationDaysReason.script", DATE_DEFAULT, DATE_NEW);
         MessageManager messageManager = prepareMessageManagerOn(INBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
         assertThat(fakeMailContext.getSentMails()).isEmpty();
@@ -905,12 +905,12 @@ public class SieveIntegrationTest {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationDaysReason.script", DATE_CLOSE, DATE_NEW);
         MessageManager messageManager = prepareMessageManagerOn(INBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
-        FakeMailContext.SentMail expectedSentMail = new FakeMailContext.SentMail.Builder()
+        FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
             .sender(new MailAddress(RECEIVER_DOMAIN_COM))
-            .recipients(Lists.newArrayList(new MailAddress("sender@any.com")))
+            .recipient(new MailAddress("sender@any.com"))
             .build();
         assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
     }
@@ -920,12 +920,12 @@ public class SieveIntegrationTest {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationReasonAndFileInto.script", DATE_DEFAULT, DATE_NEW);
         MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
-        FakeMailContext.SentMail expectedSentMail = new FakeMailContext.SentMail.Builder()
+        FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
             .sender(new MailAddress(RECEIVER_DOMAIN_COM))
-            .recipients(Lists.newArrayList(new MailAddress("sender@any.com")))
+            .recipient(new MailAddress("sender@any.com"))
             .build();
         assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
     }
@@ -935,12 +935,12 @@ public class SieveIntegrationTest {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationSubjectFromReason.script", DATE_DEFAULT, DATE_NEW);
         MessageManager messageManager = prepareMessageManagerOn(INBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
-        FakeMailContext.SentMail expectedSentMail = new FakeMailContext.SentMail.Builder()
+        FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
             .sender(new MailAddress("benwa@apache.org"))
-            .recipients(Lists.newArrayList(new MailAddress("sender@any.com")))
+            .recipient(new MailAddress("sender@any.com"))
             .build();
         assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
     }
@@ -950,12 +950,12 @@ public class SieveIntegrationTest {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationDaysAddressesReason.script", DATE_CLOSE, DATE_NEW);
         MessageManager messageManager = prepareMessageManagerOn(INBOX);
 
-        testee.storeMail(sender, new MailAddress(RECEIVER_DOMAIN_COM), createMail());
+        testee.storeMail(new MailAddress(RECEIVER_DOMAIN_COM), createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
-        FakeMailContext.SentMail expectedSentMail = new FakeMailContext.SentMail.Builder()
+        FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
             .sender(new MailAddress(RECEIVER_DOMAIN_COM))
-            .recipients(Lists.newArrayList(new MailAddress("sender@any.com")))
+            .recipient(new MailAddress("sender@any.com"))
             .build();
         assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
     }

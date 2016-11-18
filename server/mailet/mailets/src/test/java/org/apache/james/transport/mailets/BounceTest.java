@@ -77,8 +77,8 @@ public class BounceTest {
 
         bounce.service(mail);
 
-        FakeMailContext.SentMail expected = new FakeMailContext.SentMail.Builder()
-            .recipients(Lists.newArrayList(senderMailAddress))
+        FakeMailContext.SentMail expected = FakeMailContext.sentMailBuilder()
+            .recipient(senderMailAddress)
             .build();
         assertThat(fakeMailContext.getSentMails()).containsOnly(expected);
     }

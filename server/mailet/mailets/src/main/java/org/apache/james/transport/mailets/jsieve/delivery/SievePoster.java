@@ -48,14 +48,15 @@ public class SievePoster implements Poster {
         } else {
             String scheme = url.substring(0, endOfScheme);
             if (scheme.equals("mailbox")) {
-                handleMailboxProtocol(url, mail, endOfScheme);
+                UserAndPath userAndPath = retrieveUserAndPath(url, endOfScheme);
+                mailboxAppender.appendAndUseSlashAsSeparator(mail, userAndPath.user, userAndPath.path, folder);
             } else {
                 throw new MessagingException("Unsupported protocol");
             }
         }
     }
 
-    private void handleMailboxProtocol(String url, MimeMessage mail, int endOfScheme) throws MessagingException {
+    private UserAndPath retrieveUserAndPath(String url, int endOfScheme) throws MessagingException {
         int startOfUser = endOfScheme + 3;
         int endOfUser = url.indexOf('@', startOfUser);
         int startOfHost = endOfUser + 1;
@@ -65,10 +66,10 @@ public class SievePoster implements Poster {
             throw new MessagingException("Shared mailbox is not supported");
         } else {
             String host = url.substring(startOfHost, endOfHost);
-            String user = parseUser(url, startOfUser, endOfUser, host);
+            String user = retrieveUser(url, startOfUser, endOfUser, host);
             String urlPath = parseUrlPath(url, endOfHost);
 
-            mailboxAppender.appendAndUseSlashAsSeparator(mail, user, urlPath, folder);
+            return new UserAndPath(user, urlPath);
         }
     }
 
@@ -81,7 +82,7 @@ public class SievePoster implements Poster {
         }
     }
 
-    private String parseUser(String url, int startOfUser, int endOfUser, String host) throws MessagingException {
+    private String retrieveUser(String url, int startOfUser, int endOfUser, String host) throws MessagingException {
         // lowerCase the user - see
         // https://issues.apache.org/jira/browse/JAMES-1369
         String user = url.substring(startOfUser, endOfUser).toLowerCase();
@@ -90,6 +91,16 @@ public class SievePoster implements Poster {
             return usersRepos.getUser(new MailAddress(user, host));
         } catch (UsersRepositoryException e) {
             throw new MessagingException("Unable to accessUsersRepository", e);
+        }
+    }
+
+    private static class UserAndPath {
+        private final String user;
+        private final String path;
+
+        public UserAndPath(String user, String path) {
+            this.user = user;
+            this.path = path;
         }
     }
 }

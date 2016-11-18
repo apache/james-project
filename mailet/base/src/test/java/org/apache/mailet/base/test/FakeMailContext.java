@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -49,6 +50,10 @@ public class FakeMailContext implements MailetContext {
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    public static SentMail.Builder sentMailBuilder() {
+        return new SentMail.Builder();
     }
 
     public static FakeMailContext defaultContext() {
@@ -86,6 +91,11 @@ public class FakeMailContext implements MailetContext {
             public Builder recipients(Collection<MailAddress> recipients) {
                 this.recipients = Optional.of(recipients);
                 return this;
+            }
+
+            public Builder recipient(MailAddress recipient) {
+                Preconditions.checkNotNull(recipient);
+                return recipients(ImmutableList.of(recipient));
             }
 
             public Builder message(MimeMessage mimeMessage) {
