@@ -69,7 +69,7 @@ public class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
-            .mailStorer(mailStore)
+            .mailStore(mailStore)
             .consume(true)
             .build();
 
@@ -91,7 +91,7 @@ public class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
-            .mailStorer(mailStore)
+            .mailStore(mailStore)
             .consume(true)
             .build();
 
@@ -110,7 +110,7 @@ public class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
-            .mailStorer(mailStore)
+            .mailStore(mailStore)
             .consume(false)
             .build();
 
@@ -130,7 +130,7 @@ public class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
-            .mailStorer(mailStore)
+            .mailStore(mailStore)
             .consume(true)
             .build();
         doThrow(new MessagingException())
@@ -173,7 +173,7 @@ public class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
-            .mailStorer(mailStore)
+            .mailStore(mailStore)
             .consume(false)
             .build();
 
@@ -197,7 +197,7 @@ public class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
-            .mailStorer(mailStore)
+            .mailStore(mailStore)
             .consume(false)
             .build();
 
@@ -223,7 +223,7 @@ public class MailDispatcherTest {
         MailDispatcher testee = MailDispatcher.builder()
             .log(mock(Log.class))
             .mailetContext(fakeMailContext)
-            .mailStorer(accumulator)
+            .mailStore(accumulator)
             .consume(false)
             .build();
 

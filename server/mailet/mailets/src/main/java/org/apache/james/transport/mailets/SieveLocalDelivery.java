@@ -66,9 +66,7 @@ public class SieveLocalDelivery extends GenericMailet {
 
     public void service(Mail mail) throws MessagingException {
         recipientRewriteTable.service(mail);
-        if (!mail.getState().equals(Mail.GHOST)) {
-            mailDispatcher.dispatch(mail);
-        }
+        mailDispatcher.dispatch(mail);
     }
 
     public String getMailetInfo() {
@@ -85,7 +83,7 @@ public class SieveLocalDelivery extends GenericMailet {
             .build();
 
         mailDispatcher = MailDispatcher.builder()
-            .mailStorer(SieveMailStore.builder()
+            .mailStore(SieveMailStore.builder()
                 .sievePoster(new SievePoster(
                     new MailboxAppender(mailboxManager, getMailetContext().getLogger()),
                     MailboxConstants.INBOX,

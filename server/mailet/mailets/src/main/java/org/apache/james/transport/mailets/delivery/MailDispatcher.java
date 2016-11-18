@@ -45,7 +45,7 @@ public class MailDispatcher {
     }
 
     public static class Builder {
-        public static final boolean CONSUME_DEFAULT_VALUE = true;
+        public static final boolean CONSUME = true;
         private MailStore mailStore;
         private Optional<Boolean> consume = Optional.absent();
         private MailetContext mailetContext;
@@ -56,7 +56,7 @@ public class MailDispatcher {
             return this;
         }
 
-        public Builder mailStorer(MailStore mailStore) {
+        public Builder mailStore(MailStore mailStore) {
             this.mailStore = mailStore;
             return this;
         }
@@ -75,7 +75,7 @@ public class MailDispatcher {
             Preconditions.checkNotNull(mailStore);
             Preconditions.checkNotNull(log);
             Preconditions.checkNotNull(mailetContext);
-            return new MailDispatcher(mailStore, consume.or(CONSUME_DEFAULT_VALUE), log, mailetContext);
+            return new MailDispatcher(mailStore, consume.or(CONSUME), log, mailetContext);
         }
 
     }
@@ -116,15 +116,23 @@ public class MailDispatcher {
         // This only works because there is a placeholder inserted by MimeMessageWrapper
         message.setHeader(RFC2822Headers.RETURN_PATH, DeliveryUtils.prettyPrint(mail.getSender()));
 
+        List<String> deliveredToHeader = removeDeliveryHeaders(message);
+        Collection<MailAddress> errors = deliver(mail, message);
+        putDeliveryHeadersBack(message, deliveredToHeader);
+
+        return errors;
+    }
+
+    private List<String> removeDeliveryHeaders(MimeMessage message) throws MessagingException {
         List<String> deliveredToHeader = Arrays.asList(Optional.fromNullable(message.getHeader(DELIVERED_TO)).or(NO_HEADERS));
         message.removeHeader(DELIVERED_TO);
+        return deliveredToHeader;
+    }
 
-        Collection<MailAddress> errors = deliver(mail, message);
-
+    private void putDeliveryHeadersBack(MimeMessage message, List<String> deliveredToHeader) throws MessagingException {
         for (String deliveredTo : deliveredToHeader) {
             message.addHeader(DELIVERED_TO, deliveredTo);
         }
-        return errors;
     }
 
     private Collection<MailAddress> deliver(Mail mail, MimeMessage message) {

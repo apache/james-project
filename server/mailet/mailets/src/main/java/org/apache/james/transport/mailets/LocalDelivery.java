@@ -63,9 +63,7 @@ public class LocalDelivery extends GenericMailet {
 
     public void service(Mail mail) throws MessagingException {
         recipientRewriteTable.service(mail);
-        if (!mail.getState().equals(Mail.GHOST)) {
-            mailDispatcher.dispatch(mail);
-        }
+        mailDispatcher.dispatch(mail);
     }
 
     public String getMailetInfo() {
@@ -82,7 +80,7 @@ public class LocalDelivery extends GenericMailet {
             .build();
 
         mailDispatcher = MailDispatcher.builder()
-            .mailStorer(SimpleMailStore.builder()
+            .mailStore(SimpleMailStore.builder()
                 .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext().getLogger()))
                 .usersRepository(usersRepository)
                 .folder(MailboxConstants.INBOX)

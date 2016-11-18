@@ -71,9 +71,7 @@ public class SieveToRecipientFolder extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        if (!mail.getState().equals(Mail.GHOST)) {
-            mailDispatcher.dispatch(mail);
-        }
+        mailDispatcher.dispatch(mail);
     }
 
     @Override
@@ -85,7 +83,7 @@ public class SieveToRecipientFolder extends GenericMailet {
             .build();
         String folder = getInitParameter(FOLDER_PARAMETER, MailboxConstants.INBOX);
         mailDispatcher = MailDispatcher.builder()
-            .mailStorer(SieveMailStore.builder()
+            .mailStore(SieveMailStore.builder()
                 .sievePoster(new SievePoster(new MailboxAppender(mailboxManager, getMailetContext().getLogger()), folder, usersRepository))
                 .usersRepository(usersRepository)
                 .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))

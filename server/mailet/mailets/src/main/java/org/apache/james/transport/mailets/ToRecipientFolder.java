@@ -66,9 +66,7 @@ public class ToRecipientFolder extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        if (!mail.getState().equals(Mail.GHOST)) {
-            mailDispatcher.dispatch(mail);
-        }
+        mailDispatcher.dispatch(mail);
     }
 
     @Override
@@ -79,7 +77,7 @@ public class ToRecipientFolder extends GenericMailet {
             .verbose(getInitParameter("verbose", false))
             .build();
         mailDispatcher = MailDispatcher.builder()
-            .mailStorer(SimpleMailStore.builder()
+            .mailStore(SimpleMailStore.builder()
                 .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext().getLogger()))
                 .usersRepository(usersRepository)
                 .folder(getInitParameter(FOLDER_PARAMETER, MailboxConstants.INBOX))
