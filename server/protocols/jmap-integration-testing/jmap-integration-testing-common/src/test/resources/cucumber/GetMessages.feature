@@ -207,3 +207,10 @@ Feature: GetMessages method
     And the list should contain 1 message
     And the textBody of the message is "Hello text body\n"
     And the htmlBody of the message is "<html>Hello html body</html>\n"
+    
+Scenario: Retrieving message with more than 1000 char by line should return message when exists
+    Given the user has a message in "inbox" mailbox beginning by a long line
+    When the user ask for messages "["username@domain.tld|inbox|1"]"
+    Then no error is returned
+    And the list should contain 1 message
+    And the id of the message is "username@domain.tld|inbox|1"

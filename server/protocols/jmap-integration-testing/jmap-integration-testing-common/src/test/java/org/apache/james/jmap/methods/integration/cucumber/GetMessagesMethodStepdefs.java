@@ -150,6 +150,11 @@ public class GetMessagesMethodStepdefs {
         appendMessage("eml/multipartRelated.eml");
     }
 
+    @Given("^the user has a message in \"([^\"]*)\" mailbox beginning by a long line$")
+    public void appendMessageBeginningByALongLine(String mailbox) throws Throwable {
+        appendMessage("eml/longLine.eml");
+    }
+
     private void appendMessage(String emlFileName) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         mainStepdefs.jmapServer.serverProbe().appendMessage(userStepdefs.lastConnectedUser, 
