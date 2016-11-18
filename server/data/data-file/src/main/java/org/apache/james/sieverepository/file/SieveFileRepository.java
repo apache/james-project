@@ -342,7 +342,7 @@ public class SieveFileRepository implements SieveRepository {
         try {
             content = toString(new File(dir, FILE_NAME_ACTIVE), UTF_8);
         } catch (FileNotFoundException ex) {
-            throw new ScriptNotFoundException("There is no active script.");
+            throw new ScriptNotFoundException("There is no active script for user " + user);
         }
         return new File(dir, content);
     }
