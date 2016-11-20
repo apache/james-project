@@ -25,6 +25,7 @@ import java.io.IOException;
 import javax.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
+import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.delivery.DeliveryUtils;
 import org.apache.james.transport.mailets.jsieve.ActionDispatcher;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
@@ -126,21 +127,16 @@ public class SieveExecutor {
         Preconditions.checkNotNull(mail.getMessage(), "Mail message to be spooled cannot be null.");
 
         sieveMessage(recipient, mail, log);
-        // If no exception was thrown the message was successfully stored in the mailbox
-        log.info("Local delivered mail " + mail.getName() + " sucessfully from " + DeliveryUtils.prettyPrint(mail.getSender()) + " to " + DeliveryUtils.prettyPrint(recipient)
-            + " in folder " + this.folder);
     }
 
     protected void sieveMessage(MailAddress recipient, Mail aMail, Log log) throws MessagingException {
         try {
             ResourceLocator.UserSieveInformation userSieveInformation = resourceLocator.get(getScriptUri(recipient));
             sieveMessageEvaluate(recipient, aMail, userSieveInformation, log);
+        } catch (ScriptNotFoundException e) {
+            log.info("Can not locate SIEVE script for user " + recipient.asPrettyString());
         } catch (Exception ex) {
-            // SIEVE is a mail filtering protocol.
-            // Rejecting the mail because it cannot be filtered
-            // seems very unfriendly.
-            // So just log and store in INBOX
-            log.error("Cannot evaluate Sieve script. Storing mail in user INBOX.", ex);
+            log.error("Cannot evaluate Sieve script for user " + recipient.asPrettyString(), ex);
         }
     }
 
