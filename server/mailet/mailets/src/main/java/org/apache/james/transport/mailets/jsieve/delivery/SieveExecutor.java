@@ -141,7 +141,6 @@ public class SieveExecutor {
             // seems very unfriendly.
             // So just log and store in INBOX
             log.error("Cannot evaluate Sieve script. Storing mail in user INBOX.", ex);
-            storeMessageInbox(recipient, aMail);
         }
     }
 
@@ -171,10 +170,6 @@ public class SieveExecutor {
 
     protected void handleFailure(MailAddress recipient, Mail aMail, Exception ex) throws MessagingException, IOException {
         mailetContext.sendMail(recipient, ImmutableList.of(recipient), SieveFailureMessageComposer.composeMessage(aMail, ex, recipient.toString()));
-    }
-
-    protected void storeMessageInbox(MailAddress mailAddress, Mail mail) throws MessagingException {
-        sievePoster.post("mailbox://" + retrieveUserNameUsedForScriptStorage(mailAddress) + "/", mail);
     }
 
     public String retrieveUserNameUsedForScriptStorage(MailAddress mailAddress) {
