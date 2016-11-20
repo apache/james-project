@@ -54,7 +54,7 @@ public class Sieve extends GenericMailet {
 
     @Inject
     public Sieve(UsersRepository usersRepository, SieveRepository sieveRepository) throws MessagingException {
-        this(usersRepository, ResourceLocatorImpl.instanciate(usersRepository, sieveRepository));
+        this(usersRepository, new ResourceLocator(sieveRepository, usersRepository));
     }
 
     public Sieve(UsersRepository usersRepository, ResourceLocator resourceLocator) throws MessagingException {
@@ -76,7 +76,6 @@ public class Sieve extends GenericMailet {
             .build();
         sieveExecutor = SieveExecutor.builder()
             .resourceLocator(resourceLocator)
-            .usersRepository(usersRepository)
             .mailetContext(getMailetContext())
             .log(log)
             .sievePoster(new SievePoster(usersRepository, MailboxConstants.INBOX))

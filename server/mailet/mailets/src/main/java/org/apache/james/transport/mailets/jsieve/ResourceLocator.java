@@ -18,46 +18,17 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.jsieve;
 
+import org.apache.james.sieverepository.api.SieveRepository;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.mailet.MailAddress;
 import org.joda.time.DateTime;
 
 import java.io.InputStream;
 
-/**
- * <p>Experimental API locates resources. 
- * Used to load Sieve scripts. The base for relative URLs
- * should be taken to be the root of the James configuration.
- * </p><p>
- * Required schemas:
- * </p>
- * <ul>
- * <li><strong>User sieve scripts</strong> - the relative URL scheme 
- * <code>//<em>user</em>@<em>host</em>/<em>sieve</em> will be used to
- * obtain the script
- * </ul>
- * <p>
- * The advantage of using <code>URI</code>s 
- * and verbs (for example <code>GET</code>, <code>POST</code>)
- * are their uniformity. The same API can be used to interface radically
- * different resource types and protocols. This allows concise, minimal,
- * powerful APIs to be created. Their simplicity is easy to preserved 
- * across versions. 
- * </p><p>
- * The disadvantage is that this free decouple means that there is 
- * no gaurantee that the implementations decoupled by this interface
- * actually support the same scheme. Issues will be caught only 
- * at deployment and not at compile time.
- * This places a larger burden on the deployer.
- * </p><p>
- * Either an understanding or a consistent URL mapping scheme may be 
- * required. For example, <code>//john.smith@localhost/sieve</code>
- * may need to be resolved to <code>../apps/james/var/sieve/john.smith@localhost.sieve</code>
- * when using the file system to store scripts. Note that names <strong>MUST</strong>
- * be normalised before resolving on a file system.
- * </p>
- */
-public interface ResourceLocator {
+public class ResourceLocator {
 
-    class UserSieveInformation {
+    public static class UserSieveInformation {
         private DateTime scriptActivationDate;
         private DateTime scriptInterpretationDate;
         private InputStream scriptContent;
@@ -81,12 +52,26 @@ public interface ResourceLocator {
         }
     }
 
-    /**
-     * GET verb locates and loads a resource. 
-     * @param uri identifies the Sieve script 
-     * @return not null
-     * @throws Exception when the resource cannot be located
-     */
-    UserSieveInformation get(String uri) throws Exception;
+    private final SieveRepository sieveRepository;
+    private final UsersRepository usersRepository;
+
+    public ResourceLocator(SieveRepository sieveRepository, UsersRepository usersRepository) {
+        this.sieveRepository = sieveRepository;
+        this.usersRepository = usersRepository;
+    }
+
+    public UserSieveInformation get(MailAddress mailAddress) throws Exception {
+        String username = retrieveUsername(mailAddress);
+        return new UserSieveInformation(sieveRepository.getActivationDateForActiveScript(username), DateTime.now(), sieveRepository.getActive(username));
+    }
+
+    private String retrieveUsername(MailAddress mailAddress) {
+        try {
+            return usersRepository.getUser(mailAddress);
+        } catch (UsersRepositoryException e) {
+
+            return mailAddress.asString();
+        }
+    }
 
 }

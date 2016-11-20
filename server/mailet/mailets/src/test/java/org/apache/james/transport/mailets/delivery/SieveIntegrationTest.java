@@ -92,10 +92,23 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOn() throws Exception {
+    public void serviceShouldNotModifyEmailWhenErrorRetrievingScript() throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
         when(usersRepository.getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(RECEIVER_DOMAIN_COM);
-        when(resourceLocator.get(RECEIVER_DOMAIN_COM)).thenThrow(new ScriptNotFoundException());
+        when(resourceLocator.get(new MailAddress(RECEIVER_DOMAIN_COM))).thenThrow(new ScriptNotFoundException());
+
+        FakeMail mail = createMail();
+        testee.service(mail);
+
+        assertThat(mail.getAttribute(MailStore.DELIVERY_PATH_PREFIX + RECEIVER_DOMAIN_COM)).isNull();
+        assertThat(mail.getState()).isEqualTo(Mail.DEFAULT);
+    }
+
+    @Test
+    public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOn() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/keep.script");
+        when(usersRepository.supportVirtualHosting()).thenReturn(true);
+        when(usersRepository.getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(RECEIVER_DOMAIN_COM);
 
         FakeMail mail = createMail();
         testee.service(mail);
@@ -105,9 +118,9 @@ public class SieveIntegrationTest {
 
     @Test
     public void mailShouldBeWellDeliveredByDefaultToUserWhenvirtualHostingIsTurnedOff() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/keep.script");
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
         when(usersRepository.getUser(new MailAddress("receiver@localhost"))).thenReturn("receiver");
-        when(resourceLocator.get("receiver")).thenThrow(new ScriptNotFoundException());
 
         FakeMail mail = createMail();
         testee.service(mail);
@@ -914,7 +927,7 @@ public class SieveIntegrationTest {
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
         when(usersRepository.getUser(new MailAddress(LOCAL_PART + "@localhost"))).thenReturn(LOCAL_PART);
         when(usersRepository.getUser(new MailAddress(LOCAL_PART + "@domain.com"))).thenReturn(LOCAL_PART);
-        when(resourceLocator.get("//" + LOCAL_PART + "@localhost/sieve")).thenReturn(new ResourceLocator.UserSieveInformation(scriptCreationDate,
+        when(resourceLocator.get(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(new ResourceLocator.UserSieveInformation(scriptCreationDate,
             scriptExecutionDate,
             ClassLoader.getSystemResourceAsStream(script)));
     }

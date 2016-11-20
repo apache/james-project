@@ -26,12 +26,9 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.apache.james.transport.mailets.delivery.DeliveryUtils;
 import org.apache.james.transport.mailets.jsieve.ActionDispatcher;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.transport.mailets.jsieve.SieveMailAdapter;
-import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.jsieve.ConfigurationManager;
 import org.apache.jsieve.SieveConfigurationException;
 import org.apache.jsieve.SieveFactory;
@@ -53,15 +50,9 @@ public class SieveExecutor {
 
     public static class Builder {
         private MailetContext mailetContext;
-        private UsersRepository usersRepos;
         private SievePoster sievePoster;
         private ResourceLocator resourceLocator;
         private Log log;
-
-        public Builder usersRepository(UsersRepository usersRepository) {
-            this.usersRepos = usersRepository;
-            return this;
-        }
 
         public Builder sievePoster(SievePoster sievePoster) {
             this.sievePoster = sievePoster;
@@ -85,26 +76,23 @@ public class SieveExecutor {
 
         public SieveExecutor build() throws MessagingException {
             Preconditions.checkNotNull(mailetContext);
-            Preconditions.checkNotNull(usersRepos);
             Preconditions.checkNotNull(resourceLocator);
             Preconditions.checkNotNull(log);
             Preconditions.checkNotNull(sievePoster);
-            return new SieveExecutor(mailetContext, usersRepos, sievePoster, resourceLocator, log);
+            return new SieveExecutor(mailetContext, sievePoster, resourceLocator, log);
         }
     }
 
     private final MailetContext mailetContext;
-    private final UsersRepository usersRepos;
     private final SievePoster sievePoster;
     private final ResourceLocator resourceLocator;
     private final SieveFactory factory;
     private final ActionDispatcher actionDispatcher;
     private final Log log;
 
-    public SieveExecutor(MailetContext mailetContext, UsersRepository usersRepos, SievePoster sievePoster,
+    public SieveExecutor(MailetContext mailetContext, SievePoster sievePoster,
                          ResourceLocator resourceLocator, Log log) throws MessagingException {
         this.mailetContext = mailetContext;
-        this.usersRepos = usersRepos;
         this.sievePoster = sievePoster;
         this.resourceLocator = resourceLocator;
         factory = createFactory(log);
@@ -131,7 +119,7 @@ public class SieveExecutor {
 
     protected void sieveMessage(MailAddress recipient, Mail aMail, Log log) throws MessagingException {
         try {
-            ResourceLocator.UserSieveInformation userSieveInformation = resourceLocator.get(getScriptUri(recipient));
+            ResourceLocator.UserSieveInformation userSieveInformation = resourceLocator.get(recipient);
             sieveMessageEvaluate(recipient, aMail, userSieveInformation, log);
         } catch (ScriptNotFoundException e) {
             log.info("Can not locate SIEVE script for user " + recipient.asPrettyString());
@@ -147,7 +135,7 @@ public class SieveExecutor {
                 userSieveInformation.getScriptInterpretationDate(), recipient);
             aMailAdapter.setLog(log);
             // This logging operation is potentially costly
-            log.debug("Evaluating " + aMailAdapter.toString() + "against \"" + getScriptUri(recipient) + "\"");
+            log.debug("Evaluating " + aMailAdapter.toString() + " against \"" + recipient.asPrettyString() + "\"");
             factory.evaluate(aMailAdapter, factory.parse(userSieveInformation.getScriptContent()));
         } catch (SieveException ex) {
             handleFailure(recipient, aMail, ex);
@@ -160,24 +148,7 @@ public class SieveExecutor {
         }
     }
 
-    protected String getScriptUri(MailAddress m) {
-        return "//" + retrieveUserNameUsedForScriptStorage(m) + "/sieve";
-    }
-
     protected void handleFailure(MailAddress recipient, Mail aMail, Exception ex) throws MessagingException, IOException {
         mailetContext.sendMail(recipient, ImmutableList.of(recipient), SieveFailureMessageComposer.composeMessage(aMail, ex, recipient.toString()));
-    }
-
-    public String retrieveUserNameUsedForScriptStorage(MailAddress mailAddress) {
-        try {
-            if (usersRepos.supportVirtualHosting()) {
-                return mailAddress.asString();
-            } else {
-                return mailAddress.getLocalPart() + "@localhost";
-            }
-        } catch (UsersRepositoryException e) {
-            log.warn("Can not determine if virtual hosting is used for " + mailAddress.asPrettyString(), e);
-            return mailAddress.getLocalPart() + "@localhost";
-        }
     }
 }
