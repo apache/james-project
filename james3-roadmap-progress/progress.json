@@ -8,22 +8,22 @@
    },
    {
      "name" : "Make a marketing James 3.0 website",
-     "completion" : 60,
+     "completion" : 80,
      "complexity" : 30
    },
    {
      "name" : "Assign a unique Id to message entity (and handle move and move to trash)",
-     "completion" : 40,
+     "completion" : 50,
      "complexity" : 50
    },
    {
      "name" : "Deploy James @ Linagora",
-     "completion" : 60,
+     "completion" : 70,
      "complexity" : 10
    },
    {
      "name" : "Gatling load and endurance testing",
-     "completion" : 40,
+     "completion" : 60,
      "complexity" : 30
    },
    {
@@ -38,7 +38,7 @@
    },
    {
      "name" : "Complete IMAP METADATA implementation",
-     "completion" : 50,
+     "completion" : 100,
      "complexity" : 15
    },
    {
@@ -48,12 +48,12 @@
    },
    {
      "name" : "Make sure default (JPA + Lucene) backends work well",
-     "completion" : 90,
+     "completion" : 80,
      "complexity" : 10
    },
    {
      "name" : "Implement a Guice JPA + Lucene module",
-     "completion" : 0,
+     "completion" : 50,
      "complexity" : 5
    },
    {
@@ -63,18 +63,24 @@
    },
    {
      "name" : "bug triaging",
-     "completion" : 0,
+     "completion" : 10,
      "complexity" : 5
    },
+  {
+   "name", "TTN",
+   "completion" : 0,
+   "complexity": 10
+  },
    {
      "name": "Mailet refactor",
      "children": [        
-        {"name": "AbstractNotify", "completion": 60, "complexity" : 10},
+        {"name": "AbstractNotify", "completion": 80, "complexity" : 10},
+        {"name": "LocalDelivery", "completion": 60, "complexity" : 10},
         {"name": "RemoteDelivery", "completion": 0, "complexity" : 10},
-        {"name": "RecipientRewriteTable", "completion": 80, "complexity" : 5},
+        {"name": "RecipientRewriteTable", "completion": 90, "complexity" : 5},
         {"name": "All other mailets", "completion": 100, "complexity" : 25}
      ],
-     "complexity" : 50
+     "complexity" : 60
     }
  ]
 }
