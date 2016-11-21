@@ -22,7 +22,6 @@ package org.apache.james.transport.mailets.delivery;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-
 import java.util.Properties;
 
 import javax.activation.DataHandler;
@@ -36,7 +35,6 @@ import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.model.FetchGroupImpl;
@@ -44,7 +42,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
-import org.apache.mailet.MailetContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
