@@ -67,7 +67,7 @@
      "complexity" : 5
    },
   {
-   "name", "TTN",
+   "name": "TTN",
    "completion" : 0,
    "complexity": 10
   },
