@@ -26,7 +26,6 @@ import javax.mail.MessagingException;
 
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,7 +49,10 @@ public class SenderIsRegexTest {
 
     @Test
     public void shouldMatchOnMatchingPattern() throws Exception {
-        matcher.init(new FakeMatcherConfig("SenderIsRegex=.*@.*", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderIsRegex")
+                .condition(".*@.*")
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .sender(new MailAddress(SENDER_NAME))
@@ -62,7 +64,10 @@ public class SenderIsRegexTest {
 
     @Test
     public void shouldNotMatchSubParts() throws Exception {
-        matcher.init(new FakeMatcherConfig("SenderIsRegex=test", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderIsRegex")
+                .condition("test")
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .sender(new MailAddress(SENDER_NAME))
@@ -74,7 +79,10 @@ public class SenderIsRegexTest {
 
     @Test
     public void shouldNotMatchWhenNullSender() throws Exception {
-        matcher.init(new FakeMatcherConfig("SenderIsRegex=.*@.*", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderIsRegex")
+                .condition(".*@.*")
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .recipient(recipient)
@@ -85,7 +93,10 @@ public class SenderIsRegexTest {
 
     @Test
     public void shouldNotMatchOnNonMatchingPattern() throws Exception {
-        matcher.init(new FakeMatcherConfig("SenderIsRegex=^\\.", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderIsRegex")
+                .condition("^\\.")
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .sender(new MailAddress(SENDER_NAME))
@@ -98,18 +109,25 @@ public class SenderIsRegexTest {
     @Test
     public void initShouldThrowWhenEmptyCondition() throws MessagingException {
         expectedException.expect(MessagingException.class);
-        matcher.init(new FakeMatcherConfig("SenderIsRegex=", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderIsRegex")
+                .build());
     }
 
     @Test
     public void initShouldThrowWhenNoConditions() throws MessagingException {
         expectedException.expect(MessagingException.class);
-        matcher.init(new FakeMatcherConfig("SenderIsRegex", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderIsRegex")
+                .build());
     }
 
     @Test
     public void initShouldThrowWhenInvalidPattern() throws MessagingException {
         expectedException.expect(MessagingException.class);
-        matcher.init(new FakeMatcherConfig("SenderIsRegex=(.", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderIsRegex")
+                .condition("(.")
+                .build());
     }
 }

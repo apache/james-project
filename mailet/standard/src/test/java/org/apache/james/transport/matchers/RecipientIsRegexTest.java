@@ -27,7 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.MessagingException;
 
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,7 +47,10 @@ public class RecipientIsRegexTest {
 
     @Test
     public void shouldMatchOneAddress() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("RecipientIsRegex=.*@.*", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("RecipientIsRegex")
+                .condition(".*@.*")
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .recipient(ANY_AT_JAMES)
@@ -59,7 +61,10 @@ public class RecipientIsRegexTest {
 
     @Test
     public void shouldNotMatchPartially() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("RecipientIsRegex=any", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("RecipientIsRegex")
+                .condition("any")
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .recipient(ANY_AT_JAMES)
@@ -70,7 +75,10 @@ public class RecipientIsRegexTest {
 
     @Test
     public void shouldMatchOnlyMatchingPatterns() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("RecipientIsRegex=^any@.*", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("RecipientIsRegex")
+                .condition("^any@.*")
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
@@ -81,7 +89,10 @@ public class RecipientIsRegexTest {
 
     @Test
     public void shouldNotMatchNonMatchingPatterns() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("RecipientIsRegex=.*\\+", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("RecipientIsRegex")
+                .condition(".*\\+")
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
@@ -93,18 +104,25 @@ public class RecipientIsRegexTest {
     @Test
     public void testRegexIsNotMatchedCauseError() throws MessagingException {
         expectedException.expect(MessagingException.class);
-        matcher.init(new FakeMatcherConfig("RecipientIsRegex=(.", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("RecipientIsRegex")
+                .condition("(.")
+                .build());
     }
 
     @Test
     public void testThrowExceptionWithEmptyPattern() throws MessagingException {
         expectedException.expect(MessagingException.class);
-        matcher.init(new FakeMatcherConfig("RecipientIsRegex=", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("RecipientIsRegex")
+                .build());
     }
 
     @Test
     public void testThrowExceptionWithNoCondition() throws MessagingException {
         expectedException.expect(MessagingException.class);
-        matcher.init(new FakeMatcherConfig("RecipientIsRegex", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("RecipientIsRegex")
+                .build());
     }
 }

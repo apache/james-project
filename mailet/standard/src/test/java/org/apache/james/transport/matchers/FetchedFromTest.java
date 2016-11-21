@@ -27,7 +27,6 @@ import javax.mail.MessagingException;
 
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
@@ -42,7 +41,11 @@ public class FetchedFromTest {
     @Before
     public void setUp() throws MessagingException {
         matcher = new FetchedFrom();
-        FakeMatcherConfig matcherConfig = new FakeMatcherConfig("FetchedFrom=" + EXPECTED_HEADER_VALUE, FakeMailContext.defaultContext());
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+                .matcherName("FetchedFrom")
+                .condition(EXPECTED_HEADER_VALUE)
+                .build();
+
         matcher.init(matcherConfig);
     }
 

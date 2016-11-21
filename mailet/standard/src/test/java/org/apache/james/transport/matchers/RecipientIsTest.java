@@ -26,8 +26,8 @@ import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
+
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,7 +48,10 @@ public class RecipientIsTest {
 
     @Test
     public void shouldMatchCorrespondingAddres() throws Exception {
-        matcher.init(new FakeMatcherConfig("RecipientIs=" + ANY_AT_JAMES.toString(), FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("RecipientIs")
+                .condition(ANY_AT_JAMES.toString())
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .recipient(ANY_AT_JAMES)
@@ -59,7 +62,10 @@ public class RecipientIsTest {
 
     @Test
     public void shouldOnlyMatchCorrespondingAddress() throws Exception {
-        matcher.init(new FakeMatcherConfig("RecipientIs=" + ANY_AT_JAMES.toString(), FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("RecipientIs")
+                .condition(ANY_AT_JAMES.toString())
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
@@ -70,7 +76,10 @@ public class RecipientIsTest {
 
     @Test
     public void shouldNotMatchUnrelatedAddresses() throws Exception {
-        matcher.init(new FakeMatcherConfig("RecipientIs=" + ANY_AT_JAMES.toString(), FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("RecipientIs")
+                .condition(ANY_AT_JAMES.toString())
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .recipients(OTHER_AT_JAMES, ANY_AT_JAMES2)
@@ -82,18 +91,25 @@ public class RecipientIsTest {
     @Test
     public void initShouldThrowOnMissingCondition() throws Exception {
         expectedException.expect(MessagingException.class);
-        matcher.init(new FakeMatcherConfig("RecipientIs", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("RecipientIs")
+                .build());
     }
 
     @Test
     public void initShouldThrowOnEmptyCondition() throws Exception {
         expectedException.expect(MessagingException.class);
-        matcher.init(new FakeMatcherConfig("RecipientIs=", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("RecipientIs")
+                .build());
     }
 
     @Test
     public void shouldBeAbleToMatchSeveralAddresses() throws Exception {
-        matcher.init(new FakeMatcherConfig("RecipientIs=" + ANY_AT_JAMES.toString() + ", " + ANY_AT_JAMES2.toString(), FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("RecipientIs")
+                .condition(ANY_AT_JAMES + ", " + ANY_AT_JAMES2)
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES, ANY_AT_JAMES2)

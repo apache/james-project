@@ -29,7 +29,6 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Assert;
@@ -62,7 +61,10 @@ public class NESSpamCheckTest {
     private void setupMatcher() throws MessagingException {
         setupMockedMimeMessage();
         matcher = new NESSpamCheck();
-        FakeMatcherConfig mci = new FakeMatcherConfig("NESSpamCheck", FakeMailContext.defaultContext());
+        FakeMatcherConfig mci = FakeMatcherConfig.builder()
+                .matcherName("NESSpamCheck")
+                .build();
+
         matcher.init(mci);
     }
 

@@ -29,7 +29,6 @@ import javax.mail.MessagingException;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +47,11 @@ public class RemoteAddrNotInNetworkTest {
                 return InetAddress.getByName(host);
             }
         };
-        matcherConfig = new FakeMatcherConfig("AllowedNetworkIs=192.168.200.0/24", FakeMailContext.defaultContext());
+        matcherConfig = FakeMatcherConfig.builder()
+                .matcherName("AllowedNetworkIs")
+                .condition("192.168.200.0/24")
+                .build();
+
         matcher = new RemoteAddrNotInNetwork();
         matcher.setDNSService(dnsServer);
         matcher.init(matcherConfig);
@@ -81,7 +84,10 @@ public class RemoteAddrNotInNetworkTest {
 
     @Test
     public void shouldMatchWhenNoCondition() throws MessagingException {
-        matcherConfig = new FakeMatcherConfig("", FakeMailContext.defaultContext());
+        matcherConfig = FakeMatcherConfig.builder()
+                .matcherName("")
+                .build();
+
         matcher = new RemoteAddrNotInNetwork();
         matcher.init(matcherConfig);
 

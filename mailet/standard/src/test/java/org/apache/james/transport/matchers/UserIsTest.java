@@ -29,7 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.MessagingException;
 
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,7 +49,10 @@ public class UserIsTest {
 
     @Test
     public void shouldMatchCorrespondingUser() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("UserIs=any", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("UserIs")
+                .condition("any")
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .recipient(ANY_AT_JAMES)
@@ -61,7 +63,10 @@ public class UserIsTest {
 
     @Test
     public void shouldMatchCorrespondingUserAccrossDomains() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("UserIs=any", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("UserIs")
+                .condition("any")
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .recipients(ANY_AT_JAMES, ANY_AT_JAMES2)
@@ -72,7 +77,10 @@ public class UserIsTest {
 
     @Test
     public void shouldNotMatchNonSpecifiedUsersButPreserveSpecifiedUsers() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("UserIs=any", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("UserIs")
+                .condition("any")
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
@@ -83,7 +91,10 @@ public class UserIsTest {
 
     @Test
     public void shouldNotMatchNonSpecifiedUsers() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("UserIs=any", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("UserIs")
+                .condition("any")
+                .build());
 
         FakeMail fakeMail = FakeMail.builder()
             .recipients(OTHER_AT_JAMES)
@@ -95,12 +106,16 @@ public class UserIsTest {
     @Test
     public void initShouldThrowOnMissingCondition() throws Exception {
         expectedException.expect(MessagingException.class);
-        matcher.init(new FakeMatcherConfig("UserIs", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("UserIs")
+                .build());
     }
 
     @Test
     public void initShouldThrowOnEmptyCondition() throws Exception {
         expectedException.expect(MessagingException.class);
-        matcher.init(new FakeMatcherConfig("UserIs=", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("UserIs")
+                .build());
     }
 }

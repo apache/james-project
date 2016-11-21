@@ -28,7 +28,6 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.GenericMatcher;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
 
@@ -68,9 +67,13 @@ public abstract class AbstractHasMailAttributeTest extends TestCase {
 
     protected void setupMatcher() throws MessagingException {
         matcher = createMatcher();
-        FakeMatcherConfig mci = new FakeMatcherConfig(getConfigOption()
-                + getHasMailAttribute(), FakeMailContext.defaultContext());
+        FakeMatcherConfig mci = FakeMatcherConfig.builder()
+                .matcherName(getMatcherName())
+                .condition(getHasMailAttribute())
+                .build();
+
         matcher.init(mci);
+
     }
 
     // test if the mail attribute was matched
@@ -109,5 +112,5 @@ public abstract class AbstractHasMailAttributeTest extends TestCase {
 
     protected abstract GenericMatcher createMatcher();
 
-    protected abstract String getConfigOption();
+    protected abstract String getMatcherName();
 }

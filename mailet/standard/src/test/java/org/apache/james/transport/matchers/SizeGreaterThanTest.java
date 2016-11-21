@@ -27,7 +27,6 @@ import javax.mail.MessagingException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Rule;
@@ -53,7 +52,11 @@ public class SizeGreaterThanTest {
             .recipient(ANY_AT_JAMES)
             .build();
 
-        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1m", FakeMailContext.defaultContext());
+        FakeMatcherConfig matcherConfiguration = FakeMatcherConfig.builder()
+                .matcherName("SizeGreaterThan")
+                .condition("1m")
+                .build();
+
         matcher.init(matcherConfiguration);
 
         assertThat(matcher.match(mail)).containsExactly(ANY_AT_JAMES);
@@ -66,7 +69,11 @@ public class SizeGreaterThanTest {
             .recipient(ANY_AT_JAMES)
             .build();
 
-        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1m", FakeMailContext.defaultContext());
+        FakeMatcherConfig matcherConfiguration = FakeMatcherConfig.builder()
+                .matcherName("SizeGreaterThan")
+                .condition("1m")
+                .build();
+
         matcher.init(matcherConfiguration);
 
         assertThat(matcher.match(mail)).isNull();
@@ -79,7 +86,11 @@ public class SizeGreaterThanTest {
             .recipient(ANY_AT_JAMES)
             .build();
 
-        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1k", FakeMailContext.defaultContext());
+        FakeMatcherConfig matcherConfiguration = FakeMatcherConfig.builder()
+                .matcherName("SizeGreaterThan")
+                .condition("1k")
+                .build();
+
         matcher.init(matcherConfiguration);
 
         assertThat(matcher.match(mail)).isNull();
@@ -92,7 +103,11 @@ public class SizeGreaterThanTest {
             .recipient(ANY_AT_JAMES)
             .build();
 
-        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1k", FakeMailContext.defaultContext());
+        FakeMatcherConfig matcherConfiguration = FakeMatcherConfig.builder()
+                .matcherName("SizeGreaterThan")
+                .condition("1k")
+                .build();
+
         matcher.init(matcherConfiguration);
 
         assertThat(matcher.match(mail)).containsExactly(ANY_AT_JAMES);
@@ -105,7 +120,11 @@ public class SizeGreaterThanTest {
             .recipient(ANY_AT_JAMES)
             .build();
 
-        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=4", FakeMailContext.defaultContext());
+        FakeMatcherConfig matcherConfiguration = FakeMatcherConfig.builder()
+                .matcherName("SizeGreaterThan")
+                .condition("4")
+                .build();
+
         matcher.init(matcherConfiguration);
 
         assertThat(matcher.match(mail)).isNull();
@@ -118,7 +137,11 @@ public class SizeGreaterThanTest {
             .recipient(ANY_AT_JAMES)
             .build();
 
-        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=4", FakeMailContext.defaultContext());
+        FakeMatcherConfig matcherConfiguration = FakeMatcherConfig.builder()
+                .matcherName("SizeGreaterThan")
+                .condition("4")
+                .build();
+
         matcher.init(matcherConfiguration);
 
         assertThat(matcher.match(mail)).containsExactly(ANY_AT_JAMES);
@@ -127,19 +150,31 @@ public class SizeGreaterThanTest {
     @Test
     public void initShouldThrowOnInvalidUnits() throws Exception {
         expectedException.expect(MessagingException.class);
-        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1mb", FakeMailContext.defaultContext());
+        FakeMatcherConfig matcherConfiguration = FakeMatcherConfig.builder()
+                .matcherName("SizeGreaterThan")
+                .condition("1mb")
+                .build();
+
         matcher.init(matcherConfiguration);
     }
 
     @Test(expected = MessagingException.class)
     public void initShouldThrowOnNullSize() throws Exception {
-        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=0", FakeMailContext.defaultContext());
+        FakeMatcherConfig matcherConfiguration = FakeMatcherConfig.builder()
+                .matcherName("SizeGreaterThan")
+                .condition("0")
+                .build();
+
         matcher.init(matcherConfiguration);
     }
 
     @Test(expected = MessagingException.class)
     public void initShouldThrowOnNegativeSize() throws Exception {
-        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=-1", FakeMailContext.defaultContext());
+        FakeMatcherConfig matcherConfiguration = FakeMatcherConfig.builder()
+                .matcherName("SizeGreaterThan")
+                .condition("-1")
+                .build();
+
         matcher.init(matcherConfiguration);
     }
 }

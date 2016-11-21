@@ -44,7 +44,10 @@ public class RecipientIsLocalTest {
     public void setUp() throws Exception {
         mailetContext = mock(MailetContext.class);
         testee = new RecipientIsLocal();
-        testee.init(new FakeMatcherConfig(MATCHER_NAME, mailetContext));
+        testee.init(FakeMatcherConfig.builder()
+                .matcherName(MATCHER_NAME)
+                .mailetContext(mailetContext)
+                .build());
 
         mailAddress1 = new MailAddress("mail1@domain.com");
         mailAddress2 = new MailAddress("mail2@domain.com");

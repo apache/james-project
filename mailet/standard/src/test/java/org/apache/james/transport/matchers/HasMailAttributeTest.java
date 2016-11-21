@@ -36,8 +36,8 @@ public class HasMailAttributeTest extends AbstractHasMailAttributeTest {
         return MAIL_ATTRIBUTE_NAME;
     }
 
-    protected String getConfigOption() {
-        return "HasMailAttribute=";
+    protected String getMatcherName() {
+        return "HasMailAttribute";
     }
 
 }

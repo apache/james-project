@@ -31,7 +31,6 @@ import javax.mail.internet.MimeMessage;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,41 +46,58 @@ public class RelayLimitTest {
         testee = new RelayLimit();
         mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
         mail = FakeMail.builder()
-            .recipient(ANY_AT_JAMES)
-            .mimeMessage(mimeMessage)
-            .build();
+                .recipient(ANY_AT_JAMES)
+                .mimeMessage(mimeMessage)
+                .build();
     }
 
     @Test(expected = MessagingException.class)
     public void relayLimitShouldBeANumber() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=Abc", FakeMailContext.defaultContext()));
+        testee.init(FakeMatcherConfig.builder()
+                .matcherName("RelayLimit")
+                .condition("Abc")
+                .build());
     }
 
     @Test(expected = MessagingException.class)
     public void relayLimitShouldBeSpecified() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=", FakeMailContext.defaultContext()));
+        testee.init(FakeMatcherConfig.builder()
+                .matcherName("RelayLimit")
+                .build());
     }
 
     @Test(expected = MessagingException.class)
     public void relayLimitShouldNotBeNull() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=0", FakeMailContext.defaultContext()));
+        testee.init(FakeMatcherConfig.builder()
+                .matcherName("RelayLimit")
+                .condition("0")
+                .build());
     }
 
     @Test(expected = MessagingException.class)
-    public void relayLimitShouldNotBeEqualToZero() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=-1", FakeMailContext.defaultContext()));
+    public void relayLimitShouldThrowWhenConditionLessThanZero() throws Exception {
+        testee.init(FakeMatcherConfig.builder()
+                .matcherName("RelayLimit")
+                .condition("-1")
+                .build());
     }
-
     @Test
-    public void matchShouldReturnNullWhenNoReceivedHeader() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=2", FakeMailContext.defaultContext()));
+    public void shouldNotMatchWhenNoReceivedHeader() throws Exception {
+        testee.init(FakeMatcherConfig.builder()
+                .matcherName("RelayLimit")
+                .condition("2")
+                .build());
 
         assertThat(testee.match(mail)).isNull();
     }
 
+
     @Test
-    public void matchShouldReturnNullWhenNotEnoughReceivedHeader() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=2", FakeMailContext.defaultContext()));
+    public void shouldNotMatchWhenNotEnoughReceivedHeader() throws Exception {
+        testee.init(FakeMatcherConfig.builder()
+                .matcherName("RelayLimit")
+                .condition("2")
+                .build());
 
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
 
@@ -89,8 +105,11 @@ public class RelayLimitTest {
     }
 
     @Test
-    public void matchShouldReturnAddressWhenEqualToLimit() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=2", FakeMailContext.defaultContext()));
+    public void shouldMatchWhenEqualToLimit() throws Exception {
+        testee.init(FakeMatcherConfig.builder()
+                .matcherName("RelayLimit")
+                .condition("2")
+                .build());
 
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
@@ -99,8 +118,11 @@ public class RelayLimitTest {
     }
 
     @Test
-    public void matchShouldReturnAddressWhenOverLimit() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=2", FakeMailContext.defaultContext()));
+    public void shouldMatchWhenWhenOverLimit() throws Exception {
+        testee.init(FakeMatcherConfig.builder()
+                .matcherName("RelayLimit")
+                .condition("2")
+                .build());
 
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");

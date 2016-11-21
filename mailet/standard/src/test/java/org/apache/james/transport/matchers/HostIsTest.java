@@ -19,10 +19,10 @@
 
 package org.apache.james.transport.matchers;
 
-import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG;
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
-import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES2;
+import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG;
+import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
 import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES2;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,7 +31,6 @@ import javax.mail.MessagingException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +42,11 @@ public class HostIsTest {
     @Before
     public void setUp() throws Exception {
         matcher = new HostIs();
-        FakeMatcherConfig mci = new FakeMatcherConfig("HostIs=" + JAMES_APACHE_ORG, FakeMailContext.defaultContext());
+        FakeMatcherConfig mci = FakeMatcherConfig.builder()
+                .matcherName("HostIs")
+                .condition(JAMES_APACHE_ORG)
+                .build();
+
         matcher.init(mci);
     }
 

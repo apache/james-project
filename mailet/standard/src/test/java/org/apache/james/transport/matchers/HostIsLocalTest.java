@@ -20,11 +20,11 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES2;
 import static org.apache.mailet.base.MailAddressFixture.JAMES2_APACHE_ORG;
 import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG;
-import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
 import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
-import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES2;
 import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES2;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -51,7 +51,11 @@ public class HostIsLocalTest {
         when(mailContext.isLocalServer(JAMES2_APACHE_ORG)).thenReturn(false);
 
         matcher = new HostIsLocal();
-        FakeMatcherConfig mci = new FakeMatcherConfig("HostIsLocal", mailContext);
+        FakeMatcherConfig mci = FakeMatcherConfig.builder()
+                .matcherName("HostIsLocal")
+                .mailetContext(mailContext)
+                .build();
+
         matcher.init(mci);
     }
 

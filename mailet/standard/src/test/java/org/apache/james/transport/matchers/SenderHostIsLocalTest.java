@@ -52,7 +52,11 @@ public class SenderHostIsLocalTest {
         when(mailContext.isLocalServer(JAMES2_APACHE_ORG)).thenReturn(false);
         
         matcher = new SenderHostIsLocal();
-        FakeMatcherConfig mci= new FakeMatcherConfig("SenderHostIsLocal", mailContext);
+        FakeMatcherConfig mci = FakeMatcherConfig.builder()
+                .matcherName("SenderHostIsLocal")
+                .mailetContext(mailContext)
+                .build();
+        
         matcher.init(mci);
     }
 

@@ -27,7 +27,6 @@ import javax.mail.internet.AddressException;
 
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
@@ -51,8 +50,11 @@ public class SubjectStartsWithTest {
                 .mimeMessage(MailUtil.createMimeMessageWithSubject("testSubject"))
                 .build();
         
-        FakeMatcherConfig mailetConfig = new FakeMatcherConfig("SubjectIs=test", FakeMailContext.defaultContext());
-        
+        FakeMatcherConfig mailetConfig = FakeMatcherConfig.builder()
+                .matcherName("SubjectStartsWith")
+                .condition("test")
+                .build();
+
         matcher.init(mailetConfig);
 
         assertThat(matcher.match(mail)).containsExactly(roger);
@@ -65,8 +67,11 @@ public class SubjectStartsWithTest {
                 .mimeMessage(MailUtil.createMimeMessageWithSubject("foobar"))
                 .build();
         
-        FakeMatcherConfig mailetConfig = new FakeMatcherConfig("SubjectIs=test", FakeMailContext.defaultContext());
-        
+        FakeMatcherConfig mailetConfig = FakeMatcherConfig.builder()
+                .matcherName("SubjectStartsWith")
+                .condition("test")
+                .build();
+
         matcher.init(mailetConfig);
 
         assertThat(matcher.match(mail)).isNull();
@@ -80,7 +85,10 @@ public class SubjectStartsWithTest {
                 .mimeMessage(MailUtil.createMimeMessageWithSubject(null))
                 .build();
         
-        FakeMatcherConfig mailetConfig = new FakeMatcherConfig("SubjectIs=test", FakeMailContext.defaultContext());
+        FakeMatcherConfig mailetConfig = FakeMatcherConfig.builder()
+                .matcherName("SubjectStartsWith")
+                .condition("test")
+                .build();
         
         matcher.init(mailetConfig);
 

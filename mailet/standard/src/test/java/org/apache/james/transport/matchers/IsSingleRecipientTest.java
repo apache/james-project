@@ -28,7 +28,6 @@ import javax.mail.MessagingException;
 
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +39,9 @@ public class IsSingleRecipientTest {
     @Before
     public void setUp() throws MessagingException {
         matcher = new IsSingleRecipient();
-        FakeMatcherConfig matcherConfig = new FakeMatcherConfig("IsSingleRecipient", FakeMailContext.defaultContext());
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+                .matcherName("IsSingleRecipient")
+                .build();
         matcher.init(matcherConfig);
     }
 

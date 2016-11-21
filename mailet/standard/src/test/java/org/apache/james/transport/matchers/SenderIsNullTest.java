@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Rule;
@@ -42,7 +41,9 @@ public class SenderIsNullTest {
     @Before
     public void setUp() throws Exception {
         matcher = new SenderIsNull();
-        matcher.init(new FakeMatcherConfig("SenderIsNull", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderIsNull")
+                .build());
     }
 
     @Test

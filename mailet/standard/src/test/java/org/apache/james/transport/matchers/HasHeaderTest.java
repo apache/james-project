@@ -31,7 +31,6 @@ import javax.mail.internet.MimeMessage;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
@@ -56,49 +55,76 @@ public class HasHeaderTest {
 
     @Test
     public void matchShouldReturnAddressesWhenRightHeaderNameWithoutValue() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("HasHeader=" + HEADER_NAME_1, FakeMailContext.defaultContext()));
+
+        FakeMatcherConfig mci = FakeMatcherConfig.builder()
+                .matcherName("HasHeader")
+                .condition(HEADER_NAME_1)
+                .build();
+
+        matcher.init(mci);
+
+
 
         assertThat(matcher.match(mockedMail)).containsAll(mockedMail.getRecipients());
     }
 
     @Test
     public void matchShouldReturnNullWhenWrongHeaderNameWithoutValue() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("HasHeader=" + HEADER_NAME_2, FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("HasHeader")
+                .condition(HEADER_NAME_2)
+                .build());
 
         assertThat(matcher.match(mockedMail)).isNull();
     }
 
     @Test
     public void matchShouldReturnAddressesWhenGoodHeaderNameAndValue() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("HasHeader=" + HEADER_NAME_1 + "=" + HEADER_VALUE_1, FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("HasHeader")
+                .condition(HEADER_NAME_1 + "=" + HEADER_VALUE_1)
+                .build());
 
         assertThat(matcher.match(mockedMail)).containsAll(mockedMail.getRecipients());
     }
 
     @Test
     public void matchShouldReturnNullWhenWrongValue() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("HasHeader=" + HEADER_NAME_1 + "=" + HEADER_VALUE_2, FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("HasHeader")
+                .condition(HEADER_NAME_1 + "=" + HEADER_VALUE_2)
+                .build());
 
         assertThat(matcher.match(mockedMail)).isNull();
     }
 
     @Test
     public void matchShouldReturnNullWhenWrongHeaderNameWithValueSpecified() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("HasHeader=" + HEADER_NAME_2 + "=" + HEADER_VALUE_2, FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("HasHeader")
+                .condition(HEADER_NAME_2 + "=" + HEADER_VALUE_2)
+                .build());
 
         assertThat(matcher.match(mockedMail)).isNull();
     }
 
     @Test
     public void matchShouldIgnoreExtraEquals() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("HasHeader=" + HEADER_NAME_1 + "=" + HEADER_VALUE_1 + "=any", FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("HasHeader")
+                .condition(HEADER_NAME_1 + "=" + HEADER_VALUE_1 + "=any")
+                .build());
 
         assertThat(matcher.match(mockedMail)).containsAll(mockedMail.getRecipients());
     }
 
     @Test
     public void matchShouldNotMatchMailsWithNoHeaderWhenValueSpecified() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("HasHeader=" + HEADER_NAME_1 + "=" + HEADER_VALUE_1, FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("HasHeader")
+                .condition(HEADER_NAME_1 + "=" + HEADER_VALUE_1)
+                .build());
+
         Mail mail = MailUtil.createMockMail2Recipients(MailUtil.createMimeMessage());
 
         assertThat(matcher.match(mail)).isNull();
@@ -106,7 +132,11 @@ public class HasHeaderTest {
 
     @Test
     public void matchShouldNotMatchMailsWithNoHeaderWhenValueNotSpecified() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("HasHeader=" + HEADER_NAME_1, FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("HasHeader")
+                .condition(HEADER_NAME_1)
+                .build());
+
         Mail mail = MailUtil.createMockMail2Recipients(MailUtil.createMimeMessage());
 
         assertThat(matcher.match(mail)).isNull();
@@ -114,14 +144,21 @@ public class HasHeaderTest {
 
     @Test
     public void matchShouldReturnNullWhenOneConditionIsNotTrue() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("HasHeader=" + HEADER_NAME_1 + "+" + HEADER_NAME_2, FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("HasHeader")
+                .condition(HEADER_NAME_1 + "+" + HEADER_NAME_2)
+                .build());
 
         assertThat(matcher.match(mockedMail)).isNull();
     }
 
     @Test
     public void matchShouldReturnAddressesWhenAllConditionsMatch() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("HasHeader=" + HEADER_NAME_1 + "+" + HEADER_NAME_2, FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("HasHeader")
+                .condition(HEADER_NAME_1 + "+" + HEADER_NAME_2)
+                .build());
+
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
         mimeMessage.addHeader(HEADER_NAME_1, HEADER_VALUE_1);
         mimeMessage.addHeader(HEADER_NAME_2, HEADER_VALUE_2);
@@ -133,7 +170,11 @@ public class HasHeaderTest {
 
     @Test
     public void matchShouldFindTheRightHeaderLineWhenUsedWithValue() throws MessagingException {
-        matcher.init(new FakeMatcherConfig("HasHeader=" + HEADER_NAME_1 + "=" + HEADER_VALUE_2, FakeMailContext.defaultContext()));
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("HasHeader")
+                .condition(HEADER_NAME_1 + "=" + HEADER_VALUE_2)
+                .build());
+
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
         mimeMessage.addHeader(HEADER_NAME_1, HEADER_VALUE_1);
         mimeMessage.addHeader(HEADER_NAME_1, HEADER_VALUE_2);

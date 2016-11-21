@@ -51,7 +51,11 @@ public class SenderIsLocalTest {
         when(mailContext.isLocalEmail(ANY_AT_JAMES2)).thenReturn(false);
         
         matcher = new SenderIsLocal();
-        FakeMatcherConfig mci = new FakeMatcherConfig("SenderIsLocal", mailContext);
+        FakeMatcherConfig mci = FakeMatcherConfig.builder()
+                .matcherName("SenderIsLocal")
+                .mailetContext(mailContext)
+                .build();
+
         matcher.init(mci);
     }
 

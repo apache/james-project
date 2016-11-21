@@ -32,7 +32,7 @@ public class SMTPAuthSuccessfulTest extends AbstractHasMailAttributeTest {
         return new SMTPAuthSuccessful();
     }
 
-    protected String getConfigOption() {   
+    protected String getMatcherName() {
         return "SMTPAuthSuccessful";
     }
     

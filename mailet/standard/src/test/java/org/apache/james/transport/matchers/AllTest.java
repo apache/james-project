@@ -29,7 +29,6 @@ import javax.mail.MessagingException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,8 +40,10 @@ public class AllTest {
     @Before
     public void setupMatcher() throws MessagingException {
         matcher = new All();
-        FakeMatcherConfig mci = new FakeMatcherConfig("All",
-                FakeMailContext.defaultContext());
+        FakeMatcherConfig mci = FakeMatcherConfig.builder()
+                .matcherName("All")
+                .build();
+
         matcher.init(mci);
     }
 

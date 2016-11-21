@@ -38,8 +38,8 @@ public class SMTPAuthUserIsTest extends AbstractHasMailAttributeTest {
         return new SMTPAuthUserIs();
     }
 
-    protected String getConfigOption() {   
-        return "SMTPAuthUserIs=";
+    protected String getMatcherName() {
+        return "SMTPAuthUserIs";
     }
     
     protected void init() {

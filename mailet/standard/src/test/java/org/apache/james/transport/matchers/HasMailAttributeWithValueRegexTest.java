@@ -102,7 +102,7 @@ public class HasMailAttributeWithValueRegexTest extends
         }
     }
 
-    protected String getConfigOption() {
-        return "HasMailAttributeWithValueRegex=";
+    protected String getMatcherName() {
+        return "HasMailAttributeWithValueRegex";
     }
 }

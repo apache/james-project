@@ -27,7 +27,6 @@ import javax.mail.MessagingException;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Assert;
@@ -55,8 +54,10 @@ public class SMTPIsAuthNetworkTest {
 
     private void setupMatcher() throws MessagingException {
         matcher = new SMTPIsAuthNetwork();
-        FakeMatcherConfig mci = new FakeMatcherConfig("SMTPIsAuthNetwork",
-                FakeMailContext.defaultContext());
+        FakeMatcherConfig mci = FakeMatcherConfig.builder()
+                .matcherName("SMTPIsAuthNetwork")
+                .build();
+
         matcher.init(mci);
     }
 

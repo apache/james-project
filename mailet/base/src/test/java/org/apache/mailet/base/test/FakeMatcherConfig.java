@@ -22,39 +22,73 @@ package org.apache.mailet.base.test;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.MatcherConfig;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+
 /**
  * MatcherConfig
  */
 public class FakeMatcherConfig implements MatcherConfig {
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        private String matcherName;
+        private Optional<MailetContext> mailetContext;
+        private Optional<String> condition;
+
+        private Builder() {
+            condition = Optional.absent();
+            mailetContext = Optional.absent();
+        }
+
+        public Builder matcherName(String matcherName) {
+            this.matcherName = matcherName;
+            return this;
+        }
+
+        public Builder mailetContext(MailetContext mailetContext) {
+            Preconditions.checkNotNull(mailetContext);
+            this.mailetContext = Optional.of(mailetContext);
+            return this;
+        }
+
+        public Builder condition(String condition) {
+            this.condition = Optional.fromNullable(condition);
+            return this;
+        }
+
+        public FakeMatcherConfig build() {
+            Preconditions.checkNotNull(matcherName, "'matcherName' is mandatory");
+            return new FakeMatcherConfig(matcherName, mailetContext.or(FakeMailContext.defaultContext()), condition);
+        }
+    }
+
     private final String matcherName;
+    private final MailetContext mailetContext;
+    private final Optional<String> condition;
 
-    private final MailetContext mc;
-
-    public FakeMatcherConfig(String matcherName, MailetContext mc) {
-        super();
+    private FakeMatcherConfig(String matcherName, MailetContext mailetContext, Optional<String> condition) {
         this.matcherName = matcherName;
-        this.mc = mc;
+        this.mailetContext = mailetContext;
+        this.condition = condition;
     }
 
-    public String getCondition() {
-        if (matcherName.contains("=")) {
-            return matcherName.substring(getMatcherName().length() + 1);
-        } else {
-            return null;
-        }
-    }
-
-    public MailetContext getMailetContext() {
-        return mc;
-    }
-
+    @Override
     public String getMatcherName() {
-        if (matcherName.contains("=")) {
-            return matcherName.split("=")[0];
-        } else {
-            return matcherName;
-        }
+        return matcherName;
     }
 
+    @Override
+    public MailetContext getMailetContext() {
+        return mailetContext;
+    }
+
+    @Override
+    public String getCondition() {
+        return condition.orNull();
+    }
 }

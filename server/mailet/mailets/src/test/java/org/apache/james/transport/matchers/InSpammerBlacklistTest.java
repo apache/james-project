@@ -33,7 +33,6 @@ import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Test;
 
@@ -68,8 +67,11 @@ public class InSpammerBlacklistTest {
     private void setupMatcher(String blacklist) throws MessagingException {
         matcher = new InSpammerBlacklist();
         matcher.setDNSService(setUpDNSServer());
-        FakeMailContext context = FakeMailContext.defaultContext();
-        FakeMatcherConfig mci = new FakeMatcherConfig("InSpammerBlacklist=" + blacklist, context);
+        FakeMatcherConfig mci = FakeMatcherConfig.builder()
+                .matcherName("InSpammerBlacklist")
+                .condition(blacklist)
+                .build();
+
         matcher.init(mci);
     }
 
