@@ -84,29 +84,34 @@ public class Sieve extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
+        List<MailAddress> recipientsWithSuccessfulSieveExecution = executeRetrieveSuccess(mail);
+        mail.setRecipients(keepNonDiscardedRecipients(mail, recipientsWithSuccessfulSieveExecution));
+    }
+
+    private List<MailAddress> executeRetrieveSuccess(Mail mail) throws MessagingException {
+        ImmutableList.Builder<MailAddress> recipientsWithSuccessfulSieveExecution = ImmutableList.builder();
         for(MailAddress recipient: mail.getRecipients()) {
-            executeSieveScript(mail, recipient);
+            if (sieveExecutor.execute(recipient, mail)) {
+                recipientsWithSuccessfulSieveExecution.add(recipient);
+            }
         }
-        mail.setRecipients(keepNonDiscardedRecipients(mail));
+        return recipientsWithSuccessfulSieveExecution.build();
     }
 
-    private void executeSieveScript(Mail mail, MailAddress recipient) {
-        try {
-            sieveExecutor.execute(recipient, mail);
-        } catch (Exception e) {
-            getMailetContext().getLogger().warn("Failed to execute Sieve script for user " + recipient.asPrettyString(), e);
-        }
-    }
-
-
-    private ImmutableList<MailAddress> keepNonDiscardedRecipients(Mail mail) {
+    private ImmutableList<MailAddress> keepNonDiscardedRecipients(Mail mail, final List<MailAddress> recipientsWithSuccessfulSieveExecution) {
         final List<MailAddress> discardedRecipients = retrieveDiscardedRecipients(mail);
-        return FluentIterable.from(mail.getRecipients()).filter(new Predicate<MailAddress>() {
-                @Override
-                public boolean apply(MailAddress input) {
-                    return !discardedRecipients.contains(input);
-                }
-            }).toList();
+        return FluentIterable.from(mail.getRecipients())
+            .filter(discardPredicate(discardedRecipients, recipientsWithSuccessfulSieveExecution))
+            .toList();
+    }
+
+    private Predicate<MailAddress> discardPredicate(final List<MailAddress> discardedAddressList, final List<MailAddress> discardeableAddressList) {
+        return new Predicate<MailAddress>() {
+            @Override
+            public boolean apply(MailAddress input) {
+                return !discardeableAddressList.contains(input) || !discardedAddressList.contains(input);
+            }
+        };
     }
 
     private List<MailAddress> retrieveDiscardedRecipients(Mail mail) {

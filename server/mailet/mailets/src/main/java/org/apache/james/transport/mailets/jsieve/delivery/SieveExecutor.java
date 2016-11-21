@@ -110,21 +110,24 @@ public class SieveExecutor {
         }
     }
 
-    public void execute(MailAddress recipient, Mail mail) throws MessagingException {
+    public boolean execute(MailAddress recipient, Mail mail) throws MessagingException {
         Preconditions.checkNotNull(recipient, "Recipient for mail to be spooled cannot be null.");
         Preconditions.checkNotNull(mail.getMessage(), "Mail message to be spooled cannot be null.");
 
-        sieveMessage(recipient, mail, log);
+        return sieveMessage(recipient, mail, log);
     }
 
-    protected void sieveMessage(MailAddress recipient, Mail aMail, Log log) throws MessagingException {
+    protected boolean sieveMessage(MailAddress recipient, Mail aMail, Log log) throws MessagingException {
         try {
             ResourceLocator.UserSieveInformation userSieveInformation = resourceLocator.get(recipient);
             sieveMessageEvaluate(recipient, aMail, userSieveInformation, log);
+            return true;
         } catch (ScriptNotFoundException e) {
             log.info("Can not locate SIEVE script for user " + recipient.asPrettyString());
+            return false;
         } catch (Exception ex) {
             log.error("Cannot evaluate Sieve script for user " + recipient.asPrettyString(), ex);
+            return false;
         }
     }
 
