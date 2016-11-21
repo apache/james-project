@@ -17,21 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory;
+package org.apache.james;
 
-import org.apache.james.JmapJamesServer;
-import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.jmap.methods.integration.GetMailboxesMethodTest;
-import org.junit.Rule;
+import org.apache.james.modules.TestFilesystemModule;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
-public class MemoryGetMailboxesMethodTest extends GetMailboxesMethodTest {
+public class MemoryJmapTestRule implements TestRule {
 
-    @Rule
-    public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
+    private static final int LIMIT_TO_3_MESSAGES = 3;
+    
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    public JmapJamesServer jmapServer() {
+        return new JmapJamesServer()
+                .combineWith(MemoryJamesServerMain.inMemoryServerModule)
+                .overrideWith(new TestFilesystemModule(temporaryFolder),
+                        new TestJMAPServerModule(LIMIT_TO_3_MESSAGES));
+    }
 
     @Override
-    protected JmapJamesServer createJmapServer() {
-        return memoryJmap.jmapServer();
+    public Statement apply(Statement base, Description description) {
+        return temporaryFolder.apply(base, description);
     }
     
 }

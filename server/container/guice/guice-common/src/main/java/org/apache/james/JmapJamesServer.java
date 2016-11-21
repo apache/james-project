@@ -33,7 +33,7 @@ public class JmapJamesServer extends GuiceJamesServerImpl implements GuiceJamesS
         super();
     }
 
-    public JmapJamesServer(Module module) {
+    private JmapJamesServer(Module module) {
         super(module);
     }
 

@@ -19,36 +19,23 @@
 
 package org.apache.james.jmap.cassandra;
 
-import org.apache.james.CassandraJamesServerMain;
+import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.JmapJamesServer;
-import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.methods.integration.SetMailboxesMethodTest;
-import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
-import org.apache.james.modules.CassandraJmapServerModule;
 import org.junit.Rule;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
 
 public class CassandraSetMailboxesMethodTest extends SetMailboxesMethodTest {
 
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
-    private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
-
-    @Rule
-    public RuleChain chain = RuleChain
-        .outerRule(temporaryFolder)
-        .around(embeddedElasticSearch);
-
-    @Override
-    protected JmapJamesServer createJmapServer() {
-        return new JmapJamesServer()
-                    .combineWith(CassandraJamesServerMain.cassandraServerModule)
-                    .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra));
-    }
+    @Rule 
+    public CassandraJmapTestRule rule = new CassandraJmapTestRule();
     
     @Override
+    protected JmapJamesServer createJmapServer() {
+        return rule.jmapServer();
+    }
+
+    @Override
     protected void await() {
-        embeddedElasticSearch.awaitForElasticSearch();
+        rule.await();
     }
 }

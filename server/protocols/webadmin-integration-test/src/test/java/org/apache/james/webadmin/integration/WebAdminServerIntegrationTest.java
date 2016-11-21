@@ -28,11 +28,8 @@ import static org.hamcrest.Matchers.is;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.CassandraJamesServerMain;
+import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.JmapJamesServer;
-import org.apache.james.backends.cassandra.EmbeddedCassandra;
-import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
-import org.apache.james.modules.CassandraJmapServerModule;
 import org.apache.james.webadmin.routes.DomainRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
@@ -40,8 +37,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
@@ -57,23 +52,15 @@ public class WebAdminServerIntegrationTest {
     public static final String MAILBOX = "mailbox";
     public static final String SPECIFIC_MAILBOX = SPECIFIC_USER + SEPARATOR + UserMailboxesRoutes.MAILBOXES + SEPARATOR + MAILBOX;
 
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
-    private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
-
     @Rule
-    public RuleChain chain = RuleChain
-        .outerRule(temporaryFolder)
-        .around(embeddedElasticSearch);
+    public CassandraJmapTestRule cassandraJmapTestRule = new CassandraJmapTestRule();
 
     private JmapJamesServer guiceJamesServer;
 
     @Before
     public void setUp() throws Exception {
-        guiceJamesServer = new JmapJamesServer()
-            .combineWith(CassandraJamesServerMain.cassandraServerModule)
-            .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra),
-                new WebAdminConfigurationModule());
+        guiceJamesServer = cassandraJmapTestRule.jmapServer()
+                .overrideWith(new WebAdminConfigurationModule());
         guiceJamesServer.start();
 
         RestAssured.requestSpecification = new RequestSpecBuilder()

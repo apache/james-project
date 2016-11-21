@@ -18,35 +18,22 @@
  ****************************************************************/
 package org.apache.james.jmap.cassandra;
 
-import org.apache.james.CassandraJamesServerMain;
+import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.JmapJamesServer;
-import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.JMAPAuthenticationTest;
-import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
-import org.apache.james.modules.CassandraJmapServerModule;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.Rule;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
 
 public class CassandraJmapAuthenticationTest extends JMAPAuthenticationTest {
 
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
-    private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
-
-    @Rule
-    public RuleChain chain = RuleChain
-        .outerRule(temporaryFolder)
-        .around(embeddedElasticSearch);
-
+    @Rule 
+    public CassandraJmapTestRule rule = new CassandraJmapTestRule();
+    
     @Override
     protected JmapJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) {
-        return new JmapJamesServer()
-                    .combineWith(CassandraJamesServerMain.cassandraServerModule)
-                    .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra),
-                            (binder) -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
+        return rule.jmapServer()
+                .overrideWith(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
     }
-    
+
 }

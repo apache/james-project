@@ -19,57 +19,20 @@
 
 package org.apache.james;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.jmap.methods.GetMessageListMethod;
-import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
-import org.apache.james.modules.TestElasticSearchModule;
-import org.apache.james.modules.TestFilesystemModule;
-import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.Rule;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
-
-import com.datastax.driver.core.Session;
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 
 public class CassandraJamesServerTest extends AbstractJmapJamesServerTest {
 
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
-    private CassandraCluster cassandra;
-
     @Rule
-    public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
+    public CassandraJmapTestRule cassandraJmap = new CassandraJmapTestRule();
 
     @Override
     protected JmapJamesServer createJamesServer() {
-        return new JmapJamesServer()
-                .combineWith(CassandraJamesServerMain.cassandraServerModule)
-                .overrideWith(new TestElasticSearchModule(embeddedElasticSearch),
-                        new TestFilesystemModule(temporaryFolder),
-                        new TestJMAPServerModule(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT),
-                        new AbstractModule() {
-                    
-                    @Override
-                    protected void configure() {
-                    }
-                    
-                    @Provides
-                    @Singleton
-                    Session provideSession(CassandraModule cassandraModule) {
-                        cassandra = CassandraCluster.create(cassandraModule);
-                        return cassandra.getConf();
-                    }
-                });
+        return cassandraJmap.jmapServer();
     }
 
     @Override
     protected void clean() {
-        cassandra.clearAllTables();
     }
-    
 
 }

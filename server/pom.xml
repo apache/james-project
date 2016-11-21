@@ -593,6 +593,12 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
+                <artifactId>james-server-memory-guice</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
                 <artifactId>james-server-jmap</artifactId>
                 <version>${project.version}</version>
             </dependency>
