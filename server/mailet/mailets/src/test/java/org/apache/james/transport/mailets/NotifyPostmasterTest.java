@@ -77,8 +77,11 @@ public class NotifyPostmasterTest {
 
     @Test
     public void initShouldFailWhenUnknownParameterIsConfigured() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("unknwon", "value");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("unknwon", "value")
+                .build();
         expectedException.expect(MessagingException.class);
 
         notifyPostmaster.init(mailetConfig);
@@ -86,7 +89,10 @@ public class NotifyPostmasterTest {
 
     @Test
     public void getRecipientsShouldReturnPostmaster() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
         notifyPostmaster.init(mailetConfig);
 
         assertThat(notifyPostmaster.getRecipients()).containsOnly(postmaster);
@@ -94,7 +100,10 @@ public class NotifyPostmasterTest {
 
     @Test
     public void getToShouldReturnPostmasterWhenToIsNotconfigured() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
         notifyPostmaster.init(mailetConfig);
 
         assertThat(notifyPostmaster.getTo()).containsOnly(postmaster.toInternetAddress());
@@ -102,8 +111,11 @@ public class NotifyPostmasterTest {
 
     @Test
     public void getToShouldReturnPostmasterWhenToIsEqualToPostmaster() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("to", "postmaster");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("to", "postmaster")
+                .build();
         notifyPostmaster.init(mailetConfig);
 
         assertThat(notifyPostmaster.getTo()).containsOnly(postmaster.toInternetAddress());
@@ -111,8 +123,11 @@ public class NotifyPostmasterTest {
 
     @Test
     public void getToShouldReturnUnalteredWhenToIsEqualToUnaltered() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("to", "unaltered");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("to", "unaltered")
+                .build();
         notifyPostmaster.init(mailetConfig);
 
         assertThat(notifyPostmaster.getTo()).containsOnly(SpecialAddress.UNALTERED.toInternetAddress());
@@ -120,8 +135,11 @@ public class NotifyPostmasterTest {
 
     @Test
     public void getToShouldReturnPostmasterWhenToIsNotEqualToPostmasterOrUnaltered() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("to", "otherTo");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("to", "otherTo")
+                .build();
         notifyPostmaster.init(mailetConfig);
 
         assertThat(notifyPostmaster.getTo()).containsOnly(postmaster.toInternetAddress());
@@ -129,8 +147,11 @@ public class NotifyPostmasterTest {
 
     @Test
     public void notifyPostmasterShouldAddPrefixToSubjectWhenPrefixIsConfigured() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("prefix", "pre");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("prefix", "pre")
+                .build();
         notifyPostmaster.init(mailetConfig);
 
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));

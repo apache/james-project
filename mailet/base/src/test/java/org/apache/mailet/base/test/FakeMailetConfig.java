@@ -38,6 +38,7 @@ public class FakeMailetConfig implements MailetConfig {
 
     public static class Builder {
 
+        private static final String DEFAULT_MAILET_NAME = "A Mailet";
         private Optional<String> mailetName;
         private Optional<MailetContext> mailetContext;
         private Properties properties;
@@ -64,7 +65,7 @@ public class FakeMailetConfig implements MailetConfig {
         }
 
         public FakeMailetConfig build() {
-            return new FakeMailetConfig(mailetName.or("A Mailet"), 
+            return new FakeMailetConfig(mailetName.or(DEFAULT_MAILET_NAME), 
                     mailetContext.or(FakeMailContext.defaultContext()), 
                     properties);
         }

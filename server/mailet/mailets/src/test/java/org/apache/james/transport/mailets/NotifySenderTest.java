@@ -77,8 +77,11 @@ public class NotifySenderTest {
 
     @Test
     public void initShouldFailWhenUnknownParameterIsConfigured() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("unknwon", "value");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("unknwon", "value")
+                .build();
         expectedException.expect(MessagingException.class);
 
         notifySender.init(mailetConfig);
@@ -86,7 +89,10 @@ public class NotifySenderTest {
 
     @Test
     public void getRecipientsShouldReturnSender() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
         notifySender.init(mailetConfig);
 
         assertThat(notifySender.getRecipients()).containsOnly(SpecialAddress.SENDER);
@@ -94,7 +100,10 @@ public class NotifySenderTest {
 
     @Test
     public void getToShouldReturnSenderWhenToIsNotconfigured() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
         notifySender.init(mailetConfig);
 
         assertThat(notifySender.getTo()).containsOnly(SpecialAddress.SENDER.toInternetAddress());
@@ -102,8 +111,11 @@ public class NotifySenderTest {
 
     @Test
     public void getToShouldReturnSenderWhenToIsEqualToSender() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("to", "sender");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("to", "sender")
+                .build();
         notifySender.init(mailetConfig);
 
         assertThat(notifySender.getTo()).containsOnly(SpecialAddress.SENDER.toInternetAddress());
@@ -111,8 +123,11 @@ public class NotifySenderTest {
 
     @Test
     public void getToShouldReturnUnalteredWhenToIsEqualToUnaltered() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("to", "unaltered");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("to", "unaltered")
+                .build();
         notifySender.init(mailetConfig);
 
         assertThat(notifySender.getTo()).containsOnly(SpecialAddress.UNALTERED.toInternetAddress());
@@ -120,8 +135,11 @@ public class NotifySenderTest {
 
     @Test
     public void getToShouldReturnFromWhenToIsEqualToFrom() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("to", "from");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("to", "from")
+                .build();
         notifySender.init(mailetConfig);
 
         assertThat(notifySender.getTo()).containsOnly(SpecialAddress.FROM.toInternetAddress());
@@ -129,8 +147,11 @@ public class NotifySenderTest {
 
     @Test
     public void getToShouldReturnSenderWhenToIsNotEqualToSenderUnalteredOrFrom() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("to", "otherTo");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("to", "otherTo")
+                .build();
         notifySender.init(mailetConfig);
 
         assertThat(notifySender.getTo()).containsOnly(SpecialAddress.SENDER.toInternetAddress());
@@ -138,8 +159,11 @@ public class NotifySenderTest {
 
     @Test
     public void notifySenderShouldAddPrefixToSubjectWhenPrefixIsConfigured() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("prefix", "pre");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("prefix", "pre")
+                .build();
         notifySender.init(mailetConfig);
 
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));

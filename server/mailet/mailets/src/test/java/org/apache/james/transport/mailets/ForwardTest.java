@@ -72,8 +72,11 @@ public class ForwardTest {
 
     @Test
     public void initShouldThrowWhenUnkownParameter() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("unknown", "error");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("unknown", "error")
+                .build();
         expectedException.expect(MessagingException.class);
 
         forward.init(mailetConfig);
@@ -81,20 +84,26 @@ public class ForwardTest {
 
     @Test
     public void initShouldNotThrowWhenEveryParameters() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("debug", "true");
-        mailetConfig.setProperty("passThrough", "false");
-        mailetConfig.setProperty("fakeDomainCheck", "false");
-        mailetConfig.setProperty("forwardto", "other@james.org");
-        mailetConfig.setProperty("forwardTo", "other@james.org");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("debug", "true")
+                .setProperty("passThrough", "false")
+                .setProperty("fakeDomainCheck", "false")
+                .setProperty("forwardto", "other@james.org")
+                .setProperty("forwardTo", "other@james.org")
+                .build();
 
         forward.init(mailetConfig);
     }
 
     @Test
     public void initShouldThrowWhenNoForwardToParameters() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("isStatic", "true");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("isStatic", "true")
+                .build();
         expectedException.expect(MessagingException.class);
 
         forward.init(mailetConfig);
@@ -102,9 +111,12 @@ public class ForwardTest {
 
     @Test
     public void initShouldThrowWhenUnparsableForwardToAddress() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("isStatic", "true");
-        mailetConfig.setProperty("forwardTo", "user@james@org");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("isStatic", "true")
+                .setProperty("forwardTo", "user@james@org")
+                .build();
         expectedException.expect(MessagingException.class);
 
         forward.init(mailetConfig);
@@ -112,9 +124,12 @@ public class ForwardTest {
 
     @Test
     public void initShouldThrowWhenForwardToIsEmpty() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("isStatic", "true");
-        mailetConfig.setProperty("forwardTo", "");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("isStatic", "true")
+                .setProperty("forwardTo", "")
+                .build();
         expectedException.expect(MessagingException.class);
 
         forward.init(mailetConfig);
@@ -142,11 +157,14 @@ public class ForwardTest {
 
     @Test
     public void getRecipientsShouldReturnRecipientsWhenForwardtoParameters() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("forwardto",
-                MailAddressFixture.ANY_AT_JAMES.toString() +
-                ", " + 
-                MailAddressFixture.OTHER_AT_JAMES.toString());
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("forwardto",
+                        MailAddressFixture.ANY_AT_JAMES.toString() +
+                        ", " + 
+                        MailAddressFixture.OTHER_AT_JAMES.toString())
+                .build();
         forward.init(mailetConfig);
 
         Collection<MailAddress> recipients = forward.getRecipients();
@@ -155,11 +173,14 @@ public class ForwardTest {
 
     @Test
     public void getRecipientsShouldReturnRecipientsWhenForwardToParameters() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("forwardTo",
-                MailAddressFixture.ANY_AT_JAMES.toString() +
-                ", " + 
-                MailAddressFixture.OTHER_AT_JAMES.toString());
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("forwardTo",
+                        MailAddressFixture.ANY_AT_JAMES.toString() +
+                        ", " + 
+                        MailAddressFixture.OTHER_AT_JAMES.toString())
+                .build();
         forward.init(mailetConfig);
 
         Collection<MailAddress> recipients = forward.getRecipients();
@@ -168,8 +189,11 @@ public class ForwardTest {
 
     @Test
     public void getRecipientsShouldReturnSpecialAddressWhenForwardToIsMatchingOne() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("forwardTo", "postmaster");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("forwardTo", "postmaster")
+                .build();
         forward.init(mailetConfig);
 
         assertThat(forward.getRecipients()).containsOnly(postmaster);
@@ -177,8 +201,11 @@ public class ForwardTest {
 
     @Test
     public void forwardShouldNotModifySubject() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("forwardTo", "other@james.org");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("forwardTo", "other@james.org")
+                .build();
         forward.init(mailetConfig);
 
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));

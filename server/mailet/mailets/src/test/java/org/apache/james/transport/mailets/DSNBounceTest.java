@@ -96,8 +96,11 @@ public class DSNBounceTest {
 
     @Test
     public void initShouldFailWhenUnknownParameterIsConfigured() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("unknwon", "value");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("unknwon", "value")
+                .build();
         expectedException.expect(MessagingException.class);
 
         dsnBounce.init(mailetConfig);
@@ -121,7 +124,10 @@ public class DSNBounceTest {
 
     @Test
     public void serviceShouldSendMultipartMailToTheSender() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
         dsnBounce.init(mailetConfig);
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
@@ -149,7 +155,10 @@ public class DSNBounceTest {
 
     @Test
     public void serviceShouldSendMultipartMailContainingTextPart() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
         dsnBounce.init(mailetConfig);
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
@@ -187,8 +196,11 @@ public class DSNBounceTest {
 
     @Test
     public void serviceShouldSendMultipartMailContainingTextPartWhenCustomMessageIsConfigured() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("messageString", "My custom message\n");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("messageString", "My custom message\n")
+                .build();
         dsnBounce.init(mailetConfig);
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
@@ -225,7 +237,10 @@ public class DSNBounceTest {
 
     @Test
     public void serviceShouldSendMultipartMailContainingDSNPart() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
         dsnBounce.init(mailetConfig);
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
@@ -262,8 +277,11 @@ public class DSNBounceTest {
 
     @Test
     public void serviceShouldUpdateTheMailStateWhenNoSenderAndPassThroughIsFalse() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("passThrough", "false");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("passThrough", "false")
+                .build();
         dsnBounce.init(mailetConfig);
 
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
@@ -284,7 +302,10 @@ public class DSNBounceTest {
 
     @Test
     public void serviceShouldNotUpdateTheMailStateWhenNoSenderPassThroughHasDefaultValue() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
         dsnBounce.init(mailetConfig);
 
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
@@ -305,8 +326,11 @@ public class DSNBounceTest {
 
     @Test
     public void serviceShouldNotUpdateTheMailStateWhenNoSenderPassThroughIsTrue() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("passThrough", "true");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("passThrough", "true")
+                .build();
         dsnBounce.init(mailetConfig);
 
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
@@ -327,8 +351,11 @@ public class DSNBounceTest {
 
     @Test
     public void serviceShouldNotAttachTheOriginalMailWhenAttachmentIsEqualToNone() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("attachment", "none");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("attachment", "none")
+                .build();
         dsnBounce.init(mailetConfig);
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
@@ -356,8 +383,11 @@ public class DSNBounceTest {
 
     @Test
     public void serviceShouldAttachTheOriginalMailWhenAttachmentIsEqualToAll() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("attachment", "all");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("attachment", "all")
+                .build();
         dsnBounce.init(mailetConfig);
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
@@ -385,8 +415,11 @@ public class DSNBounceTest {
 
     @Test
     public void serviceShouldAttachTheOriginalMailHeadersOnlyWhenAttachmentIsEqualToHeads() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("attachment", "heads");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("attachment", "heads")
+                .build();
         dsnBounce.init(mailetConfig);
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
@@ -419,7 +452,10 @@ public class DSNBounceTest {
 
     @Test
     public void serviceShouldSetTheDateHeaderWhenNone() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
         dsnBounce.init(mailetConfig);
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
@@ -446,7 +482,10 @@ public class DSNBounceTest {
 
     @Test
     public void serviceShouldNotModifyTheDateHeaderWhenAlreadyPresent() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
         dsnBounce.init(mailetConfig);
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
@@ -475,8 +514,11 @@ public class DSNBounceTest {
 
     @Test
     public void dsnBounceShouldAddPrefixToSubjectWhenPrefixIsConfigured() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("prefix", "pre");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("prefix", "pre")
+                .build();
         dsnBounce.init(mailetConfig);
 
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));

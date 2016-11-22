@@ -21,13 +21,10 @@ package org.apache.james.transport.mailets.redirect;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Properties;
-
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,9 +45,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getPassThroughShouldReturnTrueWhenSetToTrue() throws Exception {
-        Properties properties = new Properties();
-        properties.put("passThrough", "true");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("passThrough", "true")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -60,9 +58,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getPassThroughShouldReturnFalseWhenSetToFalse() throws Exception {
-        Properties properties = new Properties();
-        properties.put("passThrough", "false");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("passThrough", "false")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -72,8 +71,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getPassThroughShouldReturnTrueWhenNotSet() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -83,9 +83,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getFakeDomainCheckShouldReturnTrueWhenSetToTrue() throws Exception {
-        Properties properties = new Properties();
-        properties.put("fakeDomainCheck", "true");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("fakeDomainCheck", "true")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -95,9 +96,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getFakeDomainCheckShouldReturnFalseWhenSetToFalse() throws Exception {
-        Properties properties = new Properties();
-        properties.put("fakeDomainCheck", "false");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("fakeDomainCheck", "false")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -107,8 +109,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getFakeDomainCheckShouldReturnFalseWhenNotSet() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -118,9 +121,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getInLineTypeShouldReturnValueWhenSet() throws Exception {
-        Properties properties = new Properties();
-        properties.put("inline", "unaltered");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("inline", "unaltered")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -130,8 +134,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getInLineTypeShouldReturnNoneWhenNotSet() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -141,9 +146,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getAttachmentTypeShouldReturnValueWhenSet() throws Exception {
-        Properties properties = new Properties();
-        properties.put("attachment", "unaltered");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("attachment", "unaltered")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -153,8 +159,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getAttachmentTypeShouldReturnMessageWhenNotSet() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -164,9 +171,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getMessageShouldReturnNoticeValueWhenSet() throws Exception {
-        Properties properties = new Properties();
-        properties.put("notice", "my notice");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("notice", "my notice")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -176,9 +184,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getMessageShouldReturnMessageValueWhenSet() throws Exception {
-        Properties properties = new Properties();
-        properties.put("message", "my message");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("message", "my message")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -188,8 +197,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getMessageShouldReturnDefaultMessageWhenNoticeAndMessageNotSet() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -199,8 +209,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getSubjectShouldReturnNull() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -210,9 +221,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getSubjectPrefixShouldReturnValueWhenSet() throws Exception {
-        Properties properties = new Properties();
-        properties.put("prefix", "my prefix");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("prefix", "my prefix")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -222,8 +234,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getSubjectPrefixShouldReturnDefaultValueWhenNotSet() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -233,9 +246,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void isAttachErrorShouldReturnTrueWhenSetToTrue() throws Exception {
-        Properties properties = new Properties();
-        properties.put("attachError", "true");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("attachError", "true")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -245,9 +259,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void isAttachErrorShouldReturnFalseWhenSetToFalse() throws Exception {
-        Properties properties = new Properties();
-        properties.put("attachError", "false");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("attachError", "false")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -257,8 +272,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void isAttachErrorShouldReturnFalseWhenNotSet() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -268,8 +284,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void isReplyShouldReturnTrue() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -279,9 +296,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getRecipientsShouldReturnValueWhenSet() throws Exception {
-        Properties properties = new Properties();
-        properties.put("recipients", "user@james.org, user2@james.org");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("recipients", "user@james.org, user2@james.org")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -291,9 +309,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getRecipientsShouldReturnNullWhenEmpty() throws Exception {
-        Properties properties = new Properties();
-        properties.put("recipients", "");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("recipients", "")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -303,8 +322,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getRecipientsShouldReturnNullWhenNotSet() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -314,9 +334,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getToShouldReturnValueWhenSet() throws Exception {
-        Properties properties = new Properties();
-        properties.put("to", "user@james.org, user2@james.org");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("to", "user@james.org, user2@james.org")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -326,9 +347,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getToShouldReturnNullWhenEmpty() throws Exception {
-        Properties properties = new Properties();
-        properties.put("to", "");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("to", "")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -338,8 +360,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getToShouldReturnNullWhenNotSet() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -349,9 +372,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getReversePathShouldReturnValueWhenSet() throws Exception {
-        Properties properties = new Properties();
-        properties.put("reversePath", "user@james.org, user2@james.org");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("reversePath", "user@james.org, user2@james.org")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -361,9 +385,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getReversePathShouldReturnNullWhenEmpty() throws Exception {
-        Properties properties = new Properties();
-        properties.put("reversePath", "");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("reversePath", "")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -373,8 +398,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getReversePathShouldReturnNullWhenNotSet() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -384,9 +410,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getSenderShouldReturnValueWhenSet() throws Exception {
-        Properties properties = new Properties();
-        properties.put("sender", "user@james.org, user2@james.org");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("sender", "user@james.org, user2@james.org")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -396,9 +423,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getSenderShouldReturnNullWhenEmpty() throws Exception {
-        Properties properties = new Properties();
-        properties.put("sender", "");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("sender", "")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -408,8 +436,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getSenderShouldReturnNullWhenNotSet() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -419,9 +448,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getReplyToShouldReturnValueWhenSet() throws Exception {
-        Properties properties = new Properties();
-        properties.put("replyTo", "user@james.org, user2@james.org");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("replyTo", "user@james.org, user2@james.org")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -431,9 +461,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getReplyToShouldReturnreplytoValueWhenSet() throws Exception {
-        Properties properties = new Properties();
-        properties.put("replyto", "user@james.org, user2@james.org");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("replyto", "user@james.org, user2@james.org")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -443,9 +474,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getReplyToShouldReturnNullWhenEmpty() throws Exception {
-        Properties properties = new Properties();
-        properties.put("replyTo", "");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("replyTo", "")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -455,8 +487,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void getReplyToShouldReturnNullWhenNotSet() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -466,9 +499,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void isDebugShouldReturnTrueWhenSetToTrue() throws Exception {
-        Properties properties = new Properties();
-        properties.put("debug", "true");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("debug", "true")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -478,9 +512,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void isDebugShouldReturnFalseWhenSetToFalse() throws Exception {
-        Properties properties = new Properties();
-        properties.put("debug", "false");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("debug", "false")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -490,8 +525,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void isDebugShouldReturnFalseWhenNotSet() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -501,9 +537,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void isStaticShouldReturnTrueWhenSetToTrue() throws Exception {
-        Properties properties = new Properties();
-        properties.put("static", "true");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("static", "true")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -513,9 +550,10 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void isStaticShouldReturnFalseWhenSetToFalse() throws Exception {
-        Properties properties = new Properties();
-        properties.put("static", "false");
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .setProperty("static", "false")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
@@ -525,8 +563,9 @@ public class NotifyMailetInitParametersTest {
 
     @Test
     public void isStaticShouldReturnFalseWhenNotSet() throws Exception {
-        Properties properties = new Properties();
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("mailet")
+                .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 

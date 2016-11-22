@@ -73,8 +73,11 @@ public class RedirectTest {
 
     @Test
     public void initShouldThrowWhenUnkownParameter() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("unknown", "error");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("unknown", "error")
+                .build();
         expectedException.expect(MessagingException.class);
 
         redirect.init(mailetConfig);
@@ -82,31 +85,37 @@ public class RedirectTest {
 
     @Test
     public void initShouldNotThrowWhenEveryParameters() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("static", "true");
-        mailetConfig.setProperty("debug", "true");
-        mailetConfig.setProperty("passThrough", "false");
-        mailetConfig.setProperty("fakeDomainCheck", "false");
-        mailetConfig.setProperty("inline", "true");
-        mailetConfig.setProperty("attachment", "true");
-        mailetConfig.setProperty("message", "mess");
-        mailetConfig.setProperty("recipients", "user@james.org, user2@james.org");
-        mailetConfig.setProperty("to", "to@james.org");
-        mailetConfig.setProperty("replyTo", "replyTo@james.org");
-        mailetConfig.setProperty("replyto", "replyto@james.org");
-        mailetConfig.setProperty("reversePath", "reverse@james.org");
-        mailetConfig.setProperty("sender", "sender@james.org");
-        mailetConfig.setProperty("subject", "subj");
-        mailetConfig.setProperty("prefix", "pref");
-        mailetConfig.setProperty("attachError", "true");
-        mailetConfig.setProperty("isReply", "true");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("static", "true")
+                .setProperty("debug", "true")
+                .setProperty("passThrough", "false")
+                .setProperty("fakeDomainCheck", "false")
+                .setProperty("inline", "true")
+                .setProperty("attachment", "true")
+                .setProperty("message", "mess")
+                .setProperty("recipients", "user@james.org, user2@james.org")
+                .setProperty("to", "to@james.org")
+                .setProperty("replyTo", "replyTo@james.org")
+                .setProperty("replyto", "replyto@james.org")
+                .setProperty("reversePath", "reverse@james.org")
+                .setProperty("sender", "sender@james.org")
+                .setProperty("subject", "subj")
+                .setProperty("prefix", "pref")
+                .setProperty("attachError", "true")
+                .setProperty("isReply", "true")
+                .build();
 
         redirect.init(mailetConfig);
     }
 
     @Test
     public void initShouldReturnEmptyWhenNoRecipientsOrToParameters() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
         redirect.init(mailetConfig);
 
         assertThat(redirect.getRecipients()).isEmpty();
@@ -114,8 +123,11 @@ public class RedirectTest {
 
     @Test
     public void getRecipientsShouldThrowWhenUnparsableRecipientsAddress() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("recipients", "user@james@org");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("recipients", "user@james@org")
+                .build();
         redirect.init(mailetConfig);
 
         expectedException.expect(MessagingException.class);
@@ -124,8 +136,11 @@ public class RedirectTest {
 
     @Test
     public void getRecipientsShouldThrowWhenUnparsableToAddress() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("to", "user@james@org");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("to", "user@james@org")
+                .build();
         redirect.init(mailetConfig);
 
         expectedException.expect(MessagingException.class);
@@ -134,9 +149,12 @@ public class RedirectTest {
 
     @Test
     public void getRecipientsShouldThrowWhenRecipientsAndToAreEmpty() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("recipients", "");
-        mailetConfig.setProperty("to", "");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("recipients", "")
+                .setProperty("to", "")
+                .build();
         redirect.init(mailetConfig);
 
         expectedException.expect(MessagingException.class);
@@ -145,8 +163,11 @@ public class RedirectTest {
 
     @Test
     public void getRecipientsShouldReturnSpecialAddressWhenRecipientsIsMatchingOne() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("recipients", "postmaster");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("recipients", "postmaster")
+                .build();
         redirect.init(mailetConfig);
 
         assertThat(redirect.getRecipients()).containsOnly(postmaster);
@@ -154,8 +175,11 @@ public class RedirectTest {
 
     @Test
     public void getToShouldThrowWhenUnparsableRecipientsAddress() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("recipients", "user@james@org");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("recipients", "user@james@org")
+                .build();
         redirect.init(mailetConfig);
 
         expectedException.expect(MessagingException.class);
@@ -164,8 +188,11 @@ public class RedirectTest {
 
     @Test
     public void getToShouldThrowWhenUnparsableToAddress() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("to", "user@james@org");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("to", "user@james@org")
+                .build();
         redirect.init(mailetConfig);
 
         expectedException.expect(MessagingException.class);
@@ -174,9 +201,12 @@ public class RedirectTest {
 
     @Test
     public void getToShouldThrowWhenRecipientsAndToAreEmpty() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("recipients", "");
-        mailetConfig.setProperty("to", "");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("recipients", "")
+                .setProperty("to", "")
+                .build();
         redirect.init(mailetConfig);
 
         expectedException.expect(MessagingException.class);
@@ -185,8 +215,11 @@ public class RedirectTest {
 
     @Test
     public void getToShouldReturnSpecialAddressWhenRecipientsIsMatchingOne() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("recipients", "postmaster");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("recipients", "postmaster")
+                .build();
         redirect.init(mailetConfig);
 
         assertThat(redirect.getTo()).containsOnly(postmaster.toInternetAddress());
@@ -194,7 +227,10 @@ public class RedirectTest {
 
     @Test
     public void getReversePathShouldReturnNullWhenNoReversePathParameter() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
         redirect.init(mailetConfig);
 
         assertThat(redirect.getReversePath()).isNull();
@@ -202,8 +238,11 @@ public class RedirectTest {
 
     @Test
     public void getReversePathShouldThrowWhenUnparsableReversePathParameter() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("reversePath", "reverse@james@org");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("reversePath", "reverse@james@org")
+                .build();
         redirect.init(mailetConfig);
 
         expectedException.expect(MessagingException.class);
@@ -212,8 +251,11 @@ public class RedirectTest {
 
     @Test
     public void getReversePathShouldReturnSpecialAddressWhenReversePathIsMatchingOne() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("reversePath", "postmaster");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("reversePath", "postmaster")
+                .build();
         redirect.init(mailetConfig);
 
         assertThat(redirect.getReversePath()).isEqualTo(postmaster);
@@ -221,8 +263,11 @@ public class RedirectTest {
 
     @Test
     public void getReversePathShouldReturnMailAddressWhenReversePathIsGiven() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("reversePath", "reverse@james.org");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("reversePath", "reverse@james.org")
+                .build();
         redirect.init(mailetConfig);
 
         assertThat(redirect.getReversePath()).isEqualTo(new MailAddress("reverse@james.org"));
@@ -230,7 +275,10 @@ public class RedirectTest {
 
     @Test
     public void getReversePathWithMailShouldReturnNullWhenNotStaticAndReversePathParameters() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
         redirect.init(mailetConfig);
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
@@ -243,8 +291,11 @@ public class RedirectTest {
 
     @Test
     public void getReversePathWithMailShouldReturnReversePathWhenReversePathIsGiven() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("reversePath", "reverse@james.org");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("reversePath", "reverse@james.org")
+                .build();
         redirect.init(mailetConfig);
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
@@ -257,8 +308,11 @@ public class RedirectTest {
 
     @Test
     public void getReversePathWithMailShouldReturnSpecialAddressWhenReversePathIsMatchingOne() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("reversePath", "postmaster");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("reversePath", "postmaster")
+                .build();
         redirect.init(mailetConfig);
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
@@ -271,8 +325,12 @@ public class RedirectTest {
 
     @Test
     public void getReversePathWithMailShouldReturnSpecialAddressWhenNotStaticAndNewReversePathIsMatchingOne() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("static", "false");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("static", "false")
+                .setProperty("reversePath", "postmaster")
+                .build();
         redirect.init(mailetConfig);
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
@@ -280,14 +338,16 @@ public class RedirectTest {
         message.setText("This is a fake mail");
         FakeMail mail = FakeMail.from(message);
 
-        mailetConfig.setProperty("reversePath", "postmaster");
         assertThat(redirect.getReversePath(mail)).isEqualTo(postmaster);
     }
 
     @Test
     public void getReversePathWithMailShouldReturnSenderWhenNoReversePath() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("sender", "sender@james.org");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("sender", "sender@james.org")
+                .build();
         redirect.init(mailetConfig);
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
@@ -300,9 +360,12 @@ public class RedirectTest {
 
     @Test
     public void redirectShouldNotModifyOriginalSubject() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("subject", "subj");
-        mailetConfig.setProperty("prefix", "pref");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("subject", "subj")
+                .setProperty("prefix", "pref")
+                .build();
         redirect.init(mailetConfig);
 
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
@@ -321,9 +384,12 @@ public class RedirectTest {
 
     @Test
     public void redirectShouldAddPrefixAndSubjectToSentMail() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("subject", "subj");
-        mailetConfig.setProperty("prefix", "pre");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("subject", "subj")
+                .setProperty("prefix", "pre")
+                .build();
         redirect.init(mailetConfig);
 
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));

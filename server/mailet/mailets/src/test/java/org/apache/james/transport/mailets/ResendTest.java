@@ -73,8 +73,11 @@ public class ResendTest {
 
     @Test
     public void initShouldThrowWhenUnknownParameter() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("unknown", "error");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("unknown", "error")
+                .build();
         expectedException.expect(MessagingException.class);
 
         resend.init(mailetConfig);
@@ -82,34 +85,40 @@ public class ResendTest {
 
     @Test
     public void initShouldNotThrowWhenEveryParameters() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("debug", "true");
-        mailetConfig.setProperty("passThrough", "false");
-        mailetConfig.setProperty("fakeDomainCheck", "false");
-        mailetConfig.setProperty("inline", "true");
-        mailetConfig.setProperty("attachment", "true");
-        mailetConfig.setProperty("message", "mess");
-        mailetConfig.setProperty("recipients", "user@james.org, user2@james.org");
-        mailetConfig.setProperty("to", "to@james.org");
-        mailetConfig.setProperty("replyTo", "replyTo@james.org");
-        mailetConfig.setProperty("replyto", "replyto@james.org");
-        mailetConfig.setProperty("reversePath", "reverse@james.org");
-        mailetConfig.setProperty("sender", "sender@james.org");
-        mailetConfig.setProperty("subject", "subj");
-        mailetConfig.setProperty("prefix", "pref");
-        mailetConfig.setProperty("attachError", "true");
-        mailetConfig.setProperty("isReply", "true");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("debug", "true")
+                .setProperty("passThrough", "false")
+                .setProperty("fakeDomainCheck", "false")
+                .setProperty("inline", "true")
+                .setProperty("attachment", "true")
+                .setProperty("message", "mess")
+                .setProperty("recipients", "user@james.org, user2@james.org")
+                .setProperty("to", "to@james.org")
+                .setProperty("replyTo", "replyTo@james.org")
+                .setProperty("replyto", "replyto@james.org")
+                .setProperty("reversePath", "reverse@james.org")
+                .setProperty("sender", "sender@james.org")
+                .setProperty("subject", "subj")
+                .setProperty("prefix", "pref")
+                .setProperty("attachError", "true")
+                .setProperty("isReply", "true")
+                .build();
 
         resend.init(mailetConfig);
     }
 
     @Test
     public void resendShouldNotModifyOriginalSubject() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("subject", "subj");
-        mailetConfig.setProperty("prefix", "pref");
-        mailetConfig.setProperty("recipients", "user@james.org, user2@james.org");
-        mailetConfig.setProperty("to", "to@james.org");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("subject", "subj")
+                .setProperty("prefix", "pref")
+                .setProperty("recipients", "user@james.org, user2@james.org")
+                .setProperty("to", "to@james.org")
+                .build();
         resend.init(mailetConfig);
 
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
@@ -128,11 +137,14 @@ public class ResendTest {
 
     @Test
     public void resendShouldAddPrefixAndSubjectToSentMail() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("subject", "subj");
-        mailetConfig.setProperty("prefix", "pre");
-        mailetConfig.setProperty("recipients", "user@james.org, user2@james.org");
-        mailetConfig.setProperty("to", "to@james.org");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("subject", "subj")
+                .setProperty("prefix", "pre")
+                .setProperty("recipients", "user@james.org, user2@james.org")
+                .setProperty("to", "to@james.org")
+                .build();
         resend.init(mailetConfig);
 
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
