@@ -18,12 +18,14 @@
  ****************************************************************/
 package org.apache.james.transport.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.guava.api.Assertions.assertThat;
 
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Test;
+
+import com.google.common.base.Optional;
 
 public class ReplyToUtilsTest {
 
@@ -33,9 +35,9 @@ public class ReplyToUtilsTest {
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 
-        MailAddress replyTo = testee.getReplyTo(fakeMail);
+        Optional<MailAddress> replyTo = testee.getReplyTo(fakeMail);
 
-        assertThat(replyTo).isNull();
+        assertThat(replyTo).isAbsent();
     }
 
     @Test
@@ -44,9 +46,9 @@ public class ReplyToUtilsTest {
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 
-        MailAddress replyTo = testee.getReplyTo(fakeMail);
+        Optional<MailAddress> replyTo = testee.getReplyTo(fakeMail);
 
-        assertThat(replyTo).isNull();
+        assertThat(replyTo).isAbsent();
     }
 
     @Test
@@ -59,8 +61,8 @@ public class ReplyToUtilsTest {
                 .sender(expectedMailAddress)
                 .build();
 
-        MailAddress replyTo = testee.getReplyTo(fakeMail);
+        Optional<MailAddress> replyTo = testee.getReplyTo(fakeMail);
 
-        assertThat(replyTo).isEqualTo(expectedMailAddress);
+        assertThat(replyTo).contains(expectedMailAddress);
     }
 }

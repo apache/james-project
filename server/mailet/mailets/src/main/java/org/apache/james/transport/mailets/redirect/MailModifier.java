@@ -135,8 +135,9 @@ public class MailModifier {
      * If the requested value is <code>SpecialAddress.NULL</code> will remove
      * the "Reply-To:" header. If the requested value is null does nothing.</p>
      */
-    public void setReplyTo(MailAddress replyTo, Mail originalMail) throws MessagingException {
-        if (replyTo != null) {
+    public void setReplyTo(Optional<MailAddress> optionalReplyTo, Mail originalMail) throws MessagingException {
+        if (optionalReplyTo.isPresent()) {
+            MailAddress replyTo = optionalReplyTo.get();
             if (replyTo.equals(SpecialAddress.NULL)) {
                 mail.getMessage().setReplyTo(null);
                 if (mailet.getInitParameters().isDebug()) {

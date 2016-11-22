@@ -219,11 +219,11 @@ public interface RedirectNotify extends Mailet, MailetConfig {
      * Gets the <code>replyTo</code> property, built dynamically using the
      * original Mail object. Is a "getX(Mail)" method.
      *
-     * @return {@link #getReplyTo()} replacing
+     * @return Optional of {@link #getReplyTo()} replacing
      *         <code>SpecialAddress.UNALTERED</code> if applicable with null and
      *         <code>SpecialAddress.SENDER</code> with the original mail sender
      */
-    MailAddress getReplyTo(Mail originalMail) throws MessagingException;
+    Optional<MailAddress> getReplyTo(Mail originalMail) throws MessagingException;
 
     /**
      * Gets the <code>reversePath</code> property. Returns the reverse-path of
