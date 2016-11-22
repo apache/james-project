@@ -68,9 +68,8 @@ public class DSNBounceTest {
         timeZone = TimeZone.getDefault();
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
-        dsnBounce = new DSNBounce();
         DNSService dnsService = mock(DNSService.class);
-        dsnBounce.setDNSService(dnsService);
+        dsnBounce = new DSNBounce(dnsService);
         fakeMailContext = FakeMailContext.defaultContext();
 
         InetAddress localHost = InetAddress.getLocalHost();

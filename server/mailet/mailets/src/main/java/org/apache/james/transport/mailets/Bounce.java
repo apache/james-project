@@ -126,7 +126,12 @@ public class Bounce extends GenericMailet implements RedirectNotify {
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError" };
     private static final List<MailAddress> RECIPIENTS = ImmutableList.of(SpecialAddress.REVERSE_PATH);
     private static final List<InternetAddress> TO = ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress());
-    private DNSService dns;
+    private final DNSService dns;
+
+    @Inject
+    public Bounce(DNSService dns) {
+        this.dns = dns;
+    }
 
     @Override
     public String getMailetInfo() {
@@ -141,12 +146,6 @@ public class Bounce extends GenericMailet implements RedirectNotify {
     @Override
     public String[] getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
-    }
-
-    @Inject
-    @Override
-    public void setDNSService(DNSService dns) {
-        this.dns = dns;
     }
 
     @Override

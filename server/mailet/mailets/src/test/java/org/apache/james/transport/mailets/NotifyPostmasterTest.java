@@ -55,9 +55,8 @@ public class NotifyPostmasterTest {
 
     @Before
     public void setUp() throws Exception {
-        notifyPostmaster = new NotifyPostmaster();
         DNSService dnsService = mock(DNSService.class);
-        notifyPostmaster.setDNSService(dnsService);
+        notifyPostmaster = new NotifyPostmaster(dnsService);
         postmaster = new MailAddress("postmaster@james.org");
         fakeMailContext = FakeMailContext.builder()
                 .postmaster(postmaster)

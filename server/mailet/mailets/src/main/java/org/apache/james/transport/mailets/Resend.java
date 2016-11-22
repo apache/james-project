@@ -298,7 +298,12 @@ public class Resend extends GenericMailet implements RedirectNotify {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };
-    private DNSService dns;
+    private final DNSService dns;
+
+    @Inject
+    public Resend(DNSService dns) {
+        this.dns = dns;
+    }
 
     @Override
     public String getMailetInfo() {
@@ -313,12 +318,6 @@ public class Resend extends GenericMailet implements RedirectNotify {
     @Override
     public String[] getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
-    }
-
-    @Inject
-    @Override
-    public void setDNSService(DNSService dns) {
-        this.dns = dns;
     }
 
     @Override

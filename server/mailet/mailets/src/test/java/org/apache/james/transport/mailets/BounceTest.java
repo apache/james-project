@@ -31,7 +31,6 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.transport.mailets.Bounce;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.MailAddressFixture;
@@ -55,9 +54,8 @@ public class BounceTest {
 
     @Before
     public void setUp() throws Exception {
-        bounce = new Bounce();
         DNSService dnsService = mock(DNSService.class);
-        bounce.setDNSService(dnsService);
+        bounce = new Bounce(dnsService);
         fakeMailContext = FakeMailContext.defaultContext();
 
         when(dnsService.getLocalHost()).thenThrow(new UnknownHostException());

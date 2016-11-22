@@ -96,7 +96,13 @@ public class Forward extends GenericMailet implements RedirectNotify {
             "debug", "passThrough", "fakeDomainCheck", "forwardto", "forwardTo" };
     private static final List<String> ALLOWED_SPECIALS = ImmutableList.of(
             "postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null");
-    private DNSService dns;
+    private final DNSService dns;
+
+    @Inject
+    public Forward(DNSService dns) {
+        this.dns = dns;
+        
+    }
 
     @Override
     public String getMailetInfo() {
@@ -111,12 +117,6 @@ public class Forward extends GenericMailet implements RedirectNotify {
     @Override
     public String[] getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
-    }
-
-    @Inject
-    @Override
-    public void setDNSService(DNSService dns) {
-        this.dns = dns;
     }
 
     @Override

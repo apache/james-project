@@ -143,8 +143,6 @@ public interface RedirectNotify extends Mailet, MailetConfig {
 
     String[] getAllowedInitParameters();
 
-    void setDNSService(DNSService dns);
-
     DNSService getDNSService();
 
     void log(String message);

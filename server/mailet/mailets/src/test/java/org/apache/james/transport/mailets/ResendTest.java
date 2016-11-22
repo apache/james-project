@@ -56,9 +56,8 @@ public class ResendTest {
 
     @Before
     public void setUp() throws Exception {
-        resend = new Resend();
         DNSService dnsService = mock(DNSService.class);
-        resend.setDNSService(dnsService);
+        resend = new Resend(dnsService);
         postmaster = new MailAddress("postmaster@james.org");
         fakeMailContext = FakeMailContext.builder()
                 .postmaster(postmaster)

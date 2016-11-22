@@ -56,9 +56,8 @@ public class RedirectTest {
 
     @Before
     public void setUp() throws Exception {
-        redirect = new Redirect();
         DNSService dnsService = mock(DNSService.class);
-        redirect.setDNSService(dnsService);
+        redirect = new Redirect(dnsService);
         postmaster = new MailAddress("postmaster@james.org");
         fakeMailContext = FakeMailContext.builder()
                 .postmaster(postmaster)

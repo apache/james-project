@@ -126,8 +126,13 @@ public class NotifySender extends GenericMailet implements RedirectNotify {
     private static final List<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableList.of(SpecialAddress.SENDER);
     private static final List<String> ALLOWED_SPECIALS = ImmutableList.of("sender", "unaltered", "from");
 
+    private final DNSService dns;
     private Optional<String> to = Optional.absent();
-    private DNSService dns;
+
+    @Inject
+    public NotifySender(DNSService dns) {
+        this.dns = dns;
+    }
 
     @Override
     public void init(MailetConfig mailetConfig) throws MessagingException {
@@ -148,12 +153,6 @@ public class NotifySender extends GenericMailet implements RedirectNotify {
     @Override
     public String[] getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
-    }
-
-    @Inject
-    @Override
-    public void setDNSService(DNSService dns) {
-        this.dns = dns;
     }
 
     @Override

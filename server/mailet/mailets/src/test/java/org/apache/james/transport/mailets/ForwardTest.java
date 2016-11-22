@@ -55,9 +55,8 @@ public class ForwardTest {
 
     @Before
     public void setUp() throws Exception {
-        forward = new Forward();
         DNSService dnsService = mock(DNSService.class);
-        forward.setDNSService(dnsService);
+        forward = new Forward(dnsService);
         postmaster = new MailAddress("postmaster@james.org");
         fakeMailContext = FakeMailContext.builder()
                 .postmaster(postmaster)

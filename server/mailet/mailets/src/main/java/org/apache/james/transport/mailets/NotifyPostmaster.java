@@ -126,8 +126,13 @@ public class NotifyPostmaster extends GenericMailet implements RedirectNotify {
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "to" };
     private static final List<String> ALLOWED_SPECIALS = ImmutableList.of("postmaster", "unaltered");
 
+    private final DNSService dns;
     private Optional<String> to = Optional.absent();
-    private DNSService dns;
+
+    @Inject
+    public NotifyPostmaster(DNSService dns) {
+        this.dns = dns;
+    }
 
     @Override
     public void init(MailetConfig mailetConfig) throws MessagingException {
@@ -148,12 +153,6 @@ public class NotifyPostmaster extends GenericMailet implements RedirectNotify {
     @Override
     public String[] getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
-    }
-
-    @Inject
-    @Override
-    public void setDNSService(DNSService dns) {
-        this.dns = dns;
     }
 
     @Override

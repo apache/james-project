@@ -305,7 +305,12 @@ public class Redirect extends GenericMailet implements RedirectNotify {
             "static", "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };
     private static final List<String> ALLOWED_SPECIALS = ImmutableList.of(
             "postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null");
-    private DNSService dns;
+    private final DNSService dns;
+
+    @Inject
+    public Redirect(DNSService dns) {
+        this.dns = dns;
+    }
 
     @Override
     public String getMailetInfo() {
@@ -320,12 +325,6 @@ public class Redirect extends GenericMailet implements RedirectNotify {
     @Override
     public String[] getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
-    }
-
-    @Inject
-    @Override
-    public void setDNSService(DNSService dns) {
-        this.dns = dns;
     }
 
     @Override

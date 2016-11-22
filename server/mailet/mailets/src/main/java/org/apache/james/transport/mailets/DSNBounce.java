@@ -111,8 +111,13 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private static final String MACHINE_PATTERN = "[machine]";
     private static final String LINE_BREAK = "\n";
 
+    private final DNSService dns;
     private String messageString = null;
-    private DNSService dns;
+
+    @Inject
+    public DSNBounce(DNSService dns) {
+        this.dns = dns;
+    }
 
     @Override
     public void init() throws MessagingException {
@@ -146,12 +151,6 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     @Override
     public String[] getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
-    }
-
-    @Inject
-    @Override
-    public void setDNSService(DNSService dns) {
-        this.dns = dns;
     }
 
     @Override
