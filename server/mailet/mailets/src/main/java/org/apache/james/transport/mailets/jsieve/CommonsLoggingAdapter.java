@@ -19,13 +19,59 @@
 package org.apache.james.transport.mailets.jsieve;
 
 import org.apache.commons.logging.Log;
-import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 /**
  * Adapts commons logging to mailet logging.
  */
-class CommonsLoggingAdapter implements Log {
-    
+public class CommonsLoggingAdapter implements Log {
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private Optional<Boolean> verbose = Optional.absent();
+        private Optional<Boolean> quiet = Optional.absent();
+        private Logger logger;
+
+        public Builder wrappedLogger(Logger logger) {
+            this.logger = logger;
+            return this;
+        }
+
+        public Builder verbose(boolean verbose) {
+            this.verbose = Optional.of(verbose);
+            return this;
+        }
+
+        public Builder quiet(boolean quiet) {
+            this.quiet = Optional.of(quiet);
+            return this;
+        }
+
+        public CommonsLoggingAdapter build() {
+            Preconditions.checkNotNull(logger);
+            Boolean quietParameter = quiet.or(false);
+            Boolean verboseParameter = verbose.or(false);
+            Preconditions.checkState(!(verboseParameter && quietParameter), "You can not specify a logger both verbose and quiet");
+            return new CommonsLoggingAdapter(logger, computeLogLevel(quietParameter, verboseParameter));
+        }
+
+        private int computeLogLevel(boolean quiet, boolean verbose) {
+            if (verbose) {
+                return CommonsLoggingAdapter.TRACE;
+            } else if (quiet) {
+                return CommonsLoggingAdapter.FATAL;
+            } else {
+                return CommonsLoggingAdapter.WARN;
+            }
+        }
+    }
+
     public static final int TRACE = 6;
     public static final int DEBUG = 5;
     public static final int INFO = 4;
@@ -33,110 +79,109 @@ class CommonsLoggingAdapter implements Log {
     public static final int ERROR = 2;
     public static final int FATAL = 1;
     
-    private final GenericMailet mailet;
+    private final Logger logger;
     private final int level;
     
-    public CommonsLoggingAdapter(final GenericMailet mailet, final int level) {
+    private CommonsLoggingAdapter(Logger logger, final int level) {
         super();
-        this.mailet = mailet;
+        this.logger = logger;
         this.level = level;
     }
 
     public void debug(Object message) {
         if (isDebugEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString());
+            logger.debug(message == null ? "NULL" : message.toString());
         }
     }
 
     public void debug(Object message, Throwable t) {
         if (isDebugEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString(), t);
+            logger.debug(message == null ? "NULL" : message.toString(), t);
         } 
     }
 
     public void error(Object message) {
         if (isErrorEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString());
+            logger.error(message == null ? "NULL" : message.toString());
         }
     }
 
     public void error(Object message, Throwable t) {
         if (isErrorEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString(), t);
+            logger.error(message == null ? "NULL" : message.toString(), t);
         }
     }
 
     public void fatal(Object message) {
         if (isFatalEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString());
+            logger.error(message == null ? "NULL" : message.toString());
         }
     }
 
     public void fatal(Object message, Throwable t) {
         if (isFatalEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString(), t);
+            logger.error(message == null ? "NULL" : message.toString(), t);
         }
     }
 
     public void info(Object message) {
         if (isInfoEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString());
+            logger.info(message == null ? "NULL" : message.toString());
         }
     }
 
     public void info(Object message, Throwable t) {
         if (isInfoEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString(), t);
+            logger.info(message == null ? "NULL" : message.toString(), t);
         }
     }
 
     public boolean isDebugEnabled() {
-        return level <= DEBUG;
+        return level >= DEBUG;
     }
 
     public boolean isErrorEnabled() {
-        return level <= ERROR;
+        return level >= ERROR;
     }
 
     public boolean isFatalEnabled() {
-        return level <= FATAL;
+        return level >= FATAL;
     }
 
     public boolean isInfoEnabled() {
-        return level <= INFO;
+        return level >= INFO;
     }
 
     public boolean isTraceEnabled() {
-        return level <= TRACE;
+        return level >= TRACE;
     }
 
     public boolean isWarnEnabled() {
-        return level <= WARN;
+        return level >= WARN;
     }
 
     public void trace(Object message) {
         if (isTraceEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString());
+            logger.debug(message == null ? "NULL" : message.toString());
         }
     }
 
     public void trace(Object message, Throwable t) {
         if (isTraceEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString(), t);
+            logger.debug(message == null ? "NULL" : message.toString(), t);
         }
     }
 
     public void warn(Object message) {
         if (isWarnEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString());
+            logger.warn(message == null ? "NULL" : message.toString());
         }
     }
 
     public void warn(Object message, Throwable t) {
         if (isWarnEnabled()) {
-            mailet.log(message == null ? "NULL" : message.toString(), t);
+            logger.warn(message == null ? "NULL" : message.toString(), t);
         }
     }
-    
-    
+
 }

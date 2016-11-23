@@ -22,6 +22,7 @@ package org.apache.james.user.api;
 import java.util.Iterator;
 
 import org.apache.james.user.api.model.User;
+import org.apache.mailet.MailAddress;
 
 /**
  * Interface for a repository of users. A repository represents a logical
@@ -126,5 +127,14 @@ public interface UsersRepository {
      * @return true or false
      */
     boolean supportVirtualHosting() throws UsersRepositoryException;
+
+    /**
+     * Returns username to be used for a given MailAddress
+     *
+     * @param mailAddress
+     * @return Username used by James for this mailAddress
+     * @throws UsersRepositoryException
+     */
+    String getUser(MailAddress mailAddress) throws UsersRepositoryException;
 
 }

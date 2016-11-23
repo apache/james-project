@@ -17,26 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.transport.mailets.delivery;
 
-import java.io.InputStream;
-import java.util.Date;
+import javax.mail.MessagingException;
 
-import javax.mail.Flags;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
 
-import org.apache.james.cli.probe.ServerProbe;
-import org.apache.james.mailbox.exception.BadCredentialsException;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
+public interface MailStore {
+    String DELIVERY_PATH_PREFIX = "DeliveryPath_";
 
-public interface ExtendedServerProbe extends ServerProbe {
-
-    void appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
-            throws BadCredentialsException, MailboxException;
-
-    Mailbox getMailbox(String namespace, String user, String name);
-
-    void addActiveSieveScript(String user, String name, String script) throws Exception;
-
+    void storeMail(MailAddress recipient, Mail mail) throws MessagingException;
 }

@@ -62,8 +62,8 @@ public class GuiceServerProbe implements ExtendedServerProbe, GuiceProbe {
     private final MailboxMapperFactory mailboxMapperFactory;
     private final DomainList domainList;
     private final UsersRepository usersRepository;
-    private final SieveRepository sieveRepository;
     private final RecipientRewriteTable recipientRewriteTable;
+    private final SieveRepository sieveRepository;
 
     @Inject
     private GuiceServerProbe(MailboxManager mailboxManager, MailboxMapperFactory mailboxMapperFactory,
@@ -349,4 +349,9 @@ public class GuiceServerProbe implements ExtendedServerProbe, GuiceProbe {
         sieveRepository.removeQuota(user);
     }
 
+    @Override
+    public void addActiveSieveScript(String user, String name, String script) throws Exception {
+        sieveRepository.putScript(user, name, script);
+        sieveRepository.setActive(user, name);
+    }
 }

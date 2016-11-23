@@ -137,8 +137,6 @@ public class RejectAction implements MailAction {
         {
             context.getLog().info("Unable to send reject MDN. Could not determine the recipient.");
         }
-        // Ghost the original mail
-        aMail.setState(Mail.GHOST);
     }
 
 }

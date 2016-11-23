@@ -832,17 +832,11 @@ public class MessageProcessor extends ProcessorAbstract {
      * @throws UsersRepositoryException
      */
     protected boolean isLocalRecipient(MailAddress recipient) throws UsersRepositoryException {
-        if (isLocalServer(recipient)) {
-            // check if we use virtualhosting or not and use the right part of
-            // the recipient in respect of this
-            // See JAMES-1135
-            if (getConfiguration().getLocalUsers().supportVirtualHosting()) {
-                return getLocalUsers().contains(recipient.toString());
-            } else {
-                return getLocalUsers().contains(recipient.getLocalPart());
-            }
-        }
-        return false;
+        // check if we use virtualhosting or not and use the right part of
+        // the recipient in respect of this
+        // See JAMES-1135
+        return isLocalServer(recipient)
+            && getLocalUsers().contains(getLocalUsers().getUser(recipient));
     }
 
     /**

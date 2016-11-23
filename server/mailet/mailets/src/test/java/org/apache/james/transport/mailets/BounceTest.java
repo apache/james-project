@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.Serializable;
 import java.net.UnknownHostException;
 import java.util.Properties;
 
@@ -37,9 +36,6 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 public class BounceTest {
 
@@ -77,10 +73,9 @@ public class BounceTest {
 
         bounce.service(mail);
 
-        FakeMailContext.SentMail expected = new FakeMailContext.SentMail(null,
-            Lists.newArrayList(senderMailAddress),
-            null,
-            ImmutableMap.<String, Serializable>of());
+        FakeMailContext.SentMail expected = FakeMailContext.sentMailBuilder()
+            .recipient(senderMailAddress)
+            .build();
         assertThat(fakeMailContext.getSentMails()).containsOnly(expected);
     }
 

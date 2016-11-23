@@ -30,6 +30,7 @@ import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
 
 public abstract class AbstractUsersRepository implements UsersRepository, LogEnabled, Configurable {
@@ -132,4 +133,13 @@ public abstract class AbstractUsersRepository implements UsersRepository, LogEna
      *           If an error occurred
      */
     protected abstract void doAddUser(String username, String password) throws UsersRepositoryException;
+
+    @Override
+    public String getUser(MailAddress mailAddress) throws UsersRepositoryException {
+        if (supportVirtualHosting()) {
+            return mailAddress.asString();
+        } else {
+            return mailAddress.getLocalPart();
+        }
+    }
 }

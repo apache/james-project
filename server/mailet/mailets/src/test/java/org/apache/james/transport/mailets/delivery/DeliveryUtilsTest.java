@@ -17,26 +17,24 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.transport.mailets.delivery;
 
-import java.io.InputStream;
-import java.util.Date;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.Flags;
+import org.apache.mailet.base.MailAddressFixture;
+import org.junit.Test;
 
-import org.apache.james.cli.probe.ServerProbe;
-import org.apache.james.mailbox.exception.BadCredentialsException;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
+public class DeliveryUtilsTest {
 
-public interface ExtendedServerProbe extends ServerProbe {
+    @Test
+    public void prettyPrintShouldDisplayNullAddresses() {
+        assertThat(DeliveryUtils.prettyPrint(null)).isEqualTo("<>");
+    }
 
-    void appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
-            throws BadCredentialsException, MailboxException;
-
-    Mailbox getMailbox(String namespace, String user, String name);
-
-    void addActiveSieveScript(String user, String name, String script) throws Exception;
+    @Test
+    public void prettyPrintShouldDisplayAddresses() {
+        assertThat(DeliveryUtils.prettyPrint(MailAddressFixture.ANY_AT_JAMES))
+            .isEqualTo("<" + MailAddressFixture.ANY_AT_JAMES + ">");
+    }
 
 }

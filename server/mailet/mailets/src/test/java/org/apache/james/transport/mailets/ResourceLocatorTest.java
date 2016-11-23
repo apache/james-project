@@ -25,33 +25,45 @@ import static org.mockito.Mockito.when;
 
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
+import org.apache.james.transport.mailets.jsieve.ResourceLocator;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.mailet.MailAddress;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-public class ResourceLocatorImplTest {
+public class ResourceLocatorTest {
 
+    public static final String RECEIVER_LOCALHOST = "receiver@localhost";
     private SieveRepository sieveRepository;
-    private ResourceLocatorImpl resourceLocator;
+    private ResourceLocator resourceLocator;
+    private MailAddress mailAddress;
+    private UsersRepository usersRepository;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         sieveRepository = mock(SieveRepository.class);
-        resourceLocator = new ResourceLocatorImpl(true, sieveRepository);
+        usersRepository = mock(UsersRepository.class);
+        resourceLocator = new ResourceLocator(sieveRepository, usersRepository);
+        mailAddress = new MailAddress(RECEIVER_LOCALHOST);
     }
 
     @Test(expected = ScriptNotFoundException.class)
     public void resourceLocatorImplShouldPropagateScriptNotFound() throws Exception {
-        when(sieveRepository.getActive("receiver@localhost")).thenThrow(new ScriptNotFoundException());
-        resourceLocator.get("//receiver@localhost/sieve");
+        when(sieveRepository.getActive(RECEIVER_LOCALHOST)).thenThrow(new ScriptNotFoundException());
+        when(usersRepository.getUser(mailAddress)).thenReturn(RECEIVER_LOCALHOST);
+
+        resourceLocator.get(mailAddress);
     }
 
     @Test
     public void resourceLocatorImplShouldWork() throws Exception {
         InputStream inputStream = new ByteArrayInputStream(new byte[0]);
-        when(sieveRepository.getActive("receiver@localhost")).thenReturn(inputStream);
-        assertThat(resourceLocator.get("//receiver@localhost/sieve").getScriptContent()).isEqualTo(inputStream);
+        when(sieveRepository.getActive(RECEIVER_LOCALHOST)).thenReturn(inputStream);
+        when(usersRepository.getUser(mailAddress)).thenReturn(RECEIVER_LOCALHOST);
+
+        assertThat(resourceLocator.get(mailAddress).getScriptContent()).isEqualTo(inputStream);
     }
 }

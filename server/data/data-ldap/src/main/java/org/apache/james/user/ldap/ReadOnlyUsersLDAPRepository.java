@@ -51,6 +51,7 @@ import org.apache.james.user.ldap.api.LdapConstants;
 import org.apache.james.util.retry.DoublingRetrySchedule;
 import org.apache.james.util.retry.api.RetrySchedule;
 import org.apache.james.util.retry.naming.ldap.RetryingLdapContext;
+import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
 
 /**
@@ -761,4 +762,9 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         return false;
     }
 
+
+    @Override
+    public String getUser(MailAddress mailAddress) throws UsersRepositoryException {
+        return mailAddress.getLocalPart();
+    }
 }

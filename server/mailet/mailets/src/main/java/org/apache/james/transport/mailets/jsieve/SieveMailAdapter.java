@@ -440,7 +440,8 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     public String getServerInfo() {
         return getMailetContext().getServerInfo();
     }
-    public void post(String uri, MimeMessage mail) throws MessagingException {
+
+    public void post(String uri, Mail mail) throws MessagingException {
         poster.post(uri, mail);
     }
     

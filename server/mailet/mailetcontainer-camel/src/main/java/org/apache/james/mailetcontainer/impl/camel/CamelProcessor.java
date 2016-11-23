@@ -90,6 +90,9 @@ public class CamelProcessor implements Processor {
             MailetPipelineLogging.logEndOfMailetProcess(mailet, mail);
             List<MailetProcessorListener> listeners = processor.getListeners();
             long complete = System.currentTimeMillis() - start;
+            if (mail.getRecipients().isEmpty()) {
+                mail.setState(Mail.GHOST);
+            }
             for (MailetProcessorListener listener : listeners) {
                 listener.afterMailet(mailet, mail.getName(), mail.getState(), complete, ex);
             }

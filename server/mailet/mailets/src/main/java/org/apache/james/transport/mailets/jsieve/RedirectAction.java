@@ -61,7 +61,6 @@ public class RedirectAction implements MailAction {
         recipients.add(new MailAddress(new InternetAddress(anAction.getAddress())));
         MailAddress sender = aMail.getSender();
         context.post(sender, recipients, aMail.getMessage());
-        aMail.setState(Mail.GHOST);
         Log log = context.getLog();
         if (log.isDebugEnabled()) {
             log.debug("Redirected Message ID: "

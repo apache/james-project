@@ -278,6 +278,10 @@ public class MailAddress implements java.io.Serializable {
     public String toString() {
         return localPart + "@" + domain;
     }
+    
+    public String asPrettyString() {
+        return '<' + asString() + '>';
+    }
 
     /**
      * Returns an InternetAddress representing the same address
