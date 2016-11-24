@@ -19,11 +19,22 @@
 
 package org.apache.james.modules.server;
 
+import java.util.List;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
+import org.apache.james.utils.ConfigurationPerformer;
 
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Scopes;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 
 public class DropWizardMetricsModule extends AbstractModule {
 
@@ -31,6 +42,34 @@ public class DropWizardMetricsModule extends AbstractModule {
     protected void configure() {
         bind(DropWizardMetricFactory.class).in(Scopes.SINGLETON);
         bind(MetricFactory.class).to(DropWizardMetricFactory.class);
+
+        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(DropWizardConfigurationPerformer.class);
+    }
+
+    @Singleton
+    public static class DropWizardConfigurationPerformer implements ConfigurationPerformer {
+        public static final HierarchicalConfiguration NO_CONFIGURATION = null;
+
+        private final DropWizardMetricFactory metricFactory;
+
+        @Inject
+        public DropWizardConfigurationPerformer(DropWizardMetricFactory metricFactory) {
+            this.metricFactory = metricFactory;
+        }
+
+        @Override
+        public void initModule() {
+            try {
+                metricFactory.configure(NO_CONFIGURATION);
+            } catch (ConfigurationException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+
+        @Override
+        public List<Class<? extends Configurable>> forClasses() {
+            return ImmutableList.of(DropWizardMetricFactory.class);
+        }
     }
 
 }
