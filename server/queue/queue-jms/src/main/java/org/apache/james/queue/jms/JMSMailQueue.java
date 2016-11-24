@@ -49,6 +49,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailImpl;
 import org.apache.james.core.MimeMessageCopyOnWriteProxy;
+import org.apache.james.metrics.api.Metric;
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -73,13 +74,15 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     protected final String queueName;
     protected final ConnectionFactory connectionFactory;
     protected final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
+    protected final Metric enqueuedMailsMetric;
     protected final Logger logger;
     public final static String FORCE_DELIVERY = "FORCE_DELIVERY";
 
-    public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName, Logger logger) {
+    public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName, Metric enqueuedMailsMetric, Logger logger) {
         this.connectionFactory = connectionFactory;
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
         this.queueName = queueName;
+        this.enqueuedMailsMetric = enqueuedMailsMetric;
         this.logger = logger;
     }
 
@@ -204,6 +207,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
             produceMail(session, props, msgPrio, mail);
 
+            enqueuedMailsMetric.increment();
         } catch (Exception e) {
             if (session != null) {
                 try {

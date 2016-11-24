@@ -21,6 +21,7 @@ package org.apache.james.queue.activemq;
 import javax.inject.Inject;
 import javax.jms.ConnectionFactory;
 
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -35,8 +36,8 @@ public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
     private boolean useBlob = true;
 
     @Inject
-    public ActiveMQMailQueueFactory(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
-        super(connectionFactory, mailQueueItemDecoratorFactory);
+    public ActiveMQMailQueueFactory(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, MetricFactory metricFactory) {
+        super(connectionFactory, mailQueueItemDecoratorFactory, metricFactory);
     }
 
     public void setUseBlobMessages(boolean useBlob) {
@@ -45,6 +46,6 @@ public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
 
     @Override
     protected MailQueue createMailQueue(String name) {
-        return new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, useBlob, log);
+        return new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, useBlob, metricFactory.generate("enqueuedMails:" + name), log);
     }
 }

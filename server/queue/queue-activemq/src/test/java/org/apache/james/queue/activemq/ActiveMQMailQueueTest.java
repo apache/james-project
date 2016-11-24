@@ -18,11 +18,18 @@
  ****************************************************************/
 package org.apache.james.queue.activemq;
 
+import static org.mockito.Mockito.mock;
+
+import java.util.Arrays;
+
+import javax.jms.ConnectionFactory;
+
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.plugin.StatisticsBrokerPlugin;
+import org.apache.james.metrics.api.Metric;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.jms.AbstractJMSMailQueueTest;
 import org.apache.james.queue.jms.JMSMailQueue;
@@ -30,9 +37,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.ConnectionFactory;
-import java.util.Arrays;
 
 public abstract class ActiveMQMailQueueTest extends AbstractJMSMailQueueTest {
 
@@ -74,7 +78,8 @@ public abstract class ActiveMQMailQueueTest extends AbstractJMSMailQueueTest {
     @Override
     protected JMSMailQueue createQueue(ConnectionFactory factory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName) {
         Logger log = LoggerFactory.getLogger(ActiveMQMailQueueTest.class);
-        return new ActiveMQMailQueue(factory, mailQueueItemDecoratorFactory, queueName, useBlobMessages(), log);
+
+        return new ActiveMQMailQueue(factory, mailQueueItemDecoratorFactory, queueName, useBlobMessages(), mock(Metric.class), log);
     }
 
     protected boolean useBlobMessages() {

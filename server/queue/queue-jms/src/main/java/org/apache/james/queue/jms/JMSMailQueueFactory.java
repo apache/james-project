@@ -21,6 +21,8 @@ package org.apache.james.queue.jms;
 import javax.inject.Inject;
 import javax.jms.ConnectionFactory;
 
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -31,18 +33,20 @@ import org.apache.james.queue.library.AbstractMailQueueFactory;
  */
 public class JMSMailQueueFactory extends AbstractMailQueueFactory {
 
-    protected ConnectionFactory connectionFactory;
-    protected MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
+    protected final ConnectionFactory connectionFactory;
+    protected final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
+    protected final MetricFactory metricFactory;
     
     @Inject
-    public JMSMailQueueFactory(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
+    public JMSMailQueueFactory(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, MetricFactory metricFactory) {
         this.connectionFactory = connectionFactory;
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
+        this.metricFactory = metricFactory;
     }
 
     @Override
     protected MailQueue createMailQueue(String name) {
-        return new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, log);
+        return new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, metricFactory.generate("enqueuedMail:" + name), log);
     }
     
 }
