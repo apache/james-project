@@ -19,12 +19,12 @@ EXPOSE 25 110 143 465 587 993 8000
 WORKDIR /root
 
 # Get data we need to run James : build results and configuration
-ADD destination/james-server-jpa-guice-3.0.0-beta6-SNAPSHOT.jar /root/james-server.jar
-ADD destination/james-server-jpa-guice-3.0.0-beta6-SNAPSHOT.lib /root/james-server-jpa-guice-3.0.0-beta6-SNAPSHOT.lib
-ADD destination/james-server-cli-3.0.0-beta6-SNAPSHOT.jar /root/james-cli.jar
-ADD destination/james-server-cli-3.0.0-beta6-SNAPSHOT.lib /root/james-server-cli-3.0.0-beta6-SNAPSHOT.lib
+ADD destination/james-server-jpa-guice.jar /root/james-server.jar
+ADD destination/james-server-jpa-guice.lib /root/james-server-jpa-guice.lib
+ADD destination/james-server-cli.jar /root/james-cli.jar
+ADD destination/james-server-cli.lib /root/james-server-cli.lib
 ADD destination/conf /root/conf
 
 VOLUME /logs
 
-ENTRYPOINT java -javaagent:/root/james-server-cli-3.0.0-beta6-SNAPSHOT.lib/openjpa-2.2.1.jar -Dlogback.configurationFile=/root/conf/logback.xml -Dworking.directory=/root/ -jar james-server.jar
+ENTRYPOINT java -classpath '/root/james-server.jar:/root/james-server-jpa-guice.lib/*' -javaagent:/root/james-server-cli.lib/openjpa-2.2.1.jar -Dlogback.configuratioile=/root/conf/logback.xml -Dworking.directory=/root/ org.apache.james.JPAJamesServerMain

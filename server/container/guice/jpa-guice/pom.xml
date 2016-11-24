@@ -147,7 +147,7 @@
                             <goal>copy-dependencies</goal>
                           </goals>
                           <configuration>
-                            <outputDirectory>${project.build.directory}/${project.build.finalName}.lib</outputDirectory>
+                            <outputDirectory>${project.build.directory}/${project.artifactId}.lib</outputDirectory>
                           </configuration>
                         </execution>
                       </executions>
@@ -162,10 +162,11 @@
                                   <goal>jar</goal>
                               </goals>
                               <configuration>
+                                  <finalName>${project.artifactId}</finalName>
                                   <archive>
                                       <manifest>
                                           <addClasspath>true</addClasspath>
-                                          <classpathPrefix>${project.build.finalName}.lib/</classpathPrefix>
+                                          <classpathPrefix>${project.artifactId}.lib/</classpathPrefix>
                                           <mainClass>org.apache.james.JPAJamesServerMain</mainClass>
                                           <useUniqueVersions>false</useUniqueVersions>
                                       </manifest>

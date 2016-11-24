@@ -54,18 +54,16 @@ fi
 
 if [ $? -eq 0 ]; then
    if [ -d "$CASSANDRA_DESTINATION" ]; then
-      cp server/app/target/james-server-app-*-app.zip $CASSANDRA_DESTINATION || true
-      cp server/container/guice/cassandra-guice/target/james-server-cassandra-guice-*-SNAPSHOT.jar $CASSANDRA_DESTINATION || true
-      cp -r server/container/guice/cassandra-guice/target/james-server-cassandra-guice-*-SNAPSHOT.lib $CASSANDRA_DESTINATION || true
-      cp server/container/cli/target/james-server-cli-*.jar $CASSANDRA_DESTINATION || true
-      cp -r server/container/cli/target/james-server-cli-*.lib $CASSANDRA_DESTINATION || true
+      cp server/container/guice/cassandra-guice/target/james-server-cassandra-guice.jar $CASSANDRA_DESTINATION || true
+      cp -r server/container/guice/cassandra-guice/target/james-server-cassandra-guice.lib $CASSANDRA_DESTINATION || true
+      cp server/container/cli/target/james-server-cli.jar $CASSANDRA_DESTINATION || true
+      cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_DESTINATION || true
    fi
 
    if [ -d "$JPA_DESTINATION" ]; then
-      cp server/app/target/james-server-app-*-app.zip $JPA_DESTINATION || true
-      cp server/container/guice/jpa-guice/target/james-server-jpa-guice-*-SNAPSHOT.jar $JPA_DESTINATION || true
-      cp -r server/container/guice/jpa-guice/target/james-server-jpa-guice-*-SNAPSHOT.lib $JPA_DESTINATION || true
-      cp server/container/cli/target/james-server-cli-*.jar $JPA_DESTINATION || true
-      cp -r server/container/cli/target/james-server-cli-*.lib $JPA_DESTINATION || true
+      cp server/container/guice/jpa-guice/target/james-server-jpa-guice.jar $JPA_DESTINATION || true
+      cp -r server/container/guice/jpa-guice/target/james-server-jpa-guice.lib $JPA_DESTINATION || true
+      cp server/container/cli/target/james-server-cli.jar $JPA_DESTINATION || true
+      cp -r server/container/cli/target/james-server-cli.lib $JPA_DESTINATION || true
    fi
 fi
