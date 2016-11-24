@@ -16,45 +16,29 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.imapserver.netty;
 
-import org.apache.james.imap.api.process.ImapProcessor;
-import org.apache.james.imap.decode.ImapDecoder;
-import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.metrics.api.Metric;
-import org.jboss.netty.channel.socket.ServerSocketChannelFactory;
-import org.jboss.netty.channel.socket.oio.OioServerSocketChannelFactory;
-import org.jboss.netty.handler.execution.ExecutionHandler;
+import org.apache.james.metrics.api.MetricFactory;
 
-/**
- * IMAPServer which use old IO and not NIO. If you want to use NIO you should
- * use {@link IMAPServer}
- */
-public class OioIMAPServer extends IMAPServer {
+public class ImapMetrics {
+    private static final String IMAP_COMMANDS = "imapCommands";
+    private static final String IMAP_CONNECTIONS = "imapConnections";
 
-    public OioIMAPServer(ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor, ImapMetrics imapMetrics) {
-        super(decoder, encoder, processor, imapMetrics);
+    private final Metric commandsMetric;
+    private final Metric connectionsMetric;
+
+    public ImapMetrics(MetricFactory metricFactory) {
+        commandsMetric = metricFactory.generate(IMAP_COMMANDS);
+        connectionsMetric = metricFactory.generate(IMAP_CONNECTIONS);
     }
 
-    @Override
-    protected ServerSocketChannelFactory createSocketChannelFactory() {
-        return new OioServerSocketChannelFactory(createBossExecutor(), createWorkerExecutor());
+    public Metric getCommandsMetric() {
+        return commandsMetric;
     }
 
-    /**
-     * Return -1 as it is not known
-     */
-    @Override
-    public int getIoWorkerCount() {
-        return -1;
+    public Metric getConnectionsMetric() {
+        return connectionsMetric;
     }
-
-    /**
-     * As OIO use one thread per connection we disable the use of the {@link ExecutionHandler}
-     */
-    @Override
-    protected ExecutionHandler createExecutionHander() {
-        return null;
-    }
-
 }

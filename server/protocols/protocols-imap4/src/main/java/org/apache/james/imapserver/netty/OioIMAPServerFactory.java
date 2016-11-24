@@ -18,11 +18,24 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
+import javax.inject.Inject;
+
+import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.imap.api.process.ImapProcessor;
+import org.apache.james.imap.decode.ImapDecoder;
+import org.apache.james.imap.encode.ImapEncoder;
+import org.apache.james.metrics.api.MetricFactory;
+
 public class OioIMAPServerFactory extends IMAPServerFactory {
+
+    @Inject
+    public OioIMAPServerFactory(FileSystem fileSystem, ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor, MetricFactory metricFactory) {
+        super(fileSystem, decoder, encoder, processor, metricFactory);
+    }
 
     @Override
     protected IMAPServer createServer() {
-        return new OioIMAPServer();
+        return new OioIMAPServer(decoder, encoder, processor, imapMetrics);
     }
 
 }

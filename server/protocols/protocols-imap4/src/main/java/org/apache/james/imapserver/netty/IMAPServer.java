@@ -22,7 +22,6 @@ import static org.jboss.netty.channel.Channels.pipeline;
 
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
 import javax.net.ssl.SSLEngine;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -55,9 +54,10 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
 
     private static final String softwaretype = "JAMES " + VERSION + " Server ";
 
-    private ImapProcessor processor;
-    private ImapEncoder encoder;
-    private ImapDecoder decoder;
+    private final ImapProcessor processor;
+    private final ImapEncoder encoder;
+    private final ImapDecoder decoder;
+    private final ImapMetrics imapMetrics;
 
     private String hello;
     private boolean compress;
@@ -72,19 +72,11 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     public final static int DEFAULT_TIMEOUT = 30 * 60; // default timeout is 30 seconds
     public final static int DEFAULT_LITERAL_SIZE_LIMIT = 0;
 
-    @Inject
-    public void setImapProcessor(ImapProcessor processor) {
+    public IMAPServer(ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor, ImapMetrics imapMetrics) {
         this.processor = processor;
-    }
-
-    @Inject
-    public void setImapDecoder(ImapDecoder decoder) {
-        this.decoder = decoder;
-    }
-
-    @Inject
-    public void setImapEncoder(ImapEncoder encoder) {
         this.encoder = encoder;
+        this.decoder = decoder;
+        this.imapMetrics = imapMetrics;
     }
 
     @Override
@@ -186,9 +178,9 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         ImapChannelUpstreamHandler coreHandler;
         Encryption secure = getEncryption();
         if (secure!= null && secure.isStartTLS()) {
-           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, getLogger(), compress, plainAuthDisallowed, secure.getContext(), getEnabledCipherSuites());
+           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, getLogger(), compress, plainAuthDisallowed, secure.getContext(), getEnabledCipherSuites(), imapMetrics);
         } else {
-           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, getLogger(), compress, plainAuthDisallowed);
+           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, getLogger(), compress, plainAuthDisallowed, imapMetrics);
         }
         return coreHandler;
     }

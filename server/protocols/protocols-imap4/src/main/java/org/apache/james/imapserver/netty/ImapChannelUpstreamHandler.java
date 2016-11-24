@@ -32,6 +32,7 @@ import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.main.ResponseEncoder;
+import org.apache.james.metrics.api.Metric;
 import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.api.logger.ProtocolSessionLogger;
 import org.apache.james.protocols.lib.Slf4jLoggerAdapter;
@@ -70,12 +71,18 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
     private final ImapHeartbeatHandler heartbeatHandler = new ImapHeartbeatHandler();
 
     private final boolean plainAuthDisallowed;
+
+    private final Metric imapConnectionsMetric;
+    private final Metric imapCommandsMetric;
     
-    public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, Logger logger, boolean compress, boolean plainAuthDisallowed) {
-        this(hello, processor, encoder, logger, compress, plainAuthDisallowed, null, null);
+    public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, Logger logger, boolean compress,
+                                      boolean plainAuthDisallowed, ImapMetrics imapMetrics) {
+        this(hello, processor, encoder, logger, compress, plainAuthDisallowed, null, null, imapMetrics);
     }
 
-    public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, Logger logger, boolean compress, boolean plainAuthDisallowed, SSLContext context, String[] enabledCipherSuites) {
+    public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, Logger logger, boolean compress,
+                                      boolean plainAuthDisallowed, SSLContext context, String[] enabledCipherSuites,
+                                      ImapMetrics imapMetrics) {
         this.logger = logger;
         this.hello = hello;
         this.processor = processor;
@@ -84,6 +91,8 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
         this.enabledCipherSuites = enabledCipherSuites;
         this.compress = compress;
         this.plainAuthDisallowed = plainAuthDisallowed;
+        this.imapConnectionsMetric = imapMetrics.getConnectionsMetric();
+        this.imapCommandsMetric = imapMetrics.getCommandsMetric();
     }
 
     private Logger getLogger(Channel channel) {
@@ -108,6 +117,7 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
         ImapSession imapSession = (ImapSession) attributes.remove(ctx.getChannel());
         if (imapSession != null)
             imapSession.logout();
+        imapConnectionsMetric.decrement();
 
         super.channelClosed(ctx, e);
     }
@@ -117,6 +127,7 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
         
         InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
         getLogger(ctx.getChannel()).info("Connection established from " + address.getAddress().getHostAddress());
+        imapConnectionsMetric.increment();
 
         ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.getChannel()));
         ctx.setAttachment(response);
@@ -171,7 +182,8 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        
+
+        imapCommandsMetric.increment();
         ImapSession session = (ImapSession) attributes.get(ctx.getChannel());
         ImapResponseComposer response = (ImapResponseComposer) ctx.getAttachment();
         ImapMessage message = (ImapMessage) e.getMessage();

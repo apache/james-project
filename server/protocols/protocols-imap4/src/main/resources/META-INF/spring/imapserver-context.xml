@@ -20,10 +20,11 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
     <bean id="imapserver" class="org.apache.james.imapserver.netty.IMAPServerFactory">
-        <property name="imapProcessor" ref="imapProcessor"/>
-        <property name="imapEncoder" ref="imapEncoder"/>
-        <property name="imapDecoder" ref="imapDecoder"/>
-        <property name="fileSystem" ref="filesystem"/>
+        <constructor-arg index="0" ref="filesystem" />
+        <constructor-arg index="1" ref="imapDecoder" />
+        <constructor-arg index="2" ref="imapEncoder" />
+        <constructor-arg index="3" ref="imapProcessor" />
+        <constructor-arg index="4" ref="metricFactory" />
     </bean>
 
     <!-- The imapProcessor configuration will be reviewed when IMAP will be integrated into Protocols project -->
