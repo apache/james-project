@@ -56,13 +56,15 @@
         <module>karaf/features</module>
         <module>karaf/integration</module>
 
-        <module>container/guice</module>
         <module>container/cli</module>
         <module>container/core</module>
         <module>container/filesystem-api</module>
+        <module>container/guice</module>
         <module>container/jetty</module>
         <module>container/lifecycle-api</module>
         <module>container/mailbox-adapter</module>
+        <module>container/metrics/metrics-api</module>
+        <module>container/metrics/metrics-dropwizard</module>
         <module>container/spring</module>
         <module>container/util</module>
         <module>container/util-java8</module>
@@ -186,6 +188,7 @@
         <assertj-3.version>3.3.0</assertj-3.version>
         <testcontainers-version>1.0.2</testcontainers-version>
         <guavate.version>1.0.0</guavate.version>
+        <metrics.version>3.1.0</metrics.version>
     </properties>
 
     <dependencyManagement>
@@ -596,6 +599,16 @@
                 <artifactId>james-server-memory-guice</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-metrics-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-metrics-dropwizard</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
@@ -1295,6 +1308,11 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty</artifactId>
                 <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-core</artifactId>
+                <version>${metrics.version}</version>
             </dependency>
             <!-- This needed to let the bundle plugin to generate the right import statement -->
             <dependency>
