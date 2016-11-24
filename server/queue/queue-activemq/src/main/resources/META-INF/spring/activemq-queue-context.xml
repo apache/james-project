@@ -32,6 +32,7 @@
         <constructor-arg index="1">
             <util:constant static-field="org.apache.james.queue.api.MailQueueItemDecoratorFactory.RAW_FACTORY"/>
         </constructor-arg>
+        <constructor-arg index="2" ref="metricFactory"/>
     </bean>
 
     <!-- 
