@@ -33,6 +33,7 @@ import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.modules.server.AsyncTasksExecutorModule;
 import org.apache.james.modules.server.ConfigurationProviderModule;
 import org.apache.james.modules.server.DNSServiceModule;
+import org.apache.james.modules.server.DropWizardMetricsModule;
 import org.apache.james.onami.lifecycle.PreDestroyModule;
 
 import com.google.inject.AbstractModule;
@@ -55,6 +56,7 @@ public class CommonServicesModule extends AbstractModule {
         install(new PreDestroyModule());
         install(new DNSServiceModule());
         install(new AsyncTasksExecutorModule());
+        install(new DropWizardMetricsModule());
 
         bind(FileSystemImpl.class).in(Scopes.SINGLETON);
 
