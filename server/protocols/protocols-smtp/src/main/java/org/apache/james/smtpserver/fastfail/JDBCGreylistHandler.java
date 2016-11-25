@@ -162,7 +162,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
      * record will be deleted
      * 
      * @param unseenLifeTime
-     *            The lifetime
+     *        The lifetime
      */
     public void setUnseenLifeTime(String unseenLifeTime) {
         setUnseenLifeTime(TimeConverter.getMilliSeconds(unseenLifeTime));
@@ -173,7 +173,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
         this.dnsService = dnsService;
     }
 
-    public void setWhiteListedNetworks(NetMatcher wNetworks) {
+    public void initWhiteListedNetworks(NetMatcher wNetworks) {
         this.wNetworks = wNetworks;
     }
 
@@ -428,7 +428,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
             for (String aWhitelistArray : whitelistArray) {
                 wList.add(aWhitelistArray.trim());
             }
-            setWhiteListedNetworks(new NetMatcher(wList, dnsService));
+            initWhiteListedNetworks(new NetMatcher(wList, dnsService));
             serviceLog.info("Whitelisted addresses: " + getWhiteListedNetworks().toString());
 
         }
