@@ -60,6 +60,8 @@ import org.apache.james.dnsservice.library.MXHostAddressIterator;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
@@ -158,6 +160,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
     private static final String PATTERN_STRING = "\\s*([0-9]*\\s*[\\*])?\\s*([0-9]+)\\s*([a-z,A-Z]*)\\s*";
 
     private static final Pattern PATTERN = Patterns.compilePatternUncheckedException(PATTERN_STRING);
+    private static final String OUTGOING_MAILS = "outgoingMails";
 
     @Inject
     private DNSService dnsServer;
@@ -260,6 +263,9 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 
     private boolean isSSLEnable = false;
 
+    private MetricFactory metricFactory;
+    private Metric outgoingMailsMetric;
+
     @Inject
     public void setDomainList(DomainList domainList) {
         this.domainList = domainList;
@@ -270,6 +276,11 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
         this.queueFactory = queueFactory;
     }
 
+    @Inject
+    public void setMetricFactory(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
+    }
+
     /**
      * Initializes all arguments based on configuration values specified in the
      * James configuration file.
@@ -277,6 +288,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
      * @throws MessagingException on failure to initialize attributes.
      */
     public void init() throws MessagingException {
+        outgoingMailsMetric = metricFactory.generate(OUTGOING_MAILS);
         // Set isDebug flag.
         isDebug = (getInitParameter("debug") == null) ? false : Boolean.valueOf(getInitParameter("debug"));
 
@@ -1050,6 +1062,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
                     logMessageBuffer = new StringBuilder(256).append("Mail (").append(mail.getName()).append(") sent successfully to ").append(outgoingMailServer.getHostName()).append(" at ").append(outgoingMailServer.getHost()).append(" from ").append(props.get("mail.smtp.from")).append(" for ")
                             .append(mail.getRecipients());
                     log(logMessageBuffer.toString());
+                    outgoingMailsMetric.increment();
                     return true;
                 } catch (SendFailedException sfe) {
                     logSendFailedException(sfe);
