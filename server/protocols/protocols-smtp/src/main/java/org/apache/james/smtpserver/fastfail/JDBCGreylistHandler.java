@@ -151,7 +151,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
      * After this lifetime the record will be deleted
      * 
      * @param autoWhiteListLifeTime
-     *            The lifeTime
+     *            		The lifeTime 
      */
     public void setAutoWhiteListLifeTime(String autoWhiteListLifeTime) {
         setAutoWhiteListLifeTime(TimeConverter.getMilliSeconds(autoWhiteListLifeTime));
