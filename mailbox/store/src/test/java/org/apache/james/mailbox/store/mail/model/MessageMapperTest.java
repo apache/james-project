@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import javax.mail.Flags;
@@ -34,18 +33,13 @@ import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Attachment;
-import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -60,7 +54,6 @@ import org.xenei.junit.contract.ContractTest;
 import org.xenei.junit.contract.IProducer;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 @Contract(MapperProvider.class)
 public class MessageMapperTest<T extends MapperProvider> {
@@ -74,11 +67,9 @@ public class MessageMapperTest<T extends MapperProvider> {
     private IProducer<T> producer;
     private MapperProvider mapperProvider;
     private MessageMapper messageMapper;
-    private AttachmentMapper attachmentMapper;
 
     private SimpleMailbox benwaInboxMailbox;
     private SimpleMailbox benwaWorkMailbox;
-    private SimpleMailbox attachmentsMailbox;
     
     private SimpleMailboxMessage message1;
     private SimpleMailboxMessage message2;
@@ -86,8 +77,6 @@ public class MessageMapperTest<T extends MapperProvider> {
     private SimpleMailboxMessage message4;
     private SimpleMailboxMessage message5;
     private SimpleMailboxMessage message6;
-    private SimpleMailboxMessage message7With1Attachment;
-    private SimpleMailboxMessage message8With2Attachments;
 
     @Rule
     public ExpectedException expected = ExpectedException.none();
@@ -99,14 +88,11 @@ public class MessageMapperTest<T extends MapperProvider> {
         this.mapperProvider.ensureMapperPrepared();
 
         Assume.assumeFalse(mapperProvider.getNotImplemented().contains(MapperProvider.Capabilities.MESSAGE));
-        Assume.assumeFalse(mapperProvider.getNotImplemented().contains(MapperProvider.Capabilities.ATTACHMENT));
 
         this.messageMapper = mapperProvider.createMessageMapper();
-        this.attachmentMapper = mapperProvider.createAttachmentMapper();
 
         benwaInboxMailbox = createMailbox(new MailboxPath("#private", "benwa", "INBOX"));
         benwaWorkMailbox = createMailbox( new MailboxPath("#private", "benwa", "INBOX"+DELIMITER+"work"));
-        attachmentsMailbox = createMailbox( new MailboxPath("#private", "benwa", "Attachments"));
 
         message1 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
         message2 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test2 \n\nBody2\n.\n", BODY_START, new PropertyBuilder());
@@ -114,38 +100,6 @@ public class MessageMapperTest<T extends MapperProvider> {
         message4 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test4 \n\nBody4\n.\n", BODY_START, new PropertyBuilder());
         message5 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test5 \n\nBody5\n.\n", BODY_START, new PropertyBuilder());
         message6 = createMessage(benwaWorkMailbox, mapperProvider.generateMessageId(), "Subject: Test6 \n\nBody6\n.\n", BODY_START, new PropertyBuilder());
-
-        Attachment attachment = Attachment.builder()
-                .attachmentId(AttachmentId.from("123"))
-                .bytes("attachment".getBytes())
-                .type("content")
-                .build();
-        attachmentMapper.storeAttachment(attachment);
-        Attachment attachment2 = Attachment.builder()
-                .attachmentId(AttachmentId.from("456"))
-                .bytes("attachment2".getBytes())
-                .type("content")
-                .build();
-        attachmentMapper.storeAttachment(attachment2);
-        message7With1Attachment = createMessage(attachmentsMailbox, mapperProvider.generateMessageId(), "Subject: Test7 \n\nBody7\n.\n", BODY_START, new PropertyBuilder(), 
-                ImmutableList.of(MessageAttachment.builder()
-                        .attachment(attachment)
-                        .cid(Cid.from("cid"))
-                        .isInline(true)
-                        .build()));
-        message8With2Attachments = createMessage(attachmentsMailbox, mapperProvider.generateMessageId(), "Subject: Test8 \n\nBody8\n.\n", BODY_START, new PropertyBuilder(),
-                ImmutableList.of(
-                        MessageAttachment.builder()
-                            .attachment(attachment)
-                            .cid(Cid.from("cid"))
-                            .isInline(true)
-                            .build(),
-                        MessageAttachment.builder()
-                            .attachment(attachment2)
-                            .cid(Cid.from("cid2"))
-                            .isInline(false)
-                            .build()));
-
     }
 
     @After
@@ -309,56 +263,6 @@ public class MessageMapperTest<T extends MapperProvider> {
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), fetchType, LIMIT);
         MessageAssert.assertThat(retrievedMessageIterator.next()).isEqualTo(message1, fetchType);
         assertThat(retrievedMessageIterator).isEmpty();
-    }
-
-    @ContractTest
-    public void messagesRetrievedUsingFetchTypeFullShouldHaveAttachmentsEmptyWhenNoAttachment() throws MailboxException, IOException{
-        saveMessages();
-        MessageMapper.FetchType fetchType = MessageMapper.FetchType.Full;
-        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), fetchType, LIMIT);
-        assertThat(retrievedMessageIterator.next().getAttachments()).isEmpty();
-    }
-
-    @ContractTest
-    public void messagesRetrievedUsingFetchTypeFullShouldHaveAttachmentsLoadedWhenOneAttachment() throws MailboxException, IOException{
-        saveMessages();
-        MessageMapper.FetchType fetchType = MessageMapper.FetchType.Full;
-        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(message7With1Attachment.getUid()), fetchType, LIMIT);
-        assertThat(retrievedMessageIterator.next().getAttachments()).isEqualTo(message7With1Attachment.getAttachments());
-    }
-
-    @ContractTest
-    public void messagesRetrievedUsingFetchTypeFullShouldHaveAttachmentsLoadedWhenTwoAttachments() throws MailboxException, IOException{
-        saveMessages();
-        MessageMapper.FetchType fetchType = MessageMapper.FetchType.Full;
-        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(message8With2Attachments.getUid()), fetchType, LIMIT);
-        assertThat(retrievedMessageIterator.next().getAttachments()).isEqualTo(message8With2Attachments.getAttachments());
-    }
-
-    @ContractTest
-    public void messagesRetrievedUsingFetchTypeBodyShouldHaveAttachmentsLoadedWhenOneAttachment() throws MailboxException, IOException{
-        saveMessages();
-        MessageMapper.FetchType fetchType = MessageMapper.FetchType.Body;
-        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(message7With1Attachment.getUid()), fetchType, LIMIT);
-        assertThat(retrievedMessageIterator.next().getAttachments()).isEqualTo(message7With1Attachment.getAttachments());
-    }
-
-    @ContractTest
-    public void messagesRetrievedUsingFetchTypeHeadersShouldHaveAttachmentsEmptyWhenOneAttachment() throws MailboxException, IOException{
-        Assume.assumeTrue(mapperProvider.supportPartialAttachmentFetch());
-        saveMessages();
-        MessageMapper.FetchType fetchType = MessageMapper.FetchType.Headers;
-        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(message7With1Attachment.getUid()), fetchType, LIMIT);
-        assertThat(retrievedMessageIterator.next().getAttachments()).isEmpty();
-    }
-
-    @ContractTest
-    public void messagesRetrievedUsingFetchTypeMetadataShouldHaveAttachmentsEmptyWhenOneAttachment() throws MailboxException, IOException{
-        Assume.assumeTrue(mapperProvider.supportPartialAttachmentFetch());
-        saveMessages();
-        MessageMapper.FetchType fetchType = MessageMapper.FetchType.Metadata;
-        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(message7With1Attachment.getUid()), fetchType, LIMIT);
-        assertThat(retrievedMessageIterator.next().getAttachments()).isEmpty();
     }
 
     @ContractTest
@@ -776,18 +680,10 @@ public class MessageMapperTest<T extends MapperProvider> {
         message5.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
         messageMapper.add(benwaWorkMailbox, message6);
         message6.setModSeq(messageMapper.getHighestModSeq(benwaWorkMailbox));
-        messageMapper.add(attachmentsMailbox, message7With1Attachment);
-        message7With1Attachment.setModSeq(messageMapper.getHighestModSeq(attachmentsMailbox));
-        messageMapper.add(attachmentsMailbox, message8With2Attachments);
-        message8With2Attachments.setModSeq(messageMapper.getHighestModSeq(attachmentsMailbox));
     }
 
     private MailboxMessage retrieveMessageFromStorage(MailboxMessage message) throws MailboxException {
         return messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message.getUid()), MessageMapper.FetchType.Metadata, LIMIT).next();
-    }
-    
-    private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) {
-        return new SimpleMailboxMessage(messageId, new Date(), content.length(), bodyStart, new SharedByteArrayInputStream(content.getBytes()), new Flags(), propertyBuilder, mailbox.getMailboxId(), attachments);
     }
     
     private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder) {
