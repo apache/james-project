@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
+import static org.apache.james.transport.mailets.LocalDelivery.LOCAL_DELIVERED_MAILS_METRIC_NAME;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.mail.MessagingException;
@@ -25,6 +27,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.logging.Log;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.transport.mailets.delivery.MailDispatcher;
 import org.apache.james.transport.mailets.delivery.MailboxAppender;
 import org.apache.james.transport.mailets.delivery.SimpleMailStore;
@@ -56,10 +59,13 @@ public class ToRecipientFolder extends GenericMailet {
 
     private final MailboxManager mailboxManager;
     private final UsersRepository usersRepository;
+    private final MetricFactory metricFactory;
     private MailDispatcher mailDispatcher;
 
     @Inject
-    public ToRecipientFolder(@Named("mailboxmanager")MailboxManager mailboxManager, UsersRepository usersRepository) {
+    public ToRecipientFolder(@Named("mailboxmanager")MailboxManager mailboxManager, UsersRepository usersRepository,
+                             MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
         this.mailboxManager = mailboxManager;
         this.usersRepository = usersRepository;
     }
@@ -81,6 +87,7 @@ public class ToRecipientFolder extends GenericMailet {
                 .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext().getLogger()))
                 .usersRepository(usersRepository)
                 .folder(getInitParameter(FOLDER_PARAMETER, MailboxConstants.INBOX))
+                .metric(metricFactory.generate(LOCAL_DELIVERED_MAILS_METRIC_NAME))
                 .log(log)
                 .build())
             .consume(getInitParameter(CONSUME_PARAMETER, false))

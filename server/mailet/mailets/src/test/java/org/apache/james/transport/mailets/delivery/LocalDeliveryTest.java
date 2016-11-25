@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets.delivery;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -46,6 +47,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.user.api.UsersRepository;
@@ -77,7 +80,9 @@ public class LocalDeliveryTest {
         DomainList domainList = mock(DomainList.class);
 
 
-        testee = new LocalDelivery(recipientRewriteTable, usersRepository, mailboxManager, domainList);
+        MetricFactory metricFactory = mock(MetricFactory.class);
+        when(metricFactory.generate(anyString())).thenReturn(mock(Metric.class));
+        testee = new LocalDelivery(recipientRewriteTable, usersRepository, mailboxManager, domainList, metricFactory);
 
         user = mock(MailboxSession.User.class);
         MailboxSession session = mock(MailboxSession.class);

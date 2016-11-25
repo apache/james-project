@@ -28,6 +28,7 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
 
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.transport.mailets.delivery.MailDispatcher;
 import org.apache.james.transport.mailets.delivery.MailboxAppender;
 import org.apache.james.transport.mailets.delivery.SimpleMailStore;
@@ -46,14 +47,17 @@ import org.apache.mailet.base.GenericMailet;
  */
 public class LocalDelivery extends GenericMailet {
 
+    public static final String LOCAL_DELIVERED_MAILS_METRIC_NAME = "localDeliveredMails";
     private final UsersRepository usersRepository;
     private final MailboxManager mailboxManager;
     private final RecipientRewriteTable recipientRewriteTable;
+    private final MetricFactory metricFactory;
     private MailDispatcher mailDispatcher;
 
     @Inject
     public LocalDelivery(org.apache.james.rrt.api.RecipientRewriteTable rrt, UsersRepository usersRepository,
-                         @Named("mailboxmanager") MailboxManager mailboxManager, DomainList domainList) {
+                         @Named("mailboxmanager") MailboxManager mailboxManager, DomainList domainList, MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
         this.usersRepository = usersRepository;
         this.mailboxManager = mailboxManager;
         this.recipientRewriteTable = new RecipientRewriteTable(rrt, domainList);
@@ -82,6 +86,7 @@ public class LocalDelivery extends GenericMailet {
                 .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext().getLogger()))
                 .usersRepository(usersRepository)
                 .folder(MailboxConstants.INBOX)
+                .metric(metricFactory.generate(LOCAL_DELIVERED_MAILS_METRIC_NAME))
                 .log(log)
                 .build())
             .consume(getInitParameter("consume", true))

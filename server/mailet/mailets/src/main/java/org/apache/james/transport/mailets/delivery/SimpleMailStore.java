@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets.delivery;
 import javax.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
+import org.apache.james.metrics.api.Metric;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
@@ -39,6 +40,7 @@ public class SimpleMailStore implements MailStore {
         private UsersRepository usersRepos;
         private MailboxAppender mailboxAppender;
         private String folder;
+        private Metric metric;
         private Log log;
 
         public Builder folder(String folder) {
@@ -61,23 +63,31 @@ public class SimpleMailStore implements MailStore {
             return this;
         }
 
+        public Builder metric(Metric metric) {
+            this.metric = metric;
+            return this;
+        }
+
         public SimpleMailStore build() throws MessagingException {
             Preconditions.checkNotNull(usersRepos);
             Preconditions.checkNotNull(folder);
             Preconditions.checkNotNull(log);
             Preconditions.checkNotNull(mailboxAppender);
-            return new SimpleMailStore(mailboxAppender, usersRepos, log, folder);
+            Preconditions.checkNotNull(metric);
+            return new SimpleMailStore(mailboxAppender, usersRepos, metric, log, folder);
         }
     }
 
     private final MailboxAppender mailboxAppender;
     private final UsersRepository usersRepository;
+    private final Metric metric;
     private final Log log;
     private final String folder;
 
-    private SimpleMailStore(MailboxAppender mailboxAppender, UsersRepository usersRepository, Log log, String folder) {
+    private SimpleMailStore(MailboxAppender mailboxAppender, UsersRepository usersRepository, Metric metric, Log log, String folder) {
         this.mailboxAppender = mailboxAppender;
         this.usersRepository = usersRepository;
+        this.metric = metric;
         this.log = log;
         this.folder = folder;
     }
@@ -89,6 +99,7 @@ public class SimpleMailStore implements MailStore {
         String locatedFolder = locateFolder(username, mail);
         mailboxAppender.append(mail.getMessage(), username, locatedFolder);
 
+        metric.increment();
         log.info("Local delivered mail " + mail.getName() + " successfully from " + DeliveryUtils.prettyPrint(mail.getSender())
             + " to " + DeliveryUtils.prettyPrint(recipient) + " in folder " + locatedFolder);
     }

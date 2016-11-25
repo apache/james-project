@@ -88,7 +88,7 @@ public class SieveIntegrationTest {
         fakeMailContext = FakeMailContext.builder().logger(mock(Logger.class)).build();
 
         testee = new Sieve(usersRepository, resourceLocator);
-        testee.init(new FakeMailetConfig("Sieve", fakeMailContext));
+        testee.init(FakeMailetConfig.builder().mailetName("Sieve").mailetContext(fakeMailContext).build());
     }
 
     @Test

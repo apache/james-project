@@ -36,6 +36,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.logging.Log;
+import org.apache.james.metrics.api.Metric;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.MailAddress;
@@ -60,6 +61,7 @@ public class SimpleMailStoreTest {
             .usersRepository(usersRepository)
             .mailboxAppender(mailboxAppender)
             .folder(FOLDER)
+            .metric(mock(Metric.class))
             .log(mock(Log.class))
             .build();
 
