@@ -64,6 +64,9 @@
         </processor>
 
         <processor state="error" enableJmx="true">
+            <mailet match="All" class="MetricsMailet">
+                <metricName>mailetContainerErrors</metricName>
+            </mailet>
             <mailet match="All" class="Bounce"/>
             <mailet match="All" class="ToRepository">
                 <repositoryPath>file://var/mail/error/</repositoryPath>
@@ -108,12 +111,18 @@
         </processor>
 
         <processor state="spam" enableJmx="true">
+            <mailet match="All" class="MetricsMailet">
+                <metricName>mailetContainerSpam</metricName>
+            </mailet>
             <mailet match="All" class="ToRepository">
                 <repositoryPath>file://var/mail/spam/</repositoryPath>
             </mailet>
         </processor>
 
         <processor state="local-address-error" enableJmx="true">
+            <mailet match="All" class="MetricsMailet">
+                <metricName>mailetContainerLocalAddressError</metricName>
+            </mailet>
             <mailet match="All" class="Bounce">
                 <attachment>none</attachment>
             </mailet>
@@ -123,6 +132,9 @@
         </processor>
 
         <processor state="relay-denied" enableJmx="true">
+            <mailet match="All" class="MetricsMailet">
+                <metricName>mailetContainerRelayDenied</metricName>
+            </mailet>
             <mailet match="All" class="Bounce">
                 <attachment>none</attachment>
             </mailet>
@@ -133,6 +145,9 @@
         </processor>
 
         <processor state="bounces" enableJmx="true">
+            <mailet match="All" class="MetricsMailet">
+                <metricName>bounces</metricName>
+            </mailet>
             <mailet match="All" class="DSNBounce">
                 <passThrough>false</passThrough>
             </mailet>

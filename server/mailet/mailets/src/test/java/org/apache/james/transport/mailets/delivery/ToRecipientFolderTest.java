@@ -46,6 +46,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.transport.mailets.ToRecipientFolder;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
@@ -85,7 +86,7 @@ public class ToRecipientFolderTest {
         user = mock(MailboxSession.User.class);
 
 
-        testee = new ToRecipientFolder(mailboxManager, usersRepository);
+        testee = new ToRecipientFolder(mailboxManager, usersRepository, mock(MetricFactory.class));
 
         MailboxSession session = mock(MailboxSession.class);
         when(session.getPathDelimiter()).thenReturn('.');
