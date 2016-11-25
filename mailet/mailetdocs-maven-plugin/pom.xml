@@ -90,6 +90,10 @@
                             <goal>helpmojo</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>default-descriptor</id>
+                        <phase>process-classes</phase>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
