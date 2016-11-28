@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -41,11 +42,14 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 
 public class IndexableMessage {
 
-    public static IndexableMessage from(MailboxMessage message, List<User> users, TextExtractor textExtractor, ZoneId zoneId) {
+    public static IndexableMessage from(MailboxMessage message, List<User> users, TextExtractor textExtractor, 
+            ZoneId zoneId, IndexAttachments indexAttachments) {
+
         Preconditions.checkNotNull(message.getMailboxId());
         Preconditions.checkArgument(!users.isEmpty());
         IndexableMessage indexableMessage = new IndexableMessage();
@@ -54,7 +58,7 @@ public class IndexableMessage {
             indexableMessage.users = users.stream().map(User::getUserName).collect(Guavate.toImmutableList());
             indexableMessage.bodyText = parsingResult.locateFirstTextBody();
             indexableMessage.bodyHtml = parsingResult.locateFirstHtmlBody();
-            indexableMessage.setFlattenedAttachments(parsingResult);
+            indexableMessage.setFlattenedAttachments(parsingResult, indexAttachments);
             indexableMessage.copyHeaderFields(parsingResult.getHeaderCollection(), getSanitizedInternalDate(message, zoneId));
             indexableMessage.generateText();
         } catch (IOException | MimeException e) {
@@ -64,9 +68,13 @@ public class IndexableMessage {
         return indexableMessage;
     }
 
-    private void setFlattenedAttachments(MimePart parsingResult) {
-        attachments = parsingResult.getAttachmentsStream()
-            .collect(Collectors.toList());
+    private void setFlattenedAttachments(MimePart parsingResult, IndexAttachments indexAttachments) {
+        if (indexAttachments.equals(IndexAttachments.YES)) {
+            attachments = parsingResult.getAttachmentsStream()
+                    .collect(Collectors.toList());
+        } else {
+            attachments = ImmutableList.of();
+        }
     }
 
     private void copyHeaderFields(HeaderCollection headerCollection, ZonedDateTime internalDate) {

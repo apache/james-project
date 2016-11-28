@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession.User;
+import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
@@ -56,7 +57,7 @@ public class MessageToElasticSearchJson {
 
     public String convertToJson(MailboxMessage message, List<User> users) throws JsonProcessingException {
         Preconditions.checkNotNull(message);
-        return mapper.writeValueAsString(IndexableMessage.from(message, users, textExtractor, zoneId));
+        return mapper.writeValueAsString(IndexableMessage.from(message, users, textExtractor, zoneId, IndexAttachments.NO));
     }
 
     public String getUpdatedJsonMessagePart(Flags flags, long modSeq) throws JsonProcessingException {
