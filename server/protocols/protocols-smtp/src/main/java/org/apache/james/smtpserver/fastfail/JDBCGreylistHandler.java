@@ -173,10 +173,6 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
         this.dnsService = dnsService;
     }
 
-    public void setWhiteListedNetworks(NetMatcher wNetworks) {
-        this.wNetworks = wNetworks;
-    }
-
     protected NetMatcher getWhiteListedNetworks() {
         return wNetworks;
     }
@@ -428,9 +424,8 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
             for (String aWhitelistArray : whitelistArray) {
                 wList.add(aWhitelistArray.trim());
             }
-            setWhiteListedNetworks(new NetMatcher(wList, dnsService));
+            wNetworks = new NetMatcher(wList, dnsService);
             serviceLog.info("Whitelisted addresses: " + getWhiteListedNetworks().toString());
-
         }
 
         // Get the SQL file location
