@@ -71,7 +71,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         messageSearchIndex = new ElasticSearchListeningMessageSearchIndex(mapperFactory,
             new ElasticSearchIndexer(client, new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor(), BATCH_SIZE)),
             new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE, new InMemoryId.Factory()),
-            new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris")));
+            new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES));
         MessageId.Factory messageIdFactory = new DefaultMessageId.Factory();
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,

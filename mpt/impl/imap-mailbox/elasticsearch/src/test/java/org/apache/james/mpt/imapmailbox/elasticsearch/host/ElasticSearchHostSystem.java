@@ -35,6 +35,7 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.elasticsearch.DeleteByQueryPerformer;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchIndexer;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
+import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.IndexCreationFactory;
 import org.apache.james.mailbox.elasticsearch.NodeMappingFactory;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
@@ -109,7 +110,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
             factory,
             new ElasticSearchIndexer(client, new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor())),
             new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), new InMemoryId.Factory()),
-            new MessageToElasticSearchJson(new DefaultTextExtractor()));
+            new MessageToElasticSearchJson(new DefaultTextExtractor(), IndexAttachments.YES));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();

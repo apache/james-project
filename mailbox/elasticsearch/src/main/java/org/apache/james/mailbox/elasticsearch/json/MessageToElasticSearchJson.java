@@ -41,23 +41,25 @@ public class MessageToElasticSearchJson {
     private final ObjectMapper mapper;
     private final TextExtractor textExtractor;
     private final ZoneId zoneId;
+    private final IndexAttachments indexAttachments;
 
-    public MessageToElasticSearchJson(TextExtractor textExtractor, ZoneId zoneId) {
+    public MessageToElasticSearchJson(TextExtractor textExtractor, ZoneId zoneId, IndexAttachments indexAttachments) {
         this.textExtractor = textExtractor;
         this.zoneId = zoneId;
+        this.indexAttachments = indexAttachments;
         this.mapper = new ObjectMapper();
         this.mapper.registerModule(new GuavaModule());
         this.mapper.registerModule(new Jdk8Module());
     }
 
     @Inject
-    public MessageToElasticSearchJson(TextExtractor textExtractor) {
-        this(textExtractor, ZoneId.systemDefault());
+    public MessageToElasticSearchJson(TextExtractor textExtractor, IndexAttachments indexAttachments) {
+        this(textExtractor, ZoneId.systemDefault(), indexAttachments);
     }
 
     public String convertToJson(MailboxMessage message, List<User> users) throws JsonProcessingException {
         Preconditions.checkNotNull(message);
-        return mapper.writeValueAsString(IndexableMessage.from(message, users, textExtractor, zoneId, IndexAttachments.NO));
+        return mapper.writeValueAsString(IndexableMessage.from(message, users, textExtractor, zoneId, indexAttachments));
     }
 
     public String getUpdatedJsonMessagePart(Flags flags, long modSeq) throws JsonProcessingException {

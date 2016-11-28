@@ -34,6 +34,8 @@
         <dd>Is the name of the cluster used by James.</dd>
         <dt><strong>elasticsearch.masterHost</strong></dt>
         <dd>Is the IP (or host) of the ElasticSearch master</dd>
+        <dt><strong>elasticsearch.indexAttachments</strong></dt>
+        <dd>Indicates if you wish to index attachments or not (default: true).</dd>
       </dl>
 
 <p>If you want more explanation about ElasticSearch configuration, you should visit the dedicated <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">documentation</a>.</p>

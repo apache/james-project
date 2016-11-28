@@ -29,6 +29,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.elasticsearch.ClientProvider;
 import org.apache.james.mailbox.elasticsearch.ClientProviderImpl;
+import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.IndexCreationFactory;
 import org.apache.james.mailbox.elasticsearch.NodeMappingFactory;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
@@ -48,6 +49,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     private static final int DEFAULT_CONNECTION_MAX_RETRIES = 7;
     private static final int DEFAULT_CONNECTION_MIN_DELAY = 3000;
+    private static final boolean DEFAULT_INDEX_ATTACHMENTS = true;
 
     @Override
     protected void configure() {
@@ -81,6 +83,15 @@ public class ElasticSearchMailboxModule extends AbstractModule {
                 .retryOn(NoNodeAvailableException.class)
                 .withMaxRetries(configuration.getInt("elasticsearch.retryConnection.maxRetries", DEFAULT_CONNECTION_MAX_RETRIES))
                 .withMinDelay(configuration.getInt("elasticsearch.retryConnection.minDelay", DEFAULT_CONNECTION_MIN_DELAY));
+    }
+
+    @Provides 
+    @Singleton
+    public IndexAttachments provideIndexAttachments(PropertiesConfiguration configuration) {
+        if (configuration.getBoolean("elasticsearch.indexAttachments", DEFAULT_INDEX_ATTACHMENTS)) {
+            return IndexAttachments.YES;
+        }
+        return IndexAttachments.NO;
     }
 
 }

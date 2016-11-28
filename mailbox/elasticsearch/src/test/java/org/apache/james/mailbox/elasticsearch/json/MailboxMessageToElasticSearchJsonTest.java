@@ -35,6 +35,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession.User;
+import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MessageId;
@@ -80,7 +81,7 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void convertToJsonShouldThrowWhenNoUser() throws Exception {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
                 new DefaultTextExtractor(),
-                ZoneId.of("Europe/Paris"));
+                ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
                 date,
                 SIZE,
@@ -99,7 +100,7 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void spamEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"));
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
                 date,
                 SIZE,
@@ -119,7 +120,7 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void htmlEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"));
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage htmlMail = new SimpleMailboxMessage(MESSAGE_ID,
                 date,
                 SIZE,
@@ -139,7 +140,7 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void pgpSignedEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"));
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage pgpSignedMail = new SimpleMailboxMessage(MESSAGE_ID,
                 date,
                 SIZE,
@@ -159,7 +160,7 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void simpleEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"));
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage mail = new SimpleMailboxMessage(MESSAGE_ID,
                 date,
                 SIZE,
@@ -180,7 +181,7 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void recursiveEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"));
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage recursiveMail = new SimpleMailboxMessage(MESSAGE_ID, 
                 date,
                 SIZE,
@@ -200,7 +201,7 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void emailWithNoInternalDateShouldUseNowDate() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"));
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage mailWithNoInternalDate = new SimpleMailboxMessage(MESSAGE_ID,
                 null,
                 SIZE,
@@ -217,11 +218,65 @@ public class MailboxMessageToElasticSearchJsonTest {
             .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/recursiveMail.json")));
     }
 
+    @Test
+    public void emailWithAttachmentsShouldConvertAttachmentsWhenIndexAttachmentsIsTrue() throws IOException {
+        // Given
+        MailboxMessage mailWithNoInternalDate = new SimpleMailboxMessage(MESSAGE_ID,
+                null,
+                SIZE,
+                BODY_START_OCTET,
+                new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/recursiveMail.eml"))),
+                new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
+                propertyBuilder,
+                MAILBOX_ID);
+        mailWithNoInternalDate.setModSeq(MOD_SEQ);
+        mailWithNoInternalDate.setUid(UID);
+
+        // When
+        MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
+            new DefaultTextExtractor(),
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+        String convertToJson = messageToElasticSearchJson.convertToJson(mailWithNoInternalDate, ImmutableList.of(new MockMailboxSession("username").getUser()));
+
+        // Then
+        assertThatJson(convertToJson)
+            .when(IGNORING_ARRAY_ORDER)
+            .when(IGNORING_VALUES)
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/recursiveMail.json")));
+    }
+
+    @Test
+    public void emailWithAttachmentsShouldNotConvertAttachmentsWhenIndexAttachmentsIsFalse() throws IOException {
+        // Given
+        MailboxMessage mailWithNoInternalDate = new SimpleMailboxMessage(MESSAGE_ID,
+                null,
+                SIZE,
+                BODY_START_OCTET,
+                new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/recursiveMail.eml"))),
+                new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
+                propertyBuilder,
+                MAILBOX_ID);
+        mailWithNoInternalDate.setModSeq(MOD_SEQ);
+        mailWithNoInternalDate.setUid(UID);
+        
+        // When
+        MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
+            new DefaultTextExtractor(),
+            ZoneId.of("Europe/Paris"), IndexAttachments.NO);
+        String convertToJson = messageToElasticSearchJson.convertToJson(mailWithNoInternalDate, ImmutableList.of(new MockMailboxSession("username").getUser()));
+
+        // Then
+        assertThatJson(convertToJson)
+            .when(IGNORING_ARRAY_ORDER)
+            .when(IGNORING_VALUES)
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/recursiveMailWithoutAttachments.json")));
+    }
+
     @Test(expected = NullPointerException.class)
     public void emailWithNoMailboxIdShouldThrow() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"));
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage mailWithNoMailboxId;
         try {
             mailWithNoMailboxId = new SimpleMailboxMessage(MESSAGE_ID, date,
@@ -243,7 +298,7 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void getUpdatedJsonMessagePartShouldBehaveWellOnEmptyFlags() throws Exception {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"));
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         assertThatJson(messageToElasticSearchJson.getUpdatedJsonMessagePart(new Flags(), MOD_SEQ))
             .isEqualTo("{\"modSeq\":42,\"isAnswered\":false,\"isDeleted\":false,\"isDraft\":false,\"isFlagged\":false,\"isRecent\":false,\"userFlags\":[],\"isUnread\":true}");
     }
@@ -252,7 +307,7 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void getUpdatedJsonMessagePartShouldBehaveWellOnNonEmptyFlags() throws Exception {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"));
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         assertThatJson(messageToElasticSearchJson.getUpdatedJsonMessagePart(new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.FLAGGED).add("user").build(), MOD_SEQ))
             .isEqualTo("{\"modSeq\":42,\"isAnswered\":false,\"isDeleted\":true,\"isDraft\":false,\"isFlagged\":true,\"isRecent\":false,\"userFlags\":[\"user\"],\"isUnread\":true}");
     }
@@ -261,7 +316,7 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void getUpdatedJsonMessagePartShouldThrowIfFlagsIsNull() throws Exception {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"));
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         messageToElasticSearchJson.getUpdatedJsonMessagePart(null, MOD_SEQ);
     }
 
@@ -269,7 +324,7 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void spamEmailShouldBeWellConvertedToJsonWithApacheTika() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new TikaTextExtractor(),
-            ZoneId.of("Europe/Paris"));
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID, date,
             SIZE,
             BODY_START_OCTET,
