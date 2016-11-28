@@ -29,9 +29,9 @@ Just include something like this in your *pom.xml*
 ### Write your own mailets
 
 To learn how to write your own mailets please have a look at
-<a href="http://svn.apache.org/repos/asf/james/trunk/mailet/base/src/main/java/org/apache/mailet/base/GenericMatcher.java">Generic Matcher</a> and
-<a href="http://svn.apache.org/repos/asf/james/trunk/mailet/base/src/main/java/org/apache/mailet/base/GenericMailet.java">Generic Mailet</a>.
+<a href="https://github.com/apache/james-project/blob/master/mailet/base/src/main/java/org/apache/mailet/base/GenericMatcher.java">Generic Matcher</a> and
+<a href="https://github.com/apache/james-project/blob/master/mailet/base/src/main/java/org/apache/mailet/base/GenericMailet.java">Generic Mailet</a>.
 
 Another good learning source are the unit tests from
-<a href="http://svn.apache.org/repos/asf/james/trunk/mailet/standard/src/test/java/org/apache/james/mailet/standard/">Standard Mailets</a>
+<a href="https://github.com/apache/james-project/tree/master/mailet/standard/src/main/java/org/apache/james/transport">Standard Mailets</a>
 

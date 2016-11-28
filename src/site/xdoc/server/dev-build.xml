@@ -85,7 +85,7 @@
       <li>test - run unit tests for James.</li>
       <li><b>package - generates all the James distributions, packed.
       From the root directory, cd to 'server/container/spring/target' to have the build distribution.
-      Notice, for the latest trunk(revision 1430655+), a specific profile argument need to be set: '-Pwith-assembly'.
+      Notice, for the latest trunk(revision 1430655+), or on master, a specific profile argument need to be set: '-Pwith-assembly'.
       The location of final distributions is also changed to 'JAMES_SRC_HOME/server/app/target'.</b></li>
       <li>javadocs:javadocs - builds the James javadocs.</li>
       <li>site - builds the entirety of the James website.</li>
@@ -189,11 +189,11 @@
           You will see an dialog window used to enter the information about the Subversion repository you are going to use. It looks like this:</p>
           <img src="./images/netbeans/netbeans-svn-checkout1.png"/>
           <p>In the <code>Repository URL</code> field enter the location for James repository and click <code>Next</code>.
-          You can use the following URL to get the trunk or development version:
+          You can use the following URL to get the master or development version:
           <a href="http://git-wip-us.apache.org/repos/asf/james-project.git">http://git-wip-us.apache.org/repos/asf/james-project.git</a>.<br/>
           After this you will be presented with another dialog window where you can configure which folders to check out and where to save them on your machine.</p>
           <img src="./images/netbeans/netbeans-svn-checkout2.png"/>
-          <p>If you supplied the above URL you can click <code>Finish</code> to get trunk version and start hacking.
+          <p>If you supplied the above URL you can click <code>Finish</code> to get master version and start hacking.
           You can choose another folder by clicking <code>Browse</code>. A new dialog window will open and from there you can browse
           the whole subversion repository. I wanted to build James 3.0beta so I choosed <code>james-serve-3.0-beta1</code> under james/server/tags/ folder. <br/></p>
           <img src="./images/netbeans/netbeans-svn-checkout-browse.png"/>
@@ -215,7 +215,7 @@
 
   <section name="Build James from IntelliJ IDEA">
 
-      <p>This section has been created using IntelliJ IDEA 12 and Maven 3. And downloading the trunk version of the server
+      <p>This section has been created using IntelliJ IDEA 12 and Maven 3. And downloading the master version of the server
           from <code>http://git-wip-us.apache.org/repos/asf/james-project.git/</code>.
       </p>
 
