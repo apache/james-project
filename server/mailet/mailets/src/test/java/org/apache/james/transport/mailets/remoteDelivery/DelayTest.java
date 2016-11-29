@@ -40,78 +40,79 @@ public class DelayTest {
 
     @Test
     public void stringConstructorShouldWorkForNumbers() throws Exception {
-        assertThat(new Delay("36")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, 36));
+        assertThat(Delay.from("36")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, 36));
     }
 
     @Test
     public void stringConstructorShouldWorkForZero() throws Exception {
-        assertThat(new Delay("0")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, 0));
+        assertThat(Delay.from("0")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, 0));
     }
 
     @Test
-    public void stringConstructorShouldDefaultToZeroForNegatives() throws Exception {
-        assertThat(new Delay("0")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, 0));
+    public void stringConstructorShouldThrowOnNegativeNumbers() throws Exception {
+        expectedException.expect(NumberFormatException.class);
+        assertThat(Delay.from("-1s")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, 0));
     }
 
     @Test
     public void stringConstructorShouldWorkForNumberAndSecond() throws Exception {
-        assertThat(new Delay("1s")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, 1000));
+        assertThat(Delay.from("1s")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, 1000));
     }
 
     @Test
     public void stringConstructorShouldWorkForNumberAndAttempts() throws Exception {
-        assertThat(new Delay("2*36")).isEqualTo(new Delay(2, 36));
+        assertThat(Delay.from("2*36")).isEqualTo(new Delay(2, 36));
     }
 
     @Test
     public void stringConstructorShouldWorkForNumberAndZeroAttempts() throws Exception {
-        assertThat(new Delay("0*36")).isEqualTo(new Delay(0, 36));
+        assertThat(Delay.from("0*36")).isEqualTo(new Delay(0, 36));
     }
 
     @Test
     public void stringConstructorShouldThrowOnNegativeAttempts() throws Exception {
         expectedException.expect(MessagingException.class);
 
-        new Delay("-1*36");
+        Delay.from("-1*36");
     }
 
     @Test
     public void stringConstructorShouldThrowWhenAttemptsOmitted() throws Exception {
         expectedException.expect(NumberFormatException.class);
 
-        new Delay("*36");
+        Delay.from("*36");
     }
 
     @Test
     public void stringConstructorShouldThrowWhenDelayOmitted() throws Exception {
-        expectedException.expect(MessagingException.class);
+        expectedException.expect(NumberFormatException.class);
 
-        new Delay("2*");
+        Delay.from("2*");
     }
 
     @Test
     public void stringConstructorShouldWorkForNumberAttemptsAndUnit() throws Exception {
-        assertThat(new Delay("2*36s")).isEqualTo(new Delay(2, 36000));
+        assertThat(Delay.from("2*36s")).isEqualTo(new Delay(2, 36000));
     }
 
     @Test
     public void stringConstructorShouldThrowOnInvalidInput() throws Exception {
-        expectedException.expect(MessagingException.class);
+        expectedException.expect(NumberFormatException.class);
 
-        new Delay("invalid");
+        Delay.from("invalid");
     }
 
     @Test
     public void stringConstructorShouldThrowOnInvalidUnit() throws Exception {
-        expectedException.expect(MessagingException.class);
+        expectedException.expect(NumberFormatException.class);
 
-        new Delay("36invalid");
+        Delay.from("36invalid");
     }
 
     @Test
     public void stringConstructorShouldThrowOnEmptyString() throws Exception {
-        expectedException.expect(MessagingException.class);
+        expectedException.expect(NumberFormatException.class);
 
-        new Delay("");
+        Delay.from("");
     }
 }

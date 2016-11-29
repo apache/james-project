@@ -25,6 +25,16 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
 public class TimeConverterTest {
+    
+    @Test
+    public void getMilliSecondsShouldConvertValueWhenNoUnitAmountAsString() {
+        //Given
+        long expected = 2;
+        //When
+        long actual = TimeConverter.getMilliSeconds("2");
+        //Then
+        assertThat(actual).isEqualTo(expected);
+    }
 
     @Test 
     public void getMilliSecondsShouldConvertValueWhenMsecUnit() {

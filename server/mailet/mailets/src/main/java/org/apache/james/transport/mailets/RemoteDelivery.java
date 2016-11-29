@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -166,7 +167,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
     /**
      * List of Delay Times. Controls frequency of retry attempts.
      */
-    private long[] delayTimes;
+    private List<Long> delayTimes;
 
     /**
      * Maximum no. of retries (Defaults to 5).
@@ -392,10 +393,10 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
      * @return the next delay time to use, given the retry count
      */
     private long getNextDelay(int retry_count) {
-        if (retry_count > delayTimes.length) {
+        if (retry_count > delayTimes.size()) {
             return Delay.DEFAULT_DELAY_TIME;
         }
-        return delayTimes[retry_count - 1];
+        return delayTimes.get(retry_count - 1);
     }
 
     @Override

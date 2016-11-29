@@ -124,13 +124,13 @@ public class DelaysAndMaxRetryTest {
     public void getExpendedDelaysShouldExpandSingleDelays() throws Exception {
         DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(3, "1*1S,1*2S,1*5S");
 
-        assertThat(testee.getExpendedDelays()).containsExactly(1000, 2000, 5000);
+        assertThat(testee.getExpendedDelays()).containsExactly(1000L, 2000L, 5000L);
     }
 
     @Test
     public void getExpendedDelaysShouldExpandMultipleDelays() throws Exception {
         DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(3, "1*1S,2*2S,2*5S");
 
-        assertThat(testee.getExpendedDelays()).containsExactly(1000, 2000, 2000, 5000, 5000);
+        assertThat(testee.getExpendedDelays()).containsExactly(1000L, 2000L, 2000L, 5000L, 5000L);
     }
 }

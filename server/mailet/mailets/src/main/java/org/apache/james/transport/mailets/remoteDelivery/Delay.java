@@ -19,133 +19,82 @@
 
 package org.apache.james.transport.mailets.remoteDelivery;
 
-import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.transport.util.Patterns;
 import org.apache.james.util.TimeConverter;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
-/**
- * This class is used to hold a delay time and its corresponding number of
- * retries.
- */
 public class Delay {
-
     /**
-     * Default Delay Time (Default is 6*60*60*1000 Milliseconds (6 hours)).
-     */
-    public static final long DEFAULT_DELAY_TIME = 21600000;
-    public static final int DEFAULT_ATTEMPTS = 1;
-    /**
-     * Pattern to match [attempts*]delay[units].
-     */
-    private static final String PATTERN_STRING = "\\s*([0-9]*\\s*[\\*])?\\s*([0-9]+)\\s*([a-z,A-Z]*)\\s*";
-    private static final Pattern PATTERN = Patterns.compilePatternUncheckedException(PATTERN_STRING);
-
-    private int attempts = DEFAULT_ATTEMPTS;
-
-    private long delayTime = DEFAULT_DELAY_TIME;
-
-    /**
-     * <p>
-     * This constructor expects Strings of the form
-     * "[attempt\*]delaytime[unit]".
-     * </p>
-     * <p>
-     * The optional attempt is the number of tries this delay should be used
-     * (default = 1). The unit, if present, must be one of
-     * (msec,sec,minute,hour,day). The default value of unit is 'msec'.
-     * </p>
-     * <p>
-     * The constructor multiplies the delaytime by the relevant multiplier
-     * for the unit, so the delayTime instance variable is always in msec.
-     * </p>
+     * <p> The optional attempt is the number of tries this delay should be used (default = 1).
+     * The delayTime is parsed by {@link TimeConverter}</p>
      *
-     * @param initString the string to initialize this Delay object from
+     * @param initString the string to initialize this Delay object from. It has the form "[attempt\*]delaytime[unit]"
      */
-    public Delay(String initString) throws MessagingException {
-        // Default unit value to 'msec'.
-        String unit = "msec";
-
-        Matcher res = PATTERN.matcher(initString);
-        if (res.matches()) {
-            // The capturing groups will now hold:
-            // at 1: attempts * (if present)
-            // at 2: delaytime
-            // at 3: unit (if present)
-            if (res.group(1) != null && !res.group(1).equals("")) {
-                // We have an attempt *
-                String attemptMatch = res.group(1);
-
-                // Strip the * and whitespace.
-                attemptMatch = attemptMatch.substring(0, attemptMatch.length() - 1).trim();
-                attempts = Integer.parseInt(attemptMatch);
-            }
-
-            delayTime = Long.parseLong(res.group(2));
-
-            if (!res.group(3).equals("")) {
-                // We have a value for 'unit'.
-                unit = res.group(3).toLowerCase(Locale.US);
-            }
-        } else {
-            throw new MessagingException(initString + " does not match " + PATTERN_STRING);
+    public static Delay from(String initString) throws MessagingException {
+        if (Strings.isNullOrEmpty(initString)) {
+            throw new NumberFormatException("Null or Empty strings are not permitted");
         }
+        List<String> parts = Splitter.on('*').splitToList(initString);
 
-        // calculate delayTime.
-        try {
-            delayTime = TimeConverter.getMilliSeconds(delayTime, unit);
-        } catch (NumberFormatException e) {
-            throw new MessagingException(e.getMessage());
+        if (parts.size() == 1) {
+            return new Delay(DEFAULT_ATTEMPTS, TimeConverter.getMilliSeconds(parts.get(0)));
         }
+        if (parts.size() == 2) {
+            int attempts = Integer.parseInt(parts.get(0));
+            if (attempts < 0) {
+                throw new MessagingException("Number of attempts negative in " + initString);
+            }
+            return new Delay(attempts, TimeConverter.getMilliSeconds(parts.get(1)));
+        }
+        throw new MessagingException(initString + " contains too much parts");
     }
 
-    /**
-     * This constructor makes a default Delay object with attempts = 1 and
-     * delayTime = DEFAULT_DELAY_TIME.
-     */
+    public static final long DEFAULT_DELAY_TIME = TimeUnit.HOURS.toMillis(6);
+    public static final int DEFAULT_ATTEMPTS = 1;
+
+    private final int attempts;
+    private final long delayTimeInMs;
+
     public Delay() {
+        this(DEFAULT_ATTEMPTS, DEFAULT_DELAY_TIME);
     }
 
     @VisibleForTesting
     Delay(int attempts, long delayTime) {
         this.attempts = attempts;
-        this.delayTime = delayTime;
+        this.delayTimeInMs = delayTime;
     }
 
-    /**
-     * @return the delayTime for this Delay
-     */
-    public long getDelayTime() {
-        return delayTime;
+    public long getDelayTimeInMs() {
+        return delayTimeInMs;
     }
 
-    /**
-     * @return the number attempts this Delay should be used.
-     */
     public int getAttempts() {
         return attempts;
     }
 
-    /**
-     * Set the number attempts this Delay should be used.
-     */
-    public void setAttempts(int value) {
-        attempts = value;
+    public List<Long> getExpendendDelays() {
+        return Repeat.repeat(delayTimeInMs, attempts);
     }
 
-    /**
-     * Pretty prints this Delay
-     */
     @Override
     public String toString() {
-        return getAttempts() + "*" + getDelayTime() + "msecs";
+        return MoreObjects.toStringHelper(this)
+            .add("attempts", attempts)
+            .add("delayTime", delayTimeInMs)
+            .toString();
     }
 
     @Override
@@ -154,13 +103,13 @@ public class Delay {
             Delay that = (Delay) o;
 
             return Objects.equal(this.attempts, that.attempts)
-                && Objects.equal(this.delayTime, that.delayTime);
+                && Objects.equal(this.delayTimeInMs, that.delayTimeInMs);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(attempts, delayTime);
+        return Objects.hashCode(attempts, delayTimeInMs);
     }
 }

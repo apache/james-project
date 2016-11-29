@@ -19,10 +19,7 @@
 
 package org.apache.james.transport.mailets.remoteDelivery;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import javax.mail.MessagingException;
 
@@ -31,72 +28,75 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
+import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class DelaysAndMaxRetry {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DelaysAndMaxRetry.class);
 
+    public static DelaysAndMaxRetry defaults() {
+        return new DelaysAndMaxRetry(RemoteDeliveryConfiguration.DEFAULT_MAX_RETRY, Repeat.repeat(new Delay(), RemoteDeliveryConfiguration.DEFAULT_MAX_RETRY));
+    }
+
     public static DelaysAndMaxRetry from(int intendedMaxRetries, String delaysAsString) throws MessagingException {
-        // Create list of Delay Times.
-        ArrayList<Delay> delayTimesList = createDelayList(delaysAsString);
+        List<Delay> delayTimesList = createDelayList(delaysAsString);
+        int totalAttempts = computeTotalAttempts(delayTimesList);
+        return getDelaysAndMaxRetry(intendedMaxRetries, totalAttempts, delayTimesList);
+    }
 
-        // Check consistency of 'maxRetries' with delayTimesList attempts.
-        int totalAttempts = calcTotalAttempts(delayTimesList);
-
-        // If inconsistency found, fix it.
+    private static DelaysAndMaxRetry getDelaysAndMaxRetry(int intendedMaxRetries, int totalAttempts, List<Delay> delayTimesList) throws MessagingException {
         if (totalAttempts > intendedMaxRetries) {
-            LOGGER.warn("Total number of delayTime attempts exceeds maxRetries specified. " + " Increasing maxRetries from " + intendedMaxRetries + " to " + totalAttempts);
+            LOGGER.warn("Total number of delayTime attempts exceeds maxRetries specified. Increasing maxRetries from {} to {}", intendedMaxRetries, totalAttempts);
             return new DelaysAndMaxRetry(totalAttempts, delayTimesList);
         } else {
             int extra = intendedMaxRetries - totalAttempts;
-            if (extra != 0) {
-                LOGGER.warn("maxRetries is larger than total number of attempts specified.  " + "Increasing last delayTime with " + extra + " attempts ");
-
-                // Add extra attempts to the last delayTime.
-                if (delayTimesList.size() != 0) {
-                    // Get the last delayTime.
-                    Delay delay = delayTimesList.get(delayTimesList.size() - 1);
-
-                    // Increase no. of attempts.
-                    delay.setAttempts(delay.getAttempts() + extra);
-                    LOGGER.warn("Delay of " + delay.getDelayTime() + " msecs is now attempted: " + delay.getAttempts() + " times");
-                } else {
-                    throw new MessagingException("No delaytimes, cannot continue");
-                }
+            if (extra > 0) {
+                LOGGER.warn("maxRetries is larger than total number of attempts specified. Increasing last delayTime with {} attempts ", extra);
+                return addExtraAttemptToLastDelay(intendedMaxRetries, extra, delayTimesList);
             }
             return new DelaysAndMaxRetry(intendedMaxRetries, delayTimesList);
         }
     }
 
-    private static ArrayList<Delay> createDelayList(String delaysAsString) {
-        ArrayList<Delay> delayTimesList = new ArrayList<Delay>();
-        try {
-            if (delaysAsString != null) {
-
-                // Split on commas
-                StringTokenizer st = new StringTokenizer(delaysAsString, ",");
-                while (st.hasMoreTokens()) {
-                    String delayTime = st.nextToken();
-                    delayTimesList.add(new Delay(delayTime));
-                }
-            } else {
-                // Use default delayTime.
-                delayTimesList.add(new Delay());
-            }
-        } catch (Exception e) {
-            LOGGER.warn("Invalid delayTime setting: " + delaysAsString);
+    private static DelaysAndMaxRetry addExtraAttemptToLastDelay(int intendedMaxRetries, int extra, List<Delay> delayTimesList) throws MessagingException {
+        if (delayTimesList.size() != 0) {
+            Delay lastDelay = delayTimesList.get(delayTimesList.size() - 1);
+            LOGGER.warn("Delay of {} msecs is now attempted: {} times", lastDelay.getDelayTimeInMs(), lastDelay.getAttempts());
+            return new DelaysAndMaxRetry(intendedMaxRetries,
+                ImmutableList.copyOf(
+                    Iterables.concat(
+                        Iterables.limit(delayTimesList, delayTimesList.size() - 1),
+                        ImmutableList.of(new Delay(lastDelay.getAttempts() + extra, lastDelay.getDelayTimeInMs())))));
+        } else {
+            throw new MessagingException("No delaytimes, cannot continue");
         }
-        return delayTimesList;
     }
 
-    /**
-     * Calculates Total no. of attempts for the specified delayList.
-     *
-     * @param delayList list of 'Delay' objects
-     * @return total no. of retry attempts
-     */
-    private static int calcTotalAttempts(List<Delay> delayList) {
+    private static List<Delay> createDelayList(String delaysAsString) {
+        if (delaysAsString == null) {
+            // Use default delayTime.
+            return ImmutableList.of(new Delay());
+        }
+        ImmutableList<String> delayStrings = FluentIterable.from(Splitter.on(',')
+            .omitEmptyStrings()
+            .split(delaysAsString))
+            .toList();
+        ImmutableList.Builder<Delay> builder = ImmutableList.builder();
+        try {
+            for (String s : delayStrings) {
+                builder.add(Delay.from(s));
+            }
+            return builder.build();
+        } catch (Exception e) {
+            LOGGER.warn("Invalid delayTime setting: {}", delaysAsString);
+            return builder.build();
+        }
+    }
+
+    private static int computeTotalAttempts(List<Delay> delayList) {
         int sum = 0;
         for (Delay delay : delayList) {
             sum += delay.getAttempts();
@@ -136,17 +136,12 @@ public class DelaysAndMaxRetry {
      * @param list the list to expand
      * @return the expanded list
      */
-    public long[] getExpendedDelays() {
-        long[] delaysAsLong = new long[calcTotalAttempts(delays)];
-        Iterator<Delay> i = delays.iterator();
-        int idx = 0;
-        while (i.hasNext()) {
-            Delay delay = i.next();
-            for (int j = 0; j < delay.getAttempts(); j++) {
-                delaysAsLong[idx++] = delay.getDelayTime();
-            }
+    public List<Long> getExpendedDelays() {
+        ImmutableList.Builder<Long> builder = ImmutableList.builder();
+        for (Delay delay: delays) {
+            builder.addAll(delay.getExpendendDelays());
         }
-        return delaysAsLong;
+        return builder.build();
     }
 
     @Override

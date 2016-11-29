@@ -27,12 +27,13 @@ public class TimeConverter {
 
     private static final HashMap<String, Integer> multipliers = new HashMap<String, Integer>(10);
 
-    private static final String PATTERN_STRING = "\\s*([0-9]+)\\s*([a-z,A-Z]+)\\s*";
+    private static final String PATTERN_STRING = "\\s*([0-9]+)\\s*([a-z,A-Z]*)\\s*";
 
     private static Pattern PATTERN = null;
 
     static {
         // add allowed units and their respective multiplier
+        multipliers.put("", 1);
         multipliers.put("ms", 1);
         multipliers.put("msec", 1);
         multipliers.put("msecs", 1);
