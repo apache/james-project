@@ -76,6 +76,20 @@ public class DelayTest {
     }
 
     @Test
+    public void stringConstructorShouldThrowWhenAttemptsOmitted() throws Exception {
+        expectedException.expect(NumberFormatException.class);
+
+        new Delay("*36");
+    }
+
+    @Test
+    public void stringConstructorShouldThrowWhenDelayOmitted() throws Exception {
+        expectedException.expect(MessagingException.class);
+
+        new Delay("2*");
+    }
+
+    @Test
     public void stringConstructorShouldWorkForNumberAttemptsAndUnit() throws Exception {
         assertThat(new Delay("2*36s")).isEqualTo(new Delay(2, 36000));
     }
@@ -92,5 +106,12 @@ public class DelayTest {
         expectedException.expect(MessagingException.class);
 
         new Delay("36invalid");
+    }
+
+    @Test
+    public void stringConstructorShouldThrowOnEmptyString() throws Exception {
+        expectedException.expect(MessagingException.class);
+
+        new Delay("");
     }
 }

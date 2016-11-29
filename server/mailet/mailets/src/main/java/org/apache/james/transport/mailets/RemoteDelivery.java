@@ -64,6 +64,7 @@ import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.transport.mailets.remoteDelivery.Delay;
+import org.apache.james.transport.mailets.remoteDelivery.DelaysAndMaxRetry;
 import org.apache.james.transport.mailets.remoteDelivery.HeloNameProvider;
 import org.apache.james.transport.mailets.remoteDelivery.RemoteDeliverySocketFactory;
 import org.apache.mailet.HostAddress;
@@ -170,7 +171,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
     /**
      * Maximum no. of retries (Defaults to 5).
      */
-    private int maxRetries = 5;
+    private int maxRetries;
 
     /**
      * Default number of ms to timeout on smtp delivery
@@ -264,61 +265,11 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 
         logger = getMailetContext().getLogger();
 
-        // Create list of Delay Times.
-        ArrayList<Delay> delayTimesList = new ArrayList<Delay>();
         try {
-            if (getInitParameter("delayTime") != null) {
-
-                // parses delayTimes specified in config file.
-                String delayTimesParm = getInitParameter("delayTime");
-
-                // Split on commas
-                StringTokenizer st = new StringTokenizer(delayTimesParm, ",");
-                while (st.hasMoreTokens()) {
-                    String delayTime = st.nextToken();
-                    delayTimesList.add(new Delay(delayTime));
-                }
-            } else {
-                // Use default delayTime.
-                delayTimesList.add(new Delay());
-            }
-        } catch (Exception e) {
-            log("Invalid delayTime setting: " + getInitParameter("delayTime"));
-        }
-
-        try {
-            // Get No. of Max Retries.
-            if (getInitParameter("maxRetries") != null) {
-                maxRetries = Integer.parseInt(getInitParameter("maxRetries"));
-            }
-
-            // Check consistency of 'maxRetries' with delayTimesList attempts.
-            int totalAttempts = calcTotalAttempts(delayTimesList);
-
-            // If inconsistency found, fix it.
-            if (totalAttempts > maxRetries) {
-                log("Total number of delayTime attempts exceeds maxRetries specified. " + " Increasing maxRetries from " + maxRetries + " to " + totalAttempts);
-                maxRetries = totalAttempts;
-            } else {
-                int extra = maxRetries - totalAttempts;
-                if (extra != 0) {
-                    log("maxRetries is larger than total number of attempts specified.  " + "Increasing last delayTime with " + extra + " attempts ");
-
-                    // Add extra attempts to the last delayTime.
-                    if (delayTimesList.size() != 0) {
-                        // Get the last delayTime.
-                        Delay delay = delayTimesList.get(delayTimesList.size() - 1);
-
-                        // Increase no. of attempts.
-                        delay.setAttempts(delay.getAttempts() + extra);
-                        log("Delay of " + delay.getDelayTime() + " msecs is now attempted: " + delay.getAttempts() + " times");
-                    } else {
-                        throw new MessagingException("No delaytimes, cannot continue");
-                    }
-                }
-            }
-            delayTimes = expandDelays(delayTimesList);
-
+            int intendedMaxRetries = Integer.parseInt(getInitParameter("maxRetries", "5"));
+            DelaysAndMaxRetry delaysAndMaxRetry = DelaysAndMaxRetry.from(intendedMaxRetries, getInitParameter("delayTime"));
+            maxRetries = delaysAndMaxRetry.getMaxRetries();
+            delayTimes = delaysAndMaxRetry.getExpendedDelays();
         } catch (Exception e) {
             log("Invalid maxRetries setting: " + getInitParameter("maxRetries"));
         }
@@ -432,52 +383,6 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
             t.start();
             workersThreads.add(t);
         }
-    }
-
-    /**
-     * Calculates Total no. of attempts for the specified delayList.
-     *
-     * @param delayList list of 'Delay' objects
-     * @return total no. of retry attempts
-     */
-    private int calcTotalAttempts(ArrayList<Delay> delayList) {
-        int sum = 0;
-        for (Delay delay : delayList) {
-            sum += delay.getAttempts();
-        }
-        return sum;
-    }
-
-    /**
-     * <p>
-     * This method expands an ArrayList containing Delay objects into an array
-     * holding the only delaytime in the order.
-     * </p>
-     * <p/>
-     * So if the list has 2 Delay objects the first having attempts=2 and
-     * delaytime 4000 the second having attempts=1 and delaytime=300000 will be
-     * expanded into this array:
-     * <p/>
-     * <pre>
-     * long[0] = 4000
-     * long[1] = 4000
-     * long[2] = 300000
-     * </pre>
-     *
-     * @param list the list to expand
-     * @return the expanded list
-     */
-    private long[] expandDelays(ArrayList<Delay> list) {
-        long[] delays = new long[calcTotalAttempts(list)];
-        Iterator<Delay> i = list.iterator();
-        int idx = 0;
-        while (i.hasNext()) {
-            Delay delay = i.next();
-            for (int j = 0; j < delay.getAttempts(); j++) {
-                delays[idx++] = delay.getDelayTime();
-            }
-        }
-        return delays;
     }
 
     /**
