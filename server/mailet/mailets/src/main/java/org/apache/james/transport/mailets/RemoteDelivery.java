@@ -164,8 +164,12 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
     private static final Pattern PATTERN = Patterns.compilePatternUncheckedException(PATTERN_STRING);
     private static final String OUTGOING_MAILS = "outgoingMails";
 
-    @Inject
-    private DNSService dnsServer;
+    private final DNSService dnsServer;
+    private final DomainList domainList;
+    private final MailQueueFactory queueFactory;
+    private final Metric outgoingMailsMetric;
+    private final Properties defprops; // Default properties for the JavaMail Session
+    private final Collection<Thread> workersThreads;
 
     /**
      * Flag to define verbose logging messages.
@@ -225,11 +229,6 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
     private boolean isBindUsed = false;
 
     /**
-     * Collection that stores all worker threads.
-     */
-    private final Collection<Thread> workersThreads = new Vector<Thread>();
-
-    /**
      * Flag used by 'run' method to end itself.
      */
     private volatile boolean destroyed = false;
@@ -239,17 +238,11 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
      */
     private String bounceProcessor = null;
 
-    /**
-     * Default properties for the JavaMail Session
-     */
-    private final Properties defprops = new Properties();
 
     /**
      * The retry count dnsProblemErrors
      */
     private int dnsProblemRetry = 0;
-
-    private MailQueueFactory queueFactory;
 
     private MailQueue queue;
 
@@ -257,29 +250,20 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 
     private boolean usePriority;
 
-    private DomainList domainList;
-
     private boolean startTLS = false;
 
     private boolean isSSLEnable = false;
 
-    private MetricFactory metricFactory;
-    private Metric outgoingMailsMetric;
     private HeloNameProvider heloNameProvider;
 
     @Inject
-    public void setDomainList(DomainList domainList) {
+    public RemoteDelivery(DNSService dnsServer, DomainList domainList, MailQueueFactory queueFactory, MetricFactory metricFactory) {
+        this.dnsServer = dnsServer;
         this.domainList = domainList;
-    }
-
-    @Inject
-    public void setMailQueueFactory(MailQueueFactory queueFactory) {
         this.queueFactory = queueFactory;
-    }
-
-    @Inject
-    public void setMetricFactory(MetricFactory metricFactory) {
-        this.metricFactory = metricFactory;
+        this.outgoingMailsMetric = metricFactory.generate(OUTGOING_MAILS);
+        this.defprops = new Properties();
+        this.workersThreads = new Vector<Thread>();
     }
 
     /**
@@ -289,7 +273,6 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
      * @throws MessagingException on failure to initialize attributes.
      */
     public void init() throws MessagingException {
-        outgoingMailsMetric = metricFactory.generate(OUTGOING_MAILS);
         // Set isDebug flag.
         isDebug = (getInitParameter("debug") == null) ? false : Boolean.valueOf(getInitParameter("debug"));
 
