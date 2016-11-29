@@ -32,6 +32,7 @@ import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPATransactionalMapper;
+import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -76,7 +77,13 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     public void save(Mailbox mailbox) throws MailboxException {
         try {
             this.lastMailboxName = mailbox.getName();
-            getEntityManager().persist(mailbox);
+            if (mailbox instanceof JPAMailbox) {
+                getEntityManager().persist(mailbox);
+            } else {
+                JPAMailbox persistedData = new JPAMailbox(mailbox);
+                getEntityManager().persist(persistedData);
+                mailbox.setMailboxId(persistedData.getMailboxId());
+            }
         } catch (PersistenceException e) {
             throw new MailboxException("Save of mailbox " + mailbox.getName() +" failed", e);
         } 
@@ -88,22 +95,31 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     public Mailbox findMailboxByPath(MailboxPath mailboxPath) throws MailboxException, MailboxNotFoundException {
         try {
             if (mailboxPath.getUser() == null) {
-                return (Mailbox) getEntityManager().createNamedQuery("findMailboxByName").setParameter("nameParam", mailboxPath.getName()).setParameter("namespaceParam", mailboxPath.getNamespace()).getSingleResult();
+                return getEntityManager().createNamedQuery("findMailboxByName", JPAMailbox.class)
+                    .setParameter("nameParam", mailboxPath.getName())
+                    .setParameter("namespaceParam", mailboxPath.getNamespace())
+                    .getSingleResult();
             } else {
-                return (Mailbox) getEntityManager().createNamedQuery("findMailboxByNameWithUser").setParameter("nameParam", mailboxPath.getName()).setParameter("namespaceParam", mailboxPath.getNamespace()).setParameter("userParam", mailboxPath.getUser()).getSingleResult();
+                return getEntityManager().createNamedQuery("findMailboxByNameWithUser", JPAMailbox.class)
+                    .setParameter("nameParam", mailboxPath.getName())
+                    .setParameter("namespaceParam", mailboxPath.getNamespace())
+                    .setParameter("userParam", mailboxPath.getUser())
+                    .getSingleResult();
             }
         } catch (NoResultException e) {
             throw new MailboxNotFoundException(mailboxPath);
         } catch (PersistenceException e) {
             throw new MailboxException("Search of mailbox " + mailboxPath + " failed", e);
-        } 
+        }
     }
 
     @Override
     public Mailbox findMailboxById(MailboxId id) throws MailboxException, MailboxNotFoundException {
         JPAId mailboxId = (JPAId)id;
         try {
-            return (Mailbox) getEntityManager().createNamedQuery("findMailboxById").setParameter("idParam", mailboxId.getRawId()).getSingleResult();
+            return getEntityManager().createNamedQuery("findMailboxById", JPAMailbox.class)
+                .setParameter("idParam", mailboxId.getRawId())
+                .getSingleResult();
         } catch (NoResultException e) {
             throw new MailboxNotFoundException(mailboxId.serialize());
         } catch (PersistenceException e) {
@@ -118,7 +134,8 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         try {  
             JPAId mailboxId = (JPAId) mailbox.getMailboxId();
             getEntityManager().createNamedQuery("deleteMessages").setParameter("idParam", mailboxId.getRawId()).executeUpdate();
-            getEntityManager().remove(mailbox);
+            JPAMailbox jpaMailbox = getEntityManager().find(JPAMailbox.class, mailboxId.getRawId());
+            getEntityManager().remove(jpaMailbox);
         } catch (PersistenceException e) {
             throw new MailboxException("Delete of mailbox " + mailbox + " failed", e);
         } 
@@ -127,13 +144,19 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     /**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxWithPathLike(MailboxPath)
      */
-    @SuppressWarnings("unchecked")
     public List<Mailbox> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
         try {
             if (path.getUser() == null) {
-                return getEntityManager().createNamedQuery("findMailboxWithNameLike").setParameter("nameParam", SQL_WILDCARD_CHAR + path.getName() + SQL_WILDCARD_CHAR).setParameter("namespaceParam", path.getNamespace()).getResultList();
+                return getEntityManager().createNamedQuery("findMailboxWithNameLike", Mailbox.class)
+                    .setParameter("nameParam", path.getName())
+                    .setParameter("namespaceParam", path.getNamespace())
+                    .getResultList();
             } else {
-                return getEntityManager().createNamedQuery("findMailboxWithNameLikeWithUser").setParameter("nameParam", SQL_WILDCARD_CHAR + path.getName() + SQL_WILDCARD_CHAR).setParameter("namespaceParam", path.getNamespace()).setParameter("userParam", path.getUser()).getResultList();
+                return getEntityManager().createNamedQuery("findMailboxWithNameLikeWithUser", Mailbox.class)
+                    .setParameter("nameParam", path.getName())
+                    .setParameter("namespaceParam", path.getNamespace())
+                    .setParameter("userParam", path.getUser())
+                    .getResultList();
             }
         } catch (PersistenceException e) {
             throw new MailboxException("Search of mailbox " + path + " failed", e);
@@ -174,10 +197,9 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
 	/**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#list()
      */
-    @SuppressWarnings("unchecked")
     public List<Mailbox> list() throws MailboxException{
         try {
-            return getEntityManager().createNamedQuery("listMailboxes").getResultList();
+            return getEntityManager().createNamedQuery("listMailboxes", Mailbox.class).getResultList();
         } catch (PersistenceException e) {
             throw new MailboxException("Delete of mailboxes failed", e);
         } 

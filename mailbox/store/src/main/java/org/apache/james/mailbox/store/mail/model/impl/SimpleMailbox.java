@@ -24,6 +24,9 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
 public class SimpleMailbox implements Mailbox {
 
     private MailboxId id = null;
@@ -115,17 +118,9 @@ public class SimpleMailbox implements Mailbox {
      * @see java.lang.Object#equals(java.lang.Object)
      */
     public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
         if (obj instanceof SimpleMailbox) {
-            if (id != null) {
-                if (id.equals(((SimpleMailbox) obj).getMailboxId()))
-                    return true;
-            } else {
-                if (((SimpleMailbox) obj).getMailboxId() == null)
-                    return true;
-            }
+            SimpleMailbox o = (SimpleMailbox)obj;
+            return Objects.equal(id, o.getMailboxId());
         }
         return false;
     }
@@ -135,14 +130,7 @@ public class SimpleMailbox implements Mailbox {
      */
     @Override
     public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + namespace.hashCode();
-        if (user != null) {
-            result = PRIME * result + user.hashCode();
-        }
-        result = PRIME * result + name.hashCode();
-        return result;
+        return Objects.hashCode(namespace, user, name);
     }
 
     /**
@@ -150,7 +138,11 @@ public class SimpleMailbox implements Mailbox {
      */
     @Override
     public String toString() {
-        return namespace + ":" + user + ":" + name;
+        return MoreObjects.toStringHelper(this)
+            .add("namespace", namespace)
+            .add("user", user)
+            .add("name", name)
+            .toString();
     }
 
     @Override
@@ -158,17 +150,11 @@ public class SimpleMailbox implements Mailbox {
         this.id = id;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getACL()
-     */
     @Override
     public MailboxACL getACL() {
         return acl;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setACL(org.apache.james.mailbox.MailboxACL)
-     */
     @Override
     public void setACL(MailboxACL acl) {
         this.acl = acl;

@@ -53,7 +53,7 @@ import org.xenei.junit.contract.IProducer;
 
 import com.google.common.collect.ImmutableList;
 
-//@Contract(MapperProvider.class)
+@Contract(MapperProvider.class)
 public class MessageWithAttachmentMapperTest<T extends MapperProvider> {
 
     private static final int LIMIT = 10;

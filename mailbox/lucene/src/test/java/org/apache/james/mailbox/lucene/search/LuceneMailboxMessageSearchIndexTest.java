@@ -606,14 +606,13 @@ public class LuceneMailboxMessageSearchIndexTest {
     }
     
     private final class SimpleMailbox implements Mailbox {
-        private TestId id;
+        private final TestId id;
 
         public SimpleMailbox(long id) {
         	this.id = TestId.of(id);
         }
 
         public void setMailboxId(MailboxId id) {
-            this.id = (TestId)id;
         }
 
         public TestId getMailboxId() {
