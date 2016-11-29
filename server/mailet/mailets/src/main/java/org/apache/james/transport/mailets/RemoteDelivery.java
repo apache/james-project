@@ -53,12 +53,10 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 import javax.mail.internet.ParseException;
 
-import com.sun.mail.smtp.SMTPTransport;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
 import org.apache.james.dnsservice.library.MXHostAddressIterator;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
@@ -67,6 +65,7 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.transport.mailets.remoteDelivery.HeloNameProvider;
 import org.apache.james.transport.mailets.remoteDelivery.RemoteDeliverySocketFactory;
 import org.apache.james.transport.util.Patterns;
 import org.apache.james.util.TimeConverter;
@@ -76,6 +75,8 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
+
+import com.sun.mail.smtp.SMTPTransport;
 
 /**
  * <p>The RemoteDelivery mailet delivers messages to a remote SMTP server able to deliver or forward messages to their final
@@ -252,8 +253,6 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 
     private MailQueue queue;
 
-    private String heloName;
-
     private Logger logger;
 
     private boolean usePriority;
@@ -266,6 +265,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 
     private MetricFactory metricFactory;
     private Metric outgoingMailsMetric;
+    private HeloNameProvider heloNameProvider;
 
     @Inject
     public void setDomainList(DomainList domainList) {
@@ -444,7 +444,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
             dnsProblemRetry = Integer.parseInt(dnsRetry);
         }
 
-        heloName = getInitParameter("heloName");
+        heloNameProvider = new HeloNameProvider(getInitParameter("heloName"), domainList);
 
         String prio = getInitParameter("usePriority");
         if (prio != null) {
@@ -751,7 +751,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
         props.put("mail.smtp.connectiontimeout", connectionTimeout + "");
         props.put("mail.smtp.sendpartial", String.valueOf(sendPartial));
 
-        props.put("mail.smtp.localhost", getHeloName());
+        props.put("mail.smtp.localhost", heloNameProvider.getHeloName());
 
         // handle starttls
         props.put("mail.smtp.starttls.enable", String.valueOf(startTLS));
@@ -970,7 +970,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
                     SMTPTransport transport = null;
                     try {
                         transport =  (SMTPTransport) session.getTransport(outgoingMailServer);
-                        transport.setLocalHost( props.getProperty("mail.smtp.localhost", heloName) );
+                        transport.setLocalHost( props.getProperty("mail.smtp.localhost", heloNameProvider.getHeloName()) );
                         try {
                             if (authUser != null) {
                                 transport.connect(outgoingMailServer.getHostName(), authUser, authPass);
@@ -1555,7 +1555,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
         PrintWriter out = new PrintWriter(sout, true);
         String machine;
         try {
-            machine = getHeloName();
+            machine = heloNameProvider.getHeloName();
 
         } catch (Exception e) {
             machine = "[address unknown]";
@@ -1629,20 +1629,6 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
         Iterator<String> gateways = gatewayServers.iterator();
 
         return new MXHostAddressIterator(gateways, dnsServer, false, logger);
-    }
-
-    protected String getHeloName() {
-        if (heloName == null) {
-            // TODO: Maybe we should better just lookup the hostname via dns
-            try {
-                return domainList.getDefaultDomain();
-            } catch (DomainListException e) {
-                log("Unable to access DomainList", e);
-                return "localhost";
-            }
-        } else {
-            return heloName;
-        }
     }
 
 }
