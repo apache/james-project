@@ -20,11 +20,12 @@ package org.apache.james.smtpserver;
 
 import org.apache.james.smtpserver.netty.OioSMTPServer;
 import org.apache.james.smtpserver.netty.SMTPServer;
+import org.apache.james.smtpserver.netty.SmtpMetricsImpl;
 
 public class OioSMTPServerTest extends SMTPServerTest {
 
     @Override
-    protected SMTPServer createSMTPServer() {
-        return new OioSMTPServer();
+    protected SMTPServer createSMTPServer(SmtpMetricsImpl smtpMetrics) {
+        return new OioSMTPServer(smtpMetrics);
     }
 }

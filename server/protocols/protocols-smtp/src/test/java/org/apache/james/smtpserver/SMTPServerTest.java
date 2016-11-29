@@ -24,6 +24,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -54,6 +56,7 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.mock.MockMailRepositoryStore;
+import org.apache.james.metrics.api.Metric;
 import org.apache.james.protocols.lib.PortUtil;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
@@ -64,6 +67,7 @@ import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.smtpserver.netty.SMTPServer;
+import org.apache.james.smtpserver.netty.SmtpMetricsImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import org.apache.mailet.HostAddress;
@@ -193,16 +197,18 @@ public class SMTPServerTest {
         setUpSMTPServer();
     }
 
-    protected SMTPServer createSMTPServer() {
-        return new SMTPServer();
+    protected SMTPServer createSMTPServer(SmtpMetricsImpl smtpMetrics) {
+        return new SMTPServer(smtpMetrics);
     }
 
     protected void setUpSMTPServer() {
-        
         Logger log = LoggerFactory.getLogger("SMTP");
         // slf4j can't set programmatically any log level. It's just a facade
         // log.setLevel(SimpleLog.LOG_LEVEL_ALL);
-        smtpServer = createSMTPServer();
+        SmtpMetricsImpl smtpMetrics = mock(SmtpMetricsImpl.class);
+        when(smtpMetrics.getCommandsMetric()).thenReturn(mock(Metric.class));
+        when(smtpMetrics.getConnectionMetric()).thenReturn(mock(Metric.class));
+        smtpServer = createSMTPServer(smtpMetrics);
         smtpServer.setDnsService(dnsServer);
         smtpServer.setFileSystem(fileSystem);
         smtpServer.setProtocolHandlerLoader(chain);

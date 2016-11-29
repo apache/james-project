@@ -16,42 +16,31 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.smtpserver.netty;
 
-import org.jboss.netty.channel.socket.ServerSocketChannelFactory;
-import org.jboss.netty.channel.socket.oio.OioServerSocketChannelFactory;
-import org.jboss.netty.handler.execution.ExecutionHandler;
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
 
-/**
- * SMTPServer which use old IO and not NIO. If you want to use NIO you should
- * use {@link SMTPServer}
- */
-public class OioSMTPServer extends SMTPServer {
+public class SmtpMetricsImpl implements SmtpMetrics {
+    private static final String SMTP_CONNECTIONS = "smtpConnections";
+    private static final String SMTP_COMMANDS = "smtpCommands";
 
-    public OioSMTPServer(SmtpMetricsImpl smtpMetrics) {
-        super(smtpMetrics);
+    private final Metric smtpConnectionMetric;
+    private final Metric smtpCommandsMetric;
+
+    public SmtpMetricsImpl(MetricFactory metricFactory) {
+        this.smtpConnectionMetric = metricFactory.generate(SMTP_CONNECTIONS);
+        this.smtpCommandsMetric = metricFactory.generate(SMTP_COMMANDS);
     }
 
     @Override
-    protected ServerSocketChannelFactory createSocketChannelFactory() {
-        return new OioServerSocketChannelFactory(createBossExecutor(), createWorkerExecutor());
+    public Metric getConnectionMetric() {
+        return smtpConnectionMetric;
     }
 
-    /**
-     * Return -1 as it is not known
-     */
     @Override
-    public int getIoWorkerCount() {
-        return -1;
-    }
-
-
-    /**
-     * As OIO use one thread per connection we disable the use of the {@link ExecutionHandler}
-     * 
-     */
-    @Override
-    protected ExecutionHandler createExecutionHander() {
-        return null;
+    public Metric getCommandsMetric() {
+        return smtpCommandsMetric;
     }
 }

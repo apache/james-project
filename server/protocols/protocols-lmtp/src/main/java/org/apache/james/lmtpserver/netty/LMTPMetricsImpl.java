@@ -16,42 +16,30 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.smtpserver.netty;
 
-import org.jboss.netty.channel.socket.ServerSocketChannelFactory;
-import org.jboss.netty.channel.socket.oio.OioServerSocketChannelFactory;
-import org.jboss.netty.handler.execution.ExecutionHandler;
+package org.apache.james.lmtpserver.netty;
 
-/**
- * SMTPServer which use old IO and not NIO. If you want to use NIO you should
- * use {@link SMTPServer}
- */
-public class OioSMTPServer extends SMTPServer {
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.smtpserver.netty.SmtpMetrics;
 
-    public OioSMTPServer(SmtpMetricsImpl smtpMetrics) {
-        super(smtpMetrics);
+public class LMTPMetricsImpl implements SmtpMetrics {
+    private static final String LMTP_CONNECTIONS = "lmtpConnections";
+    private static final String LMTP_COMMANDS = "lmtpCommands";
+
+    private final MetricFactory metricFactory;
+
+    public LMTPMetricsImpl(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
     }
 
     @Override
-    protected ServerSocketChannelFactory createSocketChannelFactory() {
-        return new OioServerSocketChannelFactory(createBossExecutor(), createWorkerExecutor());
+    public Metric getConnectionMetric() {
+        return metricFactory.generate(LMTP_CONNECTIONS);
     }
 
-    /**
-     * Return -1 as it is not known
-     */
     @Override
-    public int getIoWorkerCount() {
-        return -1;
-    }
-
-
-    /**
-     * As OIO use one thread per connection we disable the use of the {@link ExecutionHandler}
-     * 
-     */
-    @Override
-    protected ExecutionHandler createExecutionHander() {
-        return null;
+    public Metric getCommandsMetric() {
+        return metricFactory.generate(LMTP_COMMANDS);
     }
 }

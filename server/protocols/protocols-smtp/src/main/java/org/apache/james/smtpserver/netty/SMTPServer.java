@@ -75,6 +75,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
      * The configuration data to be passed to the handler
      */
     private final SMTPConfiguration theConfigData = new SMTPHandlerConfigurationDataImpl();
+    private final SmtpMetrics smtpMetrics;
 
     private boolean addressBracketsEnforcement = true;
 
@@ -84,6 +85,10 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     private String authorizedAddresses;
     
     private SMTPChannelUpstreamHandler coreHandler;
+
+    public SMTPServer(SmtpMetrics smtpMetrics) {
+        this.smtpMetrics = smtpMetrics;
+    }
 
     @Inject
     public void setDnsService(DNSService dns) {
@@ -110,7 +115,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             }
             
         };
-        coreHandler = new SMTPChannelUpstreamHandler(transport, getLogger(), getEncryption());        
+        coreHandler = new SMTPChannelUpstreamHandler(transport, getLogger(), getEncryption(), smtpMetrics);
     }
 
     @Override

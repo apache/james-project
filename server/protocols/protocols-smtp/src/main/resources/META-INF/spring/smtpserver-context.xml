@@ -19,9 +19,10 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
     <bean id="smtpserver" class="org.apache.james.smtpserver.netty.SMTPServerFactory">
-        <property name="protocolHandlerLoader" ref="protocolhandlerloader"/>
-        <property name="fileSystem" ref="filesystem"/>
-        <property name="dnsService" ref="dnsservice"/>
+        <constructor-arg index="0" ref="dnsservice"/>
+        <constructor-arg index="1" ref="protocolhandlerloader"/>
+        <constructor-arg index="2" ref="filesystem"/>
+        <constructor-arg index="3" ref="metricFactory"/>
     </bean>
     
 </beans>

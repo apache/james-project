@@ -28,6 +28,11 @@ import org.jboss.netty.handler.execution.ExecutionHandler;
  */
 public class OioLMTPServer extends LMTPServer {
 
+
+    public OioLMTPServer(LMTPMetricsImpl lmtpMetrics) {
+        super(lmtpMetrics);
+    }
+
     @Override
     protected ServerSocketChannelFactory createSocketChannelFactory() {
         return new OioServerSocketChannelFactory(createBossExecutor(), createWorkerExecutor());

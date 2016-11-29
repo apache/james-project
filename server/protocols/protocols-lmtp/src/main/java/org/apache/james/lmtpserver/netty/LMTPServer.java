@@ -39,8 +39,12 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
      */
     private long maxMessageSize = 0;
     private final LMTPConfigurationImpl lmtpConfig = new LMTPConfigurationImpl();
+    private final LMTPMetricsImpl lmtpMetrics;
     private String lmtpGreeting;
 
+    public LMTPServer(LMTPMetricsImpl lmtpMetrics) {
+        this.lmtpMetrics = lmtpMetrics;
+    }
 
     /**
      * @see
@@ -138,7 +142,7 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
     @Override
     protected ChannelUpstreamHandler createCoreHandler() {
         SMTPProtocol protocol = new SMTPProtocol(getProtocolHandlerChain(), lmtpConfig, new ProtocolLoggerAdapter(getLogger()));
-        return new SMTPChannelUpstreamHandler(protocol, getLogger());
+        return new SMTPChannelUpstreamHandler(protocol, getLogger(), lmtpMetrics);
     }
 
     @Override

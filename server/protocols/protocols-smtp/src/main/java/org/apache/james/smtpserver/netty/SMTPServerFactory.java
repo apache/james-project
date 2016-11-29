@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
@@ -34,27 +35,21 @@ import org.slf4j.Logger;
 
 public class SMTPServerFactory extends AbstractServerFactory {
 
-    private DNSService dns;
-    private ProtocolHandlerLoader loader;
-    private FileSystem fileSystem;
+    protected final DNSService dns;
+    protected final ProtocolHandlerLoader loader;
+    protected final FileSystem fileSystem;
+    protected final SmtpMetricsImpl smtpMetrics;
 
     @Inject
-    public void setDnsService(DNSService dns) {
+    public SMTPServerFactory(DNSService dns, ProtocolHandlerLoader loader, FileSystem fileSystem, MetricFactory metricFactory) {
         this.dns = dns;
-    }
-    
-    @Inject
-    public void setProtocolHandlerLoader(ProtocolHandlerLoader loader) {
         this.loader = loader;
-    }
-
-    @Inject
-    public final void setFileSystem(FileSystem filesystem) {
-        this.fileSystem = filesystem;
+        this.fileSystem = fileSystem;
+        this.smtpMetrics = new SmtpMetricsImpl(metricFactory);
     }
 
     protected SMTPServer createServer() {
-       return new SMTPServer();
+       return new SMTPServer(smtpMetrics);
     }
     
     @Override

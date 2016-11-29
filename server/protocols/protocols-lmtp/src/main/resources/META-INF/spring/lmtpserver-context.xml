@@ -18,8 +18,9 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
     <bean id="lmtpserver" class="org.apache.james.lmtpserver.netty.LMTPServerFactory">
-        <property name="protocolHandlerLoader" ref="protocolhandlerloader"/>
-        <property name="fileSystem" ref="filesystem"/>
+        <constructor-arg index="0" ref="protocolhandlerloader"/>
+        <constructor-arg index="1" ref="filesystem"/>
+        <constructor-arg index="2" ref="metricFactory"/>
     </bean>
     
 </beans>

@@ -25,6 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
@@ -32,21 +33,19 @@ import org.slf4j.Logger;
 
 public class LMTPServerFactory extends AbstractServerFactory{
 
-    private ProtocolHandlerLoader loader;
-    private FileSystem fileSystem;
+    private final ProtocolHandlerLoader loader;
+    private final FileSystem fileSystem;
+    protected final LMTPMetricsImpl lmtpMetrics;
 
     @Inject
-    public void setProtocolHandlerLoader(ProtocolHandlerLoader loader) {
+    public LMTPServerFactory(ProtocolHandlerLoader loader, FileSystem fileSystem, MetricFactory metricFactory) {
         this.loader = loader;
-    }
-    
-    @Inject
-    public final void setFileSystem(FileSystem filesystem) {
-        this.fileSystem = filesystem;
+        this.fileSystem = fileSystem;
+        this.lmtpMetrics = new LMTPMetricsImpl(metricFactory);
     }
 
     protected LMTPServer createServer() {
-       return new LMTPServer();
+       return new LMTPServer(lmtpMetrics);
     }
     
     @Override

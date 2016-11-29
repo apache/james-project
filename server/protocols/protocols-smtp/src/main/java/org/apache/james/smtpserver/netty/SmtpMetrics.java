@@ -16,42 +16,13 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.smtpserver.netty;
 
-import org.jboss.netty.channel.socket.ServerSocketChannelFactory;
-import org.jboss.netty.channel.socket.oio.OioServerSocketChannelFactory;
-import org.jboss.netty.handler.execution.ExecutionHandler;
+import org.apache.james.metrics.api.Metric;
 
-/**
- * SMTPServer which use old IO and not NIO. If you want to use NIO you should
- * use {@link SMTPServer}
- */
-public class OioSMTPServer extends SMTPServer {
+public interface SmtpMetrics {
+    Metric getConnectionMetric();
 
-    public OioSMTPServer(SmtpMetricsImpl smtpMetrics) {
-        super(smtpMetrics);
-    }
-
-    @Override
-    protected ServerSocketChannelFactory createSocketChannelFactory() {
-        return new OioServerSocketChannelFactory(createBossExecutor(), createWorkerExecutor());
-    }
-
-    /**
-     * Return -1 as it is not known
-     */
-    @Override
-    public int getIoWorkerCount() {
-        return -1;
-    }
-
-
-    /**
-     * As OIO use one thread per connection we disable the use of the {@link ExecutionHandler}
-     * 
-     */
-    @Override
-    protected ExecutionHandler createExecutionHander() {
-        return null;
-    }
+    Metric getCommandsMetric();
 }

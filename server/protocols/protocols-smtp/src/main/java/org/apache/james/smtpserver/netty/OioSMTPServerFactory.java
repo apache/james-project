@@ -19,11 +19,20 @@
 
 package org.apache.james.smtpserver.netty;
 
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
+
 public class OioSMTPServerFactory extends SMTPServerFactory{
+
+    public OioSMTPServerFactory(DNSService dns, ProtocolHandlerLoader loader, FileSystem fileSystem, MetricFactory metricFactory) {
+        super(dns, loader, fileSystem, metricFactory);
+    }
 
     @Override
     protected SMTPServer createServer() {
-        return new OioSMTPServer();
+        return new OioSMTPServer(smtpMetrics);
     }
 
 }

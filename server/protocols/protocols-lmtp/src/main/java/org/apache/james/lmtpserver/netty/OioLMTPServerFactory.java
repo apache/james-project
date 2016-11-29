@@ -18,11 +18,19 @@
  ****************************************************************/
 package org.apache.james.lmtpserver.netty;
 
+import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
+
 public class OioLMTPServerFactory extends LMTPServerFactory{
+
+    public OioLMTPServerFactory(ProtocolHandlerLoader loader, FileSystem fileSystem, MetricFactory metricFactory) {
+        super(loader, fileSystem, metricFactory);
+    }
 
     @Override
     protected LMTPServer createServer() {
-        return new OioLMTPServer();
+        return new OioLMTPServer(lmtpMetrics);
     }
 
 }
