@@ -39,8 +39,6 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.mail.Address;
@@ -65,10 +63,9 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.transport.mailets.remoteDelivery.Delay;
 import org.apache.james.transport.mailets.remoteDelivery.HeloNameProvider;
 import org.apache.james.transport.mailets.remoteDelivery.RemoteDeliverySocketFactory;
-import org.apache.james.transport.util.Patterns;
-import org.apache.james.util.TimeConverter;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -151,17 +148,6 @@ import com.sun.mail.smtp.SMTPTransport;
 @SuppressWarnings("deprecation")
 public class RemoteDelivery extends GenericMailet implements Runnable {
 
-    /**
-     * Default Delay Time (Default is 6*60*60*1000 Milliseconds (6 hours)).
-     */
-    private static final long DEFAULT_DELAY_TIME = 21600000;
-
-    /**
-     * Pattern to match [attempts*]delay[units].
-     */
-    private static final String PATTERN_STRING = "\\s*([0-9]*\\s*[\\*])?\\s*([0-9]+)\\s*([a-z,A-Z]*)\\s*";
-
-    private static final Pattern PATTERN = Patterns.compilePatternUncheckedException(PATTERN_STRING);
     private static final String OUTGOING_MAILS = "outgoingMails";
 
     private final DNSService dnsServer;
@@ -502,109 +488,9 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
      */
     private long getNextDelay(int retry_count) {
         if (retry_count > delayTimes.length) {
-            return DEFAULT_DELAY_TIME;
+            return Delay.DEFAULT_DELAY_TIME;
         }
         return delayTimes[retry_count - 1];
-    }
-
-    /**
-     * This class is used to hold a delay time and its corresponding number of
-     * retries.
-     */
-    private final static class Delay {
-        private int attempts = 1;
-
-        private long delayTime = DEFAULT_DELAY_TIME;
-
-        /**
-         * <p>
-         * This constructor expects Strings of the form
-         * "[attempt\*]delaytime[unit]".
-         * </p>
-         * <p>
-         * The optional attempt is the number of tries this delay should be used
-         * (default = 1). The unit, if present, must be one of
-         * (msec,sec,minute,hour,day). The default value of unit is 'msec'.
-         * </p>
-         * <p>
-         * The constructor multiplies the delaytime by the relevant multiplier
-         * for the unit, so the delayTime instance variable is always in msec.
-         * </p>
-         *
-         * @param initString the string to initialize this Delay object from
-         */
-        public Delay(String initString) throws MessagingException {
-            // Default unit value to 'msec'.
-            String unit = "msec";
-
-            Matcher res = PATTERN.matcher(initString);
-            if (res.matches()) {
-                // The capturing groups will now hold:
-                // at 1: attempts * (if present)
-                // at 2: delaytime
-                // at 3: unit (if present)
-                if (res.group(1) != null && !res.group(1).equals("")) {
-                    // We have an attempt *
-                    String attemptMatch = res.group(1);
-
-                    // Strip the * and whitespace.
-                    attemptMatch = attemptMatch.substring(0, attemptMatch.length() - 1).trim();
-                    attempts = Integer.parseInt(attemptMatch);
-                }
-
-                delayTime = Long.parseLong(res.group(2));
-
-                if (!res.group(3).equals("")) {
-                    // We have a value for 'unit'.
-                    unit = res.group(3).toLowerCase(Locale.US);
-                }
-            } else {
-                throw new MessagingException(initString + " does not match " + PATTERN_STRING);
-            }
-
-            // calculate delayTime.
-            try {
-                delayTime = TimeConverter.getMilliSeconds(delayTime, unit);
-            } catch (NumberFormatException e) {
-                throw new MessagingException(e.getMessage());
-            }
-        }
-
-        /**
-         * This constructor makes a default Delay object with attempts = 1 and
-         * delayTime = DEFAULT_DELAY_TIME.
-         */
-        public Delay() {
-        }
-
-        /**
-         * @return the delayTime for this Delay
-         */
-        public long getDelayTime() {
-            return delayTime;
-        }
-
-        /**
-         * @return the number attempts this Delay should be used.
-         */
-        public int getAttempts() {
-            return attempts;
-        }
-
-        /**
-         * Set the number attempts this Delay should be used.
-         */
-        public void setAttempts(int value) {
-            attempts = value;
-        }
-
-        /**
-         * Pretty prints this Delay
-         */
-        @Override
-        public String toString() {
-            return getAttempts() + "*" + getDelayTime() + "msecs";
-        }
     }
 
     @Override
