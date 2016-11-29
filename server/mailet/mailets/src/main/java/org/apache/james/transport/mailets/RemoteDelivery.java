@@ -67,6 +67,7 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.transport.mailets.remoteDelivery.RemoteDeliverySocketFactory;
 import org.apache.james.transport.util.Patterns;
 import org.apache.james.util.TimeConverter;
 import org.apache.mailet.HostAddress;
