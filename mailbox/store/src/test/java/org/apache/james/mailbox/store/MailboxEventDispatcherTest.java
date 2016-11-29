@@ -37,6 +37,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -111,6 +112,10 @@ public class MailboxEventDispatcherTest {
 
         @Override
         public void setACL(MailboxACL acl) {
+        }
+
+        @Override
+        public void setMailboxId(MailboxId id) {
         }
 
     };

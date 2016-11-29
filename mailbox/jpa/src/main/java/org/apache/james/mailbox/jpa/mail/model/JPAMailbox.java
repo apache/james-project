@@ -29,6 +29,7 @@ import javax.persistence.Table;
 
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -118,6 +119,10 @@ public class JPAMailbox implements Mailbox {
         return JPAId.of(mailboxId);
     }
 
+    @Override
+    public void setMailboxId(MailboxId mailboxId) {
+        this.mailboxId = ((JPAId)mailboxId).getRawId();
+    }
     /**
      * @see org.apache.james.mailbox.store.mail.model.Mailbox#getName()
      */

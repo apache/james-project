@@ -138,7 +138,9 @@ public class SimpleMailbox implements Mailbox {
         final int PRIME = 31;
         int result = 1;
         result = PRIME * result + namespace.hashCode();
-        result = PRIME * result + user.hashCode();
+        if (user != null) {
+            result = PRIME * result + user.hashCode();
+        }
         result = PRIME * result + name.hashCode();
         return result;
     }
@@ -151,7 +153,7 @@ public class SimpleMailbox implements Mailbox {
         return namespace + ":" + user + ":" + name;
     }
 
-
+    @Override
     public void setMailboxId(MailboxId id) {
         this.id = id;
     }

@@ -27,6 +27,7 @@ import org.apache.james.mailbox.jcr.JCRId;
 import org.apache.james.mailbox.jcr.JCRImapConstants;
 import org.apache.james.mailbox.jcr.Persistent;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -198,10 +199,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getMailboxId()
-     */
+    @Override
     public JCRId getMailboxId() {
         if (isPersistent()) {
             try {
@@ -213,6 +211,10 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
         return null;      
     }
 
+    @Override
+    public void setMailboxId(MailboxId mailboxId) {
+        
+    }
     /*
      * (non-Javadoc)
      * @see org.apache.james.mailbox.store.mail.model.Mailbox#getNamespace()
