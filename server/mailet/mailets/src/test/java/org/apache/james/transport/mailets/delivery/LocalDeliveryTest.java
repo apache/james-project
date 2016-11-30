@@ -89,7 +89,10 @@ public class LocalDeliveryTest {
         }
         when(session.getUser()).thenReturn(user);
 
-        config = new FakeMailetConfig("Local delivery", FakeMailContext.builder().logger(mock(Logger.class)).build());
+        config = FakeMailetConfig.builder()
+            .mailetName("Local delivery")
+            .mailetContext(FakeMailContext.builder().logger(mock(Logger.class)).build())
+            .build();
     }
 
     @Test

@@ -30,7 +30,6 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
@@ -51,9 +50,11 @@ public class SetMailAttributeTest {
 
     @Test
     public void shouldAddConfiguredAttributes() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        mailetConfig.setProperty("org.apache.james.junit1", "true");
-        mailetConfig.setProperty("org.apache.james.junit2", "happy");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("org.apache.james.junit1", "true")
+                .setProperty("org.apache.james.junit2", "happy")
+                .build();
 
         mailet.init(mailetConfig);
 
@@ -67,7 +68,9 @@ public class SetMailAttributeTest {
     
     @Test
     public void shouldAddNothingWhenNoConfiguredAttribute() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .build();
      
         mailet.init(mailetConfig);
 
@@ -80,8 +83,10 @@ public class SetMailAttributeTest {
     
     @Test
     public void shouldOverwriteAttributeWhenAttributeAlreadyPresent() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        mailetConfig.setProperty("org.apache.james.junit1", "bar");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("org.apache.james.junit1", "bar")
+                .build();
         
         mailet.init(mailetConfig);
         
@@ -91,19 +96,5 @@ public class SetMailAttributeTest {
         mailet.service(mail);
 
         assertThat(mail.getAttribute("org.apache.james.junit1")).isEqualTo("bar");
-    }
-    
-    @Test
-    public void shouldThrowWhenNullProperty() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        expectedException.expect(NullPointerException.class);
-        mailetConfig.setProperty(null, "bar");
-    }
-    
-    @Test
-    public void shouldThrowWhenNullValue() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        expectedException.expect(NullPointerException.class);
-        mailetConfig.setProperty("org.apache.james.junit1", null);
     }
 }

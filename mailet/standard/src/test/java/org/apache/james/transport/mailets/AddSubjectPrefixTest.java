@@ -27,7 +27,6 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
@@ -40,17 +39,18 @@ public class AddSubjectPrefixTest {
     @Rule public ExpectedException expectedException = ExpectedException.none();
     
     private Mailet mailet;
-    private FakeMailetConfig mailetConfig;
 
     @Before
     public void setup() {
         mailet = new AddSubjectPrefix();
-        mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
     }
     
     @Test
     public void shouldAddPrefixToSubject() throws MessagingException {
-        mailetConfig.setProperty("subjectPrefix", "JUNIT");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("subjectPrefix", "JUNIT")
+                .build();
         mailet.init(mailetConfig);
 
         MimeMessage mockedMimeMessage = MailUtil.createMimeMessageWithSubject("test");
@@ -64,7 +64,10 @@ public class AddSubjectPrefixTest {
     
     @Test
     public void shouldAddPrefixToEncodedSubject() throws MessagingException {
-        mailetConfig.setProperty("subjectPrefix", "Русский");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("subjectPrefix", "Русский")
+                .build();
         mailet.init(mailetConfig);
 
         String subject = 
@@ -80,7 +83,10 @@ public class AddSubjectPrefixTest {
     
     @Test
     public void shouldDefinePrefixAsSubjectWhenNoSubject() throws MessagingException {
-        mailetConfig.setProperty("subjectPrefix", "JUNIT");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("subjectPrefix", "JUNIT")
+                .build();
         mailet.init(mailetConfig);
 
         String noSubject = null;
@@ -94,7 +100,10 @@ public class AddSubjectPrefixTest {
 
     @Test
     public void shouldDefinePrefixAsSubjectWhenEmptySubject() throws MessagingException {
-        mailetConfig.setProperty("subjectPrefix", "JUNIT");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("subjectPrefix", "JUNIT")
+                .build();
         mailet.init(mailetConfig);
 
         MimeMessage mockedMimeMessage = MailUtil.createMimeMessageWithSubject("");
@@ -107,7 +116,10 @@ public class AddSubjectPrefixTest {
     
     @Test
     public void shouldThrowWhenEmptyPrefix() throws MessagingException {
-        mailetConfig.setProperty("subjectPrefix", "");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("subjectPrefix", "")
+                .build();
 
         expectedException.expect(MessagingException.class);
 

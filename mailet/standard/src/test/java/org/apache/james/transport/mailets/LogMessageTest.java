@@ -52,16 +52,16 @@ public class LogMessageTest {
     public ExpectedException expectedException = ExpectedException.none();
 
     private LogMessage mailet;
-    private FakeMailetConfig mailetConfig;
+    private FakeMailContext mailContext;
     private Logger logger;
+
 
     @Before
     public void setup() {
         logger = mock(Logger.class);
-        FakeMailContext mailContext = FakeMailContext.builder()
+        mailContext = FakeMailContext.builder()
                 .logger(logger)
                 .build();
-        mailetConfig = new FakeMailetConfig("LogContext", mailContext);
         mailet = new LogMessage();
     }
 
@@ -72,12 +72,20 @@ public class LogMessageTest {
 
     @Test
     public void initShouldIgnoreExceptions() throws Exception {
-        mailetConfig.setProperty("maxBody", "comment");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("LogContext")
+                .mailetContext(mailContext)
+                .setProperty("maxBody", "comment")
+                .build();
         mailet.init(mailetConfig);
     }
 
     @Test
     public void serviceShouldFailWhenMailHasNoStream() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("LogContext")
+                .mailetContext(mailContext)
+                .build();
         mailet.init(mailetConfig);
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
@@ -97,6 +105,10 @@ public class LogMessageTest {
 
     @Test
     public void serviceShouldLog() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("LogContext")
+                .mailetContext(mailContext)
+                .build();
         mailet.init(mailetConfig);
 
         mailet.service(createMail());
@@ -111,6 +123,10 @@ public class LogMessageTest {
 
     @Test
     public void serviceShouldLogWhenExceptionOccured() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("LogContext")
+                .mailetContext(mailContext)
+                .build();
         mailet.init(mailetConfig);
 
         Mail mail = mock(Mail.class);
@@ -130,7 +146,11 @@ public class LogMessageTest {
 
     @Test
     public void serviceShouldSetTheMailStateWhenPassThroughIsFalse() throws Exception {
-        mailetConfig.setProperty("passThrough", "false");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("LogContext")
+                .mailetContext(mailContext)
+                .setProperty("passThrough", "false")
+                .build();
         mailet.init(mailetConfig);
 
         FakeMail mail = createMail();
@@ -141,7 +161,11 @@ public class LogMessageTest {
 
     @Test
     public void serviceShouldNotChangeTheMailStateWhenPassThroughIsTrue() throws Exception {
-        mailetConfig.setProperty("passThrough", "true");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("LogContext")
+                .mailetContext(mailContext)
+                .setProperty("passThrough", "true")
+                .build();
         mailet.init(mailetConfig);
 
         FakeMail mail = createMail();
@@ -153,7 +177,11 @@ public class LogMessageTest {
 
     @Test
     public void serviceShouldNotLogHeadersWhenFalse() throws Exception {
-        mailetConfig.setProperty("headers", "false");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("LogContext")
+                .mailetContext(mailContext)
+                .setProperty("headers", "false")
+                .build();
         mailet.init(mailetConfig);
 
         mailet.service(createMail());
@@ -165,7 +193,11 @@ public class LogMessageTest {
 
     @Test
     public void serviceShouldNotLogBodyWhenFalse() throws Exception {
-        mailetConfig.setProperty("body", "false");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("LogContext")
+                .mailetContext(mailContext)
+                .setProperty("body", "false")
+                .build();
         mailet.init(mailetConfig);
 
         mailet.service(createMail());
@@ -179,7 +211,11 @@ public class LogMessageTest {
 
     @Test
     public void serviceShouldNotLogFullBodyWhenBodyMaxIsSet() throws Exception {
-        mailetConfig.setProperty("maxBody", "2");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("LogContext")
+                .mailetContext(mailContext)
+                .setProperty("maxBody", "2")
+                .build();
         mailet.init(mailetConfig);
 
         mailet.service(createMail());
@@ -194,7 +230,11 @@ public class LogMessageTest {
 
     @Test
     public void serviceShouldLogAdditionalCommentWhenCommentIsSet() throws Exception {
-        mailetConfig.setProperty("comment", "comment");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("LogContext")
+                .mailetContext(mailContext)
+                .setProperty("comment", "comment")
+                .build();
         mailet.init(mailetConfig);
 
         mailet.service(createMail());

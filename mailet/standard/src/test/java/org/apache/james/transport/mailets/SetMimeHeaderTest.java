@@ -20,17 +20,15 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
@@ -51,9 +49,11 @@ public class SetMimeHeaderTest {
 
     @Test
     public void shouldAddHeaderToMime() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        mailetConfig.setProperty("name", "header-name");
-        mailetConfig.setProperty("value", "test-value");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("name", "header-name")
+                .setProperty("value", "test-value")
+                .build();
         mailet.init(mailetConfig);
         
         MimeMessage mimeMessage = MailUtil.createMimeMessage();
@@ -66,9 +66,11 @@ public class SetMimeHeaderTest {
 
     @Test
     public void shouldAddHeaderWhenAlreadyPresent() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        mailetConfig.setProperty("name", "header-name");
-        mailetConfig.setProperty("value", "test-value");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("name", "header-name")
+                .setProperty("value", "test-value")
+                .build();
         mailet.init(mailetConfig);
         
         MimeMessage mimeMessage = MailUtil.createMimeMessage();
@@ -82,9 +84,11 @@ public class SetMimeHeaderTest {
 
     @Test
     public void shouldNotThrowOnMessagingException() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        mailetConfig.setProperty("name", "header-name");
-        mailetConfig.setProperty("value", "test-value");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("name", "header-name")
+                .setProperty("value", "test-value")
+                .build();
         mailet.init(mailetConfig);
         
         Mail mail = mock(Mail.class);
@@ -94,41 +98,51 @@ public class SetMimeHeaderTest {
     
     @Test
     public void shouldThrowWhenNoConfiguration() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .build();
         expectedException.expect(MessagingException.class);
         mailet.init(mailetConfig);
     }
     
     @Test
     public void shouldThrowWhenNoValue() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        mailetConfig.setProperty("name", "correct");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("name", "correct")
+                .build();
         expectedException.expect(MessagingException.class);
         mailet.init(mailetConfig);
     }
     
     @Test
     public void shouldThrowWhenNoHeader() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        mailetConfig.setProperty("value", "correct");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("value", "correct")
+                .build();
         expectedException.expect(MessagingException.class);
         mailet.init(mailetConfig);
     }
     
     @Test
     public void shouldThrowWhenEmptyValue() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        mailetConfig.setProperty("value", "");
-        mailetConfig.setProperty("name", "correct");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("value", "")
+                .setProperty("name", "correct")
+                .build();
         expectedException.expect(MessagingException.class);
         mailet.init(mailetConfig);
     }
     
     @Test
     public void shouldThrowWhenEmptyHeader() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        mailetConfig.setProperty("name", "");
-        mailetConfig.setProperty("value", "correct");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("name", "")
+                .setProperty("value", "correct")
+                .build();
         expectedException.expect(MessagingException.class);
         mailet.init(mailetConfig);
     }

@@ -33,7 +33,6 @@ import javax.mail.MessagingException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
@@ -57,7 +56,6 @@ public class AddFooterTest {
     private final String javaCharset;
     private final String javaMailCharset;
     private Mailet mailet;
-    private FakeMailetConfig mailetConfig;
     
     @Parameters
     public static Collection<String[]> data() {
@@ -90,14 +88,14 @@ public class AddFooterTest {
     @Before
     public void setup() {
         mailet = new AddFooter();
-        mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-
     }
     
     @Test
     public void shouldAddFooterWhenQuotedPrintableTextPlainMessage() throws MessagingException, IOException {
-
-        mailetConfig.setProperty("text", "------ my footer \u00E0/\u20AC ------");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .build();
         mailet.init(mailetConfig);
         
         String quotedPrintableTextPlainMessage = Joiner.on("\r\n").join(
@@ -120,8 +118,10 @@ public class AddFooterTest {
 
     @Test
     public void shouldEnsureCarriageReturnWhenAddFooterWithTextPlainMessage() throws MessagingException, IOException {
-
-        mailetConfig.setProperty("text", "------ my footer \u00E0/\u20AC ------");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .build();
         mailet.init(mailetConfig);
         
         String quotedPrintableTextPlainMessage = Joiner.on("\r\n").join(
@@ -151,7 +151,10 @@ public class AddFooterTest {
     
     @Test
     public void shouldNotAddFooterWhenUnsupportedEncoding() throws MessagingException, IOException {
-        mailetConfig.setProperty("text", "------ my footer \u00E0/\u20AC ------");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .build();
         mailet.init(mailetConfig);
         
         String quotedPrintableTextPlainMessage = Joiner.on("\r\n").join(
@@ -171,7 +174,10 @@ public class AddFooterTest {
 
     @Test
     public void shouldNotAddFooterWhenUnsupportedTextContentType() throws MessagingException, IOException {
-        mailetConfig.setProperty("text", "------ my footer \u00E0/\u20AC ------");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .build();
         mailet.init(mailetConfig);
         
         String quotedPrintableTextPlainMessage = Joiner.on("\r\n").join(
@@ -195,7 +201,10 @@ public class AddFooterTest {
      */
     @Test
     public void shouldNotAddFooterWhenNestedUnsupportedMultipart() throws MessagingException, IOException {
-        mailetConfig.setProperty("text", "------ my footer \u00E0/\u20AC ------");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .build();
         mailet.init(mailetConfig);
         
         String quotedPrintableMultipartMixedMessage = Joiner.on("\r\n").join(
@@ -228,8 +237,10 @@ public class AddFooterTest {
      */
     @Test
     public void shouldAddFooterWhenMultipartRelatedHtmlMessage() throws MessagingException, IOException {
-
-        mailetConfig.setProperty("text", "------ my footer \u00E0/\u20AC ------");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .build();
         mailet.init(mailetConfig);
         
         String htmlMultipartRelatedMessagePart1 = Joiner.on("\r\n").join(
@@ -279,8 +290,10 @@ public class AddFooterTest {
     @Test
     public void shouldAddFooterWhenMultipartAlternivateMessage() throws MessagingException,
             IOException {
-
-        mailetConfig.setProperty("text", "------ my footer \u00E0/\u20AC ------");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .build();
         mailet.init(mailetConfig);
         
         String multipartAlternativeMessage = Joiner.on("\r\n").join(
@@ -337,8 +350,10 @@ public class AddFooterTest {
     @Test
     public void shouldAddFooterWhenHtmlMessageWithMixedCaseBodyTag() throws MessagingException,
             IOException {
-
-        mailetConfig.setProperty("text", "------ my footer \u00E0/\u20AC ------");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .build();
         mailet.init(mailetConfig);
         
         String htmlMessage = Joiner.on("\r\n").join(
@@ -372,8 +387,10 @@ public class AddFooterTest {
     @Test
     public void shouldAddFooterWhenHtmlMessageWithNoBodyTag() throws MessagingException,
             IOException {
-
-        mailetConfig.setProperty("text", "------ my footer \u00E0/\u20AC ------");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .build();
         mailet.init(mailetConfig);
         
         String htmlMessage = Joiner.on("\r\n").join(
@@ -407,7 +424,10 @@ public class AddFooterTest {
     @SuppressWarnings("unchecked")
     @Test
     public void shouldThrowMessagingExceptionWhenIOExceptionReadingMessage() throws MessagingException {
-        mailetConfig.setProperty("text", "------ my footer \u00E0/\u20AC ------");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .build();
         mailet.init(mailetConfig);
         
         Mail mail = mock(Mail.class);

@@ -38,7 +38,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Assert;
 import org.junit.Test;
@@ -119,11 +118,12 @@ public class StripAttachmentTest {
     public void testSimpleAttachment2() throws MessagingException, IOException {
         Mailet mailet = new StripAttachment();
 
-        FakeMailetConfig mci = new FakeMailetConfig("Test",
-                FakeMailContext.defaultContext());
-        mci.setProperty("directory", "./");
-        mci.setProperty("remove", "all");
-        mci.setProperty("notpattern", "^(winmail\\.dat$)");
+        FakeMailetConfig mci = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("directory", "./")
+                .setProperty("remove", "all")
+                .setProperty("notpattern", "^(winmail\\.dat$)")
+                .build();
         mailet.init(mci);
 
         MimeMessage message = new MimeMessage(Session
@@ -252,21 +252,25 @@ public class StripAttachmentTest {
     public void testToAndFromAttributes() throws MessagingException,
             IOException {
         Mailet strip = new StripAttachment();
-        FakeMailetConfig mci = new FakeMailetConfig("Test",
-                FakeMailContext.defaultContext());
-        mci.setProperty("attribute", "my.attribute");
-        mci.setProperty("remove", "all");
-        mci.setProperty("notpattern", ".*\\.tmp.*");
+        FakeMailetConfig mci = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("attribute", "my.attribute")
+                .setProperty("remove", "all")
+                .setProperty("notpattern", ".*\\.tmp.*")
+                .build();
         strip.init(mci);
 
         Mailet recover = new RecoverAttachment();
-        FakeMailetConfig mci2 = new FakeMailetConfig("Test",
-                FakeMailContext.defaultContext());
-        mci2.setProperty("attribute", "my.attribute");
+        FakeMailetConfig mci2 = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("attribute", "my.attribute")
+                .build();
         recover.init(mci2);
 
         Mailet onlyText = new OnlyText();
-        onlyText.init(new FakeMailetConfig("Test", FakeMailContext.defaultContext()));
+        onlyText.init(FakeMailetConfig.builder()
+                .mailetName("Test")
+                .build());
 
         MimeMessage message = new MimeMessage(Session
                 .getDefaultInstance(new Properties()));
@@ -343,26 +347,27 @@ public class StripAttachmentTest {
     private Mailet initMailet() throws MessagingException {
         Mailet mailet = new StripAttachment();
 
-        FakeMailetConfig mci = new FakeMailetConfig("Test",
-                FakeMailContext.defaultContext());
-        mci.setProperty("directory", "./");
-        mci.setProperty("remove", "all");
-        mci.setProperty("pattern", ".*\\.tmp");
-        mci.setProperty("decodeFilename", "true");
-        mci.setProperty("replaceFilenamePattern",
-                "/[\u00C0\u00C1\u00C2\u00C3\u00C4\u00C5]/A//,"
-                        + "/[\u00C6]/AE//,"
-                        + "/[\u00C8\u00C9\u00CA\u00CB]/E//,"
-                        + "/[\u00CC\u00CD\u00CE\u00CF]/I//,"
-                        + "/[\u00D2\u00D3\u00D4\u00D5\u00D6]/O//,"
-                        + "/[\u00D7]/x//," + "/[\u00D9\u00DA\u00DB\u00DC]/U//,"
-                        + "/[\u00E0\u00E1\u00E2\u00E3\u00E4\u00E5]/a//,"
-                        + "/[\u00E6]/ae//,"
-                        + "/[\u00E8\u00E9\u00EA\u00EB]/e/r/,"
-                        + "/[\u00EC\u00ED\u00EE\u00EF]/i//,"
-                        + "/[\u00F2\u00F3\u00F4\u00F5\u00F6]/o//,"
-                        + "/[\u00F9\u00FA\u00FB\u00FC]/u//,"
-                        + "/[^A-Za-z0-9._-]+/_/r/");
+        FakeMailetConfig mci = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("directory", "./")
+                .setProperty("remove", "all")
+                .setProperty("pattern", ".*\\.tmp")
+                .setProperty("decodeFilename", "true")
+                .setProperty("replaceFilenamePattern",
+                    "/[\u00C0\u00C1\u00C2\u00C3\u00C4\u00C5]/A//,"
+                            + "/[\u00C6]/AE//,"
+                            + "/[\u00C8\u00C9\u00CA\u00CB]/E//,"
+                            + "/[\u00CC\u00CD\u00CE\u00CF]/I//,"
+                            + "/[\u00D2\u00D3\u00D4\u00D5\u00D6]/O//,"
+                            + "/[\u00D7]/x//," + "/[\u00D9\u00DA\u00DB\u00DC]/U//,"
+                            + "/[\u00E0\u00E1\u00E2\u00E3\u00E4\u00E5]/a//,"
+                            + "/[\u00E6]/ae//,"
+                            + "/[\u00E8\u00E9\u00EA\u00EB]/e/r/,"
+                            + "/[\u00EC\u00ED\u00EE\u00EF]/i//,"
+                            + "/[\u00F2\u00F3\u00F4\u00F5\u00F6]/o//,"
+                            + "/[\u00F9\u00FA\u00FB\u00FC]/u//,"
+                            + "/[^A-Za-z0-9._-]+/_/r/")
+                .build();
 
         mailet.init(mci);
         return mailet;

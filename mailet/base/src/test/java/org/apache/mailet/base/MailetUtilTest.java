@@ -22,19 +22,11 @@ package org.apache.mailet.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
 import org.junit.Test;
 
 public class MailetUtilTest {
 
     private static final String A_PARAMETER = "aParameter";
-
-    FakeMailetConfig config;
-
-    @Before
-    public void setUp() throws Exception {
-        config = new FakeMailetConfig();
-    }
 
     @Test
     public void getInitParameterShouldReturnTrueWhenIsValueTrueLowerCase() {
@@ -86,13 +78,16 @@ public class MailetUtilTest {
 
     @Test
     public void getInitParameterShouldReturnDefaultValueWhenNull() {
-        assertThat(MailetUtil.getInitParameter(config, A_PARAMETER, false)).isFalse();
-        assertThat(MailetUtil.getInitParameter(config, A_PARAMETER, true)).isTrue();
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .build();
+        assertThat(MailetUtil.getInitParameter(mailetConfig, A_PARAMETER, false)).isFalse();
+        assertThat(MailetUtil.getInitParameter(mailetConfig, A_PARAMETER, true)).isTrue();
     }
 
     private boolean getParameterValued(String value, boolean defaultValue) {
-        config.clear();
-        config.setProperty(A_PARAMETER, value);
-        return MailetUtil.getInitParameter(config, A_PARAMETER, defaultValue);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .setProperty(A_PARAMETER, value)
+            .build();
+        return MailetUtil.getInitParameter(mailetConfig, A_PARAMETER, defaultValue);
     }
 }

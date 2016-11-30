@@ -97,7 +97,11 @@ public class MailetPreconditionTest {
         Properties properties = new Properties();
         properties.setProperty("name", WRONG_NAME);
         RemoveMimeHeader removeMimeHeader = new RemoveMimeHeader();
-        removeMimeHeader.init(new FakeMailetConfig(WRONG_NAME, MAILET_CONTEXT, properties));
+        removeMimeHeader.init(FakeMailetConfig.builder()
+                .mailetName(WRONG_NAME)
+                .mailetContext(MAILET_CONTEXT)
+                .setProperty("name", WRONG_NAME)
+                .build());
 
         List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), removeMimeHeader));
         new JMAPModule.VacationMailetCheck().check(pairs);
@@ -105,10 +109,12 @@ public class MailetPreconditionTest {
 
     @Test(expected = ConfigurationException.class)
     public void bccMailetCheckShouldNotThrowOnValidPair() throws Exception {
-        Properties properties = new Properties();
-        properties.setProperty("name", BCC);
         RemoveMimeHeader removeMimeHeader = new RemoveMimeHeader();
-        removeMimeHeader.init(new FakeMailetConfig(BCC, MAILET_CONTEXT, properties));
+        removeMimeHeader.init(FakeMailetConfig.builder()
+                .mailetName(BCC)
+                .mailetContext(MAILET_CONTEXT)
+                .setProperty("name", BCC)
+                .build());
 
         List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), removeMimeHeader));
         new JMAPModule.VacationMailetCheck().check(pairs);

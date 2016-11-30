@@ -94,7 +94,10 @@ public class VacationMailetTest {
         notificationRegistry = mock(NotificationRegistry.class);
         testee = new VacationMailet(vacationRepository, zonedDateTimeProvider, automaticallySentMailDetector, notificationRegistry, mimeMessageBodyGenerator);
         mailetContext = mock(MailetContext.class);
-        testee.init(new FakeMailetConfig("vacation", mailetContext));
+        testee.init(FakeMailetConfig.builder()
+                .mailetName("vacation")
+                .mailetContext(mailetContext)
+                .build());
     }
 
     @Test

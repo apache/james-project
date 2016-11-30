@@ -67,19 +67,18 @@ public class ToRecipientFolderTest {
     public static final MailboxPath INBOX = new MailboxPath("#private", USER, "INBOX");
     public static final MailboxPath JUNK = new MailboxPath("#private", USER_LOCAL_PART, "Junk");
     public static final MailboxPath JUNK_VIRTUAL_HOSTING = new MailboxPath("#private", USER, "Junk");
+    public static final String MAILET_NAME = "RecipientFolderTest";
 
     private MessageManager messageManager;
     private UsersRepository usersRepository;
     private MailboxManager mailboxManager;
     private ToRecipientFolder testee;
     private MailboxSession.User user;
-
-
-    private FakeMailetConfig mailetConfig;
+    private FakeMailContext mailetContext;
 
     @Before
     public void setUp() throws Exception {
-        mailetConfig = new FakeMailetConfig("RecipientFolderTest", FakeMailContext.builder().logger(mock(Logger.class)).build());
+        mailetContext = FakeMailContext.builder().logger(mock(Logger.class)).build();
         messageManager = mock(MessageManager.class);
         usersRepository = mock(UsersRepository.class);
         mailboxManager = mock(MailboxManager.class);
@@ -100,16 +99,22 @@ public class ToRecipientFolderTest {
 
     @Test
     public void initParameterTesting() throws Exception {
-        mailetConfig.setProperty(ToRecipientFolder.FOLDER_PARAMETER, "Junk");
-        testee.init(mailetConfig);
+        testee.init(FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(mailetContext)
+            .setProperty(ToRecipientFolder.FOLDER_PARAMETER, "Junk")
+            .build());
 
         Assert.assertEquals("Junk", testee.getInitParameter(ToRecipientFolder.FOLDER_PARAMETER));
     }
 
     @Test
     public void consumeOptionShouldGhostTheMail() throws Exception {
-        mailetConfig.setProperty(ToRecipientFolder.CONSUME_PARAMETER, "true");
-        testee.init(mailetConfig);
+        testee.init(FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(mailetContext)
+            .setProperty(ToRecipientFolder.CONSUME_PARAMETER, "true")
+            .build());
 
         Mail mail = createMail();
         testee.service(mail);
@@ -119,7 +124,10 @@ public class ToRecipientFolderTest {
 
     @Test
     public void consumeOptionShouldNotGhostTheMailByDefault() throws Exception {
-        testee.init(mailetConfig);
+        testee.init(FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(mailetContext)
+            .build());
 
         Mail mail = createMail();
         testee.service(mail);
@@ -134,8 +142,11 @@ public class ToRecipientFolderTest {
         when(mailboxManager.getMailbox(eq(JUNK_VIRTUAL_HOSTING), any(MailboxSession.class))).thenReturn(messageManager);
         when(user.getUserName()).thenReturn(USER);
 
-        mailetConfig.setProperty(ToRecipientFolder.FOLDER_PARAMETER, "Junk");
-        testee.init(mailetConfig);
+        testee.init(FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(mailetContext)
+            .setProperty(ToRecipientFolder.FOLDER_PARAMETER, "Junk")
+            .build());
         testee.service(createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
@@ -148,7 +159,10 @@ public class ToRecipientFolderTest {
         when(mailboxManager.getMailbox(eq(INBOX), any(MailboxSession.class))).thenReturn(messageManager);
         when(user.getUserName()).thenReturn(USER);
 
-        testee.init(mailetConfig);
+        testee.init(FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(mailetContext)
+            .build());
         testee.service(createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
@@ -162,8 +176,12 @@ public class ToRecipientFolderTest {
         when(mailboxManager.getMailbox(eq(JUNK), any(MailboxSession.class))).thenReturn(messageManager);
         when(user.getUserName()).thenReturn(USER_LOCAL_PART);
 
-        mailetConfig.setProperty(ToRecipientFolder.FOLDER_PARAMETER, "Junk");
-        testee.init(mailetConfig);
+        testee.init(FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(mailetContext)
+            .setProperty(ToRecipientFolder.FOLDER_PARAMETER, "Junk")
+            .setProperty(ToRecipientFolder.CONSUME_PARAMETER, "true")
+            .build());
         testee.service(createMail());
 
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));

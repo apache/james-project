@@ -57,7 +57,12 @@ public class RecipientRewriteTableTest {
         message = new MimeMessage(Session.getDefaultInstance(new Properties()));
 
         mailetContext = FakeMailContext.defaultContext();
-        mailetConfig = new FakeMailetConfig("Test", mailetContext);
+
+        mailetConfig = FakeMailetConfig.builder()
+            .mailetName("vut")
+            .mailetContext(mailetContext)
+            .build();
+
         mail = FakeMail.builder().build();
     }
 

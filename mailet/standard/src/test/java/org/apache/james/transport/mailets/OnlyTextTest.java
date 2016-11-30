@@ -31,7 +31,6 @@ import javax.mail.internet.MimeMultipart;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 
 import junit.framework.TestCase;
@@ -53,7 +52,9 @@ public class OnlyTextTest extends TestCase {
         Mail mail;
 
         mailet = new OnlyText();
-        mci = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mci = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .build();
         mailet.init(mci);
 
         // ----------------
@@ -178,7 +179,9 @@ public class OnlyTextTest extends TestCase {
 
     public void testHtml2Text() throws MessagingException {
         OnlyText mailet = new OnlyText();
-        mailet.init(new FakeMailetConfig("Test", FakeMailContext.defaultContext()));
+        mailet.init(FakeMailetConfig.builder()
+                .mailetName("Test")
+                .build());
 
         String html;
         html = "<b>Prova di html</b><br /><p>Un paragrafo</p><LI>e ci mettiamo anche una lista</LI><br>";

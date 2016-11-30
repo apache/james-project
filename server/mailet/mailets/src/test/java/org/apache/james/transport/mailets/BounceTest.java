@@ -54,7 +54,10 @@ public class BounceTest {
         fakeMailContext = FakeMailContext.defaultContext();
 
         when(dnsService.getLocalHost()).thenThrow(new UnknownHostException());
-        bounce.init(new FakeMailetConfig(MAILET_NAME, fakeMailContext));
+        bounce.init(FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(fakeMailContext)
+            .build());
 
         senderMailAddress = new MailAddress("sender@domain.com");
         recipientMailAddress = new MailAddress("recipient@domain.com");

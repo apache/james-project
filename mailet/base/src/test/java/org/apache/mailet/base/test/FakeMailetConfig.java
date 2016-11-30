@@ -25,28 +25,59 @@ import java.util.Properties;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
 
+import com.google.common.base.Optional;
+
 /**
  * MailetConfig over Properties
  */
 public class FakeMailetConfig implements MailetConfig {
 
-    public String mailetName;
-    public MailetContext mc;
+    public static Builder builder() {
+        return new Builder();
+    }
 
+    public static class Builder {
+
+        private Optional<String> mailetName;
+        private Optional<MailetContext> mailetContext;
+        private Properties properties;
+
+        private Builder() {
+            mailetName = Optional.absent();
+            mailetContext = Optional.absent();
+            properties = new Properties();
+        }
+
+        public Builder mailetName(String mailetName) {
+            this.mailetName = Optional.fromNullable(mailetName);
+            return this;
+        }
+
+        public Builder mailetContext(MailetContext mailetContext) {
+            this.mailetContext = Optional.fromNullable(mailetContext);
+            return this;
+        }
+
+        public Builder setProperty(String key, String value) {
+            this.properties.setProperty(key, value);
+            return this;
+        }
+
+        public FakeMailetConfig build() {
+            return new FakeMailetConfig(mailetName.or("A Mailet"), 
+                    mailetContext.or(FakeMailContext.defaultContext()), 
+                    properties);
+        }
+    }
+
+    private final String mailetName;
+    private final MailetContext mailetContext;
     private final Properties properties;
-    
-    public FakeMailetConfig() {
-    	this("A Mailet", FakeMailContext.defaultContext());
-    }
-    
-    public FakeMailetConfig(String mailetName, MailetContext mc) {
-        this(mailetName, mc, new Properties());
-    }
 
-    public FakeMailetConfig(String mailetName, MailetContext mc, Properties arg0) {
+    private FakeMailetConfig(String mailetName, MailetContext mailetContext, Properties properties) {
         this.mailetName = mailetName;
-        this.mc = mc;
-        this.properties = arg0;
+        this.mailetContext = mailetContext;
+        this.properties = properties;
     }
 
     public String getInitParameter(String name) {
@@ -58,25 +89,10 @@ public class FakeMailetConfig implements MailetConfig {
     }
 
     public MailetContext getMailetContext() {
-        return mc;
+        return mailetContext;
     }
 
     public String getMailetName() {
         return mailetName;
-    }
-
-    // Override setProperty to work like it should in this MockMailetConfig
-    public Object setProperty(String key, String value) {
-        String oldValue = properties.getProperty(key);
-        String newValue = value;
-
-        if (oldValue != null) {
-            newValue = oldValue + "," + value;
-        }
-        return properties.setProperty(key, newValue);
-    }
-    
-    public void clear() {
-        properties.clear();
     }
 }

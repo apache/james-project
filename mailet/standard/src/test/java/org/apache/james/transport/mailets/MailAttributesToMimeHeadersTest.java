@@ -28,7 +28,6 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
@@ -58,10 +57,13 @@ public class MailAttributesToMimeHeadersTest {
 
     @Test
     public void shouldPutAttributesIntoHeadersWhenMappingDefined() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        mailetConfig.setProperty("simplemapping", MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1);
-        mailetConfig.setProperty("simplemapping", MAIL_ATTRIBUTE_NAME2 + "; " + HEADER_NAME2);
-        mailetConfig.setProperty("simplemapping", "another.attribute" + "; " + "Another-Header");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("simplemapping", 
+                        MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1 +
+                        "," + MAIL_ATTRIBUTE_NAME2 + "; " + HEADER_NAME2 + 
+                        "," + "another.attribute" + "; " + "Another-Header")
+                .build();
         mailet.init(mailetConfig);
         
         FakeMail mockedMail = MailUtil.createMockMail2Recipients(MailUtil.createMimeMessage());
@@ -77,8 +79,10 @@ public class MailAttributesToMimeHeadersTest {
 
     @Test
     public void shouldAddAttributeIntoHeadersWhenHeaderAlreadyPresent() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        mailetConfig.setProperty("simplemapping", MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("simplemapping", MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1)
+                .build();
         mailet.init(mailetConfig);
         
         MimeMessage mimeMessage = MailUtil.createMimeMessage();
@@ -94,23 +98,29 @@ public class MailAttributesToMimeHeadersTest {
     
     @Test
     public void shouldThrowAtInitWhenNoSemicolumnInConfigurationEntry() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        mailetConfig.setProperty("simplemapping", "invalidConfigEntry");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("simplemapping", "invalidConfigEntry")
+                .build();
         expectedException.expect(MessagingException.class);
         mailet.init(mailetConfig);
     }
 
     @Test
     public void shouldThrowAtInitWhenTwoSemicolumnsInConfigurationEntry() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        mailetConfig.setProperty("simplemapping", "first;second;third");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("simplemapping", "first;second;third")
+                .build();
         expectedException.expect(MessagingException.class);
         mailet.init(mailetConfig);
     }
 
     @Test
     public void shouldThrowAtInitWhenNoConfigurationEntry() throws MessagingException {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .build();
         expectedException.expect(MessagingException.class);
         mailet.init(mailetConfig);
     }

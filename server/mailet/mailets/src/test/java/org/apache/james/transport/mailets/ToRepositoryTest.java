@@ -31,7 +31,6 @@ import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
@@ -43,7 +42,6 @@ public class ToRepositoryTest {
     @Rule public ExpectedException expectedException = ExpectedException.none();
     
     private ToRepository mailet;
-    private FakeMailetConfig mailetConfig;
     private MailRepositoryStore mailRepositoryStore;
     private FakeMail message;
 
@@ -53,7 +51,6 @@ public class ToRepositoryTest {
         mailRepositoryStore = mock(MailRepositoryStore.class);
         mailet = new ToRepository();
         mailet.setStore(mailRepositoryStore);
-        mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
         message = MailUtil.createMockMail2Recipients(MailUtil.createMimeMessage());
     }
 
@@ -79,6 +76,9 @@ public class ToRepositoryTest {
         when(mailRepositoryStore.select(any(String.class))).thenThrow(new RuntimeException());
         expectedException.expect(MessagingException.class);
 
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .build();
         mailet.init(mailetConfig);
     }
 
@@ -86,6 +86,10 @@ public class ToRepositoryTest {
     public void serviceShouldStoreMailIntoRepository() throws Exception {
         MailRepository mailRepository = mock(MailRepository.class);
         when(mailRepositoryStore.select(any(String.class))).thenReturn(mailRepository);
+
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .build();
         mailet.init(mailetConfig);
 
         mailet.service(message);
@@ -97,6 +101,10 @@ public class ToRepositoryTest {
     public void serviceShouldGhostMailIfPassThroughNotSet() throws Exception {
         MailRepository mailRepository = mock(MailRepository.class);
         when(mailRepositoryStore.select(any(String.class))).thenReturn(mailRepository);
+
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .build();
         mailet.init(mailetConfig);
 
         mailet.service(message);
@@ -106,7 +114,10 @@ public class ToRepositoryTest {
 
     @Test
     public void serviceShouldGhostMailIfPassThroughSetToFalse() throws Exception {
-        mailetConfig.setProperty("passThrough", "false");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("passThrough", "false")
+                .build();
         MailRepository mailRepository = mock(MailRepository.class);
         when(mailRepositoryStore.select(any(String.class))).thenReturn(mailRepository);
         mailet.init(mailetConfig);
@@ -118,7 +129,10 @@ public class ToRepositoryTest {
 
     @Test
     public void serviceShouldNotGhostMailIfPassThroughSetToTrue() throws Exception {
-        mailetConfig.setProperty("passThrough", "true");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("passThrough", "true")
+                .build();
         MailRepository mailRepository = mock(MailRepository.class);
         when(mailRepositoryStore.select(any(String.class))).thenReturn(mailRepository);
         mailet.init(mailetConfig);

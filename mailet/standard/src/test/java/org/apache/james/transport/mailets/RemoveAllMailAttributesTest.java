@@ -26,7 +26,6 @@ import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
@@ -39,7 +38,9 @@ public class RemoveAllMailAttributesTest {
 
     @Before
     public void setUp() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .build();
         mailet = new RemoveAllMailAttributes();
         mailet.init(mailetConfig);
     }

@@ -45,14 +45,14 @@ public class ToProcessorTest {
     public ExpectedException expectedException = ExpectedException.none();
 
     private Mailet mailet;
-    private FakeMailetConfig mailetConfig;
     private Logger logger;
+    private FakeMailContext mailContext;
 
     @Before
     public void setup() {
         mailet = new ToProcessor();
         logger = mock(Logger.class);
-        mailetConfig = new FakeMailetConfig("Test", FakeMailContext.builder().logger(logger).build());
+        mailContext = FakeMailContext.builder().logger(logger).build();
     }
 
     @Test
@@ -62,7 +62,11 @@ public class ToProcessorTest {
 
     @Test
     public void initShouldThrowWhenProcessorIsNotGiven() throws MessagingException {
-        mailetConfig.setProperty("notice", "error in message");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .mailetContext(mailContext)
+                .setProperty("notice", "error in message")
+                .build();
         expectedException.expect(MailetException.class);
 
         mailet.init(mailetConfig);
@@ -71,7 +75,11 @@ public class ToProcessorTest {
     @Test
     public void serviceShouldSetTheStateOfTheMail() throws MessagingException {
         String processor = "error";
-        mailetConfig.setProperty("processor", processor);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .mailetContext(mailContext)
+                .setProperty("processor", processor)
+                .build();
         mailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
@@ -85,9 +93,13 @@ public class ToProcessorTest {
     @Test
     public void serviceShouldSetTheErrorMessageOfTheMailWhenNotAlreadySet() throws MessagingException {
         String processor = "error";
-        mailetConfig.setProperty("processor", processor);
         String notice = "error in message";
-        mailetConfig.setProperty("notice", notice);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .mailetContext(mailContext)
+                .setProperty("processor", processor)
+                .setProperty("notice", notice)
+                .build();
         mailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
@@ -101,9 +113,13 @@ public class ToProcessorTest {
     @Test
     public void serviceShouldAppendTheErrorMessageOfTheMailWhenSomeErrorMessageOnMail() throws MessagingException {
         String processor = "error";
-        mailetConfig.setProperty("processor", processor);
         String notice = "error in message";
-        mailetConfig.setProperty("notice", notice);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .mailetContext(mailContext)
+                .setProperty("processor", processor)
+                .setProperty("notice", notice)
+                .build();
         mailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
@@ -118,9 +134,13 @@ public class ToProcessorTest {
 
     @Test
     public void serviceShouldLogWhenDebug() throws MessagingException {
-        mailetConfig.setProperty("processor", "error");
-        mailetConfig.setProperty("notice", "error in message");
-        mailetConfig.setProperty("debug", "true");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .mailetContext(mailContext)
+                .setProperty("processor", "error")
+                .setProperty("notice", "error in message")
+                .setProperty("debug", "true")
+                .build();
         mailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()

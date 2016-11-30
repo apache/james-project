@@ -27,7 +27,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,12 +41,10 @@ public class RemoveMailAttributeTest {
     private static final String VALUE_3 = "value3";
     private static final String ATTRIBUTE1_ATTRIBUTE2 = "attribute1, attribute2";
     private Mailet removeMailet;
-    private FakeMailetConfig mailetConfig;
 
     @Before
     public void setup() throws Exception {
         removeMailet = new RemoveMailAttribute();
-        mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
     }
 
     @Test
@@ -57,6 +54,9 @@ public class RemoveMailAttributeTest {
 
     @Test(expected = MailetException.class)
     public void initShouldThrowExceptionIfMailetConfigDoesNotContainAttribute() throws MessagingException {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .build();
         removeMailet.init(mailetConfig);
     }
 
@@ -67,7 +67,10 @@ public class RemoveMailAttributeTest {
 
     @Test
     public void serviceShouldDoNothingWhenMailHasEmptyAttribute() throws MessagingException {
-        mailetConfig.setProperty(RemoveMailAttribute.MAILET_NAME_PARAMETER, ATTRIBUTE1_ATTRIBUTE2);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty(RemoveMailAttribute.MAILET_NAME_PARAMETER, ATTRIBUTE1_ATTRIBUTE2)
+                .build();
         removeMailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder().build();
@@ -78,7 +81,10 @@ public class RemoveMailAttributeTest {
 
     @Test
     public void serviceShouldDoNothingWhenMailDoNotMatchAttribute() throws MessagingException {
-        mailetConfig.setProperty(RemoveMailAttribute.MAILET_NAME_PARAMETER, ATTRIBUTE1_ATTRIBUTE2);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty(RemoveMailAttribute.MAILET_NAME_PARAMETER, ATTRIBUTE1_ATTRIBUTE2)
+                .build();
         removeMailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
@@ -91,7 +97,10 @@ public class RemoveMailAttributeTest {
 
     @Test
     public void serviceShouldRemoveSpecifiedAttribute() throws MessagingException {
-        mailetConfig.setProperty(RemoveMailAttribute.MAILET_NAME_PARAMETER, ATTRIBUTE_1);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty(RemoveMailAttribute.MAILET_NAME_PARAMETER, ATTRIBUTE_1)
+                .build();
         removeMailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
@@ -106,7 +115,10 @@ public class RemoveMailAttributeTest {
 
     @Test
     public void serviceShouldRemoveSpecifiedAttributes() throws MessagingException {
-        mailetConfig.setProperty(RemoveMailAttribute.MAILET_NAME_PARAMETER, ATTRIBUTE1_ATTRIBUTE2);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty(RemoveMailAttribute.MAILET_NAME_PARAMETER, ATTRIBUTE1_ATTRIBUTE2)
+                .build();
         removeMailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
