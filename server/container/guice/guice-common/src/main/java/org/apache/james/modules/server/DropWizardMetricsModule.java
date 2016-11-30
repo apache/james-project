@@ -50,17 +50,17 @@ public class DropWizardMetricsModule extends AbstractModule {
     public static class DropWizardConfigurationPerformer implements ConfigurationPerformer {
         public static final HierarchicalConfiguration NO_CONFIGURATION = null;
 
-        private final DropWizardMetricFactory metricFactory;
+        private final DropWizardInitializer dropWizardInitializer;
 
         @Inject
-        public DropWizardConfigurationPerformer(DropWizardMetricFactory metricFactory) {
-            this.metricFactory = metricFactory;
+        public DropWizardConfigurationPerformer(DropWizardInitializer dropWizardInitializer) {
+            this.dropWizardInitializer = dropWizardInitializer;
         }
 
         @Override
         public void initModule() {
             try {
-                metricFactory.configure(NO_CONFIGURATION);
+                dropWizardInitializer.configure(NO_CONFIGURATION);
             } catch (ConfigurationException e) {
                 throw Throwables.propagate(e);
             }
@@ -68,7 +68,21 @@ public class DropWizardMetricsModule extends AbstractModule {
 
         @Override
         public List<Class<? extends Configurable>> forClasses() {
-            return ImmutableList.of(DropWizardMetricFactory.class);
+            return ImmutableList.of(DropWizardInitializer.class);
+        }
+    }
+
+    public static class DropWizardInitializer implements Configurable {
+        private final DropWizardMetricFactory dropWizardMetricFactory;
+
+        @Inject
+        public DropWizardInitializer(DropWizardMetricFactory dropWizardMetricFactory) {
+            this.dropWizardMetricFactory = dropWizardMetricFactory;
+        }
+
+        @Override
+        public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+            dropWizardMetricFactory.start();
         }
     }
 
