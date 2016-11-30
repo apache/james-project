@@ -18,11 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -344,10 +340,14 @@ public class SMTPServerTest {
         }
         smtpProtocol.sendCommand("EHLO " + sb.toString());
         System.out.println(smtpProtocol.getReplyString());
-        assertEquals("Line length exceed", 500, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("Line length exceed")
+            .isEqualTo(500);
 
         smtpProtocol.sendCommand("EHLO test");
-        assertEquals("Line length ok", 250, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("Line length ok")
+            .isEqualTo(250);
 
         smtpProtocol.quit();
         smtpProtocol.disconnect();
@@ -390,25 +390,33 @@ public class SMTPServerTest {
 
     public void verifyLastMail(String sender, String recipient, MimeMessage msg) throws IOException, MessagingException {
         Mail mailData = queue.getLastMail();
-        assertNotNull("mail received by mail server", mailData);
+        assertThat(mailData)
+            .as("mail received by mail server")
+            .isNotNull();
 
         if (sender == null && recipient == null && msg == null) {
             fail("no verification can be done with all arguments null");
         }
 
         if (sender != null) {
-            assertEquals("sender verfication", sender, mailData.getSender().toString());
+            assertThat(mailData.getSender().toString())
+                .as("sender verfication")
+                .isEqualTo(sender);
         }
         if (recipient != null) {
-            assertTrue("recipient verfication", mailData.getRecipients().contains(new MailAddress(recipient)));
+            assertThat(mailData.getRecipients())
+                .as("recipient verfication")
+                .containsOnly(new MailAddress(recipient));
         }
         if (msg != null) {
             ByteArrayOutputStream bo1 = new ByteArrayOutputStream();
             msg.writeTo(bo1);
             ByteArrayOutputStream bo2 = new ByteArrayOutputStream();
             mailData.getMessage().writeTo(bo2);
-            assertEquals(bo1.toString(), bo2.toString());
-            assertEquals("message verification", msg, mailData.getMessage());
+            assertThat(bo2.toString()).isEqualTo(bo1.toString());
+            assertThat(mailData.getMessage())
+                .as("message verification")
+                .isEqualTo(msg);
         }
     }
 
@@ -420,7 +428,9 @@ public class SMTPServerTest {
         smtpProtocol.connect("127.0.0.1", smtpListenerPort);
 
         // no message there, yet
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();;
 
         smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
         String[] capabilityRes = smtpProtocol.getReplyStrings();
@@ -430,10 +440,18 @@ public class SMTPServerTest {
             capabilitieslist.add(capabilityRes[i].substring(4));
         }
 
-        assertEquals("capabilities", 3, capabilitieslist.size());
-        assertTrue("capabilities present PIPELINING", capabilitieslist.contains("PIPELINING"));
-        assertTrue("capabilities present ENHANCEDSTATUSCODES", capabilitieslist.contains("ENHANCEDSTATUSCODES"));
-        assertTrue("capabilities present 8BITMIME", capabilitieslist.contains("8BITMIME"));
+        assertThat(capabilitieslist)
+            .as("capabilities")
+            .hasSize(3);
+        assertThat(capabilitieslist.contains("PIPELINING"))
+            .as("capabilities present PIPELINING")
+            .isTrue();
+        assertThat(capabilitieslist.contains("ENHANCEDSTATUSCODES"))
+            .as("capabilities present ENHANCEDSTATUSCODES")
+            .isTrue();
+        assertThat(capabilitieslist.contains("8BITMIME"))
+            .as("capabilities present 8BITMIME")
+            .isTrue();
 
         smtpProtocol.setSender("mail@localhost");
         smtpProtocol.addRecipient("mail@localhost");
@@ -443,7 +461,9 @@ public class SMTPServerTest {
         smtpProtocol.disconnect();
 
         // mail was propagated by SMTPServer
-        assertNotNull("mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("mail received by mail server")
+            .isNotNull();
     }
 
     @Test
@@ -455,7 +475,9 @@ public class SMTPServerTest {
         smtpProtocol.connect("127.0.0.1", smtpListenerPort);
 
         // no message there, yet
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();;
 
         smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
         String[] capabilityRes = smtpProtocol.getReplyStrings();
@@ -465,11 +487,12 @@ public class SMTPServerTest {
             capabilitieslist.add(capabilityRes[i].substring(4));
         }
 
-        assertEquals("capabilities", 4, capabilitieslist.size());
-        assertTrue("capabilities present PIPELINING", capabilitieslist.contains("PIPELINING"));
-        assertTrue("capabilities present ENHANCEDSTATUSCODES", capabilitieslist.contains("ENHANCEDSTATUSCODES"));
-        assertTrue("capabilities present 8BITMIME", capabilitieslist.contains("8BITMIME"));
-        assertTrue("capabilities present STARTTLS", capabilitieslist.contains("STARTTLS"));
+        assertThat(capabilitieslist)
+            .as("capabilities")
+            .hasSize(4);
+        assertThat(capabilitieslist)
+            .as("capabilities present PIPELINING ENHANCEDSTATUSCODES 8BITMIME STARTTLS")
+            .containsOnly("PIPELINING", "ENHANCEDSTATUSCODES", "8BITMIME", "STARTTLS");
 
         smtpProtocol.quit();
         smtpProtocol.disconnect();
@@ -503,7 +526,9 @@ public class SMTPServerTest {
         SMTPClient smtp = newSMTPClient();
 
         // no message there, yet
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();;
 
         smtp.helo(InetAddress.getLocalHost().toString());
         smtp.setSender("mail@localhost");
@@ -513,8 +538,9 @@ public class SMTPServerTest {
         smtp.quit();
         smtp.disconnect();
 
-        assertNotNull("spooled mail has Received header",
-                queue.getLastMail().getMessage().getHeader("Received"));
+        assertThat(queue.getLastMail().getMessage().getHeader("Received"))
+            .as("spooled mail has Received header")
+            .isNotNull();
     }
 
     // FIXME
@@ -526,7 +552,9 @@ public class SMTPServerTest {
         SMTPClient smtp = newSMTPClient();
 
         // no message there, yet
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();;
 
         smtp.helo(InetAddress.getLocalHost().toString());
         smtp.setSender("mail@localhost");
@@ -536,8 +564,9 @@ public class SMTPServerTest {
         smtp.quit();
         smtp.disconnect();
 
-        assertNotNull("spooled mail has Received header",
-                queue.getLastMail().getMessage().getHeader("Received"));
+        assertThat(queue.getLastMail().getMessage().getHeader("Received"))
+            .as("spooled mail has Received header")
+            .isNotNull();
         // TODO: test body size
     }
 
@@ -549,7 +578,9 @@ public class SMTPServerTest {
         smtpProtocol.connect("127.0.0.1", smtpListenerPort);
 
         // no message there, yet
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
 
         smtpProtocol.helo(InetAddress.getLocalHost().toString());
 
@@ -563,7 +594,9 @@ public class SMTPServerTest {
         smtpProtocol.disconnect();
 
         // mail was propagated by SMTPServer
-        assertNotNull("mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("mail received by mail server")
+            .isNotNull();
     }
 
     @Test
@@ -575,11 +608,17 @@ public class SMTPServerTest {
         SMTPClient smtpProtocol2 = new SMTPClient();
         smtpProtocol2.connect("127.0.0.1", smtpListenerPort);
 
-        assertTrue("first connection taken", smtpProtocol1.isConnected());
-        assertTrue("second connection taken", smtpProtocol2.isConnected());
+        assertThat(smtpProtocol1.isConnected())
+            .as("first connection taken")
+            .isTrue();
+        assertThat(smtpProtocol2.isConnected())
+            .as("second connection taken")
+            .isTrue();
 
         // no message there, yet
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
 
         smtpProtocol1.helo(InetAddress.getLocalHost().toString());
         smtpProtocol2.helo(InetAddress.getLocalHost().toString());
@@ -614,10 +653,14 @@ public class SMTPServerTest {
         SMTPClient smtpProtocol1 = new SMTPClient();
         smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
 
-        assertTrue("first connection taken", smtpProtocol1.isConnected());
+        assertThat(smtpProtocol1.isConnected())
+            .as("first connection taken")
+            .isTrue();
 
         // no message there, yet
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
 
         smtpProtocol1.helo(InetAddress.getLocalHost().toString());
 
@@ -654,10 +697,14 @@ public class SMTPServerTest {
         SMTPClient smtpProtocol = new SMTPClient();
         smtpProtocol.connect("127.0.0.1", smtpListenerPort);
 
-        assertTrue("first connection taken", smtpProtocol.isConnected());
+        assertThat(smtpProtocol.isConnected())
+            .as("first connection taken")
+            .isTrue();
 
         // no message there, yet
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
 
         String fictionalDomain = "abgsfe3rsf.de";
         String existingDomain = "james.apache.org";
@@ -669,7 +716,9 @@ public class SMTPServerTest {
         smtpProtocol.addRecipient(rcpt);
 
         // this should give a 501 code cause the helo/ehlo could not resolved
-        assertEquals("expected error: " + heloCommand + " could not resolved", 501, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected error: " + heloCommand + " could not resolved")
+            .isEqualTo(501);
 
         smtpProtocol.sendCommand(heloCommand, existingDomain);
         smtpProtocol.setSender(mail);
@@ -679,7 +728,9 @@ public class SMTPServerTest {
             fail(existingDomain + " domain currently cannot be resolved (check your DNS/internet connection/proxy settings to make test pass)");
         }
         // helo/ehlo is resolvable. so this should give a 250 code
-        assertEquals(heloCommand + " accepted", 250, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as(heloCommand + " accepted")
+            .isEqualTo(250);
 
         smtpProtocol.quit();
     }
@@ -693,7 +744,9 @@ public class SMTPServerTest {
 
         smtpProtocol1.helo("abgsfe3rsf.de");
         // helo should not be checked. so this should give a 250 code
-        assertEquals("Helo accepted", 250, smtpProtocol1.getReplyCode());
+        assertThat(smtpProtocol1.getReplyCode())
+            .as("Helo accepted")
+            .isEqualTo(250);
 
         smtpProtocol1.quit();
     }
@@ -714,10 +767,14 @@ public class SMTPServerTest {
             SMTPClient smtpProtocol1 = new SMTPClient();
             smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
 
-            assertTrue("first connection taken", smtpProtocol1.isConnected());
+            assertThat(smtpProtocol1.isConnected())
+                .as("first connection taken")
+                .isTrue();
 
             // no message there, yet
-            assertNull("no mail received by mail server", queue.getLastMail());
+            assertThat(queue.getLastMail())
+                .as("no mail received by mail server")
+                .isNull();
 
             String helo1 = "abgsfe3rsf.de";
             String helo2 = "james.apache.org";
@@ -730,14 +787,18 @@ public class SMTPServerTest {
 
             // this should give a 501 code cause the helo not equal reverse of
             // ip
-            assertEquals("expected error: helo not equals reverse of ip", 501, smtpProtocol1.getReplyCode());
+            assertThat(smtpProtocol1.getReplyCode())
+                .as("expected error: helo not equals reverse of ip")
+                .isEqualTo(501);
 
             smtpProtocol1.sendCommand("helo", helo2);
             smtpProtocol1.setSender(mail);
             smtpProtocol1.addRecipient(rcpt);
 
             // helo is resolvable. so this should give a 250 code
-            assertEquals("Helo accepted", 250, smtpProtocol1.getReplyCode());
+            assertThat(smtpProtocol1.getReplyCode())
+                .as("Helo accepted")
+                .isEqualTo(250);
 
             smtpProtocol1.quit();
         } finally {
@@ -754,20 +815,28 @@ public class SMTPServerTest {
         SMTPClient smtpProtocol1 = new SMTPClient();
         smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
 
-        assertTrue("first connection taken", smtpProtocol1.isConnected());
+        assertThat(smtpProtocol1.isConnected())
+            .as("first connection taken")
+            .isTrue();
 
         // no message there, yet
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
 
         smtpProtocol1.helo(InetAddress.getLocalHost().toString());
 
         String sender1 = "mail_sender1@xfwrqqfgfe.de";
 
         smtpProtocol1.setSender(sender1);
-        assertEquals("expected 501 error", 501, smtpProtocol1.getReplyCode());
+        assertThat(smtpProtocol1.getReplyCode())
+            .as("expected 501 error")
+            .isEqualTo(501);
 
         smtpProtocol1.addRecipient("test@localhost");
-        assertEquals("Recipient not accepted cause no valid sender", 503, smtpProtocol1.getReplyCode());
+        assertThat(smtpProtocol1.getReplyCode())
+            .as("Recipient not accepted cause no valid sender")
+            .isEqualTo(503);
         smtpProtocol1.quit();
 
     }
@@ -796,10 +865,14 @@ public class SMTPServerTest {
         SMTPClient smtpProtocol1 = new SMTPClient();
         smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
 
-        assertTrue("first connection taken", smtpProtocol1.isConnected());
+        assertThat(smtpProtocol1.isConnected())
+            .as("first connection taken")
+            .isTrue();
 
         // no message there, yet
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
 
         smtpProtocol1.helo(InetAddress.getLocalHost().toString());
 
@@ -821,10 +894,14 @@ public class SMTPServerTest {
         SMTPClient smtpProtocol1 = new SMTPClient();
         smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
 
-        assertTrue("first connection taken", smtpProtocol1.isConnected());
+        assertThat(smtpProtocol1.isConnected())
+            .as("first connection taken")
+            .isTrue();
 
         // no message there, yet
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
 
         smtpProtocol1.helo(InetAddress.getLocalHost().toString());
 
@@ -832,7 +909,9 @@ public class SMTPServerTest {
         String sender2 = "mail_sender2@james.apache.org";
 
         smtpProtocol1.setSender(sender1);
-        assertEquals("expected 501 error", 501, smtpProtocol1.getReplyCode());
+        assertThat(smtpProtocol1.getReplyCode())
+            .as("expected 501 error")
+            .isEqualTo(501);
 
         smtpProtocol1.setSender(sender2);
 
@@ -848,10 +927,14 @@ public class SMTPServerTest {
         SMTPClient smtpProtocol1 = new SMTPClient();
         smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
 
-        assertTrue("first connection taken", smtpProtocol1.isConnected());
+        assertThat(smtpProtocol1.isConnected())
+            .as("first connection taken")
+            .isTrue();
 
         // no message there, yet
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
 
         smtpProtocol1.helo(InetAddress.getLocalHost().toString());
 
@@ -863,7 +946,9 @@ public class SMTPServerTest {
         smtpProtocol1.addRecipient(rcpt1);
 
         smtpProtocol1.addRecipient(rcpt2);
-        assertEquals("expected 452 error", 452, smtpProtocol1.getReplyCode());
+        assertThat(smtpProtocol1.getReplyCode())
+            .as("expected 452 error")
+            .isEqualTo(452);
 
         smtpProtocol1.sendShortMessageData("Subject: test\r\n\r\nTest body testMaxRcpt1\r\n");
 
@@ -919,7 +1004,9 @@ public class SMTPServerTest {
 
         smtpProtocol1.sendCommand("ehlo", "abgsfe3rsf.de");
         // ehlo should not be checked. so this should give a 250 code
-        assertEquals("ehlo accepted", 250, smtpProtocol1.getReplyCode());
+        assertThat(smtpProtocol1.getReplyCode())
+            .as("ehlo accepted")
+            .isEqualTo(250);
 
         smtpProtocol1.quit();
     }
@@ -951,10 +1038,13 @@ public class SMTPServerTest {
             SMTPClient smtpProtocol1 = new SMTPClient();
             smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
 
-            assertTrue("first connection taken", smtpProtocol1.isConnected());
-
+            assertThat(smtpProtocol1.isConnected())
+                .as("first connection taken")
+                .isTrue();
             // no message there, yet
-            assertNull("no mail received by mail server", queue.getLastMail());
+            assertThat(queue.getLastMail())
+                .as("no mail received by mail server")
+                .isNull();
 
             String ehlo1 = "abgsfe3rsf.de";
             String ehlo2 = "james.apache.org";
@@ -967,14 +1057,18 @@ public class SMTPServerTest {
 
             // this should give a 501 code cause the ehlo not equals reverse of
             // ip
-            assertEquals("expected error: ehlo not equals reverse of ip", 501, smtpProtocol1.getReplyCode());
+            assertThat(smtpProtocol1.getReplyCode())
+                .as("expected error: ehlo not equals reverse of ip")
+                .isEqualTo(501);
 
             smtpProtocol1.sendCommand("ehlo", ehlo2);
             smtpProtocol1.setSender(mail);
             smtpProtocol1.addRecipient(rcpt);
 
             // ehlo is resolvable. so this should give a 250 code
-            assertEquals("ehlo accepted", 250, smtpProtocol1.getReplyCode());
+            assertThat(smtpProtocol1.getReplyCode())
+                .as("ehlo accepted")
+                .isEqualTo(250);
 
             smtpProtocol1.quit();
         } finally {
@@ -989,14 +1083,20 @@ public class SMTPServerTest {
         SMTPClient smtpProtocol1 = new SMTPClient();
         smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
 
-        assertTrue("first connection taken", smtpProtocol1.isConnected());
+        assertThat(smtpProtocol1.isConnected())
+            .as("first connection taken")
+            .isTrue();
 
         // no message there, yet
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
 
         String sender1 = "mail_sender1@localhost";
         smtpProtocol1.setSender(sender1);
-        assertEquals("expected 503 error", 503, smtpProtocol1.getReplyCode());
+        assertThat(smtpProtocol1.getReplyCode())
+            .as("expected 503 error")
+            .isEqualTo(503);
 
         smtpProtocol1.helo(InetAddress.getLocalHost().toString());
 
@@ -1013,10 +1113,14 @@ public class SMTPServerTest {
         SMTPClient smtpProtocol1 = new SMTPClient();
         smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
 
-        assertTrue("first connection taken", smtpProtocol1.isConnected());
+        assertThat(smtpProtocol1.isConnected())
+            .as("first connection taken")
+            .isTrue();
 
         // no message there, yet
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
 
         String sender1 = "mail_sender1@localhost";
 
@@ -1038,11 +1142,15 @@ public class SMTPServerTest {
 
         smtpProtocol.sendCommand("AUTH PLAIN");
 
-        assertEquals("start auth.", 334, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("start auth.")
+            .isEqualTo(334);
 
         smtpProtocol.sendCommand("*");
 
-        assertEquals("cancel auth.", 501, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("cancel auth.")
+            .isEqualTo(501);
 
         smtpProtocol.quit();
 
@@ -1066,7 +1174,9 @@ public class SMTPServerTest {
             capabilitieslist.add(capabilityRes[i].substring(4));
         }
 
-        assertTrue("anouncing auth required", capabilitieslist.contains("AUTH LOGIN PLAIN"));
+        assertThat(capabilitieslist.contains("AUTH LOGIN PLAIN"))
+            .as("anouncing auth required")
+            .isTrue();
         // is this required or just for compatibility?
         // assertTrue("anouncing auth required",
         // capabilitieslist.contains("AUTH=LOGIN PLAIN"));
@@ -1075,32 +1185,46 @@ public class SMTPServerTest {
         String noexistUserName = "noexist_test_user_smtp";
         String sender = "test_user_smtp@localhost";
         smtpProtocol.sendCommand("AUTH FOO", null);
-        assertEquals("expected error: unrecognized authentication type", 504, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected error: unrecognized authentication type")
+            .isEqualTo(504);
 
         smtpProtocol.setSender(sender);
 
         smtpProtocol.addRecipient("mail@sample.com");
-        assertEquals("expected 530 error", 530, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected 530 error")
+            .isEqualTo(530);
 
-        assertFalse("user not existing", usersRepository.contains(noexistUserName));
+        assertThat(usersRepository.contains(noexistUserName))
+            .as("user not existing")
+            .isFalse();
 
         smtpProtocol.sendCommand("AUTH PLAIN");
         smtpProtocol.sendCommand(Base64.encodeAsString("\0" + noexistUserName + "\0pwd\0"));
         // smtpProtocol.sendCommand(noexistUserName+"pwd".toCharArray());
-        assertEquals("expected error", 535, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected error")
+            .isEqualTo(535);
 
         usersRepository.addUser(userName, "pwd");
 
         smtpProtocol.sendCommand("AUTH PLAIN");
         smtpProtocol.sendCommand(Base64.encodeAsString("\0" + userName + "\0wrongpwd\0"));
-        assertEquals("expected error", 535, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected error")
+            .isEqualTo(535);
 
         smtpProtocol.sendCommand("AUTH PLAIN");
         smtpProtocol.sendCommand(Base64.encodeAsString("\0" + userName + "\0pwd\0"));
-        assertEquals("authenticated", 235, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated")
+            .isEqualTo(235);
 
         smtpProtocol.sendCommand("AUTH PLAIN");
-        assertEquals("expected error: User has previously authenticated.", 503, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected error: User has previously authenticated.")
+            .isEqualTo(503);
 
         smtpProtocol.addRecipient("mail@sample.com");
         smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testAuth\r\n");
@@ -1108,7 +1232,9 @@ public class SMTPServerTest {
         smtpProtocol.quit();
 
         // mail was propagated by SMTPServer
-        assertNotNull("mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("mail received by mail server")
+            .isNotNull();
     }
 
     @Test
@@ -1129,10 +1255,14 @@ public class SMTPServerTest {
 
         smtpProtocol.sendCommand("AUTH PLAIN");
         smtpProtocol.sendCommand(Base64.encodeAsString("\0" + userName + "\0pwd\0"));
-        assertEquals("authenticated", 235, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated")
+            .isEqualTo(235);
 
         smtpProtocol.addRecipient("mail@sample.com");
-        assertEquals("expected error", 503, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected error")
+            .isEqualTo(503);
 
         smtpProtocol.quit();
     }
@@ -1151,12 +1281,16 @@ public class SMTPServerTest {
         // left out for test smtpProtocol.rcpt(new Address("mail@localhost"));
 
         smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testNoRecepientSpecified\r\n");
-        assertTrue("sending succeeded without recepient", SMTPReply.isNegativePermanent(smtpProtocol.getReplyCode()));
+        assertThat(SMTPReply.isNegativePermanent(smtpProtocol.getReplyCode()))
+            .as("sending succeeded without recepient")
+            .isTrue();
 
         smtpProtocol.quit();
 
         // mail was propagated by SMTPServer
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
     }
 
     @Test
@@ -1177,7 +1311,9 @@ public class SMTPServerTest {
         smtpProtocol.quit();
 
         // mail was propagated by SMTPServer
-        assertNull("no mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
     }
 
     @Test
@@ -1193,7 +1329,9 @@ public class SMTPServerTest {
         smtpProtocol.setSender("mail@sample.com");
 
         smtpProtocol.addRecipient("maila@sample.com");
-        assertEquals("expected 550 error", 550, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected 550 error")
+            .isEqualTo(550);
     }
 
     @Test
@@ -1207,10 +1345,14 @@ public class SMTPServerTest {
         smtpProtocol.sendCommand("ehlo " + InetAddress.getLocalHost());
 
         smtpProtocol.sendCommand("MAIL FROM:<mail@localhost> SIZE=1025", null);
-        assertEquals("expected error: max msg size exceeded", 552, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected error: max msg size exceeded")
+            .isEqualTo(552);
 
         smtpProtocol.addRecipient("mail@localhost");
-        assertEquals("expected error", 503, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected error")
+            .isEqualTo(503);
     }
 
     public void testHandleMessageSizeLimitExceeded() throws Exception {
@@ -1242,9 +1384,12 @@ public class SMTPServerTest {
         wr.write("123456781012345678201\r\n"); // 521 + CRLF = 523 + 502 => 1025
         wr.close();
 
-        assertFalse(smtpProtocol.completePendingCommand());
+        assertThat(smtpProtocol.completePendingCommand())
+            .isFalse();
 
-        assertEquals("expected 552 error", 552, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected 552 error")
+            .isEqualTo(552);
 
     }
 
@@ -1276,9 +1421,12 @@ public class SMTPServerTest {
         wr.write("1234567810123456782012\r\n"); // 1022 + CRLF = 1024
         wr.close();
 
-        assertTrue(smtpProtocol.completePendingCommand());
+        assertThat(smtpProtocol.completePendingCommand())
+            .isTrue();
 
-        assertEquals("expected 250 ok", 250, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected 250 ok")
+            .isEqualTo(250);
 
     }
     // Check if auth users get not rejected cause rbl. See JAMES-566
@@ -1303,7 +1451,9 @@ public class SMTPServerTest {
             capabilitieslist.add(capabilityRes[i].substring(4));
         }
 
-        assertTrue("anouncing auth required", capabilitieslist.contains("AUTH LOGIN PLAIN"));
+        assertThat(capabilitieslist.contains("AUTH LOGIN PLAIN"))
+            .as("anouncing auth required")
+            .isTrue();
         // is this required or just for compatibility? assertTrue("anouncing
         // auth required", capabilitieslist.contains("AUTH=LOGIN PLAIN"));
 
@@ -1316,17 +1466,23 @@ public class SMTPServerTest {
 
         smtpProtocol.sendCommand("AUTH PLAIN");
         smtpProtocol.sendCommand(Base64.encodeAsString("\0" + userName + "\0pwd\0"));
-        assertEquals("authenticated", 235, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated")
+            .isEqualTo(235);
 
         smtpProtocol.addRecipient("mail@sample.com");
-        assertEquals("authenticated.. not reject", 250, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated.. not reject")
+            .isEqualTo(250);
 
         smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testDNSRBLNotRejectAuthUser\r\n");
 
         smtpProtocol.quit();
 
         // mail was propagated by SMTPServer
-        assertNotNull("mail received by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("mail received by mail server")
+            .isNotNull();
     }
 
     @Test
@@ -1347,14 +1503,18 @@ public class SMTPServerTest {
         smtpProtocol.setSender(sender);
 
         smtpProtocol.addRecipient("mail@sample.com");
-        assertEquals("reject", 554, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("reject")
+            .isEqualTo(554);
 
         smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testDNSRBLRejectWorks\r\n");
 
         smtpProtocol.quit();
 
         // mail was rejected by SMTPServer
-        assertNull("mail reject by mail server", queue.getLastMail());
+        assertThat(queue.getLastMail())
+            .as("mail reject by mail server")
+            .isNull();
     }
 
     @Test
@@ -1367,10 +1527,14 @@ public class SMTPServerTest {
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
 
         smtpProtocol.sendCommand("mail from:", "test@localhost");
-        assertEquals("accept", 250, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("accept")
+            .isEqualTo(250);
 
         smtpProtocol.sendCommand("rcpt to:", "mail@sample.com");
-        assertEquals("accept", 250, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("accept")
+            .isEqualTo(250);
 
         smtpProtocol.quit();
 
@@ -1379,10 +1543,14 @@ public class SMTPServerTest {
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
 
         smtpProtocol.sendCommand("mail from:", "<test@localhost>");
-        assertEquals("accept", 250, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("accept")
+            .isEqualTo(250);
 
         smtpProtocol.sendCommand("rcpt to:", "<mail@sample.com>");
-        assertEquals("accept", 250, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("accept")
+            .isEqualTo(250);
 
         smtpProtocol.quit();
     }
@@ -1396,14 +1564,22 @@ public class SMTPServerTest {
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
 
         smtpProtocol.sendCommand("mail from:", "test@localhost");
-        assertEquals("reject", 501, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("reject")
+            .isEqualTo(501);
         smtpProtocol.sendCommand("mail from:", "<test@localhost>");
-        assertEquals("accept", 250, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("accept")
+            .isEqualTo(250);
 
         smtpProtocol.sendCommand("rcpt to:", "mail@sample.com");
-        assertEquals("reject", 501, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("reject")
+            .isEqualTo(501);
         smtpProtocol.sendCommand("rcpt to:", "<mail@sample.com>");
-        assertEquals("accept", 250, smtpProtocol.getReplyCode());
+        assertThat(smtpProtocol.getReplyCode())
+            .as("accept")
+            .isEqualTo(250);
 
         smtpProtocol.quit();
     }
@@ -1441,12 +1617,24 @@ public class SMTPServerTest {
 
         BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
-        assertEquals("Connection made", 220, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("HELO accepted", 250, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("MAIL FROM accepted", 250, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("RCPT TO accepted", 250, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("DATA accepted", 354, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("Message accepted", 250, Integer.parseInt(in.readLine().split(" ")[0]));
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("Connection made")
+            .isEqualTo(220);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("HELO accepted")
+            .isEqualTo(250);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("MAIL FROM accepted")
+            .isEqualTo(250);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("RCPT TO accepted")
+            .isEqualTo(250);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("DATA accepted")
+            .isEqualTo(354);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("Message accepted")
+            .isEqualTo(250);
         in.close();
         out.close();
         client.close();
@@ -1488,12 +1676,24 @@ public class SMTPServerTest {
 
         BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
-        assertEquals("Connection made", 220, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("HELO accepted", 250, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("MAIL FROM accepted", 250, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("RCPT TO rejected", 550, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("RCPT TO rejected", 550, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("DATA not accepted", 503, Integer.parseInt(in.readLine().split(" ")[0]));
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("Connection made")
+            .isEqualTo(220);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("HELO accepted")
+            .isEqualTo(250);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("MAIL FROM accepted")
+            .isEqualTo(250);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("RCPT TO rejected")
+            .isEqualTo(550);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("RCPT TO rejected")
+            .isEqualTo(550);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("DATA not accepted")
+            .isEqualTo(503);
         in.close();
         out.close();
         client.close();
@@ -1534,13 +1734,27 @@ public class SMTPServerTest {
 
         BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
-        assertEquals("Connection made", 220, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("HELO accepted", 250, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("MAIL FROM accepted", 250, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("RCPT TO rejected", 550, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("RCPT accepted", 250, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("DATA accepted", 354, Integer.parseInt(in.readLine().split(" ")[0]));
-        assertEquals("Message accepted", 250, Integer.parseInt(in.readLine().split(" ")[0]));
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("Connection made")
+            .isEqualTo(220);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("HELO accepted")
+            .isEqualTo(250);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("MAIL FROM accepted")
+            .isEqualTo(250);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("RCPT TO rejected")
+            .isEqualTo(550);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("RCPT accepted")
+            .isEqualTo(250);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("DATA accepted")
+            .isEqualTo(354);
+        assertThat(Integer.parseInt(in.readLine().split(" ")[0]))
+            .as("Message accepted")
+            .isEqualTo(250);
         in.close();
         out.close();
         client.close();
