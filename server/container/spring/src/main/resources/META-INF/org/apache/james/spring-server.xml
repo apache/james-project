@@ -293,9 +293,4 @@
 
     <bean id="metricFactory" class="org.apache.james.metrics.dropwizard.DropWizardMetricFactory"/>
 
-
-    <beans profile="cassandra">
-        <import resource="classpath:META-INF/cassandra-session.xml"/>
-    </beans>
-
 </beans>

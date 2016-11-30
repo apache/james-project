@@ -27,7 +27,7 @@
  
 <indexer>
    <!-- supported providers are: -->
-   <!-- lazyIndex, luceneIndex, elasticsearch -->
+   <!-- lazyIndex, luceneIndex -->
    <!--  -->
   <provider>luceneIndex</provider>
 </indexer>
