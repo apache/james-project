@@ -206,6 +206,35 @@ public class RemoteDeliveryConfiguration {
         return address;
     }
 
+    public Properties createFinalJavaxProperties() {
+        Properties props = new Properties();
+        props.put("mail.debug", "false");
+        // Reactivated: javamail 1.3.2 should no more have problems with "250 OK" messages
+        // (WAS "false": Prevents problems encountered with 250 OK Messages)
+        props.put("mail.smtp.ehlo", "true");
+        // By setting this property to true the transport is allowed to send 8 bit data to the server (if it supports
+        // the 8bitmime extension).
+        props.setProperty("mail.smtp.allow8bitmime", "true");
+        props.put("mail.smtp.timeout", String.valueOf(smtpTimeout));
+        props.put("mail.smtp.connectiontimeout", String.valueOf(connectionTimeout));
+        props.put("mail.smtp.sendpartial", String.valueOf(sendPartial));
+        props.put("mail.smtp.localhost", heloNameProvider.getHeloName());
+        props.put("mail.smtp.starttls.enable", String.valueOf(startTLS));
+        props.put("mail.smtp.ssl.enable", String.valueOf(isSSLEnable));
+        if (isBindUsed()) {
+            // undocumented JavaMail 1.2 feature, smtp transport will use
+            // our socket factory, which will also set the local address
+            props.put("mail.smtp.socketFactory.class", RemoteDeliverySocketFactory.class.getClass());
+            // Don't fallback to the standard socket factory on error, do throw an exception
+            props.put("mail.smtp.socketFactory.fallback", "false");
+        }
+        if (authUser != null) {
+            props.put("mail.smtp.auth", "true");
+        }
+        props.putAll(javaxAdditionalProperties);
+        return props;
+    }
+
     public boolean isDebug() {
         return isDebug;
     }

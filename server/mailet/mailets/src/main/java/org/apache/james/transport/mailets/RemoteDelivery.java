@@ -318,53 +318,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
      */
     @Override
     public void run() {
-
-        // Checks the pool and delivers a mail message
-        Properties props = new Properties();
-        // Not needed for production environment
-        props.put("mail.debug", "false");
-        // Reactivated: javamail 1.3.2 should no more have problems with
-        // "250 OK"
-        // messages (WAS "false": Prevents problems encountered with 250 OK
-        // Messages)
-        props.put("mail.smtp.ehlo", "true");
-        // By setting this property to true the transport is allowed to
-        // send 8 bit data to the server (if it supports the 8bitmime
-        // extension).
-        // 2006/03/01 reverted to false because of a javamail bug converting to
-        // 8bit
-        // messages created by an inputstream.
-        props.setProperty("mail.smtp.allow8bitmime", "true");
-        // Sets timeout on going connections
-        props.put("mail.smtp.timeout", configuration.getSmtpTimeout() + "");
-
-        props.put("mail.smtp.connectiontimeout", configuration.getConnectionTimeout() + "");
-        props.put("mail.smtp.sendpartial", String.valueOf(configuration.isSendPartial()));
-
-        props.put("mail.smtp.localhost", configuration.getHeloNameProvider().getHeloName());
-
-        // handle starttls
-        props.put("mail.smtp.starttls.enable", String.valueOf(configuration.isStartTLS()));
-
-        // handle SSLEnable
-        props.put("mail.smtp.ssl.enable", String.valueOf(configuration.isSSLEnable()));
-
-        if (configuration.isBindUsed()) {
-            // undocumented JavaMail 1.2 feature, smtp transport will use
-            // our socket factory, which will also set the local address
-            props.put("mail.smtp.socketFactory.class", RemoteDeliverySocketFactory.class.getClass());
-            // Don't fallback to the standard socket factory on error, do throw
-            // an exception
-            props.put("mail.smtp.socketFactory.fallback", "false");
-        }
-
-        if (configuration.getAuthUser() != null) {
-            props.put("mail.smtp.auth", "true");
-        }
-
-        props.putAll(configuration.getJavaxAdditionalProperties());
-
-        final Session session = obtainSession(props);
+        final Session session = obtainSession(configuration.createFinalJavaxProperties());
         try {
             while (!Thread.interrupted() && !destroyed) {
                 try {
