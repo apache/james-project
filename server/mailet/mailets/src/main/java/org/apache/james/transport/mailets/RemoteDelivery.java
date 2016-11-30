@@ -33,11 +33,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
@@ -65,8 +63,7 @@ import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.transport.mailets.remoteDelivery.Delay;
-import org.apache.james.transport.mailets.remoteDelivery.DelaysAndMaxRetry;
-import org.apache.james.transport.mailets.remoteDelivery.HeloNameProvider;
+import org.apache.james.transport.mailets.remoteDelivery.RemoteDeliveryConfiguration;
 import org.apache.james.transport.mailets.remoteDelivery.RemoteDeliverySocketFactory;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.Mail;
@@ -156,93 +153,16 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
     private final DomainList domainList;
     private final MailQueueFactory queueFactory;
     private final Metric outgoingMailsMetric;
-    private final Properties defprops; // Default properties for the JavaMail Session
     private final Collection<Thread> workersThreads;
 
-    /**
-     * Flag to define verbose logging messages.
-     */
-    private boolean isDebug = false;
-
-    /**
-     * List of Delay Times. Controls frequency of retry attempts.
-     */
-    private List<Long> delayTimes;
-
-    /**
-     * Maximum no. of retries (Defaults to 5).
-     */
-    private int maxRetries;
-
-    /**
-     * Default number of ms to timeout on smtp delivery
-     */
-    private long smtpTimeout = 180000;
-
-    /**
-     * If false then ANY address errors will cause the transmission to fail
-     */
-    private boolean sendPartial = false;
-
-    /**
-     * The amount of time JavaMail will wait before giving up on a socket
-     * connect()
-     */
-    private int connectionTimeout = 60000;
-
-    /**
-     * No. of threads used to process messages that should be retried.
-     */
-    private int workersThreadCount = 1;
-
-    /**
-     * The server(s) to send all email to
-     */
-    private Collection<String> gatewayServer = null;
-
-    /**
-     * Auth for gateway server
-     */
-    private String authUser = null;
-
-    /**
-     * Password for gateway server
-     */
-    private String authPass = null;
-
-    /**
-     * True, if the bind configuration parameter is supplied,
-     * RemoteDeliverySocketFactory will be used in this case.
-     */
-    private boolean isBindUsed = false;
+    private MailQueue queue;
+    private Logger logger;
+    private RemoteDeliveryConfiguration configuration;
 
     /**
      * Flag used by 'run' method to end itself.
      */
     private volatile boolean destroyed = false;
-
-    /**
-     * the processor for creating Bounces
-     */
-    private String bounceProcessor = null;
-
-
-    /**
-     * The retry count dnsProblemErrors
-     */
-    private int dnsProblemRetry = 0;
-
-    private MailQueue queue;
-
-    private Logger logger;
-
-    private boolean usePriority;
-
-    private boolean startTLS = false;
-
-    private boolean isSSLEnable = false;
-
-    private HeloNameProvider heloNameProvider;
 
     @Inject
     public RemoteDelivery(DNSService dnsServer, DomainList domainList, MailQueueFactory queueFactory, MetricFactory metricFactory) {
@@ -250,7 +170,6 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
         this.domainList = domainList;
         this.queueFactory = queueFactory;
         this.outgoingMailsMetric = metricFactory.generate(OUTGOING_MAILS);
-        this.defprops = new Properties();
         this.workersThreads = new Vector<Thread>();
     }
 
@@ -261,124 +180,20 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
      * @throws MessagingException on failure to initialize attributes.
      */
     public void init() throws MessagingException {
-        // Set isDebug flag.
-        isDebug = (getInitParameter("debug") == null) ? false : Boolean.valueOf(getInitParameter("debug"));
-
         logger = getMailetContext().getLogger();
-
-        try {
-            int intendedMaxRetries = Integer.parseInt(getInitParameter("maxRetries", "5"));
-            DelaysAndMaxRetry delaysAndMaxRetry = DelaysAndMaxRetry.from(intendedMaxRetries, getInitParameter("delayTime"));
-            maxRetries = delaysAndMaxRetry.getMaxRetries();
-            delayTimes = delaysAndMaxRetry.getExpendedDelays();
-        } catch (Exception e) {
-            log("Invalid maxRetries setting: " + getInitParameter("maxRetries"));
-        }
-        // Get the path for the 'Outgoing' repository. This is the place on the
-        // file system where Mail objects will be saved during the 'delivery'
-        // processing. This can be changed to a repository on a database (e.g.
-        // db://maildb/spool/retry).
-        String outgoing = getInitParameter("outgoing");
-        if (outgoing == null) {
-            outgoing = "outgoing";
-        }
-        queue = queueFactory.getQueue(outgoing);
-
-        try {
-            if (getInitParameter("timeout") != null) {
-                smtpTimeout = Integer.parseInt(getInitParameter("timeout"));
-            }
-        } catch (Exception e) {
-            log("Invalid timeout setting: " + getInitParameter("timeout"));
-        }
-
-        try {
-            if (getInitParameter("connectiontimeout") != null) {
-                connectionTimeout = Integer.parseInt(getInitParameter("connectiontimeout"));
-            }
-        } catch (Exception e) {
-            log("Invalid timeout setting: " + getInitParameter("timeout"));
-        }
-
-        sendPartial = (getInitParameter("sendpartial") == null) ? false : Boolean.valueOf(getInitParameter("sendpartial"));
-
-        bounceProcessor = getInitParameter("bounceProcessor");
-
-        String sTLS = getInitParameter("startTLS");
-        if (sTLS != null) {
-            startTLS = Boolean.valueOf(sTLS);
-        }
-
-        isSSLEnable = (getInitParameter("sslEnable") == null) ? false : Boolean.valueOf(getInitParameter("sslEnable"));
-
-        String gateway = getInitParameter("gateway");
-        String gatewayPort = getInitParameter("gatewayPort");
-
-        if (gateway != null) {
-            gatewayServer = new ArrayList<String>();
-            StringTokenizer st = new StringTokenizer(gateway, ",");
-            while (st.hasMoreTokens()) {
-                String server = st.nextToken().trim();
-                if (server.indexOf(':') < 0 && gatewayPort != null) {
-                    server += ":";
-                    server += gatewayPort;
-                }
-
-                if (isDebug)
-                    log("Adding SMTP gateway: " + server);
-                gatewayServer.add(server);
-            }
-            authUser = getInitParameter("gatewayUsername");
-            // backward compatibility with 2.3.x
-            if (authUser == null) {
-                authUser = getInitParameter("gatewayusername");
-            }
-            authPass = getInitParameter("gatewayPassword");
-        }
-
-        /*
-      JavaMail delivery socket binds to this local address. If null the
-      JavaMail default will be used.
-     */
-        String bindAddress = getInitParameter("bind");
-        isBindUsed = bindAddress != null;
-        try {
-            if (isBindUsed)
-                RemoteDeliverySocketFactory.setBindAdress(bindAddress);
-        } catch (UnknownHostException e) {
-            log("Invalid bind setting (" + bindAddress + "): " + e.toString());
-        }
-
-
-        // deal with <mail.*> attributes, passing them to javamail
-        Iterator<String> i = getInitParameterNames();
-        while (i.hasNext()) {
-            String name = i.next();
-            if (name.startsWith("mail.")) {
-                defprops.put(name, getInitParameter(name));
-            }
-
-        }
-
-        String dnsRetry = getInitParameter("maxDnsProblemRetries");
-        if (dnsRetry != null && !dnsRetry.equals("")) {
-            dnsProblemRetry = Integer.parseInt(dnsRetry);
-        }
-
-        heloNameProvider = new HeloNameProvider(getInitParameter("heloName"), domainList);
-
-        String prio = getInitParameter("usePriority");
-        if (prio != null) {
-            usePriority = Boolean.valueOf(prio);
-        }
-
-        // Start Workers Threads.
-        workersThreadCount = Integer.parseInt(getInitParameter("deliveryThreads"));
+        configuration = new RemoteDeliveryConfiguration(getMailetConfig(), domainList);
+        queue = queueFactory.getQueue(configuration.getOutGoingQueueName());
         initDeliveryThreads();
+        try {
+            if (configuration.isBindUsed())
+                RemoteDeliverySocketFactory.setBindAdress(configuration.getBindAddress());
+        } catch (UnknownHostException e) {
+            log("Invalid bind setting (" + configuration.getBindAddress() + "): " + e.toString());
+        }
     }
 
     private void initDeliveryThreads() {
-        for (int a = 0; a < workersThreadCount; a++) {
+        for (int a = 0; a < configuration.getWorkersThreadCount(); a++) {
             String threadName = "Remote delivery thread (" + a + ")";
             Thread t = new Thread(this, threadName);
             t.start();
@@ -393,10 +208,10 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
      * @return the next delay time to use, given the retry count
      */
     private long getNextDelay(int retry_count) {
-        if (retry_count > delayTimes.size()) {
+        if (retry_count > configuration.getDelayTimes().size()) {
             return Delay.DEFAULT_DELAY_TIME;
         }
-        return delayTimes.get(retry_count - 1);
+        return configuration.getDelayTimes().get(retry_count - 1);
     }
 
     @Override
@@ -416,17 +231,17 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
     @Override
     public void service(Mail mail) throws MessagingException {
         // Do I want to give the internal key, or the message's Message ID
-        if (isDebug) {
+        if (configuration.isDebug()) {
             log("Remotely delivering mail " + mail.getName());
         }
         Collection<MailAddress> recipients = mail.getRecipients();
 
-        if (usePriority) {
+        if (configuration.isUsePriority()) {
 
             // Use highest prio for new emails. See JAMES-1311
             mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.HIGH_PRIORITY);
         }
-        if (gatewayServer == null) {
+        if (configuration.getGatewayServer() == null) {
             // Must first organize the recipients into distinct servers (name
             // made case insensitive)
             Hashtable<String, Collection<MailAddress>> targets = new Hashtable<String, Collection<MailAddress>>();
@@ -449,7 +264,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
             // outgoing mail repository
             String name = mail.getName();
             for (Map.Entry<String, Collection<MailAddress>> entry : targets.entrySet()) {
-                if (isDebug) {
+                if (configuration.isDebug()) {
                     String logMessageBuffer = "Sending mail to " + entry.getValue() + " on host " + entry.getKey();
                     log(logMessageBuffer);
                 }
@@ -464,8 +279,8 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
             }
         } else {
             // Store the mail unaltered for processing by the gateway server(s)
-            if (isDebug) {
-                String logMessageBuffer = "Sending mail to " + mail.getRecipients() + " via " + gatewayServer;
+            if (configuration.isDebug()) {
+                String logMessageBuffer = "Sending mail to " + mail.getRecipients() + " via " + configuration.getGatewayServer();
                 log(logMessageBuffer);
             }
 
@@ -521,20 +336,20 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
         // messages created by an inputstream.
         props.setProperty("mail.smtp.allow8bitmime", "true");
         // Sets timeout on going connections
-        props.put("mail.smtp.timeout", smtpTimeout + "");
+        props.put("mail.smtp.timeout", configuration.getSmtpTimeout() + "");
 
-        props.put("mail.smtp.connectiontimeout", connectionTimeout + "");
-        props.put("mail.smtp.sendpartial", String.valueOf(sendPartial));
+        props.put("mail.smtp.connectiontimeout", configuration.getConnectionTimeout() + "");
+        props.put("mail.smtp.sendpartial", String.valueOf(configuration.isSendPartial()));
 
-        props.put("mail.smtp.localhost", heloNameProvider.getHeloName());
+        props.put("mail.smtp.localhost", configuration.getHeloNameProvider().getHeloName());
 
         // handle starttls
-        props.put("mail.smtp.starttls.enable", String.valueOf(startTLS));
+        props.put("mail.smtp.starttls.enable", String.valueOf(configuration.isStartTLS()));
 
         // handle SSLEnable
-        props.put("mail.smtp.ssl.enable", String.valueOf(isSSLEnable));
+        props.put("mail.smtp.ssl.enable", String.valueOf(configuration.isSSLEnable()));
 
-        if (isBindUsed) {
+        if (configuration.isBindUsed()) {
             // undocumented JavaMail 1.2 feature, smtp transport will use
             // our socket factory, which will also set the local address
             props.put("mail.smtp.socketFactory.class", RemoteDeliverySocketFactory.class.getClass());
@@ -543,11 +358,11 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
             props.put("mail.smtp.socketFactory.fallback", "false");
         }
 
-        if (authUser != null) {
+        if (configuration.getAuthUser() != null) {
             props.put("mail.smtp.auth", "true");
         }
 
-        props.putAll(defprops);
+        props.putAll(configuration.getJavaxAdditionalProperties());
 
         final Session session = obtainSession(props);
         try {
@@ -567,7 +382,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
                     String key = mail.getName();
 
                     try {
-                        if (isDebug) {
+                        if (configuration.isDebug()) {
                             String message = Thread.currentThread().getName() + " will process mail " + key;
                             log(message);
                         }
@@ -593,7 +408,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 
                             long delay = getNextDelay(retries);
 
-                            if (usePriority) {
+                            if (configuration.isUsePriority()) {
                                 // Use lowest priority for retries. See JAMES-1311
                                 mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.LOW_PRIORITY);
                             }
@@ -657,7 +472,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
      */
     private boolean deliver(Mail mail, Session session) {
         try {
-            if (isDebug) {
+            if (configuration.isDebug()) {
                 log("Attempting to deliver " + mail.getName());
             }
             MimeMessage message = mail.getMessage();
@@ -679,7 +494,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
             // Figure out which servers to try to send to. This collection
             // will hold all the possible target servers
             Iterator<HostAddress> targetServers;
-            if (gatewayServer == null) {
+            if (configuration.getGatewayServer() == null) {
                 MailAddress rcpt = recipients.iterator().next();
                 String host = rcpt.getDomain();
 
@@ -703,7 +518,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
                     } catch (NumberFormatException e) {
                         // Unable to parse retryCount
                     }
-                    if (retry == 0 || retry > dnsProblemRetry) {
+                    if (retry == 0 || retry > configuration.getDnsProblemRetry()) {
                         // The domain has no dns entry.. Return a permanent
                         // error
                         return failMessage(mail, new MessagingException(exceptionBuffer), true);
@@ -712,7 +527,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
                     }
                 }
             } else {
-                targetServers = getGatewaySMTPHostAddresses(gatewayServer);
+                targetServers = getGatewaySMTPHostAddresses(configuration.getGatewayServer());
             }
 
             MessagingException lastError = null;
@@ -745,10 +560,10 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
                     SMTPTransport transport = null;
                     try {
                         transport =  (SMTPTransport) session.getTransport(outgoingMailServer);
-                        transport.setLocalHost( props.getProperty("mail.smtp.localhost", heloNameProvider.getHeloName()) );
+                        transport.setLocalHost( props.getProperty("mail.smtp.localhost", configuration.getHeloNameProvider().getHeloName()) );
                         try {
-                            if (authUser != null) {
-                                transport.connect(outgoingMailServer.getHostName(), authUser, authPass);
+                            if (configuration.getAuthUser() != null) {
+                                transport.connect(outgoingMailServer.getHostName(), configuration.getAuthUser(), configuration.getAuthPass());
                             } else {
                                 transport.connect();
                             }
@@ -762,7 +577,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
                             // failing the message at the end of the loop.
 
                             // Also include the stacktrace if debug is enabled. See JAMES-1257
-                            if (isDebug) {
+                            if (configuration.isDebug()) {
                                 log(me.getMessage(), me.getCause());
                             } else {
                                 log(me.getMessage());
@@ -868,7 +683,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
                     }
 
                     if (sfe.getValidUnsentAddresses() != null && sfe.getValidUnsentAddresses().length > 0) {
-                        if (isDebug)
+                        if (configuration.isDebug())
                             log("Send failed, " + sfe.getValidUnsentAddresses().length + " valid addresses remain, continuing with any other servers");
                         lastError = sfe;
                     } else {
@@ -967,7 +782,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
             }
 
             // log the original set of intended recipients
-            if (isDebug)
+            if (configuration.isDebug())
                 log("Recipients: " + recipients);
 
             if (sfe.getInvalidAddresses() != null) {
@@ -987,7 +802,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
                     // Set the recipients for the mail
                     mail.setRecipients(recipients);
 
-                    if (isDebug)
+                    if (configuration.isDebug())
                         log("Invalid recipients: " + recipients);
                     deleteMessage = failMessage(mail, sfe, true);
                 }
@@ -1009,7 +824,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
                     }
                     // Set the recipients for the mail
                     mail.setRecipients(recipients);
-                    if (isDebug)
+                    if (configuration.isDebug())
                         log("Unsent recipients: " + recipients);
                     if (sfe.getClass().getName().endsWith(".SMTPSendFailedException")) {
                         int returnCode = (Integer) invokeGetter(sfe, "getReturnCode");
@@ -1141,7 +956,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
      * JavaMail 1.3.2.
      */
     private void logSendFailedException(SendFailedException sfe) {
-        if (isDebug) {
+        if (configuration.isDebug()) {
             MessagingException me = sfe;
             if (me.getClass().getName().endsWith(".SMTPSendFailedException")) {
                 try {
@@ -1247,7 +1062,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 
         logBuffer.append(": ");
         out.print(logBuffer.toString());
-        if (isDebug)
+        if (configuration.isDebug())
             ex.printStackTrace(out);
         log(sout.toString());
         if (!permanent) {
@@ -1264,7 +1079,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
                 // Something strange was happen with the errorMessage..
             }
 
-            if (retries < maxRetries) {
+            if (retries < configuration.getMaxRetries()) {
                 logBuffer = new StringBuilder(128).append("Storing message ").append(mail.getName()).append(" into outgoing after ").append(retries).append(" retries");
                 log(logBuffer.toString());
                 ++retries;
@@ -1282,7 +1097,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
             return true;
         }
 
-        if (bounceProcessor != null) {
+        if (configuration.getBounceProcessor() != null) {
             // do the new DSN bounce
             // setting attributes for DSN mailet
             String cause;
@@ -1292,7 +1107,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
                 cause = ex.getMessage();
             }
             mail.setAttribute("delivery-error", cause);
-            mail.setState(bounceProcessor);
+            mail.setState(configuration.getBounceProcessor());
             // re-insert the mail into the spool for getting it passed to the
             // dsn-processor
             MailetContext mc = getMailetContext();
@@ -1330,7 +1145,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
         PrintWriter out = new PrintWriter(sout, true);
         String machine;
         try {
-            machine = heloNameProvider.getHeloName();
+            machine = configuration.getHeloNameProvider().getHeloName();
 
         } catch (Exception e) {
             machine = "[address unknown]";

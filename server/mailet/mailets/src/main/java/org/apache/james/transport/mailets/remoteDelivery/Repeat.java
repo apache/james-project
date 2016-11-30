@@ -28,7 +28,7 @@ import com.google.common.collect.Iterables;
 public class Repeat {
 
     public static <T> List<T> repeat(T element, int times) {
-        Preconditions.checkArgument(times > 0, "Times argument should be strictly positive");
+        Preconditions.checkArgument(times >= 0, "Times argument should be strictly positive");
         return ImmutableList.copyOf(
             Iterables.limit(
                 Iterables.cycle(element), times));

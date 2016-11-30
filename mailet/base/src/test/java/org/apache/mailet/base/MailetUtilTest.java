@@ -20,6 +20,7 @@
 package org.apache.mailet.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.guava.api.Assertions.assertThat;
 
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Test;
@@ -27,6 +28,7 @@ import org.junit.Test;
 public class MailetUtilTest {
 
     private static final String A_PARAMETER = "aParameter";
+    public static final String DEFAULT_VALUE = "default";
 
     @Test
     public void getInitParameterShouldReturnTrueWhenIsValueTrueLowerCase() {
@@ -77,17 +79,16 @@ public class MailetUtilTest {
     }
 
     @Test
-    public void getInitParameterShouldReturnDefaultValueWhenNull() {
+    public void getInitParameterShouldReturnAbsentWhenNull() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .build();
-        assertThat(MailetUtil.getInitParameter(mailetConfig, A_PARAMETER, false)).isFalse();
-        assertThat(MailetUtil.getInitParameter(mailetConfig, A_PARAMETER, true)).isTrue();
+        assertThat(MailetUtil.getInitParameter(mailetConfig, A_PARAMETER)).isAbsent();
     }
 
     private boolean getParameterValued(String value, boolean defaultValue) {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .setProperty(A_PARAMETER, value)
             .build();
-        return MailetUtil.getInitParameter(mailetConfig, A_PARAMETER, defaultValue);
+        return MailetUtil.getInitParameter(mailetConfig, A_PARAMETER).or(defaultValue);
     }
 }

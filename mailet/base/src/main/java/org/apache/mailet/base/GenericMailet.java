@@ -79,7 +79,7 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
         if (config == null) {
             throw new NullPointerException("Mailet configuration must be set before getInitParameter is called.");
         }
-        return MailetUtil.getInitParameter(config, name, defaultValue);
+        return MailetUtil.getInitParameter(config, name).or(defaultValue);
     }
 
     /**

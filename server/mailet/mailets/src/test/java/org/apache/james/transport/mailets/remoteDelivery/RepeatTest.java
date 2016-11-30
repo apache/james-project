@@ -39,10 +39,8 @@ public class RepeatTest {
     }
 
     @Test
-    public void repeatShouldThrowOnZeroTimes() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        Repeat.repeat(new Object(), 0);
+    public void repeatShouldReturnEmptyListOnZeroTimes() {
+        assertThat(Repeat.repeat(new Object(), 0)).isEmpty();
     }
 
     @Test
