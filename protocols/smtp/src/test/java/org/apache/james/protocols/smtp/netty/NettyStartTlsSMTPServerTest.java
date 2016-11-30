@@ -18,8 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.netty;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -88,10 +87,10 @@ public class NettyStartTlsSMTPServerTest {
             
             SMTPSClient client = createClient();
             client.connect(address.getAddress().getHostAddress(), address.getPort());
-            assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).isTrue();
             
             client.sendCommand("EHLO localhost");
-            assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).isTrue();
             
             boolean startTLSAnnounced = false;
             for (String reply: client.getReplyStrings()) {
@@ -100,16 +99,15 @@ public class NettyStartTlsSMTPServerTest {
                     break;
                 }
             }
-            assertTrue(startTLSAnnounced);
-            
-            assertTrue(client.execTLS());
+            assertThat(startTLSAnnounced).isTrue();
+            assertThat(client.execTLS()).isTrue();
             
             client.quit();
-            assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode()))
+                .as("Reply="+ client.getReplyString())
+                .isTrue();
             
             client.disconnect();
-
-
         } finally {
             if (server != null) {
                 server.unbind();
@@ -156,11 +154,7 @@ public class NettyStartTlsSMTPServerTest {
             transport.connect(new Socket(address.getHostName(), address.getPort()));
             transport.sendMessage(message, rcpts);
             
-           
-            assertEquals(1, hook.getQueued().size());
-            
-
-
+            assertThat(hook.getQueued()).hasSize(1);
         } finally {
             if (server != null) {
                 server.unbind();

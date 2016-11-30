@@ -39,17 +39,6 @@
             <artifactId>protocols-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-net</groupId>
-            <artifactId>commons-net</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.james.protocols</groupId>
             <artifactId>protocols-api</artifactId>
             <scope>test</scope>
@@ -61,6 +50,16 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
@@ -68,6 +67,12 @@
         <dependency>
             <groupId>javax.mail</groupId>
             <artifactId>mail</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj-1.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
