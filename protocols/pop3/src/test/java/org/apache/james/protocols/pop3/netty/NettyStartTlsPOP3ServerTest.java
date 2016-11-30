@@ -23,14 +23,18 @@ import java.net.InetSocketAddress;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
+import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.pop3.AbstractStartTlsPOP3ServerTest;
+import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
+import org.jboss.netty.handler.codec.frame.Delimiters;
 
 public class NettyStartTlsPOP3ServerTest extends AbstractStartTlsPOP3ServerTest{
 
     @Override
     protected ProtocolServer createServer(Protocol protocol, InetSocketAddress address, Encryption enc) {
-        NettyServer server = new NettyServer(protocol, enc);
+        NettyServer server = new NettyServer(protocol, enc,
+                new DelimiterBasedFrameDecoder(AbstractChannelPipelineFactory.MAX_LINE_LENGTH, false, Delimiters.lineDelimiter()));
         server.setListenAddresses(address);
         
         return server;
