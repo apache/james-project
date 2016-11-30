@@ -97,11 +97,8 @@ public abstract class AbstractStartTlsSMTPServerTest {
             
             assertTrue(client.execTLS());
             
-            // TODO: Add back once commons-net 3.1.0 was released.
-            // See: NET-421
-            //
-            //client.quit();
-            //assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            client.quit();
+            assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
             client.disconnect();
 
