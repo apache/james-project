@@ -56,9 +56,7 @@ public class LocalDelivery extends GenericMailet {
                          @Named("mailboxmanager") MailboxManager mailboxManager, DomainList domainList) {
         this.usersRepository = usersRepository;
         this.mailboxManager = mailboxManager;
-        this.recipientRewriteTable = new RecipientRewriteTable();
-        recipientRewriteTable.setDomainList(domainList);
-        recipientRewriteTable.setRecipientRewriteTable(rrt);
+        this.recipientRewriteTable = new RecipientRewriteTable(rrt, domainList);
     }
 
     public void service(Mail mail) throws MessagingException {

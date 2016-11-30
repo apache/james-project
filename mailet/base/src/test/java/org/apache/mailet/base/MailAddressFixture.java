@@ -27,10 +27,12 @@ import com.google.common.base.Throwables;
 
 public class MailAddressFixture {
 
-
+    public static final String JAMES_LOCAL = "localhost";
     public static final String JAMES_APACHE_ORG = "james.apache.org";
     public static final String JAMES2_APACHE_ORG = "james2.apache.org";
 
+    public static final MailAddress ANY_AT_LOCAL = createMailAddress("any@" + JAMES_LOCAL);
+    public static final MailAddress OTHER_AT_LOCAL = createMailAddress("other@" + JAMES_LOCAL);
     public static final MailAddress ANY_AT_JAMES = createMailAddress("any@" + JAMES_APACHE_ORG);
     public static final MailAddress OTHER_AT_JAMES = createMailAddress("other@" + JAMES_APACHE_ORG);
     public static final MailAddress ANY_AT_JAMES2 = createMailAddress("any@" + JAMES2_APACHE_ORG);

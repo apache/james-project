@@ -19,19 +19,16 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import javax.inject.Inject;
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.rrt.api.RecipientRewriteTable;
-import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
-import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.mailet.MailAddress;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMailet;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Receives a Mail from JamesSpoolManager and takes care of delivery of the
@@ -49,65 +46,43 @@ import org.apache.mailet.MailAddress;
  * @deprecated use org.apache.james.transport.mailets.RecipientRewriteTable
  */
 @Deprecated
-public class UsersRepositoryAliasingForwarding extends AbstractRecipientRewriteTableMailet {
+public class UsersRepositoryAliasingForwarding extends GenericMailet {
+    private final UsersRepository usersRepository;
+    private final DomainList domainList;
+    private RecipientRewriteTableProcessor processor;
 
-    /**
-     * The user repository for this mail server. Contains all the users with
-     * inboxes on this server.
-     */
-    private UsersRepository usersRepository;
+    @Inject
+    public UsersRepositoryAliasingForwarding(UsersRepository usersRepository, DomainList domainList) {
+        this.usersRepository = usersRepository;
+        this.domainList = domainList;
+    }
 
-    /**
-     * Return a string describing this mailet.
-     * 
-     * @return a string describing this mailet
-     */
-    public String getMailetInfo() {
-        return "Local User Aliasing and Forwarding Mailet";
+    @Override
+    public void init() throws MessagingException {
+        if (usersRepository instanceof RecipientRewriteTable) {
+            RecipientRewriteTable virtualTableStore = (RecipientRewriteTable) usersRepository;
+            processor = new RecipientRewriteTableProcessor(virtualTableStore, domainList, getMailetContext());
+        } else {
+            throw new MessagingException("The user repository is not RecipientRewriteTable");
+        }
     }
 
     @Inject
-    public void setUsersRepository(UsersRepository usersRepository) {
-        this.usersRepository = usersRepository;
+    public final void setProcessor(RecipientRewriteTableProcessor processor) {
+        this.processor = processor;
     }
 
-    /**
-     * Return null when the mail should be GHOSTed, the username string when it
-     * should be changed due to the ignoreUser configuration.
-     * 
-     * @param sender
-     * @param recipient
-     * @param message
-     * @throws MessagingException
-     */
-    public Collection<MailAddress> processMail(MailAddress sender, MailAddress recipient, MimeMessage message) throws MessagingException {
-        if (recipient == null) {
-            throw new IllegalArgumentException("Recipient for mail to be spooled cannot be null.");
-        }
-        if (message == null) {
-            throw new IllegalArgumentException("Mail message to be spooled cannot be null.");
-        }
+    @Override
+    public void service(Mail mail) throws MessagingException {
+        Preconditions.checkNotNull(mail);
+        Preconditions.checkNotNull(mail.getMessage());
+        Preconditions.checkNotNull(processor);
 
-        if (usersRepository instanceof RecipientRewriteTable) {
-            Mappings mappings;
-            try {
-                mappings = ((RecipientRewriteTable) usersRepository).getMappings(recipient.getLocalPart(), recipient.getDomain());
-            } catch (ErrorMappingException e) {
-                String errorBuffer = "A problem as occoured trying to alias and forward user " + recipient + ": " + e.getMessage();
-                throw new MessagingException(errorBuffer);
-            } catch (RecipientRewriteTableException e) {
-                String errorBuffer = "A problem as occoured trying to alias and forward user " + recipient + ": " + e.getMessage();
-                throw new MessagingException(errorBuffer);
-            }
+        processor.processMail(mail);
+    }
 
-            if (mappings != null) {
-                return handleMappings(mappings, sender, recipient, message);
-            }
-        }
-        ArrayList<MailAddress> ret = new ArrayList<MailAddress>();
-        ret.add(recipient);
-        return ret;
-
+    public String getMailetInfo() {
+        return "Local User Aliasing and Forwarding Mailet";
     }
 
 }
