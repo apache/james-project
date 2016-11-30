@@ -19,12 +19,17 @@
 
 package org.apache.james.managesieveserver.netty;
 
+import static org.jboss.netty.channel.Channels.pipeline;
+
+import javax.net.ssl.SSLEngine;
+
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.ChannelGroupHandler;
 import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
+import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
@@ -39,10 +44,6 @@ import org.jboss.netty.handler.stream.ChunkedWriteHandler;
 import org.jboss.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.net.ssl.SSLEngine;
-
-import static org.jboss.netty.channel.Channels.pipeline;
 
 public class ManageSieveServer extends AbstractConfigurableAsyncServer implements ManageSieveServerMBean {
 
@@ -114,7 +115,7 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
                 // Add the text line decoder which limit the max line length,
                 // don't strip the delimiter and use CRLF as delimiter
                 // Use a SwitchableDelimiterBasedFrameDecoder, see JAMES-1436
-                pipeline.addLast(FRAMER, new DelimiterBasedFrameDecoder(maxLineLength, false, Delimiters.lineDelimiter()));
+                pipeline.addLast(FRAMER, createFrameHandler());
                 pipeline.addLast(CONNECTION_COUNT_HANDLER, getConnectionCountHandler());
                 pipeline.addLast(CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
 
@@ -135,5 +136,10 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     @Override
     public String getServiceType() {
         return "Manage Sieve Service";
+    }
+
+    @Override
+    protected ChannelHandler createFrameHandler() {
+        return new DelimiterBasedFrameDecoder(maxLineLength, false, Delimiters.lineDelimiter());
     }
 }

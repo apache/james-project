@@ -13,7 +13,10 @@ public class NettyLMTPSServerTest extends AbstractLMTPSServerTest{
 
     @Override
     protected ProtocolServer createServer(Protocol protocol, InetSocketAddress address) {
-        NettyServer server =  new NettyServer(protocol, Encryption.createTls(BogusSslContextFactory.getServerContext()));
+        NettyServer server =  NettyServer.builder()
+                .protocol(protocol)
+                .secure(Encryption.createTls(BogusSslContextFactory.getServerContext()))
+                .build();
         server.setListenAddresses(address);
         return server;
     }

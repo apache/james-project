@@ -35,6 +35,7 @@ import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.ChannelGroupHandler;
 import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
+import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
@@ -139,7 +140,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                 // Add the text line decoder which limit the max line length,
                 // don't strip the delimiter and use CRLF as delimiter
                 // Use a SwitchableDelimiterBasedFrameDecoder, see JAMES-1436
-                pipeline.addLast(FRAMER, new SwitchableDelimiterBasedFrameDecoder(maxLineLength, false, Delimiters.lineDelimiter()));
+                pipeline.addLast(FRAMER, createFrameHandler());
                
                 Encryption secure = getEncryption();
                 if (secure != null && !secure.isStartTLS()) {
@@ -190,6 +191,11 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
      */
     protected OneToOneEncoder createEncoder() {
         return null;
+    }
+
+    @Override
+    protected ChannelHandler createFrameHandler() {
+        return new SwitchableDelimiterBasedFrameDecoder(maxLineLength, false, Delimiters.lineDelimiter());
     }
 
 }

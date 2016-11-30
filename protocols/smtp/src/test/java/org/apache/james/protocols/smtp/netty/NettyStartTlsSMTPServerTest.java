@@ -42,11 +42,15 @@ import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 import org.apache.james.protocols.api.utils.MockLogger;
 import org.apache.james.protocols.api.utils.TestUtils;
+import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.smtp.SMTPConfigurationImpl;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPProtocolHandlerChain;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
+import org.assertj.core.api.AssertDelegateTarget;
+import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
+import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.junit.After;
 import org.junit.Test;
 
@@ -65,7 +69,11 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     private ProtocolServer createServer(Protocol protocol, InetSocketAddress address, Encryption enc) {
-        NettyServer server = new NettyServer(protocol, enc);
+        NettyServer server = NettyServer.builder()
+                .protocol(protocol)
+                .secure(enc)
+                .frameHandler(new DelimiterBasedFrameDecoder(AbstractChannelPipelineFactory.MAX_LINE_LENGTH, false, Delimiters.lineDelimiter()))
+                .build();
         server.setListenAddresses(address);
         return server;
     }
@@ -125,19 +133,29 @@ public class NettyStartTlsSMTPServerTest {
         client.connect(address.getAddress().getHostAddress(), address.getPort());
         client.sendCommand("EHLO localhost");
 
-        assertThat(isStartTLSAnnounced(client)).isTrue();
+        assertThat(new StartTLSAssert(client)).isStartTLSAnnounced();
 
         client.quit();
         client.disconnect();
     }
 
-    private boolean isStartTLSAnnounced(SMTPSClient client) {
-        for (String reply: client.getReplyStrings()) {
-            if (reply.toUpperCase(Locale.UK).endsWith("STARTTLS")) {
-                return true;
-            }
+    private static class StartTLSAssert implements AssertDelegateTarget {
+
+        private final SMTPSClient client;
+
+        public StartTLSAssert(SMTPSClient client) {
+            this.client = client;
+            
         }
-        return false;
+
+        public boolean isStartTLSAnnounced() {
+            for (String reply: client.getReplyStrings()) {
+                if (reply.toUpperCase(Locale.UK).endsWith("STARTTLS")) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     @Test

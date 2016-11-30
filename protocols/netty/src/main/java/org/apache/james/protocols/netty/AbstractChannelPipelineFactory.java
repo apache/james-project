@@ -20,6 +20,7 @@ package org.apache.james.protocols.netty;
 
 import static org.jboss.netty.channel.Channels.pipeline;
 
+import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
@@ -45,19 +46,20 @@ public abstract class AbstractChannelPipelineFactory implements ChannelPipelineF
     private final ChannelGroupHandler groupHandler;
 	private final int timeout;
     private final ExecutionHandler eHandler;
+    private final ChannelHandler frameHandler;
     public AbstractChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp, ChannelGroup channels) {
-        this(timeout, maxConnections, maxConnectsPerIp, channels, null);
+        this(timeout, maxConnections, maxConnectsPerIp, channels, null, new DelimiterBasedFrameDecoder(MAX_LINE_LENGTH, false, Delimiters.lineDelimiter()));
     }
     
-    public AbstractChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp, ChannelGroup channels, ExecutionHandler eHandler) {
+    public AbstractChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp, ChannelGroup channels, ExecutionHandler eHandler,
+            ChannelHandler frameHandler) {
         this.connectionLimitHandler = new ConnectionLimitUpstreamHandler(maxConnections);
         this.connectionPerIpLimitHandler = new ConnectionPerIpLimitUpstreamHandler(maxConnectsPerIp);
         this.groupHandler = new ChannelGroupHandler(channels);
         this.timeout = timeout;
         this.eHandler = eHandler;
+        this.frameHandler = frameHandler;
     }
-    
-    
     
     
     /**
@@ -74,7 +76,7 @@ public abstract class AbstractChannelPipelineFactory implements ChannelPipelineF
 
         
         // Add the text line decoder which limit the max line length, don't strip the delimiter and use CRLF as delimiter
-        pipeline.addLast(HandlerConstants.FRAMER, new DelimiterBasedFrameDecoder(MAX_LINE_LENGTH, false, Delimiters.lineDelimiter()));
+        pipeline.addLast(HandlerConstants.FRAMER, frameHandler);
        
         // Add the ChunkedWriteHandler to be able to write ChunkInput
         pipeline.addLast(HandlerConstants.CHUNK_HANDLER, new ChunkedWriteHandler());
@@ -89,8 +91,6 @@ public abstract class AbstractChannelPipelineFactory implements ChannelPipelineF
 
         return pipeline;
     }
-
-
 
     
     /**
