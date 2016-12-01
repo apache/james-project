@@ -136,14 +136,7 @@ public class DeliveryRunnable implements Runnable {
             LifecycleUtil.dispose(mail);
         } else {
             // Something happened that will delay delivery. Store it back in the retry repository.
-            int retries = 0;
-            try {
-                retries = Integer.parseInt(mail.getErrorMessage());
-            } catch (NumberFormatException e) {
-                // Something strange was happen with the errorMessage..
-            }
-
-            long delay = getNextDelay(retries);
+            long delay = getNextDelay(DeliveryRetriesHelper.retrieveRetries(mail));
 
             if (configuration.isUsePriority()) {
                 // Use lowest priority for retries. See JAMES-1311
@@ -153,7 +146,6 @@ public class DeliveryRunnable implements Runnable {
             LifecycleUtil.dispose(mail);
         }
     }
-
 
     /**
      * We can assume that the recipients of this message are all going to the
@@ -558,12 +550,7 @@ public class DeliveryRunnable implements Runnable {
         logger.info("No mail server found for: " + host);
         String exceptionBuffer = "There are no DNS entries for the hostname " + host + ".  I cannot determine where to send this message.";
 
-        int retry = 0;
-        try {
-            retry = Integer.parseInt(mail.getErrorMessage());
-        } catch (NumberFormatException e) {
-            // Unable to parse retryCount
-        }
+        int retry = DeliveryRetriesHelper.retrieveRetries(mail);
         if (retry == 0 || retry > configuration.getDnsProblemRetry()) {
             // The domain has no dns entry.. Return a permanent error
             return failMessage(mail, new MessagingException(exceptionBuffer), true);
@@ -647,8 +634,6 @@ public class DeliveryRunnable implements Runnable {
     }
 
     /**
-     * Insert the method's description here.
-     *
      * @param mail      org.apache.james.core.MailImpl
      * @param ex        javax.mail.MessagingException
      * @param permanent
@@ -659,21 +644,15 @@ public class DeliveryRunnable implements Runnable {
         if (!permanent) {
             if (!mail.getState().equals(Mail.ERROR)) {
                 mail.setState(Mail.ERROR);
-                mail.setErrorMessage("0");
+                DeliveryRetriesHelper.initRetries(mail);
                 mail.setLastUpdated(new Date());
             }
 
-            int retries = 0;
-            try {
-                retries = Integer.parseInt(mail.getErrorMessage());
-            } catch (NumberFormatException e) {
-                // Something strange was happen with the errorMessage..
-            }
+            int retries = DeliveryRetriesHelper.retrieveRetries(mail);
 
             if (retries < configuration.getMaxRetries()) {
                 logger.debug("Storing message " + mail.getName() + " into outgoing after " + retries + " retries");
-                ++retries;
-                mail.setErrorMessage(retries + "");
+                DeliveryRetriesHelper.incrementRetries(mail);
                 mail.setLastUpdated(new Date());
                 return false;
             } else {
