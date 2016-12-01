@@ -44,12 +44,12 @@ import org.apache.james.protocols.api.utils.MockLogger;
 import org.apache.james.protocols.api.utils.TestUtils;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.NettyServer;
+import org.apache.james.protocols.smtp.AllButStartTlsDelimiterChannelHandler;
 import org.apache.james.protocols.smtp.SMTPConfigurationImpl;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPProtocolHandlerChain;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.assertj.core.api.AssertDelegateTarget;
-import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.junit.After;
 import org.junit.Test;
@@ -72,7 +72,7 @@ public class NettyStartTlsSMTPServerTest {
         NettyServer server = NettyServer.builder()
                 .protocol(protocol)
                 .secure(enc)
-                .frameHandler(new DelimiterBasedFrameDecoder(AbstractChannelPipelineFactory.MAX_LINE_LENGTH, false, Delimiters.lineDelimiter()))
+                .frameHandler(new AllButStartTlsDelimiterChannelHandler(AbstractChannelPipelineFactory.MAX_LINE_LENGTH, false, Delimiters.lineDelimiter()))
                 .build();
         server.setListenAddresses(address);
         return server;
@@ -173,6 +173,20 @@ public class NettyStartTlsSMTPServerTest {
 
         client.quit();
         client.disconnect();
+    }
+
+    @Test
+    public void startTlsShouldFailWhenFollowedByInjectedCommand() throws Exception {
+        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
+        ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), address, Encryption.createStartTls(BogusSslContextFactory.getServerContext()));  
+        server.bind();
+
+        SMTPSClient client = createClient();
+        client.connect(address.getAddress().getHostAddress(), address.getPort());
+        client.sendCommand("EHLO localhost");
+
+        client.sendCommand("STARTTLS\r\nRSET\r\n");
+        assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).isFalse();
     }
 
     @Test
