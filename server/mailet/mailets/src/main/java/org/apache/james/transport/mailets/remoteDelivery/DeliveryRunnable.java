@@ -186,20 +186,42 @@ public class DeliveryRunnable implements Runnable {
                 outgoingMailsMetric.increment();
                 break;
             case TEMPORARY_FAILURE:
-                // TODO move the incrementing of retries here instead of in fail message
-                // Something happened that will delay delivery. Store it back in the retry repository.
-                long delay = getNextDelay(DeliveryRetriesHelper.retrieveRetries(mail));
-
-                if (configuration.isUsePriority()) {
-                    // Use lowest priority for retries. See JAMES-1311
-                    mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.LOW_PRIORITY);
-                }
-                queue.enQueue(mail, delay, TimeUnit.MILLISECONDS);
+                handleTemporaryFailure(mail, executionResult);
                 break;
             case PERMANENT_FAILURE:
-                // TODO move boucing logic here
+                bounce(mail, executionResult.getException().orNull());
                 break;
         }
+    }
+
+    private void handleTemporaryFailure(Mail mail, ExecutionResult executionResult) throws MailQueue.MailQueueException {
+        if (!mail.getState().equals(Mail.ERROR)) {
+            mail.setState(Mail.ERROR);
+            DeliveryRetriesHelper.initRetries(mail);
+            mail.setLastUpdated(new Date());
+        }
+        int retries = DeliveryRetriesHelper.retrieveRetries(mail);
+
+        if (retries < configuration.getMaxRetries()) {
+            reAttemptDelivery(mail, retries);
+        } else {
+            logger.debug("Bouncing message " + mail.getName() + " after " + retries + " retries");
+            bounce(mail, new Exception("Too many retries failure. Bouncing after " + retries + " retries.", executionResult.getException().orNull()));
+        }
+    }
+
+    private void reAttemptDelivery(Mail mail, int retries) throws MailQueue.MailQueueException {
+        logger.debug("Storing message " + mail.getName() + " into outgoing after " + retries + " retries");
+        DeliveryRetriesHelper.incrementRetries(mail);
+        mail.setLastUpdated(new Date());
+        // Something happened that will delay delivery. Store it back in the retry repository.
+        long delay = getNextDelay(DeliveryRetriesHelper.retrieveRetries(mail));
+
+        if (configuration.isUsePriority()) {
+            // Use lowest priority for retries. See JAMES-1311
+            mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.LOW_PRIORITY);
+        }
+        queue.enQueue(mail, delay, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -215,14 +237,7 @@ public class DeliveryRunnable implements Runnable {
      */
     private ExecutionResult deliver(Mail mail, Session session) {
         try {
-            return Optional.fromNullable(tryDeliver(mail, session))
-                .or(failMessage(mail, new MessagingException("No mail server(s) available at this time."), false));
-            /*
-             * If we get here, we've exhausted the loop of servers without sending
-             * the message or throwing an exception. One case where this might
-             * happen is if we get a MessagingException on each transport.connect(),
-             * e.g., if there is only one server and we get a connect exception.
-             */
+            return tryDeliver(mail, session);
         } catch (SendFailedException sfe) {
             return handleSenderFailedException(mail, sfe);
         } catch (MessagingException ex) {
@@ -234,11 +249,15 @@ public class DeliveryRunnable implements Runnable {
 
             // We check whether this is a 5xx error message, which indicates a permanent failure (like account doesn't exist
             // or mailbox is full or domain is setup wrong). We fail permanently if this was a 5xx error
-            return failMessage(mail, ex, ('5' == ex.getMessage().charAt(0)));
+
+            boolean isPermanent = '5' == ex.getMessage().charAt(0);
+            logger.debug(messageComposer.composeFailLogMessage(mail, ex, isPermanent));
+            return onFailure(isPermanent, ex);
         } catch (Exception ex) {
             logger.error("Generic exception = permanent failure: " + ex.getMessage(), ex);
             // Generic exception = permanent failure
-            return failMessage(mail, ex, PERMANENT_FAILURE);
+            logger.debug(messageComposer.composeFailLogMessage(mail, ex, PERMANENT_FAILURE));
+            return permanentFailure(ex);
         }
     }
 
@@ -301,7 +320,6 @@ public class DeliveryRunnable implements Runnable {
     }
 
     private boolean tryDeliveryToHost(Mail mail, Session session, MimeMessage message, InternetAddress[] addr, HostAddress outgoingMailServer) throws MessagingException {
-        boolean success = false;
         Properties props = session.getProperties();
         if (mail.getSender() == null) {
             props.put("mail.smtp.from", "<>");
@@ -325,16 +343,15 @@ public class DeliveryRunnable implements Runnable {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
             transport.setLocalHost( props.getProperty("mail.smtp.localhost", configuration.getHeloNameProvider().getHeloName()) );
             if (!connect(outgoingMailServer, transport)) {
-                success = false;
+                return false;
             }
             transport.sendMessage(adaptToTransport(message, transport), addr);
-            success = true;
             logger.debug("Mail (" + mail.getName() + ")  sent successfully to " + outgoingMailServer.getHostName() +
                 " at " + outgoingMailServer.getHost() + " from " + props.get("mail.smtp.from") + " for " + mail.getRecipients());
+            return true;
         } finally {
             closeTransport(mail, outgoingMailServer, transport);
         }
-        return success;
     }
 
     private MessagingException handleMessagingException(Mail mail, MessagingException me) throws MessagingException {
@@ -440,7 +457,8 @@ public class DeliveryRunnable implements Runnable {
 
                 if (configuration.isDebug())
                     logger.debug("Invalid recipients: " + recipients);
-                deleteMessage = failMessage(mail, sfe, true);
+                logger.debug(messageComposer.composeFailLogMessage(mail, sfe, true));
+                deleteMessage = permanentFailure(sfe);
             }
         }
 
@@ -462,11 +480,15 @@ public class DeliveryRunnable implements Runnable {
                 mail.setRecipients(recipients);
                 if (configuration.isDebug())
                     logger.debug("Unsent recipients: " + recipients);
+
                 if (sfe.getClass().getName().endsWith(".SMTPSendFailedException")) {
                     int returnCode = (Integer) invokeGetter(sfe, "getReturnCode");
-                    deleteMessage = failMessage(mail, sfe, returnCode >= 500 && returnCode <= 599);
+                    boolean isPermanent = returnCode >= 500 && returnCode <= 599;
+                    logger.debug(messageComposer.composeFailLogMessage(mail, sfe, isPermanent));
+                    deleteMessage = onFailure(isPermanent, sfe);
                 } else {
-                    deleteMessage = failMessage(mail, sfe, false);
+                    logger.debug(messageComposer.composeFailLogMessage(mail, sfe, false));
+                    deleteMessage = temporaryFailure(sfe);
                 }
             }
         }
@@ -593,11 +615,9 @@ public class DeliveryRunnable implements Runnable {
     }
 
     private ExecutionResult handleTemporaryResolutionException(Mail mail, String host) {
-        logger.info("Temporary problem looking up mail server for host: " + host);
-        // temporary problems
-        return failMessage(mail,
-            new MessagingException("Temporary problem looking up mail server for host: " + host + ".  I cannot determine where to send this message."),
-            false);
+        MessagingException messagingException = new MessagingException("Temporary problem looking up mail server for host: " + host + ".  I cannot determine where to send this message.");
+        logger.debug(messageComposer.composeFailLogMessage(mail, messagingException, false));
+        return temporaryFailure(messagingException);
     }
 
     private ExecutionResult handleNoTargetServer(Mail mail, String host) {
@@ -607,9 +627,13 @@ public class DeliveryRunnable implements Runnable {
         int retry = DeliveryRetriesHelper.retrieveRetries(mail);
         if (retry == 0 || retry > configuration.getDnsProblemRetry()) {
             // The domain has no dns entry.. Return a permanent error
-            return failMessage(mail, new MessagingException(exceptionBuffer), true);
+            MessagingException messagingException = new MessagingException(exceptionBuffer);
+            logger.debug(messageComposer.composeFailLogMessage(mail, messagingException, true));
+            return permanentFailure(messagingException);
         } else {
-            return failMessage(mail, new MessagingException(exceptionBuffer), false);
+            MessagingException messagingException = new MessagingException(exceptionBuffer);
+            logger.debug(messageComposer.composeFailLogMessage(mail, messagingException, false));
+            return temporaryFailure(messagingException);
         }
     }
 
@@ -687,41 +711,13 @@ public class DeliveryRunnable implements Runnable {
         }
     }
 
-    /**
-     * @param mail      org.apache.james.core.MailImpl
-     * @param ex        javax.mail.MessagingException
-     * @param permanent
-     * @return boolean Whether the message failed fully and can be deleted
-     */
-    private ExecutionResult failMessage(Mail mail, Exception ex, boolean permanent) {
-        logger.debug(messageComposer.composeFailLogMessage(mail, ex, permanent));
-        if (!permanent) {
-            if (!mail.getState().equals(Mail.ERROR)) {
-                mail.setState(Mail.ERROR);
-                DeliveryRetriesHelper.initRetries(mail);
-                mail.setLastUpdated(new Date());
-            }
-
-            int retries = DeliveryRetriesHelper.retrieveRetries(mail);
-
-            if (retries < configuration.getMaxRetries()) {
-                logger.debug("Storing message " + mail.getName() + " into outgoing after " + retries + " retries");
-                DeliveryRetriesHelper.incrementRetries(mail);
-                mail.setLastUpdated(new Date());
-                return temporaryFailure();
-            } else {
-                logger.debug("Bouncing message " + mail.getName() + " after " + retries + " retries");
-            }
-        }
-
+    private void bounce(Mail mail, Exception ex) {
         if (mail.getSender() == null) {
             logger.debug("Null Sender: no bounce will be generated for " + mail.getName());
-            return permanentFailure(ex);
         }
 
         if (configuration.getBounceProcessor() != null) {
-            // do the new DSN bounce
-            // setting attributes for DSN mailet
+            // do the new DSN bounce setting attributes for DSN mailet
             mail.setAttribute("delivery-error", messageComposer.getErrorMsg(ex));
             mail.setState(configuration.getBounceProcessor());
             // re-insert the mail into the spool for getting it passed to the dsn-processor
@@ -732,14 +728,12 @@ public class DeliveryRunnable implements Runnable {
                 logger.debug("Exception re-inserting failed mail: ", e);
             }
         } else {
-            // do an old style bounce
-            bounce(mail, ex);
+            bounceWithMailetContext(mail, ex);
         }
-        return permanentFailure(ex);
     }
 
 
-    private void bounce(Mail mail, Exception ex) {
+    private void bounceWithMailetContext(Mail mail, Exception ex) {
         logger.debug("Sending failure message " + mail.getName());
         try {
             mailetContext.bounce(mail, messageComposer.composeForBounce(mail, ex));
