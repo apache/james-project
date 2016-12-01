@@ -36,8 +36,6 @@ import javax.mail.SendFailedException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.internet.MimePart;
 import javax.mail.internet.ParseException;
 
 import org.apache.james.dnsservice.api.DNSService;
@@ -69,6 +67,7 @@ public class DeliveryRunnable implements Runnable {
     private final MailetContext mailetContext;
     private final VolatileIsDestroyed volatileIsDestroyed;
     private final MessageComposer messageComposer;
+    private final Converter7Bit converter7Bit;
 
     public DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, DNSService dnsServer, Metric outgoingMailsMetric, Logger logger, MailetContext mailetContext, VolatileIsDestroyed volatileIsDestroyed) {
         this.queue = queue;
@@ -79,6 +78,7 @@ public class DeliveryRunnable implements Runnable {
         this.mailetContext = mailetContext;
         this.volatileIsDestroyed = volatileIsDestroyed;
         this.messageComposer = new MessageComposer(configuration);
+        this.converter7Bit = new Converter7Bit(mailetContext);
     }
 
     /**
@@ -486,7 +486,7 @@ public class DeliveryRunnable implements Runnable {
             // Temporarily disabled. See JAMES-638
             if (!transport.supportsExtension(BIT_MIME_8)) {
                 try {
-                    convertTo7Bit(message);
+                    converter7Bit.convertTo7Bit(message);
                 } catch (IOException e) {
                     // An error has occured during the 7bit conversion.
                     // The error is logged and the message is sent anyway.
@@ -498,7 +498,7 @@ public class DeliveryRunnable implements Runnable {
             // If the transport is not the one developed by Sun we are not sure of how it
             // handles the 8 bit mime stuff, so I convert the message to 7bit.
             try {
-                convertTo7Bit(message);
+                converter7Bit.convertTo7Bit(message);
             } catch (IOException e) {
                 logger.error("Error during the conversion to 7 bit.", e);
             }
@@ -643,37 +643,6 @@ public class DeliveryRunnable implements Runnable {
                     }
                 }
             }
-        }
-    }
-
-    /**
-     * Converts a message to 7 bit.
-     *
-     * @param part
-     */
-    private void convertTo7Bit(MimePart part) throws MessagingException, IOException {
-        if (part.isMimeType("multipart/*")) {
-            MimeMultipart parts = (MimeMultipart) part.getContent();
-            int count = parts.getCount();
-            for (int i = 0; i < count; i++) {
-                convertTo7Bit((MimePart) parts.getBodyPart(i));
-            }
-        } else if ("8bit".equals(part.getEncoding())) {
-            // The content may already be in encoded the form (likely with mail
-            // created from a
-            // stream). In that case, just changing the encoding to
-            // quoted-printable will mangle
-            // the result when this is transmitted. We must first convert the
-            // content into its
-            // native format, set it back, and only THEN set the transfer
-            // encoding to force the
-            // content to be encoded appropriately.
-
-            // if the part doesn't contain text it will be base64 encoded.
-            String contentTransferEncoding = part.isMimeType("text/*") ? "quoted-printable" : "base64";
-            part.setContent(part.getContent(), part.getContentType());
-            part.setHeader("Content-Transfer-Encoding", contentTransferEncoding);
-            part.addHeader("X-MIME-Autoconverted", "from 8bit to " + contentTransferEncoding + " by " + mailetContext.getServerInfo());
         }
     }
 
