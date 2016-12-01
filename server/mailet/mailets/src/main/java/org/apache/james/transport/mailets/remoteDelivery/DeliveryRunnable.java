@@ -113,7 +113,6 @@ public class DeliveryRunnable implements Runnable {
                         logger.error("Exception caught in RemoteDelivery.run()", e);
                         LifecycleUtil.dispose(mail);
                         queueItem.done(false);
-                        throw new MailQueue.MailQueueException("Unable to perform dequeue", e);
                     }
 
                 } catch (Throwable e) {
