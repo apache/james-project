@@ -101,10 +101,8 @@ public class DeliveryRunnable implements Runnable {
                         if (configuration.isDebug()) {
                             logger.debug(Thread.currentThread().getName() + " will process mail " + mail.getName());
                         }
-
                         attemptDelivery(session, mail);
-
-                        // Clear the object handle to make sure it recycles this object.
+                        LifecycleUtil.dispose(mail);
                         mail = null;
                         queueItem.done(true);
                     } catch (Exception e) {
@@ -131,10 +129,7 @@ public class DeliveryRunnable implements Runnable {
     }
 
     private void attemptDelivery(Session session, Mail mail) throws MailQueue.MailQueueException {
-        if (deliver(mail, session)) {
-            // Message was successfully delivered/fully failed... delete it
-            LifecycleUtil.dispose(mail);
-        } else {
+        if (!deliver(mail, session)) {
             // Something happened that will delay delivery. Store it back in the retry repository.
             long delay = getNextDelay(DeliveryRetriesHelper.retrieveRetries(mail));
 
@@ -143,7 +138,6 @@ public class DeliveryRunnable implements Runnable {
                 mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.LOW_PRIORITY);
             }
             queue.enQueue(mail, delay, TimeUnit.MILLISECONDS);
-            LifecycleUtil.dispose(mail);
         }
     }
 
