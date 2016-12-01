@@ -59,6 +59,7 @@ import com.sun.mail.smtp.SMTPTransport;
 public class DeliveryRunnable implements Runnable {
 
     public static final boolean PERMANENT_FAILURE = true;
+    public static final String BIT_MIME_8 = "8BITMIME";
     private final MailQueue queue;
     private final RemoteDeliveryConfiguration configuration;
     private final DNSService dnsServer;
@@ -407,7 +408,7 @@ public class DeliveryRunnable implements Runnable {
                         // that conversion, but it is required to be a rfc-compliant smtp server.
 
                         // Temporarily disabled. See JAMES-638
-                        if (!isSupports8bitmime(transport)) {
+                        if (!transport.supportsExtension(BIT_MIME_8)) {
                             try {
                                 convertTo7Bit(message);
                             } catch (IOException e) {
@@ -511,22 +512,6 @@ public class DeliveryRunnable implements Runnable {
             throw lastError;
         }
         return null;
-    }
-
-    private boolean isSupports8bitmime(SMTPTransport transport) {
-        boolean supports8bitmime = false;
-        try {
-            Method supportsExtension = transport.getClass().getMethod("supportsExtension", new Class[]{String.class});
-            supports8bitmime = (Boolean) supportsExtension.invoke(transport, "8BITMIME");
-        } catch (NoSuchMethodException nsme) {
-            // An SMTPAddressFailedException with no
-            // getAddress method.
-        } catch (IllegalAccessException iae) {
-        } catch (IllegalArgumentException iae) {
-        } catch (InvocationTargetException ite) {
-            // Other issues with getAddress invokation.
-        }
-        return supports8bitmime;
     }
 
     private boolean handleTemporaryResolutionException(Mail mail, String host) {
