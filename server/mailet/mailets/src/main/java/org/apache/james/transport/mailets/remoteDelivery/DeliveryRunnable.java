@@ -57,6 +57,58 @@ import com.sun.mail.smtp.SMTPTransport;
 @SuppressWarnings("deprecation")
 public class DeliveryRunnable implements Runnable {
 
+    private static ExecutionResult success() {
+        return new ExecutionResult(ExecutionState.SUCCESS, Optional.<Exception>absent());
+    }
+
+    private static ExecutionResult temporaryFailure(Exception e) {
+        return new ExecutionResult(ExecutionState.TEMPORARY_FAILURE, Optional.of(e));
+    }
+
+    private static ExecutionResult permanentFailure(Exception e) {
+        return new ExecutionResult(ExecutionState.PERMANENT_FAILURE, Optional.of(e));
+    }
+
+    private static ExecutionResult temporaryFailure() {
+        return new ExecutionResult(ExecutionState.TEMPORARY_FAILURE, Optional.<Exception>absent());
+    }
+
+    private static ExecutionResult permanentFailure() {
+        return new ExecutionResult(ExecutionState.PERMANENT_FAILURE, Optional.<Exception>absent());
+    }
+
+    private static class ExecutionResult {
+        private final ExecutionState executionState;
+        private final Optional<Exception> exception;
+
+        public ExecutionResult(ExecutionState executionState, Optional<Exception> exception) {
+            this.executionState = executionState;
+            this.exception = exception;
+        }
+
+        public ExecutionState getExecutionState() {
+            return executionState;
+        }
+
+        public Optional<Exception> getException() {
+            return exception;
+        }
+    }
+
+    private enum ExecutionState {
+        SUCCESS,
+        PERMANENT_FAILURE,
+        TEMPORARY_FAILURE
+    }
+
+    private static ExecutionResult onFailure(boolean permanent, Exception exeption) {
+        if (permanent) {
+            return permanentFailure(exeption);
+        } else {
+            return temporaryFailure(exeption);
+        }
+    }
+
     public static final boolean PERMANENT_FAILURE = true;
     public static final String BIT_MIME_8 = "8BITMIME";
     private final MailQueue queue;
@@ -128,15 +180,25 @@ public class DeliveryRunnable implements Runnable {
     }
 
     private void attemptDelivery(Session session, Mail mail) throws MailQueue.MailQueueException {
-        if (!deliver(mail, session)) {
-            // Something happened that will delay delivery. Store it back in the retry repository.
-            long delay = getNextDelay(DeliveryRetriesHelper.retrieveRetries(mail));
+        ExecutionResult executionResult = deliver(mail, session);
+        switch (executionResult.getExecutionState()) {
+            case SUCCESS:
+                outgoingMailsMetric.increment();
+                break;
+            case TEMPORARY_FAILURE:
+                // TODO move the incrementing of retries here instead of in fail message
+                // Something happened that will delay delivery. Store it back in the retry repository.
+                long delay = getNextDelay(DeliveryRetriesHelper.retrieveRetries(mail));
 
-            if (configuration.isUsePriority()) {
-                // Use lowest priority for retries. See JAMES-1311
-                mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.LOW_PRIORITY);
-            }
-            queue.enQueue(mail, delay, TimeUnit.MILLISECONDS);
+                if (configuration.isUsePriority()) {
+                    // Use lowest priority for retries. See JAMES-1311
+                    mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.LOW_PRIORITY);
+                }
+                queue.enQueue(mail, delay, TimeUnit.MILLISECONDS);
+                break;
+            case PERMANENT_FAILURE:
+                // TODO move boucing logic here
+                break;
         }
     }
 
@@ -151,7 +213,7 @@ public class DeliveryRunnable implements Runnable {
      * @return boolean Whether the delivery was successful and the message can
      *         be deleted
      */
-    private boolean deliver(Mail mail, Session session) {
+    private ExecutionResult deliver(Mail mail, Session session) {
         try {
             return Optional.fromNullable(tryDeliver(mail, session))
                 .or(failMessage(mail, new MessagingException("No mail server(s) available at this time."), false));
@@ -180,10 +242,10 @@ public class DeliveryRunnable implements Runnable {
         }
     }
 
-    private Boolean tryDeliver(Mail mail, Session session) throws MessagingException {
+    private ExecutionResult tryDeliver(Mail mail, Session session) throws MessagingException {
         if (mail.getRecipients().isEmpty()) {
             logger.info("No recipients specified... not sure how this could have happened.");
-            return true;
+            return permanentFailure(new Exception("No recipients specified for " + mail.getName() + " sent by " + mail.getSender()));
         }
         if (configuration.isDebug()) {
             logger.debug("Attempting to deliver " + mail.getName());
@@ -212,20 +274,20 @@ public class DeliveryRunnable implements Runnable {
         return doDeliver(mail, session, mail.getMessage(), convertToInetAddr(mail.getRecipients()), targetServers);
     }
 
-    private Boolean doDeliver(Mail mail, Session session, MimeMessage message, InternetAddress[] addr, Iterator<HostAddress> targetServers) throws MessagingException {
+    private ExecutionResult doDeliver(Mail mail, Session session, MimeMessage message, InternetAddress[] addr, Iterator<HostAddress> targetServers) throws MessagingException {
         MessagingException lastError = null;
 
         while (targetServers.hasNext()) {
             try {
                 if (tryDeliveryToHost(mail, session, message, addr, targetServers.next())) {
-                    return true;
+                    return success();
                 }
             } catch (SendFailedException sfe) {
                 lastError = handleSendFailException(mail, sfe);
             } catch (MessagingException me) {
                 lastError = handleMessagingException(mail, me);
             }
-        } // end while
+        }
         // If we encountered an exception while looping through,
         // throw the last MessagingException we caught. We only
         // do this if we were unable to send the message to any
@@ -235,7 +297,7 @@ public class DeliveryRunnable implements Runnable {
         if (lastError != null) {
             throw lastError;
         }
-        return null;
+        return temporaryFailure();
     }
 
     private boolean tryDeliveryToHost(Mail mail, Session session, MimeMessage message, InternetAddress[] addr, HostAddress outgoingMailServer) throws MessagingException {
@@ -269,7 +331,6 @@ public class DeliveryRunnable implements Runnable {
             success = true;
             logger.debug("Mail (" + mail.getName() + ")  sent successfully to " + outgoingMailServer.getHostName() +
                 " at " + outgoingMailServer.getHost() + " from " + props.get("mail.smtp.from") + " for " + mail.getRecipients());
-            outgoingMailsMetric.increment();
         } finally {
             closeTransport(mail, outgoingMailServer, transport);
         }
@@ -298,13 +359,13 @@ public class DeliveryRunnable implements Runnable {
         return lastError;
     }
 
-    private boolean handleSenderFailedException(Mail mail, SendFailedException sfe) {
+    private ExecutionResult handleSenderFailedException(Mail mail, SendFailedException sfe) {
         logSendFailedException(sfe);
 
         // Copy the recipients as direct modification may not be possible
         Collection<MailAddress> recipients = new ArrayList<MailAddress>(mail.getRecipients());
 
-        boolean deleteMessage = false;
+        ExecutionResult deleteMessage = temporaryFailure();
 
             /*
              * If you send a message that has multiple invalid addresses, you'll
@@ -333,7 +394,7 @@ public class DeliveryRunnable implements Runnable {
                 int returnCode = (Integer) invokeGetter(sfe, "getReturnCode");
                 // If we got an SMTPSendFailedException, use its RetCode to
                 // determine default permanent/temporary failure
-                deleteMessage = (returnCode >= 500 && returnCode <= 599);
+                deleteMessage = onFailure(returnCode >= 500 && returnCode <= 599, sfe);
             } else {
                 // Sometimes we'll get a normal SendFailedException with
                 // nested SMTPAddressFailedException, so use the latter
@@ -344,7 +405,7 @@ public class DeliveryRunnable implements Runnable {
                     me = (MessagingException) ne;
                     if (me.getClass().getName().endsWith(".SMTPAddressFailedException")) {
                         int returnCode = (Integer) invokeGetter(me, "getReturnCode");
-                        deleteMessage = (returnCode >= 500 && returnCode <= 599);
+                        deleteMessage = onFailure(returnCode >= 500 && returnCode <= 599, sfe);
                     }
                 }
             }
@@ -531,7 +592,7 @@ public class DeliveryRunnable implements Runnable {
         }
     }
 
-    private boolean handleTemporaryResolutionException(Mail mail, String host) {
+    private ExecutionResult handleTemporaryResolutionException(Mail mail, String host) {
         logger.info("Temporary problem looking up mail server for host: " + host);
         // temporary problems
         return failMessage(mail,
@@ -539,7 +600,7 @@ public class DeliveryRunnable implements Runnable {
             false);
     }
 
-    private boolean handleNoTargetServer(Mail mail, String host) {
+    private ExecutionResult handleNoTargetServer(Mail mail, String host) {
         logger.info("No mail server found for: " + host);
         String exceptionBuffer = "There are no DNS entries for the hostname " + host + ".  I cannot determine where to send this message.";
 
@@ -632,7 +693,7 @@ public class DeliveryRunnable implements Runnable {
      * @param permanent
      * @return boolean Whether the message failed fully and can be deleted
      */
-    private boolean failMessage(Mail mail, Exception ex, boolean permanent) {
+    private ExecutionResult failMessage(Mail mail, Exception ex, boolean permanent) {
         logger.debug(messageComposer.composeFailLogMessage(mail, ex, permanent));
         if (!permanent) {
             if (!mail.getState().equals(Mail.ERROR)) {
@@ -647,7 +708,7 @@ public class DeliveryRunnable implements Runnable {
                 logger.debug("Storing message " + mail.getName() + " into outgoing after " + retries + " retries");
                 DeliveryRetriesHelper.incrementRetries(mail);
                 mail.setLastUpdated(new Date());
-                return false;
+                return temporaryFailure();
             } else {
                 logger.debug("Bouncing message " + mail.getName() + " after " + retries + " retries");
             }
@@ -655,7 +716,7 @@ public class DeliveryRunnable implements Runnable {
 
         if (mail.getSender() == null) {
             logger.debug("Null Sender: no bounce will be generated for " + mail.getName());
-            return true;
+            return permanentFailure(ex);
         }
 
         if (configuration.getBounceProcessor() != null) {
@@ -674,7 +735,7 @@ public class DeliveryRunnable implements Runnable {
             // do an old style bounce
             bounce(mail, ex);
         }
-        return true;
+        return permanentFailure(ex);
     }
 
 
