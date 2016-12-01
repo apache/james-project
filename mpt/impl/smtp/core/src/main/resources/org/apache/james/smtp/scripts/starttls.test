@@ -1,0 +1,11 @@
+S: 220 mydomain.tld smtp
+
+C: ehlo yopmail.com
+S: 250.*
+S: 250-PIPELINING
+S: 250-ENHANCEDSTATUSCODES
+S: 250-8BITMIME
+S: 250 STARTTLS
+
+C: starttls
+S: 220 2.0.0 Ready to start TLS
