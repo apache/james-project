@@ -52,7 +52,7 @@ public class ForwardSmtpTest extends AbstractSimpleScriptedTestProtocol {
     public static final String PASSWORD = "secret";
 
     private final TemporaryFolder folder = new TemporaryFolder();
-    private final GenericContainer fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest")
+    private final GenericContainer<?> fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest")
             .withAffinityToContainer();
     
     @Rule
@@ -66,6 +66,7 @@ public class ForwardSmtpTest extends AbstractSimpleScriptedTestProtocol {
     }
 
     @Before
+    @SuppressWarnings("deprecation")
     public void setUp() throws Exception {
         super.setUp();
         InetAddress containerIp = InetAddresses.forString(fakeSmtp.getContainerInfo().getNetworkSettings().getIpAddress());
