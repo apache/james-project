@@ -21,6 +21,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -30,6 +31,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetException;
+import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -143,13 +145,13 @@ public class ToProcessorTest {
                 .build();
         mailet.init(mailetConfig);
 
-        Mail mail = FakeMail.builder()
-                .recipients(new MailAddress("test@james.apache.org"), new MailAddress("test2@james.apache.org"))
-                .build();
         String initialErrorMessage = "first";
-        mail.setErrorMessage(initialErrorMessage);
+        Mail mail = FakeMail.builder()
+            .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES)
+            .errorMessage(initialErrorMessage)
+            .build();
         mailet.service(mail);
 
-        verify(logger).info("Sending mail " + mail +" to error");
+        verify(logger).info(anyString());
     }
 }

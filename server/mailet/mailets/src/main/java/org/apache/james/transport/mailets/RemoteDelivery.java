@@ -20,9 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Vector;
@@ -46,6 +44,8 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
+
+import com.google.common.collect.HashMultimap;
 
 /**
  * <p>The RemoteDelivery mailet delivers messages to a remote SMTP server able to deliver or forward messages to their final
@@ -120,6 +120,8 @@ import org.slf4j.Logger;
 public class RemoteDelivery extends GenericMailet {
 
     private static final String OUTGOING_MAILS = "outgoingMails";
+    private static final boolean DEFAULT_START_THREADS = true;
+    public static final String NAME_JUNCTION = "-to-";
 
     private final DNSService dnsServer;
     private final DomainList domainList;
@@ -127,6 +129,7 @@ public class RemoteDelivery extends GenericMailet {
     private final Metric outgoingMailsMetric;
     private final Collection<Thread> workersThreads;
     private final VolatileIsDestroyed volatileIsDestroyed;
+    private final boolean startThreads;
 
     private MailQueue queue;
     private Logger logger;
@@ -134,30 +137,31 @@ public class RemoteDelivery extends GenericMailet {
 
     @Inject
     public RemoteDelivery(DNSService dnsServer, DomainList domainList, MailQueueFactory queueFactory, MetricFactory metricFactory) {
+        this(dnsServer, domainList, queueFactory, metricFactory, DEFAULT_START_THREADS);
+    }
+
+    public RemoteDelivery(DNSService dnsServer, DomainList domainList, MailQueueFactory queueFactory, MetricFactory metricFactory, boolean startThreads) {
         this.dnsServer = dnsServer;
         this.domainList = domainList;
         this.queueFactory = queueFactory;
         this.outgoingMailsMetric = metricFactory.generate(OUTGOING_MAILS);
-        this.workersThreads = new Vector<Thread>();
         this.volatileIsDestroyed = new VolatileIsDestroyed();
+        this.workersThreads = new Vector<Thread>();
+        this.startThreads = startThreads;
     }
 
-    /**
-     * Initializes all arguments based on configuration values specified in the
-     * James configuration file.
-     *
-     * @throws MessagingException on failure to initialize attributes.
-     */
     public void init() throws MessagingException {
         logger = getMailetContext().getLogger();
         configuration = new RemoteDeliveryConfiguration(getMailetConfig(), domainList);
         queue = queueFactory.getQueue(configuration.getOutGoingQueueName());
-        initDeliveryThreads();
         try {
             if (configuration.isBindUsed())
                 RemoteDeliverySocketFactory.setBindAdress(configuration.getBindAddress());
         } catch (UnknownHostException e) {
             log("Invalid bind setting (" + configuration.getBindAddress() + "): " + e.toString());
+        }
+        if (startThreads) {
+            initDeliveryThreads();
         }
     }
 
@@ -183,80 +187,65 @@ public class RemoteDelivery extends GenericMailet {
         return "RemoteDelivery Mailet";
     }
 
-    /**
-     * For this message, we take the list of recipients, organize these into
-     * distinct servers, and duplicate the message for each of these servers,
-     * and then call the deliver (messagecontainer) method for each
-     * server-specific messagecontainer ... that will handle storing it in the
-     * outgoing queue if needed.
-     *
-     * @param mail org.apache.mailet.Mail
-     */
     @Override
     public void service(Mail mail) throws MessagingException {
-        // Do I want to give the internal key, or the message's Message ID
         if (configuration.isDebug()) {
             log("Remotely delivering mail " + mail.getName());
         }
-        Collection<MailAddress> recipients = mail.getRecipients();
-
         if (configuration.isUsePriority()) {
-
-            // Use highest prio for new emails. See JAMES-1311
             mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.HIGH_PRIORITY);
         }
-        if (configuration.getGatewayServer() == null) {
-            // Must first organize the recipients into distinct servers (name
-            // made case insensitive)
-            Hashtable<String, Collection<MailAddress>> targets = new Hashtable<String, Collection<MailAddress>>();
-            for (MailAddress target : recipients) {
-                String targetServer = target.getDomain().toLowerCase(Locale.US);
-                Collection<MailAddress> temp = targets.get(targetServer);
-                if (temp == null) {
-                    temp = new ArrayList<MailAddress>();
-                    targets.put(targetServer, temp);
-                }
-                temp.add(target);
-            }
-
-            // We have the recipients organized into distinct servers... put
-            // them into the
-            // delivery store organized like this... this is ultra inefficient I
-            // think...
-
-            // Store the new message containers, organized by server, in the
-            // outgoing mail repository
-            String name = mail.getName();
-            for (Map.Entry<String, Collection<MailAddress>> entry : targets.entrySet()) {
-                if (configuration.isDebug()) {
-                    String logMessageBuffer = "Sending mail to " + entry.getValue() + " on host " + entry.getKey();
-                    log(logMessageBuffer);
-                }
-                mail.setRecipients(entry.getValue());
-                String nameBuffer = name + "-to-" + entry.getKey();
-                mail.setName(nameBuffer);
-                try {
-                    queue.enQueue(mail);
-                } catch (MailQueueException e) {
-                    log("Unable to queue mail " + mail.getName() + " for recipients + " + mail.getRecipients().toString(), e);
-                }
+        if (!mail.getRecipients().isEmpty()) {
+            if (configuration.getGatewayServer().isEmpty()) {
+                serviceNoGateway(mail);
+            } else {
+                serviceWithGateway(mail);
             }
         } else {
-            // Store the mail unaltered for processing by the gateway server(s)
-            if (configuration.isDebug()) {
-                String logMessageBuffer = "Sending mail to " + mail.getRecipients() + " via " + configuration.getGatewayServer();
-                log(logMessageBuffer);
-            }
-
-            // Set it to try to deliver (in a separate thread) immediately
-            // (triggered by storage)
-            try {
-                queue.enQueue(mail);
-            } catch (MailQueueException e) {
-                log("Unable to queue mail " + mail.getName() + " for recipients + " + mail.getRecipients().toString(), e);
-            }
+            log("Mail " + mail.getName() + " from " + mail.getSender() + " has no recipients and can not be remotely delivered");
         }
         mail.setState(Mail.GHOST);
+    }
+
+    private void serviceWithGateway(Mail mail) {
+        if (configuration.isDebug()) {
+            log("Sending mail to " + mail.getRecipients() + " via " + configuration.getGatewayServer());
+        }
+        try {
+            queue.enQueue(mail);
+        } catch (MailQueueException e) {
+            log("Unable to queue mail " + mail.getName() + " for recipients + " + mail.getRecipients().toString(), e);
+        }
+    }
+
+    private void serviceNoGateway(Mail mail) {
+        String mailName = mail.getName();
+        Map<String, Collection<MailAddress>> targets = groupByServer(mail.getRecipients());
+        for (Map.Entry<String, Collection<MailAddress>> entry : targets.entrySet()) {
+            serviceSingleServer(mail, mailName, entry);
+        }
+    }
+
+    private void serviceSingleServer(Mail mail, String originalName, Map.Entry<String, Collection<MailAddress>> entry) {
+        if (configuration.isDebug()) {
+            log("Sending mail to " + entry.getValue() + " on host " + entry.getKey());
+        }
+        mail.setRecipients(entry.getValue());
+        mail.setName(originalName + NAME_JUNCTION + entry.getKey());
+        try {
+            queue.enQueue(mail);
+        } catch (MailQueueException e) {
+            log("Unable to queue mail " + mail.getName() + " for recipients + " + mail.getRecipients().toString(), e);
+        }
+    }
+
+    private Map<String, Collection<MailAddress>> groupByServer(Collection<MailAddress> recipients) {
+        // Must first organize the recipients into distinct servers (name made case insensitive)
+        HashMultimap<String, MailAddress> groupByServerMultimap = HashMultimap.create();
+        for (MailAddress recipient : recipients) {
+            groupByServerMultimap.put(recipient.getDomain().toLowerCase(Locale.US), recipient);
+        }
+        return groupByServerMultimap.asMap();
     }
 
     /**
@@ -266,12 +255,14 @@ public class RemoteDelivery extends GenericMailet {
      */
     @Override
     public synchronized void destroy() {
-        volatileIsDestroyed.markAsDestroyed();
-        // Wake up all threads from waiting for an accept
-        for (Thread t : workersThreads) {
-            t.interrupt();
+        if (startThreads) {
+            volatileIsDestroyed.markAsDestroyed();
+            // Wake up all threads from waiting for an accept
+            for (Thread t : workersThreads) {
+                t.interrupt();
+            }
+            notifyAll();
         }
-        notifyAll();
     }
 
 }
