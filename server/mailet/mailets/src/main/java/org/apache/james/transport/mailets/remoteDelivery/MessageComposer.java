@@ -23,9 +23,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.ConnectException;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 
 import javax.mail.MessagingException;
@@ -33,7 +30,6 @@ import javax.mail.SendFailedException;
 import javax.mail.internet.InternetAddress;
 
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
 
 public class MessageComposer {
 
@@ -41,50 +37,6 @@ public class MessageComposer {
 
     public MessageComposer(RemoteDeliveryConfiguration configuration) {
         this.configuration = configuration;
-    }
-
-    public String composeForBounce(Mail mail, Exception ex) {
-        StringWriter sout = new StringWriter();
-        PrintWriter out = new PrintWriter(sout, true);
-        String machine;
-        try {
-            machine = configuration.getHeloNameProvider().getHeloName();
-
-        } catch (Exception e) {
-            machine = "[address unknown]";
-        }
-        String bounceBuffer = "Hi. This is the James mail server at " + machine + ".";
-        out.println(bounceBuffer);
-        out.println("I'm afraid I wasn't able to deliver your message to the following addresses.");
-        out.println("This is a permanent error; I've given up. Sorry it didn't work out.  Below");
-        out.println("I include the list of recipients and the reason why I was unable to deliver");
-        out.println("your message.");
-        out.println();
-        for (MailAddress mailAddress : mail.getRecipients()) {
-            out.println(mailAddress);
-        }
-        if (ex instanceof MessagingException) {
-            if (((MessagingException) ex).getNextException() == null) {
-                out.println(ex.getMessage().trim());
-            } else {
-                Exception ex1 = ((MessagingException) ex).getNextException();
-                if (ex1 instanceof SendFailedException) {
-                    out.println("Remote mail server told me: " + ex1.getMessage().trim());
-                } else if (ex1 instanceof UnknownHostException) {
-                    out.println("Unknown host: " + ex1.getMessage().trim());
-                    out.println("This could be a DNS server error, a typo, or a problem with the recipient's mail server.");
-                } else if (ex1 instanceof ConnectException) {
-                    // Already formatted as "Connection timed out: connect"
-                    out.println(ex1.getMessage().trim());
-                } else if (ex1 instanceof SocketException) {
-                    out.println("Socket exception: " + ex1.getMessage().trim());
-                } else {
-                    out.println(ex1.getMessage().trim());
-                }
-            }
-        }
-        out.println();
-        return sout.toString();
     }
 
     /**

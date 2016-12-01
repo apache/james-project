@@ -116,7 +116,7 @@ public class DeliveryRunnable implements Runnable {
     private final DNSService dnsServer;
     private final Metric outgoingMailsMetric;
     private final Logger logger;
-    private final MailetContext mailetContext;
+    private final Bouncer bouncer;
     private final VolatileIsDestroyed volatileIsDestroyed;
     private final MessageComposer messageComposer;
     private final Converter7Bit converter7Bit;
@@ -127,10 +127,10 @@ public class DeliveryRunnable implements Runnable {
         this.dnsServer = dnsServer;
         this.outgoingMailsMetric = outgoingMailsMetric;
         this.logger = logger;
-        this.mailetContext = mailetContext;
         this.volatileIsDestroyed = volatileIsDestroyed;
         this.messageComposer = new MessageComposer(configuration);
         this.converter7Bit = new Converter7Bit(mailetContext);
+        this.bouncer = new Bouncer(configuration, messageComposer, mailetContext, logger);
     }
 
     /**
@@ -189,7 +189,7 @@ public class DeliveryRunnable implements Runnable {
                 handleTemporaryFailure(mail, executionResult);
                 break;
             case PERMANENT_FAILURE:
-                bounce(mail, executionResult.getException().orNull());
+                bouncer.bounce(mail, executionResult.getException().orNull());
                 break;
         }
     }
@@ -206,7 +206,7 @@ public class DeliveryRunnable implements Runnable {
             reAttemptDelivery(mail, retries);
         } else {
             logger.debug("Bouncing message " + mail.getName() + " after " + retries + " retries");
-            bounce(mail, new Exception("Too many retries failure. Bouncing after " + retries + " retries.", executionResult.getException().orNull()));
+            bouncer.bounce(mail, new Exception("Too many retries failure. Bouncing after " + retries + " retries.", executionResult.getException().orNull()));
         }
     }
 
@@ -708,39 +708,6 @@ public class DeliveryRunnable implements Runnable {
                     }
                 }
             }
-        }
-    }
-
-    private void bounce(Mail mail, Exception ex) {
-        if (mail.getSender() == null) {
-            logger.debug("Null Sender: no bounce will be generated for " + mail.getName());
-        }
-
-        if (configuration.getBounceProcessor() != null) {
-            // do the new DSN bounce setting attributes for DSN mailet
-            mail.setAttribute("delivery-error", messageComposer.getErrorMsg(ex));
-            mail.setState(configuration.getBounceProcessor());
-            // re-insert the mail into the spool for getting it passed to the dsn-processor
-            try {
-                mailetContext.sendMail(mail);
-            } catch (MessagingException e) {
-                // we shouldn't get an exception, because the mail was already processed
-                logger.debug("Exception re-inserting failed mail: ", e);
-            }
-        } else {
-            bounceWithMailetContext(mail, ex);
-        }
-    }
-
-
-    private void bounceWithMailetContext(Mail mail, Exception ex) {
-        logger.debug("Sending failure message " + mail.getName());
-        try {
-            mailetContext.bounce(mail, messageComposer.composeForBounce(mail, ex));
-        } catch (MessagingException me) {
-            logger.debug("Encountered unexpected messaging exception while bouncing message: " + me.getMessage());
-        } catch (Exception e) {
-            logger.debug("Encountered unexpected exception while bouncing message: " + e.getMessage());
         }
     }
 
