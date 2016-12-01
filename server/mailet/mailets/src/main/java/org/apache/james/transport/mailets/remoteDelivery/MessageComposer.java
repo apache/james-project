@@ -122,12 +122,14 @@ public class MessageComposer {
         }
     }
 
-    public String composeFailLogMessage(Mail mail, Exception ex, boolean permanent) {
+    public String composeFailLogMessage(Mail mail, ExecutionResult executionResult) {
         StringWriter sout = new StringWriter();
         PrintWriter out = new PrintWriter(sout, true);
-        out.print(permanentAsString(permanent) + " exception delivering mail (" + mail.getName() + ")" + retrieveExceptionLog(ex) + ": " );
+        out.print(permanentAsString(executionResult.isPermanent()) + " exception delivering mail (" + mail.getName()
+            + ")" + retrieveExceptionLog(executionResult.getException().orNull()) + ": " );
         if (configuration.isDebug()) {
-            ex.printStackTrace(out);
+            if (executionResult.getException().isPresent())
+                executionResult.getException().get().printStackTrace(out);
         }
         return sout.toString();
     }

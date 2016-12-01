@@ -51,65 +51,11 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
 import com.sun.mail.smtp.SMTPTransport;
 
 @SuppressWarnings("deprecation")
 public class DeliveryRunnable implements Runnable {
 
-    private static ExecutionResult success() {
-        return new ExecutionResult(ExecutionState.SUCCESS, Optional.<Exception>absent());
-    }
-
-    private static ExecutionResult temporaryFailure(Exception e) {
-        return new ExecutionResult(ExecutionState.TEMPORARY_FAILURE, Optional.of(e));
-    }
-
-    private static ExecutionResult permanentFailure(Exception e) {
-        return new ExecutionResult(ExecutionState.PERMANENT_FAILURE, Optional.of(e));
-    }
-
-    private static ExecutionResult temporaryFailure() {
-        return new ExecutionResult(ExecutionState.TEMPORARY_FAILURE, Optional.<Exception>absent());
-    }
-
-    private static ExecutionResult permanentFailure() {
-        return new ExecutionResult(ExecutionState.PERMANENT_FAILURE, Optional.<Exception>absent());
-    }
-
-    private static class ExecutionResult {
-        private final ExecutionState executionState;
-        private final Optional<Exception> exception;
-
-        public ExecutionResult(ExecutionState executionState, Optional<Exception> exception) {
-            this.executionState = executionState;
-            this.exception = exception;
-        }
-
-        public ExecutionState getExecutionState() {
-            return executionState;
-        }
-
-        public Optional<Exception> getException() {
-            return exception;
-        }
-    }
-
-    private enum ExecutionState {
-        SUCCESS,
-        PERMANENT_FAILURE,
-        TEMPORARY_FAILURE
-    }
-
-    private static ExecutionResult onFailure(boolean permanent, Exception exeption) {
-        if (permanent) {
-            return permanentFailure(exeption);
-        } else {
-            return temporaryFailure(exeption);
-        }
-    }
-
-    public static final boolean PERMANENT_FAILURE = true;
     public static final String BIT_MIME_8 = "8BITMIME";
     private final MailQueue queue;
     private final RemoteDeliveryConfiguration configuration;
@@ -251,20 +197,22 @@ public class DeliveryRunnable implements Runnable {
             // or mailbox is full or domain is setup wrong). We fail permanently if this was a 5xx error
 
             boolean isPermanent = '5' == ex.getMessage().charAt(0);
-            logger.debug(messageComposer.composeFailLogMessage(mail, ex, isPermanent));
-            return onFailure(isPermanent, ex);
+            ExecutionResult executionResult = ExecutionResult.onFailure(isPermanent, ex);
+            logger.debug(messageComposer.composeFailLogMessage(mail, executionResult));
+            return executionResult;
         } catch (Exception ex) {
             logger.error("Generic exception = permanent failure: " + ex.getMessage(), ex);
             // Generic exception = permanent failure
-            logger.debug(messageComposer.composeFailLogMessage(mail, ex, PERMANENT_FAILURE));
-            return permanentFailure(ex);
+            ExecutionResult executionResult = ExecutionResult.permanentFailure(ex);
+            logger.debug(messageComposer.composeFailLogMessage(mail, executionResult));
+            return executionResult;
         }
     }
 
     private ExecutionResult tryDeliver(Mail mail, Session session) throws MessagingException {
         if (mail.getRecipients().isEmpty()) {
             logger.info("No recipients specified... not sure how this could have happened.");
-            return permanentFailure(new Exception("No recipients specified for " + mail.getName() + " sent by " + mail.getSender()));
+            return ExecutionResult.permanentFailure(new Exception("No recipients specified for " + mail.getName() + " sent by " + mail.getSender()));
         }
         if (configuration.isDebug()) {
             logger.debug("Attempting to deliver " + mail.getName());
@@ -299,7 +247,7 @@ public class DeliveryRunnable implements Runnable {
         while (targetServers.hasNext()) {
             try {
                 if (tryDeliveryToHost(mail, session, message, addr, targetServers.next())) {
-                    return success();
+                    return ExecutionResult.success();
                 }
             } catch (SendFailedException sfe) {
                 lastError = handleSendFailException(mail, sfe);
@@ -316,7 +264,7 @@ public class DeliveryRunnable implements Runnable {
         if (lastError != null) {
             throw lastError;
         }
-        return temporaryFailure();
+        return ExecutionResult.temporaryFailure();
     }
 
     private boolean tryDeliveryToHost(Mail mail, Session session, MimeMessage message, InternetAddress[] addr, HostAddress outgoingMailServer) throws MessagingException {
@@ -382,7 +330,7 @@ public class DeliveryRunnable implements Runnable {
         // Copy the recipients as direct modification may not be possible
         Collection<MailAddress> recipients = new ArrayList<MailAddress>(mail.getRecipients());
 
-        ExecutionResult deleteMessage = temporaryFailure();
+        ExecutionResult deleteMessage = ExecutionResult.temporaryFailure();
 
             /*
              * If you send a message that has multiple invalid addresses, you'll
@@ -411,7 +359,7 @@ public class DeliveryRunnable implements Runnable {
                 int returnCode = (Integer) invokeGetter(sfe, "getReturnCode");
                 // If we got an SMTPSendFailedException, use its RetCode to
                 // determine default permanent/temporary failure
-                deleteMessage = onFailure(returnCode >= 500 && returnCode <= 599, sfe);
+                deleteMessage = ExecutionResult.onFailure(returnCode >= 500 && returnCode <= 599, sfe);
             } else {
                 // Sometimes we'll get a normal SendFailedException with
                 // nested SMTPAddressFailedException, so use the latter
@@ -422,7 +370,7 @@ public class DeliveryRunnable implements Runnable {
                     me = (MessagingException) ne;
                     if (me.getClass().getName().endsWith(".SMTPAddressFailedException")) {
                         int returnCode = (Integer) invokeGetter(me, "getReturnCode");
-                        deleteMessage = onFailure(returnCode >= 500 && returnCode <= 599, sfe);
+                        deleteMessage = ExecutionResult.onFailure(returnCode >= 500 && returnCode <= 599, sfe);
                     }
                 }
             }
@@ -457,8 +405,8 @@ public class DeliveryRunnable implements Runnable {
 
                 if (configuration.isDebug())
                     logger.debug("Invalid recipients: " + recipients);
-                logger.debug(messageComposer.composeFailLogMessage(mail, sfe, true));
-                deleteMessage = permanentFailure(sfe);
+                deleteMessage = ExecutionResult.permanentFailure(sfe);
+                logger.debug(messageComposer.composeFailLogMessage(mail, deleteMessage));
             }
         }
 
@@ -484,11 +432,11 @@ public class DeliveryRunnable implements Runnable {
                 if (sfe.getClass().getName().endsWith(".SMTPSendFailedException")) {
                     int returnCode = (Integer) invokeGetter(sfe, "getReturnCode");
                     boolean isPermanent = returnCode >= 500 && returnCode <= 599;
-                    logger.debug(messageComposer.composeFailLogMessage(mail, sfe, isPermanent));
-                    deleteMessage = onFailure(isPermanent, sfe);
+                    deleteMessage = ExecutionResult.onFailure(isPermanent, sfe);
+                    logger.debug(messageComposer.composeFailLogMessage(mail, deleteMessage));
                 } else {
-                    logger.debug(messageComposer.composeFailLogMessage(mail, sfe, false));
-                    deleteMessage = temporaryFailure(sfe);
+                    deleteMessage = ExecutionResult.temporaryFailure(sfe);
+                    logger.debug(messageComposer.composeFailLogMessage(mail, deleteMessage));
                 }
             }
         }
@@ -615,25 +563,27 @@ public class DeliveryRunnable implements Runnable {
     }
 
     private ExecutionResult handleTemporaryResolutionException(Mail mail, String host) {
-        MessagingException messagingException = new MessagingException("Temporary problem looking up mail server for host: " + host + ".  I cannot determine where to send this message.");
-        logger.debug(messageComposer.composeFailLogMessage(mail, messagingException, false));
-        return temporaryFailure(messagingException);
+        ExecutionResult executionResult = ExecutionResult.temporaryFailure(new MessagingException("Temporary problem looking " +
+            "up mail server for host: " + host + ".  I cannot determine where to send this message."));
+        logger.debug(messageComposer.composeFailLogMessage(mail, executionResult));
+        return executionResult;
     }
 
     private ExecutionResult handleNoTargetServer(Mail mail, String host) {
         logger.info("No mail server found for: " + host);
         String exceptionBuffer = "There are no DNS entries for the hostname " + host + ".  I cannot determine where to send this message.";
 
+        MessagingException messagingException = new MessagingException(exceptionBuffer);
         int retry = DeliveryRetriesHelper.retrieveRetries(mail);
         if (retry == 0 || retry > configuration.getDnsProblemRetry()) {
             // The domain has no dns entry.. Return a permanent error
-            MessagingException messagingException = new MessagingException(exceptionBuffer);
-            logger.debug(messageComposer.composeFailLogMessage(mail, messagingException, true));
-            return permanentFailure(messagingException);
+            ExecutionResult executionResult = ExecutionResult.permanentFailure(messagingException);
+            logger.debug(messageComposer.composeFailLogMessage(mail, executionResult));
+            return executionResult;
         } else {
-            MessagingException messagingException = new MessagingException(exceptionBuffer);
-            logger.debug(messageComposer.composeFailLogMessage(mail, messagingException, false));
-            return temporaryFailure(messagingException);
+            ExecutionResult executionResult = ExecutionResult.temporaryFailure(messagingException);
+            logger.debug(messageComposer.composeFailLogMessage(mail, executionResult));
+            return executionResult;
         }
     }
 
