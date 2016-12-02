@@ -253,6 +253,11 @@ public class DeliveryRunnable implements Runnable {
                 lastError = handleSendFailException(mail, sfe);
             } catch (MessagingException me) {
                 lastError = handleMessagingException(mail, me);
+                if (configuration.isDebug()) {
+                    logger.debug(me.getMessage(), me.getCause());
+                } else {
+                    logger.info(me.getMessage());
+                }
             }
         }
         // If we encountered an exception while looping through,
@@ -290,9 +295,7 @@ public class DeliveryRunnable implements Runnable {
         try {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
             transport.setLocalHost( props.getProperty("mail.smtp.localhost", configuration.getHeloNameProvider().getHeloName()) );
-            if (!connect(outgoingMailServer, transport)) {
-                return false;
-            }
+            connect(outgoingMailServer, transport);
             transport.sendMessage(adaptToTransport(message, transport), addr);
             logger.debug("Mail (" + mail.getName() + ")  sent successfully to " + outgoingMailServer.getHostName() +
                 " at " + outgoingMailServer.getHost() + " from " + props.get("mail.smtp.from") + " for " + mail.getRecipients());
@@ -538,27 +541,11 @@ public class DeliveryRunnable implements Runnable {
         }
     }
 
-    private boolean connect(HostAddress outgoingMailServer, SMTPTransport transport) {
-        try {
-            if (configuration.getAuthUser() != null) {
-                transport.connect(outgoingMailServer.getHostName(), configuration.getAuthUser(), configuration.getAuthPass());
-            } else {
-                transport.connect();
-            }
-            return true;
-        } catch (MessagingException me) {
-            // Any error on connect should cause the mailet to attempt
-            // to connect to the next SMTP server associated with this
-            // MX record. Just log the exception. We'll worry about
-            // failing the message at the end of the loop.
-
-            // Also include the stacktrace if debug is enabled. See JAMES-1257
-            if (configuration.isDebug()) {
-                logger.debug(me.getMessage(), me.getCause());
-            } else {
-                logger.info(me.getMessage());
-            }
-            return false;
+    private void connect(HostAddress outgoingMailServer, SMTPTransport transport) throws MessagingException {
+        if (configuration.getAuthUser() != null) {
+            transport.connect(outgoingMailServer.getHostName(), configuration.getAuthUser(), configuration.getAuthPass());
+        } else {
+            transport.connect();
         }
     }
 
