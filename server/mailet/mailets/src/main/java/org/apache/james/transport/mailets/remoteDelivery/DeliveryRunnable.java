@@ -51,6 +51,7 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 
+import com.google.common.base.Optional;
 import com.sun.mail.smtp.SMTPTransport;
 
 @SuppressWarnings("deprecation")
@@ -334,6 +335,7 @@ public class DeliveryRunnable implements Runnable {
         Collection<MailAddress> recipients = new ArrayList<MailAddress>(mail.getRecipients());
 
         ExecutionResult deleteMessage = ExecutionResult.temporaryFailure();
+        EnhancedMessagingException enhancedMessagingException = new EnhancedMessagingException(sfe);
 
             /*
              * If you send a message that has multiple invalid addresses, you'll
@@ -357,32 +359,12 @@ public class DeliveryRunnable implements Runnable {
              * SMTPSendFailedException introduced in JavaMail 1.3.2, and
              * provides detailed protocol reply code for the operation
              */
-        try {
-            if (sfe.getClass().getName().endsWith(".SMTPSendFailedException")) {
-                int returnCode = (Integer) invokeGetter(sfe, "getReturnCode");
-                // If we got an SMTPSendFailedException, use its RetCode to
-                // determine default permanent/temporary failure
-                deleteMessage = ExecutionResult.onFailure(returnCode >= 500 && returnCode <= 599, sfe);
+        if (enhancedMessagingException.hasReturnCode()) {
+            if (enhancedMessagingException.isServerError()) {
+                deleteMessage = ExecutionResult.permanentFailure(sfe);
             } else {
-                // Sometimes we'll get a normal SendFailedException with
-                // nested SMTPAddressFailedException, so use the latter
-                // RetCode
-                MessagingException me = sfe;
-                Exception ne;
-                while ((ne = me.getNextException()) != null && ne instanceof MessagingException) {
-                    me = (MessagingException) ne;
-                    if (me.getClass().getName().endsWith(".SMTPAddressFailedException")) {
-                        int returnCode = (Integer) invokeGetter(me, "getReturnCode");
-                        deleteMessage = ExecutionResult.onFailure(returnCode >= 500 && returnCode <= 599, sfe);
-                    }
-                }
+                deleteMessage = ExecutionResult.temporaryFailure(sfe);
             }
-        } catch (IllegalStateException ise) {
-            // unexpected exception (not a compatible javamail
-            // implementation)
-        } catch (ClassCastException cce) {
-            // unexpected exception (not a compatible javamail
-            // implementation)
         }
 
         // log the original set of intended recipients
@@ -432,9 +414,8 @@ public class DeliveryRunnable implements Runnable {
                 if (configuration.isDebug())
                     logger.debug("Unsent recipients: " + recipients);
 
-                if (sfe.getClass().getName().endsWith(".SMTPSendFailedException")) {
-                    int returnCode = (Integer) invokeGetter(sfe, "getReturnCode");
-                    boolean isPermanent = returnCode >= 500 && returnCode <= 599;
+                if (enhancedMessagingException.hasReturnCode()) {
+                    boolean isPermanent = enhancedMessagingException.isServerError();
                     deleteMessage = ExecutionResult.onFailure(isPermanent, sfe);
                     logger.debug(messageComposer.composeFailLogMessage(mail, deleteMessage));
                 } else {
@@ -458,20 +439,13 @@ public class DeliveryRunnable implements Runnable {
             }
         }
 
-                /*
-                 * SMTPSendFailedException introduced in JavaMail 1.3.2, and
-                 * provides detailed protocol reply code for the operation
-                 */
-        if (sfe.getClass().getName().endsWith(".SMTPSendFailedException")) {
-            try {
-                int returnCode = (Integer) invokeGetter(sfe, "getReturnCode");
-                // if 5xx, terminate this delivery attempt by
-                // re-throwing the exception.
-                if (returnCode >= 500 && returnCode <= 599)
-                    throw sfe;
-            } catch (ClassCastException cce) {
-            } catch (IllegalArgumentException iae) {
-            }
+        /*
+        * SMTPSendFailedException introduced in JavaMail 1.3.2, and
+        * provides detailed protocol reply code for the operation
+        */
+        EnhancedMessagingException enhancedMessagingException = new EnhancedMessagingException(sfe);
+        if (enhancedMessagingException.isServerError()) {
+            throw sfe;
         }
 
         if (sfe.getValidUnsentAddresses() != null && sfe.getValidUnsentAddresses().length > 0) {
@@ -585,65 +559,34 @@ public class DeliveryRunnable implements Runnable {
         return configuration.getDelayTimes().get(retry_count - 1);
     }
 
-
-    private Object invokeGetter(Object target, String getter) {
-        try {
-            Method getAddress = target.getClass().getMethod(getter);
-            return getAddress.invoke(target);
-        } catch (NoSuchMethodException nsme) {
-            // An SMTPAddressFailedException with no getAddress method.
-        } catch (IllegalAccessException iae) {
-        } catch (IllegalArgumentException iae) {
-        } catch (InvocationTargetException ite) {
-            // Other issues with getAddress invokation.
-        }
-        return new IllegalStateException("Exception invoking " + getter + " on a " + target.getClass() + " object");
-    }
-
     private void logSendFailedException(SendFailedException sfe) {
         if (configuration.isDebug()) {
-            MessagingException me = sfe;
-            if (me.getClass().getName().endsWith(".SMTPSendFailedException")) {
-                try {
-                    String command = (String) invokeGetter(sfe, "getCommand");
-                    Integer returnCode = (Integer) invokeGetter(sfe, "getReturnCode");
-                    logger.debug("SMTP SEND FAILED:");
-                    logger.debug(sfe.toString());
-                    logger.debug("  Command: " + command);
-                    logger.debug("  RetCode: " + returnCode);
-                    logger.debug("  Response: " + sfe.getMessage());
-                } catch (IllegalStateException ise) {
-                    // Error invoking the getAddress method
-                    logger.debug("Send failed: " + me.toString());
-                } catch (ClassCastException cce) {
-                    // The getAddress method returned something different than
-                    // InternetAddress
-                    logger.debug("Send failed: " + me.toString());
-                }
+            EnhancedMessagingException enhancedMessagingException = new EnhancedMessagingException(sfe);
+            if (enhancedMessagingException.hasReturnCode()) {
+                logger.debug("SMTP SEND FAILED:");
+                logger.debug(sfe.toString());
+                logger.debug("  Command: " + enhancedMessagingException.computeCommand());
+                logger.debug("  RetCode: " + enhancedMessagingException.getReturnCode());
+                logger.debug("  Response: " + sfe.getMessage());
             } else {
-                logger.debug("Send failed: " + me.toString());
+                logger.debug("Send failed: " + sfe.toString());
             }
-            Exception ne;
-            while ((ne = me.getNextException()) != null && ne instanceof MessagingException) {
-                me = (MessagingException) ne;
-                if (me.getClass().getName().endsWith(".SMTPAddressFailedException") || me.getClass().getName().endsWith(".SMTPAddressSucceededException")) {
-                    try {
-                        String action = me.getClass().getName().endsWith(".SMTPAddressFailedException") ? "FAILED" : "SUCCEEDED";
-                        InternetAddress address = (InternetAddress) invokeGetter(me, "getAddress");
-                        String command = (String) invokeGetter(me, "getCommand");
-                        Integer returnCode = (Integer) invokeGetter(me, "getReturnCode");
-                        logger.debug("ADDRESS " + action + ":");
-                        logger.debug(me.toString());
-                        logger.debug("  Address: " + address);
-                        logger.debug("  Command: " + command);
-                        logger.debug("  RetCode: " + returnCode);
-                        logger.debug("  Response: " + me.getMessage());
-                    } catch (IllegalStateException ise) {
-                        // Error invoking the getAddress method
-                    } catch (ClassCastException cce) {
-                        // A method returned something different than expected
-                    }
-                }
+            logLevels(sfe);
+        }
+    }
+
+    private void logLevels(MessagingException me) {
+        Exception ne;
+        while ((ne = me.getNextException()) != null && ne instanceof MessagingException) {
+            me = (MessagingException) ne;
+            EnhancedMessagingException enhancedMessagingException = new EnhancedMessagingException(me);
+            if (me.getClass().getName().endsWith(".SMTPAddressFailedException") || me.getClass().getName().endsWith(".SMTPAddressSucceededException")) {
+                logger.debug("ADDRESS " + enhancedMessagingException.computeAction() + ":");
+                logger.debug(me.toString());
+                logger.debug("  Address: " + enhancedMessagingException.computeAddress());
+                logger.debug("  Command: " + enhancedMessagingException.computeCommand());
+                logger.debug("  RetCode: " + enhancedMessagingException.getReturnCode());
+                logger.debug("  Response: " + me.getMessage());
             }
         }
     }
