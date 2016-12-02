@@ -31,7 +31,18 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
+
 public class DeliveryRunnable implements Runnable {
+
+    public static final Supplier<Date> CURRENT_DATE_SUPPLIER = new Supplier<Date>() {
+        @Override
+        public Date get() {
+            return new Date();
+        }
+    };
+    public static final AtomicBoolean DEFAULT_NOT_STARTED = new AtomicBoolean(false);
 
     private final MailQueue queue;
     private final RemoteDeliveryConfiguration configuration;
@@ -40,17 +51,26 @@ public class DeliveryRunnable implements Runnable {
     private final Bouncer bouncer;
     private final MailDelivrer mailDelivrer;
     private final VolatileIsDestroyed volatileIsDestroyed;
+    private final Supplier<Date> dateSupplier;
 
     public DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, DNSService dnsServer, Metric outgoingMailsMetric,
                             Logger logger, MailetContext mailetContext, VolatileIsDestroyed volatileIsDestroyed) {
+        this(queue, configuration, outgoingMailsMetric, logger, new Bouncer(configuration, mailetContext, logger),
+            new MailDelivrer(configuration, new MailDelivrerToHost(configuration, mailetContext, logger), dnsServer, logger),
+            volatileIsDestroyed, CURRENT_DATE_SUPPLIER);
+    }
+
+    @VisibleForTesting
+    DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, Metric outgoingMailsMetric, Logger logger, Bouncer bouncer,
+                     MailDelivrer mailDelivrer, VolatileIsDestroyed volatileIsDestroyed, Supplier<Date> dateSupplier) {
         this.queue = queue;
         this.configuration = configuration;
         this.outgoingMailsMetric = outgoingMailsMetric;
         this.logger = logger;
+        this.bouncer = bouncer;
+        this.mailDelivrer = mailDelivrer;
         this.volatileIsDestroyed = volatileIsDestroyed;
-        this.bouncer = new Bouncer(configuration, mailetContext, logger);
-        MailDelivrerToHost mailDelivrerToHost = new MailDelivrerToHost(configuration, mailetContext, logger);
-        this.mailDelivrer = new MailDelivrer(configuration, mailDelivrerToHost, dnsServer, logger);
+        this.dateSupplier = dateSupplier;
     }
 
     @Override
@@ -98,7 +118,8 @@ public class DeliveryRunnable implements Runnable {
         }
     }
 
-    private void attemptDelivery(Mail mail) throws MailQueue.MailQueueException {
+    @VisibleForTesting
+    void attemptDelivery(Mail mail) throws MailQueue.MailQueueException {
         ExecutionResult executionResult = mailDelivrer.deliver(mail);
         switch (executionResult.getExecutionState()) {
             case SUCCESS:
@@ -117,7 +138,7 @@ public class DeliveryRunnable implements Runnable {
         if (!mail.getState().equals(Mail.ERROR)) {
             mail.setState(Mail.ERROR);
             DeliveryRetriesHelper.initRetries(mail);
-            mail.setLastUpdated(new Date());
+            mail.setLastUpdated(dateSupplier.get());
         }
         int retries = DeliveryRetriesHelper.retrieveRetries(mail);
 
@@ -132,7 +153,7 @@ public class DeliveryRunnable implements Runnable {
     private void reAttemptDelivery(Mail mail, int retries) throws MailQueue.MailQueueException {
         logger.debug("Storing message " + mail.getName() + " into outgoing after " + retries + " retries");
         DeliveryRetriesHelper.incrementRetries(mail);
-        mail.setLastUpdated(new Date());
+        mail.setLastUpdated(dateSupplier.get());
         // Something happened that will delay delivery. Store it back in the retry repository.
         long delay = getNextDelay(DeliveryRetriesHelper.retrieveRetries(mail));
 
