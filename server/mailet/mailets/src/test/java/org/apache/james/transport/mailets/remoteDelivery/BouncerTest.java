@@ -74,7 +74,7 @@ public class BouncerTest {
         FakeMailContext.BouncedMail expected = new FakeMailContext.BouncedMail(FakeMailContext.fromMail(mail),
             "Hi. This is the James mail server at " + HELLO_NAME + ".\n" +
                 "I'm afraid I wasn't able to deliver your message to the following addresses.\n" +
-                "This is a permanent error; I've given up. Sorry it didn't work out.  Below\n" +
+                "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
                 "I include the list of recipients and the reason why I was unable to deliver\n" +
                 "your message.\n\n\n",
             Optional.<MailAddress>absent());
@@ -101,7 +101,7 @@ public class BouncerTest {
         FakeMailContext.BouncedMail expected = new FakeMailContext.BouncedMail(FakeMailContext.fromMail(mail),
             "Hi. This is the James mail server at " + HELLO_NAME + ".\n" +
                 "I'm afraid I wasn't able to deliver your message to the following addresses.\n" +
-                "This is a permanent error; I've given up. Sorry it didn't work out.  Below\n" +
+                "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
                 "I include the list of recipients and the reason why I was unable to deliver\n" +
                 "your message.\n" +
                 "\n" +
@@ -130,7 +130,7 @@ public class BouncerTest {
         FakeMailContext.BouncedMail expected = new FakeMailContext.BouncedMail(FakeMailContext.fromMail(mail),
             "Hi. This is the James mail server at " + HELLO_NAME + ".\n" +
                 "I'm afraid I wasn't able to deliver your message to the following addresses.\n" +
-                "This is a permanent error; I've given up. Sorry it didn't work out.  Below\n" +
+                "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
                 "I include the list of recipients and the reason why I was unable to deliver\n" +
                 "your message.\n" +
                 "\n" +
@@ -159,7 +159,7 @@ public class BouncerTest {
         FakeMailContext.BouncedMail expected = new FakeMailContext.BouncedMail(FakeMailContext.fromMail(mail),
             "Hi. This is the James mail server at " + HELLO_NAME + ".\n" +
                 "I'm afraid I wasn't able to deliver your message to the following addresses.\n" +
-                "This is a permanent error; I've given up. Sorry it didn't work out.  Below\n" +
+                "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
                 "I include the list of recipients and the reason why I was unable to deliver\n" +
                 "your message.\n" +
                 "\n" +
@@ -189,7 +189,7 @@ public class BouncerTest {
         FakeMailContext.BouncedMail expected = new FakeMailContext.BouncedMail(FakeMailContext.fromMail(mail),
             "Hi. This is the James mail server at " + HELLO_NAME + ".\n" +
                 "I'm afraid I wasn't able to deliver your message to the following addresses.\n" +
-                "This is a permanent error; I've given up. Sorry it didn't work out.  Below\n" +
+                "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
                 "I include the list of recipients and the reason why I was unable to deliver\n" +
                 "your message.\n" +
                 "\n" +
@@ -218,7 +218,7 @@ public class BouncerTest {
         FakeMailContext.BouncedMail expected = new FakeMailContext.BouncedMail(FakeMailContext.fromMail(mail),
             "Hi. This is the James mail server at " + HELLO_NAME + ".\n" +
                 "I'm afraid I wasn't able to deliver your message to the following addresses.\n" +
-                "This is a permanent error; I've given up. Sorry it didn't work out.  Below\n" +
+                "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
                 "I include the list of recipients and the reason why I was unable to deliver\n" +
                 "your message.\n" +
                 "\n" +
@@ -247,7 +247,7 @@ public class BouncerTest {
         FakeMailContext.BouncedMail expected = new FakeMailContext.BouncedMail(FakeMailContext.fromMail(mail),
             "Hi. This is the James mail server at " + HELLO_NAME + ".\n" +
                 "I'm afraid I wasn't able to deliver your message to the following addresses.\n" +
-                "This is a permanent error; I've given up. Sorry it didn't work out.  Below\n" +
+                "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
                 "I include the list of recipients and the reason why I was unable to deliver\n" +
                 "your message.\n" +
                 "\n" +
@@ -277,7 +277,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldSupportExceptionWithoutMessagesByDefaultByDefault() throws Exception {
+    public void bounceShouldSupportExceptionWithoutMessagesByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             FakeMailetConfig.builder()
                 .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
@@ -294,7 +294,7 @@ public class BouncerTest {
         FakeMailContext.BouncedMail expected = new FakeMailContext.BouncedMail(FakeMailContext.fromMail(mail),
             "Hi. This is the James mail server at " + HELLO_NAME + ".\n" +
                 "I'm afraid I wasn't able to deliver your message to the following addresses.\n" +
-                "This is a permanent error; I've given up. Sorry it didn't work out.  Below\n" +
+                "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
                 "I include the list of recipients and the reason why I was unable to deliver\n" +
                 "your message.\n\n\n",
             Optional.<MailAddress>absent());
@@ -303,7 +303,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldNotSupportMessagingExceptionWithoutMessagesByDefaultByDefault() throws Exception {
+    public void bounceShouldNotSupportMessagingExceptionWithoutMessagesByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             FakeMailetConfig.builder()
                 .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
@@ -317,8 +317,15 @@ public class BouncerTest {
             .build();
         testee.bounce(mail, new MessagingException());
 
+        FakeMailContext.BouncedMail expected = new FakeMailContext.BouncedMail(FakeMailContext.fromMail(mail),
+            "Hi. This is the James mail server at " + HELLO_NAME + ".\n" +
+                "I'm afraid I wasn't able to deliver your message to the following addresses.\n" +
+                "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
+                "I include the list of recipients and the reason why I was unable to deliver\n" +
+                "your message.\n\nnull\n\n",
+            Optional.<MailAddress>absent());
         assertThat(mailetContext.getSentMails()).isEmpty();
-        assertThat(mailetContext.getBouncedMails()).isEmpty();
+        assertThat(mailetContext.getBouncedMails()).containsOnly(expected);
     }
 
     @Test
@@ -367,7 +374,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldDisplayAddressByDefaultByDefault() throws Exception {
+    public void bounceShouldDisplayAddressByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             FakeMailetConfig.builder()
                 .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
@@ -385,7 +392,7 @@ public class BouncerTest {
         FakeMailContext.BouncedMail expected = new FakeMailContext.BouncedMail(FakeMailContext.fromMail(mail),
             "Hi. This is the James mail server at " + HELLO_NAME + ".\n" +
                 "I'm afraid I wasn't able to deliver your message to the following addresses.\n" +
-                "This is a permanent error; I've given up. Sorry it didn't work out.  Below\n" +
+                "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
                 "I include the list of recipients and the reason why I was unable to deliver\n" +
                 "your message.\n\n" +
                 MailAddressFixture.ANY_AT_JAMES2.asString() + "\n\n",
@@ -395,7 +402,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldDisplayAddressesByDefaultByDefault() throws Exception {
+    public void bounceShouldDisplayAddressesByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             FakeMailetConfig.builder()
                 .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
@@ -413,7 +420,7 @@ public class BouncerTest {
         FakeMailContext.BouncedMail expected = new FakeMailContext.BouncedMail(FakeMailContext.fromMail(mail),
             "Hi. This is the James mail server at " + HELLO_NAME + ".\n" +
                 "I'm afraid I wasn't able to deliver your message to the following addresses.\n" +
-                "This is a permanent error; I've given up. Sorry it didn't work out.  Below\n" +
+                "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
                 "I include the list of recipients and the reason why I was unable to deliver\n" +
                 "your message.\n\n" +
                 MailAddressFixture.ANY_AT_JAMES2.asString() + "\n" +
@@ -421,5 +428,30 @@ public class BouncerTest {
             Optional.<MailAddress>absent());
         assertThat(mailetContext.getSentMails()).isEmpty();
         assertThat(mailetContext.getBouncedMails()).containsOnly(expected);
+    }
+
+    @Test
+    public void bounceShouldWorkWhenProcessorSpecifiedAndNoExceptionMessage() throws Exception {
+        RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
+            FakeMailetConfig.builder()
+                .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
+                .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
+                .setProperty(RemoteDeliveryConfiguration.BOUNCE_PROCESSOR, BOUNCE_PROCESSOR)
+                .build(),
+            mock(DomainList.class));
+        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+
+        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+            .sender(MailAddressFixture.ANY_AT_JAMES)
+            .build();
+        testee.bounce(mail, new MessagingException());
+
+        FakeMailContext.SentMail expected = FakeMailContext.sentMailBuilder()
+            .sender(MailAddressFixture.ANY_AT_JAMES)
+            .attribute(DELIVERY_ERROR, "null")
+            .state(BOUNCE_PROCESSOR)
+            .build();
+        assertThat(mailetContext.getSentMails()).containsOnly(expected);
+        assertThat(mailetContext.getBouncedMails()).isEmpty();
     }
 }

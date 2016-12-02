@@ -37,28 +37,26 @@ public class Bouncer {
 
     public static final String DELIVERY_ERROR = "delivery-error";
     private final RemoteDeliveryConfiguration configuration;
-    private final MessageComposer messageComposer;
     private final MailetContext mailetContext;
     private final Logger logger;
 
     public Bouncer(RemoteDeliveryConfiguration configuration, MailetContext mailetContext, Logger logger) {
         this.configuration = configuration;
-        this.messageComposer = new MessageComposer(configuration);
         this.mailetContext = mailetContext;
         this.logger = logger;
     }
 
     public void bounce(Mail mail, Exception ex) {
         if (mail.getSender() == null) {
-            logger.debug("Null Sender: no bounce will be generated for " + mail.getName());
+            logger.debug("Null Sender: no bounce will be generated for {}", mail.getName());
         } else {
             if (configuration.getBounceProcessor() != null) {
-                mail.setAttribute(DELIVERY_ERROR, messageComposer.getErrorMsg(ex));
+                mail.setAttribute(DELIVERY_ERROR, getErrorMsg(ex));
                 mail.setState(configuration.getBounceProcessor());
                 try {
                     mailetContext.sendMail(mail);
                 } catch (MessagingException e) {
-                    logger.debug("Exception re-inserting failed mail: ", e);
+                    logger.warn("Exception re-inserting failed mail: ", e);
                 }
             } else {
                 bounceWithMailetContext(mail, ex);
@@ -72,26 +70,18 @@ public class Bouncer {
         try {
             mailetContext.bounce(mail, explanationText(mail, ex));
         } catch (MessagingException me) {
-            logger.debug("Encountered unexpected messaging exception while bouncing message: " + me.getMessage());
+            logger.warn("Encountered unexpected messaging exception while bouncing message: {}", me.getMessage());
         } catch (Exception e) {
-            logger.debug("Encountered unexpected exception while bouncing message: " + e.getMessage());
+            logger.warn("Encountered unexpected exception while bouncing message: {}", e.getMessage());
         }
     }
 
     public String explanationText(Mail mail, Exception ex) {
         StringWriter sout = new StringWriter();
         PrintWriter out = new PrintWriter(sout, true);
-        String machine;
-        try {
-            machine = configuration.getHeloNameProvider().getHeloName();
-
-        } catch (Exception e) {
-            machine = "[address unknown]";
-        }
-        String bounceBuffer = "Hi. This is the James mail server at " + machine + ".";
-        out.println(bounceBuffer);
+        out.println("Hi. This is the James mail server at " + resolveMachineName() + ".");
         out.println("I'm afraid I wasn't able to deliver your message to the following addresses.");
-        out.println("This is a permanent error; I've given up. Sorry it didn't work out.  Below");
+        out.println("This is a permanent error; I've given up. Sorry it didn't work out. Below");
         out.println("I include the list of recipients and the reason why I was unable to deliver");
         out.println("your message.");
         out.println();
@@ -100,25 +90,58 @@ public class Bouncer {
         }
         if (ex instanceof MessagingException) {
             if (((MessagingException) ex).getNextException() == null) {
-                out.println(ex.getMessage().trim());
+                out.println(sanitizeExceptionMessage(ex));
             } else {
                 Exception ex1 = ((MessagingException) ex).getNextException();
                 if (ex1 instanceof SendFailedException) {
-                    out.println("Remote mail server told me: " + ex1.getMessage().trim());
+                    out.println("Remote mail server told me: " + sanitizeExceptionMessage(ex1));
                 } else if (ex1 instanceof UnknownHostException) {
-                    out.println("Unknown host: " + ex1.getMessage().trim());
+                    out.println("Unknown host: " + sanitizeExceptionMessage(ex1));
                     out.println("This could be a DNS server error, a typo, or a problem with the recipient's mail server.");
                 } else if (ex1 instanceof ConnectException) {
                     // Already formatted as "Connection timed out: connect"
-                    out.println(ex1.getMessage().trim());
+                    out.println(sanitizeExceptionMessage(ex1));
                 } else if (ex1 instanceof SocketException) {
-                    out.println("Socket exception: " + ex1.getMessage().trim());
+                    out.println("Socket exception: " + sanitizeExceptionMessage(ex1));
                 } else {
-                    out.println(ex1.getMessage().trim());
+                    out.println(sanitizeExceptionMessage(ex1));
                 }
             }
         }
         out.println();
         return sout.toString();
+    }
+
+    private String sanitizeExceptionMessage(Exception e) {
+        if (e.getMessage() == null) {
+            return "null";
+        } else {
+            return e.getMessage().trim();
+        }
+    }
+
+    private String resolveMachineName() {
+        try {
+            return configuration.getHeloNameProvider().getHeloName();
+        } catch (Exception e) {
+            return "[address unknown]";
+        }
+    }
+
+    public String getErrorMsg(Exception ex) {
+        if (ex instanceof MessagingException) {
+            return getNestedExceptionMessage((MessagingException) ex);
+        } else {
+            return sanitizeExceptionMessage(ex);
+        }
+    }
+
+    public String getNestedExceptionMessage(MessagingException me) {
+        if (me.getNextException() == null) {
+            return sanitizeExceptionMessage(me);
+        } else {
+            Exception ex1 = me.getNextException();
+            return sanitizeExceptionMessage(ex1);
+        }
     }
 }

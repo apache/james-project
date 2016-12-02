@@ -99,29 +99,6 @@ public class MessageComposer {
         return null;
     }
 
-    /**
-     * Utility method for getting the error message from the (nested) exception.
-     *
-     * @param me MessagingException
-     * @return error message
-     */
-    public String getErrorMsg(Exception ex) {
-        if (ex instanceof MessagingException) {
-            return getNestedExceptionMessage((MessagingException) ex);
-        } else {
-            return ex.getMessage();
-        }
-    }
-
-    public String getNestedExceptionMessage(MessagingException me) {
-        if (me.getNextException() == null) {
-            return me.getMessage().trim();
-        } else {
-            Exception ex1 = me.getNextException();
-            return ex1.getMessage().trim();
-        }
-    }
-
     public String composeFailLogMessage(Mail mail, ExecutionResult executionResult) {
         StringWriter sout = new StringWriter();
         PrintWriter out = new PrintWriter(sout, true);
