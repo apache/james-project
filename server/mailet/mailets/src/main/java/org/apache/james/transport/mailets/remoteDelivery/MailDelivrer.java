@@ -34,7 +34,6 @@ import javax.mail.internet.ParseException;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
-import org.apache.james.dnsservice.library.MXHostAddressIterator;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -46,14 +45,14 @@ public class MailDelivrer {
 
     private final RemoteDeliveryConfiguration configuration;
     private final MailDelivrerToHost mailDelivrerToHost;
-    private final DNSService dnsServer;
+    private final DnsHelper dnsHelper;
     private final MessageComposer messageComposer;
     private final Logger logger;
 
     public MailDelivrer(RemoteDeliveryConfiguration configuration, MailDelivrerToHost mailDelivrerToHost, DNSService dnsServer, Logger logger) {
         this.configuration = configuration;
         this.mailDelivrerToHost = mailDelivrerToHost;
-        this.dnsServer = dnsServer;
+        this.dnsHelper = new DnsHelper(dnsServer, configuration, logger);
         this.messageComposer = new MessageComposer(configuration);
         this.logger = logger;
     }
@@ -107,27 +106,23 @@ public class MailDelivrer {
             logger.debug("Attempting to deliver " + mail.getName());
         }
 
-        // Figure out which servers to try to send to. This collection
-        // will hold all the possible target servers
-        Iterator<HostAddress> targetServers;
-        if (configuration.getGatewayServer().isEmpty()) {
-            MailAddress rcpt = mail.getRecipients().iterator().next();
-            String host = rcpt.getDomain();
-
-            // Lookup the possible targets
-            try {
-                targetServers = new MXHostAddressIterator(dnsServer.findMXRecords(host).iterator(), dnsServer, false, logger);
-            } catch (TemporaryResolutionException e) {
-                return handleTemporaryResolutionException(mail, host);
-            }
+        String host = retrieveTargetHostname(mail);
+        try {
+            // Figure out which servers to try to send to. This collection
+            // will hold all the possible target servers
+            Iterator<HostAddress> targetServers = dnsHelper.retrieveHostAddressIterator(host);
             if (!targetServers.hasNext()) {
                 return handleNoTargetServer(mail, host);
             }
-        } else {
-            targetServers = getGatewaySMTPHostAddresses(configuration.getGatewayServer());
+            return doDeliver(mail, mail.getMessage(), InternetAddressConverter.convert(mail.getRecipients()), targetServers);
+        } catch (TemporaryResolutionException e) {
+            return handleTemporaryResolutionException(mail, host);
         }
+    }
 
-        return doDeliver(mail, mail.getMessage(), InternetAddressConverter.convert(mail.getRecipients()), targetServers);
+    private String retrieveTargetHostname(Mail mail) {
+        MailAddress rcpt = mail.getRecipients().iterator().next();
+        return rcpt.getDomain();
     }
 
     @SuppressWarnings("deprecation")
@@ -335,24 +330,6 @@ public class MailDelivrer {
             logger.debug(messageComposer.composeFailLogMessage(mail, executionResult));
             return executionResult;
         }
-    }
-
-    /**
-     * Returns an Iterator over org.apache.mailet.HostAddress, a specialized
-     * subclass of javax.mail.URLName, which provides location information for
-     * servers that are specified as mail handlers for the given hostname. If no
-     * host is found, the Iterator returned will be empty and the first call to
-     * hasNext() will return false. The Iterator is a nested iterator: the outer
-     * iteration is over each gateway, and the inner iteration is over
-     * potentially multiple A records for each gateway.
-     *
-     * @param gatewayServers - Collection of host[:port] Strings
-     * @return an Iterator over HostAddress instances, sorted by priority
-     * @since v2.2.0a16-unstable
-     */
-    @SuppressWarnings("deprecation")
-    private Iterator<HostAddress> getGatewaySMTPHostAddresses(Collection<String> gatewayServers) {
-        return new MXHostAddressIterator(gatewayServers.iterator(), dnsServer, false, logger);
     }
 
     private void logSendFailedException(SendFailedException sfe) {
