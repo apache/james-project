@@ -41,9 +41,9 @@ public class Bouncer {
     private final MailetContext mailetContext;
     private final Logger logger;
 
-    public Bouncer(RemoteDeliveryConfiguration configuration, MessageComposer messageComposer, MailetContext mailetContext, Logger logger) {
+    public Bouncer(RemoteDeliveryConfiguration configuration, MailetContext mailetContext, Logger logger) {
         this.configuration = configuration;
-        this.messageComposer = messageComposer;
+        this.messageComposer = new MessageComposer(configuration);
         this.mailetContext = mailetContext;
         this.logger = logger;
     }
