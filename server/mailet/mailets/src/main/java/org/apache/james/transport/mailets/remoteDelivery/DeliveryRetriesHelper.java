@@ -19,25 +19,32 @@
 
 package org.apache.james.transport.mailets.remoteDelivery;
 
+import java.io.Serializable;
+
 import org.apache.mailet.Mail;
 
 public class DeliveryRetriesHelper {
 
+    public static final String DELIVERY_RETRY_COUNT = "delivery_retry_count";
+
     public static int retrieveRetries(Mail mail) {
         try {
-            return Integer.parseInt(mail.getErrorMessage());
-        } catch (NumberFormatException e) {
-            // Something strange was happen with the errorMessage..
+            Serializable value = mail.getAttribute(DELIVERY_RETRY_COUNT);
+            if (value != null) {
+                return (Integer) value;
+            }
+            return 0;
+        } catch (ClassCastException e) {
             return 0;
         }
     }
 
     public static void initRetries(Mail mail) {
-        mail.setErrorMessage("0");
+        mail.setAttribute(DELIVERY_RETRY_COUNT, 0);
     }
 
     public static void incrementRetries(Mail mail) {
-        mail.setErrorMessage(String.valueOf(retrieveRetries(mail) + 1));
+        mail.setAttribute(DELIVERY_RETRY_COUNT, retrieveRetries(mail) + 1);
     }
 
 }

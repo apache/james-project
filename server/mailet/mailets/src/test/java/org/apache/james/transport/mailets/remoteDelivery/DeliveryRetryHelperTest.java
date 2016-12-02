@@ -65,7 +65,7 @@ public class DeliveryRetryHelperTest {
 
     @Test
     public void retrieveRetriesShouldBeZeroOnInvalidValue() throws Exception {
-        FakeMail mail = FakeMail.builder().errorMessage("invalid").build();
+        FakeMail mail = FakeMail.builder().attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, "invalid").build();
 
         assertThat(DeliveryRetriesHelper.retrieveRetries(mail))
             .isEqualTo(0);
@@ -73,7 +73,7 @@ public class DeliveryRetryHelperTest {
 
     @Test
     public void incrementRetriesShouldWorkOnInvalidMails() throws Exception {
-        FakeMail mail = FakeMail.builder().errorMessage("invalid").build();
+        FakeMail mail = FakeMail.builder().attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, "invalid").build();
 
         DeliveryRetriesHelper.incrementRetries(mail);
 
