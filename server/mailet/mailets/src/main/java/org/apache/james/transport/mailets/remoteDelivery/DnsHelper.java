@@ -19,7 +19,6 @@
 
 package org.apache.james.transport.mailets.remoteDelivery;
 
-import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.james.dnsservice.api.DNSService;
@@ -31,6 +30,7 @@ import org.slf4j.Logger;
 @SuppressWarnings("deprecation")
 public class DnsHelper {
 
+    public static final boolean USE_SEVERAL_IP = false;
     private final DNSService dnsServer;
     private final RemoteDeliveryConfiguration configuration;
     private final Logger logger;
@@ -43,27 +43,10 @@ public class DnsHelper {
 
     public Iterator<HostAddress> retrieveHostAddressIterator(String host) throws TemporaryResolutionException {
         if (configuration.getGatewayServer().isEmpty()) {
-            return new MXHostAddressIterator(dnsServer.findMXRecords(host).iterator(), dnsServer, false, logger);
+            return new MXHostAddressIterator(dnsServer.findMXRecords(host).iterator(), dnsServer, USE_SEVERAL_IP, logger);
         } else {
-            return getGatewaySMTPHostAddresses(configuration.getGatewayServer());
+            return new MXHostAddressIterator(configuration.getGatewayServer().iterator(), dnsServer, USE_SEVERAL_IP, logger);
         }
-    }
-
-    /**
-     * Returns an Iterator over org.apache.mailet.HostAddress, a specialized
-     * subclass of javax.mail.URLName, which provides location information for
-     * servers that are specified as mail handlers for the given hostname. If no
-     * host is found, the Iterator returned will be empty and the first call to
-     * hasNext() will return false. The Iterator is a nested iterator: the outer
-     * iteration is over each gateway, and the inner iteration is over
-     * potentially multiple A records for each gateway.
-     *
-     * @param gatewayServers - Collection of host[:port] Strings
-     * @return an Iterator over HostAddress instances, sorted by priority
-     * @since v2.2.0a16-unstable
-     */
-    private Iterator<HostAddress> getGatewaySMTPHostAddresses(Collection<String> gatewayServers) {
-        return new MXHostAddressIterator(gatewayServers.iterator(), dnsServer, false, logger);
     }
 
 }
