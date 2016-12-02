@@ -127,7 +127,7 @@ public class MailDelivrer {
             targetServers = getGatewaySMTPHostAddresses(configuration.getGatewayServer());
         }
 
-        return doDeliver(mail, mail.getMessage(), convertToInetAddr(mail.getRecipients()), targetServers);
+        return doDeliver(mail, mail.getMessage(), InternetAddressConverter.convert(mail.getRecipients()), targetServers);
     }
 
     @SuppressWarnings("deprecation")
@@ -310,16 +310,6 @@ public class MailDelivrer {
             // There are no valid addresses left to send, so rethrow
             throw sfe;
         }
-    }
-
-    private InternetAddress[] convertToInetAddr(Collection<MailAddress> recipients) {
-        InternetAddress addr[] = new InternetAddress[recipients.size()];
-        int j = 0;
-        for (Iterator<MailAddress> i = recipients.iterator(); i.hasNext(); j++) {
-            MailAddress rcpt = i.next();
-            addr[j] = rcpt.toInternetAddress();
-        }
-        return addr;
     }
 
     private ExecutionResult handleTemporaryResolutionException(Mail mail, String host) {
