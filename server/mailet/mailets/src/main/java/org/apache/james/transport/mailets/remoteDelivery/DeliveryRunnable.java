@@ -266,14 +266,13 @@ public class DeliveryRunnable implements Runnable {
     }
 
     private MessagingException handleMessagingException(Mail mail, MessagingException me) throws MessagingException {
-        MessagingException lastError;// MessagingException are horribly difficult to figure out what actually happened.
         logger.debug("Exception delivering message (" + mail.getName() + ") - " + me.getMessage());
         if ((me.getNextException() != null) && (me.getNextException() instanceof IOException)) {
             // This is more than likely a temporary failure
 
             // If it's an IO exception with no nested exception, it's probably
             // some socket or weird I/O related problem.
-            lastError = me;
+            return me;
         } else {
             // This was not a connection or I/O error particular to one
             // SMTP server of an MX set. Instead, it is almost certainly
@@ -284,7 +283,6 @@ public class DeliveryRunnable implements Runnable {
             // severity.
             throw me;
         }
-        return lastError;
     }
 
     private ExecutionResult handleSenderFailedException(Mail mail, SendFailedException sfe) {
