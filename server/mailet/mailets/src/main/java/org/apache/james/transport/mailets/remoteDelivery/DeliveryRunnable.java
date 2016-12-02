@@ -20,20 +20,16 @@
 package org.apache.james.transport.mailets.remoteDelivery;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
-import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
@@ -51,24 +47,21 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
-import com.sun.mail.smtp.SMTPTransport;
-
 @SuppressWarnings("deprecation")
 public class DeliveryRunnable implements Runnable {
 
-    public static final String BIT_MIME_8 = "8BITMIME";
     private final MailQueue queue;
     private final RemoteDeliveryConfiguration configuration;
     private final DNSService dnsServer;
     private final Metric outgoingMailsMetric;
     private final Logger logger;
     private final Bouncer bouncer;
+    private final MailDelivrerToHost mailDelivrerToHost;
     private final VolatileIsDestroyed volatileIsDestroyed;
     private final MessageComposer messageComposer;
-    private final Converter7Bit converter7Bit;
 
-    public DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, DNSService dnsServer, Metric outgoingMailsMetric, Logger logger, MailetContext mailetContext, VolatileIsDestroyed volatileIsDestroyed) {
+    public DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, DNSService dnsServer, Metric outgoingMailsMetric,
+                            Logger logger, MailetContext mailetContext, VolatileIsDestroyed volatileIsDestroyed) {
         this.queue = queue;
         this.configuration = configuration;
         this.dnsServer = dnsServer;
@@ -76,8 +69,8 @@ public class DeliveryRunnable implements Runnable {
         this.logger = logger;
         this.volatileIsDestroyed = volatileIsDestroyed;
         this.messageComposer = new MessageComposer(configuration);
-        this.converter7Bit = new Converter7Bit(mailetContext);
         this.bouncer = new Bouncer(configuration, messageComposer, mailetContext, logger);
+        this.mailDelivrerToHost = new MailDelivrerToHost(configuration, mailetContext, logger);
     }
 
     /**
@@ -86,7 +79,6 @@ public class DeliveryRunnable implements Runnable {
      */
     @Override
     public void run() {
-        final Session session = obtainSession(configuration.createFinalJavaxProperties());
         try {
             while (!Thread.interrupted() && !volatileIsDestroyed.isDestroyed()) {
                 try {
@@ -100,7 +92,7 @@ public class DeliveryRunnable implements Runnable {
                         if (configuration.isDebug()) {
                             logger.debug(Thread.currentThread().getName() + " will process mail " + mail.getName());
                         }
-                        attemptDelivery(session, mail);
+                        attemptDelivery(mail);
                         LifecycleUtil.dispose(mail);
                         mail = null;
                         queueItem.done(true);
@@ -126,8 +118,8 @@ public class DeliveryRunnable implements Runnable {
         }
     }
 
-    private void attemptDelivery(Session session, Mail mail) throws MailQueue.MailQueueException {
-        ExecutionResult executionResult = deliver(mail, session);
+    private void attemptDelivery(Mail mail) throws MailQueue.MailQueueException {
+        ExecutionResult executionResult = deliver(mail);
         switch (executionResult.getExecutionState()) {
             case SUCCESS:
                 outgoingMailsMetric.increment();
@@ -182,9 +174,9 @@ public class DeliveryRunnable implements Runnable {
      * @return boolean Whether the delivery was successful and the message can
      *         be deleted
      */
-    private ExecutionResult deliver(Mail mail, Session session) {
+    private ExecutionResult deliver(Mail mail) {
         try {
-            return tryDeliver(mail, session);
+            return tryDeliver(mail);
         } catch (SendFailedException sfe) {
             return handleSenderFailedException(mail, sfe);
         } catch (MessagingException ex) {
@@ -210,7 +202,7 @@ public class DeliveryRunnable implements Runnable {
         }
     }
 
-    private ExecutionResult tryDeliver(Mail mail, Session session) throws MessagingException {
+    private ExecutionResult tryDeliver(Mail mail) throws MessagingException {
         if (mail.getRecipients().isEmpty()) {
             logger.info("No recipients specified... not sure how this could have happened.");
             return ExecutionResult.permanentFailure(new Exception("No recipients specified for " + mail.getName() + " sent by " + mail.getSender()));
@@ -239,15 +231,15 @@ public class DeliveryRunnable implements Runnable {
             targetServers = getGatewaySMTPHostAddresses(configuration.getGatewayServer());
         }
 
-        return doDeliver(mail, session, mail.getMessage(), convertToInetAddr(mail.getRecipients()), targetServers);
+        return doDeliver(mail, mail.getMessage(), convertToInetAddr(mail.getRecipients()), targetServers);
     }
 
-    private ExecutionResult doDeliver(Mail mail, Session session, MimeMessage message, InternetAddress[] addr, Iterator<HostAddress> targetServers) throws MessagingException {
+    private ExecutionResult doDeliver(Mail mail, MimeMessage message, InternetAddress[] addr, Iterator<HostAddress> targetServers) throws MessagingException {
         MessagingException lastError = null;
 
         while (targetServers.hasNext()) {
             try {
-                if (tryDeliveryToHost(mail, session, message, addr, targetServers.next())) {
+                if (mailDelivrerToHost.tryDeliveryToHost(mail, message, addr, targetServers.next())) {
                     return ExecutionResult.success();
                 }
             } catch (SendFailedException sfe) {
@@ -271,39 +263,6 @@ public class DeliveryRunnable implements Runnable {
             throw lastError;
         }
         return ExecutionResult.temporaryFailure();
-    }
-
-    private boolean tryDeliveryToHost(Mail mail, Session session, MimeMessage message, InternetAddress[] addr, HostAddress outgoingMailServer) throws MessagingException {
-        Properties props = session.getProperties();
-        if (mail.getSender() == null) {
-            props.put("mail.smtp.from", "<>");
-        } else {
-            String sender = mail.getSender().toString();
-            props.put("mail.smtp.from", sender);
-        }
-        logger.debug("Attempting delivery of " + mail.getName() + " to host " + outgoingMailServer.getHostName()
-            + " at " + outgoingMailServer.getHost() + " from " + props.get("mail.smtp.from"));
-
-        // Many of these properties are only in later JavaMail versions
-        // "mail.smtp.ehlo"           //default true
-        // "mail.smtp.auth"           //default false
-        // "mail.smtp.dsn.ret"        //default to nothing... appended as
-        // RET= after MAIL FROM line.
-        // "mail.smtp.dsn.notify"     //default to nothing...appended as
-        // NOTIFY= after RCPT TO line.
-
-        SMTPTransport transport = null;
-        try {
-            transport = (SMTPTransport) session.getTransport(outgoingMailServer);
-            transport.setLocalHost( props.getProperty("mail.smtp.localhost", configuration.getHeloNameProvider().getHeloName()) );
-            connect(outgoingMailServer, transport);
-            transport.sendMessage(adaptToTransport(message, transport), addr);
-            logger.debug("Mail (" + mail.getName() + ")  sent successfully to " + outgoingMailServer.getHostName() +
-                " at " + outgoingMailServer.getHost() + " from " + props.get("mail.smtp.from") + " for " + mail.getRecipients());
-            return true;
-        } finally {
-            closeTransport(mail, outgoingMailServer, transport);
-        }
     }
 
     private MessagingException handleMessagingException(Mail mail, MessagingException me) throws MessagingException {
@@ -468,61 +427,6 @@ public class DeliveryRunnable implements Runnable {
         return addr;
     }
 
-    private MimeMessage adaptToTransport(MimeMessage message, SMTPTransport transport) throws MessagingException {
-        // if the transport is a SMTPTransport (from sun) some
-        // performance enhancement can be done.
-        if (transport.getClass().getName().endsWith(".SMTPTransport")) {
-            // if the message is alredy 8bit or binary and the server doesn't support the 8bit extension it has
-            // to be converted to 7bit. Javamail api doesn't perform
-            // that conversion, but it is required to be a rfc-compliant smtp server.
-
-            // Temporarily disabled. See JAMES-638
-            if (!transport.supportsExtension(BIT_MIME_8)) {
-                try {
-                    converter7Bit.convertTo7Bit(message);
-                } catch (IOException e) {
-                    // An error has occured during the 7bit conversion.
-                    // The error is logged and the message is sent anyway.
-
-                    logger.error("Error during the conversion to 7 bit.", e);
-                }
-            }
-        } else {
-            // If the transport is not the one developed by Sun we are not sure of how it
-            // handles the 8 bit mime stuff, so I convert the message to 7bit.
-            try {
-                converter7Bit.convertTo7Bit(message);
-            } catch (IOException e) {
-                logger.error("Error during the conversion to 7 bit.", e);
-            }
-        }
-        return message;
-    }
-
-    private void closeTransport(Mail mail, HostAddress outgoingMailServer, SMTPTransport transport) {
-        if (transport != null) {
-            try {
-                // James-899: transport.close() sends QUIT to the server; if that fails
-                // (e.g. because the server has already closed the connection) the message
-                // should be considered to be delivered because the error happened outside
-                // of the mail transaction (MAIL, RCPT, DATA).
-                transport.close();
-            } catch (MessagingException e) {
-                logger.error("Warning: could not close the SMTP transport after sending mail (" + mail.getName() + ") to " + outgoingMailServer.getHostName() + " at " + outgoingMailServer.getHost() + " for " + mail.getRecipients() + "; probably the server has already closed the "
-                    + "connection. Message is considered to be delivered. Exception: " + e.getMessage());
-            }
-            transport = null;
-        }
-    }
-
-    private void connect(HostAddress outgoingMailServer, SMTPTransport transport) throws MessagingException {
-        if (configuration.getAuthUser() != null) {
-            transport.connect(outgoingMailServer.getHostName(), configuration.getAuthUser(), configuration.getAuthPass());
-        } else {
-            transport.connect();
-        }
-    }
-
     private ExecutionResult handleTemporaryResolutionException(Mail mail, String host) {
         ExecutionResult executionResult = ExecutionResult.temporaryFailure(new MessagingException("Temporary problem looking " +
             "up mail server for host: " + host + ".  I cannot determine where to send this message."));
@@ -546,10 +450,6 @@ public class DeliveryRunnable implements Runnable {
             logger.debug(messageComposer.composeFailLogMessage(mail, executionResult));
             return executionResult;
         }
-    }
-
-    protected Session obtainSession(Properties props) {
-        return Session.getInstance(props);
     }
 
     private long getNextDelay(int retry_count) {
