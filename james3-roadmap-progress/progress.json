@@ -23,7 +23,7 @@
    },
    {
      "name" : "Gatling load and endurance testing",
-     "completion" : 60,
+     "completion" : 70,
      "complexity" : 30
    },
    {
@@ -48,7 +48,7 @@
    },
    {
      "name" : "Make sure default (JPA + Lucene) backends work well",
-     "completion" : 80,
+     "completion" : 90,
      "complexity" : 10
    },
    {
@@ -58,26 +58,26 @@
    },
    {
      "name" : "Make security audits",
-     "completion" : 20,
+     "completion" : 40,
      "complexity" : 5
    },
    {
      "name" : "bug triaging",
-     "completion" : 10,
+     "completion" : 100,
      "complexity" : 5
    },
   {
    "name": "TTN",
-   "completion" : 0,
+   "completion" : 60,
    "complexity": 10
   },
    {
      "name": "Mailet refactor",
      "children": [        
         {"name": "AbstractNotify", "completion": 80, "complexity" : 10},
-        {"name": "LocalDelivery", "completion": 60, "complexity" : 10},
-        {"name": "RemoteDelivery", "completion": 0, "complexity" : 10},
-        {"name": "RecipientRewriteTable", "completion": 90, "complexity" : 5},
+        {"name": "LocalDelivery", "completion": 100, "complexity" : 10},
+        {"name": "RemoteDelivery", "completion": 25, "complexity" : 10},
+        {"name": "RecipientRewriteTable", "completion": 100, "complexity" : 5},
         {"name": "All other mailets", "completion": 100, "complexity" : 25}
      ],
      "complexity" : 60
