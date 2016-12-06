@@ -499,46 +499,6 @@ public class SMTPServerTest {
 
     }
 
-    @Test
-    public void startTlsCommandShouldWorkWhenAlone() throws Exception {
-        smtpConfiguration.setStartTLS();
-        init(smtpConfiguration);
-
-        SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
-
-        // no message there, yet
-        assertThat(queue.getLastMail())
-            .as("no mail received by mail server")
-            .isNull();;
-
-        smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
-        smtpProtocol.sendCommand("STARTTLS");
-        assertThat(smtpProtocol.getReplyCode()).isEqualTo(220);
-        
-        smtpProtocol.disconnect();
-    }
-
-    @Test
-    public void startTlsCommandShouldFailWhenFollowedByInjectedCommand() throws Exception {
-        smtpConfiguration.setStartTLS();
-        init(smtpConfiguration);
-
-        SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
-
-        // no message there, yet
-        assertThat(queue.getLastMail())
-            .as("no mail received by mail server")
-            .isNull();;
-
-        smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
-        smtpProtocol.sendCommand("STARTTLS\r\nAUTH PLAIN");
-        assertThat(smtpProtocol.getReplyCode()).isEqualTo(451);
-        
-        smtpProtocol.disconnect();
-    }
-
     protected SMTPClient newSMTPClient() throws IOException {
         SMTPClient smtp = new SMTPClient();
         smtp.connect("127.0.0.1", smtpListenerPort);
