@@ -46,8 +46,8 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
     private InMemoryDNSService inMemoryDNSService;
 
 
-    public CassandraJamesSmtpHostSystem(int smtpPort) {
-        super("localhost", smtpPort, new SystemLoggingMonitor(), "220 mydomain.tld smtp");
+    public CassandraJamesSmtpHostSystem() {
+        super("localhost", 1025, new SystemLoggingMonitor(), "220 mydomain.tld smtp");
     }
 
     @Override

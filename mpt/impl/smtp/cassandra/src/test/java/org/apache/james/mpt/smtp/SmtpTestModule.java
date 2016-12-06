@@ -26,7 +26,7 @@ public class SmtpTestModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(SmtpHostSystem.class).toInstance(new CassandraJamesSmtpHostSystem(1025));
+        bind(SmtpHostSystem.class).to(CassandraJamesSmtpHostSystem.class);
     }
 
 }
