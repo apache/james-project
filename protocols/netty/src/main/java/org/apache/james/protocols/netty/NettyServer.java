@@ -21,14 +21,20 @@ package org.apache.james.protocols.netty;
 
 import javax.net.ssl.SSLContext;
 
-import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.Encryption;
+import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
+import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.group.ChannelGroup;
+import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
+import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.jboss.netty.handler.execution.ExecutionHandler;
 import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 
 /**
@@ -36,27 +42,60 @@ import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
  */
 public class NettyServer extends AbstractAsyncServer {
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private Protocol protocol;
+        private Optional<Encryption> secure;
+        private Optional<ChannelHandler> frameHandler;
+
+        private Builder() {
+            secure = Optional.absent();
+            frameHandler = Optional.absent();
+        }
+
+        public Builder protocol(Protocol protocol) {
+            Preconditions.checkNotNull(protocol, "'protocol' is mandatory");
+            this.protocol = protocol;
+            return this;
+        }
+
+        public Builder secure(Encryption secure) {
+            this.secure = Optional.fromNullable(secure);
+            return this;
+        }
+
+        public Builder frameHandler(ChannelHandler frameHandler) {
+            this.frameHandler = Optional.fromNullable(frameHandler);
+            return this;
+        }
+
+        public NettyServer build() {
+            Preconditions.checkState(protocol != null, "'protocol' is mandatory");
+            return new NettyServer(protocol, 
+                    secure.orNull(),
+                    frameHandler.or(new DelimiterBasedFrameDecoder(AbstractChannelPipelineFactory.MAX_LINE_LENGTH, false, Delimiters.lineDelimiter())));
+        }
+    }
+
     protected final Protocol protocol;
+    protected final Encryption secure;
+    private final ChannelHandler frameHandler;
     
     private ExecutionHandler eHandler;
     
     private ChannelUpstreamHandler coreHandler;
 
-    protected final Encryption secure;
-
     private int maxCurConnections;
 
     private int maxCurConnectionsPerIP;
    
-    public NettyServer(Protocol protocol) {
-        this(protocol, null);
-    }
-    
-    
-    public NettyServer(Protocol protocol, Encryption secure) {
-        super();
+    private NettyServer(Protocol protocol, Encryption secure, ChannelHandler frameHandler) {
         this.protocol = protocol;
         this.secure = secure;
+        this.frameHandler = frameHandler;
     }
     
     protected ExecutionHandler createExecutionHandler(int size) {
@@ -102,11 +141,14 @@ public class NettyServer extends AbstractAsyncServer {
         super.bind();
     }
 
+    private ChannelHandler getFrameHandler() {
+        return frameHandler;
+    }
 
     @Override
     protected ChannelPipelineFactory createPipelineFactory(ChannelGroup group) {
 
-        return new AbstractSSLAwareChannelPipelineFactory(getTimeout(), maxCurConnections, maxCurConnectionsPerIP, group, eHandler) {
+        return new AbstractSSLAwareChannelPipelineFactory(getTimeout(), maxCurConnections, maxCurConnectionsPerIP, group, eHandler, getFrameHandler()) {
 
             @Override
             protected ChannelUpstreamHandler createHandler() {

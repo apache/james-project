@@ -47,6 +47,7 @@ import org.apache.james.protocols.lib.jmx.ServerMBean;
 import org.apache.james.protocols.netty.AbstractAsyncServer;
 import org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutor;
 import org.jboss.netty.bootstrap.ServerBootstrap;
+import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.group.ChannelGroup;
@@ -110,10 +111,12 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     private final ConnectionCountHandler countHandler = new ConnectionCountHandler();
 
     private ExecutionHandler executionHandler = null;
+    private ChannelHandler frameHandler;
 
     private int maxExecutorThreads;
 
     private MBeanServer mbeanServer;
+
 
     @Inject
     public final void setFileSystem(FileSystem filesystem) {
@@ -268,6 +271,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             buildSSLContext();
             preInit();
             executionHandler = createExecutionHander();
+            frameHandler = createFrameHandler();
             bind();
 
             mbeanServer = ManagementFactory.getPlatformMBeanServer();
@@ -564,6 +568,8 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return new ExecutionHandler(new JMXEnabledOrderedMemoryAwareThreadPoolExecutor(maxExecutorThreads, 0, 0, getThreadPoolJMXPath(), getDefaultJMXName() + "-executor"));
     }
 
+    protected abstract ChannelHandler createFrameHandler();
+
     /**
      * Return the {@link ExecutionHandler} or null if non should be used. Be sure you call {@link #createExecutionHander()} before
      * 
@@ -573,11 +579,15 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return executionHandler;
     }
     
+    protected ChannelHandler getFrameHandler() {
+        return frameHandler;
+    }
+
     protected abstract ChannelUpstreamHandler createCoreHandler();
     
     @Override
     protected ChannelPipelineFactory createPipelineFactory(ChannelGroup group) {
-        return new AbstractExecutorAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP, group, enabledCipherSuites, getExecutionHandler()) {
+        return new AbstractExecutorAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP, group, enabledCipherSuites, getExecutionHandler(), getFrameHandler()) {
             @Override
             protected SSLContext getSSLContext() {
                 if (encryption == null) {

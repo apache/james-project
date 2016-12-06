@@ -22,11 +22,11 @@ import org.apache.james.mpt.smtp.host.CassandraJamesSmtpHostSystem;
 
 import com.google.inject.AbstractModule;
 
-public class SmtpTestModule extends AbstractModule {
+public class StarttlsSmtpTestModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(SmtpHostSystem.class).toInstance(new CassandraJamesSmtpHostSystem(1025));
+        bind(SmtpHostSystem.class).toInstance(new CassandraJamesSmtpHostSystem(1587));
     }
 
 }

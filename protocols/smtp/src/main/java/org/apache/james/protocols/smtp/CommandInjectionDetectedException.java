@@ -16,17 +16,8 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mpt.smtp;
+package org.apache.james.protocols.smtp;
 
-import org.apache.james.mpt.smtp.host.CassandraJamesSmtpHostSystem;
-
-import com.google.inject.AbstractModule;
-
-public class SmtpTestModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        bind(SmtpHostSystem.class).toInstance(new CassandraJamesSmtpHostSystem(1025));
-    }
+public class CommandInjectionDetectedException extends RuntimeException {
 
 }
