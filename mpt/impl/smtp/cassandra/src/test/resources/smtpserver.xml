@@ -77,8 +77,8 @@
         <jmxName>smtpserver-authenticated</jmxName>
         <bind>0.0.0.0:1587</bind>
         <connectionBacklog>200</connectionBacklog>
-        <tls socketTLS="false" startTLS="true">
-            <keystore>keystore</keystore>
+        <tls socketTLS="false" startTLS="false">
+            <keystore>file://conf/keystore</keystore>
             <secret>james72laBalle</secret>
             <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
             <algorithm>SunX509</algorithm>
