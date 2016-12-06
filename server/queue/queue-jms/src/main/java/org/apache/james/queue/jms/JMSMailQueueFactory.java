@@ -21,10 +21,11 @@ package org.apache.james.queue.jms;
 import javax.inject.Inject;
 import javax.jms.ConnectionFactory;
 
+import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.library.AbstractMailQueueFactory;
 
 /**

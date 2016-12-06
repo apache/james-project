@@ -19,6 +19,7 @@
 package org.apache.james.transport.mailets.jsieve;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.logging.Log;
 import org.apache.jsieve.mail.Action;
@@ -67,6 +68,7 @@ public class FileIntoAction implements MailAction {
      * @param context not null
      * @throws MessagingException
      */
+    @SuppressWarnings("deprecation")
     public void execute(ActionFileInto anAction, Mail aMail, final ActionContext context) throws MessagingException
     {
         String destinationMailbox = anAction.getDestination();

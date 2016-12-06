@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets.jsieve;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 
