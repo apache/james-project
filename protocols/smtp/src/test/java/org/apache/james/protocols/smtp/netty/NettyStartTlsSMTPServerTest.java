@@ -42,14 +42,11 @@ import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 import org.apache.james.protocols.api.utils.MockLogger;
 import org.apache.james.protocols.api.utils.TestUtils;
-import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.smtp.SMTPConfigurationImpl;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPProtocolHandlerChain;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
-import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
-import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.junit.After;
 import org.junit.Test;
 
@@ -68,8 +65,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     private ProtocolServer createServer(Protocol protocol, InetSocketAddress address, Encryption enc) {
-        NettyServer server = new NettyServer(protocol, enc,
-                new DelimiterBasedFrameDecoder(AbstractChannelPipelineFactory.MAX_LINE_LENGTH, false, Delimiters.lineDelimiter()));
+        NettyServer server = new NettyServer(protocol, enc);
         server.setListenAddresses(address);
         return server;
     }

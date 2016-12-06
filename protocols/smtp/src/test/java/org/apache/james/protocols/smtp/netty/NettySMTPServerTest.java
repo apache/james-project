@@ -20,14 +20,10 @@ package org.apache.james.protocols.smtp.netty;
 
 import java.net.InetSocketAddress;
 
-import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
-import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.smtp.AbstractSMTPServerTest;
-import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
-import org.jboss.netty.handler.codec.frame.Delimiters;
 
 /**
  * Integration tests which use netty implementation
@@ -39,9 +35,7 @@ public class NettySMTPServerTest extends AbstractSMTPServerTest{
     
     @Override
     protected ProtocolServer createServer(Protocol protocol, InetSocketAddress address) {
-        Encryption secure = null;
-        NettyServer server = new NettyServer(protocol, secure,
-                new DelimiterBasedFrameDecoder(AbstractChannelPipelineFactory.MAX_LINE_LENGTH, false, Delimiters.lineDelimiter()));
+        NettyServer server =  new NettyServer(protocol);
         server.setListenAddresses(address);
         return server;
     }

@@ -21,7 +21,6 @@ package org.apache.james.protocols.netty;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
-import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.handler.execution.ExecutionHandler;
@@ -38,15 +37,13 @@ public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractCha
     private String[] enabledCipherSuites = null;
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
-            int maxConnections, int maxConnectsPerIp, ChannelGroup group, ExecutionHandler eHandler,
-            ChannelHandler frameHandler) {
-        super(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandler);
+            int maxConnections, int maxConnectsPerIp, ChannelGroup group, ExecutionHandler eHandler) {
+        super(timeout, maxConnections, maxConnectsPerIp, group, eHandler);
     }
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
-            int maxConnections, int maxConnectsPerIp, ChannelGroup group, String[] enabledCipherSuites, ExecutionHandler eHandler,
-            ChannelHandler frameHandler) {
-        this(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandler);
+            int maxConnections, int maxConnectsPerIp, ChannelGroup group, String[] enabledCipherSuites, ExecutionHandler eHandler) {
+        this(timeout, maxConnections, maxConnectsPerIp, group, eHandler);
         
         // We need to copy the String array becuase of possible security issues.
         // See https://issues.apache.org/jira/browse/PROTOCOLS-18

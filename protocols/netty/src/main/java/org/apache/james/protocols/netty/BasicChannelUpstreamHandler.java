@@ -23,18 +23,19 @@ import java.util.List;
 
 import javax.net.ssl.SSLEngine;
 
-import org.apache.james.protocols.api.Encryption;
+import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolSession;
-import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.api.Response;
+import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.future.FutureResponse;
 import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.api.handler.DisconnectHandler;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
 import org.apache.james.protocols.api.handler.ProtocolHandlerResultHandler;
+import org.apache.james.protocols.netty.NettyProtocolTransport;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandler.Sharable;
@@ -138,6 +139,7 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
         if (lineHandlers.size() > 0) {
         
             ChannelBuffer buf = (ChannelBuffer) e.getMessage();      
+            
             LineHandler lHandler=  (LineHandler) lineHandlers.getLast();
             long start = System.currentTimeMillis();            
             Response response = lHandler.onLine(pSession,buf.toByteBuffer());

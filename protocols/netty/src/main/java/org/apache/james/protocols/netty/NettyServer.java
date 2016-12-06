@@ -21,10 +21,9 @@ package org.apache.james.protocols.netty;
 
 import javax.net.ssl.SSLContext;
 
-import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
+import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
-import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.group.ChannelGroup;
@@ -40,7 +39,6 @@ public class NettyServer extends AbstractAsyncServer {
     protected final Protocol protocol;
     
     private ExecutionHandler eHandler;
-    private ChannelHandler frameHandler;
     
     private ChannelUpstreamHandler coreHandler;
 
@@ -51,15 +49,14 @@ public class NettyServer extends AbstractAsyncServer {
     private int maxCurConnectionsPerIP;
    
     public NettyServer(Protocol protocol) {
-        this(protocol, null, null);
+        this(protocol, null);
     }
     
     
-    public NettyServer(Protocol protocol, Encryption secure, ChannelHandler frameHandler) {
+    public NettyServer(Protocol protocol, Encryption secure) {
         super();
         this.protocol = protocol;
         this.secure = secure;
-        this.frameHandler = frameHandler;
     }
     
     protected ExecutionHandler createExecutionHandler(int size) {
@@ -105,14 +102,11 @@ public class NettyServer extends AbstractAsyncServer {
         super.bind();
     }
 
-    private ChannelHandler getFrameHandler() {
-        return frameHandler;
-    }
 
     @Override
     protected ChannelPipelineFactory createPipelineFactory(ChannelGroup group) {
 
-        return new AbstractSSLAwareChannelPipelineFactory(getTimeout(), maxCurConnections, maxCurConnectionsPerIP, group, eHandler, getFrameHandler()) {
+        return new AbstractSSLAwareChannelPipelineFactory(getTimeout(), maxCurConnections, maxCurConnectionsPerIP, group, eHandler) {
 
             @Override
             protected ChannelUpstreamHandler createHandler() {
