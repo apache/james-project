@@ -183,8 +183,7 @@ public class MessageWithAttachmentMapperTest<T extends MapperProvider> {
     public void messagesCanBeRetrievedInMailboxWithRangeTypeOne() throws MailboxException, IOException{
         saveMessages();
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.Full;
-        int limit =10;
-        assertThat(messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(messageWith1Attachment.getUid()), fetchType, limit).next())
+        assertThat(messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(messageWith1Attachment.getUid()), fetchType, LIMIT).next())
             .isEqualTo(messageWith1Attachment, fetchType);
     }
 

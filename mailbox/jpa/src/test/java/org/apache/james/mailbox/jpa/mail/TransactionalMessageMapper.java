@@ -38,10 +38,10 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 
 public class TransactionalMessageMapper implements MessageMapper {
-    private final JPAMessageMapper wrapped;
+    private final JPAMessageMapper messageMapper;
 
-    public TransactionalMessageMapper(JPAMessageMapper wrapped) {
-        this.wrapped = wrapped;
+    public TransactionalMessageMapper(JPAMessageMapper messageMapper) {
+        this.messageMapper = messageMapper;
     }
     @Override
     public void endRequest() {
@@ -56,16 +56,16 @@ public class TransactionalMessageMapper implements MessageMapper {
     @Override
     public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange set, FetchType type, int limit)
             throws MailboxException {
-        return wrapped.findInMailbox(mailbox, set, type, limit);
+        return messageMapper.findInMailbox(mailbox, set, type, limit);
     }
 
     @Override
     public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(final Mailbox mailbox, final MessageRange set)
             throws MailboxException {
-        Map<MessageUid, MessageMetaData> data = wrapped.execute(new Transaction<Map<MessageUid, MessageMetaData>>() {
+        Map<MessageUid, MessageMetaData> data = messageMapper.execute(new Transaction<Map<MessageUid, MessageMetaData>>() {
             @Override
             public Map<MessageUid, MessageMetaData> run() throws MailboxException {
-                return wrapped.expungeMarkedForDeletionInMailbox(mailbox, set);
+                return messageMapper.expungeMarkedForDeletionInMailbox(mailbox, set);
             }
         });
         return data;
@@ -73,21 +73,21 @@ public class TransactionalMessageMapper implements MessageMapper {
 
     @Override
     public long countMessagesInMailbox(Mailbox mailbox) throws MailboxException {
-        return wrapped.countMessagesInMailbox(mailbox);
+        return messageMapper.countMessagesInMailbox(mailbox);
     }
 
     @Override
     public long countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
-        return wrapped.countUnseenMessagesInMailbox(mailbox);
+        return messageMapper.countUnseenMessagesInMailbox(mailbox);
     }
 
     @Override
     public void delete(final Mailbox mailbox, final MailboxMessage message) throws MailboxException {
         try {
-            wrapped.execute(new VoidTransaction() {
+            messageMapper.execute(new VoidTransaction() {
                 @Override
                 public void runVoid() throws MailboxException {
-                    wrapped.delete(mailbox, message);
+                    messageMapper.delete(mailbox, message);
                 }
             });
         } catch (MailboxException e) {
@@ -97,20 +97,20 @@ public class TransactionalMessageMapper implements MessageMapper {
 
     @Override
     public MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
-        return wrapped.findFirstUnseenMessageUid(mailbox);
+        return messageMapper.findFirstUnseenMessageUid(mailbox);
     }
 
     @Override
     public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
-        return wrapped.findRecentMessageUidsInMailbox(mailbox);
+        return messageMapper.findRecentMessageUidsInMailbox(mailbox);
     }
 
     @Override
     public MessageMetaData add(final Mailbox mailbox, final MailboxMessage message) throws MailboxException {
-        MessageMetaData data = wrapped.execute(new Transaction<MessageMetaData>() {
+        MessageMetaData data = messageMapper.execute(new Transaction<MessageMetaData>() {
             @Override
             public MessageMetaData run() throws MailboxException {
-                return wrapped.add(mailbox, message);
+                return messageMapper.add(mailbox, message);
             }
         });
         return data;
@@ -119,10 +119,10 @@ public class TransactionalMessageMapper implements MessageMapper {
     @Override
     public Iterator<UpdatedFlags> updateFlags(final Mailbox mailbox, final FlagsUpdateCalculator flagsUpdateCalculator,
             final MessageRange set) throws MailboxException {
-        Iterator<UpdatedFlags> data = wrapped.execute(new Transaction<Iterator<UpdatedFlags>>() {
+        Iterator<UpdatedFlags> data = messageMapper.execute(new Transaction<Iterator<UpdatedFlags>>() {
             @Override
             public Iterator<UpdatedFlags> run() throws MailboxException {
-                return wrapped.updateFlags(mailbox, flagsUpdateCalculator, set);
+                return messageMapper.updateFlags(mailbox, flagsUpdateCalculator, set);
             }
         });
         return data;
@@ -130,10 +130,10 @@ public class TransactionalMessageMapper implements MessageMapper {
 
     @Override
     public MessageMetaData copy(final Mailbox mailbox, final MailboxMessage original) throws MailboxException {
-        MessageMetaData data = wrapped.execute(new Transaction<MessageMetaData>() {
+        MessageMetaData data = messageMapper.execute(new Transaction<MessageMetaData>() {
             @Override
             public MessageMetaData run() throws MailboxException {
-                return wrapped.copy(mailbox, original);
+                return messageMapper.copy(mailbox, original);
             }
         });
         return data;
@@ -141,17 +141,17 @@ public class TransactionalMessageMapper implements MessageMapper {
 
     @Override
     public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
-        return wrapped.move(mailbox, original);
+        return messageMapper.move(mailbox, original);
     }
 
     @Override
     public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
-        return wrapped.getLastUid(mailbox);
+        return messageMapper.getLastUid(mailbox);
     }
 
     @Override
     public long getHighestModSeq(Mailbox mailbox) throws MailboxException {
-        return wrapped.getHighestModSeq(mailbox);
+        return messageMapper.getHighestModSeq(mailbox);
     }
 
 }

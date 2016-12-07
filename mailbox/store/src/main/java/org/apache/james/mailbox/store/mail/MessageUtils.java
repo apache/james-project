@@ -19,20 +19,31 @@
 
 package org.apache.james.mailbox.store.mail;
 
+import java.util.Iterator;
+import java.util.List;
+
+import javax.mail.Flags;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
-public class MessageMetadata {
+public class MessageUtils {
     private final MailboxSession mailboxSession;
     private final UidProvider uidProvider;
     private final ModSeqProvider modSeqProvider;
 
-    public MessageMetadata(MailboxSession mailboxSession, UidProvider uidProvider, ModSeqProvider modSeqProvider) {
+    public MessageUtils(MailboxSession mailboxSession, UidProvider uidProvider, ModSeqProvider modSeqProvider) {
+        Preconditions.checkNotNull(uidProvider);
+        Preconditions.checkNotNull(modSeqProvider);
         this.mailboxSession = mailboxSession;
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
@@ -52,18 +63,56 @@ public class MessageMetadata {
     }
 
     public long nextModSeq(Mailbox mailbox) throws MailboxException {
-        if (modSeqProvider != null) {
-            return modSeqProvider.nextModSeq(mailboxSession, mailbox);
-        }
-        return -1;
+        return modSeqProvider.nextModSeq(mailboxSession, mailbox);
     }
 
     public void enrichMessage(Mailbox mailbox, MailboxMessage message) throws MailboxException { 
         message.setUid(nextUid(mailbox));
-        
-        if (modSeqProvider != null) {
-            message.setModSeq(nextModSeq(mailbox));
-        }
+        message.setModSeq(nextModSeq(mailbox));
     }
 
+    public MessageChangedFlags updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, 
+            Iterator<MailboxMessage> messages) throws MailboxException {
+        ImmutableList.Builder<UpdatedFlags> updatedFlags = ImmutableList.builder();
+        ImmutableList.Builder<MailboxMessage> changedFlags = ImmutableList.builder();
+
+        long modSeq = nextModSeq(mailbox);
+
+        while(messages.hasNext()) {
+            MailboxMessage member = messages.next();
+            Flags originalFlags = member.createFlags();
+            member.setFlags(flagsUpdateCalculator.buildNewFlags(originalFlags));
+            Flags newFlags = member.createFlags();
+            if (UpdatedFlags.flagsChanged(originalFlags, newFlags)) {
+                member.setModSeq(modSeq);
+                changedFlags.add(member);
+            }
+
+            UpdatedFlags uFlags = new UpdatedFlags(member.getUid(), member.getModSeq(), originalFlags, newFlags);
+
+            updatedFlags.add(uFlags);
+
+        }
+
+        return new MessageChangedFlags(updatedFlags.build().iterator(), changedFlags.build());
+    }
+
+    
+    public class MessageChangedFlags {
+        private final Iterator<UpdatedFlags> updatedFlags;
+        private final List<MailboxMessage> changedFlags;
+
+        public MessageChangedFlags(Iterator<UpdatedFlags> updatedFlags, List<MailboxMessage> changedFlags) {
+            this.updatedFlags = updatedFlags;
+            this.changedFlags = changedFlags;
+        }
+
+        public Iterator<UpdatedFlags> getUpdatedFlags() {
+            return updatedFlags;
+        }
+
+        public List<MailboxMessage> getChangedFlags() {
+            return changedFlags;
+        }
+    }
 }

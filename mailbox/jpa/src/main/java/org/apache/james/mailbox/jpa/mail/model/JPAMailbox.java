@@ -96,6 +96,13 @@ public class JPAMailbox implements Mailbox {
     @Column(name = "MAILBOX_HIGHEST_MODSEQ", nullable = true)
     private long highestModSeq;
     
+    public static JPAMailbox from(Mailbox mailbox) {
+        if (mailbox instanceof JPAMailbox) {
+            return (JPAMailbox) mailbox;
+        }
+        return new JPAMailbox(mailbox);
+    }
+
     /**
      * JPA only
      */
@@ -230,5 +237,5 @@ public class JPAMailbox implements Mailbox {
     @Override
     public void setACL(MailboxACL acl) {
     }
-    
+
 }

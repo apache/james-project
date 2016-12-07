@@ -45,7 +45,8 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.MessageMetadata;
+import org.apache.james.mailbox.store.mail.MessageUtils;
+import org.apache.james.mailbox.store.mail.MessageUtils.MessageChangedFlags;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -59,11 +60,12 @@ import com.google.common.collect.ImmutableList;
  * JPA implementation of a {@link MessageMapper}. This class is not thread-safe!
  */
 public class JPAMessageMapper extends JPATransactionalMapper implements MessageMapper {
-    private final MessageMetadata messageMetadataMapper;
+    private static final int UNLIMIT_MAX_SIZE = -1;
+    private final MessageUtils messageMetadataMapper;
 
     public JPAMessageMapper(MailboxSession mailboxSession, UidProvider uidProvider, ModSeqProvider modSeqProvider, EntityManagerFactory entityManagerFactory) {
         super(entityManagerFactory);
-        this.messageMetadataMapper = new MessageMetadata(mailboxSession, uidProvider, modSeqProvider);
+        this.messageMetadataMapper = new MessageUtils(mailboxSession, uidProvider, modSeqProvider);
     }
 
     /**
@@ -249,30 +251,15 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     @Override
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator,
             MessageRange set) throws MailboxException {
-        ImmutableList.Builder<UpdatedFlags> updatedFlags = ImmutableList.builder();
-        Iterator<MailboxMessage> messages = findInMailbox(mailbox, set, FetchType.Metadata, -1);
-        
-        long modSeq = -1;
-        if (messages.hasNext()) {
-            modSeq = messageMetadataMapper.nextModSeq(mailbox);
-        }
-        while(messages.hasNext()) {
-            MailboxMessage member = messages.next();
-            Flags originalFlags = member.createFlags();
-            member.setFlags(flagsUpdateCalculator.buildNewFlags(originalFlags));
-            Flags newFlags = member.createFlags();
-            if (UpdatedFlags.flagsChanged(originalFlags, newFlags)) {
-                member.setModSeq(modSeq);
-                save(mailbox, member);
-            }
+        Iterator<MailboxMessage> messages = findInMailbox(mailbox, set, FetchType.Metadata, UNLIMIT_MAX_SIZE);
 
-            UpdatedFlags uFlags = new UpdatedFlags(member.getUid(), member.getModSeq(), originalFlags, newFlags);
-            
-            updatedFlags.add(uFlags);
-            
+        MessageChangedFlags messageChangedFlags = messageMetadataMapper.updateFlags(mailbox, flagsUpdateCalculator, messages);
+
+        for (MailboxMessage mailboxMessage : messageChangedFlags.getChangedFlags()) {
+            save(mailbox, mailboxMessage);
         }
 
-        return updatedFlags.build().iterator();
+        return messageChangedFlags.getUpdatedFlags();
     }
 
     @Override
@@ -293,12 +280,8 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     private MessageMetaData copy(Mailbox mailbox, MessageUid uid, long modSeq, MailboxMessage original)
             throws MailboxException {
         MailboxMessage copy;
-        JPAMailbox currentMailbox;
-        if (mailbox instanceof JPAMailbox) {
-            currentMailbox = (JPAMailbox) mailbox;
-        } else {
-            currentMailbox = new JPAMailbox(mailbox);
-        }
+        JPAMailbox currentMailbox = JPAMailbox.from(mailbox);
+
         if (original instanceof JPAStreamingMailboxMessage) {
             copy = new JPAStreamingMailboxMessage(currentMailbox, uid, modSeq, original);
         } else if (original instanceof JPAEncryptedMailboxMessage) {
