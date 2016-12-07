@@ -42,6 +42,8 @@ import com.google.common.base.Strings;
  */
 public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
     
+    private static final String EXPERIMENTAL = " (Experimental)";
+
     /**
      * Directory where reports will go.
      */
@@ -89,6 +91,7 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
         getSink().sectionTitle1();
         getSink().text("Mailets and Matchers Reference");
         getSink().sectionTitle1_();
+        getSink().text("Items marked as Experimental are not yet supported by James; however, you can try them.");
         getSink().section1_();
         
         writeDescriptions();
@@ -177,6 +180,9 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
             getSink().listItem();
             getSink().link("#" + descriptor.getName());
             getSink().text(descriptor.getName());
+            if (descriptor.isExperimental()) {
+                getSink().text(EXPERIMENTAL);
+            }
             getSink().link_();
             getSink().listItem_();
         }
@@ -199,6 +205,9 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
             getSink().sectionTitle2();
             getSink().anchor(descriptor.getName());
             getSink().text(descriptor.getName());
+            if (descriptor.isExperimental()) {
+                getSink().text(EXPERIMENTAL);
+            }
             getSink().anchor_();
             getSink().sectionTitle2_();
 
