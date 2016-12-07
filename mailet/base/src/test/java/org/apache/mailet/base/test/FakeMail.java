@@ -58,6 +58,19 @@ public class FakeMail implements Mail {
                     new ByteArrayInputStream(text.getBytes(javaEncodingCharset))))
                 .build();
     }
+
+    public static FakeMail fromMail(Mail mail) throws MessagingException {
+        return new FakeMail(mail.getMessage(),
+            Lists.newArrayList(mail.getRecipients()),
+            mail.getName(),
+            mail.getSender(),
+            mail.getState(),
+            mail.getErrorMessage(),
+            mail.getLastUpdated(),
+            attributes(mail),
+            mail.getMessageSize(),
+            mail.getRemoteAddr());
+    }
     
     public static Builder builder() {
         return new Builder();
@@ -210,11 +223,6 @@ public class FakeMail implements Mail {
         this.attributes = attributes;
         this.size = size;
         this.remoteAddr = remoteAddr;
-    }
-
-    public FakeMail(Mail mail) throws MessagingException {
-        this(mail.getMessage(), Lists.newArrayList(mail.getRecipients()), mail.getName(), mail.getSender(), mail.getState(), mail.getErrorMessage(),
-            mail.getLastUpdated(), attributes(mail), mail.getMessageSize(), mail.getRemoteAddr());
     }
 
     @Override

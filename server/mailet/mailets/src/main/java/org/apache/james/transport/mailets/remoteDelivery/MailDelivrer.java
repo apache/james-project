@@ -45,11 +45,13 @@ public class MailDelivrer {
     private final MailDelivrerToHost mailDelivrerToHost;
     private final DnsHelper dnsHelper;
     private final MessageComposer messageComposer;
+    private final Bouncer bouncer;
     private final Logger logger;
 
-    public MailDelivrer(RemoteDeliveryConfiguration configuration, MailDelivrerToHost mailDelivrerToHost, DNSService dnsServer, Logger logger) {
+    public MailDelivrer(RemoteDeliveryConfiguration configuration, MailDelivrerToHost mailDelivrerToHost, DNSService dnsServer, Bouncer bouncer, Logger logger) {
         this.configuration = configuration;
         this.mailDelivrerToHost = mailDelivrerToHost;
+        this.bouncer = bouncer;
         this.dnsHelper = new DnsHelper(dnsServer, configuration, logger);
         this.messageComposer = new MessageComposer(configuration);
         this.logger = logger;
@@ -191,6 +193,10 @@ public class MailDelivrer {
             }
         }
         if (!validUnsentAddresses.isEmpty()) {
+            if (!invalidAddresses.isEmpty()) {
+                mail.setRecipients(invalidAddresses);
+                bouncer.bounce(mail, sfe);
+            }
             mail.setRecipients(validUnsentAddresses);
             if (enhancedMessagingException.hasReturnCode()) {
                 boolean isPermanent = enhancedMessagingException.isServerError();

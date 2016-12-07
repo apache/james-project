@@ -66,7 +66,7 @@ public class RemoteDeliveryTest {
         @Override
         public void enQueue(Mail mail) throws MailQueueException {
             try {
-                enqueuedMail.add(new FakeMail(mail));
+                enqueuedMail.add(FakeMail.fromMail(mail));
             } catch (MessagingException e) {
                 throw Throwables.propagate(e);
             }
@@ -82,7 +82,6 @@ public class RemoteDeliveryTest {
         }
     }
 
-    public static final boolean DONT_START_THREADS = false;
     private RemoteDelivery remoteDelivery;
     private FakeMailQueue mailQueue;
 
@@ -91,7 +90,7 @@ public class RemoteDeliveryTest {
         MailQueueFactory queueFactory = mock(MailQueueFactory.class);
         mailQueue = new FakeMailQueue();
         when(queueFactory.getQueue(RemoteDeliveryConfiguration.OUTGOING)).thenReturn(mailQueue);
-        remoteDelivery = new RemoteDelivery(mock(DNSService.class), mock(DomainList.class), queueFactory, mock(MetricFactory.class), DONT_START_THREADS);
+        remoteDelivery = new RemoteDelivery(mock(DNSService.class), mock(DomainList.class), queueFactory, mock(MetricFactory.class), RemoteDelivery.THREAD_STATE.DO_NOT_START_THREADS);
     }
 
     @Test

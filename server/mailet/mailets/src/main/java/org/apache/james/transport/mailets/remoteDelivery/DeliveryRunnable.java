@@ -54,9 +54,9 @@ public class DeliveryRunnable implements Runnable {
     private final Supplier<Date> dateSupplier;
 
     public DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, DNSService dnsServer, Metric outgoingMailsMetric,
-                            Logger logger, MailetContext mailetContext, VolatileIsDestroyed volatileIsDestroyed) {
-        this(queue, configuration, outgoingMailsMetric, logger, new Bouncer(configuration, mailetContext, logger),
-            new MailDelivrer(configuration, new MailDelivrerToHost(configuration, mailetContext, logger), dnsServer, logger),
+                            Logger logger, MailetContext mailetContext, Bouncer bouncer, VolatileIsDestroyed volatileIsDestroyed) {
+        this(queue, configuration, outgoingMailsMetric, logger, bouncer,
+            new MailDelivrer(configuration, new MailDelivrerToHost(configuration, mailetContext, logger), dnsServer, bouncer, logger),
             volatileIsDestroyed, CURRENT_DATE_SUPPLIER);
     }
 

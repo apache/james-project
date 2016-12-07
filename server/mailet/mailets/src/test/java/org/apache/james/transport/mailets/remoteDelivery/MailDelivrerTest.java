@@ -21,6 +21,8 @@ package org.apache.james.transport.mailets.remoteDelivery;
 
 import static org.mockito.Mockito.mock;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import javax.mail.Address;
 import javax.mail.SendFailedException;
@@ -42,10 +44,12 @@ public class MailDelivrerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailDelivrerTest.class);
 
     private MailDelivrer testee;
+    private Bouncer bouncer;
 
     @Before
     public void setUp() {
-        testee = new MailDelivrer(mock(RemoteDeliveryConfiguration.class), mock(MailDelivrerToHost.class), mock(DNSService.class), LOGGER);
+        bouncer = mock(Bouncer.class);
+        testee = new MailDelivrer(mock(RemoteDeliveryConfiguration.class), mock(MailDelivrerToHost.class), mock(DNSService.class), bouncer, LOGGER);
     }
 
     @Test
@@ -179,5 +183,23 @@ public class MailDelivrerTest {
         testee.handleSenderFailedException(mail, sfe);
 
         assertThat(mail.getRecipients()).containsOnly(MailAddressFixture.OTHER_AT_JAMES);
+    }
+
+    @Test
+    public void handleSenderFailedExceptionShouldBounceInvalidAddressesOnBothInvalidAndValidUnsent() throws Exception {
+        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+
+        Address[] validSent = {};
+        Address[] validUnsent = {new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.asString())};
+        Address[] invalid = {new InternetAddress(MailAddressFixture.ANY_AT_JAMES.asString())};
+        SendFailedException sfe = new SendFailedException("Message",
+            new Exception(),
+            validSent,
+            validUnsent,
+            invalid);
+        testee.handleSenderFailedException(mail, sfe);
+
+        verify(bouncer).bounce(mail, sfe);
+        verifyNoMoreInteractions(bouncer);
     }
 }

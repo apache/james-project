@@ -23,7 +23,8 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -36,6 +37,7 @@ import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.transport.mailets.remoteDelivery.Bouncer;
 import org.apache.james.transport.mailets.remoteDelivery.DeliveryRunnable;
 import org.apache.james.transport.mailets.remoteDelivery.RemoteDeliveryConfiguration;
 import org.apache.james.transport.mailets.remoteDelivery.RemoteDeliverySocketFactory;
@@ -119,34 +121,37 @@ import com.google.common.collect.HashMultimap;
  */
 public class RemoteDelivery extends GenericMailet {
 
+    public enum THREAD_STATE {
+        START_THREADS,
+        DO_NOT_START_THREADS
+    }
+
     private static final String OUTGOING_MAILS = "outgoingMails";
-    private static final boolean DEFAULT_START_THREADS = true;
     public static final String NAME_JUNCTION = "-to-";
 
     private final DNSService dnsServer;
     private final DomainList domainList;
     private final MailQueueFactory queueFactory;
     private final Metric outgoingMailsMetric;
-    private final Collection<Thread> workersThreads;
     private final VolatileIsDestroyed volatileIsDestroyed;
-    private final boolean startThreads;
+    private final THREAD_STATE startThreads;
 
     private MailQueue queue;
     private Logger logger;
     private RemoteDeliveryConfiguration configuration;
+    private ExecutorService executor;
 
     @Inject
     public RemoteDelivery(DNSService dnsServer, DomainList domainList, MailQueueFactory queueFactory, MetricFactory metricFactory) {
-        this(dnsServer, domainList, queueFactory, metricFactory, DEFAULT_START_THREADS);
+        this(dnsServer, domainList, queueFactory, metricFactory, THREAD_STATE.START_THREADS);
     }
 
-    public RemoteDelivery(DNSService dnsServer, DomainList domainList, MailQueueFactory queueFactory, MetricFactory metricFactory, boolean startThreads) {
+    public RemoteDelivery(DNSService dnsServer, DomainList domainList, MailQueueFactory queueFactory, MetricFactory metricFactory, THREAD_STATE startThreads) {
         this.dnsServer = dnsServer;
         this.domainList = domainList;
         this.queueFactory = queueFactory;
         this.outgoingMailsMetric = metricFactory.generate(OUTGOING_MAILS);
         this.volatileIsDestroyed = new VolatileIsDestroyed();
-        this.workersThreads = new Vector<Thread>();
         this.startThreads = startThreads;
     }
 
@@ -160,25 +165,23 @@ public class RemoteDelivery extends GenericMailet {
         } catch (UnknownHostException e) {
             log("Invalid bind setting (" + configuration.getBindAddress() + "): " + e.toString());
         }
-        if (startThreads) {
+        if (startThreads == THREAD_STATE.START_THREADS) {
             initDeliveryThreads();
         }
     }
 
     private void initDeliveryThreads() {
+        executor = Executors.newFixedThreadPool(configuration.getWorkersThreadCount());
         for (int a = 0; a < configuration.getWorkersThreadCount(); a++) {
-            String threadName = "Remote delivery thread (" + a + ")";
-            Thread t = new Thread(
+            executor.execute(
                 new DeliveryRunnable(queue,
                     configuration,
                     dnsServer,
                     outgoingMailsMetric,
                     logger,
                     getMailetContext(),
-                    volatileIsDestroyed),
-                threadName);
-            t.start();
-            workersThreads.add(t);
+                    new Bouncer(configuration, getMailetContext(), logger),
+                    volatileIsDestroyed));
         }
     }
 
@@ -255,12 +258,9 @@ public class RemoteDelivery extends GenericMailet {
      */
     @Override
     public synchronized void destroy() {
-        if (startThreads) {
+        if (startThreads == THREAD_STATE.START_THREADS) {
             volatileIsDestroyed.markAsDestroyed();
-            // Wake up all threads from waiting for an accept
-            for (Thread t : workersThreads) {
-                t.interrupt();
-            }
+            executor.shutdown();
             notifyAll();
         }
     }
