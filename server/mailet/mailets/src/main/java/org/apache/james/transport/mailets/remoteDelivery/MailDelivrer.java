@@ -135,7 +135,7 @@ public class MailDelivrer {
                     return ExecutionResult.success();
                 }
             } catch (SendFailedException sfe) {
-                lastError = handleSendFailException(mail, sfe);
+                lastError = handleSendFailExceptionOnMxIteration(mail, sfe);
             } catch (MessagingException me) {
                 lastError = handleMessagingException(mail, me);
                 if (configuration.isDebug()) {
@@ -223,7 +223,7 @@ public class MailDelivrer {
         return executionResult;
     }
 
-    private MessagingException handleSendFailException(Mail mail, SendFailedException sfe) throws SendFailedException {
+    private MessagingException handleSendFailExceptionOnMxIteration(Mail mail, SendFailedException sfe) throws SendFailedException {
         logSendFailedException(sfe);
 
         if (sfe.getValidSentAddresses() != null) {
