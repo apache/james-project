@@ -50,5 +50,11 @@ public class MimeMessageInputStreamSourceTest {
         testee = new MimeMessageInputStreamSource("myKey", new ZeroedInputStream(_10KB));
         assertThat(testee.getInputStream()).hasContentEqualTo(new ZeroedInputStream(_10KB));
     }
-    
+
+    @Test
+    public void streamWithVeryShortNameShouldWork() throws MessagingException, IOException {
+        String veryShortName = "1";
+        testee = new MimeMessageInputStreamSource(veryShortName, new ZeroedInputStream(_1M));
+        assertThat(testee.getInputStream()).isNotNull();
+    }
 }

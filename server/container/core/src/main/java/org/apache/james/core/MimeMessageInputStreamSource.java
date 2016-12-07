@@ -77,7 +77,7 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
         // We want to immediately read this into a temporary file
         // Create a temp file and channel the input stream into it
         try {
-            out = new DeferredFileOutputStream(THRESHOLD, key, ".m64", TMPDIR);
+            out = new DeferredFileOutputStream(THRESHOLD, "mimemessage-" + key, ".m64", TMPDIR);
             IOUtils.copy(in, out);
             sourceId = key;
         } catch (IOException ioe) {
