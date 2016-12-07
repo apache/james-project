@@ -222,30 +222,29 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
 
     @Override
     public void service(Mail originalMail) throws MessagingException {
-        if (originalMail.getSender() == null) {
-            if (getInitParameters().isDebug()) {
-                log("Processing a bounce request for a message with an empty reverse-path.  No bounce will be sent.");
-            }
-            if (!getInitParameters().getPassThrough()) {
-                originalMail.setState(Mail.GHOST);
-            }
-            return;
+        if (hasSender(originalMail)) {
+            trySendBounce(originalMail);
         }
 
+        if (!getInitParameters().getPassThrough()) {
+            originalMail.setState(Mail.GHOST);
+        }
+    }
+
+    private void trySendBounce(Mail originalMail) throws MessagingException {
         MailImpl newMail = new MailImpl(originalMail);
         try {
-
             newMail.setRemoteHost(getRemoteHost());
             newMail.setRemoteAddr(getRemoteAddr());
             newMail.setRecipients(getSenderAsList(originalMail));
-
+       
             if (getInitParameters().isDebug()) {
                 log("New mail - sender: " + newMail.getSender() + ", recipients: " + StringUtils.arrayToString(newMail.getRecipients().toArray()) + ", name: " + newMail.getName() + ", remoteHost: " + newMail.getRemoteHost() + ", remoteAddr: " + newMail.getRemoteAddr() + ", state: " + newMail.getState()
                         + ", lastUpdated: " + newMail.getLastUpdated() + ", errorMessage: " + newMail.getErrorMessage());
             }
-
+       
             newMail.setMessage(createBounceMessage(originalMail));
-
+       
             // Set additional headers
             MailModifier mailModifier = MailModifier.builder()
                     .mailet(this)
@@ -259,19 +258,24 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
             mailModifier.setReversePath(getReversePath(originalMail), originalMail);
             mailModifier.setIsReply(getInitParameters().isReply(), originalMail);
             mailModifier.setSender(getSender(originalMail), originalMail);
-            newMail =  mailModifier.getMail();
-
+       
             newMail.getMessage().setHeader(RFC2822Headers.DATE, getDateHeader(originalMail));
-
+       
             newMail.getMessage().saveChanges();
             getMailetContext().sendMail(newMail);
         } finally {
             newMail.dispose();
         }
+    }
 
-        if (!getInitParameters().getPassThrough()) {
-            originalMail.setState(Mail.GHOST);
+    private boolean hasSender(Mail originalMail) {
+        if (originalMail.getSender() == null) {
+            if (getInitParameters().isDebug()) {
+                log("Processing a bounce request for a message with an empty reverse-path.  No bounce will be sent.");
+            }
+            return false;
         }
+        return true;
     }
 
     private String getDateHeader(Mail originalMail) throws MessagingException {
