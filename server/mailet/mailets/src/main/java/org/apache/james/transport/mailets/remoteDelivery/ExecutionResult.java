@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets.remoteDelivery;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
 public class ExecutionResult {
@@ -71,6 +72,21 @@ public class ExecutionResult {
 
     public boolean isPermanent() {
         return executionState == ExecutionState.PERMANENT_FAILURE;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof ExecutionResult) {
+            ExecutionResult that = (ExecutionResult) o;
+            return Objects.equal(this.executionState, that.executionState)
+                && Objects.equal(this.exception, that.exception);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(executionState, exception);
     }
 }
 

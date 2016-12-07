@@ -20,17 +20,15 @@
 package org.apache.james.transport.mailets.remoteDelivery;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.ParseException;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
@@ -39,7 +37,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
+import com.google.common.annotations.VisibleForTesting;
 
 public class MailDelivrer {
 
@@ -177,105 +175,46 @@ public class MailDelivrer {
         }
     }
 
-    private ExecutionResult handleSenderFailedException(Mail mail, SendFailedException sfe) {
+    @VisibleForTesting
+    ExecutionResult handleSenderFailedException(Mail mail, SendFailedException sfe) {
         logSendFailedException(sfe);
-
-        // Copy the recipients as direct modification may not be possible
-        Collection<MailAddress> recipients = new ArrayList<MailAddress>(mail.getRecipients());
-
-        ExecutionResult deleteMessage = ExecutionResult.temporaryFailure();
         EnhancedMessagingException enhancedMessagingException = new EnhancedMessagingException(sfe);
+        List<MailAddress> invalidAddresses = SFEHelper.getAddressesAsMailAddress(sfe.getInvalidAddresses(), logger);
+        List<MailAddress> validUnsentAddresses = SFEHelper.getAddressesAsMailAddress(sfe.getValidUnsentAddresses(), logger);
+        if (configuration.isDebug()) {
+            logger.debug("Mail " + mail.getName() + " has initially recipients: " + mail.getRecipients());
+            if (!invalidAddresses.isEmpty()) {
+                logger.debug("Invalid recipients: " + invalidAddresses);
+            }
+            if (!validUnsentAddresses.isEmpty()) {
+                logger.debug("Unsent recipients: " + validUnsentAddresses);
+            }
+        }
+        if (!validUnsentAddresses.isEmpty()) {
+            mail.setRecipients(validUnsentAddresses);
+            if (enhancedMessagingException.hasReturnCode()) {
+                boolean isPermanent = enhancedMessagingException.isServerError();
+                return logAndReturn(mail, ExecutionResult.onFailure(isPermanent, sfe));
+            } else {
+                return logAndReturn(mail, ExecutionResult.temporaryFailure(sfe));
+            }
+        }
+        if (!invalidAddresses.isEmpty()) {
+            mail.setRecipients(invalidAddresses);
+            return logAndReturn(mail, ExecutionResult.permanentFailure(sfe));
+        }
 
-            /*
-             * If you send a message that has multiple invalid addresses, you'll
-             * get a top-level SendFailedException that that has the valid,
-             * valid-unsent, and invalid address lists, with all of the server
-             * response messages will be contained within the nested exceptions.
-             * [Note: the content of the nested exceptions is implementation
-             * dependent.]
-             *
-             * sfe.getInvalidAddresses() should be considered permanent.
-             * sfe.getValidUnsentAddresses() should be considered temporary.
-             *
-             * JavaMail v1.3 properly populates those collections based upon the
-             * 4xx and 5xx response codes to RCPT TO. Some servers, such as
-             * Yahoo! don't respond to the RCPT TO, and provide a 5xx reply
-             * after DATA. In that case, we will pick up the failure from
-             * SMTPSendFailedException.
-             */
-
-            /*
-             * SMTPSendFailedException introduced in JavaMail 1.3.2, and
-             * provides detailed protocol reply code for the operation
-             */
         if (enhancedMessagingException.hasReturnCode() || enhancedMessagingException.hasNestedReturnCode()) {
             if (enhancedMessagingException.isServerError()) {
-                deleteMessage = ExecutionResult.permanentFailure(sfe);
-            } else {
-                deleteMessage = ExecutionResult.temporaryFailure(sfe);
+                return ExecutionResult.permanentFailure(sfe);
             }
         }
+        return ExecutionResult.temporaryFailure(sfe);
+    }
 
-        // log the original set of intended recipients
-        if (configuration.isDebug())
-            logger.debug("Recipients: " + recipients);
-
-        if (sfe.getInvalidAddresses() != null) {
-            Address[] address = sfe.getInvalidAddresses();
-            if (address.length > 0) {
-                recipients.clear();
-                for (Address addres : address) {
-                    try {
-                        recipients.add(new MailAddress(addres.toString()));
-                    } catch (ParseException pe) {
-                        // this should never happen ... we should have
-                        // caught malformed addresses long before we
-                        // got to this code.
-                        logger.debug("Can't parse invalid address: " + pe.getMessage());
-                    }
-                }
-                // Set the recipients for the mail
-                mail.setRecipients(recipients);
-
-                if (configuration.isDebug())
-                    logger.debug("Invalid recipients: " + recipients);
-                deleteMessage = ExecutionResult.permanentFailure(sfe);
-                logger.debug(messageComposer.composeFailLogMessage(mail, deleteMessage));
-            }
-        }
-
-        if (sfe.getValidUnsentAddresses() != null) {
-            Address[] address = sfe.getValidUnsentAddresses();
-            if (address.length > 0) {
-                recipients.clear();
-                for (Address addres : address) {
-                    try {
-                        recipients.add(new MailAddress(addres.toString()));
-                    } catch (ParseException pe) {
-                        // this should never happen ... we should have
-                        // caught malformed addresses long before we
-                        // got to this code.
-                        logger.debug("Can't parse unsent address: " + pe.getMessage());
-                    }
-                }
-                // Set the recipients for the mail
-                mail.setRecipients(recipients);
-                if (configuration.isDebug())
-                    logger.debug("Unsent recipients: " + recipients);
-
-                if (enhancedMessagingException.hasReturnCode()) {
-                    boolean isPermanent = enhancedMessagingException.isServerError();
-                    deleteMessage = ExecutionResult.onFailure(isPermanent, sfe);
-                    logger.debug(messageComposer.composeFailLogMessage(mail, deleteMessage));
-                } else {
-                    deleteMessage = ExecutionResult.temporaryFailure(sfe);
-                    logger.debug(messageComposer.composeFailLogMessage(mail, deleteMessage));
-                }
-            }
-        }
-
-
-        return deleteMessage;
+    private ExecutionResult logAndReturn(Mail mail, ExecutionResult executionResult) {
+        logger.debug(messageComposer.composeFailLogMessage(mail, executionResult));
+        return executionResult;
     }
 
     private MessagingException handleSendFailException(Mail mail, SendFailedException sfe) throws SendFailedException {
