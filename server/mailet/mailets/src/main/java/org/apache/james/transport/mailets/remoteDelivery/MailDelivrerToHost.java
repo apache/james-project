@@ -50,24 +50,16 @@ public class MailDelivrerToHost {
         this.logger = logger;
     }
 
-    public boolean tryDeliveryToHost(Mail mail, InternetAddress[] addr, HostAddress outgoingMailServer) throws MessagingException {
-        Properties props = session.getProperties();
-        if (mail.getSender() == null) {
-            props.put("mail.smtp.from", "<>");
-        } else {
-            String sender = mail.getSender().toString();
-            props.put("mail.smtp.from", sender);
-        }
-        logger.debug("Attempting delivery of " + mail.getName() + " to host " + outgoingMailServer.getHostName()
-            + " at " + outgoingMailServer.getHost() + " from " + props.get("mail.smtp.from"));
+    public ExecutionResult tryDeliveryToHost(Mail mail, InternetAddress[] addr, HostAddress outgoingMailServer) throws MessagingException {
+        Properties props = getPropertiesForMail(mail);
+        logger.debug("Attempting delivery of {} to host {} at {} from {}",
+            mail.getName(), outgoingMailServer.getHostName(), outgoingMailServer.getHost(), props.get("mail.smtp.from"));
 
         // Many of these properties are only in later JavaMail versions
         // "mail.smtp.ehlo"           //default true
         // "mail.smtp.auth"           //default false
-        // "mail.smtp.dsn.ret"        //default to nothing... appended as
-        // RET= after MAIL FROM line.
-        // "mail.smtp.dsn.notify"     //default to nothing...appended as
-        // NOTIFY= after RCPT TO line.
+        // "mail.smtp.dsn.ret"        //default to nothing... appended as RET= after MAIL FROM line.
+        // "mail.smtp.dsn.notify"     //default to nothing... appended as NOTIFY= after RCPT TO line.
 
         SMTPTransport transport = null;
         try {
@@ -75,12 +67,23 @@ public class MailDelivrerToHost {
             transport.setLocalHost( props.getProperty("mail.smtp.localhost", configuration.getHeloNameProvider().getHeloName()) );
             connect(outgoingMailServer, transport);
             transport.sendMessage(adaptToTransport(mail.getMessage(), transport), addr);
-            logger.debug("Mail (" + mail.getName() + ")  sent successfully to " + outgoingMailServer.getHostName() +
-                " at " + outgoingMailServer.getHost() + " from " + props.get("mail.smtp.from") + " for " + mail.getRecipients());
-            return true;
+            logger.debug("Mail ({})  sent successfully to {} at {} from {} for {}", mail.getName(), outgoingMailServer.getHostName(),
+                outgoingMailServer.getHost(), props.get("mail.smtp.from"), mail.getRecipients());
         } finally {
             closeTransport(mail, outgoingMailServer, transport);
         }
+        return ExecutionResult.success();
+    }
+
+    private Properties getPropertiesForMail(Mail mail) {
+        Properties props = session.getProperties();
+        if (mail.getSender() == null) {
+            props.put("mail.smtp.from", "<>");
+        } else {
+            String sender = mail.getSender().toString();
+            props.put("mail.smtp.from", sender);
+        }
+        return props;
     }
 
     private void connect(HostAddress outgoingMailServer, SMTPTransport transport) throws MessagingException {
@@ -92,27 +95,7 @@ public class MailDelivrerToHost {
     }
 
     private MimeMessage adaptToTransport(MimeMessage message, SMTPTransport transport) throws MessagingException {
-        // if the transport is a SMTPTransport (from sun) some
-        // performance enhancement can be done.
-        if (transport.getClass().getName().endsWith(".SMTPTransport")) {
-            // if the message is alredy 8bit or binary and the server doesn't support the 8bit extension it has
-            // to be converted to 7bit. Javamail api doesn't perform
-            // that conversion, but it is required to be a rfc-compliant smtp server.
-
-            // Temporarily disabled. See JAMES-638
-            if (!transport.supportsExtension(BIT_MIME_8)) {
-                try {
-                    converter7Bit.convertTo7Bit(message);
-                } catch (IOException e) {
-                    // An error has occured during the 7bit conversion.
-                    // The error is logged and the message is sent anyway.
-
-                    logger.error("Error during the conversion to 7 bit.", e);
-                }
-            }
-        } else {
-            // If the transport is not the one developed by Sun we are not sure of how it
-            // handles the 8 bit mime stuff, so I convert the message to 7bit.
+        if (shouldAdapt(transport)) {
             try {
                 converter7Bit.convertTo7Bit(message);
             } catch (IOException e) {
@@ -120,6 +103,16 @@ public class MailDelivrerToHost {
             }
         }
         return message;
+    }
+
+    private boolean shouldAdapt(SMTPTransport transport) {
+        // If the transport is a SMTPTransport (from sun) some performance enhancement can be done.
+        // If the transport is not the one developed by Sun we are not sure of how it handles the 8 bit mime stuff, so I
+        // convert the message to 7bit.
+        return !transport.getClass().getName().endsWith(".SMTPTransport")
+            || !transport.supportsExtension(BIT_MIME_8);
+        // if the message is already 8bit or binary and the server doesn't support the 8bit extension it has to be converted
+        // to 7bit. Javamail api doesn't perform that conversion, but it is required to be a rfc-compliant smtp server.
     }
 
     private void closeTransport(Mail mail, HostAddress outgoingMailServer, SMTPTransport transport) {
@@ -131,8 +124,9 @@ public class MailDelivrerToHost {
                 // of the mail transaction (MAIL, RCPT, DATA).
                 transport.close();
             } catch (MessagingException e) {
-                logger.error("Warning: could not close the SMTP transport after sending mail (" + mail.getName() + ") to " + outgoingMailServer.getHostName() + " at " + outgoingMailServer.getHost() + " for " + mail.getRecipients() + "; probably the server has already closed the "
-                    + "connection. Message is considered to be delivered. Exception: " + e.getMessage());
+                logger.error("Warning: could not close the SMTP transport after sending mail ({}) to {} at {} for {}; " +
+                        "probably the server has already closed the connection. Message is considered to be delivered. Exception: {}",
+                    mail.getName(), outgoingMailServer.getHostName(), outgoingMailServer.getHost(), mail.getRecipients(), e.getMessage());
             }
             transport = null;
         }

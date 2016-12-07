@@ -37,6 +37,8 @@ import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 
 public class MailDelivrer {
 
@@ -62,15 +64,13 @@ public class MailDelivrer {
     }
 
     /**
-     * We can assume that the recipients of this message are all going to the
-     * same mail server. We will now rely on the DNS server to do DNS MX record
-     * lookup and try to deliver to the multiple mail servers. If it fails, it
-     * should throw an exception.
+     * We can assume that the recipients of this message are all going to the same mail server. We will now rely on the
+     * DNS server to do DNS MX record lookup and try to deliver to the multiple mail servers. If it fails, it should
+     * throw an exception.
      *
      * @param mail    org.apache.james.core.MailImpl
      * @param session javax.mail.Session
-     * @return boolean Whether the delivery was successful and the message can
-     *         be deleted
+     * @return boolean Whether the delivery was successful and the message can be deleted
      */
     public ExecutionResult deliver(Mail mail) {
         try {
@@ -78,25 +78,13 @@ public class MailDelivrer {
         } catch (SendFailedException sfe) {
             return handleSenderFailedException(mail, sfe);
         } catch (MessagingException ex) {
-            // We should do a better job checking this... if the failure is a general
-            // connect exception, this is less descriptive than more specific SMTP command
-            // failure... have to lookup and see what are the various Exception possibilities
-
-            // Unable to deliver message after numerous tries... fail accordingly
-
             // We check whether this is a 5xx error message, which indicates a permanent failure (like account doesn't exist
             // or mailbox is full or domain is setup wrong). We fail permanently if this was a 5xx error
-
-            boolean isPermanent = '5' == ex.getMessage().charAt(0);
-            ExecutionResult executionResult = ExecutionResult.onFailure(isPermanent, ex);
-            logger.debug(messageComposer.composeFailLogMessage(mail, executionResult));
-            return executionResult;
+            boolean isPermanent = new EnhancedMessagingException(ex).isServerError();
+            return logAndReturn(mail, ExecutionResult.onFailure(isPermanent, ex));
         } catch (Exception ex) {
-            logger.error("Generic exception = permanent failure: " + ex.getMessage(), ex);
-            // Generic exception = permanent failure
-            ExecutionResult executionResult = ExecutionResult.permanentFailure(ex);
-            logger.debug(messageComposer.composeFailLogMessage(mail, executionResult));
-            return executionResult;
+            logger.error("Generic exception = permanent failure: {}", ex.getMessage(), ex);
+            return logAndReturn(mail, ExecutionResult.permanentFailure(ex));
         }
     }
 
@@ -107,7 +95,7 @@ public class MailDelivrer {
             return ExecutionResult.permanentFailure(new Exception("No recipients specified for " + mail.getName() + " sent by " + mail.getSender()));
         }
         if (configuration.isDebug()) {
-            logger.debug("Attempting to deliver " + mail.getName());
+            logger.debug("Attempting to deliver {}", mail.getName());
         }
 
         String host = retrieveTargetHostname(mail);
@@ -126,7 +114,8 @@ public class MailDelivrer {
     }
 
     private String retrieveTargetHostname(Mail mail) {
-        MailAddress rcpt = mail.getRecipients().iterator().next();
+        Preconditions.checkArgument(!mail.getRecipients().isEmpty(), "Mail should have recipients to attempt delivery");
+        MailAddress rcpt = Iterables.getFirst(mail.getRecipients(), null);
         return rcpt.getDomain();
     }
 
@@ -136,9 +125,7 @@ public class MailDelivrer {
 
         while (targetServers.hasNext()) {
             try {
-                if (mailDelivrerToHost.tryDeliveryToHost(mail, addr, targetServers.next())) {
-                    return ExecutionResult.success();
-                }
+                return mailDelivrerToHost.tryDeliveryToHost(mail, addr, targetServers.next());
             } catch (SendFailedException sfe) {
                 lastError = handleSendFailExceptionOnMxIteration(mail, sfe);
             } catch (MessagingException me) {
@@ -163,21 +150,16 @@ public class MailDelivrer {
     }
 
     private MessagingException handleMessagingException(Mail mail, MessagingException me) throws MessagingException {
-        logger.debug("Exception delivering message (" + mail.getName() + ") - " + me.getMessage());
+        logger.debug("Exception delivering message ({}) - {}", mail.getName(), me.getMessage());
         if ((me.getNextException() != null) && (me.getNextException() instanceof IOException)) {
-            // This is more than likely a temporary failure
-
             // If it's an IO exception with no nested exception, it's probably
             // some socket or weird I/O related problem.
             return me;
         } else {
-            // This was not a connection or I/O error particular to one
-            // SMTP server of an MX set. Instead, it is almost certainly
-            // a protocol level error. In this case we assume that this
-            // is an error we'd encounter with any of the SMTP servers
-            // associated with this MX record, and we pass the exception
-            // to the code in the outer block that determines its
-            // severity.
+            // This was not a connection or I/O error particular to one SMTP server of an MX set. Instead, it is almost
+            // certainly a protocol level error. In this case we assume that this is an error we'd encounter with any of
+            // the SMTP servers associated with this MX record, and we pass the exception to the code in the outer block
+            // that determines its severity.
             throw me;
         }
     }
@@ -189,12 +171,12 @@ public class MailDelivrer {
         List<MailAddress> invalidAddresses = SFEHelper.getAddressesAsMailAddress(sfe.getInvalidAddresses(), logger);
         List<MailAddress> validUnsentAddresses = SFEHelper.getAddressesAsMailAddress(sfe.getValidUnsentAddresses(), logger);
         if (configuration.isDebug()) {
-            logger.debug("Mail " + mail.getName() + " has initially recipients: " + mail.getRecipients());
+            logger.debug("Mail {} has initially recipients: {}", mail.getName(), mail.getRecipients());
             if (!invalidAddresses.isEmpty()) {
-                logger.debug("Invalid recipients: " + invalidAddresses);
+                logger.debug("Invalid recipients: {}", invalidAddresses);
             }
             if (!validUnsentAddresses.isEmpty()) {
-                logger.debug("Unsent recipients: " + validUnsentAddresses);
+                logger.debug("Unsent recipients: {}", validUnsentAddresses);
             }
         }
         if (!validUnsentAddresses.isEmpty()) {
@@ -234,14 +216,10 @@ public class MailDelivrer {
         if (sfe.getValidSentAddresses() != null) {
             Address[] validSent = sfe.getValidSentAddresses();
             if (validSent.length > 0) {
-                logger.debug( "Mail (" + mail.getName() + ") sent successfully for " + Arrays.asList(validSent));
+                logger.debug( "Mail ({}) sent successfully for {}", mail.getName(), Arrays.asList(validSent));
             }
         }
 
-        /*
-        * SMTPSendFailedException introduced in JavaMail 1.3.2, and
-        * provides detailed protocol reply code for the operation
-        */
         EnhancedMessagingException enhancedMessagingException = new EnhancedMessagingException(sfe);
         if (enhancedMessagingException.isServerError()) {
             throw sfe;
@@ -249,7 +227,7 @@ public class MailDelivrer {
 
         if (sfe.getValidUnsentAddresses() != null && sfe.getValidUnsentAddresses().length > 0) {
             if (configuration.isDebug())
-                logger.debug("Send failed, " + sfe.getValidUnsentAddresses().length + " valid addresses remain, continuing with any other servers");
+                logger.debug("Send failed, {} valid addresses remain, continuing with any other servers", sfe.getValidUnsentAddresses().length);
             return sfe;
         } else {
             // There are no valid addresses left to send, so rethrow
@@ -258,10 +236,9 @@ public class MailDelivrer {
     }
 
     private ExecutionResult handleNoTargetServer(Mail mail, String host) {
-        logger.info("No mail server found for: " + host);
+        logger.info("No mail server found for: {}", host);
         MessagingException messagingException = new MessagingException("There are no DNS entries for the hostname " + host + ".  I cannot determine where to send this message.");
         int retry = DeliveryRetriesHelper.retrieveRetries(mail);
-        System.out.println("retyry " + retry);
         if (retry >= configuration.getDnsProblemRetry()) {
             return logAndReturn(mail, ExecutionResult.permanentFailure(messagingException));
         } else {
@@ -273,13 +250,10 @@ public class MailDelivrer {
         if (configuration.isDebug()) {
             EnhancedMessagingException enhancedMessagingException = new EnhancedMessagingException(sfe);
             if (enhancedMessagingException.hasReturnCode()) {
-                logger.debug("SMTP SEND FAILED:");
-                logger.debug(sfe.toString());
-                logger.debug("  Command: " + enhancedMessagingException.computeCommand());
-                logger.debug("  RetCode: " + enhancedMessagingException.getReturnCode());
-                logger.debug("  Response: " + sfe.getMessage());
+                logger.debug("SMTP SEND FAILED: Command [{}] RetCode: [{}] Response[{}]", enhancedMessagingException.computeCommand(),
+                    enhancedMessagingException.getReturnCode(), sfe.getMessage());
             } else {
-                logger.debug("Send failed: " + sfe.toString());
+                logger.debug("Send failed: {}", sfe.toString());
             }
             logLevels(sfe);
         }
@@ -291,12 +265,9 @@ public class MailDelivrer {
             me = (MessagingException) ne;
             EnhancedMessagingException enhancedMessagingException = new EnhancedMessagingException(me);
             if (me.getClass().getName().endsWith(".SMTPAddressFailedException") || me.getClass().getName().endsWith(".SMTPAddressSucceededException")) {
-                logger.debug("ADDRESS " + enhancedMessagingException.computeAction() + ":");
-                logger.debug(me.toString());
-                logger.debug("  Address: " + enhancedMessagingException.computeAddress());
-                logger.debug("  Command: " + enhancedMessagingException.computeCommand());
-                logger.debug("  RetCode: " + enhancedMessagingException.getReturnCode());
-                logger.debug("  Response: " + me.getMessage());
+                logger.debug("ADDRESS :[{}] Address:[{}] Command : [{}] RetCode[{}] Response [{}]",
+                    enhancedMessagingException.computeAction(), me.toString(), enhancedMessagingException.computeAddress(),
+                    enhancedMessagingException.computeCommand(), enhancedMessagingException.getReturnCode());
             }
         }
     }
