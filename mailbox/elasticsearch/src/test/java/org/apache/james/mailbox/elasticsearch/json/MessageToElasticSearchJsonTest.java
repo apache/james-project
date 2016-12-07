@@ -54,7 +54,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
-public class MailboxMessageToElasticSearchJsonTest {
+public class MessageToElasticSearchJsonTest {
 
     public static final int SIZE = 25;
     public static final int BODY_START_OCTET = 100;
@@ -83,7 +83,7 @@ public class MailboxMessageToElasticSearchJsonTest {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
                 new DefaultTextExtractor(),
                 ZoneId.of("Europe/Paris"), IndexAttachments.YES,
-            MessageSearchIndex.IndexMessageId.Required);
+                MessageSearchIndex.IndexMessageId.Required);
         MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
                 date,
                 SIZE,
@@ -177,7 +177,7 @@ public class MailboxMessageToElasticSearchJsonTest {
                 MAILBOX_ID);
         mail.setModSeq(MOD_SEQ);
         mail.setUid(UID);
-        assertThatJson(messageToElasticSearchJson.convertToJson(mail, 
+        assertThatJson(messageToElasticSearchJson.convertToJson(mail,
                 ImmutableList.of(new MockMailboxSession("user1").getUser(), new MockMailboxSession("user2").getUser())))
             .when(IGNORING_ARRAY_ORDER).when(IGNORING_VALUES)
             .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/mail.json")));
@@ -267,7 +267,7 @@ public class MailboxMessageToElasticSearchJsonTest {
                 MAILBOX_ID);
         mailWithNoInternalDate.setModSeq(MOD_SEQ);
         mailWithNoInternalDate.setUid(UID);
-        
+
         // When
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
@@ -299,7 +299,7 @@ public class MailboxMessageToElasticSearchJsonTest {
                 null);
             mailWithNoMailboxId.setModSeq(MOD_SEQ);
             mailWithNoMailboxId.setUid(UID);
-        } catch(Exception exception) {
+        } catch (Exception exception) {
             throw Throwables.propagate(exception);
         }
         messageToElasticSearchJson.convertToJson(mailWithNoMailboxId, ImmutableList.of(new MockMailboxSession("username").getUser()));
