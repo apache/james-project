@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import org.apache.james.mailbox.hbase.HBaseId;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -64,8 +65,9 @@ public class HBaseMailbox implements Mailbox {
         return mailboxId;
     }
 
-    public void setMailboxId(HBaseId mailboxId) {
-        this.mailboxId = mailboxId;
+    @Override
+    public void setMailboxId(MailboxId mailboxId) {
+        this.mailboxId = (HBaseId)mailboxId;
     }
     /*
      * (non-Javadoc)

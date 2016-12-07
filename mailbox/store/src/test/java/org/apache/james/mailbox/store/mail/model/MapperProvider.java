@@ -34,7 +34,8 @@ public interface MapperProvider {
         MESSAGE,
         MAILBOX,
         ATTACHMENT,
-        ANNOTATION
+        ANNOTATION,
+        MOVE
     }
 
     List<Capabilities> getNotImplemented();

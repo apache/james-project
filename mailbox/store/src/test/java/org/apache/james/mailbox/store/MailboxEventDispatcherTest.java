@@ -19,13 +19,12 @@
 
 package org.apache.james.mailbox.store;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -36,9 +35,7 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.mock.MockMailboxSession;
-import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -47,81 +44,35 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class MailboxEventDispatcherTest {
+    private static final int sessionId = 10;
 
-    MailboxEventDispatcher dispatcher;
+    private MailboxEventDispatcher dispatcher;
 
-    EventCollector collector;
+    private EventCollector collector;
 
-    MessageResult result;
-    int sessionId = 10;
+    private MessageResult result;
+
+    private Mailbox mailbox;
 
     private MailboxSession session = new MockMailboxSession("test") {
-
         @Override
         public long getSessionId() {
             return sessionId;
         }
-        
     };
 
-    private Mailbox mailbox = new Mailbox() {
-
-        @Override
-        public TestId getMailboxId() {
-            return TestId.of(1L);
-        }
-
-        @Override
-        public String getNamespace() {
-            return null;
-        }
-
-        @Override
-        public void setNamespace(String namespace) {            
-        }
-
-        @Override
-        public String getUser() {
-            return null;
-        }
-
-        @Override
-        public void setUser(String user) {
-            
-        }
-
-        @Override
-        public String getName() {
-            return "test";
-        }
-
-        @Override
-        public void setName(String name) {
-        }
-
-        @Override
-        public long getUidValidity() {
-            return 0;
-        }
-        
-        @Override
-        public MailboxACL getACL() {
-            return SimpleMailboxACL.EMPTY;
-        }
-
-        @Override
-        public void setACL(MailboxACL acl) {
-        }
-
-    };
-    
     @Before
     public void setUp() throws Exception {
         collector = new EventCollector();
 
         dispatcher = new MailboxEventDispatcher(collector);
         result = mock(MessageResult.class);
+        mailbox = mock(Mailbox.class);
+
         when(result.getUid()).thenReturn(MessageUid.of(23));
+        when(mailbox.getNamespace()).thenReturn("namespace");
+        when(mailbox.getUser()).thenReturn("user");
+        when(mailbox.getName()).thenReturn("name");
     }
 
 

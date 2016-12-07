@@ -1,0 +1,111 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+
+package org.apache.james.mailbox.jpa.mail;
+
+import java.util.List;
+
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.MailboxACL.MailboxACLCommand;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.mail.MailboxMapper;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.transaction.Mapper.VoidTransaction;
+
+import com.google.common.base.Throwables;
+
+public class TransactionalMailboxMapper implements MailboxMapper {
+    private final JPAMailboxMapper wrapped;
+
+    public TransactionalMailboxMapper(JPAMailboxMapper wrapped) {
+        this.wrapped = wrapped;
+    }
+
+    @Override
+    public void endRequest() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public <T> T execute(Transaction<T> transaction) throws MailboxException {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void save(final Mailbox mailbox) throws MailboxException {
+        try {
+            wrapped.execute(new VoidTransaction() {
+                @Override
+                public void runVoid() throws MailboxException {
+                    wrapped.save(mailbox);
+                }
+            });
+        } catch (MailboxException e) {
+            Throwables.propagate(e);
+        }
+    }
+
+    @Override
+    public void delete(final Mailbox mailbox) throws MailboxException {
+        try {
+            wrapped.execute(new VoidTransaction() {
+                @Override
+                public void runVoid() throws MailboxException {
+                    wrapped.delete(mailbox);
+                }
+            });
+        } catch (MailboxException e) {
+            Throwables.propagate(e);
+        }
+    }
+
+    @Override
+    public Mailbox findMailboxByPath(MailboxPath mailboxPath) throws MailboxException, MailboxNotFoundException {
+        return wrapped.findMailboxByPath(mailboxPath);
+    }
+
+    @Override
+    public Mailbox findMailboxById(MailboxId mailboxId) throws MailboxException, MailboxNotFoundException {
+        return wrapped.findMailboxById(mailboxId);
+    }
+
+    @Override
+    public List<Mailbox> findMailboxWithPathLike(MailboxPath mailboxPath) throws MailboxException {
+        return wrapped.findMailboxWithPathLike(mailboxPath);
+    }
+
+    @Override
+    public boolean hasChildren(Mailbox mailbox, char delimiter) throws MailboxException, MailboxNotFoundException {
+        return wrapped.hasChildren(mailbox, delimiter);
+    }
+
+    @Override
+    public void updateACL(Mailbox mailbox, MailboxACLCommand mailboxACLCommand) throws MailboxException {
+        wrapped.updateACL(mailbox, mailboxACLCommand);
+    }
+
+    @Override
+    public List<Mailbox> list() throws MailboxException {
+        return wrapped.list();
+    }
+
+}

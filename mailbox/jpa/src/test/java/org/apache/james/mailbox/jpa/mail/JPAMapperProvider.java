@@ -52,7 +52,7 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public MailboxMapper createMailboxMapper() throws MailboxException {
-        throw new NotImplementedException();
+        return new TransactionalMailboxMapper(new JPAMailboxMapper(createEntityManagerFactory()));
     }
 
     @Override
@@ -84,11 +84,11 @@ public class JPAMapperProvider implements MapperProvider {
     public void clearMapper() throws MailboxException {
         EntityManager entityManager = createEntityManagerFactory().createEntityManager();
         entityManager.getTransaction().begin();
-        entityManager.createNativeQuery("TRUNCATE table JAMES_MAIL_USERFLAG;");
-        entityManager.createNativeQuery("TRUNCATE table JAMES_MAIL_PROPERTY;");
-        entityManager.createNativeQuery("TRUNCATE table JAMES_MAILBOX_ANNOTATION;");
-        entityManager.createNativeQuery("TRUNCATE table JAMES_MAILBOX;");
-        entityManager.createNativeQuery("TRUNCATE table JAMES_MAIL;");
+        entityManager.createNativeQuery("TRUNCATE table JAMES_MAIL_USERFLAG;").executeUpdate();
+        entityManager.createNativeQuery("TRUNCATE table JAMES_MAIL_PROPERTY;").executeUpdate();
+        entityManager.createNativeQuery("TRUNCATE table JAMES_MAILBOX_ANNOTATION;").executeUpdate();
+        entityManager.createNativeQuery("TRUNCATE table JAMES_MAILBOX;").executeUpdate();
+        entityManager.createNativeQuery("TRUNCATE table JAMES_MAIL;").executeUpdate();
         entityManager.getTransaction().commit();
         entityManager.close();
     }
@@ -124,6 +124,6 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public List<Capabilities> getNotImplemented() {
-        return ImmutableList.of(Capabilities.MAILBOX, Capabilities.MESSAGE, Capabilities.ATTACHMENT);
+        return ImmutableList.of(Capabilities.MESSAGE, Capabilities.ATTACHMENT, Capabilities.MOVE);
     }
 }

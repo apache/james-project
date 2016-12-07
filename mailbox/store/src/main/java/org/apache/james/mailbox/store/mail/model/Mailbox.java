@@ -25,7 +25,7 @@ import org.apache.james.mailbox.model.MailboxId;
  * Models long term mailbox data.
  */
 public interface Mailbox {
-
+    void setMailboxId(MailboxId id);
     /**
      * Gets the unique mailbox ID.
      * @return mailbox id

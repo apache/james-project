@@ -56,6 +56,11 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
     @Column(name = "HEADER_BYTES", length = 10485760, nullable = false)
     @Lob private byte[] header;
     
+
+    public JPAMailboxMessage() {
+        
+    }
+
     public JPAMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, PropertyBuilder propertyBuilder) throws MailboxException {
         super(mailbox, internalDate, flags, size ,bodyStartOctet, propertyBuilder);
         try {

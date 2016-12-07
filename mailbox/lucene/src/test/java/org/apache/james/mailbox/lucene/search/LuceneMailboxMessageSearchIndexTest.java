@@ -612,6 +612,9 @@ public class LuceneMailboxMessageSearchIndexTest {
         	this.id = TestId.of(id);
         }
 
+        public void setMailboxId(MailboxId id) {
+        }
+
         public TestId getMailboxId() {
             return id;
         }

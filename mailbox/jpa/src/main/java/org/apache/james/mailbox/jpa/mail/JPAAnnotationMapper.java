@@ -27,6 +27,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPATransactionalMapper;
@@ -169,6 +170,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
 
     @Override
     public void insertAnnotation(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
+        Preconditions.checkArgument(!mailboxAnnotation.isNil());
         JPAId jpaId = (JPAId) mailboxId;
         if (getAnnotationsByKeys(mailboxId, ImmutableSet.of(mailboxAnnotation.getKey())).isEmpty()) {
             getEntityManager().persist(

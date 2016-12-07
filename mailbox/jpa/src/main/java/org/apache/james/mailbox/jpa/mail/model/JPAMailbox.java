@@ -29,6 +29,7 @@ import javax.persistence.Table;
 
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -37,7 +38,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 @Table(name="JAMES_MAILBOX")
 @NamedQueries({
     @NamedQuery(name="findMailboxById",
-        query="SELECT mailbox FROM Mailbox mailbox WHERE mailbox.mailbox.mailboxId = :idParam"),
+        query="SELECT mailbox FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam"),
     @NamedQuery(name="findMailboxByName",
         query="SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name = :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam"),
     @NamedQuery(name="findMailboxByNameWithUser",
@@ -79,8 +80,8 @@ public class JPAMailbox implements Mailbox {
     @Column(name = "MAILBOX_UID_VALIDITY", nullable = false)
     private long uidValidity;
 
-    @Basic(optional = false)
-    @Column(name = "USER_NAME", nullable = false, length = 200)
+    @Basic(optional = true)
+    @Column(name = "USER_NAME", nullable = true, length = 200)
     private String user;
     
     @Basic(optional = false)
@@ -88,11 +89,11 @@ public class JPAMailbox implements Mailbox {
     private String namespace;
 
     @Basic(optional = false)
-    @Column(name = "MAILBOX_LAST_UID", nullable = false)
+    @Column(name = "MAILBOX_LAST_UID", nullable = true)
     private long lastUid;
     
     @Basic(optional = false)
-    @Column(name = "MAILBOX_HIGHEST_MODSEQ", nullable = false)
+    @Column(name = "MAILBOX_HIGHEST_MODSEQ", nullable = true)
     private long highestModSeq;
     
     /**
@@ -100,15 +101,17 @@ public class JPAMailbox implements Mailbox {
      */
     @Deprecated
     public JPAMailbox() {
-        super();
     }
     
-    public JPAMailbox(MailboxPath path, int uidValidity) {
-        this();
+    public JPAMailbox(MailboxPath path, long uidValidity) {
         this.name = path.getName();
         this.user = path.getUser();
         this.namespace = path.getNamespace();
         this.uidValidity = uidValidity;
+    }
+
+    public JPAMailbox(Mailbox mailbox) {
+        this(new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName()), mailbox.getUidValidity());
     }
 
     /**
@@ -118,6 +121,10 @@ public class JPAMailbox implements Mailbox {
         return JPAId.of(mailboxId);
     }
 
+    @Override
+    public void setMailboxId(MailboxId mailboxId) {
+        this.mailboxId = ((JPAId)mailboxId).getRawId();
+    }
     /**
      * @see org.apache.james.mailbox.store.mail.model.Mailbox#getName()
      */
@@ -215,21 +222,13 @@ public class JPAMailbox implements Mailbox {
         return ++highestModSeq;
     }
     
-    /* (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getACL()
-     */
     @Override
     public MailboxACL getACL() {
-        // TODO ACL support
-        return SimpleMailboxACL.OWNER_FULL_ACL;
+        return SimpleMailboxACL.EMPTY;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setACL(org.apache.james.mailbox.MailboxACL)
-     */
     @Override
     public void setACL(MailboxACL acl) {
-        // TODO ACL support
     }
     
 }
