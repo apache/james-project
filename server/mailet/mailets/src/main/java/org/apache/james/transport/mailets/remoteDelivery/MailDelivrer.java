@@ -28,7 +28,6 @@ import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
@@ -119,7 +118,7 @@ public class MailDelivrer {
             if (!targetServers.hasNext()) {
                 return handleNoTargetServer(mail, host);
             }
-            return doDeliver(mail, mail.getMessage(), InternetAddressConverter.convert(mail.getRecipients()), targetServers);
+            return doDeliver(mail, InternetAddressConverter.convert(mail.getRecipients()), targetServers);
         } catch (TemporaryResolutionException e) {
             return logAndReturn(mail, ExecutionResult.temporaryFailure(new MessagingException("Temporary problem looking " +
                 "up mail server for host: " + host + ".  I cannot determine where to send this message.")));
@@ -132,12 +131,12 @@ public class MailDelivrer {
     }
 
     @SuppressWarnings("deprecation")
-    private ExecutionResult doDeliver(Mail mail, MimeMessage message, InternetAddress[] addr, Iterator<HostAddress> targetServers) throws MessagingException {
+    private ExecutionResult doDeliver(Mail mail, InternetAddress[] addr, Iterator<HostAddress> targetServers) throws MessagingException {
         MessagingException lastError = null;
 
         while (targetServers.hasNext()) {
             try {
-                if (mailDelivrerToHost.tryDeliveryToHost(mail, message, addr, targetServers.next())) {
+                if (mailDelivrerToHost.tryDeliveryToHost(mail, addr, targetServers.next())) {
                     return ExecutionResult.success();
                 }
             } catch (SendFailedException sfe) {

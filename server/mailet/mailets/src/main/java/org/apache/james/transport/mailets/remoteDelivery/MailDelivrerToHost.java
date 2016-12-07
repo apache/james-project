@@ -50,7 +50,7 @@ public class MailDelivrerToHost {
         this.logger = logger;
     }
 
-    public boolean tryDeliveryToHost(Mail mail, MimeMessage message, InternetAddress[] addr, HostAddress outgoingMailServer) throws MessagingException {
+    public boolean tryDeliveryToHost(Mail mail, InternetAddress[] addr, HostAddress outgoingMailServer) throws MessagingException {
         Properties props = session.getProperties();
         if (mail.getSender() == null) {
             props.put("mail.smtp.from", "<>");
@@ -74,7 +74,7 @@ public class MailDelivrerToHost {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
             transport.setLocalHost( props.getProperty("mail.smtp.localhost", configuration.getHeloNameProvider().getHeloName()) );
             connect(outgoingMailServer, transport);
-            transport.sendMessage(adaptToTransport(message, transport), addr);
+            transport.sendMessage(adaptToTransport(mail.getMessage(), transport), addr);
             logger.debug("Mail (" + mail.getName() + ")  sent successfully to " + outgoingMailServer.getHostName() +
                 " at " + outgoingMailServer.getHost() + " from " + props.get("mail.smtp.from") + " for " + mail.getRecipients());
             return true;
