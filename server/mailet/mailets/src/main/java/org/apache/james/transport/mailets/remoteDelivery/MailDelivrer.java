@@ -263,7 +263,7 @@ public class MailDelivrer {
         MessagingException messagingException = new MessagingException("There are no DNS entries for the hostname " + host + ".  I cannot determine where to send this message.");
         int retry = DeliveryRetriesHelper.retrieveRetries(mail);
         System.out.println("retyry " + retry);
-        if (retry == 0 || retry > configuration.getDnsProblemRetry()) {
+        if (retry >= configuration.getDnsProblemRetry()) {
             return logAndReturn(mail, ExecutionResult.permanentFailure(messagingException));
         } else {
             return logAndReturn(mail, ExecutionResult.temporaryFailure(messagingException));

@@ -37,7 +37,6 @@ import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -223,7 +222,6 @@ public class MailDelivrerTest {
 
     @SuppressWarnings("deprecation")
     @Test
-    @Ignore("Fails if first delivery attempt")
     public void deliverShouldReturnTemporaryErrorWhenFirstDNSProblem() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
@@ -261,7 +259,6 @@ public class MailDelivrerTest {
 
     @SuppressWarnings("deprecation")
     @Test
-    @Ignore("One more failure is tolerated than specified by the configuration")
     public void deliverShouldReturnPermanentErrorWhenLimitDNSProblemReached() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
