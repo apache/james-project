@@ -49,11 +49,16 @@ public class MailDelivrer {
     private final Logger logger;
 
     public MailDelivrer(RemoteDeliveryConfiguration configuration, MailDelivrerToHost mailDelivrerToHost, DNSService dnsServer, Bouncer bouncer, Logger logger) {
+        this(configuration, mailDelivrerToHost, new DnsHelper(dnsServer, configuration, logger), bouncer, logger);
+    }
+
+    @VisibleForTesting
+    MailDelivrer(RemoteDeliveryConfiguration configuration, MailDelivrerToHost mailDelivrerToHost, DnsHelper dnsHelper, Bouncer bouncer, Logger logger) {
         this.configuration = configuration;
         this.mailDelivrerToHost = mailDelivrerToHost;
-        this.bouncer = bouncer;
-        this.dnsHelper = new DnsHelper(dnsServer, configuration, logger);
+        this.dnsHelper = dnsHelper;
         this.messageComposer = new MessageComposer(configuration);
+        this.bouncer = bouncer;
         this.logger = logger;
     }
 
@@ -116,7 +121,8 @@ public class MailDelivrer {
             }
             return doDeliver(mail, mail.getMessage(), InternetAddressConverter.convert(mail.getRecipients()), targetServers);
         } catch (TemporaryResolutionException e) {
-            return handleTemporaryResolutionException(mail, host);
+            return logAndReturn(mail, ExecutionResult.temporaryFailure(new MessagingException("Temporary problem looking " +
+                "up mail server for host: " + host + ".  I cannot determine where to send this message.")));
         }
     }
 
@@ -252,28 +258,15 @@ public class MailDelivrer {
         }
     }
 
-    private ExecutionResult handleTemporaryResolutionException(Mail mail, String host) {
-        ExecutionResult executionResult = ExecutionResult.temporaryFailure(new MessagingException("Temporary problem looking " +
-            "up mail server for host: " + host + ".  I cannot determine where to send this message."));
-        logger.debug(messageComposer.composeFailLogMessage(mail, executionResult));
-        return executionResult;
-    }
-
     private ExecutionResult handleNoTargetServer(Mail mail, String host) {
         logger.info("No mail server found for: " + host);
-        String exceptionBuffer = "There are no DNS entries for the hostname " + host + ".  I cannot determine where to send this message.";
-
-        MessagingException messagingException = new MessagingException(exceptionBuffer);
+        MessagingException messagingException = new MessagingException("There are no DNS entries for the hostname " + host + ".  I cannot determine where to send this message.");
         int retry = DeliveryRetriesHelper.retrieveRetries(mail);
+        System.out.println("retyry " + retry);
         if (retry == 0 || retry > configuration.getDnsProblemRetry()) {
-            // The domain has no dns entry.. Return a permanent error
-            ExecutionResult executionResult = ExecutionResult.permanentFailure(messagingException);
-            logger.debug(messageComposer.composeFailLogMessage(mail, executionResult));
-            return executionResult;
+            return logAndReturn(mail, ExecutionResult.permanentFailure(messagingException));
         } else {
-            ExecutionResult executionResult = ExecutionResult.temporaryFailure(messagingException);
-            logger.debug(messageComposer.composeFailLogMessage(mail, executionResult));
-            return executionResult;
+            return logAndReturn(mail, ExecutionResult.temporaryFailure(messagingException));
         }
     }
 
