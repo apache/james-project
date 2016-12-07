@@ -28,6 +28,9 @@ import javax.mail.internet.InternetAddress;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.sun.mail.smtp.SMTPAddressFailedException;
+import com.sun.mail.smtp.SMTPSendFailedException;
+import com.sun.mail.smtp.SMTPSenderFailedException;
 
 public class EnhancedMessagingException {
 
@@ -76,6 +79,18 @@ public class EnhancedMessagingException {
     }
 
     private Optional<Integer> computeReturnCode() {
+        if (messagingException instanceof SMTPAddressFailedException) {
+            SMTPAddressFailedException addressFailedException = (SMTPAddressFailedException) this.messagingException;
+            return Optional.of(addressFailedException.getReturnCode());
+        }
+        if (messagingException instanceof SMTPSendFailedException) {
+            SMTPSendFailedException sendFailedException = (SMTPSendFailedException) this.messagingException;
+            return Optional.of(sendFailedException.getReturnCode());
+        }
+        if (messagingException instanceof SMTPSenderFailedException) {
+            SMTPSenderFailedException senderFailedException = (SMTPSenderFailedException) this.messagingException;
+            return Optional.of(senderFailedException.getReturnCode());
+        }
         if (messagingException.getClass().getName().endsWith(".SMTPSendFailedException")
             || messagingException.getClass().getName().endsWith(".SMTPAddressSucceededException")) {
             try {

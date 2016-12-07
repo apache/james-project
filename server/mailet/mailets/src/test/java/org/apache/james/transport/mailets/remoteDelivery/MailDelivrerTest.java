@@ -33,7 +33,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +71,6 @@ public class MailDelivrerTest {
         assertThat(executionResult).isEqualTo(ExecutionResult.temporaryFailure(sfe));
     }
 
-    @Ignore("Return code is always ignored")
     @Test
     public void handleSenderFailedExceptionShouldReturnPermanentFailureWhenServerException() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
