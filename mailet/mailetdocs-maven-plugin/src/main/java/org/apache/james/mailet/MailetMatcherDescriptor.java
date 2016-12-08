@@ -19,6 +19,9 @@
 
 package org.apache.james.mailet;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
 /**
  * Simple bean to describe a mailet or a matcher
  */
@@ -65,6 +68,8 @@ public class MailetMatcherDescriptor {
 
     private Type type;
 
+    private boolean experimental;
+
     public String getFullyQualifiedName() {
         return fullyQualifiedClassName;
     }
@@ -105,10 +110,36 @@ public class MailetMatcherDescriptor {
         this.type = type;
     }
 
+    public boolean isExperimental() {
+        return experimental;
+    }
+
+    public void setExperimental(boolean experimental) {
+        this.experimental = experimental;
+    }
+
     @Override
     public String toString() {
-        return "MailetMatcherDescriptor [fullyQualifiedClassName="
-                + fullyQualifiedClassName + ", name=" + name + ", type=" + type
-                + "]";
+        return MoreObjects.toStringHelper(MailetMatcherDescriptor.class)
+                .add("fullyQualifiedClassName", fullyQualifiedClassName)
+                .add("name", name)
+                .add("info", info)
+                .add("type", type)
+                .add("experimental", experimental)
+                .toString();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof MailetMatcherDescriptor) {
+            MailetMatcherDescriptor other = (MailetMatcherDescriptor) obj;
+            return Objects.equal(this.fullyQualifiedClassName, other.fullyQualifiedClassName)
+                && Objects.equal(this.name, other.name)
+                && Objects.equal(this.info, other.info)
+                && Objects.equal(this.type, other.type)
+                && Objects.equal(this.experimental, other.experimental);
+        }
+        return false;
+    }
+
 }
