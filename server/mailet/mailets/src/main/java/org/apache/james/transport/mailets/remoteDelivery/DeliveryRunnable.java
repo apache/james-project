@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets.remoteDelivery;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -50,33 +51,33 @@ public class DeliveryRunnable implements Runnable {
     private final Logger logger;
     private final Bouncer bouncer;
     private final MailDelivrer mailDelivrer;
-    private final VolatileIsDestroyed volatileIsDestroyed;
+    private final AtomicBoolean isDestroyed;
     private final Supplier<Date> dateSupplier;
 
     public DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, DNSService dnsServer, Metric outgoingMailsMetric,
-                            Logger logger, MailetContext mailetContext, Bouncer bouncer, VolatileIsDestroyed volatileIsDestroyed) {
+                            Logger logger, MailetContext mailetContext, Bouncer bouncer, AtomicBoolean isDestroyed) {
         this(queue, configuration, outgoingMailsMetric, logger, bouncer,
             new MailDelivrer(configuration, new MailDelivrerToHost(configuration, mailetContext, logger), dnsServer, bouncer, logger),
-            volatileIsDestroyed, CURRENT_DATE_SUPPLIER);
+            isDestroyed, CURRENT_DATE_SUPPLIER);
     }
 
     @VisibleForTesting
     DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, Metric outgoingMailsMetric, Logger logger, Bouncer bouncer,
-                     MailDelivrer mailDelivrer, VolatileIsDestroyed volatileIsDestroyed, Supplier<Date> dateSupplier) {
+                     MailDelivrer mailDelivrer, AtomicBoolean isDestroyeds, Supplier<Date> dateSupplier) {
         this.queue = queue;
         this.configuration = configuration;
         this.outgoingMailsMetric = outgoingMailsMetric;
         this.logger = logger;
         this.bouncer = bouncer;
         this.mailDelivrer = mailDelivrer;
-        this.volatileIsDestroyed = volatileIsDestroyed;
+        this.isDestroyed = isDestroyeds;
         this.dateSupplier = dateSupplier;
     }
 
     @Override
     public void run() {
         try {
-            while (!Thread.interrupted() && !volatileIsDestroyed.isDestroyed()) {
+            while (!Thread.interrupted() && !isDestroyed.get()) {
                 runStep();
             }
         } finally {
@@ -112,7 +113,7 @@ public class DeliveryRunnable implements Runnable {
             }
 
         } catch (Throwable e) {
-            if (!volatileIsDestroyed.isDestroyed()) {
+            if (!isDestroyed.get()) {
                 logger.error("Exception caught in RemoteDelivery.run()", e);
             }
         }

@@ -25,6 +25,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -41,7 +42,6 @@ import org.apache.james.transport.mailets.remoteDelivery.Bouncer;
 import org.apache.james.transport.mailets.remoteDelivery.DeliveryRunnable;
 import org.apache.james.transport.mailets.remoteDelivery.RemoteDeliveryConfiguration;
 import org.apache.james.transport.mailets.remoteDelivery.RemoteDeliverySocketFactory;
-import org.apache.james.transport.mailets.remoteDelivery.VolatileIsDestroyed;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
@@ -133,7 +133,7 @@ public class RemoteDelivery extends GenericMailet {
     private final DomainList domainList;
     private final MailQueueFactory queueFactory;
     private final Metric outgoingMailsMetric;
-    private final VolatileIsDestroyed volatileIsDestroyed;
+    private final AtomicBoolean isDestroyed;
     private final THREAD_STATE startThreads;
 
     private MailQueue queue;
@@ -151,7 +151,7 @@ public class RemoteDelivery extends GenericMailet {
         this.domainList = domainList;
         this.queueFactory = queueFactory;
         this.outgoingMailsMetric = metricFactory.generate(OUTGOING_MAILS);
-        this.volatileIsDestroyed = new VolatileIsDestroyed();
+        this.isDestroyed = new AtomicBoolean(false);
         this.startThreads = startThreads;
     }
 
@@ -181,7 +181,7 @@ public class RemoteDelivery extends GenericMailet {
                     logger,
                     getMailetContext(),
                     new Bouncer(configuration, getMailetContext(), logger),
-                    volatileIsDestroyed));
+                    isDestroyed));
         }
     }
 
@@ -259,7 +259,7 @@ public class RemoteDelivery extends GenericMailet {
     @Override
     public synchronized void destroy() {
         if (startThreads == THREAD_STATE.START_THREADS) {
-            volatileIsDestroyed.markAsDestroyed();
+            isDestroyed.set(true);
             executor.shutdown();
             notifyAll();
         }
