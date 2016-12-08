@@ -34,7 +34,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
-public class SFEHelper {
+public class AddressesArrayToMailAddressListConverter {
 
     public static List<MailAddress> getAddressesAsMailAddress(Address[] addresses, final Logger logger) {
         if (addresses == null) {

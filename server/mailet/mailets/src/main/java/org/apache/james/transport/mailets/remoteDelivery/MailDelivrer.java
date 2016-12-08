@@ -168,8 +168,8 @@ public class MailDelivrer {
     ExecutionResult handleSenderFailedException(Mail mail, SendFailedException sfe) {
         logSendFailedException(sfe);
         EnhancedMessagingException enhancedMessagingException = new EnhancedMessagingException(sfe);
-        List<MailAddress> invalidAddresses = SFEHelper.getAddressesAsMailAddress(sfe.getInvalidAddresses(), logger);
-        List<MailAddress> validUnsentAddresses = SFEHelper.getAddressesAsMailAddress(sfe.getValidUnsentAddresses(), logger);
+        List<MailAddress> invalidAddresses = AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(sfe.getInvalidAddresses(), logger);
+        List<MailAddress> validUnsentAddresses = AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(sfe.getValidUnsentAddresses(), logger);
         if (configuration.isDebug()) {
             logger.debug("Mail {} has initially recipients: {}", mail.getName(), mail.getRecipients());
             if (!invalidAddresses.isEmpty()) {
