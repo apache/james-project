@@ -136,8 +136,8 @@ public class JPAMapperProvider implements MapperProvider {
     }
 
     @Override
-    public List<Capabilities> getNotImplemented() {
-        return ImmutableList.of(Capabilities.ATTACHMENT, Capabilities.MOVE, Capabilities.UNIQUE_MESSAGE_ID);
+    public List<Capabilities> getSupportedCapabilities() {
+        return ImmutableList.of(Capabilities.ANNOTATION, Capabilities.MAILBOX, Capabilities.MESSAGE);
     }
 
     @Override

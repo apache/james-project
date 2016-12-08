@@ -92,7 +92,7 @@ public class MessageMapperTest<T extends MapperProvider> {
         this.mapperProvider = producer.newInstance();
         this.mapperProvider.ensureMapperPrepared();
 
-        Assume.assumeFalse(mapperProvider.getNotImplemented().contains(MapperProvider.Capabilities.MESSAGE));
+        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.MESSAGE));
 
         this.messageMapper = mapperProvider.createMessageMapper();
         this.mailboxMapper = mapperProvider.createMailboxMapper();

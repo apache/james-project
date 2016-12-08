@@ -82,8 +82,8 @@ public class MessageWithAttachmentMapperTest<T extends MapperProvider> {
         this.mapperProvider = producer.newInstance();
         this.mapperProvider.ensureMapperPrepared();
 
-        Assume.assumeFalse(mapperProvider.getNotImplemented().contains(MapperProvider.Capabilities.MESSAGE));
-        Assume.assumeFalse(mapperProvider.getNotImplemented().contains(MapperProvider.Capabilities.ATTACHMENT));
+        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.MESSAGE));
+        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.ATTACHMENT));
 
         this.messageMapper = mapperProvider.createMessageMapper();
         this.attachmentMapper = mapperProvider.createAttachmentMapper();

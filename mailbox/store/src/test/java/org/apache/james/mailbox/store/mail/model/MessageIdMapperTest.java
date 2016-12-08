@@ -87,7 +87,7 @@ public class MessageIdMapperTest<T extends MapperProvider> {
     public final void setProducer(IProducer<T> producer) throws MailboxException {
         this.producer = producer;
         this.mapperProvider = producer.newInstance();
-        Assume.assumeFalse(mapperProvider.getNotImplemented().contains(MapperProvider.Capabilities.UNIQUE_MESSAGE_ID));
+        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.UNIQUE_MESSAGE_ID));
 
         this.mapperProvider.ensureMapperPrepared();
         this.sut = mapperProvider.createMessageIdMapper();

@@ -70,7 +70,7 @@ public class MessageMoveTest<T extends MapperProvider> {
         this.producer = producer;
         this.mapperProvider = producer.newInstance();
         this.mapperProvider.ensureMapperPrepared();
-        Assume.assumeFalse(mapperProvider.getNotImplemented().contains(MapperProvider.Capabilities.MOVE));
+        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.MOVE));
         this.messageMapper = mapperProvider.createMessageMapper();
         Assume.assumeNotNull(messageMapper);
 

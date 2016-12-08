@@ -34,7 +34,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.TestId;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;

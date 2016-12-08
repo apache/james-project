@@ -41,7 +41,7 @@ public interface MapperProvider {
         UNIQUE_MESSAGE_ID
     }
 
-    List<Capabilities> getNotImplemented();
+    List<Capabilities> getSupportedCapabilities();
 
     MailboxMapper createMailboxMapper() throws MailboxException;
 
