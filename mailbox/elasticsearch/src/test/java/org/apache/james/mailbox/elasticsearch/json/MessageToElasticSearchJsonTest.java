@@ -354,4 +354,32 @@ public class MessageToElasticSearchJsonTest {
             .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/nonTextual.json"), CHARSET));
     }
 
+    @Test
+    public void convertToJsonWithoutAttachmentShouldConvertEmailBoby() throws IOException {
+        // Given
+        MailboxMessage message = new SimpleMailboxMessage(MESSAGE_ID,
+            null,
+            SIZE,
+            BODY_START_OCTET,
+            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/emailWithNonIndexableAttachment.eml"))),
+            new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
+            propertyBuilder,
+            MAILBOX_ID);
+        message.setModSeq(MOD_SEQ);
+        message.setUid(UID);
+
+        // When
+        MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
+                new DefaultTextExtractor(),
+                ZoneId.of("Europe/Paris"),
+                IndexAttachments.YES,
+                MessageSearchIndex.IndexMessageId.Required);
+        String convertToJsonWithoutAttachment = messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(new MockMailboxSession("username").getUser()));
+
+        // Then
+        assertThatJson(convertToJsonWithoutAttachment)
+            .when(IGNORING_ARRAY_ORDER)
+            .when(IGNORING_VALUES)
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/emailWithNonIndexableAttachmentWithoutAttachment.json")));
+    }
 }

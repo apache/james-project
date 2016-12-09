@@ -19,6 +19,7 @@
 package org.apache.james.backends.es;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -31,6 +32,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 public class ElasticSearchIndexer {
@@ -52,6 +54,29 @@ public class ElasticSearchIndexer {
 
         public String getUpdatedDocumentPart() {
             return updatedDocumentPart;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof UpdatedRepresentation) {
+                UpdatedRepresentation other = (UpdatedRepresentation) o;
+                return Objects.equals(id, other.id)
+                    && Objects.equals(updatedDocumentPart, other.updatedDocumentPart);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(id, updatedDocumentPart);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("updatedDocumentPart", updatedDocumentPart)
+                .toString();
         }
     }
 
