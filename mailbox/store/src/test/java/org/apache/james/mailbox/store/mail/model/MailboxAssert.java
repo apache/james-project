@@ -45,7 +45,7 @@ public class MailboxAssert extends AbstractAssert<MailboxAssert, Mailbox> {
             failWithMessage("Expected Name to be <%s> but was <%s>", expected.getName(), actual.getName());
         }
         if (!equals(actual.getACL(), expected.getACL())) {
-            failWithMessage("Expected UUID to be <%s> but was <%s>", expected.getACL(), actual.getACL());
+            failWithMessage("Expected ACL to be <%s> but was <%s>", expected.getACL(), actual.getACL());
         }
         if (actual.getUidValidity() != expected.getUidValidity()) {
             failWithMessage("Expected UID Validity to be <%s> but was <%s>", expected.getUidValidity(), actual.getUidValidity());
