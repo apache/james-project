@@ -32,7 +32,7 @@ import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 
 public interface MessageIdManager {
 
-    void setFlags(Flags newState, FlagsUpdateMode replace, MessageId messageId, MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException;
+    void setFlags(Flags newState, FlagsUpdateMode replace, MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
 
     List<MessageResult> getMessages(List<MessageId> messageId, FetchGroup minimal, MailboxSession mailboxSession) throws MailboxException;
 

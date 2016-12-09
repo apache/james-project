@@ -92,13 +92,13 @@ public class InMemoryIntegrationResources implements IntegrationResources {
             }
             
             @Override
-            public void setFlags(Flags newState, FlagsUpdateMode replace, MessageId messageId, MailboxId mailboxId,
-                    MailboxSession mailboxSession) throws MailboxException {
-            }
-            
-            @Override
             public void setInMailboxes(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession)
                     throws MailboxException {
+            }
+
+            @Override
+            public void setFlags(Flags newState, FlagsUpdateMode replace, MessageId messageId, List<MailboxId> mailboxIds,
+                    MailboxSession mailboxSession) throws MailboxException {
             }
         };
     }
