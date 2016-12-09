@@ -27,7 +27,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.TestId;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;

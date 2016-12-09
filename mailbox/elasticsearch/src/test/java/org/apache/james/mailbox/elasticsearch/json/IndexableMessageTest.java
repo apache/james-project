@@ -31,7 +31,7 @@ import javax.mail.Flags;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.mock.MockMailboxSession;
-import org.apache.james.mailbox.store.TestId;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.junit.Test;

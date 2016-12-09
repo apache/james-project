@@ -20,7 +20,7 @@
 package org.apache.james.mailbox.store.mail.model;
 
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.TestId;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Test;
 

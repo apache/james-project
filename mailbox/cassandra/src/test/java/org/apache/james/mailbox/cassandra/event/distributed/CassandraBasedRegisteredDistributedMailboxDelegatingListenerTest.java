@@ -29,7 +29,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.modules.CassandraRegistrationModule;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.TestId;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.TestIdDeserializer;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.distributed.DistantMailboxPathRegister;
