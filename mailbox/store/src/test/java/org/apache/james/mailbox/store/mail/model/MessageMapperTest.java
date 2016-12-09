@@ -58,7 +58,7 @@ import com.google.common.base.Optional;
 @Contract(MapperProvider.class)
 public class MessageMapperTest<T extends MapperProvider> {
 
-    private final static char DELIMITER = ':';
+    private final static char DELIMITER = '.';
     private static final int LIMIT = 10;
     private static final int BODY_START = 16;
     public static final int UID_VALIDITY = 42;

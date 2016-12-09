@@ -47,7 +47,7 @@ import org.xenei.junit.contract.IProducer;
 @Contract(MapperProvider.class)
 public class MailboxMapperTest<T extends MapperProvider> {
     
-    private final static char DELIMITER = ':';
+    private final static char DELIMITER = '.';
     private final static char WILDCARD = '%';
     private final static long UID_VALIDITY = 42;
 

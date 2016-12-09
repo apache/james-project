@@ -33,11 +33,13 @@ import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
 public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFactory {
 
     private final MailboxMapper mailboxMapper;
+    private final InMemoryModSeqProvider modSeqProvider;
     private final MessageMapper messageMapper;
     private final SubscriptionMapper subscriptionMapper;
     private final AttachmentMapper attachmentMapper;
@@ -45,7 +47,8 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
     
     public InMemoryMailboxSessionMapperFactory() {
         mailboxMapper = new InMemoryMailboxMapper();
-        messageMapper = new InMemoryMessageMapper(null, new InMemoryUidProvider(), new InMemoryModSeqProvider());
+        modSeqProvider = new InMemoryModSeqProvider();
+        messageMapper = new InMemoryMessageMapper(null, new InMemoryUidProvider(), modSeqProvider);
         subscriptionMapper = new InMemorySubscriptionMapper();
         attachmentMapper = new InMemoryAttachmentMapper();
         annotationMapper = new InMemoryAnnotationMapper();
@@ -83,4 +86,7 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
         return annotationMapper;
     }
 
+    public ModSeqProvider getModSeqProvider() {
+        return modSeqProvider;
+    }
 }
