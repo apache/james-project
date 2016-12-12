@@ -243,15 +243,6 @@ public class StoreMessageIdManager implements MessageIdManager {
         };
     }
 
-    private Predicate<MailboxId> notIn(final List<MailboxId> alreadyInMailboxes) {
-        return new Predicate<MailboxId>() {
-            @Override
-            public boolean apply(MailboxId input) {
-                return !alreadyInMailboxes.contains(input);
-            }
-        };
-    }
-
     private static class MetadataWithMailboxId {
         private final MessageMetaData messageMetaData;
         private final MailboxId mailboxId;

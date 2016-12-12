@@ -19,13 +19,11 @@
 
 package org.apache.james.mailbox.store;
 
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Random;
 
 import javax.mail.Flags;
 

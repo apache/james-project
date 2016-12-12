@@ -65,8 +65,6 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
 
     private static final Quota OVER_QUOTA = QuotaImpl.quota(102, 100);
     private static final MessageUid messageUid1 = MessageUid.of(111);
-    private static final MessageUid messageUid2 = MessageUid.of(222);
-    private static final MessageUid messageUid3 = MessageUid.of(333);
 
     public static final Flags FLAGS = new Flags();
 
