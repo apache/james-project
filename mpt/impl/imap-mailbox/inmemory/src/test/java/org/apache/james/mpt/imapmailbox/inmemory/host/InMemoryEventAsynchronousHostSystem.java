@@ -29,6 +29,7 @@ import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -39,7 +40,6 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.AsynchronousEventDelivery;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
@@ -83,7 +83,7 @@ public class InMemoryEventAsynchronousHostSystem extends JamesImapHostSystem {
         MessageParser messageParser = new MessageParser();
 
         mailboxManager = new StoreMailboxManager(factory, userManager, aclResolver, groupMembershipResolver, messageParser, 
-                new DefaultMessageId.Factory(), MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+                new InMemoryMessageId.Factory(), MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
         QuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(factory);
 
         InMemoryPerUserMaxQuotaManager perUserMaxQuotaManager = new InMemoryPerUserMaxQuotaManager();

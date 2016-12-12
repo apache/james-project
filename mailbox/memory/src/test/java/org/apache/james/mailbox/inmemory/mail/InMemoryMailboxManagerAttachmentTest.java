@@ -29,12 +29,12 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.AbstractMailboxManagerAttachmentTest;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 
 public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
@@ -46,7 +46,7 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
     public InMemoryMailboxManagerAttachmentTest() throws Exception {
         mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         Authenticator noAuthenticator = null;
-        MessageId.Factory messageIdFactory = new DefaultMessageId.Factory();
+        MessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, noAuthenticator, new NoMailboxPathLocker(), 
                 new UnionMailboxACLResolver(), null, new MessageParser(), messageIdFactory);
         mailboxManager.init();

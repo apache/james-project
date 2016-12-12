@@ -47,13 +47,13 @@ import org.apache.james.mailbox.elasticsearch.utils.TestingClientProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
@@ -117,7 +117,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
         MessageParser messageParser = new MessageParser();
 
         mailboxManager = new StoreMailboxManager(factory, userManager, aclResolver, groupMembershipResolver, messageParser, 
-                new DefaultMessageId.Factory(), MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+                new InMemoryMessageId.Factory(), MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
         mailboxManager.setMessageSearchIndex(searchIndex);
 
         try {

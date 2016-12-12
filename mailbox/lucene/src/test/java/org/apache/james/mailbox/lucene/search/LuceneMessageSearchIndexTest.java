@@ -25,11 +25,10 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
-import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
+import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
 import org.apache.lucene.store.RAMDirectory;
@@ -45,7 +44,6 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
     protected void initializeMailboxManager() throws Exception {
         MailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
         messageSearchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), new RAMDirectory());
-        MessageId.Factory messageIdFactory = new DefaultMessageId.Factory();
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,
             new FakeAuthenticator(),
@@ -53,7 +51,7 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
             new UnionMailboxACLResolver(),
             new SimpleGroupMembershipResolver(),
             new MessageParser(),
-            messageIdFactory);
+            new InMemoryMessageId.Factory());
         storeMailboxManager.setMessageSearchIndex(messageSearchIndex);
         storeMailboxManager.init();
     }

@@ -8,6 +8,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
@@ -15,7 +16,6 @@ import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageUidProvider;
@@ -29,9 +29,10 @@ public class InMemoryMapperProvider implements MapperProvider {
     private final MessageUidProvider messageUidProvider;
     private final InMemoryMailboxSessionMapperFactory inMemoryMailboxSessionMapperFactory;
 
+
     public InMemoryMapperProvider() {
         random = new Random();
-        messageIdFactory = new DefaultMessageId.Factory();
+        messageIdFactory = new InMemoryMessageId.Factory();
         messageUidProvider = new MessageUidProvider();
         inMemoryMailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
     }
