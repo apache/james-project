@@ -33,6 +33,7 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.assertj.core.internal.FieldByFieldComparator;
 import org.junit.Before;
@@ -103,7 +104,7 @@ public class SimpleMailboxMessageTest {
         propertyBuilder.setTextualLineCount(textualLineCount);
         propertyBuilder.setMediaType(text);
         propertyBuilder.setSubType(plain);
-        SimpleMailboxMessage original = new SimpleMailboxMessage(new DefaultMessageId(), new Date(),
+        SimpleMailboxMessage original = new SimpleMailboxMessage(new TestMessageId.Factory().generate(), new Date(),
             MESSAGE_CONTENT.length(),
             BODY_START_OCTET,
             new SharedByteArrayInputStream(MESSAGE_CONTENT.getBytes(MESSAGE_CHARSET)),

@@ -21,9 +21,9 @@ package org.apache.james.mailbox.store;
 
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 
 public class StoreMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
@@ -33,7 +33,7 @@ public class StoreMessageIdManagerSideEffectTest extends AbstractMessageIdManage
     protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
 
         TestMailboxSessionMapperFactory testMailboxSessionMapperFactory = new TestMailboxSessionMapperFactory();
-        MessageId.Factory messageIdFactory = new DefaultMessageId.Factory();
+        MessageId.Factory messageIdFactory = new TestMessageId.Factory();
         MessageIdManager messageIdManager = new StoreMessageIdManager(testMailboxSessionMapperFactory, dispatcher, messageIdFactory,
             quotaManager, new DefaultQuotaRootResolver(testMailboxSessionMapperFactory));
 
