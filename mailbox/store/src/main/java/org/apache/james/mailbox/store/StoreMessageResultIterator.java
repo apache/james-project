@@ -210,8 +210,8 @@ public class StoreMessageResultIterator implements MessageResultIterator {
             uid = message.getUid();
             flags = message.createFlags();
             modSeq = message.getModSeq();
-            messageId = message.getMessageId();
             mailboxId = message.getMailboxId();
+            messageId = message.getMessageId();
             this.exception = exception;
         }
 
