@@ -30,13 +30,14 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.EventSerializer;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +51,8 @@ public abstract class EventSerializerTest {
     public static final UpdatedFlags UPDATED_FLAGS = new UpdatedFlags(UID, MOD_SEQ, new Flags(), new Flags(Flags.Flag.SEEN));
     public static final Flags FLAGS = new Flags();
     public static final long SIZE = 45L;
-    public static final SimpleMessageMetaData MESSAGE_META_DATA = new SimpleMessageMetaData(UID, MOD_SEQ, FLAGS, SIZE, null, new DefaultMessageId());
+    private static final MessageId MESSAGE_ID = new TestMessageId.Factory().generate();
+    public static final SimpleMessageMetaData MESSAGE_META_DATA = new SimpleMessageMetaData(UID, MOD_SEQ, FLAGS, SIZE, null, MESSAGE_ID);
     public static final MailboxPath FROM = new MailboxPath("namespace", "user", "name");
     private EventSerializer serializer;
     private EventFactory eventFactory;
@@ -79,7 +81,9 @@ public abstract class EventSerializerTest {
         assertThat(deserializedEvent.getSession().getSessionId()).isEqualTo(event.getSession().getSessionId());
         assertThat(deserializedEvent).isInstanceOf(MailboxListener.Added.class);
         assertThat(((MailboxListener.Added)deserializedEvent).getUids()).containsOnly(UID);
-        assertThat(((MailboxListener.Added)deserializedEvent).getMetaData(UID)).isEqualTo(MESSAGE_META_DATA);
+        MessageMetaData messageMetaData = ((MailboxListener.Added)deserializedEvent).getMetaData(UID);
+        assertThat(messageMetaData).isEqualTo(MESSAGE_META_DATA);
+        assertThat(messageMetaData.getMessageId()).isEqualTo(MESSAGE_ID);
     }
 
     @Test
@@ -93,7 +97,9 @@ public abstract class EventSerializerTest {
         assertThat(deserializedEvent.getSession().getSessionId()).isEqualTo(event.getSession().getSessionId());
         assertThat(deserializedEvent).isInstanceOf(MailboxListener.Expunged.class);
         assertThat(((MailboxListener.Expunged)deserializedEvent).getUids()).containsOnly(UID);
-        assertThat(((MailboxListener.Expunged)deserializedEvent).getMetaData(UID)).isEqualTo(MESSAGE_META_DATA);
+        MessageMetaData messageMetaData = ((MailboxListener.Expunged)deserializedEvent).getMetaData(UID);
+        assertThat(messageMetaData).isEqualTo(MESSAGE_META_DATA);
+        assertThat(messageMetaData.getMessageId()).isEqualTo(MESSAGE_ID);
     }
 
     @Test

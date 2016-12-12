@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store.json;
 
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.json.event.EventConverter;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 
@@ -28,7 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * MailboxMessage Pack ( http://msgpack.org/ ) Event Serializer
  */
 public class MessagePackEventSerializer extends JacksonEventSerializer {
-    public MessagePackEventSerializer(EventConverter eventConverter) {
-        super(eventConverter, configureObjectMapper(new ObjectMapper(new MessagePackFactory())));
+    public MessagePackEventSerializer(EventConverter eventConverter, MessageId.Factory messageIdFactory) {
+        super(eventConverter, configureObjectMapper(new ObjectMapper(new MessagePackFactory()), messageIdFactory));
     }
 }

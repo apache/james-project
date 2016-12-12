@@ -19,13 +19,14 @@
 
 package org.apache.james.mailbox.store.json;
 
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.json.event.EventConverter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JsonEventSerializer extends JacksonEventSerializer {
 
-    public JsonEventSerializer(EventConverter eventConverter) {
-        super(eventConverter, configureObjectMapper(new ObjectMapper()));
+    public JsonEventSerializer(EventConverter eventConverter, MessageId.Factory messageIdFactory) {
+        super(eventConverter, configureObjectMapper(new ObjectMapper(), messageIdFactory));
     }
 }

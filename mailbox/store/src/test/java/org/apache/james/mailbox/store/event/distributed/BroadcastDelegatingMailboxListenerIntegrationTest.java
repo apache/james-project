@@ -30,6 +30,7 @@ import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.TestIdDeserializer;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.json.MessagePackEventSerializer;
@@ -70,19 +71,22 @@ public class BroadcastDelegatingMailboxListenerIntegrationTest {
         broadcastDelegatingMailboxListener1 = new BroadcastDelegatingMailboxListener(publisherReceiver,
             publisherReceiver,
             new MessagePackEventSerializer(
-                new EventConverter(new MailboxConverter(new TestIdDeserializer()))
+                new EventConverter(new MailboxConverter(new TestIdDeserializer())),
+                new TestMessageId.Factory()
             ),
             TOPIC);
         broadcastDelegatingMailboxListener2 = new BroadcastDelegatingMailboxListener(publisherReceiver,
             publisherReceiver,
             new MessagePackEventSerializer(
-                new EventConverter(new MailboxConverter(new TestIdDeserializer()))
+                new EventConverter(new MailboxConverter(new TestIdDeserializer())),
+                new TestMessageId.Factory()
             ),
             TOPIC);
         broadcastDelegatingMailboxListener3 = new BroadcastDelegatingMailboxListener(publisherReceiver,
             publisherReceiver,
             new MessagePackEventSerializer(
-                new EventConverter(new MailboxConverter(new TestIdDeserializer()))
+                new EventConverter(new MailboxConverter(new TestIdDeserializer())),
+                new TestMessageId.Factory()
             ),
             TOPIC);
         eventCollectorMailbox1 = new EventCollector(MailboxListener.ListenerType.MAILBOX);

@@ -30,6 +30,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraRegistrationModule;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.TestIdDeserializer;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.distributed.DistantMailboxPathRegister;
@@ -78,7 +79,8 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
             SCHEDULER_PERIOD_IN_S);
         registeredDelegatingMailboxListener1 = new RegisteredDelegatingMailboxListener(
             new MessagePackEventSerializer(
-                new EventConverter(new MailboxConverter(new TestIdDeserializer()))
+                new EventConverter(new MailboxConverter(new TestIdDeserializer())),
+                new TestMessageId.Factory()
             ),
             publisherReceiver,
             publisherReceiver,
@@ -91,7 +93,8 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
             SCHEDULER_PERIOD_IN_S);
         registeredDelegatingMailboxListener2 = new RegisteredDelegatingMailboxListener(
             new MessagePackEventSerializer(
-                new EventConverter(new MailboxConverter(new TestIdDeserializer()))
+                new EventConverter(new MailboxConverter(new TestIdDeserializer())),
+                new TestMessageId.Factory()
             ),
             publisherReceiver,
             publisherReceiver,
@@ -104,7 +107,8 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
             SCHEDULER_PERIOD_IN_S);
         registeredDelegatingMailboxListener3 = new RegisteredDelegatingMailboxListener(
             new MessagePackEventSerializer(
-                new EventConverter(new MailboxConverter(new TestIdDeserializer()))
+                new EventConverter(new MailboxConverter(new TestIdDeserializer())),
+                new TestMessageId.Factory()
             ),
             publisherReceiver,
             publisherReceiver,
