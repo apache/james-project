@@ -672,7 +672,7 @@ public class StoreMailboxManager implements MailboxManager {
                             inferiors = MailboxMetaData.Children.HAS_NO_CHILDREN;
                         }
                         MailboxPath mailboxPath = new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), name);
-                        results.add(new SimpleMailboxMetaData(mailboxPath, getDelimiter(), inferiors, Selectability.NONE));
+                        results.add(new SimpleMailboxMetaData(mailboxPath, mailbox.getMailboxId(), getDelimiter(), inferiors, Selectability.NONE));
                     }
                 }
             }

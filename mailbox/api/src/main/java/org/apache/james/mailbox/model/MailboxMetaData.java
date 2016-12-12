@@ -79,4 +79,6 @@ public interface MailboxMetaData {
      * @return path
      */
     MailboxPath getPath();
+    
+    MailboxId getId();
 }

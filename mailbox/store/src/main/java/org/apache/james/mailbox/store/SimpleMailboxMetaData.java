@@ -20,13 +20,14 @@
 package org.apache.james.mailbox.store;
 
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 
 public class SimpleMailboxMetaData implements MailboxMetaData, Comparable<MailboxMetaData> {
 
-    public static MailboxMetaData createNoSelect(MailboxPath path, char delimiter) {
-        return new SimpleMailboxMetaData(path, delimiter, Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.NOSELECT);
+    public static MailboxMetaData createNoSelect(MailboxPath path, MailboxId mailboxId, char delimiter) {
+        return new SimpleMailboxMetaData(path, mailboxId, delimiter, Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.NOSELECT);
     }
 
     private final MailboxPath path;
@@ -37,13 +38,16 @@ public class SimpleMailboxMetaData implements MailboxMetaData, Comparable<Mailbo
 
     private final Selectability selectability;
 
-    public SimpleMailboxMetaData(MailboxPath path, char delimiter) {
-        this(path, delimiter, Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.NONE);
+    private final MailboxId mailboxId;
+
+    public SimpleMailboxMetaData(MailboxPath path, MailboxId mailboxId, char delimiter) {
+        this(path, mailboxId, delimiter, Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.NONE);
     }
 
-    public SimpleMailboxMetaData(MailboxPath path, char delimiter, Children inferiors, Selectability selectability) {
+    public SimpleMailboxMetaData(MailboxPath path, MailboxId mailboxId, char delimiter, Children inferiors, Selectability selectability) {
         super();
         this.path = path;
+        this.mailboxId = mailboxId;
         this.delimiter = delimiter;
         this.inferiors = inferiors;
         this.selectability = selectability;
@@ -77,6 +81,11 @@ public class SimpleMailboxMetaData implements MailboxMetaData, Comparable<Mailbo
      */
     public MailboxPath getPath() {
         return path;
+    }
+
+    @Override
+    public MailboxId getId() {
+        return mailboxId;
     }
 
     /**
