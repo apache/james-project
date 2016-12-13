@@ -44,5 +44,5 @@ public interface MessageIdMapper {
 
     void delete(MessageId messageId, List<MailboxId> mailboxIds);
 
-    Map<MailboxId, UpdatedFlags> setFlags(MessageId messageId, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException;
+    Map<MailboxId, UpdatedFlags> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException;
 }
