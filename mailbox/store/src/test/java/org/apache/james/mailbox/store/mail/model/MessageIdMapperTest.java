@@ -499,6 +499,107 @@ public class MessageIdMapperTest<T extends MapperProvider> {
         assertThat(messages.get(1).isAnswered()).isTrue();
     }
 
+    @ContractTest
+    public void countMessageShouldReturnWhenCreateNewMessage() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message1);
+
+        assertThat(messageMapper.countMessagesInMailbox(benwaInboxMailbox)).isEqualTo(1);
+    }
+
+    @ContractTest
+    public void countUnseenMessageShouldBeEmptyWhenMessageIsSeen() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        message1.setFlags(new Flags(Flag.SEEN));
+        sut.save(message1);
+
+        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(0);
+    }
+
+    @ContractTest
+    public void countUnseenMessageShouldReturnWhenMessageIsNotSeen() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message1);
+
+        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(1);
+    }
+
+    @ContractTest
+    public void countMessageShouldBeEmptyWhenDeleteMessage() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message1);
+
+        sut.delete(message1.getMessageId(), ImmutableList.of(benwaInboxMailbox.getMailboxId()));
+
+        assertThat(messageMapper.countMessagesInMailbox(benwaInboxMailbox)).isEqualTo(0);
+    }
+
+    @ContractTest
+    public void countUnseenMessageShouldBeEmptyWhenDeleteMessage() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message1);
+
+        sut.delete(message1.getMessageId(), ImmutableList.of(benwaInboxMailbox.getMailboxId()));
+
+        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(0);
+    }
+
+    @ContractTest
+    public void countUnseenMessageShouldReturnWhenDeleteMessage() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        message1.setFlags(new Flags(Flag.SEEN));
+        sut.save(message1);
+
+        message2.setUid(mapperProvider.generateMessageUid());
+        message2.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message2);
+
+        sut.delete(message1.getMessageId(), ImmutableList.of(benwaInboxMailbox.getMailboxId()));
+
+        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(1);
+    }
+
+    @ContractTest
+    public void countUnseenMessageShouldTakeCareOfMessagesMarkedAsRead() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message1);
+
+        sut.setFlags(message1.getMessageId(), ImmutableList.of(message1.getMailboxId()), new Flags(Flag.SEEN), MessageManager.FlagsUpdateMode.ADD);
+
+        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(0);
+    }
+
+    @ContractTest
+    public void countUnseenMessageShouldTakeCareOfMessagesMarkedAsUnread() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        message1.setFlags(new Flags(Flag.SEEN));
+        sut.save(message1);
+
+        sut.setFlags(message1.getMessageId(), ImmutableList.of(message1.getMailboxId()), new Flags(Flag.SEEN), MessageManager.FlagsUpdateMode.REMOVE);
+
+        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(1);
+    }
+
+    @ContractTest
+    public void countUnseenMessageShouldNotTakeCareOfOtherFlagsUpdates() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        message1.setFlags(new Flags(Flag.SEEN));
+        sut.save(message1);
+
+        sut.setFlags(message1.getMessageId(), ImmutableList.of(message1.getMailboxId()), new Flags(Flag.ANSWERED), MessageManager.FlagsUpdateMode.REMOVE);
+
+        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(1);
+    }
+
     private SimpleMailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {
         SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
         mailbox.setMailboxId(mapperProvider.generateId());
