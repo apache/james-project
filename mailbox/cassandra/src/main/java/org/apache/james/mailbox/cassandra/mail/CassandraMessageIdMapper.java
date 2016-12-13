@@ -39,7 +39,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
@@ -100,11 +99,12 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .sorted(Comparator.comparing(MailboxMessage::getUid));
     }
 
-    private Function<Pair<MailboxMessage, Stream<MessageAttachmentById>>, Pair<MailboxMessage, Stream<MessageAttachment>>> loadAttachments() {
-        return pair -> Pair.of(pair.getLeft(), new AttachmentLoader(attachmentMapper).getAttachments(pair.getRight().collect(Guavate.toImmutableList())));
+    private Function<Pair<MailboxMessage, Stream<CassandraMessageDAO.MessageAttachment>>, Pair<MailboxMessage, Stream<org.apache.james.mailbox.model.MessageAttachment>>> loadAttachments() {
+        return pair -> Pair.of(pair.getLeft(),
+            new AttachmentLoader(attachmentMapper).getAttachments(pair.getRight().collect(Guavate.toImmutableSet())).stream());
     }
 
-    private FunctionChainer<Pair<MailboxMessage, Stream<MessageAttachment>>, SimpleMailboxMessage> toMailboxMessages() {
+    private FunctionChainer<Pair<MailboxMessage, Stream<org.apache.james.mailbox.model.MessageAttachment>>, SimpleMailboxMessage> toMailboxMessages() {
         return Throwing.function(pair -> SimpleMailboxMessage.cloneWithAttachments(pair.getLeft(),
                 pair.getRight().collect(Guavate.toImmutableList())));
     }
@@ -161,7 +161,6 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     @Override
-
     public Map<MailboxId, UpdatedFlags> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
 

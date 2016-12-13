@@ -24,15 +24,22 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.assertj.core.data.MapEntry;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import org.junit.rules.ExpectedException;
 
 public class AttachmentLoaderTest {
 
@@ -46,10 +53,10 @@ public class AttachmentLoaderTest {
     }
 
     @Test
-    public void attachmentsByIdShouldRemoveDuplicateKeys() {
+    public void attachmentsByIdShouldReturnMapWhenExist() {
         AttachmentId attachmentId = AttachmentId.from("1");
         AttachmentId attachmentId2 = AttachmentId.from("2");
-        List<AttachmentId> attachmentIds = ImmutableList.of(attachmentId, attachmentId, attachmentId2);
+        Set<AttachmentId> attachmentIds = ImmutableSet.of(attachmentId, attachmentId2);
 
         Attachment attachment = Attachment.builder()
                 .attachmentId(attachmentId)
@@ -62,11 +69,36 @@ public class AttachmentLoaderTest {
                 .type("type")
                 .build();
         when(attachmentMapper.getAttachments(attachmentIds))
-            .thenReturn(ImmutableList.of(attachment, attachment, attachment2));
+            .thenReturn(ImmutableList.of(attachment, attachment2));
 
         Map<AttachmentId, Attachment> attachmentsById = testee.attachmentsById(attachmentIds);
 
-        assertThat(attachmentsById).containsOnly(MapEntry.entry(attachmentId, attachment),
-                MapEntry.entry(attachmentId2, attachment2));
+        assertThat(attachmentsById).hasSize(2)
+                .containsOnly(MapEntry.entry(attachmentId, attachment), MapEntry.entry(attachmentId2, attachment2));
     }
+
+    @Test
+    public void attachmentsByIdShouldReturnEmptyMapWhenAttachmentsDontExists() {
+        AttachmentId attachmentId = AttachmentId.from("1");
+        AttachmentId attachmentId2 = AttachmentId.from("2");
+        Set<AttachmentId> attachmentIds = ImmutableSet.of(attachmentId, attachmentId2);
+
+        Attachment attachment = Attachment.builder()
+                .attachmentId(attachmentId)
+                .bytes("attachment".getBytes())
+                .type("type")
+                .build();
+        Attachment attachment2 = Attachment.builder()
+                .attachmentId(attachmentId2)
+                .bytes("attachment2".getBytes())
+                .type("type")
+                .build();
+        when(attachmentMapper.getAttachments(attachmentIds))
+                .thenReturn(ImmutableList.of());
+
+        Map<AttachmentId, Attachment> attachmentsById = testee.attachmentsById(attachmentIds);
+
+        assertThat(attachmentsById).hasSize(0);
+    }
+
 }

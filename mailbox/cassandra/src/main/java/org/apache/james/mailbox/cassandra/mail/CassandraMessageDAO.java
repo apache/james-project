@@ -65,7 +65,6 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
-import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -83,6 +82,10 @@ import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Where;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
@@ -160,7 +163,7 @@ public class CassandraMessageDAO {
                .orElseGet(() -> boundStatement.setToNull(TEXTUAL_LINE_COUNT));
     }
 
-    private UDTValue toUDT(MessageAttachment messageAttachment) {
+    private UDTValue toUDT(org.apache.james.mailbox.model.MessageAttachment messageAttachment) {
         return typesProvider.getDefinedUserType(ATTACHMENTS)
             .newValue()
             .setString(Attachments.ID, messageAttachment.getAttachmentId().getId())
@@ -172,8 +175,8 @@ public class CassandraMessageDAO {
     private ByteBuffer toByteBuffer(InputStream stream) throws IOException {
         return ByteBuffer.wrap(ByteStreams.toByteArray(stream));
     }
-    
-    public CompletableFuture<Stream<Pair<MailboxMessage, Stream<MessageAttachmentById>>>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
+
+    public CompletableFuture<Stream<Pair<MailboxMessage, Stream<MessageAttachment>>>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
         return retrieveRows(messageIds, fetchType, limit)
                 .thenApply(resultSet -> CassandraUtils.convertToStream(resultSet)
                         .map(row -> message(row, messageIds, fetchType)));
@@ -182,7 +185,7 @@ public class CassandraMessageDAO {
     private CompletableFuture<ResultSet> retrieveRows(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
         return cassandraAsyncExecutor.execute(
                 buildSelectQueryWithLimit(
-                        buildQuery(messageIds, fetchType), 
+                        buildQuery(messageIds, fetchType),
                         limit)
                 );
     }
@@ -198,7 +201,7 @@ public class CassandraMessageDAO {
                         .collect(Collectors.toList())));
     }
 
-    private Pair<MailboxMessage, Stream<MessageAttachmentById>> message(Row row, List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType) {
+    private Pair<MailboxMessage, Stream<MessageAttachment>> message(Row row, List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType) {
         try {
             ComposedMessageIdWithMetaData messageIdWithMetaData = retrieveComposedMessageId(messageIdFactory.of(row.getUUID(MESSAGE_ID)), messageIds);
             ComposedMessageId messageId = messageIdWithMetaData.getComposedMessageId();
@@ -231,7 +234,7 @@ public class CassandraMessageDAO {
         return property;
     }
 
-    private Stream<MessageAttachmentById> getAttachments(Row row, FetchType fetchType) {
+    private Stream<MessageAttachment> getAttachments(Row row, FetchType fetchType) {
         switch (fetchType) {
         case Full:
         case Body:
@@ -243,13 +246,13 @@ public class CassandraMessageDAO {
         }
     }
 
-    private Stream<MessageAttachmentById> attachmentByIds(List<UDTValue> udtValues) {
+    private Stream<MessageAttachment> attachmentByIds(List<UDTValue> udtValues) {
         return udtValues.stream()
             .map(this::messageAttachmentByIdFrom);
     }
 
-    private MessageAttachmentById messageAttachmentByIdFrom(UDTValue udtValue) {
-        return MessageAttachmentById.builder()
+    private MessageAttachment messageAttachmentByIdFrom(UDTValue udtValue) {
+        return MessageAttachment.builder()
                 .attachmentId(AttachmentId.from(udtValue.getString(Attachments.ID)))
                 .name(udtValue.getString(Attachments.NAME))
                 .cid(Optional.ofNullable(udtValue.getString(Attachments.CID)).map(Cid::from))
@@ -318,5 +321,119 @@ public class CassandraMessageDAO {
         byte[] headerContent = new byte[row.getBytes(field).remaining()];
         row.getBytes(field).get(headerContent);
         return headerContent;
+    }
+
+    static class MessageAttachment {
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public static class Builder {
+
+            private AttachmentId attachmentId;
+            private Optional<String> name;
+            private Optional<Cid> cid;
+            private Optional<Boolean> isInline;
+
+            private Builder() {
+                name = Optional.empty();
+                cid = Optional.empty();
+                isInline = Optional.empty();
+            }
+
+            public Builder attachmentId(AttachmentId attachmentId) {
+                Preconditions.checkArgument(attachmentId != null);
+                this.attachmentId = attachmentId;
+                return this;
+            }
+
+            public Builder name(String name) {
+                this.name = Optional.ofNullable(name);
+                return this;
+            }
+
+            public Builder cid(Optional<Cid> cid) {
+                Preconditions.checkNotNull(cid);
+                this.cid = cid;
+                return this;
+            }
+
+
+            public Builder cid(Cid cid) {
+                this.cid = Optional.ofNullable(cid);
+                return this;
+            }
+
+            public Builder isInline(boolean isInline) {
+                this.isInline = Optional.of(isInline);
+                return this;
+            }
+
+            public MessageAttachment build() {
+                Preconditions.checkState(attachmentId != null, "'attachmentId' is mandatory");
+                boolean builtIsInLine = isInline.orElse(false);
+                if (builtIsInLine && !cid.isPresent()) {
+                    throw new IllegalStateException("'cid' is mandatory for inline attachments");
+                }
+                return new MessageAttachment(attachmentId, name, cid, builtIsInLine);
+            }
+        }
+
+        private final AttachmentId attachmentId;
+        private final Optional<String> name;
+        private final Optional<Cid> cid;
+        private final boolean isInline;
+
+        @VisibleForTesting MessageAttachment(AttachmentId attachmentId, Optional<String> name, Optional<Cid> cid, boolean isInline) {
+            this.attachmentId = attachmentId;
+            this.name = name;
+            this.cid = cid;
+            this.isInline = isInline;
+        }
+
+        public AttachmentId getAttachmentId() {
+            return attachmentId;
+        }
+
+        public Optional<String> getName() {
+            return name;
+        }
+
+        public Optional<Cid> getCid() {
+            return cid;
+        }
+
+        public boolean isInline() {
+            return isInline;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof MessageAttachment) {
+                MessageAttachment other = (MessageAttachment) obj;
+                return Objects.equal(attachmentId, other.attachmentId)
+                    && Objects.equal(name, other.name)
+                    && Objects.equal(cid, other.cid)
+                    && Objects.equal(isInline, other.isInline);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(attachmentId, name, cid, isInline);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects
+                    .toStringHelper(this)
+                    .add("attachmentId", attachmentId)
+                    .add("name", name)
+                    .add("cid", cid)
+                    .add("isInline", isInline)
+                    .toString();
+        }
     }
 }
