@@ -59,6 +59,8 @@ public interface MapperProvider {
 
     long generateModSeq(Mailbox mailbox) throws MailboxException;
 
+    long highestModSeq(Mailbox mailbox) throws MailboxException;
+
     void clearMapper() throws MailboxException;
 
     void ensureMapperPrepared() throws MailboxException;

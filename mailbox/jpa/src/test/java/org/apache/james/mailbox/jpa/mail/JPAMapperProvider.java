@@ -144,4 +144,9 @@ public class JPAMapperProvider implements MapperProvider {
     public long generateModSeq(Mailbox mailbox) throws MailboxException {
         throw new NotImplementedException();
     }
+
+    @Override
+    public long highestModSeq(Mailbox mailbox) throws MailboxException {
+        throw new NotImplementedException();
+    }
 }
