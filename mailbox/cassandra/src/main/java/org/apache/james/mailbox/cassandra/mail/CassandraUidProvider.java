@@ -38,6 +38,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.slf4j.Logger;
@@ -67,9 +68,14 @@ public class CassandraUidProvider implements UidProvider {
 
     @Override
     public MessageUid nextUid(MailboxSession mailboxSession, Mailbox mailbox) throws MailboxException {
-        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        if (! findHighestUid(mailboxId).isPresent()) {
-            Optional<MessageUid> optional = tryInsertUid(mailboxId, Optional.empty());
+        return nextUid(mailboxSession, mailbox.getMailboxId());
+    }
+
+    @Override
+    public MessageUid nextUid(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        CassandraId cassandraId = (CassandraId) mailboxId;
+        if (! findHighestUid(cassandraId).isPresent()) {
+            Optional<MessageUid> optional = tryInsertUid(cassandraId, Optional.empty());
             if (optional.isPresent()) {
                 return optional.get();
             }
@@ -79,7 +85,7 @@ public class CassandraUidProvider implements UidProvider {
             return runner.executeAndRetrieveObject(
                 () -> {
                     try {
-                        return tryUpdateUid(mailboxId, findHighestUid(mailboxId));
+                        return tryUpdateUid(cassandraId, findHighestUid(cassandraId));
                     } catch (Exception exception) {
                         LOG.error("Can not retrieve next Uid", exception);
                         throw Throwables.propagate(exception);
@@ -139,5 +145,4 @@ public class CassandraUidProvider implements UidProvider {
         }
         return Optional.empty();
     }
-
 }

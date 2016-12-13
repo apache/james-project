@@ -38,6 +38,7 @@ import org.apache.james.backends.cassandra.utils.LightweightTransactionException
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.slf4j.Logger;
@@ -70,27 +71,12 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     @Override
     public long nextModSeq(MailboxSession mailboxSession, Mailbox mailbox) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        if (findHighestModSeq(mailboxSession, mailboxId).isFirst()) {
-            Optional<ModSeq> optional = tryInsertModSeq(mailbox, FIRST_MODSEQ);
-            if (optional.isPresent()) {
-                return optional.get().getValue();
-            }
-        }
+        return nextModSeq(mailboxSession, mailboxId);
+    }
 
-        try {
-            return runner.executeAndRetrieveObject(
-                        () -> {
-                            try {
-                                return tryUpdateModSeq(mailboxId, findHighestModSeq(mailboxSession, mailboxId))
-                                        .map(ModSeq::getValue);
-                            } catch (Exception exception) {
-                                LOG.error("Can not retrieve next ModSeq", exception);
-                                throw Throwables.propagate(exception);
-                            }
-                        });
-        } catch (LightweightTransactionException e) {
-            throw new MailboxException("Error during ModSeq update", e);
-        }
+    @Override
+    public long nextModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        return nextModSeq(session, (CassandraId)mailboxId);
     }
 
     @Override
@@ -110,9 +96,8 @@ public class CassandraModSeqProvider implements ModSeqProvider {
         }
     }
 
-    private Optional<ModSeq> tryInsertModSeq(Mailbox mailbox, ModSeq modSeq) {
+    private Optional<ModSeq> tryInsertModSeq(CassandraId mailboxId, ModSeq modSeq) {
         ModSeq nextModSeq = modSeq.next();
-        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return transactionalStatementToOptionalModSeq(nextModSeq,
                 insertInto(TABLE_NAME)
                     .value(NEXT_MODSEQ, nextModSeq.getValue())
@@ -136,6 +121,30 @@ public class CassandraModSeqProvider implements ModSeqProvider {
         return Optional.empty();
     }
     
+    private long nextModSeq(MailboxSession mailboxSession, CassandraId mailboxId) throws MailboxException {
+        if (findHighestModSeq(mailboxSession, mailboxId).isFirst()) {
+            Optional<ModSeq> optional = tryInsertModSeq(mailboxId, FIRST_MODSEQ);
+            if (optional.isPresent()) {
+                return optional.get().getValue();
+            }
+        }
+
+        try {
+            return runner.executeAndRetrieveObject(
+                        () -> {
+                            try {
+                                return tryUpdateModSeq(mailboxId, findHighestModSeq(mailboxSession, mailboxId))
+                                        .map(ModSeq::getValue);
+                            } catch (Exception exception) {
+                                LOG.error("Can not retrieve next ModSeq", exception);
+                                throw Throwables.propagate(exception);
+                            }
+                        });
+        } catch (LightweightTransactionException e) {
+            throw new MailboxException("Error during ModSeq update", e);
+        }
+    }
+
     private static class ModSeq {
         
         private final long value;
@@ -156,4 +165,5 @@ public class CassandraModSeqProvider implements ModSeqProvider {
             return value == FIRST_MODSEQ.value;
         }
     }
+
 }

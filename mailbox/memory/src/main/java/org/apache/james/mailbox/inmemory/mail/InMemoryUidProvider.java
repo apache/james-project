@@ -27,6 +27,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
@@ -38,13 +39,18 @@ public class InMemoryUidProvider implements UidProvider{
     
     @Override
     public MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
-        InMemoryId mailboxId = (InMemoryId) mailbox.getMailboxId();
-        AtomicLong uid = getLast(mailboxId);
+        return nextUid(session, mailbox.getMailboxId());
+    }
+
+    @Override
+    public MessageUid nextUid(MailboxSession session, MailboxId mailboxId) {
+        InMemoryId memoryId = (InMemoryId) mailboxId;
+        AtomicLong uid = getLast(memoryId);
         if (uid != null) {
             return MessageUid.of(uid.incrementAndGet());
         }
         AtomicLong initialUid = new AtomicLong(MessageUid.MIN_VALUE.asLong());
-        AtomicLong previousUid = map.putIfAbsent(mailboxId, initialUid);
+        AtomicLong previousUid = map.putIfAbsent(memoryId, initialUid);
         if (previousUid != null) {
             return MessageUid.of(previousUid.incrementAndGet());
         } else {

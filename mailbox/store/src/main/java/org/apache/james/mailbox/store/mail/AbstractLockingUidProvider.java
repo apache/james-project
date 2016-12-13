@@ -18,11 +18,13 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.StoreMailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
@@ -57,4 +59,8 @@ public abstract class AbstractLockingUidProvider implements UidProvider{
      */
     protected abstract MessageUid lockedNextUid(MailboxSession session, Mailbox mailbox) throws MailboxException;
 
+    @Override
+    public MessageUid nextUid(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        throw new NotImplementedException();
+    }
 }

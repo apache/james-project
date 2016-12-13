@@ -33,6 +33,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.hbase.HBaseId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
@@ -98,11 +99,16 @@ public class HBaseUidProvider implements UidProvider {
      */
     @Override
     public MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+        return nextUid(session, mailbox.getMailboxId());
+    }
+
+    @Override
+    public MessageUid nextUid(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        HBaseId hbaseId = (HBaseId) mailboxId;
         HTable mailboxes = null;
-        HBaseId mailboxId = (HBaseId) mailbox.getMailboxId();
         try {
             mailboxes = new HTable(conf, MAILBOXES_TABLE);
-            MessageUid newValue = MessageUid.of(mailboxes.incrementColumnValue(mailboxId.toBytes(), MAILBOX_CF, MAILBOX_LASTUID, 1));
+            MessageUid newValue = MessageUid.of(mailboxes.incrementColumnValue(hbaseId.toBytes(), MAILBOX_CF, MAILBOX_LASTUID, 1));
             mailboxes.close();
             return newValue;
         } catch (IOException e) {
@@ -117,4 +123,6 @@ public class HBaseUidProvider implements UidProvider {
             }
         }
     }
+
+
 }

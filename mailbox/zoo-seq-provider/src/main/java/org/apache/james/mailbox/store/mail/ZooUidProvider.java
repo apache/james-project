@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -89,6 +90,11 @@ public class ZooUidProvider implements UidProvider {
             }
         }
         throw new MailboxException("Curator client is closed.");
+    }
+
+    @Override
+    public MessageUid nextUid(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        throw new NotImplementedException();
     }
 
     public static <E extends MailboxId> String pathForMailbox(Mailbox mailbox) {

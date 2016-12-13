@@ -32,6 +32,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.hbase.HBaseId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 /**
@@ -78,11 +79,16 @@ public class HBaseModSeqProvider implements ModSeqProvider {
 
     @Override
     public long nextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
+        return nextModSeq(session, mailbox.getMailboxId());
+    }
+
+    @Override
+    public long nextModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
         HTable mailboxes = null;
-        HBaseId mailboxId = (HBaseId) mailbox.getMailboxId();
+        HBaseId hbaseId = (HBaseId) mailboxId;
         try {
             mailboxes = new HTable(conf, MAILBOXES_TABLE);
-            long newValue = mailboxes.incrementColumnValue(mailboxId.toBytes(), MAILBOX_CF, MAILBOX_HIGHEST_MODSEQ, 1);
+            long newValue = mailboxes.incrementColumnValue(hbaseId.toBytes(), MAILBOX_CF, MAILBOX_HIGHEST_MODSEQ, 1);
             return newValue;
         } catch (IOException e) {
             throw new MailboxException("lastUid", e);

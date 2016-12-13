@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.mail;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.google.common.base.Optional;
@@ -44,4 +45,6 @@ public interface UidProvider {
      * Return the last uid which were used for storing a MailboxMessage in the {@link Mailbox}
      */
     Optional<MessageUid> lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException;
+    
+    MessageUid nextUid(MailboxSession session, MailboxId mailboxId) throws MailboxException;
 }
