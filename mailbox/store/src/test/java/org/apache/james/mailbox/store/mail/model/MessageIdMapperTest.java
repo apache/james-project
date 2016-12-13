@@ -323,7 +323,7 @@ public class MessageIdMapperTest<T extends MapperProvider> {
 
         MessageId messageId = message1.getMessageId();
         Flags newFlags = new Flags(Flag.ANSWERED);
-        Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, newFlags, MessageManager.FlagsUpdateMode.REMOVE);
+        Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), newFlags, MessageManager.FlagsUpdateMode.REMOVE);
 
         int modSeq = 1;
         UpdatedFlags expectedUpdatedFlags = new UpdatedFlags(message1.getUid(), modSeq, new Flags(), newFlags);
@@ -333,7 +333,7 @@ public class MessageIdMapperTest<T extends MapperProvider> {
     @ContractTest
     public void setFlagsShouldReturnEmptyWhenMessageIdDoesntExist() throws Exception {
         MessageId unknownMessageId = mapperProvider.generateMessageId();
-        Map<MailboxId, UpdatedFlags> flags = sut.setFlags(unknownMessageId, new Flags(Flag.RECENT), MessageManager.FlagsUpdateMode.REMOVE);
+        Map<MailboxId, UpdatedFlags> flags = sut.setFlags(unknownMessageId, ImmutableList.of(message1.getMailboxId()), new Flags(Flag.RECENT), MessageManager.FlagsUpdateMode.REMOVE);
 
         assertThat(flags).isEmpty();
     }
@@ -346,9 +346,9 @@ public class MessageIdMapperTest<T extends MapperProvider> {
 
         MessageId messageId = message1.getMessageId();
         Flags initialFlags = new Flags(Flag.RECENT);
-        sut.setFlags(messageId, initialFlags, MessageManager.FlagsUpdateMode.REMOVE);
+        sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), initialFlags, MessageManager.FlagsUpdateMode.REMOVE);
 
-        Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, new Flags(Flag.ANSWERED), MessageManager.FlagsUpdateMode.ADD);
+        Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), new Flags(Flag.ANSWERED), MessageManager.FlagsUpdateMode.ADD);
 
         Flags newFlags = new FlagsBuilder()
             .add(Flag.RECENT)
@@ -372,7 +372,7 @@ public class MessageIdMapperTest<T extends MapperProvider> {
 
         MessageId messageId = message1.getMessageId();
         Flags newFlags = new Flags(Flag.ANSWERED);
-        Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, newFlags, MessageManager.FlagsUpdateMode.REMOVE);
+        Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), newFlags, MessageManager.FlagsUpdateMode.REMOVE);
 
         int modSeq = 1;
         UpdatedFlags expectedUpdatedFlags = new UpdatedFlags(message1.getUid(), modSeq, new Flags(), newFlags);
@@ -388,7 +388,7 @@ public class MessageIdMapperTest<T extends MapperProvider> {
         sut.save(message1);
 
         MessageId messageId = message1.getMessageId();
-        sut.setFlags(messageId, new Flags(Flag.ANSWERED), MessageManager.FlagsUpdateMode.REMOVE);
+        sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), new Flags(Flag.ANSWERED), MessageManager.FlagsUpdateMode.REMOVE);
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);
@@ -403,7 +403,7 @@ public class MessageIdMapperTest<T extends MapperProvider> {
         sut.save(message1);
 
         MessageId messageId = message1.getMessageId();
-        sut.setFlags(messageId, new Flags(Flag.ANSWERED), MessageManager.FlagsUpdateMode.REMOVE);
+        sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), new Flags(Flag.ANSWERED), MessageManager.FlagsUpdateMode.REMOVE);
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);
@@ -422,7 +422,7 @@ public class MessageIdMapperTest<T extends MapperProvider> {
         sut.save(message1InOtherMailbox);
 
         MessageId messageId = message1.getMessageId();
-        sut.setFlags(messageId, new Flags(Flag.ANSWERED), MessageManager.FlagsUpdateMode.REMOVE);
+        sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId(), message1InOtherMailbox.getMailboxId()), new Flags(Flag.ANSWERED), MessageManager.FlagsUpdateMode.REMOVE);
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(2);
