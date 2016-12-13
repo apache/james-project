@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -100,5 +101,12 @@ public class InMemoryMapperProvider implements MapperProvider {
     public long generateModSeq(Mailbox mailbox) throws MailboxException {
         return inMemoryMailboxSessionMapperFactory.getModSeqProvider()
                 .nextModSeq(new MockMailboxSession("user"), mailbox);
+    }
+
+
+    @Override
+    public long highestModSeq(Mailbox mailbox) throws MailboxException {
+        return inMemoryMailboxSessionMapperFactory.getModSeqProvider()
+            .highestModSeq(new MockMailboxSession("user"), mailbox);
     }
 }

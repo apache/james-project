@@ -325,7 +325,7 @@ public class MessageIdMapperTest<T extends MapperProvider> {
         Flags newFlags = new Flags(Flag.ANSWERED);
         Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), newFlags, MessageManager.FlagsUpdateMode.REMOVE);
 
-        int modSeq = 1;
+        long modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
         UpdatedFlags expectedUpdatedFlags = new UpdatedFlags(message1.getUid(), modSeq, new Flags(), newFlags);
         assertThat(flags).containsOnly(MapEntry.entry(benwaInboxMailbox.getMailboxId(), expectedUpdatedFlags));
     }
@@ -367,7 +367,7 @@ public class MessageIdMapperTest<T extends MapperProvider> {
             .add(Flag.RECENT)
             .add(Flag.ANSWERED)
             .build();
-        int modSeq = 2;
+        long modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
         UpdatedFlags expectedUpdatedFlags = new UpdatedFlags(message1.getUid(), modSeq, initialFlags, newFlags);
         assertThat(flags).containsOnly(MapEntry.entry(benwaInboxMailbox.getMailboxId(), expectedUpdatedFlags));
     }
@@ -387,9 +387,10 @@ public class MessageIdMapperTest<T extends MapperProvider> {
         Flags newFlags = new Flags(Flag.ANSWERED);
         Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), newFlags, MessageManager.FlagsUpdateMode.REMOVE);
 
-        int modSeq = 1;
-        UpdatedFlags expectedUpdatedFlags = new UpdatedFlags(message1.getUid(), modSeq, new Flags(), newFlags);
-        UpdatedFlags expectedUpdatedFlags2 = new UpdatedFlags(message1InOtherMailbox.getUid(), modSeq, new Flags(), newFlags);
+        long modSeqBenwaInboxMailbox = mapperProvider.highestModSeq(benwaInboxMailbox);
+        long modSeqBenwaWorkMailbox = mapperProvider.highestModSeq(benwaWorkMailbox);
+        UpdatedFlags expectedUpdatedFlags = new UpdatedFlags(message1.getUid(), modSeqBenwaInboxMailbox, new Flags(), newFlags);
+        UpdatedFlags expectedUpdatedFlags2 = new UpdatedFlags(message1InOtherMailbox.getUid(), modSeqBenwaWorkMailbox, new Flags(), newFlags);
         assertThat(flags).containsOnly(MapEntry.entry(benwaInboxMailbox.getMailboxId(), expectedUpdatedFlags),
                 MapEntry.entry(benwaWorkMailbox.getMailboxId(), expectedUpdatedFlags2));
     }

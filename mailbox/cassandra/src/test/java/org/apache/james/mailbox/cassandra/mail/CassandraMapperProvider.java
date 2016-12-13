@@ -146,7 +146,7 @@ public class CassandraMapperProvider implements MapperProvider {
 
     @Override
     public List<Capabilities> getNotImplemented() {
-        return ImmutableList.of(Capabilities.UNIQUE_MESSAGE_ID);
+        return ImmutableList.of();
     }
 
     @Override
@@ -158,5 +158,11 @@ public class CassandraMapperProvider implements MapperProvider {
     public long generateModSeq(Mailbox mailbox) throws MailboxException {
         MailboxSession mailboxSession = null;
         return cassandraModSeqProvider.nextModSeq(mailboxSession, mailbox);
+    }
+
+    @Override
+    public long highestModSeq(Mailbox mailbox) throws MailboxException {
+        MailboxSession mailboxSession = null;
+        return cassandraModSeqProvider.highestModSeq(mailboxSession, mailbox);
     }
 }
