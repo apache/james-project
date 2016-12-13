@@ -409,6 +409,22 @@ public class MessageIdMapperTest<T extends MapperProvider> {
     }
 
     @ContractTest
+    public void setFlagsShouldNotModifyModSeqWhenMailboxIdsIsEmpty() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        long modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
+        message1.setModSeq(modSeq);
+        sut.save(message1);
+
+        MessageId messageId = message1.getMessageId();
+        Flags newFlags = new Flags(Flag.ANSWERED);
+        sut.setFlags(messageId, ImmutableList.<MailboxId> of(), newFlags, MessageManager.FlagsUpdateMode.REMOVE);
+
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.Body);
+        assertThat(messages).hasSize(1);
+        assertThat(messages.get(0).getModSeq()).isGreaterThan(modSeq);
+    }
+
+    @ContractTest
     public void setFlagsShouldUpdateModSeqWhenMessageIsInOneMailbox() throws Exception {
         message1.setUid(mapperProvider.generateMessageUid());
         long modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
@@ -421,6 +437,24 @@ public class MessageIdMapperTest<T extends MapperProvider> {
         List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);
         assertThat(messages.get(0).getModSeq()).isGreaterThan(modSeq);
+    }
+
+    @ContractTest
+    public void setFlagsShouldNotModifyFlagsWhenMailboxIdsIsEmpty() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        long modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
+        message1.setModSeq(modSeq);
+        Flags initialFlags = new Flags(Flags.Flag.DRAFT);
+        message1.setFlags(initialFlags);
+        sut.save(message1);
+
+        MessageId messageId = message1.getMessageId();
+        Flags newFlags = new Flags(Flag.ANSWERED);
+        sut.setFlags(messageId, ImmutableList.<MailboxId> of(), newFlags, MessageManager.FlagsUpdateMode.REMOVE);
+
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.Body);
+        assertThat(messages).hasSize(1);
+        assertThat(messages.get(0).createFlags()).isEqualTo(initialFlags);
     }
 
     @ContractTest
