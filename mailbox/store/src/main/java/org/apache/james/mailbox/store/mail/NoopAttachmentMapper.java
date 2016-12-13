@@ -45,7 +45,7 @@ public class NoopAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public List<Attachment> getAttachments(List<AttachmentId> attachmentIds) {
+    public List<Attachment> getAttachments(Collection<AttachmentId> attachmentIds) {
         return null;
     }
 

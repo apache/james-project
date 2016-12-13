@@ -92,7 +92,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public List<Attachment> getAttachments(List<AttachmentId> attachmentIds) {
+    public List<Attachment> getAttachments(Collection<AttachmentId> attachmentIds) {
         Preconditions.checkArgument(attachmentIds != null);
         List<String> ids = attachmentIds.stream()
                 .map(AttachmentId::getId)

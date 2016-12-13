@@ -100,8 +100,9 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .sorted(Comparator.comparing(MailboxMessage::getUid));
     }
 
-    private Function<Pair<MailboxMessage, Stream<MessageAttachmentById>>, Pair<MailboxMessage, Stream<MessageAttachment>>> loadAttachments() {
-        return pair -> Pair.of(pair.getLeft(), new AttachmentLoader(attachmentMapper).getAttachments(pair.getRight().collect(Guavate.toImmutableList())));
+    private Function<Pair<MailboxMessage, Stream<CassandraMessageDAO.MessageAttachmentRepresentation>>, Pair<MailboxMessage, Stream<MessageAttachment>>> loadAttachments() {
+        return pair -> Pair.of(pair.getLeft(),
+            new AttachmentLoader(attachmentMapper).getAttachments(pair.getRight().collect(Guavate.toImmutableSet())).stream());
     }
 
     private FunctionChainer<Pair<MailboxMessage, Stream<MessageAttachment>>, SimpleMailboxMessage> toMailboxMessages() {
@@ -161,7 +162,6 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     @Override
-
     public Map<MailboxId, UpdatedFlags> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
 

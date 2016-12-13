@@ -25,52 +25,51 @@ import java.util.Optional;
 
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
-import org.apache.james.mailbox.model.MessageAttachment;
 import org.junit.Test;
 
 
-public class MessageAttachmentByIdTest {
+public class MessageAttachmentRepresentationByIdTest {
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenAttachmentIsNotGiven() {
-        MessageAttachment.builder()
+        org.apache.james.mailbox.model.MessageAttachment.builder()
             .build();
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void builderShouldThrowWhenAttachmentIsNull() {
-        MessageAttachment.builder()
+        org.apache.james.mailbox.model.MessageAttachment.builder()
             .attachment(null);
     }
 
     @Test
     public void buildShouldWorkWhenMandatoryAttributesAreGiven() {
         AttachmentId attachmentId = AttachmentId.from("1");
-        MessageAttachmentById expectedMessageAttachment = new MessageAttachmentById(attachmentId, Optional.empty(), Optional.empty(), false);
+        CassandraMessageDAO.MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, Optional.empty(), Optional.empty(), false);
 
-        MessageAttachmentById messageAttachment = MessageAttachmentById.builder()
+        CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation = CassandraMessageDAO.MessageAttachmentRepresentation.builder()
             .attachmentId(attachmentId)
             .build();
 
-        assertThat(messageAttachment).isEqualTo(expectedMessageAttachment);
+        assertThat(messageAttachmentRepresentation).isEqualTo(expectedMessageAttachmentRepresentation);
     }
 
     @Test
     public void buildShouldSetIsInlineDefaultValueWhenNotGiven() {
         AttachmentId attachmentId = AttachmentId.from("1");
 
-        MessageAttachmentById messageAttachment = MessageAttachmentById.builder()
+        CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation = CassandraMessageDAO.MessageAttachmentRepresentation.builder()
             .attachmentId(attachmentId)
             .build();
 
-        assertThat(messageAttachment.isInline()).isFalse();
+        assertThat(messageAttachmentRepresentation.isInline()).isFalse();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenIsInlineAndNoCid() {
         AttachmentId attachmentId = AttachmentId.from("1");
 
-        MessageAttachmentById.builder()
+        CassandraMessageDAO.MessageAttachmentRepresentation.builder()
             .attachmentId(attachmentId)
             .isInline(true)
             .build();
@@ -79,15 +78,15 @@ public class MessageAttachmentByIdTest {
     @Test
     public void buildShouldSetAttributesWhenAllAreGiven() {
         AttachmentId attachmentId = AttachmentId.from("1");
-        MessageAttachmentById expectedMessageAttachment = new MessageAttachmentById(attachmentId, Optional.of("name"), Optional.of(Cid.from("cid")), true);
+        CassandraMessageDAO.MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, Optional.of("name"), Optional.of(Cid.from("cid")), true);
 
-        MessageAttachmentById messageAttachment = MessageAttachmentById.builder()
+        CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation = CassandraMessageDAO.MessageAttachmentRepresentation.builder()
             .attachmentId(attachmentId)
             .name("name")
             .cid(Cid.from("cid"))
             .isInline(true)
             .build();
 
-        assertThat(messageAttachment).isEqualTo(expectedMessageAttachment);
+        assertThat(messageAttachmentRepresentation).isEqualTo(expectedMessageAttachmentRepresentation);
     }
 }

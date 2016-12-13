@@ -18,20 +18,18 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.mail;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.Collection;
+import java.util.Set;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collector;
-import java.util.stream.Stream;
 
+import org.apache.james.mailbox.cassandra.mail.utils.MapMerger;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.OptionalConverter;
 
-import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 
@@ -43,36 +41,28 @@ public class AttachmentLoader {
         this.attachmentMapper = attachmentMapper;
     }
 
-    public Stream<MessageAttachment> getAttachments(List<MessageAttachmentById> attachmentsById) {
-        Map<AttachmentId, Attachment> attachmentByIdMap = attachmentsById(attachmentsById.stream()
-                .map(MessageAttachmentById::getAttachmentId)
-                .collect(Guavate.toImmutableList()));
-        return attachmentsById.stream()
-                .map(Throwing.function(attachment ->
-                    MessageAttachment.builder()
-                        .attachment(attachmentByIdMap.get(attachment.getAttachmentId()))
-                        .name(attachment.getName().orElse(null))
-                        .cid(OptionalConverter.toGuava(attachment.getCid()))
-                        .isInline(attachment.isInline())
-                        .build())
-                );
+    public Collection<MessageAttachment> getAttachments(Set<CassandraMessageDAO.MessageAttachmentRepresentation> attachmentRepresentations) {
+
+        Map<AttachmentId, CassandraMessageDAO.MessageAttachmentRepresentation> attachmentRepresentationByIds = attachmentRepresentations.stream()
+                .collect(Guavate.toImmutableMap(CassandraMessageDAO.MessageAttachmentRepresentation::getAttachmentId, Function.identity()));
+
+        Map<AttachmentId, Attachment> attachmentById = attachmentsById(attachmentRepresentationByIds.keySet());
+
+        return MapMerger.merge(attachmentById, attachmentRepresentationByIds, this::constructMessageAttachment).values();
     }
 
-    @VisibleForTesting Map<AttachmentId,Attachment> attachmentsById(List<AttachmentId> attachmentIds) {
+    private MessageAttachment constructMessageAttachment(Attachment attachment, CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation) {
+        return MessageAttachment.builder()
+                .attachment(attachment)
+                .name(messageAttachmentRepresentation.getName().orElse(null))
+                .cid(OptionalConverter.toGuava(messageAttachmentRepresentation.getCid()))
+                .isInline(messageAttachmentRepresentation.isInline())
+                .build();
+    }
+
+    @VisibleForTesting Map<AttachmentId, Attachment> attachmentsById(Set<AttachmentId> attachmentIds) {
         return attachmentMapper.getAttachments(attachmentIds).stream()
-            .collect(toMapRemovingDuplicateKeys(Attachment::getAttachmentId, Function.identity()));
+            .collect(Guavate.toImmutableMap(Attachment::getAttachmentId, Function.identity()));
     }
 
-    private Collector<Attachment, Map<AttachmentId, Attachment>, Map<AttachmentId, Attachment>> toMapRemovingDuplicateKeys(
-            Function<Attachment, AttachmentId> keyMapper,
-            Function<Attachment, Attachment> valueMapper) {
-        return Collector.of(HashMap::new,
-                (acc, v) -> acc.put(keyMapper.apply(v), valueMapper.apply(v)),
-                (map1, map2) -> {
-                    map1.putAll(map2);
-                    return map1;
-                },
-                Function.identity()
-                );
-    }
 }
