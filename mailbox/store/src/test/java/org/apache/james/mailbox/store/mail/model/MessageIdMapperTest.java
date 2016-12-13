@@ -331,6 +331,19 @@ public class MessageIdMapperTest<T extends MapperProvider> {
     }
 
     @ContractTest
+    public void setFlagsShouldReturnEmptyWhenMailboxIdsIsEmpty() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message1);
+
+        MessageId messageId = message1.getMessageId();
+        Flags newFlags = new Flags(Flag.ANSWERED);
+        Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.<MailboxId> of(), newFlags, MessageManager.FlagsUpdateMode.REMOVE);
+
+        assertThat(flags).isEmpty();
+    }
+
+    @ContractTest
     public void setFlagsShouldReturnEmptyWhenMessageIdDoesntExist() throws Exception {
         MessageId unknownMessageId = mapperProvider.generateMessageId();
         Map<MailboxId, UpdatedFlags> flags = sut.setFlags(unknownMessageId, ImmutableList.of(message1.getMailboxId()), new Flags(Flag.RECENT), MessageManager.FlagsUpdateMode.REMOVE);
