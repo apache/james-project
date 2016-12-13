@@ -153,7 +153,10 @@ public class CassandraMessageMapper implements MessageMapper {
             select(CassandraMailboxCountersTable.COUNT)
                 .from(CassandraMailboxCountersTable.TABLE_NAME)
                 .where(eq(CassandraMailboxCountersTable.MAILBOX_ID, mailboxId.asUuid())));
-        return results.isExhausted() ? 0 : results.one().getLong(CassandraMailboxCountersTable.COUNT);
+        if (!results.isExhausted()) {
+            return results.one().getLong(CassandraMailboxCountersTable.COUNT);
+        }
+        return 0;
     }
 
     @Override
