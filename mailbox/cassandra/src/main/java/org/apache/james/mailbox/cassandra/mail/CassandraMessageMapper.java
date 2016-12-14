@@ -103,23 +103,29 @@ public class CassandraMessageMapper implements MessageMapper {
     @Override
     public void delete(Mailbox mailbox, MailboxMessage message) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        messageIdDAO.retrieve(mailboxId, message.getUid()).join()
-            .ifPresent(this::deleteUsingMailboxId);
+
+        messageIdDAO.retrieve(mailboxId, message.getUid())
+            .thenCompose(optional -> optional.map(this::deleteUsingMailboxId)
+                .orElse(CompletableFuture.completedFuture(null)))
+            .join();
     }
 
-    private void deleteUsingMailboxId(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
+    private CompletableFuture<Void> deleteUsingMailboxId(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
         ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
         CassandraMessageId messageId = (CassandraMessageId) composedMessageId.getMessageId();
         CassandraId mailboxId = (CassandraId) composedMessageId.getMailboxId();
         MessageUid uid = composedMessageId.getUid();
-        CompletableFuture.allOf(imapUidDAO.delete(messageId, mailboxId),
-                messageIdDAO.delete(mailboxId, uid))
-            .join();
+        return CompletableFuture.allOf(imapUidDAO.delete(messageId, mailboxId),
+            messageIdDAO.delete(mailboxId, uid),
+            mailboxCounterDAO.decrementCount(mailboxId),
+            decrementUnseenOnDelete(mailboxId, composedMessageIdWithMetaData.getFlags()));
+    }
 
-        mailboxCounterDAO.decrementCount(mailboxId).join();
-        if (!composedMessageIdWithMetaData.getFlags().contains(Flag.SEEN)) {
-            mailboxCounterDAO.decrementUnseen(mailboxId).join();
+    private CompletableFuture<Void> decrementUnseenOnDelete(CassandraId mailboxId, Flags flags) {
+        if (flags.contains(Flags.Flag.SEEN)) {
+            return CompletableFuture.completedFuture(null);
         }
+        return mailboxCounterDAO.decrementUnseen(mailboxId);
     }
 
     private CompletableFuture<Optional<ComposedMessageIdWithMetaData>> retrieveMessageId(CassandraId mailboxId, MailboxMessage message) {
@@ -186,8 +192,9 @@ public class CassandraMessageMapper implements MessageMapper {
     public MessageMetaData move(Mailbox destinationMailbox, MailboxMessage original) throws MailboxException {
         CassandraId originalMailboxId = (CassandraId) original.getMailboxId();
         MessageMetaData messageMetaData = copy(destinationMailbox, original);
-        retrieveMessageId(originalMailboxId, original).join()
-                .ifPresent(this::deleteUsingMailboxId);
+        retrieveMessageId(originalMailboxId, original)
+            .thenCompose(optional -> optional.map(this::deleteUsingMailboxId).orElse(CompletableFuture.completedFuture(null)))
+            .join();
         return messageMetaData;
     }
 
@@ -205,13 +212,20 @@ public class CassandraMessageMapper implements MessageMapper {
     public MessageMetaData add(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         message.setUid(uidProvider.nextUid(mailboxSession, mailbox));
         message.setModSeq(modSeqProvider.nextModSeq(mailboxSession, mailbox));
-        MessageMetaData messageMetaData = save(mailbox, message);
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        if (!message.isSeen()) {
-            mailboxCounterDAO.incrementUnseen(mailboxId).join();
+        CompletableFuture.allOf(
+            save(mailbox, message),
+            incrementUnseenOnSave(mailboxId, message.createFlags()),
+            mailboxCounterDAO.incrementCount(mailboxId))
+            .join();
+        return new SimpleMessageMetaData(message);
+    }
+
+    private CompletableFuture<Void> incrementUnseenOnSave(CassandraId mailboxId, Flags flags) {
+        if (flags.contains(Flags.Flag.SEEN)) {
+            return CompletableFuture.completedFuture(null);
         }
-        mailboxCounterDAO.incrementCount(mailboxId).join();
-        return messageMetaData;
+        return mailboxCounterDAO.incrementUnseen(mailboxId);
     }
 
     @Override
@@ -221,7 +235,9 @@ public class CassandraMessageMapper implements MessageMapper {
                 .map(message -> updateFlagsOnMessage(mailbox, flagUpdateCalculator, message))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .peek((updatedFlags) -> manageUnseenMessageCounts(mailbox, updatedFlags.getOldFlags(), updatedFlags.getNewFlags()))
+                .map((updatedFlags) -> manageUnseenMessageCounts(mailbox, updatedFlags.getOldFlags(), updatedFlags.getNewFlags())
+                    .thenApply(voidValue -> updatedFlags))
+                .map(CompletableFuture::join)
                 .collect(Collectors.toList()) // This collect is here as we need to consume all the stream before returning result
                 .iterator();
     }
@@ -242,11 +258,11 @@ public class CassandraMessageMapper implements MessageMapper {
         return uidProvider.lastUid(mailboxSession, mailbox);
     }
 
-    private MessageMetaData save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
+    private CompletableFuture<Void> save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        insertIds(message, mailboxId).join();
-        messageDAO.save(mailbox, message).join();
-        return new SimpleMessageMetaData(message);
+        return CompletableFuture.allOf(
+            insertIds(message, mailboxId),
+            messageDAO.save(mailbox, message));
     }
 
     private CompletableFuture<Void> insertIds(MailboxMessage message, CassandraId mailboxId) {
@@ -259,14 +275,15 @@ public class CassandraMessageMapper implements MessageMapper {
                 imapUidDAO.insert(composedMessageIdWithMetaData));
     }
 
-    private void manageUnseenMessageCounts(Mailbox mailbox, Flags oldFlags, Flags newFlags) {
+    private CompletableFuture<Void> manageUnseenMessageCounts(Mailbox mailbox, Flags oldFlags, Flags newFlags) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         if (oldFlags.contains(Flag.SEEN) && !newFlags.contains(Flag.SEEN)) {
-            mailboxCounterDAO.incrementUnseen(mailboxId).join();
+            return mailboxCounterDAO.incrementUnseen(mailboxId);
         }
         if (!oldFlags.contains(Flag.SEEN) && newFlags.contains(Flag.SEEN)) {
-            mailboxCounterDAO.decrementUnseen(mailboxId).join();
+            return mailboxCounterDAO.decrementUnseen(mailboxId);
         }
+        return CompletableFuture.completedFuture(null);
     }
 
     private Optional<UpdatedFlags> updateFlagsOnMessage(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, MailboxMessage message) {
@@ -298,8 +315,9 @@ public class CassandraMessageMapper implements MessageMapper {
                 .modSeq(message.getModSeq())
                 .flags(message.createFlags())
                 .build();
-        return messageIdDAO.updateMetadata(composedMessageIdWithMetaData, oldModSeq).join() &&
-                imapUidDAO.updateMetadata(composedMessageIdWithMetaData, oldModSeq).join();
+        CompletableFuture<Boolean> messageIdFuture = messageIdDAO.updateMetadata(composedMessageIdWithMetaData, oldModSeq);
+        CompletableFuture<Boolean> imapUidFuture = imapUidDAO.updateMetadata(composedMessageIdWithMetaData, oldModSeq);
+        return messageIdFuture.join() && imapUidFuture.join();
     }
 
     private Optional<UpdatedFlags> handleRetries(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, MailboxMessage message) {
