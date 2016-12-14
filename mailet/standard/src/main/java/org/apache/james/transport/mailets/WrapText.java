@@ -46,12 +46,6 @@ public class WrapText extends GenericMailet {
     public String getMailetInfo() {
         return "WrapText";
     }
-
-    private static boolean getBooleanParameter(String v, boolean def) {
-        return def ? 
-                !(v != null && (v.equalsIgnoreCase("false") || v.equalsIgnoreCase("no"))) : 
-                    v != null && (v.equalsIgnoreCase("true") || v.equalsIgnoreCase("yes"))  ;
-    }
     
     public void init() throws MailetException {
         optionFlowedDelsp = getBooleanParameter(getInitParameter(PARAMETER_NAME_FLOWED_DELSP), optionFlowedDelsp);

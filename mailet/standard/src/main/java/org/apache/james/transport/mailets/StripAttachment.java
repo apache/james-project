@@ -19,20 +19,21 @@
 
 package org.apache.james.transport.mailets;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.IOException;
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
@@ -41,9 +42,15 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 /**
  * <p>
@@ -63,156 +70,159 @@ import org.apache.mailet.base.GenericMailet;
  *     &lt;remove &gt;all &lt;/remove&gt;   &lt;!-- either &quot;no&quot;, &quot;matched&quot;, &quot;all&quot; -- &gt;
  *     &lt;!-- attribute&gt;my.attribute.name&lt;/attribute --&gt;
  *   &lt;/mailet &gt;
+ *   
+ *   At least one of pattern and notpattern is required.
  * </pre>
  * 
  * </p>
  */
 public class StripAttachment extends GenericMailet {
 
+    private static final String MULTIPART_MIME_TYPE = "multipart/*";
     public static final String PATTERN_PARAMETER_NAME = "pattern";
-
     public static final String NOTPATTERN_PARAMETER_NAME = "notpattern";
-
     public static final String ATTRIBUTE_PARAMETER_NAME = "attribute";
-
     public static final String DIRECTORY_PARAMETER_NAME = "directory";
-
     // Either "no", "matched", "all"
     public static final String REMOVE_ATTACHMENT_PARAMETER_NAME = "remove"; 
-
     // Either "true", "false"
     public static final String DECODE_FILENAME_PARAMETER_NAME = "decodeFilename";
-
     public static final String REPLACE_FILENAME_PATTERN_PARAMETER_NAME = "replaceFilenamePattern";
-
     public static final String REMOVE_NONE = "no";
-
     public static final String REMOVE_ALL = "all";
-
     public static final String REMOVE_MATCHED = "matched";
-
     public static final String REMOVED_ATTACHMENTS_ATTRIBUTE_KEY = "org.apache.james.mailet.standard.mailets.StripAttachment.removed";
-
     public static final String SAVED_ATTACHMENTS_ATTRIBUTE_KEY = "org.apache.james.mailet.standard.mailets.StripAttachment.saved";
 
-    private String removeAttachments = null;
+    public static final boolean DECODE_FILENAME_DEFAULT_VALUE = false;
 
-    private String directoryName = null;
+    @VisibleForTesting String removeAttachments;
+    private String directoryName;
+    private String attributeName;
+    private Pattern regExPattern;
+    private Pattern notRegExPattern;
+    private boolean decodeFilename;
 
-    private String attributeName = null;
-
-    private Pattern regExPattern = null;
-
-    private Pattern notregExPattern = null;
-
-    private boolean decodeFilename = false;
-
-    private List<ReplacingPattern> filenameReplacingPatterns = null;
-
-    private static boolean getBooleanParameter(String v, boolean def) {
-        return def ? !(v != null && (v.equalsIgnoreCase("false") || v
-                .equalsIgnoreCase("no"))) : v != null
-                && (v.equalsIgnoreCase("true") || v.equalsIgnoreCase("yes"));
-    }
+    private List<ReplacingPattern> filenameReplacingPatterns;
 
     /**
      * Checks if the mandatory parameters are present, creates the directory to
-     * save the files ni (if not present).
+     * save the files in (if not present).
      * 
      * @throws MailetException
      */
+    @Override
     public void init() throws MailetException {
-        String patternString = getInitParameter(PATTERN_PARAMETER_NAME);
-        String notpatternString = getInitParameter(NOTPATTERN_PARAMETER_NAME);
-        if (patternString == null && notpatternString == null) {
-            throw new MailetException("No value for " + PATTERN_PARAMETER_NAME
-                    + " parameter was provided.");
+        regExPattern = regExFromParameter(PATTERN_PARAMETER_NAME);
+        notRegExPattern = regExFromParameter(NOTPATTERN_PARAMETER_NAME);
+        if (regExPattern == null && notRegExPattern == null) {
+            throw new MailetException("At least one of '" + PATTERN_PARAMETER_NAME + "' or '" + NOTPATTERN_PARAMETER_NAME + "' parameter should be provided.");
         }
 
         directoryName = getInitParameter(DIRECTORY_PARAMETER_NAME);
         attributeName = getInitParameter(ATTRIBUTE_PARAMETER_NAME);
 
-        removeAttachments = getInitParameter(REMOVE_ATTACHMENT_PARAMETER_NAME,
-                REMOVE_NONE).toLowerCase();
-        if (!REMOVE_MATCHED.equals(removeAttachments)
-                && !REMOVE_ALL.equals(removeAttachments)) {
-            removeAttachments = REMOVE_NONE;
-        }
-
-        try {
-            // if (patternString != null) regExPattern = new
-            // Perl5Compiler().compile(patternString);
-            if (patternString != null)
-                regExPattern = Pattern.compile(patternString);
-        } catch (Exception e) {
-            throw new MailetException("Could not compile regex ["
-                    + patternString + "].");
-        }
-        try {
-            // if (notpatternString != null) notregExPattern = new
-            // Perl5Compiler().compile(notpatternString);
-            if (notpatternString != null)
-                notregExPattern = Pattern.compile(notpatternString);
-        } catch (Exception e) {
-            throw new MailetException("Could not compile regex ["
-                    + notpatternString + "].");
+        removeAttachments = getInitParameter(REMOVE_ATTACHMENT_PARAMETER_NAME, REMOVE_NONE).toLowerCase(Locale.US);
+        if (!removeAttachments.equals(REMOVE_MATCHED) && !removeAttachments.equals(REMOVE_ALL) && !removeAttachments.equals(REMOVE_NONE)) {
+            throw new MailetException(String.format("Unknown remove parameter value '%s' waiting for '%s', '%s' or '%s'.", 
+                    removeAttachments, REMOVE_MATCHED, REMOVE_ALL, REMOVE_NONE));
         }
 
         if (directoryName != null) {
-            try {
-                FileUtils.forceMkdir(new File(directoryName));
-            } catch (Exception e) {
-                throw new MailetException("Could not create directory ["
-                        + directoryName + "].", e);
-            }
+            createDirectory();
         }
 
-        decodeFilename = getBooleanParameter(
-                getInitParameter(DECODE_FILENAME_PARAMETER_NAME),
-                decodeFilename);
-        if (getInitParameter(REPLACE_FILENAME_PATTERN_PARAMETER_NAME) != null) {
-            filenameReplacingPatterns = new PatternExtractor()
-                    .getPatternsFromString(getInitParameter(REPLACE_FILENAME_PATTERN_PARAMETER_NAME));
+        decodeFilename = getBooleanParameter(getInitParameter(DECODE_FILENAME_PARAMETER_NAME), DECODE_FILENAME_DEFAULT_VALUE);
+        String replaceFilenamePattern = getInitParameter(REPLACE_FILENAME_PATTERN_PARAMETER_NAME);
+        if (replaceFilenamePattern != null) {
+            filenameReplacingPatterns = new PatternExtractor().getPatternsFromString(replaceFilenamePattern);
+        } else {
+            filenameReplacingPatterns = ImmutableList.of();
         }
 
-        String toLog = String.format("StripAttachment is initialised with regex pattern [%s / %s]",
-                patternString, notpatternString);
-        if (directoryName != null) {
-            toLog += String.format(" and will save to directory [%s]", directoryName);
-        }
-        if (attributeName != null) {
-            toLog += String.format(" and will store attachments to attribute [%s]", attributeName);
-        }
-        log(toLog);
+        logConfiguration();
     }
 
+    private Pattern regExFromParameter(String patternParameterName) throws MailetException {
+        String patternString = getInitParameter(patternParameterName);
+        try {
+            if (patternString != null) {
+                return Pattern.compile(patternString);
+            }
+            return null;
+        } catch (Exception e) {
+            throw new MailetException("Could not compile regex [" + patternString + "].");
+        }
+    }
+
+    private void createDirectory() throws MailetException {
+        try {
+            FileUtils.forceMkdir(new File(directoryName));
+        } catch (Exception e) {
+            throw new MailetException("Could not create directory [" + directoryName + "].", e);
+        }
+    }
+
+      private void logConfiguration() {
+      StringBuilder logMessage = new StringBuilder();
+      logMessage.append("StripAttachment is initialised with regex pattern [");
+      if (regExPattern != null) {
+          logMessage.append(regExPattern.pattern());
+      }
+      logMessage.append(" / ");
+      if (notRegExPattern != null) {
+          logMessage.append(notRegExPattern.pattern());
+      }
+      logMessage.append("]");
+
+      if (directoryName != null) {
+          logMessage.append(" and will save to directory [");
+          logMessage.append(directoryName);
+          logMessage.append("]");
+      }
+      if (attributeName != null) {
+          logMessage.append(" and will store attachments to attribute [");
+          logMessage.append(attributeName);
+          logMessage.append("]");
+      }
+      log(logMessage.toString());
+    }
+    
     /**
-     * Service the mail: scan it for attchemnts matching the pattern, store the
-     * content of a matchin attachment in the given directory.
+     * Service the mail: scan it for attachments matching the pattern.
+     * If a filename matches the pattern: 
+     * - the file is stored (using its name) in the given directory (if directoryName is given in the mailet configuration)
+     *    and the filename is stored in 'saved' mail list attribute
+     * - the part is removed (when removeAttachments mailet configuration property is 'all' or 'matched') 
+     *    and the filename is stored in 'removed' mail list attribute
+     * - the part filename and its content is stored in mail map attribute (if attributeName is given in the mailet configuration)
      * 
      * @param mail
      *            The mail to service
      * @throws MailetException
      *             Thrown when an error situation is encountered.
      */
+    @Override
     public void service(Mail mail) throws MailetException {
-        MimeMessage message;
-        try {
-            message = mail.getMessage();
-        } catch (MessagingException e) {
-            throw new MailetException(
-                    "Could not retrieve message from Mail object", e);
+        MimeMessage message = getMessageFromMail(mail);
+        if (isMultipart(message)) {
+            processMultipartPartMessage(message, mail);
         }
-        // All MIME messages with an attachment are multipart, so we do nothing
-        // if it is not mutlipart
+    }
+
+    private boolean isMultipart(Part part) throws MailetException {
         try {
-            if (message.isMimeType("multipart/*")) {
-                analyseMultipartPartMessage(message, mail);
-            }
+            return part.isMimeType(MULTIPART_MIME_TYPE);
         } catch (MessagingException e) {
-            throw new MailetException("Could not retrieve contenttype of message.", e);
-        } catch (Exception e) {
-            throw new MailetException("Could not analyse message.", e);
+            throw new MailetException("Could not retrieve contenttype of MimePart.", e);
+        }
+    }
+
+    private MimeMessage getMessageFromMail(Mail mail) throws MailetException {
+        try {
+            return mail.getMessage();
+        } catch (MessagingException e) {
+            throw new MailetException("Could not retrieve message from Mail object", e);
         }
     }
 
@@ -221,122 +231,158 @@ public class StripAttachment extends GenericMailet {
      * 
      * @return A desciption of this mailet
      */
+    @Override
     public String getMailetInfo() {
         return "StripAttachment";
     }
 
     /**
      * Checks every part in this part (if it is a Multipart) for having a
-     * filename that matches the pattern. If the name matches, the content of
-     * the part is stored (using its name) in te given diretcory.
+     * filename that matches the pattern. 
+     * If the name matches: 
+     * - the file is stored (using its name) in the given directory (if directoryName is given in the mailet configuration)
+     *    and the filename is stored in 'saved' mail list attribute
+     * - the part is removed (when removeAttachments mailet configuration property is 'all' or 'matched') 
+     *    and the filename is stored in 'removed' mail list attribute
+     * - the part filename and its content is stored in mail map attribute (if attributeName is given in the mailet configuration)
      * 
      * Note: this method is recursive.
      * 
      * @param part
      *            The part to analyse.
      * @param mail
-     * @return
+     * @return True if one of the subpart was removed
      * @throws Exception
      */
-    private boolean analyseMultipartPartMessage(Part part, Mail mail)
-            throws Exception {
-        if (part.isMimeType("multipart/*")) {
-            try {
-                Multipart multipart = (Multipart) part.getContent();
-                boolean atLeastOneRemoved = false;
-                int numParts = multipart.getCount();
-                for (int i = 0; i < numParts; i++) {
-                    Part p = multipart.getBodyPart(i);
-                    if (p.isMimeType("multipart/*")) {
-                        atLeastOneRemoved |= analyseMultipartPartMessage(p,
-                                mail);
-                    } else {
-                        boolean removed = checkMessageRemoved(p, mail);
-                        if (removed) {
-                            multipart.removeBodyPart(i);
-                            atLeastOneRemoved = true;
-                            i--;
-                            numParts--;
-                        }
-                    }
-                }
-                if (atLeastOneRemoved) {
-                    part.setContent(multipart);
-                    if (part instanceof Message) {
-                        ((Message) part).saveChanges();
-                    }
-                }
-                return atLeastOneRemoved;
-            } catch (Exception e) {
-                log("Could not analyse part.", e);
-            }
+    @VisibleForTesting boolean processMultipartPartMessage(Part part, Mail mail) throws MailetException {
+        if (!isMultipart(part)) {
+            return false;
         }
-        return false;
+
+        try {
+            Multipart multipart = (Multipart) part.getContent();
+            boolean atLeastOneRemoved = false;
+            boolean subpartHasBeenChanged = false;
+            List<BodyPart> bodyParts = retrieveBodyParts(multipart);
+            for (BodyPart bodyPart: bodyParts) {
+                if (isMultipart(bodyPart)) {
+                    if (processMultipartPartMessage(bodyPart, mail)) {
+                        subpartHasBeenChanged = true;
+                    }
+                } else {
+                    if (shouldBeRemoved(bodyPart, mail)) {
+                        multipart.removeBodyPart(bodyPart);
+                        atLeastOneRemoved = true;
+                    }
+                }
+            }
+            if (atLeastOneRemoved || subpartHasBeenChanged) {
+                updateBodyPart(part, multipart);
+            }
+            return atLeastOneRemoved || subpartHasBeenChanged;
+        } catch (Exception e) {
+            log("Failing while analysing part for attachments (StripAttachment mailet).", e);
+            return false;
+        }
     }
 
-    private boolean checkMessageRemoved(Part part, Mail mail)
-            throws MessagingException, Exception {
-        String fileName;
-        fileName = part.getFileName();
+    private void updateBodyPart(Part part, Multipart newPartContent) throws MessagingException {
+        part.setContent(newPartContent);
+        if (part instanceof Message) {
+            ((Message) part).saveChanges();
+        }
+    }
 
-        // filename or name of part can be null, so we have to be careful
-        boolean ret = false;
+    private List<BodyPart> retrieveBodyParts(Multipart multipart) throws MessagingException {
+        ImmutableList.Builder<BodyPart> builder = ImmutableList.builder();
+        for (int i = 0; i < multipart.getCount(); i++) {
+            builder.add(multipart.getBodyPart(i));
+        }
+        return builder.build();
+    }
 
-        if (fileName != null) {
-            if (decodeFilename)
-                fileName = MimeUtility.decodeText(fileName);
+    private boolean shouldBeRemoved(BodyPart bodyPart, Mail mail) throws MessagingException, Exception {
+        String fileName = getFilename(bodyPart);
+        if (fileName == null) {
+            return false;
+        }
 
-            if (filenameReplacingPatterns != null)
-                fileName = new ContentReplacer(false, this).applyPatterns(filenameReplacingPatterns, fileName);
-
-            if (fileNameMatches(fileName)) {
-                if (directoryName != null) {
-                    String filename = saveAttachmentToFile(part, fileName);
-                    if (filename != null) {
-                        @SuppressWarnings("unchecked")
-                        Collection<String> c = (Collection<String>) mail
-                                .getAttribute(SAVED_ATTACHMENTS_ATTRIBUTE_KEY);
-                        if (c == null) {
-                            c = new ArrayList<String>();
-                            mail.setAttribute(SAVED_ATTACHMENTS_ATTRIBUTE_KEY,
-                                    (ArrayList<String>) c);
-                        }
-                        c.add(filename);
-                    }
-                }
-                if (attributeName != null) {
-                    @SuppressWarnings("unchecked")
-                    Map<String, byte[]> m = (Map<String, byte[]>) mail.getAttribute(attributeName);
-                    if (m == null) {
-                        m = new LinkedHashMap<String, byte[]>();
-                        mail.setAttribute(attributeName, (LinkedHashMap<String, byte[]>) m);
-                    }
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    OutputStream os = new BufferedOutputStream(
-                            byteArrayOutputStream);
-                    part.writeTo(os);
-                    m.put(fileName, byteArrayOutputStream.toByteArray());
-                }
-                if (removeAttachments.equals(REMOVE_MATCHED)) {
-                    ret = true;
-                }
-            }
-            if (!ret) {
-                ret = removeAttachments.equals(REMOVE_ALL);
-            }
-            if (ret) {
-                @SuppressWarnings("unchecked")
-                Collection<String> c = (Collection<String>) mail
-                        .getAttribute(REMOVED_ATTACHMENTS_ATTRIBUTE_KEY);
-                if (c == null) {
-                    c = new ArrayList<String>();
-                    mail.setAttribute(REMOVED_ATTACHMENTS_ATTRIBUTE_KEY,
-                            (ArrayList<String>) c);
-                }
-                c.add(fileName);
+        boolean shouldRemove = removeAttachments.equals(REMOVE_ALL);
+        if (fileNameMatches(fileName)) {
+            storeBodyPartAsFile(bodyPart, mail, fileName);
+            storeBodyPartAsMailAttribute(bodyPart, mail, fileName);
+            if (removeAttachments.equals(REMOVE_MATCHED)) {
+                shouldRemove = true;
             }
         }
-        return ret;
+        storeFileNameAsAttribute(mail, fileName, shouldRemove);
+        return shouldRemove;
+    }
+
+    private void storeBodyPartAsFile(BodyPart bodyPart, Mail mail, String fileName) throws Exception {
+        if (directoryName != null) {
+            Optional<String> filename = saveAttachmentToFile(bodyPart, Optional.of(fileName));
+            if (filename.isPresent()) {
+                addFilenameToAttribute(mail, filename.get(), SAVED_ATTACHMENTS_ATTRIBUTE_KEY);
+            }
+        }
+    }
+
+    private void addFilenameToAttribute(Mail mail, String filename, String attributeName) {
+        @SuppressWarnings("unchecked")
+        List<String> attributeValues = (List<String>) mail.getAttribute(attributeName);
+        if (attributeValues == null) {
+            attributeValues = new ArrayList<String>();
+            mail.setAttribute(attributeName, (Serializable) attributeValues);
+        }
+        attributeValues.add(filename);
+    }
+
+    private void storeBodyPartAsMailAttribute(BodyPart bodyPart, Mail mail, String fileName) throws IOException, MessagingException {
+        if (attributeName != null) {
+            addPartContent(bodyPart, mail, fileName);
+        }
+    }
+
+    private void addPartContent(BodyPart bodyPart, Mail mail, String fileName) throws IOException, MessagingException {
+        @SuppressWarnings("unchecked")
+        Map<String, byte[]> fileNamesToPartContent = (Map<String, byte[]>) mail.getAttribute(attributeName);
+        if (fileNamesToPartContent == null) {
+            fileNamesToPartContent = new LinkedHashMap<String, byte[]>();
+            mail.setAttribute(attributeName, (Serializable) fileNamesToPartContent);
+        }
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bodyPart.writeTo(new BufferedOutputStream(byteArrayOutputStream));
+        fileNamesToPartContent.put(fileName, byteArrayOutputStream.toByteArray());
+    }
+
+    private void storeFileNameAsAttribute(Mail mail, String fileName, boolean hasToBeStored) {
+        if (hasToBeStored) {
+            addFilenameToAttribute(mail, fileName, REMOVED_ATTACHMENTS_ATTRIBUTE_KEY);
+        }
+    }
+
+    private String getFilename(BodyPart bodyPart) throws UnsupportedEncodingException, MessagingException {
+        String fileName = bodyPart.getFileName();
+        if (fileName != null) {
+            return renameWithConfigurationPattern(decodeFilename(fileName));
+        }
+        return fileName;
+    }
+
+    private String renameWithConfigurationPattern(String fileName) {
+        if (filenameReplacingPatterns != null) {
+            boolean debug = false;
+            return new ContentReplacer(debug, this).applyPatterns(filenameReplacingPatterns, fileName);
+        }
+        return fileName;
+    }
+
+    private String decodeFilename(String fileName) throws UnsupportedEncodingException {
+        if (decodeFilename) {
+            return MimeUtility.decodeText(fileName);
+        }
+        return fileName;
     }
 
     /**
@@ -346,71 +392,97 @@ public class StripAttachment extends GenericMailet {
      *            The name to check for a match.
      * @return True if a match is found, false otherwise.
      */
-    private boolean fileNameMatches(String name) {
-        boolean result = true;
-        if (regExPattern != null)
-            result = regExPattern.matcher(name).matches();
-        if (result && notregExPattern != null)
-            result = !notregExPattern.matcher(name).matches();
+    @VisibleForTesting boolean fileNameMatches(String name) {
+        if (patternsAreEquals()) {
+            return false;
+        }
+        boolean result = isMatchingPattern(name, regExPattern).or(false) 
+                || !isMatchingPattern(name, notRegExPattern).or(true);
 
-        String log = "attachment " + name + " ";
-        if (!result)
-            log += "does not match";
-        else
-            log += "matches";
-        log(log);
+        log("attachment " + name + " " + ((result) ? "matches" : "does not match"));
         return result;
     }
 
+    private boolean patternsAreEquals() {
+        return regExPattern != null && notRegExPattern != null
+                && regExPattern.pattern().equals(notRegExPattern.pattern());
+    }
+
+    private Optional<Boolean> isMatchingPattern(String name, Pattern pattern) {
+        if (pattern != null) {
+            return Optional.of(pattern.matcher(name).matches());
+        }
+        return Optional.absent();
+    }
+
     /**
-     * Saves the content of the part to a file in the given directoy, using the
-     * name of the part. If a file with that name already exists, it will
+     * Saves the content of the part to a file in the given directory, using the
+     * name of the part. Created files have unique names.
      * 
      * @param part
      *            The MIME part to save.
      * @return
      * @throws Exception
      */
-    private String saveAttachmentToFile(Part part, String fileName)
-            throws Exception {
-        BufferedOutputStream os = null;
-        InputStream is = null;
-        File f = null;
+    @VisibleForTesting Optional<String> saveAttachmentToFile(Part part, Optional<String> fileName) throws Exception {
         try {
-            if (fileName == null)
-                fileName = part.getFileName();
-            int pos = -1;
-            if (fileName != null) {
-                pos = fileName.lastIndexOf(".");
-            }
-            String prefix = pos > 0 ? (fileName.substring(0, pos)) : fileName;
-            String suffix = pos > 0 ? (fileName.substring(pos)) : ".bin";
-            while (prefix.length() < 3)
-                prefix += "_";
-            if (suffix.length() == 0)
-                suffix = ".bin";
-            f = File.createTempFile(prefix, suffix, new File(directoryName));
-            log("saving content of " + f.getName() + "...");
-            os = new BufferedOutputStream(new FileOutputStream(f));
-            is = part.getInputStream();
-            if (!(is instanceof BufferedInputStream)) {
-                is = new BufferedInputStream(is);
-            }
-            int c;
-            while ((c = is.read()) != -1) {
-                os.write(c);
-            }
+            File outputFile = outputFile(part, fileName);
 
-            return f.getName();
+            log("saving content of " + outputFile.getName() + "...");
+            IOUtils.copy(part.getInputStream(), new FileOutputStream(outputFile));
+
+            return Optional.of(outputFile.getName());
         } catch (Exception e) {
-            log("Error while saving contents of ["
-                    + (f != null ? f.getName() : (part != null ? part
-                            .getFileName() : "NULL")) + "].", e);
-            throw e;
-        } finally {
-            is.close();
-            os.close();
+            log("Error while saving contents of", e);
+            return Optional.absent();
         }
     }
 
+    private File outputFile(Part part, Optional<String> fileName) throws MessagingException, IOException {
+        Optional<String> maybePartFileName = Optional.fromNullable(part.getFileName());
+        return createTempFile(fileName.or(maybePartFileName).orNull());
+    }
+
+    private File createTempFile(String originalFileName) throws IOException {
+        OutputFileName outputFileName = OutputFileName.from(originalFileName);
+        return File.createTempFile(outputFileName.getPrefix(), outputFileName.getSuffix(), new File(directoryName));
+    }
+
+    @VisibleForTesting static class OutputFileName {
+
+        private static final char PAD_CHAR = '_';
+        private static final int MIN_LENGTH = 3;
+        private static final String DEFAULT_SUFFIX = ".bin";
+
+        public static OutputFileName from(String originalFileName) {
+            if (!originalFileName.contains(".")) {
+                return new OutputFileName(prependedPrefix(originalFileName), DEFAULT_SUFFIX);
+            }
+
+            int lastDotPosition = originalFileName.lastIndexOf(".");
+            return new OutputFileName(prependedPrefix(originalFileName.substring(0, lastDotPosition)), 
+                    originalFileName.substring(lastDotPosition));
+        }
+
+        @VisibleForTesting static String prependedPrefix(String prefix) {
+            return Strings.padStart(prefix, MIN_LENGTH, PAD_CHAR);
+        }
+
+        private final String prefix;
+        private final String suffix;
+
+        private OutputFileName(String prefix, String suffix) {
+            this.prefix = prefix;
+            this.suffix = suffix;
+        }
+
+        public String getPrefix() {
+            return prefix;
+        }
+
+        public String getSuffix() {
+            return suffix;
+        }
+    }
 }
+

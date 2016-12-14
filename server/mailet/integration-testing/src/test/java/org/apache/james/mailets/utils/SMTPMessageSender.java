@@ -19,15 +19,22 @@
 
 package org.apache.james.mailets.utils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
+import javax.mail.Message;
+import javax.mail.MessagingException;
+
 import org.apache.commons.net.smtp.AuthenticatingSMTPClient;
 import org.apache.commons.net.smtp.SMTPClient;
+import org.apache.mailet.Mail;
 
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 
 public class SMTPMessageSender implements Closeable {
@@ -67,6 +74,24 @@ public class SMTPMessageSender implements Closeable {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    public void sendMessage(Mail mail) throws MessagingException {
+        try {
+            String from = mail.getSender().asString();
+            smtpClient.helo(senderDomain);
+            smtpClient.setSender(from);
+            smtpClient.rcpt("<" + Joiner.on(", ").join(mail.getRecipients()) + ">");
+            smtpClient.sendShortMessageData(asString(mail.getMessage()));
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    private String asString(Message message) throws IOException, MessagingException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        message.writeTo(outputStream);
+        return new String(outputStream.toByteArray(), Charsets.UTF_8);
     }
 
     public boolean messageHasBeenSent() throws IOException {
