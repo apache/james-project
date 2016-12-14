@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 import java.util.AbstractMap;
 import java.util.List;
@@ -97,7 +96,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         mailbox2 = testingData.getMailbox2();
         mailbox3 = testingData.getMailbox3();
 
-        session = mock(MailboxSession.class);
+        session = testingData.getSession();
     }
 
     @After
@@ -146,7 +145,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
     public void setInMailboxesShouldSetMessageInBothMailboxes() throws Exception {
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS);
 
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox2.getMailboxId()), session);
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
         assertThat(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session))
             .hasSize(2);
@@ -173,7 +172,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
             .get(0)
             .getUid();
         MessageUid uidMessage2Mailbox1 = FluentIterable
-            .from(messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session))
+            .from(messageIdManager.getMessages(ImmutableList.of(messageId2), FetchGroupImpl.MINIMAL, session))
             .filter(inMailbox(mailbox1.getMailboxId()))
             .toList()
             .get(0)
@@ -209,7 +208,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         MessageUid messageUid1 = messageResult1.getUid();
         long modSeq1 = messageResult1.getModSeq();
 
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox2.getMailboxId()), session);
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
         MessageResult messageResult2 = FluentIterable
             .from(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session))
@@ -265,7 +264,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
     @Test
     public void deleteMessageShouldRemoveMessageOnlyFromMailbox() throws Exception {
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS);
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox2.getMailboxId()), session);
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
         messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
 
@@ -332,8 +331,8 @@ public abstract class AbstractMessageIdManagerStorageTest {
     public void setFlagsShouldChangeFlagsInAllMailboxes() throws Exception {
         Flags newFlags = new Flags(Flags.Flag.SEEN);
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS);
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox2.getMailboxId()), session);
-        
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
+
         messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
         
         List<Flags> flags = FluentIterable

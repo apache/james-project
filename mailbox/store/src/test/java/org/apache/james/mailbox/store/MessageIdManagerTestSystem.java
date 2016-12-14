@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
@@ -28,13 +29,17 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public abstract class MessageIdManagerTestSystem {
+
     private final MessageIdManager messageIdManager;
+    private final MailboxSession session;
     private final Mailbox mailbox1;
     private final Mailbox mailbox2;
     private final Mailbox mailbox3;
 
-    public MessageIdManagerTestSystem(MessageIdManager messageIdManager, Mailbox mailbox1, Mailbox mailbox2, Mailbox mailbox3) {
+    public MessageIdManagerTestSystem(MessageIdManager messageIdManager, MailboxSession session, 
+            Mailbox mailbox1, Mailbox mailbox2, Mailbox mailbox3) {
         this.messageIdManager = messageIdManager;
+        this.session = session;
         this.mailbox1 = mailbox1;
         this.mailbox2 = mailbox2;
         this.mailbox3 = mailbox3;
@@ -42,6 +47,10 @@ public abstract class MessageIdManagerTestSystem {
 
     public MessageIdManager getMessageIdManager() {
         return messageIdManager;
+    }
+
+    public MailboxSession getSession() {
+        return session;
     }
 
     public Mailbox getMailbox1() {
