@@ -67,17 +67,19 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
     private final CassandraMessageIdDAO messageIdDAO;
     private final CassandraMessageDAO messageDAO;
+    private final CassandraMailboxCounterDAO mailboxCounterDAO;
     private final ModSeqProvider modSeqProvider;
     private final MailboxSession mailboxSession;
 
     public CassandraMessageIdMapper(MailboxMapper mailboxMapper, AttachmentMapper attachmentMapper,
-            CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
-            ModSeqProvider modSeqProvider, MailboxSession mailboxSession) {
+                                    CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
+                                    CassandraMailboxCounterDAO cassandraMailboxCounterDAO, ModSeqProvider modSeqProvider, MailboxSession mailboxSession) {
         this.mailboxMapper = mailboxMapper;
         this.attachmentMapper = attachmentMapper;
         this.imapUidDAO = imapUidDAO;
         this.messageIdDAO = messageIdDAO;
         this.messageDAO = messageDAO;
+        this.mailboxCounterDAO = cassandraMailboxCounterDAO;
         this.modSeqProvider = modSeqProvider;
         this.mailboxSession = mailboxSession;
     }
@@ -128,8 +130,17 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .modSeq(mailboxMessage.getModSeq())
             .build();
         CompletableFuture.allOf(imapUidDAO.insert(composedMessageIdWithMetaData),
-            messageIdDAO.insert(composedMessageIdWithMetaData))
+            messageIdDAO.insert(composedMessageIdWithMetaData),
+            mailboxCounterDAO.incrementCount(mailboxId),
+            incrementUnseenOnSave(mailboxId, mailboxMessage.createFlags()))
         .join();
+    }
+
+    private CompletableFuture<Void> incrementUnseenOnSave(CassandraId mailboxId, Flags flags) {
+        if (flags.contains(Flags.Flag.SEEN)) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return mailboxCounterDAO.incrementUnseen(mailboxId);
     }
 
     @Override
@@ -142,8 +153,8 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private CompletableFuture<Void> retrieveAndDeleteIndices(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
         return imapUidDAO.retrieve(messageId, mailboxId)
             .thenAccept(composedMessageIds -> composedMessageIds
-                    .map(ComposedMessageIdWithMetaData::getComposedMessageId)
-                    .forEach(this::deleteIds));
+                .map(this::deleteIds)
+                .reduce((f1, f2) -> CompletableFuture.allOf(f1, f2)));
     }
 
     @Override
@@ -153,11 +164,20 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         retrieveAndDeleteIndices(cassandraMessageId, Optional.empty()).join();
     }
 
-    private CompletableFuture<Void> deleteIds(ComposedMessageId composedMessageId) {
-        CassandraMessageId messageId = (CassandraMessageId) composedMessageId.getMessageId();
-        CassandraId mailboxId = (CassandraId) composedMessageId.getMailboxId();
+    private CompletableFuture<Void> deleteIds(ComposedMessageIdWithMetaData metaData) {
+        CassandraMessageId messageId = (CassandraMessageId) metaData.getComposedMessageId().getMessageId();
+        CassandraId mailboxId = (CassandraId) metaData.getComposedMessageId().getMailboxId();
         return CompletableFuture.allOf(imapUidDAO.delete(messageId, mailboxId),
-            messageIdDAO.delete(mailboxId, composedMessageId.getUid()));
+            messageIdDAO.delete(mailboxId, metaData.getComposedMessageId().getUid()),
+            mailboxCounterDAO.decrementCount(mailboxId),
+            decrementUnseenOnDelete(mailboxId, metaData.getFlags()));
+    }
+
+    private CompletableFuture<Void> decrementUnseenOnDelete(CassandraId mailboxId, Flags flags) {
+        if (flags.contains(Flags.Flag.SEEN)) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return mailboxCounterDAO.decrementUnseen(mailboxId);
     }
 
     @Override
@@ -168,6 +188,8 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .map(mailboxId -> (CassandraId) mailboxId)
             .flatMap(mailboxId -> imapUidDAO.retrieve(cassandraMessageId, Optional.of(mailboxId)).join())
             .map(composedMessageId -> flagsUpdateWithRetry(newState, updateMode, composedMessageId))
+            .map(this::updateCounts)
+            .map(CompletableFuture::join)
             .collect(Guavate.toImmutableMap(Pair::getLeft, Pair::getRight));
     }
 
@@ -183,6 +205,28 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         } catch (LightweightTransactionException e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    private CompletableFuture<Pair<MailboxId, UpdatedFlags>> updateCounts(Pair<MailboxId, UpdatedFlags> pair) {
+        CassandraId cassandraId = (CassandraId) pair.getLeft();
+        return CompletableFuture.allOf(
+            incrementCountIfNeeded(pair.getRight().getOldFlags(), pair.getRight().getNewFlags(), cassandraId),
+            decrementCountIfNeeded(pair.getRight().getOldFlags(), pair.getRight().getNewFlags(), cassandraId))
+            .thenApply(voidValue -> pair);
+    }
+
+    private CompletableFuture<Void> incrementCountIfNeeded(Flags oldFlags, Flags newFlags, CassandraId cassandraId) {
+        if (oldFlags.contains(Flags.Flag.SEEN) && !newFlags.contains(Flags.Flag.SEEN)) {
+            mailboxCounterDAO.incrementUnseen(cassandraId).join();
+        }
+        return CompletableFuture.completedFuture(null);
+    }
+
+    private CompletableFuture<Void> decrementCountIfNeeded(Flags oldFlags, Flags newFlags, CassandraId cassandraId) {
+        if (!oldFlags.contains(Flags.Flag.SEEN) && newFlags.contains(Flags.Flag.SEEN)) {
+            mailboxCounterDAO.decrementUnseen(cassandraId).join();
+        }
+        return CompletableFuture.completedFuture(null);
     }
 
     private long oldModSeq(ComposedMessageId composedMessageId) {
