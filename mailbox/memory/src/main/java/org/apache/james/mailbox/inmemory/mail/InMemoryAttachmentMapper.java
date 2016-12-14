@@ -52,7 +52,7 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public List<Attachment> getAttachments(List<AttachmentId> attachmentIds) {
+    public List<Attachment> getAttachments(Collection<AttachmentId> attachmentIds) {
         Preconditions.checkArgument(attachmentIds != null);
         Builder<Attachment> builder = ImmutableList.<Attachment> builder();
         for (AttachmentId attachmentId : attachmentIds) {

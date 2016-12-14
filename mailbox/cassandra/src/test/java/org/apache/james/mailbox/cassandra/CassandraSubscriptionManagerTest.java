@@ -22,10 +22,12 @@ package org.apache.james.mailbox.cassandra;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 
 /**
  * Test Cassandra subscription against some general purpose written code.
@@ -36,13 +38,18 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
     
     @Override
     public SubscriptionManager createSubscriptionManager() {
+        CassandraMessageIdToImapUidDAO imapUidDAO = null;
+        CassandraMessageDAO messageDAO = null;
+        CassandraMessageIdDAO messageIdDAO = null;
         return new CassandraSubscriptionManager(
             new CassandraMailboxSessionMapperFactory(
                 new CassandraUidProvider(cassandra.getConf()),
                 new CassandraModSeqProvider(cassandra.getConf()),
                 cassandra.getConf(),
                 cassandra.getTypesProvider(),
-                new DefaultMessageId.Factory()
+                messageDAO,
+                messageIdDAO,
+                imapUidDAO
             )
         );
     }

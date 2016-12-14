@@ -31,7 +31,7 @@ public interface AttachmentMapper extends Mapper {
 
     Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException;
 
-    List<Attachment> getAttachments(List<AttachmentId> attachmentIds);
+    List<Attachment> getAttachments(Collection<AttachmentId> attachmentIds);
 
     void storeAttachment(Attachment attachment) throws MailboxException;
 

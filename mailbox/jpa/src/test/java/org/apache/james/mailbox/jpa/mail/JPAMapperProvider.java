@@ -27,6 +27,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
@@ -41,8 +42,10 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
+import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.openjpa.persistence.OpenJPAPersistence;
 
@@ -124,6 +127,26 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public List<Capabilities> getNotImplemented() {
-        return ImmutableList.of(Capabilities.MESSAGE, Capabilities.ATTACHMENT, Capabilities.MOVE);
+        return ImmutableList.of(Capabilities.MESSAGE, Capabilities.ATTACHMENT, Capabilities.MOVE, Capabilities.UNIQUE_MESSAGE_ID);
+    }
+
+    @Override
+    public MessageIdMapper createMessageIdMapper() throws MailboxException {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public MessageUid generateMessageUid() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public long generateModSeq(Mailbox mailbox) throws MailboxException {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public long highestModSeq(Mailbox mailbox) throws MailboxException {
+        throw new NotImplementedException();
     }
 }

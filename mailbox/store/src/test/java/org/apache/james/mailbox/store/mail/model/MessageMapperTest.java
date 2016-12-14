@@ -58,7 +58,7 @@ import com.google.common.base.Optional;
 @Contract(MapperProvider.class)
 public class MessageMapperTest<T extends MapperProvider> {
 
-    private final static char DELIMITER = ':';
+    private final static char DELIMITER = '.';
     private static final int LIMIT = 10;
     private static final int BODY_START = 16;
     public static final int UID_VALIDITY = 42;
@@ -462,12 +462,16 @@ public class MessageMapperTest<T extends MapperProvider> {
     @ContractTest
     public void copyOfSeenMessageShouldNotIncrementUnSeenMessageCount() throws MailboxException {
         message6.setFlags(new Flags(Flags.Flag.SEEN));
+        saveMessages();
+        long expectedUnseenMessages = messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox);
+
         messageMapper.copy(benwaInboxMailbox, SimpleMailboxMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(0);
+        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(expectedUnseenMessages);
     }
 
     @ContractTest
     public void copiedMessageShouldBeMarkedAsRecent() throws MailboxException {
+        saveMessages();
         MessageMetaData metaData = messageMapper.copy(benwaInboxMailbox, SimpleMailboxMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
         assertThat(
             messageMapper.findInMailbox(benwaInboxMailbox,
@@ -481,6 +485,7 @@ public class MessageMapperTest<T extends MapperProvider> {
 
     @ContractTest
     public void copiedRecentMessageShouldBeMarkedAsRecent() throws MailboxException {
+        saveMessages();
         message6.setFlags(new Flags(Flags.Flag.RECENT));
         MessageMetaData metaData = messageMapper.copy(benwaInboxMailbox, SimpleMailboxMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
         assertThat(
@@ -491,6 +496,20 @@ public class MessageMapperTest<T extends MapperProvider> {
             ).next()
                 .isRecent()
         ).isTrue();
+    }
+
+    @ContractTest
+    public void copiedMessageShouldNotChangeTheFlagsOnOriginalMessage() throws MailboxException {
+        saveMessages();
+        messageMapper.copy(benwaInboxMailbox, SimpleMailboxMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
+        assertThat(
+            messageMapper.findInMailbox(benwaWorkMailbox,
+                MessageRange.one(message6.getUid()),
+                MessageMapper.FetchType.Metadata,
+                LIMIT
+            ).next()
+            .isRecent()
+        ).isFalse();
     }
 
     @ContractTest

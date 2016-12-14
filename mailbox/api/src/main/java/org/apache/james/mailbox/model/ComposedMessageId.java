@@ -19,7 +19,11 @@
 
 package org.apache.james.mailbox.model;
 
+
 import org.apache.james.mailbox.MessageUid;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
 public class ComposedMessageId {
 
@@ -45,4 +49,28 @@ public class ComposedMessageId {
         return uid;
     }
 
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof ComposedMessageId) {
+            ComposedMessageId other = (ComposedMessageId) o;
+            return Objects.equal(mailboxId, other.mailboxId)
+                && Objects.equal(messageId, other.messageId)
+                && Objects.equal(uid, other.uid);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hashCode(mailboxId, messageId, uid);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("mailboxId", mailboxId)
+            .add("messageId", messageId)
+            .add("uid", uid)
+            .toString();
+    }
 }

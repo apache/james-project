@@ -18,10 +18,12 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.StoreMailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
@@ -59,4 +61,9 @@ public abstract class AbstractLockingModSeqProvider implements ModSeqProvider{
      */
     protected abstract long lockedNextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException;
 
+
+    @Override
+    public long nextModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        throw new NotImplementedException();
+    }
 }
