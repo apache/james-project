@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
@@ -27,6 +28,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 
 /**
@@ -34,7 +36,9 @@ import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
  */
 public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
 
-    private static final CassandraCluster cassandra = CassandraCluster.create(new CassandraSubscriptionModule());
+    private static final CassandraCluster cassandra = CassandraCluster.create(
+        new CassandraModuleComposite(
+            new CassandraSubscriptionModule(), new CassandraMailboxCounterModule()));
     
     @Override
     public SubscriptionManager createSubscriptionManager() {
