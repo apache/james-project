@@ -80,12 +80,12 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(CassandraMessageTable.Properties.NAME, text())
                     .addColumn(CassandraMessageTable.Properties.VALUE, text())),
             new CassandraType(CassandraMessageTable.ATTACHMENTS,
-                    SchemaBuilder.createType(CassandraMessageTable.ATTACHMENTS)
-                        .ifNotExists()
-                        .addColumn(CassandraMessageTable.Attachments.ID, text())
-                        .addColumn(CassandraMessageTable.Attachments.NAME, text())
-                        .addColumn(CassandraMessageTable.Attachments.CID, text())
-                        .addColumn(CassandraMessageTable.Attachments.IS_INLINE, cboolean())));
+                SchemaBuilder.createType(CassandraMessageTable.ATTACHMENTS)
+                    .ifNotExists()
+                    .addColumn(CassandraMessageTable.Attachments.ID, text())
+                    .addColumn(CassandraMessageTable.Attachments.NAME, text())
+                    .addColumn(CassandraMessageTable.Attachments.CID, text())
+                    .addColumn(CassandraMessageTable.Attachments.IS_INLINE, cboolean())));
     }
 
     @Override
