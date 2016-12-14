@@ -243,6 +243,13 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-store</artifactId>
+                <scope>test</scope>
+                <type>test-jar</type>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>javax.mail</groupId>
                 <artifactId>mail</artifactId>
                 <version>1.4.4</version>

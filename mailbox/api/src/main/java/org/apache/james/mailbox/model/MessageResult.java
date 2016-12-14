@@ -139,6 +139,8 @@ public interface MessageResult extends Comparable<MessageResult>, MessageMetaDat
 
     MimeDescriptor getMimeDescriptor() throws MailboxException;
 
+    MailboxId getMailboxId();
+
     /**
      * Iterates the message headers for the given part in a multipart message.
      * 

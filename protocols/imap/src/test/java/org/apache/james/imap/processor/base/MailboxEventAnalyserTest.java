@@ -68,6 +68,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
+import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.MimeDescriptor;
@@ -226,7 +227,11 @@ public class MailboxEventAnalyserTest {
                             done = true;
                             return new MessageResult() {
 
-                                
+                                @Override
+                                public MailboxId getMailboxId() {
+                                    return TestId.of(36);
+                                }
+
                                 public int compareTo(MessageResult o) {
                                     return 0;
                                 }
