@@ -43,12 +43,12 @@ public class AttachmentLoader {
 
     public Collection<MessageAttachment> getAttachments(Set<CassandraMessageDAO.MessageAttachmentRepresentation> attachmentRepresentations) {
 
-        Map<AttachmentId, CassandraMessageDAO.MessageAttachmentRepresentation> attachmentRepresentationByIds = attachmentRepresentations.stream()
+        Map<AttachmentId, CassandraMessageDAO.MessageAttachmentRepresentation> attachmentRepresentationsById = attachmentRepresentations.stream()
                 .collect(Guavate.toImmutableMap(CassandraMessageDAO.MessageAttachmentRepresentation::getAttachmentId, Function.identity()));
 
-        Map<AttachmentId, Attachment> attachmentById = attachmentsById(attachmentRepresentationByIds.keySet());
+        Map<AttachmentId, Attachment> attachmentsById = attachmentsById(attachmentRepresentationsById.keySet());
 
-        return MapMerger.merge(attachmentById, attachmentRepresentationByIds, this::constructMessageAttachment).values();
+        return MapMerger.merge(attachmentsById, attachmentRepresentationsById, this::constructMessageAttachment).values();
     }
 
     private MessageAttachment constructMessageAttachment(Attachment attachment, CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation) {

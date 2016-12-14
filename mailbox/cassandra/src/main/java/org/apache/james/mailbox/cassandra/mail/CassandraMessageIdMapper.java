@@ -123,18 +123,20 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     @Override
     public void save(MailboxMessage mailboxMessage) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailboxMessage.getMailboxId();
-        messageDAO.save(mailboxMapper.findMailboxById(mailboxId), mailboxMessage).join();
         CassandraMessageId messageId = (CassandraMessageId) mailboxMessage.getMessageId();
         ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
             .composedMessageId(new ComposedMessageId(mailboxId, messageId, mailboxMessage.getUid()))
             .flags(mailboxMessage.createFlags())
             .modSeq(mailboxMessage.getModSeq())
             .build();
-        CompletableFuture.allOf(imapUidDAO.insert(composedMessageIdWithMetaData),
-            messageIdDAO.insert(composedMessageIdWithMetaData),
-            mailboxCounterDAO.incrementCount(mailboxId),
-            incrementUnseenOnSave(mailboxId, mailboxMessage.createFlags()))
-        .join();
+        messageDAO.save(mailboxMapper.findMailboxById(mailboxId), mailboxMessage)
+            .thenCompose(voidValue -> CompletableFuture.allOf(
+                imapUidDAO.insert(composedMessageIdWithMetaData),
+                messageIdDAO.insert(composedMessageIdWithMetaData)))
+            .thenCompose(voidValue -> CompletableFuture.allOf(
+                mailboxCounterDAO.incrementCount(mailboxId),
+                incrementUnseenOnSave(mailboxId, mailboxMessage.createFlags())))
+            .join();
     }
 
     private CompletableFuture<Void> incrementUnseenOnSave(CassandraId mailboxId, Flags flags) {
@@ -147,31 +149,39 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     @Override
     public void delete(MessageId messageId, List<MailboxId> mailboxIds) {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
-        mailboxIds.forEach(mailboxId -> retrieveAndDeleteIndices(cassandraMessageId, Optional.of((CassandraId) mailboxId)).join());
+        mailboxIds.stream()
+            .map(mailboxId -> retrieveAndDeleteIndices(cassandraMessageId, Optional.of((CassandraId) mailboxId)))
+            .reduce((f1, f2) -> CompletableFuture.allOf(f1, f2))
+            .orElse(CompletableFuture.completedFuture(null))
+            .join();
     }
 
 
     private CompletableFuture<Void> retrieveAndDeleteIndices(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
         return imapUidDAO.retrieve(messageId, mailboxId)
-            .thenAccept(composedMessageIds -> composedMessageIds
+            .thenCompose(composedMessageIds -> composedMessageIds
                 .map(this::deleteIds)
-                .reduce((f1, f2) -> CompletableFuture.allOf(f1, f2)));
+                .reduce((f1, f2) -> CompletableFuture.allOf(f1, f2))
+                .orElse(CompletableFuture.completedFuture(null)));
     }
 
     @Override
     public void delete(MessageId messageId) {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
-        messageDAO.delete(cassandraMessageId).join();
-        retrieveAndDeleteIndices(cassandraMessageId, Optional.empty()).join();
+        retrieveAndDeleteIndices(cassandraMessageId, Optional.empty())
+            .thenCompose(voidValue -> messageDAO.delete(cassandraMessageId))
+            .join();
     }
 
     private CompletableFuture<Void> deleteIds(ComposedMessageIdWithMetaData metaData) {
         CassandraMessageId messageId = (CassandraMessageId) metaData.getComposedMessageId().getMessageId();
         CassandraId mailboxId = (CassandraId) metaData.getComposedMessageId().getMailboxId();
-        return CompletableFuture.allOf(imapUidDAO.delete(messageId, mailboxId),
-            messageIdDAO.delete(mailboxId, metaData.getComposedMessageId().getUid()),
-            mailboxCounterDAO.decrementCount(mailboxId),
-            decrementUnseenOnDelete(mailboxId, metaData.getFlags()));
+        return CompletableFuture.allOf(
+            imapUidDAO.delete(messageId, mailboxId),
+            messageIdDAO.delete(mailboxId, metaData.getComposedMessageId().getUid()))
+            .thenCompose(voidValue -> CompletableFuture.allOf(
+                mailboxCounterDAO.decrementCount(mailboxId),
+                decrementUnseenOnDelete(mailboxId, metaData.getFlags())));
     }
 
     private CompletableFuture<Void> decrementUnseenOnDelete(CassandraId mailboxId, Flags flags) {
@@ -218,14 +228,14 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     private CompletableFuture<Void> incrementCountIfNeeded(Flags oldFlags, Flags newFlags, CassandraId cassandraId) {
         if (oldFlags.contains(Flags.Flag.SEEN) && !newFlags.contains(Flags.Flag.SEEN)) {
-            mailboxCounterDAO.incrementUnseen(cassandraId).join();
+            return mailboxCounterDAO.incrementUnseen(cassandraId);
         }
         return CompletableFuture.completedFuture(null);
     }
 
     private CompletableFuture<Void> decrementCountIfNeeded(Flags oldFlags, Flags newFlags, CassandraId cassandraId) {
         if (!oldFlags.contains(Flags.Flag.SEEN) && newFlags.contains(Flags.Flag.SEEN)) {
-            mailboxCounterDAO.decrementUnseen(cassandraId).join();
+            return mailboxCounterDAO.decrementUnseen(cassandraId);
         }
         return CompletableFuture.completedFuture(null);
     }
@@ -258,7 +268,8 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     private boolean updateFlags(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, long oldModSeq) {
-        return imapUidDAO.updateMetadata(composedMessageIdWithMetaData, oldModSeq).join()
-                && messageIdDAO.updateMetadata(composedMessageIdWithMetaData, oldModSeq).join();
+        CompletableFuture<Boolean> imapUidFuture = imapUidDAO.updateMetadata(composedMessageIdWithMetaData, oldModSeq);
+        CompletableFuture<Boolean> messageIdFuture = messageIdDAO.updateMetadata(composedMessageIdWithMetaData, oldModSeq);
+        return imapUidFuture.join() && messageIdFuture.join();
     }
 }

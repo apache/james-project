@@ -53,7 +53,7 @@ public class CassandraAsyncExecutor {
 
     public CompletableFuture<Void> executeVoid(Statement statement) {
         return FutureConverter.toCompletableFuture(session.executeAsync(statement))
-            .thenAccept(this::consume);
+            .thenAccept(result -> {});
     }
 
     public CompletableFuture<Optional<Row>> executeSingleRow(Statement statement) {
@@ -62,5 +62,4 @@ public class CassandraAsyncExecutor {
             .thenApply(Optional::ofNullable);
     }
 
-    private <U> void consume(U value) {}
 }
