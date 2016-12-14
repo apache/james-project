@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -65,7 +66,7 @@ public abstract class MessageIdManagerTestSystem {
      * @param flags
      * @return the id of persisted message
      */
-    public abstract MessageId persist(MailboxId mailboxId, Flags flags);
+    public abstract MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags);
 
     public abstract MessageId createNotUsedMessageId();
 

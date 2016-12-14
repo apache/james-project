@@ -40,6 +40,12 @@ public class QuotaChecker {
         this.sizeQuota = quotaManager.getStorageQuota(quotaRoot);
     }
 
+    public QuotaChecker(Quota messageQuota, Quota sizeQuota, QuotaRoot quotaRoot) {
+        this.messageQuota = messageQuota;
+        this.sizeQuota = sizeQuota;
+        this.quotaRoot = quotaRoot;
+    }
+
     public boolean tryAddition(long count, long size) throws OverQuotaException {
         messageQuota.addValueToQuota(count);
         sizeQuota.addValueToQuota(size);
