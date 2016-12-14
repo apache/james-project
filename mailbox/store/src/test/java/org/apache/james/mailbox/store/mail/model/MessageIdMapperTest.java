@@ -385,7 +385,7 @@ public class MessageIdMapperTest<T extends MapperProvider> {
 
         MessageId messageId = message1.getMessageId();
         Flags newFlags = new Flags(Flag.ANSWERED);
-        Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), newFlags, MessageManager.FlagsUpdateMode.REMOVE);
+        Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId(), message1InOtherMailbox.getMailboxId()), newFlags, MessageManager.FlagsUpdateMode.REMOVE);
 
         long modSeqBenwaInboxMailbox = mapperProvider.highestModSeq(benwaInboxMailbox);
         long modSeqBenwaWorkMailbox = mapperProvider.highestModSeq(benwaWorkMailbox);
