@@ -147,7 +147,7 @@ public class StoreMailboxManager implements MailboxManager {
             MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser,
             MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize) {
         this(mailboxSessionMapperFactory, authenticator, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
-                MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+                limitOfAnnotations, limitAnnotationSize);
     }
 
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, 
