@@ -344,8 +344,24 @@ public class FakeMailContext implements MailetContext {
     }
 
     public void log(LogLevel level, String message, Throwable t) {
-        log(level, message);
-        log(level, t.getMessage());
+        if (logger.isPresent()) {
+            switch (level) {
+            case INFO:
+                logger.get().info(message, t);
+                break;
+            case WARN:
+                logger.get().warn(message, t);
+                break;
+            case ERROR:
+                logger.get().error(message, t);
+                break;
+            default:
+                logger.get().debug(message, t);
+            }
+        } else {
+            System.out.println("[" + level + "]" + message);
+            t.printStackTrace(System.out);
+        }
     }
 
     public List<String> dnsLookup(String name, RecordType type) throws LookupException {

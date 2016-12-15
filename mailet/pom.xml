@@ -87,6 +87,11 @@
                 <version>${mime4j.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.rabbitmq</groupId>
+                <artifactId>amqp-client</artifactId>
+                <version>4.0.0</version>
+            </dependency>
+            <dependency>
                 <groupId>javax.mail</groupId>
                 <artifactId>mail</artifactId>
                 <version>${javax.version}</version>

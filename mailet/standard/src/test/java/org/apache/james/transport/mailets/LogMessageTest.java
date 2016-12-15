@@ -20,6 +20,8 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -98,8 +100,7 @@ public class LogMessageTest {
         verify(logger).info("Logging mail null");
         verify(logger).info("\n");
         verify(logger).info("Subject: subject\n");
-        verify(logger).error("Error logging message.");
-        verify(logger).error("No MimeMessage content");
+        verify(logger).error(eq("Error logging message."), any(MessagingException.class));
         verifyNoMoreInteractions(logger);
     }
 
@@ -139,8 +140,7 @@ public class LogMessageTest {
         mailet.service(mail);
 
         verify(logger).info("Logging mail name");
-        verify(logger).error("Error logging message.");
-        verify(logger).error("exception message");
+        verify(logger).error("Error logging message.", messagingException);
         verifyNoMoreInteractions(logger);
     }
 
