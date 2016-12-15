@@ -152,8 +152,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private Stream<SimpleMailboxMessage> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
         return messageDAO.retrieveMessages(messageIds, fetchType, limit).join()
                 .map(pair -> Pair.of(pair.getLeft(), new AttachmentLoader(attachmentMapper).getAttachments(pair.getRight().collect(Guavate.toImmutableSet()))))
-                .map(Throwing.function(pair -> SimpleMailboxMessage.cloneWithAttachments(pair.getLeft(),
-                        pair.getRight().stream().collect(Guavate.toImmutableList()))));
+                .map(Throwing.function(pair -> pair.getLeft().toMailboxMessage(pair.getRight().stream().collect(Guavate.toImmutableList()))));
     }
 
     @Override
@@ -346,7 +345,7 @@ public class CassandraMessageMapper implements MessageMapper {
                 mailbox,
                 messageDAO.retrieveMessages(ImmutableList.of(composedMessageIdWithMetaData), FetchType.Metadata, Optional.empty()).join()
                     .findFirst()
-                    .map(Pair::getLeft)
+                    .map(pair -> pair.getLeft().toMailboxMessage(ImmutableList.of()))
                     .orElseThrow(() -> new MessageDeletedDuringFlagsUpdateException(mailboxId, (CassandraMessageId) composedMessageIdWithMetaData.getComposedMessageId().getMessageId())));
     }
 }

@@ -43,6 +43,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.TEX
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -50,12 +51,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.CassandraMessageId.Factory;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageTable.Attachments;
@@ -65,8 +68,10 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -87,7 +92,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Bytes;
 
@@ -176,7 +180,7 @@ public class CassandraMessageDAO {
         return ByteBuffer.wrap(ByteStreams.toByteArray(stream));
     }
 
-    public CompletableFuture<Stream<Pair<MailboxMessage, Stream<MessageAttachmentRepresentation>>>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
+    public CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
         return retrieveRows(messageIds, fetchType, limit)
                 .thenApply(resultSet -> CassandraUtils.convertToStream(resultSet)
                         .map(row -> message(row, messageIds, fetchType)));
@@ -201,25 +205,24 @@ public class CassandraMessageDAO {
                         .collect(Collectors.toList())));
     }
 
-    private Pair<MailboxMessage, Stream<MessageAttachmentRepresentation>> message(Row row, List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType) {
+    private Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> message(Row row, List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType) {
         try {
             ComposedMessageIdWithMetaData messageIdWithMetaData = retrieveComposedMessageId(messageIdFactory.of(row.getUUID(MESSAGE_ID)), messageIds);
             ComposedMessageId messageId = messageIdWithMetaData.getComposedMessageId();
 
-            SimpleMailboxMessage message =
-                    new SimpleMailboxMessage(
-                            messageId.getMessageId(),
-                            row.getDate(INTERNAL_DATE),
-                            row.getLong(FULL_CONTENT_OCTETS),
-                            row.getInt(BODY_START_OCTET),
-                            buildContent(row, fetchType),
-                            messageIdWithMetaData.getFlags(),
-                            getPropertyBuilder(row),
-                            messageId.getMailboxId(),
-                            ImmutableList.of());
-            message.setUid(messageId.getUid());
-            message.setModSeq(messageIdWithMetaData.getModSeq());
-            return Pair.of(message, getAttachments(row, fetchType));
+            MessageWithoutAttachment messageWithoutAttachment =
+                new MessageWithoutAttachment(
+                    messageId.getMessageId(),
+                    row.getDate(INTERNAL_DATE),
+                    row.getLong(FULL_CONTENT_OCTETS),
+                    row.getInt(BODY_START_OCTET),
+                    buildContent(row, fetchType),
+                    messageIdWithMetaData.getFlags(),
+                    getPropertyBuilder(row),
+                    messageId.getMailboxId(),
+                    messageId.getUid(),
+                    messageIdWithMetaData.getModSeq());
+            return Pair.of(messageWithoutAttachment, getAttachments(row, fetchType));
         } catch (MailboxException e) {
             throw Throwables.propagate(e);
         }
@@ -435,6 +438,42 @@ public class CassandraMessageDAO {
                     .add("cid", cid)
                     .add("isInline", isInline)
                     .toString();
+        }
+    }
+
+    static class MessageWithoutAttachment {
+
+        private final MessageId messageId;
+        private final Date internalDate;
+        private final Long size;
+        private final Integer boduSize;
+        private final SharedByteArrayInputStream content;
+        private final Flags flags;
+        private final PropertyBuilder propertyBuilder;
+        private final MailboxId mailboxId;
+        private final MessageUid messageUid;
+        private final long modSeq;
+
+        public MessageWithoutAttachment(MessageId messageId, Date internalDate, Long size, Integer boduSize, SharedByteArrayInputStream content,
+                                        Flags flags, PropertyBuilder propertyBuilder, MailboxId mailboxId, MessageUid messageUid, long modSeq) {
+            this.messageId = messageId;
+            this.internalDate = internalDate;
+            this.size = size;
+            this.boduSize = boduSize;
+            this.content = content;
+            this.flags = flags;
+            this.propertyBuilder = propertyBuilder;
+            this.mailboxId = mailboxId;
+            this.messageUid = messageUid;
+            this.modSeq = modSeq;
+        }
+
+        public SimpleMailboxMessage toMailboxMessage(List<MessageAttachment> attachments) {
+            SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, internalDate, size, boduSize,
+                content, flags, propertyBuilder, mailboxId, attachments);
+            simpleMailboxMessage.setUid(messageUid);
+            simpleMailboxMessage.setModSeq(modSeq);
+            return simpleMailboxMessage;
         }
     }
 }
