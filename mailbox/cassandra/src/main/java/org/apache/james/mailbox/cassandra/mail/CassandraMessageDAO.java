@@ -128,7 +128,7 @@ public class CassandraMessageDAO {
                 .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
     }
 
-    public CompletableFuture<Void> save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
+    public CompletableFuture<Void> save(MailboxMessage message) throws MailboxException {
         try {
             CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
             BoundStatement boundStatement = insert.bind()

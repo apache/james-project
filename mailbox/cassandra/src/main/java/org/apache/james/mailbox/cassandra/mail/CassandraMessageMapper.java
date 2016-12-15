@@ -262,7 +262,7 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private CompletableFuture<Void> save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        return messageDAO.save(mailbox, message)
+        return messageDAO.save(message)
             .thenCompose(aVoid -> insertIds(message, mailboxId));
     }
 

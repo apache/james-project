@@ -123,13 +123,14 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     @Override
     public void save(MailboxMessage mailboxMessage) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailboxMessage.getMailboxId();
+        mailboxMapper.findMailboxById(mailboxId);
         CassandraMessageId messageId = (CassandraMessageId) mailboxMessage.getMessageId();
         ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
             .composedMessageId(new ComposedMessageId(mailboxId, messageId, mailboxMessage.getUid()))
             .flags(mailboxMessage.createFlags())
             .modSeq(mailboxMessage.getModSeq())
             .build();
-        messageDAO.save(mailboxMapper.findMailboxById(mailboxId), mailboxMessage)
+        messageDAO.save(mailboxMessage)
             .thenCompose(voidValue -> CompletableFuture.allOf(
                 imapUidDAO.insert(composedMessageIdWithMetaData),
                 messageIdDAO.insert(composedMessageIdWithMetaData)))
