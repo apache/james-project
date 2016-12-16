@@ -206,15 +206,14 @@ public class StoreMessageIdManager implements MessageIdManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
         for (MailboxId mailboxId : mailboxIds) {
             SimpleMailboxMessage copy = SimpleMailboxMessage.copy(mailboxId, mailboxMessage);
-            MessageMetaData metaData = save(mailboxSession, messageIdMapper, mailboxId, copy);
+            MessageMetaData metaData = save(mailboxSession, messageIdMapper, copy);
             dispatcher.added(mailboxSession, metaData, mailboxMapper.findMailboxById(mailboxId));
         }
     }
 
-    private MessageMetaData save(MailboxSession mailboxSession, MessageIdMapper messageIdMapper, MailboxId mailboxId, MailboxMessage mailboxMessage) throws MailboxException {
-        validateQuota(ImmutableList.of(mailboxId), ImmutableList.<MailboxId>of(), mailboxSession, mailboxMessage);
-        long modSeq = mailboxSessionMapperFactory.getModSeqProvider().nextModSeq(mailboxSession, mailboxId);
-        MessageUid uid = mailboxSessionMapperFactory.getUidProvider().nextUid(mailboxSession, mailboxId);
+    private MessageMetaData save(MailboxSession mailboxSession, MessageIdMapper messageIdMapper, MailboxMessage mailboxMessage) throws MailboxException {
+        long modSeq = mailboxSessionMapperFactory.getModSeqProvider().nextModSeq(mailboxSession, mailboxMessage.getMailboxId());
+        MessageUid uid = mailboxSessionMapperFactory.getUidProvider().nextUid(mailboxSession, mailboxMessage.getMailboxId());
         mailboxMessage.setModSeq(modSeq);
         mailboxMessage.setUid(uid);
         messageIdMapper.save(mailboxMessage);
