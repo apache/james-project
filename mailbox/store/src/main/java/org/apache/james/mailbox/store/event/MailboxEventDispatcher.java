@@ -64,7 +64,6 @@ public class MailboxEventDispatcher {
         SortedMap<MessageUid, MessageMetaData> metaDataMap = ImmutableSortedMap.<MessageUid, MessageMetaData>naturalOrder()
                 .put(messageMetaData.getUid(), messageMetaData)
                 .build();
-        metaDataMap.put(messageMetaData.getUid(), messageMetaData);
         added(session, metaDataMap, mailbox);
     }
 
