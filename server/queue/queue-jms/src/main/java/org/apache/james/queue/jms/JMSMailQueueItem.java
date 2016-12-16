@@ -74,13 +74,6 @@ public class JMSMailQueueItem implements MailQueueItem {
             } catch (JMSException e) {
                 // ignore here
             }
-
-            try {
-                if (connection != null)
-                    connection.close();
-            } catch (JMSException e) {
-                // ignore here
-            }
         }
     }
 
