@@ -52,7 +52,7 @@
             <amq:managementContext createConnector="false"/>
         </amq:managementContext>
         <amq:persistenceAdapter>
-            <amq:amqPersistenceAdapter/>
+            <amq:kahaDB/>
         </amq:persistenceAdapter>
         <amq:plugins>
             <amq:statisticsBrokerPlugin/>

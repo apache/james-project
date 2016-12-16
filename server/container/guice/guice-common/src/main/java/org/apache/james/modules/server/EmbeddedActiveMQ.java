@@ -29,7 +29,7 @@ import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.plugin.StatisticsBrokerPlugin;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.queue.activemq.FileSystemBlobTransferPolicy;
 
@@ -94,7 +94,7 @@ public class EmbeddedActiveMQ {
         ManagementContext managementContext = new ManagementContext();
         managementContext.setCreateConnector(false);
         brokerService.setManagementContext(managementContext);
-        brokerService.setPersistenceAdapter(new AMQPersistenceAdapter());
+        brokerService.setPersistenceAdapter(new KahaDBPersistenceAdapter());
         BrokerPlugin[] brokerPlugins = {new StatisticsBrokerPlugin()};
         brokerService.setPlugins(brokerPlugins);
         String[] transportConnectorsURIs = {"tcp://localhost:0"};
