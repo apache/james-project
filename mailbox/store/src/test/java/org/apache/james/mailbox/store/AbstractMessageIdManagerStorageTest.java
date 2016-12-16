@@ -86,10 +86,10 @@ public abstract class AbstractMessageIdManagerStorageTest {
     private Mailbox mailbox3;
     private MailboxSession session;
 
-    protected abstract MessageIdManagerTestSystem createTestingData();
+    protected abstract MessageIdManagerTestSystem createTestingData() throws Exception;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         testingData = createTestingData();
         messageIdManager = testingData.getMessageIdManager();
         mailbox1 = testingData.getMailbox1();
