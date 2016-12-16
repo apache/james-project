@@ -470,5 +470,13 @@ public class CassandraMessageDAO {
             simpleMailboxMessage.setModSeq(modSeq);
             return simpleMailboxMessage;
         }
+
+        public MailboxId getMailboxId() {
+            return mailboxId;
+        }
+
+        public MessageId getMessageId() {
+            return messageId;
+        }
     }
 }

@@ -97,9 +97,20 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .flatMap(CompletableFuture::join)
             .collect(Guavate.toImmutableList());
         return messageDAO.retrieveMessages(composedMessageIds, fetchType, Optional.empty()).join()
+            .filter(pair -> mailboxExists(pair.getLeft()))
             .map(loadAttachments())
             .map(toMailboxMessages())
             .sorted(Comparator.comparing(MailboxMessage::getUid));
+    }
+
+    private boolean mailboxExists(CassandraMessageDAO.MessageWithoutAttachment messageWithoutAttachment) {
+        try {
+            mailboxMapper.findMailboxById(messageWithoutAttachment.getMailboxId());
+            return true;
+        } catch (MailboxException e) {
+            LOGGER.info("Mailbox {} have been deleted but message {} is still attached to it.", messageWithoutAttachment.getMailboxId(), messageWithoutAttachment.getMessageId());
+            return false;
+        }
     }
 
     private Function<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<CassandraMessageDAO.MessageAttachmentRepresentation>>, Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<MessageAttachment>>> loadAttachments() {
