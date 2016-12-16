@@ -47,13 +47,6 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         return copy(mailboxId, original, original.getAttachments());
     }
 
-    public static SimpleMailboxMessage cloneWithAttachments(MailboxMessage mailboxMessage, List<MessageAttachment> attachments) throws MailboxException {
-        SimpleMailboxMessage simpleMailboxMessage = copy(mailboxMessage.getMailboxId(), mailboxMessage, attachments);
-        simpleMailboxMessage.setUid(mailboxMessage.getUid());
-        simpleMailboxMessage.setModSeq(mailboxMessage.getModSeq());
-        return simpleMailboxMessage;
-    }
-
     private static SimpleMailboxMessage copy(MailboxId mailboxId, MailboxMessage original, List<MessageAttachment> attachments) throws MailboxException {
         Date internalDate = original.getInternalDate();
         long size = original.getFullContentOctets();
