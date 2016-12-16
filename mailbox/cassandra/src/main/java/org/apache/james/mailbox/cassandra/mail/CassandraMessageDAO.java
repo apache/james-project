@@ -87,11 +87,12 @@ import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Where;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Bytes;
 
@@ -182,16 +183,22 @@ public class CassandraMessageDAO {
 
     public CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
         return retrieveRows(messageIds, fetchType, limit)
-                .thenApply(resultSet -> CassandraUtils.convertToStream(resultSet)
-                        .map(row -> message(row, messageIds, fetchType)));
+                .thenApply(resultSet -> toMessagesWithoutAttachements(messageIds, fetchType, resultSet));
+    }
+
+    private Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> toMessagesWithoutAttachements(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, ResultSet resultSet) {
+        ImmutableListMultimap<MessageId, Row> messagesById = CassandraUtils.convertToStream(resultSet)
+            .collect(Guavate.toImmutableListMultimap(row -> messageIdFactory.of(row.getUUID(MESSAGE_ID)), row -> row));
+        return messageIds.stream()
+            .filter(composedId -> !messagesById.get(composedId.getComposedMessageId().getMessageId()).isEmpty())
+            .map(composedId -> message(messagesById.get(composedId.getComposedMessageId().getMessageId()).get(0), composedId, fetchType));
     }
 
     private CompletableFuture<ResultSet> retrieveRows(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
         return cassandraAsyncExecutor.execute(
                 buildSelectQueryWithLimit(
                         buildQuery(messageIds, fetchType),
-                        limit)
-                );
+                        limit));
     }
     
     private Where buildQuery(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType) {
@@ -205,27 +212,22 @@ public class CassandraMessageDAO {
                         .collect(Collectors.toList())));
     }
 
-    private Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> message(Row row, List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType) {
-        try {
-            ComposedMessageIdWithMetaData messageIdWithMetaData = retrieveComposedMessageId(messageIdFactory.of(row.getUUID(MESSAGE_ID)), messageIds);
-            ComposedMessageId messageId = messageIdWithMetaData.getComposedMessageId();
+    private Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> message(Row row,ComposedMessageIdWithMetaData messageIdWithMetaData, FetchType fetchType) {
+        ComposedMessageId messageId = messageIdWithMetaData.getComposedMessageId();
 
-            MessageWithoutAttachment messageWithoutAttachment =
-                new MessageWithoutAttachment(
-                    messageId.getMessageId(),
-                    row.getDate(INTERNAL_DATE),
-                    row.getLong(FULL_CONTENT_OCTETS),
-                    row.getInt(BODY_START_OCTET),
-                    buildContent(row, fetchType),
-                    messageIdWithMetaData.getFlags(),
-                    getPropertyBuilder(row),
-                    messageId.getMailboxId(),
-                    messageId.getUid(),
-                    messageIdWithMetaData.getModSeq());
-            return Pair.of(messageWithoutAttachment, getAttachments(row, fetchType));
-        } catch (MailboxException e) {
-            throw Throwables.propagate(e);
-        }
+        MessageWithoutAttachment messageWithoutAttachment =
+            new MessageWithoutAttachment(
+                messageId.getMessageId(),
+                row.getDate(INTERNAL_DATE),
+                row.getLong(FULL_CONTENT_OCTETS),
+                row.getInt(BODY_START_OCTET),
+                buildContent(row, fetchType),
+                messageIdWithMetaData.getFlags(),
+                getPropertyBuilder(row),
+                messageId.getMailboxId(),
+                messageId.getUid(),
+                messageIdWithMetaData.getModSeq());
+        return Pair.of(messageWithoutAttachment, getAttachments(row, fetchType));
     }
 
     private PropertyBuilder getPropertyBuilder(Row row) {
@@ -261,13 +263,6 @@ public class CassandraMessageDAO {
                 .cid(Optional.ofNullable(udtValue.getString(Attachments.CID)).map(Cid::from))
                 .isInline(udtValue.getBool(Attachments.IS_INLINE))
                 .build();
-    }
-
-    private ComposedMessageIdWithMetaData retrieveComposedMessageId(CassandraMessageId messageId, List<ComposedMessageIdWithMetaData> messageIds) throws MailboxException {
-        return messageIds.stream()
-            .filter(composedMessage -> composedMessage.isMatching(messageId))
-            .findFirst()
-            .orElseThrow(() -> new MailboxException("Message not found: " + messageId));
     }
 
     private String[] retrieveFields(FetchType fetchType) {
