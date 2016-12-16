@@ -19,18 +19,15 @@
 
 package org.apache.james.mailbox.cassandra;
 
-import static org.mockito.Mockito.mock;
-
-import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.store.AbstractMessageIdManagerStorageTest;
+import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.store.AbstractMessageIdManagerSideEffectTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.quota.NoQuotaManager;
 
-public class CassandraMessageIdManagerStorageTest extends AbstractMessageIdManagerStorageTest {
+public class CassandraMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
 
     @Override
-    protected MessageIdManagerTestSystem createTestingData() throws Exception {
-        return CassandraMessageIdManagerTestSystem.createTestingData(new NoQuotaManager(), MailboxEventDispatcher.ofListener(mock(MailboxListener.class)));
+    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
+        return CassandraMessageIdManagerTestSystem.createTestingData(quotaManager, dispatcher);
     }
 }
