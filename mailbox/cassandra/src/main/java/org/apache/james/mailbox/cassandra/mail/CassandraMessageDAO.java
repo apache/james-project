@@ -183,10 +183,10 @@ public class CassandraMessageDAO {
 
     public CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
         return retrieveRows(messageIds, fetchType, limit)
-                .thenApply(resultSet -> toMessagesWithoutAttachements(messageIds, fetchType, resultSet));
+                .thenApply(resultSet -> toMessagesWithAttachmentRepresentation(messageIds, fetchType, resultSet));
     }
 
-    private Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> toMessagesWithoutAttachements(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, ResultSet resultSet) {
+    private Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> toMessagesWithAttachmentRepresentation(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, ResultSet resultSet) {
         ImmutableListMultimap<MessageId, Row> messagesById = CassandraUtils.convertToStream(resultSet)
             .collect(Guavate.toImmutableListMultimap(row -> messageIdFactory.of(row.getUUID(MESSAGE_ID)), row -> row));
         return messageIds.stream()

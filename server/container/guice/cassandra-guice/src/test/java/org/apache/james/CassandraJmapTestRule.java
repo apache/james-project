@@ -27,6 +27,8 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import com.google.inject.Module;
+
 
 public class CassandraJmapTestRule implements TestRule {
 
@@ -42,6 +44,12 @@ public class CassandraJmapTestRule implements TestRule {
         return new JmapJamesServer()
                     .combineWith(CassandraJamesServerMain.cassandraServerModule)
                     .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra));
+    }
+
+    public JmapJamesServer jmapServer(Module additional) {
+        return new JmapJamesServer()
+            .combineWith(CassandraJamesServerMain.cassandraServerModule, additional)
+            .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra));
     }
 
     @Override

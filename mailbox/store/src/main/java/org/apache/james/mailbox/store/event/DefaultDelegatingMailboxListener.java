@@ -21,6 +21,8 @@ package org.apache.james.mailbox.store.event;
 
 import java.util.Collection;
 
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -51,6 +53,7 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
         this(new SynchronousEventDelivery());
     }
 
+    @Inject
     public DefaultDelegatingMailboxListener(EventDelivery eventDelivery) {
         this.registry = new MailboxListenerRegistry();
         this.eventDelivery = eventDelivery;

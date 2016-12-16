@@ -28,20 +28,32 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 
 public class InMemoryMailboxManager extends StoreMailboxManager {
 
     @Inject
-    public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, 
+    public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator,
             MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
-            MessageParser messageParser, MessageId.Factory messageIdFactory) {
+            MessageParser messageParser, MessageId.Factory messageIdFactory, MailboxEventDispatcher dispatcher,
+            DelegatingMailboxListener delegatingMailboxListener) {
+        super(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
+            MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE, dispatcher,
+            delegatingMailboxListener);
+    }
+
+    public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator,
+                                  MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
+                                  MessageParser messageParser, MessageId.Factory messageIdFactory) {
         super(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
     }
 

@@ -99,7 +99,7 @@ public class StoreMailboxManager implements MailboxManager {
     public static final int DEFAULT_FETCH_BATCH_SIZE = 200;
 
     private MailboxEventDispatcher dispatcher;
-    private DelegatingMailboxListener delegatingListener = null;
+    private DelegatingMailboxListener delegatingListener;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
 
     private final Authenticator authenticator;
@@ -138,9 +138,17 @@ public class StoreMailboxManager implements MailboxManager {
     @Inject
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, 
             MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, 
-            MessageParser messageParser, MessageId.Factory messageIdFactory) {
+            MessageParser messageParser, MessageId.Factory messageIdFactory, MailboxEventDispatcher mailboxEventDispatcher,
+            DelegatingMailboxListener delegatingListener) {
         this(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
-                MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+                MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE, mailboxEventDispatcher, delegatingListener);
+    }
+
+    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator,
+                               MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
+                               MessageParser messageParser, MessageId.Factory messageIdFactory) {
+        this(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
+            MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
     }
 
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, 
@@ -153,6 +161,13 @@ public class StoreMailboxManager implements MailboxManager {
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, 
             MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser,
             MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize) {
+        this(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
+            limitOfAnnotations, limitAnnotationSize, null, null);
+    }
+
+    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator,
+                               MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser,
+                               MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize, MailboxEventDispatcher mailboxEventDispatcher, DelegatingMailboxListener delegatingListener) {
         this.authenticator = authenticator;
         this.locker = locker;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
@@ -162,6 +177,8 @@ public class StoreMailboxManager implements MailboxManager {
         this.messageIdFactory = messageIdFactory;
         this.limitOfAnnotations = limitOfAnnotations;
         this.limitAnnotationSize = limitAnnotationSize;
+        this.delegatingListener = delegatingListener;
+        this.dispatcher = mailboxEventDispatcher;
     }
 
     protected Factory getMessageIdFactory() {
@@ -171,6 +188,7 @@ public class StoreMailboxManager implements MailboxManager {
     public void setMailboxSessionIdGenerator(MailboxSessionIdGenerator idGenerator) {
         this.idGenerator = idGenerator;
     }
+
     public void setQuotaManager(QuotaManager quotaManager) {
         this.quotaManager = quotaManager;
     }
@@ -203,8 +221,10 @@ public class StoreMailboxManager implements MailboxManager {
      */
     @PostConstruct
     public void init() throws MailboxException {
-        // The dispatcher need to have the delegating listener added
-        dispatcher = new MailboxEventDispatcher(getDelegationListener());
+
+        if (dispatcher == null) {
+            dispatcher = new MailboxEventDispatcher(getDelegationListener());
+        }
 
         if (index == null) {
             index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory);

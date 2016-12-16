@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
 
@@ -85,6 +86,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
 
+    @Inject
     public StoreMessageIdManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, MailboxEventDispatcher dispatcher,
                                  MessageId.Factory messageIdFactory,
                                  QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) {

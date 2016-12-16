@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -31,6 +33,7 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -40,12 +43,22 @@ import com.google.common.collect.ImmutableSortedMap;
  */
 public class MailboxEventDispatcher {
 
+    @VisibleForTesting
+    public static MailboxEventDispatcher ofListener(MailboxListener mailboxListener) {
+        return new MailboxEventDispatcher(mailboxListener, new EventFactory());
+    }
+
     private final MailboxListener listener;
     private final EventFactory eventFactory;
 
-    public MailboxEventDispatcher(MailboxListener listener) {
+    @Inject
+    public MailboxEventDispatcher(DelegatingMailboxListener delegatingMailboxListener) {
+        this(delegatingMailboxListener, new EventFactory());
+    }
+
+    private MailboxEventDispatcher(MailboxListener listener, EventFactory eventFactory) {
         this.listener = listener;
-        this.eventFactory = new EventFactory();
+        this.eventFactory = eventFactory;
     }
 
     /**

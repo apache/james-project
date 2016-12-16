@@ -99,7 +99,7 @@ public class CassandraMessageIdManagerStorageTest extends AbstractMessageIdManag
             imapUidDAO);
 
         StoreMessageIdManager messageIdManager = new StoreMessageIdManager(mapperFactory,
-            new MailboxEventDispatcher(mock(MailboxListener.class)),
+            MailboxEventDispatcher.ofListener(mock(MailboxListener.class)),
             new CassandraMessageId.Factory(),
             new NoQuotaManager(),
             new DefaultQuotaRootResolver(mapperFactory));

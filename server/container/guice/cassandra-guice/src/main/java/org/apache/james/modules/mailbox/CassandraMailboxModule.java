@@ -24,6 +24,7 @@ import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
+import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
@@ -41,6 +42,8 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreMessageIdManager;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
@@ -60,6 +63,8 @@ public class CassandraMailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new DefaultEventModule());
+
         bind(CassandraMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxManager.class).in(Scopes.SINGLETON);
         bind(NoMailboxPathLocker.class).in(Scopes.SINGLETON);
@@ -72,6 +77,8 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(CassandraMessageDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMessageIdDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMessageIdToImapUidDAO.class).in(Scopes.SINGLETON);
+        bind(MailboxEventDispatcher.class).in(Scopes.SINGLETON);
+        bind(StoreMessageIdManager.class).in(Scopes.SINGLETON);
 
         bind(MessageMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
         bind(MailboxMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
@@ -86,6 +93,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(MailboxManager.class).to(CassandraMailboxManager.class);
         bind(MailboxId.Factory.class).to(CassandraId.Factory.class);
         bind(MessageId.Factory.class).to(CassandraMessageId.Factory.class);
+        bind(MessageIdManager.class).to(StoreMessageIdManager.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraAclModule.class);

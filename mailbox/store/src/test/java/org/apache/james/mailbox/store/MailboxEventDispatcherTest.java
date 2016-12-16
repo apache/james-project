@@ -65,7 +65,7 @@ public class MailboxEventDispatcherTest {
     public void setUp() throws Exception {
         collector = new EventCollector();
 
-        dispatcher = new MailboxEventDispatcher(collector);
+        dispatcher = MailboxEventDispatcher.ofListener(collector);
         result = mock(MessageResult.class);
         mailbox = mock(Mailbox.class);
 

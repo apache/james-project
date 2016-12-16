@@ -46,6 +46,7 @@ import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
@@ -65,6 +66,7 @@ public class MemoryMailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new DefaultEventModule());
 
         bind(MessageMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
         bind(MailboxMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
@@ -99,6 +101,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(SimpleGroupMembershipResolver.class).in(Scopes.SINGLETON);
         bind(InMemoryMessageId.Factory.class).in(Scopes.SINGLETON);
         bind(InMemoryMessageIdManager.class).in(Scopes.SINGLETON);
+        bind(MailboxEventDispatcher.class).in(Scopes.SINGLETON);
     }
 
     @Provides @Named(Names.MAILBOXMANAGER_NAME) @Singleton
