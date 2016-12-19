@@ -50,8 +50,8 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
     private Optional<MessageId> lastMessageIdUsed;
 
     public InMemoryMessageIdManagerTestSystem(MailboxManager mailboxManager, MailboxSession mailboxSession, 
-            Mailbox mailbox1, Mailbox mailbox2, Mailbox mailbox3) {
-        super(new InMemoryMessageIdManager(mailboxManager), mailboxSession, mailbox1, mailbox2, mailbox3);
+            Mailbox mailbox1, Mailbox mailbox2, Mailbox mailbox3, Mailbox mailbox4) {
+        super(new InMemoryMessageIdManager(mailboxManager), mailboxSession, mailbox1, mailbox2, mailbox3, mailbox4);
         this.mailboxManager = mailboxManager;
         this.mailboxSession = mailboxSession;
         this.lastMessageIdUsed = Optional.absent();

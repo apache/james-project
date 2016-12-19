@@ -37,8 +37,12 @@ public class StoreMessageIdManagerSideEffectTest extends AbstractMessageIdManage
         MessageIdManager messageIdManager = new StoreMessageIdManager(testMailboxSessionMapperFactory, dispatcher, messageIdFactory,
             quotaManager, new DefaultQuotaRootResolver(testMailboxSessionMapperFactory));
 
-        return new StoreMessageIdManagerTestSystem(messageIdManager, testMailboxSessionMapperFactory.getMailbox1(),
-            testMailboxSessionMapperFactory.getMailbox2(), testMailboxSessionMapperFactory.getMailbox3(), messageIdFactory,
+        return new StoreMessageIdManagerTestSystem(messageIdManager,
+            testMailboxSessionMapperFactory.getMailbox1(),
+            testMailboxSessionMapperFactory.getMailbox2(),
+            testMailboxSessionMapperFactory.getMailbox3(),
+            testMailboxSessionMapperFactory.getMailbox4(),
+            messageIdFactory,
             testMailboxSessionMapperFactory);
     }
 

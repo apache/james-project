@@ -69,6 +69,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
     private final SimpleMailbox mailbox1;
     private final SimpleMailbox mailbox2;
     private final SimpleMailbox mailbox3;
+    private final SimpleMailbox mailbox4;
     private final List<MailboxMessage> messages = new ArrayList<MailboxMessage>();
     private final MailboxMapper mailboxMapper;
     private final MessageIdMapper messageIdMapper;
@@ -77,6 +78,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
         mailbox1 = new SimpleMailbox(new MailboxPath("#private", "user", "INBOX"), UID_VALIDITY, TestId.of(36));
         mailbox2 = new SimpleMailbox(new MailboxPath("#private", "user", "OUTBOX"), UID_VALIDITY, TestId.of(46));
         mailbox3 = new SimpleMailbox(new MailboxPath("#private", "user", "SENT"), UID_VALIDITY, TestId.of(56));
+        mailbox4 = new SimpleMailbox(new MailboxPath("#public", "otheruser", "INBOX"), UID_VALIDITY, TestId.of(66));
 
         mailboxMapper = new MailboxMapper() {
             @Override
@@ -205,6 +207,10 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
     public SimpleMailbox getMailbox3() {
         return mailbox3;
+    }
+
+    public SimpleMailbox getMailbox4() {
+        return mailbox4;
     }
 
     @Override

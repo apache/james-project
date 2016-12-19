@@ -47,9 +47,9 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
     private final MessageId.Factory messageIdFactory;
     private final TestMailboxSessionMapperFactory mapperFactory;
 
-    public StoreMessageIdManagerTestSystem(MessageIdManager messageIdManager, Mailbox mailbox1, Mailbox mailbox2, Mailbox mailbox3,
+    public StoreMessageIdManagerTestSystem(MessageIdManager messageIdManager, Mailbox mailbox1, Mailbox mailbox2, Mailbox mailbox3, Mailbox mailbox4,
                                            MessageId.Factory messageIdFactory, TestMailboxSessionMapperFactory mapperFactory) {
-        super(messageIdManager, EMPTY_MAILBOX_SESSION, mailbox1, mailbox2, mailbox3);
+        super(messageIdManager, EMPTY_MAILBOX_SESSION, mailbox1, mailbox2, mailbox3, mailbox4);
 
         this.messageIdFactory = messageIdFactory;
         this.mapperFactory = mapperFactory;

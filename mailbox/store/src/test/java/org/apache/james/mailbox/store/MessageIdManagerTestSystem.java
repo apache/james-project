@@ -35,22 +35,20 @@ public abstract class MessageIdManagerTestSystem {
     private final Mailbox mailbox1;
     private final Mailbox mailbox2;
     private final Mailbox mailbox3;
+    private final Mailbox mailbox4;
 
     public MessageIdManagerTestSystem(MessageIdManager messageIdManager, MailboxSession session, 
-            Mailbox mailbox1, Mailbox mailbox2, Mailbox mailbox3) {
+            Mailbox mailbox1, Mailbox mailbox2, Mailbox mailbox3, Mailbox mailbox4) {
         this.messageIdManager = messageIdManager;
         this.session = session;
         this.mailbox1 = mailbox1;
         this.mailbox2 = mailbox2;
         this.mailbox3 = mailbox3;
+        this.mailbox4 = mailbox4;
     }
 
     public MessageIdManager getMessageIdManager() {
         return messageIdManager;
-    }
-
-    public MailboxSession getSession() {
-        return session;
     }
 
     public Mailbox getMailbox1() {
@@ -63,6 +61,10 @@ public abstract class MessageIdManagerTestSystem {
 
     public Mailbox getMailbox3() {
         return mailbox3;
+    }
+
+    public Mailbox getMailbox4() {
+        return mailbox4;
     }
 
     /**
