@@ -29,6 +29,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.jmap.methods.RequestHandler;
+import org.apache.james.jmap.send.PostDequeueDecoratorFactory;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
@@ -38,6 +39,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.modules.server.CamelMailetContainerModule;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.PropertiesProvider;
@@ -71,6 +73,7 @@ public class JMAPModule extends AbstractModule {
         transportProcessorChecks.addBinding().to(VacationMailetCheck.class);
         
         bind(SystemMailboxesProvider.class).to(SystemMailboxesProviderImpl.class);
+        bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Scopes.SINGLETON);
     }
 
     @Provides

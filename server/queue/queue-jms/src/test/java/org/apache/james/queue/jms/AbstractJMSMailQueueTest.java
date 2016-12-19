@@ -46,6 +46,7 @@ import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.ManageableMailQueue.MailQueueIterator;
+import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.junit.Before;
@@ -77,7 +78,7 @@ public abstract class AbstractJMSMailQueueTest {
     @Before
     public void setUp() throws Exception {
         ConnectionFactory connectionFactory = createConnectionFactory();
-        setQueue(createQueue(connectionFactory, MailQueueItemDecoratorFactory.RAW_FACTORY, QUEUE_NAME));
+        setQueue(createQueue(connectionFactory, new RawMailQueueItemDecoratorFactory(), QUEUE_NAME));
     }
 
     @Test

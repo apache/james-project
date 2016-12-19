@@ -26,6 +26,7 @@ import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.QuotaModule;
+import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -37,7 +38,8 @@ public class JPAJamesServerMain {
         new JPADataModule(),
         new SieveFileRepositoryModule(),
         new QuotaModule(),
-        new ActiveMQQueueModule());
+        new ActiveMQQueueModule(),
+        new RawPostDequeueDecoratorModule());
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServerImpl server = new GuiceJamesServerImpl()

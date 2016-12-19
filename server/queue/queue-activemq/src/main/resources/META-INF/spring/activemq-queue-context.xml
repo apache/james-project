@@ -29,9 +29,7 @@
     <!-- James Mail Queue Factory -->
     <bean id="mailqueuefactory" class="org.apache.james.queue.activemq.ActiveMQMailQueueFactory" depends-on="broker">
         <constructor-arg index="0" ref="jmsConnectionFactory"/>
-        <constructor-arg index="1">
-            <util:constant static-field="org.apache.james.queue.api.MailQueueItemDecoratorFactory.RAW_FACTORY"/>
-        </constructor-arg>
+        <constructor-arg index="1" ref="rawMailQueueItemDecoratorFactory"/>
         <constructor-arg index="2" ref="metricFactory"/>
     </bean>
 
@@ -87,6 +85,9 @@
 
     <bean id="jmsTransactionManager" class="org.springframework.jms.connection.JmsTransactionManager">
         <property name="connectionFactory" ref="jmsConnectionFactory"/>
+    </bean>
+
+    <bean id="rawMailQueueItemDecoratorFactory" class="org.apache.james.queue.api.RawMailQueueItemDecoratorFactory">
     </bean>
 
 </beans>
