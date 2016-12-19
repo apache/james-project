@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.mailbox.model.MessageId;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class InMemoryMessageId implements MessageId {
@@ -77,8 +76,6 @@ public class InMemoryMessageId implements MessageId {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(InMemoryMessageId.class)
-                .add("value", value)
-                .toString();
+        return serialize();
     }
 }
