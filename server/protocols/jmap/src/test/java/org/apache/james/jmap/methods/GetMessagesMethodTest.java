@@ -41,7 +41,6 @@ import org.apache.james.jmap.model.GetMessagesResponse;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageContentExtractor;
 import org.apache.james.jmap.model.MessageFactory;
-import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.apache.james.mailbox.MailboxManager;
@@ -123,7 +122,7 @@ public class GetMessagesMethodTest {
         session = new MockMailboxSession(ROBERT.username);
         inboxPath = MailboxPath.inbox(session);
         mailboxManager.createMailbox(inboxPath, session);
-        testee = new GetMessagesMethod(mailboxManager, messageFactory);
+        testee = new GetMessagesMethod(messageFactory, inMemoryIntegrationResources.createMessageIdManager(mailboxManager));
     }
     
     @Test
@@ -162,9 +161,9 @@ public class GetMessagesMethodTest {
         ComposedMessageId message3 = inbox.appendMessage(message3Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1.getUid()),
-                          new MessageId(ROBERT, inboxPath, message2.getUid()),
-                          new MessageId(ROBERT, inboxPath, message3.getUid())))
+                .ids(ImmutableList.of(message1.getMessageId(),
+                        message2.getMessageId(),
+                        message3.getMessageId()))
                 .build();
 
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
@@ -174,11 +173,11 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
-            .extracting(message -> message.getId().getUid(), Message::getSubject, Message::getTextBody)
+            .extracting(Message::getId, Message::getSubject, Message::getTextBody)
             .containsOnly(
-                    Tuple.tuple(message1.getUid(), "message 1 subject", Optional.of("my message")), 
-                    Tuple.tuple(message2.getUid(), "message 2 subject", Optional.of("my message")),
-                    Tuple.tuple(message3.getUid(), "", Optional.of("my message")));
+                    Tuple.tuple(message1.getMessageId(), "message 1 subject", Optional.of("my message")), 
+                    Tuple.tuple(message2.getMessageId(), "message 2 subject", Optional.of("my message")),
+                    Tuple.tuple(message3.getMessageId(), "", Optional.of("my message")));
     }
     
     @Test
@@ -189,10 +188,10 @@ public class GetMessagesMethodTest {
                 + "Subject: message 1 subject\r\n"
                 + "\r\n"
                 + "my <b>HTML</b> message").getBytes(Charsets.UTF_8));
-        ComposedMessageId messageId = inbox.appendMessage(messageContent, now, session, false, null);
+        ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, messageId.getUid())))
+                .ids(ImmutableList.of(message.getMessageId()))
                 .build();
 
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
@@ -202,8 +201,8 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
-            .extracting(message -> message.getId().getUid(), Message::getTextBody, Message::getHtmlBody)
-            .containsOnly(Tuple.tuple(messageId.getUid(), Optional.empty(), Optional.of("my <b>HTML</b> message")));
+            .extracting(Message::getId, Message::getTextBody, Message::getHtmlBody)
+            .containsOnly(Tuple.tuple(message.getMessageId(), Optional.empty(), Optional.of("my <b>HTML</b> message")));
     }
 
     @Test
@@ -214,7 +213,7 @@ public class GetMessagesMethodTest {
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1.getUid())))
+                .ids(ImmutableList.of(message1.getMessageId()))
                 .properties(ImmutableList.of())
                 .build();
 
@@ -235,7 +234,7 @@ public class GetMessagesMethodTest {
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1.getUid())))
+                .ids(ImmutableList.of(message1.getMessageId()))
                 .build();
 
         Stream<JmapResponse> result = testee.process(request, clientId, session);
@@ -255,7 +254,7 @@ public class GetMessagesMethodTest {
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1.getUid())))
+                .ids(ImmutableList.of(message1.getMessageId()))
                 .properties(ImmutableList.of(MessageProperty.subject.asFieldName()))
                 .build();
 
@@ -278,7 +277,7 @@ public class GetMessagesMethodTest {
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1.getUid())))
+                .ids(ImmutableList.of(message1.getMessageId()))
                 .properties(ImmutableList.of(MessageProperty.body.asFieldName()))
                 .build();
 
@@ -304,7 +303,7 @@ public class GetMessagesMethodTest {
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1.getUid())))
+                .ids(ImmutableList.of(message1.getMessageId()))
                 .properties(ImmutableList.of("headers.from", "headers.heADER2"))
                 .build();
 
@@ -331,7 +330,7 @@ public class GetMessagesMethodTest {
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1.getUid())))
+                .ids(ImmutableList.of(message1.getMessageId()))
                 .properties(ImmutableList.of("headers.from", "headers.heADER2"))
                 .build();
 

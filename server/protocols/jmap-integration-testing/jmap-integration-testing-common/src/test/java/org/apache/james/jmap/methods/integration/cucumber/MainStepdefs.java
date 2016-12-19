@@ -21,6 +21,7 @@ package org.apache.james.jmap.methods.integration.cucumber;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.JmapJamesServer;
+import org.apache.james.mailbox.model.MessageId;
 
 import com.google.common.base.Charsets;
 
@@ -31,7 +32,8 @@ public class MainStepdefs {
 
     public JmapJamesServer jmapServer;
     public Runnable awaitMethod = () -> {};
-
+    public MessageId.Factory messageIdFactory;
+    
     public void init() throws Exception {
         jmapServer.start();
     }
@@ -49,4 +51,5 @@ public class MainStepdefs {
     public void tearDown() {
         jmapServer.stop();
     }
+
 }

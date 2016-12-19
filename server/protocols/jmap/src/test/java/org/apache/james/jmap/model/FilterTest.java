@@ -18,14 +18,15 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class FilterTest {
 
@@ -33,7 +34,7 @@ public class FilterTest {
 
     @Before
     public void setup() {
-        parser = new ObjectMapperFactory(new InMemoryId.Factory()).forParsing();
+        parser = new ObjectMapperFactory(new InMemoryId.Factory(), new InMemoryMessageId.Factory()).forParsing();
     }
 
     @Test

@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -72,7 +74,7 @@ public class GetMailboxMessageListResponseTest {
                 .inMailboxes(Optional.of(ImmutableList.of("1", "2")))
                 .build();
         List<String> sort = ImmutableList.of("date desc");
-        List<MessageId> messageIds = ImmutableList.of(MessageId.of("user|mailbox|3"), MessageId.of("user|mailbox|4"));
+        List<MessageId> messageIds = ImmutableList.of(TestMessageId.of(3), TestMessageId.of(4));
         GetMessageListResponse expectedGetMessageListResponse = new GetMessageListResponse(null, filterCondition, sort, false, null, false, 0, 0, ImmutableList.of(), messageIds);
 
         GetMessageListResponse getMessageListResponse = GetMessageListResponse.builder()

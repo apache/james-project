@@ -25,10 +25,11 @@ import java.time.ZonedDateTime;
 import org.apache.james.jmap.model.BlobId;
 import org.apache.james.jmap.model.Emailer;
 import org.apache.james.jmap.model.Message;
-import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.SubMessage;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.TestMessageId;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -36,7 +37,7 @@ import com.google.common.collect.ImmutableMap;
 public interface ParsingWritingObjects {
 
     public interface Common {
-        MessageId MESSAGE_ID = MessageId.of("username|mailbox|1");
+        MessageId MESSAGE_ID = TestMessageId.of(1);
         BlobId BLOB_ID = BlobId.of("myBlobId");
         String THREAD_ID = "myThreadId";
         ImmutableList<MailboxId> MAILBOX_IDS = ImmutableList.of(InMemoryId.of(1), InMemoryId.of(2));

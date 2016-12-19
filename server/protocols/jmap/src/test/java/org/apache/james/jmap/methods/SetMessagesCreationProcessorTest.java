@@ -65,7 +65,7 @@ import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.mailet.Mail;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -133,7 +133,7 @@ public class SetMessagesCreationProcessorTest {
         when(outbox.getMailboxPath()).thenReturn(new MailboxPath(NAMESPACE, USER, OUTBOX));
         
         when(outbox.appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), any(Boolean.class), any(Flags.class)))
-            .thenReturn(new ComposedMessageId(OUTBOX_ID, new DefaultMessageId(), MessageUid.of(1)));
+            .thenReturn(new ComposedMessageId(OUTBOX_ID, TestMessageId.of(23), MessageUid.of(1)));
 
         drafts = mock(MessageManager.class);
         when(drafts.getId()).thenReturn(DRAFTS_ID);

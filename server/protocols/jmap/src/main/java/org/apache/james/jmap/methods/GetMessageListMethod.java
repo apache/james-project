@@ -37,7 +37,6 @@ import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.GetMessageListRequest;
 import org.apache.james.jmap.model.GetMessageListResponse;
 import org.apache.james.jmap.model.GetMessagesRequest;
-import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.utils.FilterToSearchQuery;
 import org.apache.james.jmap.utils.SortToComparatorConvertor;
 import org.apache.james.mailbox.MailboxManager;
@@ -122,7 +121,7 @@ public class GetMessageListMethod implements Method {
             
             aggregateResults(mailboxSession, searchResults).entries().stream()
                 .sorted(comparatorFor(messageListRequest))
-                .map(entry -> new MessageId(mailboxSession.getUser(), entry.getKey(), entry.getValue().getUid()))
+                .map(entry -> entry.getValue().getMessageId())
                 .skip(messageListRequest.getPosition())
                 .limit(limit(messageListRequest.getLimit()))
                 .forEach(builder::messageId);

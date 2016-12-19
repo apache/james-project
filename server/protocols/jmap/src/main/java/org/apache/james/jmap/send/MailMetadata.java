@@ -21,7 +21,7 @@ package org.apache.james.jmap.send;
 
 import java.util.Objects;
 
-import org.apache.james.jmap.model.MessageId;
+import org.apache.james.mailbox.model.MessageId;
 
 import com.google.common.base.Preconditions;
 

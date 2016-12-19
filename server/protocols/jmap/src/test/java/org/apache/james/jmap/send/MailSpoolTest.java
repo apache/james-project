@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.jmap.model.MessageId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
@@ -56,7 +56,7 @@ public class MailSpoolTest {
     public void sendShouldEnQueueTheMail() throws Exception {
         FakeMail mail = FakeMail.defaultFakeMail();
 
-        mailSpool.send(mail, new MailMetadata(MessageId.of("a|b|1"), "user"));
+        mailSpool.send(mail, new MailMetadata(TestMessageId.of(1), "user"));
 
         assertThat(myQueue.deQueue())
             .isNotNull()
