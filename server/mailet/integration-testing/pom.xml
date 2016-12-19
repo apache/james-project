@@ -150,6 +150,17 @@
           <dependencies>
               <dependency>
                   <groupId>org.apache.james</groupId>
+                  <artifactId>apache-mailet-base</artifactId>
+                  <type>test-jar</type>
+                  <scope>test</scope>
+              </dependency>
+              <dependency>
+                  <groupId>org.apache.james</groupId>
+                  <artifactId>apache-mailet-crypto</artifactId>
+                  <version>${project.version}</version>
+              </dependency>
+              <dependency>
+                  <groupId>org.apache.james</groupId>
                   <artifactId>james-server-data-memory</artifactId>
               </dependency>
               <dependency>
@@ -172,12 +183,7 @@
               </dependency>
               <dependency>
                   <groupId>org.apache.james</groupId>
-                  <artifactId>apache-mailet-crypto</artifactId>
-                  <version>${project.version}</version>
-              </dependency>
-              <dependency>
-                  <groupId>org.apache.james</groupId>
-                  <artifactId>apache-mailet-base</artifactId>
+                  <artifactId>james-server-util-java8</artifactId>
                   <type>test-jar</type>
                   <scope>test</scope>
               </dependency>
@@ -185,6 +191,11 @@
                   <groupId>ch.qos.logback</groupId>
                   <artifactId>logback-classic</artifactId>
                   <version>1.1.6</version>
+                  <scope>test</scope>
+              </dependency>
+              <dependency>
+                  <groupId>com.rabbitmq</groupId>
+                  <artifactId>amqp-client</artifactId>
                   <scope>test</scope>
               </dependency>
               <dependency>
@@ -205,6 +216,10 @@
               <dependency>
                   <groupId>org.slf4j</groupId>
                   <artifactId>slf4j-api</artifactId>
+              </dependency>
+              <dependency>
+                  <groupId>org.testcontainers</groupId>
+                  <artifactId>testcontainers</artifactId>
               </dependency>
           </dependencies>
             <build>

@@ -1070,6 +1070,11 @@
                 <version>2.6.1</version>
             </dependency>
             <dependency>
+                <groupId>com.rabbitmq</groupId>
+                <artifactId>amqp-client</artifactId>
+                <version>4.0.0</version>
+            </dependency>
+            <dependency>
                 <groupId>dnsjava</groupId>
                 <artifactId>dnsjava</artifactId>
                 <version>${dnsjava.version}</version>
