@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
