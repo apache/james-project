@@ -29,9 +29,11 @@ import javax.mail.Flags;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -40,7 +42,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import com.google.common.base.Throwables;
 
 public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem {
-    private static final MailboxSession EMPTY_MAILBOX_SESSION = null;
+    private static final MailboxSession EMPTY_MAILBOX_SESSION = new MockMailboxSession("user", SessionType.System);
     private static final long MOD_SEQ = 18;
     private static final ByteArrayInputStream ARRAY_INPUT_STREAM = new ByteArrayInputStream("".getBytes());
 

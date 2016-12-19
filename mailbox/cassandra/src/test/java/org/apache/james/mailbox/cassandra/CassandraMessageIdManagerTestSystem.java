@@ -104,16 +104,18 @@ public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSys
         SimpleMailbox mailbox1 = new SimpleMailbox(new MailboxPath("#private", "user", "INBOX"), UID_VALIDITY, CassandraId.timeBased());
         SimpleMailbox mailbox2 = new SimpleMailbox(new MailboxPath("#private", "user", "OUTBOX"), UID_VALIDITY, CassandraId.timeBased());
         SimpleMailbox mailbox3 = new SimpleMailbox(new MailboxPath("#private", "user", "SENT"), UID_VALIDITY, CassandraId.timeBased());
+        SimpleMailbox mailbox4 = new SimpleMailbox(new MailboxPath("#public", "otheruser", "INBOX"), UID_VALIDITY, CassandraId.timeBased());
         MockMailboxSession mailboxSession = new MockMailboxSession("user");
         MailboxMapper mailboxMapper = mapperFactory.getMailboxMapper(mailboxSession);
         mailboxMapper.save(mailbox1);
         mailboxMapper.save(mailbox2);
         mailboxMapper.save(mailbox3);
+        mailboxMapper.save(mailbox4);
 
         CassandraMailboxManager cassandraMailboxManager = new CassandraMailboxManager(mapperFactory, mock(Authenticator.class), new NoMailboxPathLocker(), new MessageParser(), messageIdFactory);
         cassandraMailboxManager.init();
 
-        return new CassandraMessageIdManagerTestSystem(messageIdManager, mailboxSession, mailbox1, mailbox2, mailbox3,
+        return new CassandraMessageIdManagerTestSystem(messageIdManager, mailboxSession, mailbox1, mailbox2, mailbox3, mailbox4,
             messageIdFactory, mapperFactory, mailboxSession, cassandraMailboxManager);
     }
 
@@ -122,8 +124,8 @@ public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSys
     private final MailboxSession mailboxSession;
     private final CassandraMailboxManager cassandraMailboxManager;
 
-    public CassandraMessageIdManagerTestSystem(MessageIdManager messageIdManager, MailboxSession session, Mailbox mailbox1, Mailbox mailbox2, Mailbox mailbox3, CassandraMessageId.Factory messageIdFactory, CassandraMailboxSessionMapperFactory mapperFactory, MailboxSession mailboxSession, CassandraMailboxManager cassandraMailboxManager) {
-        super(messageIdManager, session, mailbox1, mailbox2, mailbox3);
+    public CassandraMessageIdManagerTestSystem(MessageIdManager messageIdManager, MailboxSession session, Mailbox mailbox1, Mailbox mailbox2, Mailbox mailbox3, Mailbox mailbox4, CassandraMessageId.Factory messageIdFactory, CassandraMailboxSessionMapperFactory mapperFactory, MailboxSession mailboxSession, CassandraMailboxManager cassandraMailboxManager) {
+        super(messageIdManager, session, mailbox1, mailbox2, mailbox3, mailbox4);
         this.messageIdFactory = messageIdFactory;
         this.mapperFactory = mapperFactory;
         this.mailboxSession = mailboxSession;

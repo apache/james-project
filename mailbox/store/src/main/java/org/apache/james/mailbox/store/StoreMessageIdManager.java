@@ -31,10 +31,12 @@ import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -100,6 +102,10 @@ public class StoreMessageIdManager implements MessageIdManager {
     @Override
     public void setFlags(Flags newState, MessageManager.FlagsUpdateMode replace, MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
+        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
+
+        allowOnMailboxSession(mailboxIds, mailboxSession, mailboxMapper);
+
         Map<MailboxId, UpdatedFlags> updatedFlags = messageIdMapper.setFlags(messageId, mailboxIds, newState, replace);
         for (Map.Entry<MailboxId, UpdatedFlags> entry : updatedFlags.entrySet()) {
             dispatchFlagsChange(mailboxSession, entry.getKey(), entry.getValue());
@@ -107,10 +113,12 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     @Override
-    public List<MessageResult> getMessages(List<MessageId> messageIds, final MessageResult.FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
+    public List<MessageResult> getMessages(List<MessageId> messageIds, final MessageResult.FetchGroup fetchGroup, final MailboxSession mailboxSession) throws MailboxException {
         try {
             MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
+            final MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
             return FluentIterable.from(messageIdMapper.find(messageIds, MessageMapper.FetchType.Full))
+                .filter(belongsToUser(mailboxSession, mailboxMapper))
                 .transform(messageResultConverter(fetchGroup))
                 .toList();
         } catch (WrappedException wrappedException) {
@@ -122,6 +130,8 @@ public class StoreMessageIdManager implements MessageIdManager {
     public void delete(MessageId messageId, final List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
+
+        allowOnMailboxSession(mailboxIds, mailboxSession, mailboxMapper);
 
         Iterable<MetadataWithMailboxId> metadatasWithMailbox = FluentIterable
             .from(messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata))
@@ -138,8 +148,13 @@ public class StoreMessageIdManager implements MessageIdManager {
     @Override
     public void setInMailboxes(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
+        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
 
-        List<MailboxMessage> mailboxMessages = messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Full);
+        allowOnMailboxSession(mailboxIds, mailboxSession, mailboxMapper);
+
+        List<MailboxMessage> mailboxMessages = FluentIterable.from(messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Full))
+            .filter(belongsToUser(mailboxSession, mailboxMapper))
+            .toList();
 
         if (!mailboxMessages.isEmpty()) {
             ImmutableSet<MailboxId> currentMailboxes = FluentIterable.from(mailboxMessages)
@@ -242,6 +257,47 @@ public class StoreMessageIdManager implements MessageIdManager {
                 return mailboxIds.contains(mailboxMessage.getMailboxId());
             }
         };
+    }
+
+    private Predicate<MailboxMessage> belongsToUser(final MailboxSession mailboxSession, final MailboxMapper mailboxMapper) {
+        return new Predicate<MailboxMessage>() {
+            @Override
+            public boolean apply(MailboxMessage input) {
+                try {
+                    Mailbox currentMailbox = mailboxMapper.findMailboxById(input.getMailboxId());
+                    return belongsToCurrentUser(currentMailbox, mailboxSession);
+                } catch (MailboxException e) {
+                    return false;
+                }
+            }
+        };
+    }
+
+    private void allowOnMailboxSession(List<MailboxId> mailboxIds, MailboxSession mailboxSession, MailboxMapper mailboxMapper) throws MailboxNotFoundException {
+        boolean isForbidden = FluentIterable.from(mailboxIds)
+            .firstMatch(isMailboxOfOtherUser(mailboxSession, mailboxMapper))
+            .isPresent();
+
+        if (isForbidden) {
+            throw new MailboxNotFoundException("Mailbox does not belong to session: ");
+        }
+    }
+
+    private Predicate<MailboxId> isMailboxOfOtherUser(final MailboxSession mailboxSession, final MailboxMapper mailboxMapper) {
+        return new Predicate<MailboxId>() {
+            @Override
+            public boolean apply(MailboxId mailboxId) {
+                try {
+                    return !belongsToCurrentUser(mailboxMapper.findMailboxById(mailboxId), mailboxSession);
+                } catch (MailboxException e) {
+                    return true;
+                }
+            }
+        };
+    }
+
+    private boolean belongsToCurrentUser(Mailbox mailbox, MailboxSession session) {
+        return session.getUser().isSameUser(mailbox.getUser());
     }
 
     private static class MetadataWithMailboxId {

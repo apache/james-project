@@ -40,6 +40,7 @@ import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -85,9 +86,9 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     @Before
     public void setUp() throws Exception {
         dispatcher = mock(MailboxEventDispatcher.class);
-        session = mock(MailboxSession.class);
         quotaManager = mock(QuotaManager.class);
 
+        session = new MockMailboxSession("user");
         testingData = createTestSystem(quotaManager, dispatcher);
         messageIdManager = testingData.getMessageIdManager();
         mailbox1 = testingData.getMailbox1();

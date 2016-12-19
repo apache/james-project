@@ -27,13 +27,16 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
@@ -43,6 +46,7 @@ import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -59,23 +63,6 @@ public class InMemoryMessageIdManager implements MessageIdManager {
         this.mailboxManager = mailboxManager;
     }
     
-    private Optional<MessageResult> findMessageWithId(MailboxId mailboxId, final MessageId messageId, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
-        return FluentIterable.from(retrieveAllMessages(mailboxId, fetchGroup, mailboxSession))
-            .filter(new Predicate<MessageResult>() {
-
-                @Override
-                public boolean apply(MessageResult messageResult) {
-                    return messageResult.getMessageId().equals(messageId);
-                }
-            })
-            .first();
-    }
-
-    private ImmutableList<MessageResult> retrieveAllMessages(MailboxId mailboxId, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
-        MessageManager messageManager = mailboxManager.getMailbox(mailboxId, mailboxSession);
-        return ImmutableList.copyOf(messageManager.getMessages(MessageRange.all(), fetchGroup, mailboxSession));
-    }
-    
     @Override
     public void setFlags(Flags newState, FlagsUpdateMode flagsUpdateMode, MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
         for (MailboxId mailboxId: mailboxIds) {
@@ -88,29 +75,11 @@ public class InMemoryMessageIdManager implements MessageIdManager {
     }
 
     @Override
-    public List<MessageResult> getMessages(List<MessageId> messages, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
+    public List<MessageResult> getMessages(List<MessageId> messages, FetchGroup fetchGroup, final MailboxSession mailboxSession) throws MailboxException {
         ImmutableList.Builder<MessageResult> builder = ImmutableList.builder();
-        List<MailboxMetaData> userMailboxes = mailboxManager.search(userMailboxes(mailboxSession), mailboxSession);
-        for (MailboxMetaData mailboxMetaData: userMailboxes) {
-            builder.addAll(retrieveMailboxMessages(mailboxMetaData.getId(), messages, fetchGroup, mailboxSession));
-        }
-        return builder.build();
-    }
-
-    private MailboxQuery userMailboxes(MailboxSession mailboxSession) {
-        return MailboxQuery.builder()
-                .matchesAll()
-                .username(mailboxSession.getUser().getUserName())
-                .build();
-    }
-
-    private List<MessageResult> retrieveMailboxMessages(MailboxId mailboxId, List<MessageId> messages, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
-        ImmutableList.Builder<MessageResult> builder = ImmutableList.builder();
-        for (MessageId messageId: messages) {
-            Optional<MessageResult> maybeMessage = findMessageWithId(mailboxId, messageId, fetchGroup, mailboxSession);
-            if (maybeMessage.isPresent()) {
-                builder.add(maybeMessage.get());
-            }
+        List<MailboxId> userMailboxIds = getUsersMailboxIds(mailboxSession);
+        for (MailboxId mailboxId: userMailboxIds) {
+            builder.addAll(retrieveMailboxMessages(mailboxId, messages, fetchGroup, mailboxSession));
         }
         return builder.build();
     }
@@ -131,13 +100,16 @@ public class InMemoryMessageIdManager implements MessageIdManager {
     @Override
     public void setInMailboxes(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
         List<MessageResult> messages = getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, mailboxSession);
+
+        filterOnMailboxSession(mailboxIds, mailboxSession);
+
         if (!messages.isEmpty()) {
             ImmutableSet<MailboxId> currentMailboxes = currentMailboxes(messages).toSet();
-            
+
             HashSet<MailboxId> targetMailboxes = Sets.newHashSet(mailboxIds);
             List<MailboxId> mailboxesToRemove = ImmutableList.copyOf(Sets.difference(currentMailboxes, targetMailboxes));
             SetView<MailboxId> mailboxesToAdd = Sets.difference(targetMailboxes, currentMailboxes);
-            
+
             MessageResult referenceMessage = Iterables.getLast(messages);
             for (MailboxId mailboxId: mailboxesToAdd) {
                 MessageRange messageRange = referenceMessage.getUid().toRange();
@@ -145,11 +117,80 @@ public class InMemoryMessageIdManager implements MessageIdManager {
                 mailboxManager.getMailbox(mailboxId, mailboxSession)
                     .setFlags(referenceMessage.getFlags(), FlagsUpdateMode.REPLACE, messageRange, mailboxSession);
             }
-            
+
             for (MessageResult message: messages) {
                 delete(message.getMessageId(), mailboxesToRemove, mailboxSession);
             }
         }
+    }
+
+    private List<MailboxId> getUsersMailboxIds(final MailboxSession mailboxSession) throws MailboxException {
+        return FluentIterable.from(mailboxManager.search(userMailboxes(mailboxSession), mailboxSession))
+            .transform(getMailboxIdFromMetadata()).toList();
+    }
+
+    private Function<MailboxMetaData, MailboxId> getMailboxIdFromMetadata() {
+        return new Function<MailboxMetaData, MailboxId>() {
+            @Override
+            public MailboxId apply(MailboxMetaData input) {
+                return input.getId();
+            }
+        };
+    }
+
+    private Function<MailboxPath, MailboxId> getMailboxIdFromMailboxPath(final MailboxSession mailboxSession) {
+        return new Function<MailboxPath, MailboxId>() {
+            @Override
+            public MailboxId apply(MailboxPath input) {
+                try {
+                    return mailboxManager.getMailbox(input, mailboxSession).getId();
+                } catch (MailboxException e) {
+                    throw Throwables.propagate(e);
+                }
+            }
+        };
+    }
+
+    private MailboxQuery userMailboxes(MailboxSession mailboxSession) {
+        return MailboxQuery.builder()
+                .matchesAll()
+                .username(mailboxSession.getUser().getUserName())
+                .build();
+    }
+
+    private List<MessageResult> retrieveMailboxMessages(MailboxId mailboxId, List<MessageId> messages, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
+        ImmutableList.Builder<MessageResult> builder = ImmutableList.builder();
+        for (MessageId messageId: messages) {
+            Optional<MessageResult> maybeMessage = findMessageWithId(mailboxId, messageId, fetchGroup, mailboxSession);
+            if (maybeMessage.isPresent()) {
+                builder.add(maybeMessage.get());
+            }
+        }
+        return builder.build();
+    }
+
+    private void filterOnMailboxSession(List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxNotFoundException {
+        boolean isForbidden = FluentIterable.from(mailboxIds)
+            .firstMatch(findMailboxBelongsToAnotherSession(mailboxSession))
+            .isPresent();
+
+        if (isForbidden) {
+            throw new MailboxNotFoundException("Mailbox does not belong to session");
+        }
+    }
+
+    private Predicate<MailboxId> findMailboxBelongsToAnotherSession(final MailboxSession mailboxSession) {
+        return new Predicate<MailboxId>() {
+            @Override
+            public boolean apply(MailboxId input) {
+                try {
+                    MailboxPath currentMailbox = mailboxManager.getMailbox(input, mailboxSession).getMailboxPath();
+                    return !mailboxSession.getUser().isSameUser(currentMailbox.getUser());
+                } catch (MailboxException e) {
+                    return true;
+                }
+            }
+        };
     }
 
     private FluentIterable<MailboxId> currentMailboxes(List<MessageResult> messages) {
@@ -159,6 +200,23 @@ public class InMemoryMessageIdManager implements MessageIdManager {
                 return message.getMailboxId();
             }
         });
+    }
+
+    private Optional<MessageResult> findMessageWithId(MailboxId mailboxId, final MessageId messageId, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
+        return FluentIterable.from(retrieveAllMessages(mailboxId, fetchGroup, mailboxSession))
+            .filter(new Predicate<MessageResult>() {
+
+                @Override
+                public boolean apply(MessageResult messageResult) {
+                    return messageResult.getMessageId().equals(messageId);
+                }
+            })
+            .first();
+    }
+
+    private ImmutableList<MessageResult> retrieveAllMessages(MailboxId mailboxId, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
+        MessageManager messageManager = mailboxManager.getMailbox(mailboxId, mailboxSession);
+        return ImmutableList.copyOf(messageManager.getMessages(MessageRange.all(), fetchGroup, mailboxSession));
     }
 
 }
