@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.cassandra.cucumber;
 
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 import cucumber.api.CucumberOptions;
@@ -28,5 +29,6 @@ import cucumber.api.junit.Cucumber;
 @CucumberOptions(features="classpath:cucumber/MailboxModification.feature",
                 glue={"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber"},
                 strict = true)
+@Ignore("needs messageIdManager cassandra impl")
 public class CassandraSetMailboxesMethodCucumberTest {
 }
