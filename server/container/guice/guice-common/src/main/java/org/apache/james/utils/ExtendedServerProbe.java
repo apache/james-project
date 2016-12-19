@@ -27,12 +27,13 @@ import javax.mail.Flags;
 import org.apache.james.cli.probe.ServerProbe;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public interface ExtendedServerProbe extends ServerProbe {
 
-    void appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
+    ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
             throws BadCredentialsException, MailboxException;
 
     Mailbox getMailbox(String namespace, String user, String name);
