@@ -36,15 +36,15 @@ public class SwarmGenericContainer extends GenericContainer<SwarmGenericContaine
         super(dockerImageName);
     }
 
-    public GenericContainer<SwarmGenericContainer> withAffinityToContainer() {
+    public SwarmGenericContainer withAffinityToContainer() {
         String container = System.getenv(DOCKER_CONTAINER);
         if (Strings.isNullOrEmpty(container)) {
             LOGGER.warn("'DOCKER_CONTAINER' environment variable not found, dockering without affinity");
-            return this;
+            return self();
         }
         List<String> envVariables = getEnv();
         envVariables.add("affinity:container==" + container);
         setEnv(envVariables);
-        return this;
+        return self();
     }
 }
