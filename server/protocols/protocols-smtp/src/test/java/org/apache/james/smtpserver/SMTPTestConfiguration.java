@@ -20,12 +20,15 @@
 package org.apache.james.smtpserver;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.james.smtpserver.fastfail.*;
+import org.apache.james.smtpserver.fastfail.DNSRBLHandler;
+import org.apache.james.smtpserver.fastfail.MaxRcptHandler;
+import org.apache.james.smtpserver.fastfail.ResolvableEhloHeloHandler;
+import org.apache.james.smtpserver.fastfail.ReverseEqualsEhloHeloHandler;
+import org.apache.james.smtpserver.fastfail.ValidSenderDomainHandler;
 
 @SuppressWarnings("serial")
 public class SMTPTestConfiguration extends DefaultConfigurationBuilder {
 
-    private final int m_smtpListenerPort;
     private int m_maxMessageSizeKB = 0;
     private String m_authorizedAddresses = "127.0.0.0/8";
     private String m_authorizingMode = "false";
@@ -43,10 +46,6 @@ public class SMTPTestConfiguration extends DefaultConfigurationBuilder {
     private boolean m_useRBL = false;
     private boolean m_addressBracketsEnforcement = true;
     private boolean m_startTLS = false;
-
-    public SMTPTestConfiguration(int smtpListenerPort) {
-        m_smtpListenerPort = smtpListenerPort;
-    }
 
     public void setCheckAuthNetworks(boolean checkAuth) {
         m_checkAuthNetworks = checkAuth;
@@ -135,7 +134,7 @@ public class SMTPTestConfiguration extends DefaultConfigurationBuilder {
 
         addProperty("[@enabled]", true);
 
-        addProperty("bind", "127.0.0.1:" + m_smtpListenerPort);
+        addProperty("bind", "127.0.0.1:0");
         if (m_connectionLimit != null)
             addProperty("connectionLimit", "" + m_connectionLimit);
         if (m_connectionBacklog != null)
