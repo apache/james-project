@@ -22,8 +22,8 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import org.apache.james.mailbox.cassandra.mail.utils.MapMerger;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -42,13 +42,13 @@ public class AttachmentLoader {
     }
 
     public Collection<MessageAttachment> getAttachments(Set<CassandraMessageDAO.MessageAttachmentRepresentation> attachmentRepresentations) {
+        Map<AttachmentId, Attachment> attachmentsById = attachmentsById(attachmentRepresentations.stream()
+            .map(CassandraMessageDAO.MessageAttachmentRepresentation::getAttachmentId)
+            .collect(Guavate.toImmutableSet()));
 
-        Map<AttachmentId, CassandraMessageDAO.MessageAttachmentRepresentation> attachmentRepresentationsById = attachmentRepresentations.stream()
-                .collect(Guavate.toImmutableMap(CassandraMessageDAO.MessageAttachmentRepresentation::getAttachmentId, Function.identity()));
-
-        Map<AttachmentId, Attachment> attachmentsById = attachmentsById(attachmentRepresentationsById.keySet());
-
-        return MapMerger.merge(attachmentsById, attachmentRepresentationsById, this::constructMessageAttachment).values();
+        return attachmentRepresentations.stream()
+            .map(representation -> constructMessageAttachment(attachmentsById.get(representation.getAttachmentId()), representation))
+            .collect(Guavate.toImmutableSet());
     }
 
     private MessageAttachment constructMessageAttachment(Attachment attachment, CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation) {
