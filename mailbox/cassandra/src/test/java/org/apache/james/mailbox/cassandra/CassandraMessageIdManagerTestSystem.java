@@ -44,7 +44,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
-import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -54,12 +54,10 @@ import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 
@@ -101,39 +99,32 @@ public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSys
             new CassandraMessageId.Factory(),
             quotaManager,
             new DefaultQuotaRootResolver(mapperFactory));
-        SimpleMailbox mailbox1 = new SimpleMailbox(new MailboxPath("#private", "user", "INBOX"), UID_VALIDITY, CassandraId.timeBased());
-        SimpleMailbox mailbox2 = new SimpleMailbox(new MailboxPath("#private", "user", "OUTBOX"), UID_VALIDITY, CassandraId.timeBased());
-        SimpleMailbox mailbox3 = new SimpleMailbox(new MailboxPath("#private", "user", "SENT"), UID_VALIDITY, CassandraId.timeBased());
-        SimpleMailbox mailbox4 = new SimpleMailbox(new MailboxPath("#public", "otheruser", "INBOX"), UID_VALIDITY, CassandraId.timeBased());
-        MockMailboxSession mailboxSession = new MockMailboxSession("user");
-        MailboxMapper mailboxMapper = mapperFactory.getMailboxMapper(mailboxSession);
-        mailboxMapper.save(mailbox1);
-        mailboxMapper.save(mailbox2);
-        mailboxMapper.save(mailbox3);
-        mailboxMapper.save(mailbox4);
 
         CassandraMailboxManager cassandraMailboxManager = new CassandraMailboxManager(mapperFactory, mock(Authenticator.class), new NoMailboxPathLocker(), new MessageParser(), messageIdFactory);
         cassandraMailboxManager.init();
 
-        return new CassandraMessageIdManagerTestSystem(messageIdManager, mailboxSession, mailbox1, mailbox2, mailbox3, mailbox4,
-            messageIdFactory, mapperFactory, mailboxSession, cassandraMailboxManager);
+        return new CassandraMessageIdManagerTestSystem(messageIdManager, messageIdFactory, mapperFactory, cassandraMailboxManager);
     }
 
     private final CassandraMessageId.Factory messageIdFactory;
     private final CassandraMailboxSessionMapperFactory mapperFactory;
-    private final MailboxSession mailboxSession;
     private final CassandraMailboxManager cassandraMailboxManager;
 
-    public CassandraMessageIdManagerTestSystem(MessageIdManager messageIdManager, MailboxSession session, Mailbox mailbox1, Mailbox mailbox2, Mailbox mailbox3, Mailbox mailbox4, CassandraMessageId.Factory messageIdFactory, CassandraMailboxSessionMapperFactory mapperFactory, MailboxSession mailboxSession, CassandraMailboxManager cassandraMailboxManager) {
-        super(messageIdManager, session, mailbox1, mailbox2, mailbox3, mailbox4);
+    public CassandraMessageIdManagerTestSystem(MessageIdManager messageIdManager, CassandraMessageId.Factory messageIdFactory, CassandraMailboxSessionMapperFactory mapperFactory, CassandraMailboxManager cassandraMailboxManager) {
+        super(messageIdManager);
         this.messageIdFactory = messageIdFactory;
         this.mapperFactory = mapperFactory;
-        this.mailboxSession = mailboxSession;
         this.cassandraMailboxManager = cassandraMailboxManager;
     }
 
     @Override
-    public MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags) {
+    public Mailbox createMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+        cassandraMailboxManager.createMailbox(mailboxPath, session);
+        return mapperFactory.getMailboxMapper(session).findMailboxByPath(mailboxPath);
+    }
+
+    @Override
+    public MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags, MailboxSession mailboxSession) {
         try {
             CassandraMessageId messageId = messageIdFactory.generate();
             Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
@@ -150,7 +141,7 @@ public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSys
     }
 
     @Override
-    public void deleteMailbox(MailboxId mailboxId) {
+    public void deleteMailbox(MailboxId mailboxId, MailboxSession mailboxSession) {
         try {
             Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
             cassandraMailboxManager.deleteMailbox(new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName()), mailboxSession);

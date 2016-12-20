@@ -41,7 +41,6 @@ import org.apache.commons.io.input.TeeInputStream;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
@@ -456,8 +455,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      * @throws MailboxException
      */
     public boolean isWriteable(MailboxSession session) throws MailboxException {
-        return session.getType() == SessionType.System
-            || aclResolver.isReadWrite(myRights(session), getSharedPermanentFlags(session));
+        return aclResolver.isReadWrite(myRights(session), getSharedPermanentFlags(session));
     }
 
     /**

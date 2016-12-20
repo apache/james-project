@@ -36,6 +36,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.SubscriptionException;
+import org.apache.james.mailbox.manager.MailboxManagerFixture;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -70,15 +71,18 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
     private final SimpleMailbox mailbox2;
     private final SimpleMailbox mailbox3;
     private final SimpleMailbox mailbox4;
+
     private final List<MailboxMessage> messages = new ArrayList<MailboxMessage>();
     private final MailboxMapper mailboxMapper;
     private final MessageIdMapper messageIdMapper;
 
     public TestMailboxSessionMapperFactory() {
-        mailbox1 = new SimpleMailbox(new MailboxPath("#private", "user", "INBOX"), UID_VALIDITY, TestId.of(36));
-        mailbox2 = new SimpleMailbox(new MailboxPath("#private", "user", "OUTBOX"), UID_VALIDITY, TestId.of(46));
-        mailbox3 = new SimpleMailbox(new MailboxPath("#private", "user", "SENT"), UID_VALIDITY, TestId.of(56));
-        mailbox4 = new SimpleMailbox(new MailboxPath("#public", "otheruser", "INBOX"), UID_VALIDITY, TestId.of(66));
+
+
+        mailbox1 = new SimpleMailbox(MailboxManagerFixture.MAILBOX_PATH1, UID_VALIDITY, TestId.of(36));
+        mailbox2 = new SimpleMailbox(MailboxManagerFixture.MAILBOX_PATH2, UID_VALIDITY, TestId.of(46));
+        mailbox3 = new SimpleMailbox(MailboxManagerFixture.MAILBOX_PATH3, UID_VALIDITY, TestId.of(56));
+        mailbox4 = new SimpleMailbox(MailboxManagerFixture.MAILBOX_PATH4, UID_VALIDITY, TestId.of(66));
 
         mailboxMapper = new MailboxMapper() {
             @Override
@@ -94,7 +98,19 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
             @Override
             public Mailbox findMailboxByPath(MailboxPath mailboxName) throws MailboxException {
-                throw new NotImplementedException();
+                if (mailboxName.equals(MailboxManagerFixture.MAILBOX_PATH1)) {
+                    return mailbox1;
+                }
+                if (mailboxName.equals(MailboxManagerFixture.MAILBOX_PATH2)) {
+                    return mailbox2;
+                }
+                if (mailboxName.equals(MailboxManagerFixture.MAILBOX_PATH3)) {
+                    return mailbox3;
+                }
+                throw new IllegalArgumentException("Unknown mailbox : " + mailboxName + " must be one of "
+                    + MailboxManagerFixture.MAILBOX_PATH1 + " "
+                    + MailboxManagerFixture.MAILBOX_PATH2 + " "
+                    + MailboxManagerFixture.MAILBOX_PATH3);
             }
 
             @Override

@@ -30,10 +30,12 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -44,24 +46,29 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
 
     private static final MessageId FIRST_MESSAGE_ID = InMemoryMessageId.of(1);
     private static final long ONE_HUNDRED = 100;
+    private static final int UID_VALIDITY = 1024;
 
     private final MailboxManager mailboxManager;
-    private final MailboxSession mailboxSession;
     private Optional<MessageId> lastMessageIdUsed;
 
-    public InMemoryMessageIdManagerTestSystem(MailboxManager mailboxManager, MailboxSession mailboxSession, 
-            Mailbox mailbox1, Mailbox mailbox2, Mailbox mailbox3, Mailbox mailbox4) {
-        super(new InMemoryMessageIdManager(mailboxManager), mailboxSession, mailbox1, mailbox2, mailbox3, mailbox4);
+    public InMemoryMessageIdManagerTestSystem(MailboxManager mailboxManager) {
+        super(new InMemoryMessageIdManager(mailboxManager));
         this.mailboxManager = mailboxManager;
-        this.mailboxSession = mailboxSession;
         this.lastMessageIdUsed = Optional.absent();
     }
 
     @Override
-    public MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags) {
+    public Mailbox createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
+        mailboxManager.createMailbox(mailboxPath, mailboxSession);
+        MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
+        return new SimpleMailbox(mailboxPath, UID_VALIDITY, messageManager.getId());
+    }
+
+    @Override
+    public MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags, MailboxSession session) {
         try {
-            MessageManager messageManager = mailboxManager.getMailbox(mailboxId, mailboxSession);
-            MessageId messageId = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, flags)
+            MessageManager messageManager = mailboxManager.getMailbox(mailboxId, session);
+            MessageId messageId = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), session, false, flags)
                     .getMessageId();
             lastMessageIdUsed = Optional.of(messageId);
             return messageId;
@@ -76,18 +83,18 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
     }
 
     @Override
-    public void deleteMailbox(final MailboxId mailboxId) {
+    public void deleteMailbox(final MailboxId mailboxId, MailboxSession session) {
         try {
-            Optional<MailboxMetaData> mailbox = retrieveMailbox(mailboxId);
+            Optional<MailboxMetaData> mailbox = retrieveMailbox(mailboxId, session);
             if (mailbox.isPresent()) {
-                mailboxManager.deleteMailbox(mailbox.get().getPath(), mailboxSession);
+                mailboxManager.deleteMailbox(mailbox.get().getPath(), session);
             }
         } catch (MailboxException e) {
             Throwables.propagate(e);
         }
     }
 
-    private Optional<MailboxMetaData> retrieveMailbox(final MailboxId mailboxId) throws MailboxException {
+    private Optional<MailboxMetaData> retrieveMailbox(final MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
         MailboxQuery userMailboxesQuery = MailboxQuery.builder(mailboxSession).expression("*").build();
         return FluentIterable.from(mailboxManager.search(userMailboxesQuery, mailboxSession))
             .filter(new Predicate<MailboxMetaData>() {

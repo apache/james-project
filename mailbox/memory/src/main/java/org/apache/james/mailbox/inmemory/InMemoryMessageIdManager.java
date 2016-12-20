@@ -27,7 +27,6 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
@@ -202,16 +201,20 @@ public class InMemoryMessageIdManager implements MessageIdManager {
         });
     }
 
-    private Optional<MessageResult> findMessageWithId(MailboxId mailboxId, final MessageId messageId, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
+    private Optional<MessageResult> findMessageWithId(MailboxId mailboxId, MessageId messageId, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
         return FluentIterable.from(retrieveAllMessages(mailboxId, fetchGroup, mailboxSession))
-            .filter(new Predicate<MessageResult>() {
-
-                @Override
-                public boolean apply(MessageResult messageResult) {
-                    return messageResult.getMessageId().equals(messageId);
-                }
-            })
+            .filter(filterByMessageId(messageId))
             .first();
+    }
+
+    private Predicate<MessageResult> filterByMessageId(final MessageId messageId) {
+        return new Predicate<MessageResult>() {
+
+            @Override
+            public boolean apply(MessageResult messageResult) {
+                return messageResult.getMessageId().equals(messageId);
+            }
+        };
     }
 
     private ImmutableList<MessageResult> retrieveAllMessages(MailboxId mailboxId, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {

@@ -26,7 +26,6 @@ import org.apache.mailet.MailAddress;
 import com.google.common.base.Throwables;
 
 public class MailAddressFixture {
-
     public static final String JAMES_LOCAL = "localhost";
     public static final String JAMES_APACHE_ORG = "james.apache.org";
     public static final String JAMES2_APACHE_ORG = "james2.apache.org";

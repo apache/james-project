@@ -35,6 +35,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -42,26 +43,30 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import com.google.common.base.Throwables;
 
 public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem {
-    private static final MailboxSession EMPTY_MAILBOX_SESSION = new MockMailboxSession("user", SessionType.System);
+    private static final MailboxSession DEFAULT_MAILBOX_SESSION = new MockMailboxSession("user", SessionType.System);
     private static final long MOD_SEQ = 18;
     private static final ByteArrayInputStream ARRAY_INPUT_STREAM = new ByteArrayInputStream("".getBytes());
 
     private final MessageId.Factory messageIdFactory;
     private final TestMailboxSessionMapperFactory mapperFactory;
 
-    public StoreMessageIdManagerTestSystem(MessageIdManager messageIdManager, Mailbox mailbox1, Mailbox mailbox2, Mailbox mailbox3, Mailbox mailbox4,
-                                           MessageId.Factory messageIdFactory, TestMailboxSessionMapperFactory mapperFactory) {
-        super(messageIdManager, EMPTY_MAILBOX_SESSION, mailbox1, mailbox2, mailbox3, mailbox4);
+    public StoreMessageIdManagerTestSystem(MessageIdManager messageIdManager, MessageId.Factory messageIdFactory, TestMailboxSessionMapperFactory mapperFactory) {
+        super(messageIdManager);
 
         this.messageIdFactory = messageIdFactory;
         this.mapperFactory = mapperFactory;
     }
 
     @Override
-    public MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags) {
+    public Mailbox createMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException{
+        return mapperFactory.createMailboxMapper(session).findMailboxByPath(mailboxPath);
+    }
+
+    @Override
+    public MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags, MailboxSession session) {
         MessageId messageId = messageIdFactory.generate();
         try {
-            mapperFactory.createMessageIdMapper(EMPTY_MAILBOX_SESSION)
+            mapperFactory.createMessageIdMapper(DEFAULT_MAILBOX_SESSION)
                 .save(createMessage(mailboxId, flags, messageId, uid));
             return messageId;
         } catch (MailboxException e) {
@@ -70,7 +75,7 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
     }
 
     @Override
-    public void deleteMailbox(MailboxId mailboxId) {
+    public void deleteMailbox(MailboxId mailboxId, MailboxSession mailboxSession) {
         throw new NotImplementedException();
     }
 

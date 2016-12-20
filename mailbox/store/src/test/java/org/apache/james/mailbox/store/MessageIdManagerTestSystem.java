@@ -24,48 +24,25 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public abstract class MessageIdManagerTestSystem {
 
     private final MessageIdManager messageIdManager;
-    private final MailboxSession session;
-    private final Mailbox mailbox1;
-    private final Mailbox mailbox2;
-    private final Mailbox mailbox3;
-    private final Mailbox mailbox4;
 
-    public MessageIdManagerTestSystem(MessageIdManager messageIdManager, MailboxSession session, 
-            Mailbox mailbox1, Mailbox mailbox2, Mailbox mailbox3, Mailbox mailbox4) {
+    public MessageIdManagerTestSystem(MessageIdManager messageIdManager) {
         this.messageIdManager = messageIdManager;
-        this.session = session;
-        this.mailbox1 = mailbox1;
-        this.mailbox2 = mailbox2;
-        this.mailbox3 = mailbox3;
-        this.mailbox4 = mailbox4;
     }
 
     public MessageIdManager getMessageIdManager() {
         return messageIdManager;
     }
 
-    public Mailbox getMailbox1() {
-        return mailbox1;
-    }
-
-    public Mailbox getMailbox2() {
-        return mailbox2;
-    }
-
-    public Mailbox getMailbox3() {
-        return mailbox3;
-    }
-
-    public Mailbox getMailbox4() {
-        return mailbox4;
-    }
+    public abstract Mailbox createMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
     /**
      * Should take care of find returning the MailboxMessage
@@ -77,11 +54,11 @@ public abstract class MessageIdManagerTestSystem {
      * @param flags
      * @return the id of persisted message
      */
-    public abstract MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags);
+    public abstract MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags, MailboxSession session);
 
     public abstract MessageId createNotUsedMessageId();
 
-    public abstract void deleteMailbox(MailboxId mailboxId);
+    public abstract void deleteMailbox(MailboxId mailboxId, MailboxSession session);
 
     public abstract void clean();
 }

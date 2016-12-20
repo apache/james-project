@@ -31,7 +31,6 @@ import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
@@ -274,12 +273,12 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     private void allowOnMailboxSession(List<MailboxId> mailboxIds, MailboxSession mailboxSession, MailboxMapper mailboxMapper) throws MailboxNotFoundException {
-        boolean isForbidden = FluentIterable.from(mailboxIds)
+        Optional<MailboxId> mailboxForbidden = FluentIterable.from(mailboxIds)
             .firstMatch(isMailboxOfOtherUser(mailboxSession, mailboxMapper))
-            .isPresent();
+            .or(Optional.<MailboxId>absent());
 
-        if (isForbidden) {
-            throw new MailboxNotFoundException("Mailbox does not belong to session: ");
+        if (mailboxForbidden.isPresent()) {
+            throw new MailboxNotFoundException("Mailbox with Id " + mailboxForbidden.get() + " does not belong to session");
         }
     }
 
