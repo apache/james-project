@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.model;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -88,7 +87,7 @@ public class MessageAttachment {
     private final Optional<Cid> cid;
     private final boolean isInline;
 
-    @VisibleForTesting MessageAttachment(Attachment attachment, Optional<String> name, Optional<Cid> cid, boolean isInline) {
+    public MessageAttachment(Attachment attachment, Optional<String> name, Optional<Cid> cid, boolean isInline) {
         this.attachment = attachment;
         this.name = name;
         this.cid = cid;

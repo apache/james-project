@@ -321,7 +321,7 @@ public class CassandraMessageDAO {
         return headerContent;
     }
 
-    static class MessageAttachmentRepresentation {
+    public static class MessageAttachmentRepresentation {
 
         public static Builder builder() {
             return new Builder();
