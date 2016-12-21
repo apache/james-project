@@ -949,7 +949,7 @@
                 <artifactId>commons-collections4</artifactId>
                 <version>4.0</version>
             </dependency>
-	    <dependency>
+            <dependency>
                 <groupId>org.hamcrest</groupId>
                 <artifactId>java-hamcrest</artifactId>
                 <version>2.0.0.0</version>
@@ -1508,7 +1508,7 @@
             <dependency>
                 <groupId>com.jayway.awaitility</groupId>
                 <artifactId>awaitility</artifactId>
-                <version>1.6.3</version>
+                <version>1.6.5</version>
             </dependency>
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>

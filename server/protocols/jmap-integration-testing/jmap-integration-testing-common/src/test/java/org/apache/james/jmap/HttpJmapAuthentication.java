@@ -21,6 +21,7 @@ package org.apache.james.jmap;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.fluent.Request;
@@ -28,23 +29,40 @@ import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.hamcrest.core.IsAnything;
 
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
+import com.jayway.awaitility.core.ConditionFactory;
 import com.jayway.jsonpath.JsonPath;
 
 public class HttpJmapAuthentication {
 
+    private static final ConditionFactory CALMLY_AWAIT = Awaitility.with()
+            .pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .and().with()
+            .pollDelay(Duration.ONE_HUNDRED_MILLISECONDS)
+            .await();
+
     public static AccessToken authenticateJamesUser(URIBuilder uriBuilder, String username, String password) throws ClientProtocolException, IOException, URISyntaxException {
         String continuationToken = getContinuationToken(uriBuilder, username);
 
-        Response response = Request.Post(uriBuilder.setPath("/authentication").build())
+        Response response = CALMLY_AWAIT
+                .atMost(30, TimeUnit.SECONDS)
+                .ignoreExceptions()
+                .until(() -> postAuthenticate(uriBuilder, password, continuationToken), IsAnything.anything());
+
+        return AccessToken.fromString(
+                    JsonPath.parse(response.returnContent().asString())
+                    .read("accessToken"));
+    }
+
+    private static Response postAuthenticate(URIBuilder uriBuilder, String password, String continuationToken) throws ClientProtocolException, IOException, URISyntaxException {
+        return Request.Post(uriBuilder.setPath("/authentication").build())
                 .bodyString("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"" + password + "\"}", 
                         ContentType.APPLICATION_JSON)
                 .setHeader("Accept", ContentType.APPLICATION_JSON.getMimeType())
                 .execute();
-        
-        return AccessToken.fromString(
-                    JsonPath.parse(response.returnContent().asString())
-                    .read("accessToken"));
     }
 
     private static String getContinuationToken(URIBuilder uriBuilder, String username) throws ClientProtocolException, IOException, URISyntaxException {
@@ -56,4 +74,5 @@ public class HttpJmapAuthentication {
         return JsonPath.parse(response.returnContent().asString())
             .read("continuationToken");
     }
+
 }
