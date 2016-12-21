@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.protocols.pop3;
 
-import java.net.InetSocketAddress;
-
 import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3SClient;
 import org.apache.james.protocols.api.Encryption;
@@ -39,10 +37,10 @@ public abstract class AbstractPOP3SServerTest extends AbstractPOP3ServerTest {
     }
     
     @Override
-    protected ProtocolServer createServer(Protocol protocol, InetSocketAddress address) {
-        return createEncryptedServer(protocol, address,Encryption.createTls(BogusSslContextFactory.getServerContext()));
+    protected ProtocolServer createServer(Protocol protocol) {
+        return createEncryptedServer(protocol, Encryption.createTls(BogusSslContextFactory.getServerContext()));
     }
     
-    protected abstract ProtocolServer createEncryptedServer(Protocol protocol, InetSocketAddress address, Encryption enc);
+    protected abstract ProtocolServer createEncryptedServer(Protocol protocol, Encryption enc);
 
 }

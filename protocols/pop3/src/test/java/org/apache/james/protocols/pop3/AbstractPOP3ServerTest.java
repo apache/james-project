@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.pop3;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -35,7 +35,7 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.api.utils.MockLogger;
-import org.apache.james.protocols.api.utils.TestUtils;
+import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.pop3.core.AbstractApopCmdHandler;
 import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
@@ -53,7 +53,7 @@ public abstract class AbstractPOP3ServerTest {
         return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration(), new MockLogger());
     }
     
-    protected abstract ProtocolServer createServer(Protocol protocol, InetSocketAddress address);
+    protected abstract ProtocolServer createServer(Protocol protocol);
     
     protected POP3Client createClient() {
         return new POP3Client();
@@ -61,15 +61,14 @@ public abstract class AbstractPOP3ServerTest {
     
     @Test
     public void testInvalidAuth() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(new TestPassCmdHandler()), address);
+            server = createServer(createProtocol(new TestPassCmdHandler()));
             server.bind();
             
             POP3Client client =  createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             
             assertThat(client.login("invalid", "invalid")).isFalse();
             assertThat(client.logout()).isTrue();
@@ -81,22 +80,21 @@ public abstract class AbstractPOP3ServerTest {
         }
         
     }
-    
+
     @Test
     public void testEmptyInbox() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
             String identifier = "id";
             TestPassCmdHandler handler = new TestPassCmdHandler();
             
             handler.add("valid", new MockMailbox(identifier));
-            server = createServer(createProtocol(handler), address);
+            server = createServer(createProtocol(handler));
             server.bind();
             
             POP3Client client =  createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             
             assertThat(client.login("valid", "valid")).isTrue();
             POP3MessageInfo[] info = client.listMessages();
@@ -116,19 +114,18 @@ public abstract class AbstractPOP3ServerTest {
     
     @Test
     public void testInboxWithMessages() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
             String identifier = "id";
             TestPassCmdHandler handler = new TestPassCmdHandler();
             
             handler.add("valid", new MockMailbox(identifier, MESSAGE1, MESSAGE2));
-            server = createServer(createProtocol(handler), address);
+            server = createServer(createProtocol(handler));
             server.bind();
             
             POP3Client client =  createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             
             assertThat(client.login("valid", "valid")).isTrue();
             POP3MessageInfo[] info = client.listMessages();
@@ -173,19 +170,18 @@ public abstract class AbstractPOP3ServerTest {
     
     @Test
     public void testRetr() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
             String identifier = "id";
             TestPassCmdHandler factory = new TestPassCmdHandler();
             
             factory.add("valid", new MockMailbox(identifier, MESSAGE1, MESSAGE2));
-            server = createServer(createProtocol(factory), address);
+            server = createServer(createProtocol(factory));
             server.bind();
             
             POP3Client client =  createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             
             assertThat(client.login("valid", "valid")).isTrue();
             Reader reader = client.retrieveMessage(1);
@@ -216,19 +212,18 @@ public abstract class AbstractPOP3ServerTest {
     
     @Test
     public void testTop() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
             String identifier = "id";
             TestPassCmdHandler factory = new TestPassCmdHandler();
             
             factory.add("valid", new MockMailbox(identifier, MESSAGE1, MESSAGE2));
-            server = createServer(createProtocol(factory), address);
+            server = createServer(createProtocol(factory));
             server.bind();
             
             POP3Client client =  createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             
             assertThat(client.login("valid", "valid")).isTrue();
             Reader reader = client.retrieveMessageTop(1, 1000);
@@ -262,19 +257,18 @@ public abstract class AbstractPOP3ServerTest {
     
     @Test
     public void testDele() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
             String identifier = "id";
             TestPassCmdHandler factory = new TestPassCmdHandler();
             
             factory.add("valid", new MockMailbox(identifier, MESSAGE1, MESSAGE2));
-            server = createServer(createProtocol(factory), address);
+            server = createServer(createProtocol(factory));
             server.bind();
             
             POP3Client client =  createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             
             assertThat(client.login("valid", "valid")).isTrue();
             POP3MessageInfo[] info = client.listMessages();
@@ -297,7 +291,7 @@ public abstract class AbstractPOP3ServerTest {
             // logout so the messages get expunged
             assertThat(client.logout()).isTrue();
 
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
   
             assertThat(client.login("valid", "valid")).isTrue();
             info = client.listMessages();
@@ -315,19 +309,18 @@ public abstract class AbstractPOP3ServerTest {
     
     @Test
     public void testNoop() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
             String identifier = "id";
             TestPassCmdHandler factory = new TestPassCmdHandler();
             
             factory.add("valid", new MockMailbox(identifier));
-            server = createServer(createProtocol(factory), address);
+            server = createServer(createProtocol(factory));
             server.bind();
             
             POP3Client client =  createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             
             assertThat(client.login("valid", "valid")).isTrue();
             assertThat(client.noop()).isTrue();
@@ -343,19 +336,18 @@ public abstract class AbstractPOP3ServerTest {
     
     @Test
     public void testRset() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
             String identifier = "id";
             TestPassCmdHandler factory = new TestPassCmdHandler();
             
             factory.add("valid", new MockMailbox(identifier, MESSAGE1));
-            server = createServer(createProtocol(factory), address);
+            server = createServer(createProtocol(factory));
             server.bind();
             
             POP3Client client =  createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             
             assertThat(client.login("valid", "valid")).isTrue();
             assertThat(client.listMessages().length).isEqualTo(1);
@@ -378,19 +370,18 @@ public abstract class AbstractPOP3ServerTest {
     
     @Test
     public void testStat() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
             String identifier = "id";
             TestPassCmdHandler factory = new TestPassCmdHandler();
             
             factory.add("valid", new MockMailbox(identifier, MESSAGE1, MESSAGE2));
-            server = createServer(createProtocol(factory), address);
+            server = createServer(createProtocol(factory));
             server.bind();
             
             POP3Client client =  createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             
             assertThat(client.login("valid", "valid")).isTrue();
             POP3MessageInfo info = client.status();
@@ -407,20 +398,19 @@ public abstract class AbstractPOP3ServerTest {
     }
     @Test
     public void testDifferentStates() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
             String identifier = "id";
             TestPassCmdHandler factory = new TestPassCmdHandler();
             
             factory.add("valid", new MockMailbox(identifier, MESSAGE1, MESSAGE2));
-            server = createServer(createProtocol(factory), address);
+            server = createServer(createProtocol(factory));
             server.bind();
             
             POP3Client client =  createClient();
             
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertThat(client.listMessages()).isNull();
             assertThat(client.listUniqueIdentifiers()).isNull();
             assertThat(client.deleteMessage(1)).isFalse();
@@ -430,7 +420,7 @@ public abstract class AbstractPOP3ServerTest {
             assertThat(client.reset()).isFalse();
             client.logout();
             
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
             assertThat(client.login("valid", "valid")).isTrue();
             assertThat(client.listMessages()).isNotNull();
@@ -458,16 +448,15 @@ public abstract class AbstractPOP3ServerTest {
     
     @Test
     public void testAPop() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
             TestApopCmdHandler handler = new TestApopCmdHandler();
-            server = createServer(createProtocol(handler), address);
+            server = createServer(createProtocol(handler));
             server.bind();
             
             POP3Client client =  createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             String welcomeMessage = client.getReplyString();
             
             // check for valid syntax that include all info needed for APOP

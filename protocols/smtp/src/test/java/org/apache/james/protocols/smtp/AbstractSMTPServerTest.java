@@ -18,6 +18,10 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -39,7 +43,7 @@ import org.apache.james.protocols.api.handler.DisconnectHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.api.utils.MockLogger;
-import org.apache.james.protocols.api.utils.TestUtils;
+import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
@@ -48,7 +52,6 @@ import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 public abstract class AbstractSMTPServerTest {
     
@@ -61,15 +64,14 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testSimpleDelivery() throws Exception {
         TestMessageHook hook = new TestMessageHook();
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook), address);  
+            server = createServer(createProtocol(hook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
             client.helo("localhost");
@@ -109,16 +111,15 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testStartTlsNotSupported() throws Exception {
         TestMessageHook hook = new TestMessageHook();
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook), address);  
+            server = createServer(createProtocol(hook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
             client.sendCommand("STARTTLS");
@@ -142,16 +143,15 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testUnknownCommand() throws Exception {
         TestMessageHook hook = new TestMessageHook();
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook), address);  
+            server = createServer(createProtocol(hook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
             client.sendCommand("UNKNOWN");
@@ -175,16 +175,15 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testNoop() throws Exception {
         TestMessageHook hook = new TestMessageHook();
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook), address);  
+            server = createServer(createProtocol(hook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
             client.noop();
@@ -209,16 +208,15 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testMailWithoutBrackets() throws Exception {
         TestMessageHook hook = new TestMessageHook();
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-
         
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook), address);  
+            server = createServer(createProtocol(hook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
             client.helo("localhost");
@@ -252,16 +250,15 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testInvalidHelo() throws Exception {
         TestMessageHook hook = new TestMessageHook();
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook), address);  
+            server = createServer(createProtocol(hook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
             client.helo("");
@@ -286,16 +283,15 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testRcptWithoutBrackets() throws Exception {
         TestMessageHook hook = new TestMessageHook();
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook), address);  
+            server = createServer(createProtocol(hook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
             client.helo("localhost");
@@ -328,17 +324,17 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testInvalidNoBracketsEnformance() throws Exception {
         TestMessageHook hook = new TestMessageHook();
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
         
         ProtocolServer server = null;
         try {
             Protocol protocol = createProtocol(hook);
             ((SMTPConfigurationImpl) protocol.getConfiguration()).setUseAddressBracketsEnforcement(false);
-            server = createServer(protocol, address);  
+            server = createServer(protocol);
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
             client.helo("localhost");
@@ -371,16 +367,15 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testHeloEnforcement() throws Exception {
         TestMessageHook hook = new TestMessageHook();
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook), address);  
+            server = createServer(createProtocol(hook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
            
@@ -406,17 +401,17 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testHeloEnforcementDisabled() throws Exception {
         TestMessageHook hook = new TestMessageHook();
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
         
         ProtocolServer server = null;
         try {
             Protocol protocol = createProtocol(hook);
             ((SMTPConfigurationImpl) protocol.getConfiguration()).setHeloEhloEnforcement(false);
-            server = createServer(protocol, address);
+            server = createServer(protocol);
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
            
@@ -459,16 +454,14 @@ public abstract class AbstractSMTPServerTest {
             }
         };
         
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
-        
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook), address);  
+            server = createServer(createProtocol(hook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
            
@@ -508,16 +501,14 @@ public abstract class AbstractSMTPServerTest {
             }
         };
         
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
-        
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook), address);  
+            server = createServer(createProtocol(hook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
            
@@ -556,16 +547,14 @@ public abstract class AbstractSMTPServerTest {
             }
         };
         
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
-        
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook), address);  
+            server = createServer(createProtocol(hook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
            
@@ -607,16 +596,14 @@ public abstract class AbstractSMTPServerTest {
             }
         };
         
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
-        
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook), address);  
+            server = createServer(createProtocol(hook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
            
@@ -664,16 +651,14 @@ public abstract class AbstractSMTPServerTest {
 
         };
         
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
-        
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook), address);  
+            server = createServer(createProtocol(hook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
            
@@ -729,16 +714,14 @@ public abstract class AbstractSMTPServerTest {
 
         };
         
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
-        
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook), address);  
+            server = createServer(createProtocol(hook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
            
@@ -770,16 +753,14 @@ public abstract class AbstractSMTPServerTest {
     
     @Test
     public void testNullSender() throws Exception {
-
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(new ProtocolHandler[0]), address);
+            server = createServer(createProtocol(new ProtocolHandler[0]));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
            
@@ -828,15 +809,14 @@ public abstract class AbstractSMTPServerTest {
 
         };
         
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook, testHook), address);
+            server = createServer(createProtocol(hook, testHook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
            
@@ -892,15 +872,14 @@ public abstract class AbstractSMTPServerTest {
 
         };
         
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(hook, testHook), address);
+            server = createServer(createProtocol(hook, testHook));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
            
@@ -953,17 +932,15 @@ public abstract class AbstractSMTPServerTest {
             }
         };
         
-        
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
             
-            server = createServer(createProtocol(connectHandler), address);
+            server = createServer(createProtocol(connectHandler));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isNegativePermanent(client.getReplyCode()));
             
             client.disconnect();
@@ -997,16 +974,14 @@ public abstract class AbstractSMTPServerTest {
             }
         };
         
-        
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(connectHandler), address);
+            server = createServer(createProtocol(connectHandler));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isNegativeTransient(client.getReplyCode()));
             
             client.disconnect();
@@ -1041,16 +1016,14 @@ public abstract class AbstractSMTPServerTest {
             }
         };
         
-        
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(handler), address);  
+            server = createServer(createProtocol(handler));
             server.bind();
             
             SMTPClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
             
             client.disconnect();
@@ -1071,7 +1044,7 @@ public abstract class AbstractSMTPServerTest {
         return new SMTPClient();
     }
 
-    protected abstract ProtocolServer createServer(Protocol protocol, InetSocketAddress address);
+    protected abstract ProtocolServer createServer(Protocol protocol);
 
     
     protected Protocol createProtocol(ProtocolHandler... handlers) throws WiringException {

@@ -41,7 +41,7 @@ import org.apache.james.protocols.api.utils.BogusSSLSocketFactory;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 import org.apache.james.protocols.api.utils.MockLogger;
-import org.apache.james.protocols.api.utils.TestUtils;
+import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.smtp.AllButStartTlsDelimiterChannelHandler;
@@ -59,6 +59,9 @@ import com.sun.mail.smtp.SMTPTransport;
 
 public class NettyStartTlsSMTPServerTest {
 
+    private static final String LOCALHOST_IP = "127.0.0.1";
+    private static final int RANDOM_PORT = 0;
+
     private ProtocolServer server;
 
     @After
@@ -68,13 +71,13 @@ public class NettyStartTlsSMTPServerTest {
         }
     }
 
-    private ProtocolServer createServer(Protocol protocol, InetSocketAddress address, Encryption enc) {
+    private ProtocolServer createServer(Protocol protocol, Encryption enc) {
         NettyServer server = NettyServer.builder()
                 .protocol(protocol)
                 .secure(enc)
                 .frameHandler(new AllButStartTlsDelimiterChannelHandler(AbstractChannelPipelineFactory.MAX_LINE_LENGTH, false, Delimiters.lineDelimiter()))
                 .build();
-        server.setListenAddresses(address);
+        server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
         return server;
     }
 
@@ -95,12 +98,12 @@ public class NettyStartTlsSMTPServerTest {
 
     @Test
     public void connectShouldReturnTrueWhenConnecting() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), address, Encryption.createStartTls(BogusSslContextFactory.getServerContext()));  
+        ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));  
         server.bind();
 
         SMTPSClient client = createClient();
-        client.connect(address.getAddress().getHostAddress(), address.getPort());
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+        client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
         assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).isTrue();
 
         client.quit();
@@ -109,12 +112,12 @@ public class NettyStartTlsSMTPServerTest {
 
     @Test
     public void ehloShouldReturnTrueWhenSendingTheCommand() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), address, Encryption.createStartTls(BogusSslContextFactory.getServerContext()));  
+        ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));  
         server.bind();
 
         SMTPSClient client = createClient();
-        client.connect(address.getAddress().getHostAddress(), address.getPort());
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+        client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         client.sendCommand("EHLO localhost");
         assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).isTrue();
@@ -125,12 +128,12 @@ public class NettyStartTlsSMTPServerTest {
 
     @Test
     public void startTlsShouldBeAnnouncedWhenServerSupportsIt() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), address, Encryption.createStartTls(BogusSslContextFactory.getServerContext()));  
+        ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));  
         server.bind();
 
         SMTPSClient client = createClient();
-        client.connect(address.getAddress().getHostAddress(), address.getPort());
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+        client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
         client.sendCommand("EHLO localhost");
 
         assertThat(new StartTLSAssert(client)).isStartTLSAnnounced();
@@ -160,12 +163,12 @@ public class NettyStartTlsSMTPServerTest {
 
     @Test
     public void startTlsShouldReturnTrueWhenServerSupportsIt() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), address, Encryption.createStartTls(BogusSslContextFactory.getServerContext()));  
+        ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));  
         server.bind();
 
         SMTPSClient client = createClient();
-        client.connect(address.getAddress().getHostAddress(), address.getPort());
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+        client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
         client.sendCommand("EHLO localhost");
 
         boolean execTLS = client.execTLS();
@@ -177,12 +180,12 @@ public class NettyStartTlsSMTPServerTest {
 
     @Test
     public void startTlsShouldFailWhenFollowedByInjectedCommand() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), address, Encryption.createStartTls(BogusSslContextFactory.getServerContext()));  
+        ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));  
         server.bind();
 
         SMTPSClient client = createClient();
-        client.connect(address.getAddress().getHostAddress(), address.getPort());
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+        client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
         client.sendCommand("EHLO localhost");
 
         client.sendCommand("STARTTLS\r\nRSET\r\n");
@@ -192,14 +195,15 @@ public class NettyStartTlsSMTPServerTest {
     @Test
     public void startTlsShouldWorkWhenUsingJavamail() throws Exception {
         TestMessageHook hook = new TestMessageHook();
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
-        ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> of(hook)) , address, Encryption.createStartTls(BogusSslContextFactory.getServerContext()));  
+        ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> of(hook)) , Encryption.createStartTls(BogusSslContextFactory.getServerContext()));  
         server.bind();
+
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
 
         Properties mailProps = new Properties();
         mailProps.put("mail.smtp.from", "test@localhost");
-        mailProps.put("mail.smtp.host", address.getHostName());
-        mailProps.put("mail.smtp.port", address.getPort());
+        mailProps.put("mail.smtp.host", bindedAddress.getHostName());
+        mailProps.put("mail.smtp.port", bindedAddress.getPort());
         mailProps.put("mail.smtp.socketFactory.class", BogusSSLSocketFactory.class.getName());
         mailProps.put("mail.smtp.socketFactory.fallback", "false");
         mailProps.put("mail.smtp.starttls.enable", "true");
@@ -215,7 +219,7 @@ public class NettyStartTlsSMTPServerTest {
 
         SMTPTransport transport = (SMTPTransport) mailSession.getTransport("smtps");
 
-        transport.connect(new Socket(address.getHostName(), address.getPort()));
+        transport.connect(new Socket(bindedAddress.getHostName(), bindedAddress.getPort()));
         transport.sendMessage(message, rcpts);
 
         assertThat(hook.getQueued()).hasSize(1);

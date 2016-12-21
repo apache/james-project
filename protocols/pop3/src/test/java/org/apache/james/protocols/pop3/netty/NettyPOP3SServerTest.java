@@ -28,13 +28,16 @@ import org.apache.james.protocols.pop3.AbstractPOP3SServerTest;
 
 public class NettyPOP3SServerTest extends AbstractPOP3SServerTest {
 
+    private static final String LOCALHOST_IP = "127.0.0.1";
+    private static final int RANDOM_PORT = 0;
+
     @Override
-    protected ProtocolServer createEncryptedServer(Protocol protocol, InetSocketAddress address, Encryption enc) {
+    protected ProtocolServer createEncryptedServer(Protocol protocol, Encryption enc) {
         NettyServer server = NettyServer.builder()
                 .protocol(protocol)
                 .secure(enc)
                 .build();
-        server.setListenAddresses(address);
+        server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
         return server;
     }
 

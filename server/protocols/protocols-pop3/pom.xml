@@ -47,6 +47,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-api</artifactId>
+            <scope>test</scope>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james.protocols</groupId>
             <artifactId>protocols-pop3</artifactId>
         </dependency>
         <dependency>

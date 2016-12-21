@@ -11,13 +11,16 @@ import org.apache.james.protocols.netty.NettyServer;
 
 public class NettyLMTPSServerTest extends AbstractLMTPSServerTest{
 
+    private static final String LOCALHOST_IP = "127.0.0.1";
+    private static final int RANDOM_PORT = 0;
+
     @Override
-    protected ProtocolServer createServer(Protocol protocol, InetSocketAddress address) {
+    protected ProtocolServer createServer(Protocol protocol) {
         NettyServer server =  NettyServer.builder()
                 .protocol(protocol)
                 .secure(Encryption.createTls(BogusSslContextFactory.getServerContext()))
                 .build();
-        server.setListenAddresses(address);
+        server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
         return server;
     }
     

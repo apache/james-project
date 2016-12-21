@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp;
 
-import java.net.InetSocketAddress;
-
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPSClient;
 import org.apache.james.protocols.api.Encryption;
@@ -27,7 +25,6 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
-import org.apache.james.protocols.smtp.AbstractSMTPServerTest;
 
 
 public abstract class AbstractSMTPSServerTest extends AbstractSMTPServerTest{
@@ -42,9 +39,9 @@ public abstract class AbstractSMTPSServerTest extends AbstractSMTPServerTest{
 
     
     @Override
-    protected ProtocolServer createServer(Protocol protocol, InetSocketAddress address) {
-        return createEncryptedServer(protocol, address,Encryption.createTls(BogusSslContextFactory.getServerContext()));
+    protected ProtocolServer createServer(Protocol protocol) {
+        return createEncryptedServer(protocol, Encryption.createTls(BogusSslContextFactory.getServerContext()));
     }
     
-    protected abstract ProtocolServer createEncryptedServer(Protocol protocol, InetSocketAddress address, Encryption enc);
+    protected abstract ProtocolServer createEncryptedServer(Protocol protocol, Encryption enc);
 }

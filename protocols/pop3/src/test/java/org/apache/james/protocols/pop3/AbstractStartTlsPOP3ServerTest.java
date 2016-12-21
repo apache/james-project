@@ -32,13 +32,16 @@ import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 import org.apache.james.protocols.api.utils.MockLogger;
-import org.apache.james.protocols.api.utils.TestUtils;
+import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
 import org.apache.james.protocols.pop3.utils.MockMailbox;
 import org.apache.james.protocols.pop3.utils.TestPassCmdHandler;
 import org.junit.Test;
 
 public abstract class AbstractStartTlsPOP3ServerTest {
+
+    private static final String LOCALHOST_IP = "127.0.0.1";
+    private static final int RANDOM_PORT = 0;
 
     private POP3Protocol createProtocol(AbstractPassCmdHandler handler) throws WiringException {
         return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration(), new MockLogger());
@@ -55,7 +58,7 @@ public abstract class AbstractStartTlsPOP3ServerTest {
     
     @Test
     public void testStartTls() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1", TestUtils.getFreePort());
+        InetSocketAddress address = new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT);
         
         ProtocolServer server = null;
         try {
@@ -67,7 +70,8 @@ public abstract class AbstractStartTlsPOP3ServerTest {
             server.bind();
             
             POP3SClient client = createClient();
-            client.connect(address.getAddress().getHostAddress(), address.getPort());
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             
             // TODO: Make use of client.capa() once possible
             //       See NET-438
@@ -97,5 +101,4 @@ public abstract class AbstractStartTlsPOP3ServerTest {
         }
         
     }
-
 }

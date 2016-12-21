@@ -30,6 +30,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -53,7 +54,7 @@ import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.mock.MockMailRepositoryStore;
 import org.apache.james.metrics.api.Metric;
-import org.apache.james.protocols.lib.PortUtil;
+import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -166,8 +167,6 @@ public class SMTPServerTest {
 
     private static final Logger log = LoggerFactory.getLogger(SMTPServerTest.class.getName());
 
-    protected final int smtpListenerPort;
-    
     protected SMTPTestConfiguration smtpConfiguration;
     protected final InMemoryUsersRepository usersRepository = new InMemoryUsersRepository();
     protected AlterableDNSServer dnsServer;
@@ -180,16 +179,12 @@ public class SMTPServerTest {
 
     private SMTPServer smtpServer;
 
-    public SMTPServerTest() {
-        smtpListenerPort = PortUtil.getNonPrivilegedPort();
-    }
-
     @Before
     public void setUp() throws Exception {
         setUpFakeLoader();
         // slf4j can't set programmatically any log level. It's just a facade
         // log.setLevel(SimpleLog.LOG_LEVEL_ALL);
-        smtpConfiguration = new SMTPTestConfiguration(smtpListenerPort);
+        smtpConfiguration = new SMTPTestConfiguration();
         setUpSMTPServer();
     }
 
@@ -332,7 +327,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < AbstractChannelPipelineFactory.MAX_LINE_LENGTH; i++) {
@@ -359,14 +355,15 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
         SMTPClient smtpProtocol2 = new SMTPClient();
-        smtpProtocol2.connect("127.0.0.1", smtpListenerPort);
+        smtpProtocol2.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         SMTPClient smtpProtocol3 = new SMTPClient();
 
         try {
-            smtpProtocol3.connect("127.0.0.1", smtpListenerPort);
+            smtpProtocol3.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
             Thread.sleep(3000);
             fail("Shold disconnect connection 3");
         } catch (Exception e) {
@@ -377,7 +374,7 @@ public class SMTPServerTest {
         smtpProtocol2.quit();
         smtpProtocol2.disconnect();
 
-        smtpProtocol3.connect("127.0.0.1", smtpListenerPort);
+        smtpProtocol3.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
         Thread.sleep(3000);
 
     }
@@ -425,7 +422,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         // no message there, yet
         assertThat(queue.getLastMail())
@@ -472,7 +470,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         // no message there, yet
         assertThat(queue.getLastMail())
@@ -505,7 +504,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         // no message there, yet
         assertThat(queue.getLastMail())
@@ -525,7 +525,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         // no message there, yet
         assertThat(queue.getLastMail())
@@ -541,7 +542,8 @@ public class SMTPServerTest {
 
     protected SMTPClient newSMTPClient() throws IOException {
         SMTPClient smtp = new SMTPClient();
-        smtp.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtp.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
         if (log.isDebugEnabled()) {
             smtp.addProtocolCommandListener(new ProtocolCommandListener() {
 
@@ -615,7 +617,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         // no message there, yet
         assertThat(queue.getLastMail())
@@ -644,9 +647,10 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol1 = new SMTPClient();
-        smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol1.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
         SMTPClient smtpProtocol2 = new SMTPClient();
-        smtpProtocol2.connect("127.0.0.1", smtpListenerPort);
+        smtpProtocol2.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         assertThat(smtpProtocol1.isConnected())
             .as("first connection taken")
@@ -691,7 +695,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol1 = new SMTPClient();
-        smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol1.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         assertThat(smtpProtocol1.isConnected())
             .as("first connection taken")
@@ -735,7 +740,8 @@ public class SMTPServerTest {
 
     private void doTestHeloEhloResolv(String heloCommand) throws IOException {
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         assertThat(smtpProtocol.isConnected())
             .as("first connection taken")
@@ -780,7 +786,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol1 = new SMTPClient();
-        smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol1.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol1.helo("abgsfe3rsf.de");
         // helo should not be checked. so this should give a 250 code
@@ -805,7 +812,8 @@ public class SMTPServerTest {
             init(smtpConfiguration);
 
             SMTPClient smtpProtocol1 = new SMTPClient();
-            smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+            smtpProtocol1.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
             assertThat(smtpProtocol1.isConnected())
                 .as("first connection taken")
@@ -853,7 +861,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol1 = new SMTPClient();
-        smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol1.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         assertThat(smtpProtocol1.isConnected())
             .as("first connection taken")
@@ -886,7 +895,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol1 = new SMTPClient();
-        smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol1.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol1.helo(InetAddress.getLocalHost().toString());
 
@@ -903,7 +913,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol1 = new SMTPClient();
-        smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol1.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         assertThat(smtpProtocol1.isConnected())
             .as("first connection taken")
@@ -932,7 +943,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol1 = new SMTPClient();
-        smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol1.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         assertThat(smtpProtocol1.isConnected())
             .as("first connection taken")
@@ -965,7 +977,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol1 = new SMTPClient();
-        smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol1.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         assertThat(smtpProtocol1.isConnected())
             .as("first connection taken")
@@ -1010,7 +1023,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol1 = new SMTPClient();
-        smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol1.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol1.helo(InetAddress.getLocalHost().toString());
 
@@ -1040,7 +1054,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol1 = new SMTPClient();
-        smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol1.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol1.sendCommand("ehlo", "abgsfe3rsf.de");
         // ehlo should not be checked. so this should give a 250 code
@@ -1076,7 +1091,8 @@ public class SMTPServerTest {
             init(smtpConfiguration);
 
             SMTPClient smtpProtocol1 = new SMTPClient();
-            smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+            smtpProtocol1.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
             assertThat(smtpProtocol1.isConnected())
                 .as("first connection taken")
@@ -1121,7 +1137,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol1 = new SMTPClient();
-        smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol1.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         assertThat(smtpProtocol1.isConnected())
             .as("first connection taken")
@@ -1151,7 +1168,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol1 = new SMTPClient();
-        smtpProtocol1.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol1.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         assertThat(smtpProtocol1.isConnected())
             .as("first connection taken")
@@ -1176,7 +1194,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
 
@@ -1204,7 +1223,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
         String[] capabilityRes = smtpProtocol.getReplyStrings();
@@ -1284,7 +1304,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol.sendCommand("ehlo " + InetAddress.getLocalHost());
 
@@ -1312,7 +1333,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol.sendCommand("ehlo " + InetAddress.getLocalHost());
 
@@ -1338,7 +1360,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol.sendCommand("ehlo " + InetAddress.getLocalHost());
 
@@ -1362,7 +1385,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol.sendCommand("ehlo " + InetAddress.getLocalHost());
 
@@ -1380,7 +1404,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol.sendCommand("ehlo " + InetAddress.getLocalHost());
 
@@ -1400,7 +1425,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol.sendCommand("ehlo " + InetAddress.getLocalHost());
 
@@ -1439,7 +1465,8 @@ public class SMTPServerTest {
         init(smtpConfiguration);
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol.sendCommand("ehlo " + InetAddress.getLocalHost());
 
@@ -1481,7 +1508,8 @@ public class SMTPServerTest {
         dnsServer.setLocalhostByName(InetAddress.getByName("127.0.0.1"));
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
         String[] capabilityRes = smtpProtocol.getReplyStrings();
@@ -1534,7 +1562,8 @@ public class SMTPServerTest {
         dnsServer.setLocalhostByName(InetAddress.getByName("127.0.0.1"));
 
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
 
@@ -1562,7 +1591,8 @@ public class SMTPServerTest {
         smtpConfiguration.setAddressBracketsEnforcement(false);
         init(smtpConfiguration);
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
 
@@ -1578,7 +1608,7 @@ public class SMTPServerTest {
 
         smtpProtocol.quit();
 
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
 
@@ -1599,7 +1629,8 @@ public class SMTPServerTest {
     public void testAddressBracketsEnforcementEnabled() throws Exception {
         init(smtpConfiguration);
         SMTPClient smtpProtocol = new SMTPClient();
-        smtpProtocol.connect("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
 
@@ -1629,7 +1660,8 @@ public class SMTPServerTest {
     public void testPipelining() throws Exception {
         StringBuilder buf = new StringBuilder();
         init(smtpConfiguration);
-        Socket client = new Socket("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        Socket client = new Socket(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         buf.append("HELO TEST");
         buf.append("\r\n");
@@ -1686,7 +1718,8 @@ public class SMTPServerTest {
         StringBuilder buf = new StringBuilder();
         smtpConfiguration.setAuthorizedAddresses("");
         init(smtpConfiguration);
-        Socket client = new Socket("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        Socket client = new Socket(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         buf.append("HELO TEST");
         buf.append("\r\n");
@@ -1744,7 +1777,8 @@ public class SMTPServerTest {
         StringBuilder buf = new StringBuilder();
         smtpConfiguration.setAuthorizedAddresses("");
         init(smtpConfiguration);
-        Socket client = new Socket("127.0.0.1", smtpListenerPort);
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        Socket client = new Socket(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         buf.append("HELO TEST");
         buf.append("\r\n");

@@ -16,21 +16,26 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.protocols.api.utils;
 
-package org.apache.james.pop3server;
+import java.net.InetSocketAddress;
+import java.util.List;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.james.pop3server.core.CoreCmdHandlerLoader;
+import org.apache.james.protocols.api.ProtocolServer;
 
-@SuppressWarnings("serial")
-public class POP3TestConfiguration extends DefaultConfigurationBuilder {
+import com.google.common.base.Preconditions;
 
-    public void init() {
-        addProperty("[@enabled]", true);
-        addProperty("bind", "127.0.0.1:0");
-        addProperty("helloName", "myMailServer");
-        addProperty("connectiontimeout", "360000");
-        addProperty("handlerchain.[@coreHandlersPackage]", CoreCmdHandlerLoader.class.getName());
+public class ProtocolServerUtils {
+
+    private final ProtocolServer server;
+
+    public ProtocolServerUtils(ProtocolServer server) {
+        this.server = server;
     }
 
+    public InetSocketAddress retrieveBindedAddress() {
+        List<InetSocketAddress> listenAddresses = server.getListenAddresses();
+        Preconditions.checkState(listenAddresses.size() == 1, "Unexpected number of binded addresses");
+        return listenAddresses.get(0);
+    }
 }
