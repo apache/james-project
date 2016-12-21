@@ -36,6 +36,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -301,12 +302,12 @@ public class GuiceServerProbe implements ExtendedServerProbe, GuiceProbe {
     }
 
     @Override
-    public void appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
+    public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
             throws MailboxException {
         
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username, LOGGER);
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-        messageManager.appendMessage(message, internalDate, mailboxSession, isRecent, flags);
+        return messageManager.appendMessage(message, internalDate, mailboxSession, isRecent, flags);
     }
 
     @Override

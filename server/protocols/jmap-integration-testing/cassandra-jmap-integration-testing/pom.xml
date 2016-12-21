@@ -150,6 +150,12 @@
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
+                    <artifactId>apache-james-mailbox-api</artifactId>
+                    <type>test-jar</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-mailbox-elasticsearch</artifactId>
                     <type>test-jar</type>
                     <scope>test</scope>

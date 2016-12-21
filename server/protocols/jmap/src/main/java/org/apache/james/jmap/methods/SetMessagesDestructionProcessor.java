@@ -19,37 +19,39 @@
 
 package org.apache.james.jmap.methods;
 
+import java.util.List;
 import java.util.function.Function;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
 
 import org.apache.james.jmap.exceptions.MessageNotFoundException;
-import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
-import org.apache.james.mailbox.model.MessageResultIterator;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMessagesCreationProcessor.class);
 
-    private final MailboxManager mailboxManager;
+    private final MessageIdManager messageIdManager;
 
     @Inject
     @VisibleForTesting
-    SetMessagesDestructionProcessor(MailboxManager mailboxManager) {
-        this.mailboxManager = mailboxManager;
+    SetMessagesDestructionProcessor(MessageIdManager messageIdManager) {
+        this.messageIdManager = messageIdManager;
     }
 
     @Override
@@ -63,9 +65,8 @@ public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
     private Function<? super MessageId, SetMessagesResponse> delete(MailboxSession mailboxSession) {
         return (messageId) -> {
             try {
-                MessageManager messageManager = mailboxManager.getMailbox(messageId.getMailboxPath(), mailboxSession);
-                checkThatMessageExists(messageManager, messageId, mailboxSession);
-                removeMessage(messageManager, messageId, mailboxSession);
+                List<MailboxId> mailboxes = listContainingMailboxes(messageId, mailboxSession);
+                messageIdManager.delete(messageId, mailboxes, mailboxSession);
                 return SetMessagesResponse.builder().destroyed(messageId).build();
             } catch (MessageNotFoundException e) {
                 return SetMessagesResponse.builder().notDestroyed(messageId,
@@ -86,15 +87,13 @@ public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
         };
     }
 
-    private void checkThatMessageExists(MessageManager messageManager, MessageId messageId, MailboxSession mailboxSession) throws MailboxException, MessageNotFoundException {
-        MessageResultIterator messages = messageManager.getMessages(messageId.getUidAsRange(), FetchGroupImpl.MINIMAL, mailboxSession);
-        if (!messages.hasNext()) {
+    private List<MailboxId> listContainingMailboxes(MessageId messageId, MailboxSession mailboxSession) throws MailboxException, MessageNotFoundException {
+        List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, mailboxSession);
+        if (messages.isEmpty()) {
             throw new MessageNotFoundException();
         }
-    }
-
-    private void removeMessage(MessageManager messageManager, MessageId messageId, MailboxSession mailboxSession) throws MailboxException {
-        messageManager.setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.ADD, messageId.getUidAsRange(), mailboxSession);
-        messageManager.expunge(messageId.getUidAsRange(), mailboxSession);
+        return messages.stream()
+                .map(MessageResult::getMailboxId)
+                .collect(Guavate.toImmutableList());
     }
 }

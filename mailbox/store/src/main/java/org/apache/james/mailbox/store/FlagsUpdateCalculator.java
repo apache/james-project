@@ -33,8 +33,8 @@ public class FlagsUpdateCalculator {
         this.mode = mode;
     }
 
-    public Flags buildNewFlags(Flags flags) {
-        Flags updatedFlags = new Flags(flags);
+    public Flags buildNewFlags(Flags oldFlags) {
+        Flags updatedFlags = new Flags(oldFlags);
         switch (mode) {
         case REPLACE:
             return new Flags(providedFlags);

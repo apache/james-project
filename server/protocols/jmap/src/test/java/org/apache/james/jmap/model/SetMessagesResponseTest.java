@@ -26,6 +26,8 @@ import java.time.ZonedDateTime;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -56,7 +58,7 @@ public class SetMessagesResponseTest {
         ZonedDateTime currentDate = ZonedDateTime.now();
         ImmutableMap<CreationMessageId, Message> created = ImmutableMap.of(CreationMessageId.of("user|created|1"),
             Message.builder()
-                .id(MessageId.of("user|created|1"))
+                .id(TestMessageId.of(1))
                 .blobId(BlobId.of("blobId"))
                 .threadId("threadId")
                 .mailboxIds(ImmutableList.of(InMemoryId.of(123)))
@@ -66,11 +68,11 @@ public class SetMessagesResponseTest {
                 .date(currentDate)
                 .preview("preview")
                 .build());
-        ImmutableList<MessageId> updated = ImmutableList.of(MessageId.of("user|updated|1"));
-        ImmutableList<MessageId> destroyed = ImmutableList.of(MessageId.of("user|destroyed|1"));
+        ImmutableList<MessageId> updated = ImmutableList.of(TestMessageId.of(2));
+        ImmutableList<MessageId> destroyed = ImmutableList.of(TestMessageId.of(3));
         ImmutableMap<CreationMessageId, SetError> notCreated = ImmutableMap.of(CreationMessageId.of("dead-beef-defec8"), SetError.builder().type("created").build());
-        ImmutableMap<MessageId, SetError> notUpdated = ImmutableMap.of(MessageId.of("user|update|2"), SetError.builder().type("updated").build());
-        ImmutableMap<MessageId, SetError> notDestroyed  = ImmutableMap.of(MessageId.of("user|destroyed|3"), SetError.builder().type("destroyed").build());
+        ImmutableMap<MessageId, SetError> notUpdated = ImmutableMap.of(TestMessageId.of(4), SetError.builder().type("updated").build());
+        ImmutableMap<MessageId, SetError> notDestroyed  = ImmutableMap.of(TestMessageId.of(5), SetError.builder().type("destroyed").build());
         SetMessagesResponse expected = new SetMessagesResponse(null, null, null, created, updated, destroyed, notCreated, notUpdated, notDestroyed);
 
         SetMessagesResponse setMessagesResponse = SetMessagesResponse.builder()
@@ -90,12 +92,12 @@ public class SetMessagesResponseTest {
         // Given
         SetMessagesResponse.Builder emptyBuilder = SetMessagesResponse.builder();
         SetMessagesResponse testee = SetMessagesResponse.builder()
-                .created(buildMessage(CreationMessageId.of("user|inbox|1")))
-                .updated(ImmutableList.of(MessageId.of("user|inbox|2")))
-                .destroyed(ImmutableList.of(MessageId.of("user|inbox|3")))
+                .created(buildMessage(CreationMessageId.of("user|inbox|1"), TestMessageId.of(1)))
+                .updated(ImmutableList.of(TestMessageId.of(2)))
+                .destroyed(ImmutableList.of(TestMessageId.of(3)))
                 .notCreated(ImmutableMap.of(CreationMessageId.of("dead-beef-defec8"), SetError.builder().type("type").build()))
-                .notUpdated(ImmutableMap.of(MessageId.of("user|inbox|5"), SetError.builder().type("type").build()))
-                .notDestroyed(ImmutableMap.of(MessageId.of("user|inbox|6"), SetError.builder().type("type").build()))
+                .notUpdated(ImmutableMap.of(TestMessageId.of(5), SetError.builder().type("type").build()))
+                .notDestroyed(ImmutableMap.of(TestMessageId.of(6), SetError.builder().type("type").build()))
                 .build();
 
         // When
@@ -104,9 +106,9 @@ public class SetMessagesResponseTest {
         assertThat(emptyBuilder.build()).isEqualToComparingFieldByField(testee);
     }
 
-    private ImmutableMap<CreationMessageId, Message> buildMessage(CreationMessageId messageId) {
-        return ImmutableMap.of(messageId, Message.builder()
-                .id(MessageId.of(messageId.getId()))
+    private ImmutableMap<CreationMessageId, Message> buildMessage(CreationMessageId creationMessageId, MessageId messageId) {
+        return ImmutableMap.of(creationMessageId, Message.builder()
+                .id(messageId)
                 .blobId(BlobId.of("blobId"))
                 .threadId("threadId")
                 .mailboxIds(ImmutableList.of())
@@ -121,10 +123,10 @@ public class SetMessagesResponseTest {
     @Test
     public void mergeIntoShouldMergeUpdatedLists() {
         // Given
-        MessageId buildersUpdatedMessageId = MessageId.of("user|inbox|1");
+        MessageId buildersUpdatedMessageId = TestMessageId.of(1);
         SetMessagesResponse.Builder nonEmptyBuilder = SetMessagesResponse.builder()
                 .updated(ImmutableList.of(buildersUpdatedMessageId));
-        MessageId updatedMessageId = MessageId.of("user|inbox|2");
+        MessageId updatedMessageId = TestMessageId.of(2);
         SetMessagesResponse testee = SetMessagesResponse.builder()
                 .updated(ImmutableList.of(updatedMessageId))
                 .build();
@@ -141,10 +143,10 @@ public class SetMessagesResponseTest {
         // Given
         CreationMessageId buildersCreatedMessageId = CreationMessageId.of("user|inbox|1");
         SetMessagesResponse.Builder nonEmptyBuilder = SetMessagesResponse.builder()
-                .created(buildMessage(buildersCreatedMessageId));
+                .created(buildMessage(buildersCreatedMessageId, TestMessageId.of(1)));
         CreationMessageId createdMessageId = CreationMessageId.of("user|inbox|2");
         SetMessagesResponse testee = SetMessagesResponse.builder()
-                .created(buildMessage(createdMessageId))
+                .created(buildMessage(createdMessageId, TestMessageId.of(2)))
                 .build();
         // When
         testee.mergeInto(nonEmptyBuilder);
@@ -157,10 +159,10 @@ public class SetMessagesResponseTest {
     @Test
     public void mergeIntoShouldMergeDestroyedLists() {
         // Given
-        MessageId buildersDestroyedMessageId = MessageId.of("user|inbox|1");
+        MessageId buildersDestroyedMessageId = TestMessageId.of(1);
         SetMessagesResponse.Builder nonEmptyBuilder = SetMessagesResponse.builder()
                 .destroyed(ImmutableList.of(buildersDestroyedMessageId));
-        MessageId destroyedMessageId = MessageId.of("user|inbox|2");
+        MessageId destroyedMessageId = TestMessageId.of(2);
         SetMessagesResponse testee = SetMessagesResponse.builder()
                 .destroyed(ImmutableList.of(destroyedMessageId))
                 .build();

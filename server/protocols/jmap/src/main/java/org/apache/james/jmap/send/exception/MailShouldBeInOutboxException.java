@@ -18,13 +18,13 @@
  ****************************************************************/
 package org.apache.james.jmap.send.exception;
 
-import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 
 public class MailShouldBeInOutboxException extends MailQueueException {
 
-    public MailShouldBeInOutboxException(MailboxPath mailboxPath) {
-        super("Mail to be sent should be in OUTBOX but is in " + mailboxPath.getName());
+    public MailShouldBeInOutboxException(MessageId messageId) {
+        super("Message with Id " + messageId + " can't be found in outbox");
     }
 
 }

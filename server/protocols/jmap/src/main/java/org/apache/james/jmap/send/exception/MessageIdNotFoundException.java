@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.send.exception;
 
-import org.apache.james.jmap.model.MessageId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 
 public class MessageIdNotFoundException extends MailQueueException {

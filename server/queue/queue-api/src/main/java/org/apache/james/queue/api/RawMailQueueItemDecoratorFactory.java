@@ -16,22 +16,15 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.queue.api;
 
-package org.apache.james.modules.server;
+import org.apache.james.queue.api.MailQueue.MailQueueItem;
 
-import org.apache.james.jmap.send.PostDequeueDecoratorFactory;
-import org.apache.james.queue.api.MailQueueFactory;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-
-public class MemoryMailQueueModule extends AbstractModule {
+public class RawMailQueueItemDecoratorFactory implements MailQueueItemDecoratorFactory {
 
     @Override
-    protected void configure() {
-        bind(MemoryMailQueueFactory.class).in(Scopes.SINGLETON);
-        bind(PostDequeueDecoratorFactory.class).in(Scopes.SINGLETON);
-
-        bind(MailQueueFactory.class).to(MemoryMailQueueFactory.class);
+    public MailQueueItemDecorator decorate(MailQueueItem mailQueueItem) {
+        return new RawMailQueueItem(mailQueueItem);
     }
+
 }

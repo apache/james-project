@@ -41,7 +41,6 @@ import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
-import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.apache.james.jmap.model.SetError;
@@ -292,7 +291,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                 .sharedContent(content)
                 .attachments(messageAttachments)
                 .mailboxId(outbox.getId())
-                .messageId(new MessageId(session.getUser(), outbox.getMailboxPath(), message.getUid()))
+                .messageId(message.getMessageId())
                 .build();
     }
 

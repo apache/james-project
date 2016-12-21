@@ -1,5 +1,5 @@
 {
-    "id": "username|mailbox|1",
+    "id": "1",
     "blobId": "myBlobId",
     "threadId": "myThreadId",
     "mailboxIds": ["1", "2"],

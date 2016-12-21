@@ -23,23 +23,19 @@ import java.util.Map;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.Method;
+import org.apache.james.mailbox.model.MessageId;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-@JsonDeserialize(builder = SetMessagesResponse.Builder.class)
 public class SetMessagesResponse implements Method.Response {
 
     public static Builder builder() {
         return new Builder();
     }
 
-    @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
 
         public static Builder accumulator(Builder accumulator, SetMessagesResponse response) {
@@ -144,15 +140,15 @@ public class SetMessagesResponse implements Method.Response {
     private final String accountId;
     private final String oldState;
     private final String newState;
-    private final Map<CreationMessageId, Message> created;
-    private final List<MessageId> updated;
-    private final List<MessageId> destroyed;
-    private final Map<CreationMessageId, SetError> notCreated;
-    private final Map<MessageId, SetError> notUpdated;
-    private final Map<MessageId, SetError> notDestroyed;
+    private final ImmutableMap<CreationMessageId, Message> created;
+    private final ImmutableList<MessageId> updated;
+    private final ImmutableList<MessageId> destroyed;
+    private final ImmutableMap<CreationMessageId, SetError> notCreated;
+    private final ImmutableMap<MessageId, SetError> notUpdated;
+    private final ImmutableMap<MessageId, SetError> notDestroyed;
 
-    @VisibleForTesting SetMessagesResponse(String accountId, String oldState, String newState, Map<CreationMessageId, Message> created, List<MessageId> updated, List<MessageId> destroyed,
-            Map<CreationMessageId, SetError> notCreated, Map<MessageId, SetError> notUpdated, Map<MessageId, SetError> notDestroyed) {
+    @VisibleForTesting SetMessagesResponse(String accountId, String oldState, String newState, ImmutableMap<CreationMessageId, Message> created, ImmutableList<MessageId> updated, ImmutableList<MessageId> destroyed,
+            ImmutableMap<CreationMessageId, SetError> notCreated, ImmutableMap<MessageId, SetError> notUpdated, ImmutableMap<MessageId, SetError> notDestroyed) {
         this.accountId = accountId;
         this.oldState = oldState;
         this.newState = newState;
@@ -164,48 +160,39 @@ public class SetMessagesResponse implements Method.Response {
         this.notDestroyed = notDestroyed;
     }
 
-    @JsonSerialize
     public String getAccountId() {
         return accountId;
     }
 
-    @JsonSerialize
     public String getOldState() {
         return oldState;
     }
 
-    @JsonSerialize
     public String getNewState() {
         return newState;
     }
 
-    @JsonSerialize
-    public Map<CreationMessageId, Message> getCreated() {
+    public ImmutableMap<CreationMessageId, Message> getCreated() {
         return created;
     }
 
-    @JsonSerialize
-    public List<MessageId> getUpdated() {
+    public ImmutableList<MessageId> getUpdated() {
         return updated;
     }
 
-    @JsonSerialize
-    public List<MessageId> getDestroyed() {
+    public ImmutableList<MessageId> getDestroyed() {
         return destroyed;
     }
 
-    @JsonSerialize
-    public Map<CreationMessageId, SetError> getNotCreated() {
+    public ImmutableMap<CreationMessageId, SetError> getNotCreated() {
         return notCreated;
     }
 
-    @JsonSerialize
-    public Map<MessageId, SetError> getNotUpdated() {
+    public ImmutableMap<MessageId, SetError> getNotUpdated() {
         return notUpdated;
     }
 
-    @JsonSerialize
-    public Map<MessageId, SetError> getNotDestroyed() {
+    public ImmutableMap<MessageId, SetError> getNotDestroyed() {
         return notDestroyed;
     }
 

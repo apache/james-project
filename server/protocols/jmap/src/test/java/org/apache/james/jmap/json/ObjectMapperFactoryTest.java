@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Map;
 
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +36,7 @@ public class ObjectMapperFactoryTest {
 
     @Before
     public void setup() {
-        testee = new ObjectMapperFactory(new InMemoryId.Factory());
+        testee = new ObjectMapperFactory(new InMemoryId.Factory(), new InMemoryMessageId.Factory());
     }
 
     @Test
@@ -64,7 +65,7 @@ public class ObjectMapperFactoryTest {
 
     @Test
     public void mailboxIdShouldBeSerializableWhenKeyWithoutToString() throws Exception {
-        ObjectMapperFactory testeeWithoutToString = new ObjectMapperFactory(new KeyWithoutToString.Factory());
+        ObjectMapperFactory testeeWithoutToString = new ObjectMapperFactory(new KeyWithoutToString.Factory(), new InMemoryMessageId.Factory());
         MailboxIdKeyTestContainer container = new MailboxIdKeyTestContainer(ImmutableMap.of(new KeyWithoutToString("key"), "value"));
         String expectedJson = "{\"map\":{\"key\":\"value\"}}";
         String actual = testeeWithoutToString.forWriting().writeValueAsString(container);

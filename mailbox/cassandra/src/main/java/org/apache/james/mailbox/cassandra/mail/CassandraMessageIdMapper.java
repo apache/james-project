@@ -263,7 +263,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         MailboxId mailboxId = composedMessageId.getComposedMessageId().getMailboxId();
         try {
             long newModSeq = modSeqProvider.nextModSeq(mailboxSession, mailboxId);
-            Flags newFlags = new FlagsUpdateCalculator(composedMessageId.getFlags(), updateMode).buildNewFlags(newState);
+            Flags newFlags = new FlagsUpdateCalculator(newState, updateMode).buildNewFlags(composedMessageId.getFlags());
             ComposedMessageIdWithMetaData composedMessageIdWithMetaData = new ComposedMessageIdWithMetaData(
                         composedMessageId.getComposedMessageId(),
                         newFlags,

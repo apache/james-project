@@ -41,6 +41,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Mailbox;
@@ -215,7 +216,8 @@ public class MessageFactory {
                 .flags(messageResult.getFlags())
                 .size(messageResult.getSize())
                 .internalDate(messageResult.getInternalDate())
-                .attachments(messageResult.getAttachments());
+                .attachments(messageResult.getAttachments())
+                .mailboxId(messageResult.getMailboxId());
             try {
                 return builder.content(messageResult.getFullContent().getInputStream());
             } catch (IOException e) {

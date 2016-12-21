@@ -18,12 +18,13 @@
  ****************************************************************/
 package org.apache.james.jmap.send;
 
-import org.apache.james.jmap.model.MessageId;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.Test;
 
 public class MailMetadataTest {
 
-    private static final MessageId MESSAGE_ID = MessageId.of("username|path|0");
+    private static final MessageId MESSAGE_ID = TestMessageId.of(123);
     private static final String USERNAME = "username";
 
     @Test(expected=NullPointerException.class)

@@ -18,10 +18,11 @@
  ****************************************************************/
 package org.apache.james.jmap.send;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collection;
 import java.util.Date;
@@ -33,12 +34,12 @@ import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageContentExtractor;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
-import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.junit.Before;
@@ -64,6 +65,7 @@ public class MailFactoryTest {
                 + "Subject: news\n";
         String content = headers
                 + "Hello! How are you?";
+        
         message = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
                 .flags(new FlagsBuilder().add(Flags.Flag.SEEN).build())
@@ -72,10 +74,11 @@ public class MailFactoryTest {
                 .sharedContent(new SharedByteArrayInputStream(content.getBytes(Charsets.UTF_8)))
                 .attachments(ImmutableList.of())
                 .mailboxId(InMemoryId.of(3))
-                .messageId(MessageId.of("test|test|2"))
+                .messageId(TestMessageId.of(2))
                 .build();
         MessagePreviewGenerator messagePreview = mock(MessagePreviewGenerator.class);
         when(messagePreview.forTextBody(any())).thenReturn("text preview");
+
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         MessageFactory messageFactory = new MessageFactory(messagePreview, messageContentExtractor);
         jmapMessage = messageFactory.fromMetaDataWithContent(message);

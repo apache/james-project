@@ -27,7 +27,7 @@ import org.testcontainers.containers.GenericContainer;
 
 import com.google.common.base.Strings;
 
-public class SwarmGenericContainer extends GenericContainer {
+public class SwarmGenericContainer extends GenericContainer<SwarmGenericContainer> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SwarmGenericContainer.class);
     private static final String DOCKER_CONTAINER = "DOCKER_CONTAINER";
@@ -36,7 +36,7 @@ public class SwarmGenericContainer extends GenericContainer {
         super(dockerImageName);
     }
 
-    public GenericContainer withAffinityToContainer() {
+    public GenericContainer<SwarmGenericContainer> withAffinityToContainer() {
         String container = System.getenv(DOCKER_CONTAINER);
         if (Strings.isNullOrEmpty(container)) {
             LOGGER.warn("'DOCKER_CONTAINER' environment variable not found, dockering without affinity");

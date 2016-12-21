@@ -19,9 +19,7 @@
 
 package org.apache.james.queue.api;
 
-import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
-import org.apache.mailet.Mail;
 
 public interface MailQueueItemDecoratorFactory {
 
@@ -32,30 +30,6 @@ public interface MailQueueItemDecoratorFactory {
 
         public MailQueueItemDecorator(MailQueueItem mailQueueItem) {
             this.mailQueueItem = mailQueueItem;
-        }
-    }
-
-    MailQueueItemDecoratorFactory RAW_FACTORY = new MailQueueItemDecoratorFactory() {
-        @Override
-        public MailQueueItemDecorator decorate(MailQueueItem mailQueueItem) {
-            return new RawMailQueueItem(mailQueueItem);
-        }
-    };
-
-    class RawMailQueueItem extends MailQueueItemDecorator {
-
-        public RawMailQueueItem(MailQueueItem mailQueueItem) {
-            super(mailQueueItem);
-        }
-
-        @Override
-        public Mail getMail() {
-            return mailQueueItem.getMail();
-        }
-
-        @Override
-        public void done(boolean success) throws MailQueueException {
-            mailQueueItem.done(success);
         }
     }
 }

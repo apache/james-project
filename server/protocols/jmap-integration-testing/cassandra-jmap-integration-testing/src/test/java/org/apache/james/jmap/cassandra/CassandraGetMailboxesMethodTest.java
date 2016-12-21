@@ -24,7 +24,6 @@ import org.apache.james.JmapJamesServer;
 import org.apache.james.jmap.methods.integration.GetMailboxesMethodTest;
 import org.junit.Rule;
 
-
 public class CassandraGetMailboxesMethodTest extends GetMailboxesMethodTest {
 
     @Rule 

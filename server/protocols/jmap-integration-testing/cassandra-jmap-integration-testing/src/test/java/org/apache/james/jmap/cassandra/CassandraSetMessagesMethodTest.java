@@ -22,13 +22,15 @@ package org.apache.james.jmap.cassandra;
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.JmapJamesServer;
 import org.apache.james.jmap.methods.integration.SetMessagesMethodTest;
+import org.apache.james.mailbox.cassandra.CassandraMessageId;
+import org.apache.james.mailbox.model.MessageId;
 import org.junit.Rule;
 
 public class CassandraSetMessagesMethodTest extends SetMessagesMethodTest {
 
     @Rule 
     public CassandraJmapTestRule rule = new CassandraJmapTestRule();
-    
+
     @Override
     protected JmapJamesServer createJmapServer() {
         return rule.jmapServer();
@@ -37,6 +39,11 @@ public class CassandraSetMessagesMethodTest extends SetMessagesMethodTest {
     @Override
     protected void await() {
         rule.await();
+    }
+    
+    @Override
+    protected MessageId randomMessageId() {
+        return new CassandraMessageId.Factory().generate();
     }
     
 }

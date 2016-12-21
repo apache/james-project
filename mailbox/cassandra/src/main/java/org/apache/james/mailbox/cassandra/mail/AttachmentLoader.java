@@ -19,10 +19,9 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import java.util.Collection;
-import java.util.Set;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
