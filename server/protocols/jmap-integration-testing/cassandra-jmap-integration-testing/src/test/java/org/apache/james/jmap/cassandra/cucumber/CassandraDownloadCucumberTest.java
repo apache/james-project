@@ -30,6 +30,5 @@ import cucumber.api.junit.Cucumber;
                 glue={"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber"},
                 tags = {"~@Ignore"},
                 strict = true)
-@Ignore("needs messageIdManager cassandra impl")
 public class CassandraDownloadCucumberTest {
 }

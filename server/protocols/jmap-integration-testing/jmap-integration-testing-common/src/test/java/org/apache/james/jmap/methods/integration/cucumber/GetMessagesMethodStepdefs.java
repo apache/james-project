@@ -214,8 +214,13 @@ public class GetMessagesMethodStepdefs {
         requestedMessageIds = messageIds;
         String serializedIds = requestedMessageIds.stream()
                 .map(MessageId::serialize)
+                .map(toJsonString())
                 .collect(Collectors.joining(",", "[", "]" ));
         post("[[\"getMessages\", {\"ids\": " + serializedIds + "}, \"#0\"]]");
+    }
+
+    private Function<? super String, ? extends String> toJsonString() {
+        return string -> "\"" + string + "\"";
     }
 
     @When("^the user is getting messages \"(.*?)\" with properties \"(.*?)\"$")
@@ -226,10 +231,11 @@ public class GetMessagesMethodStepdefs {
 
         String serializedIds = requestedMessageIds.stream()
                 .map(MessageId::serialize)
+                .map(toJsonString())
                 .collect(Collectors.joining(",", "[", "]" ));
 
         String serializedProperties = properties.stream()
-                .map(x -> "\"" + x + "\"")
+                .map(toJsonString())
                 .collect(Collectors.joining(",", "[", "]" ));
 
         post("[[\"getMessages\", {\"ids\": " + serializedIds + ", \"properties\": " + serializedProperties + "}, \"#0\"]]");

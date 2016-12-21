@@ -57,7 +57,7 @@ public class ObjectMapperFactory {
         mailboxIdModule.addSerializer(MailboxId.class, new MailboxIdSerializer());
         mailboxIdModule.addKeyDeserializer(MailboxId.class, new MailboxIdKeyDeserializer(mailboxIdFactory));
         mailboxIdModule.addKeySerializer(MailboxId.class, new MailboxIdKeySerializer());
-        
+
         mailboxIdModule.addDeserializer(MessageId.class, new MessageIdDeserializer(messageIdFactory));
         mailboxIdModule.addSerializer(MessageId.class, new MessageIdSerializer());
         mailboxIdModule.addKeyDeserializer(MessageId.class, new MessageIdKeyDeserializer(messageIdFactory));

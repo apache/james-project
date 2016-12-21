@@ -27,6 +27,7 @@ import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.JmapJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
+import org.apache.james.mailbox.cassandra.CassandraMessageId;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.CassandraJmapServerModule;
 import org.junit.rules.TemporaryFolder;
@@ -54,6 +55,7 @@ public class CassandraStepdefs {
     public void init() throws Exception {
         temporaryFolder.create();
         embeddedElasticSearch.before();
+        mainStepdefs.messageIdFactory = new CassandraMessageId.Factory();
         mainStepdefs.jmapServer = new JmapJamesServer()
                 .combineWith(CassandraJamesServerMain.cassandraServerModule)
                 .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra));
