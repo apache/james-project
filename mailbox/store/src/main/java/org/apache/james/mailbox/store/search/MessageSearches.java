@@ -32,9 +32,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.TimeZone;
-import java.util.TreeSet;
 
 import javax.mail.Flags;
 
@@ -71,6 +69,7 @@ import org.apache.james.mime4j.utils.search.MessageMatcher;
 
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
@@ -94,13 +93,13 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     public MessageSearches() {
     }
 
-    private Set<SimpleMessageSearchIndex.SearchResult> search() {
-        TreeSet<MailboxMessage> matched = new TreeSet<MailboxMessage>(CombinedComparator.create(query.getSorts()));
+    public Iterator<SimpleMessageSearchIndex.SearchResult> iterator() {
+        ImmutableList.Builder<MailboxMessage> builder = ImmutableList.builder();
         while (messages.hasNext()) {
             MailboxMessage m = messages.next();
             try {
                 if (isMatch(query, m)) {
-                    matched.add(m);
+                    builder.add(m);
                 }
             } catch (MailboxException e) {
                 if (session != null && session.getLog() != null) {
@@ -108,7 +107,9 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                 }
             }
         }
-        return FluentIterable.from(matched)
+        List<MailboxMessage> sortedResults = FluentIterable.from(builder.build())
+            .toSortedList(CombinedComparator.create(query.getSorts()));
+        return FluentIterable.from(sortedResults)
             .transform(new Function<MailboxMessage, SimpleMessageSearchIndex.SearchResult>() {
                 @Override
                 public SimpleMessageSearchIndex.SearchResult apply(MailboxMessage input) {
@@ -117,7 +118,8 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                         input.getMailboxId(),
                         input.getUid());
                 }
-            }).toSet();
+            })
+            .iterator();
     }
 
     /**
@@ -629,15 +631,6 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
     private Calendar getGMT() {
         return Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.ENGLISH);
-    }
-
-    /**
-     * Return a {@link Iterator} which holds all uids which matched, sorted
-     * according to the SearchQuery
-     * 
-     */
-    public Iterator<SimpleMessageSearchIndex.SearchResult> iterator() {
-        return search().iterator();
     }
 
 }

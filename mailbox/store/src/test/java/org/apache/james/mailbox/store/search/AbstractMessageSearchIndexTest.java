@@ -44,6 +44,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public abstract class AbstractMessageSearchIndexTest {
@@ -898,5 +899,17 @@ public abstract class AbstractMessageSearchIndexTest {
         searchQuery.andCriteria(SearchQuery.textContains("beautifull banana"));
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m7.getUid());
+    }
+
+    @Test
+    public void sortShouldNotDiscardResultWhenSearchingFieldIsIdentical() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(new SearchQuery.AllCriterion());
+        searchQuery.setSorts(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Arrival)));
+
+        List<MessageId> actual = messageSearchIndex.search(session, MultimailboxesSearchQuery.from(searchQuery).build(), LIMIT);
+
+        assertThat(actual).containsOnly(m1.getMessageId(), m2.getMessageId(), m3.getMessageId(), m4.getMessageId(), m5.getMessageId(),
+            m6.getMessageId(), m7.getMessageId(), m8.getMessageId(), m9.getMessageId(), mOther.getMessageId());
     }
 }
