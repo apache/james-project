@@ -25,13 +25,7 @@ import org.apache.james.mailbox.store.search.SearchUtil;
 
 public class BaseSubjectComparator extends AbstractHeaderComparator{
 
-
-
-    private final static Comparator<MailboxMessage> BASESUBJECT = new BaseSubjectComparator();
-    private final static Comparator<MailboxMessage> REVERSE_BASESUBJECT = new ReverseComparator(BASESUBJECT);
-
-    
-    
+    public final static Comparator<MailboxMessage> BASESUBJECT = new BaseSubjectComparator();
     private final static String SUBJECT = "subject";
     
     @Override
@@ -40,14 +34,5 @@ public class BaseSubjectComparator extends AbstractHeaderComparator{
         String baseSubject2 = SearchUtil.getBaseSubject(getHeaderValue(SUBJECT, o2));
 
         return baseSubject1.compareToIgnoreCase(baseSubject2);
-    }
-
-
-    public static Comparator<MailboxMessage> baseSubject(boolean reverse){
-        if (reverse) {
-            return REVERSE_BASESUBJECT;
-        } else {
-            return BASESUBJECT;
-        }
     }
 }

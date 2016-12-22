@@ -24,25 +24,12 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 /**
  * {@link Comparator} which compares {@link MailboxMessage}'s with their {@link MailboxMessage#getFullContentOctets()} value
- *
  */
 public class SizeComparator implements Comparator<MailboxMessage>{
+    public final static Comparator<MailboxMessage> SIZE = new SizeComparator();
 
-
-    private final static Comparator<MailboxMessage> SIZE = new SizeComparator();
-    private final static Comparator<MailboxMessage> REVERSE_SIZE = new ReverseComparator(SIZE);
-
-    
     @Override
     public int compare(MailboxMessage o1, MailboxMessage o2) {
         return (int) (o1.getFullContentOctets() - o2.getFullContentOctets());
-    }
-
-    public static Comparator<MailboxMessage> size(boolean reverse) {
-        if (reverse) {
-            return REVERSE_SIZE;
-        } else {
-            return SIZE;
-        }
     }
 }

@@ -32,18 +32,8 @@ import org.apache.james.mime4j.field.datetime.parser.ParseException;
  *
  */
 public class SentDateComparator extends AbstractHeaderComparator {
+    public final static Comparator<MailboxMessage> SENTDATE = new SentDateComparator();
 
-
-
-    private final static Comparator<MailboxMessage> SENTDATE = new SentDateComparator(false);
-    private final static Comparator<MailboxMessage> REVERSE_SENTDATE = new ReverseComparator(new SentDateComparator(true));
-    
-    private final boolean reverse;
-
-    public SentDateComparator(boolean reverse) {
-        this.reverse = reverse;
-    }
-    
     @Override
     public int compare(MailboxMessage o1, MailboxMessage o2) {
         Date date1 = getSentDate(o1);
@@ -52,7 +42,7 @@ public class SentDateComparator extends AbstractHeaderComparator {
         
         // sent date was the same so use the uid as tie-breaker
         if (i == 0) {
-            return UidComparator.uid(reverse).compare(o1, o2);
+            return UidComparator.UID.compare(o1, o2);
         }
         return 0;
     }
@@ -68,13 +58,4 @@ public class SentDateComparator extends AbstractHeaderComparator {
             return message.getInternalDate();
         }
     }
-    
-    public static Comparator<MailboxMessage> sentDate(boolean reverse){
-        if (reverse) {
-            return REVERSE_SENTDATE;
-        } else {
-            return SENTDATE;
-        }
-    }
-
 }
