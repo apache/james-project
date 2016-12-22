@@ -165,6 +165,8 @@ public class SMTPServerTest {
         }
     }
 
+    private static final long HALF_SECOND = 500;
+    private static final int MAX_ITERATIONS = 10;
     private static final Logger log = LoggerFactory.getLogger(SMTPServerTest.class.getName());
 
     protected SMTPTestConfiguration smtpConfiguration;
@@ -369,14 +371,26 @@ public class SMTPServerTest {
         } catch (Exception e) {
         }
 
-        smtpProtocol.quit();
-        smtpProtocol.disconnect();
-        smtpProtocol2.quit();
-        smtpProtocol2.disconnect();
+        ensureIsDisconnected(smtpProtocol);
+        ensureIsDisconnected(smtpProtocol2);
 
         smtpProtocol3.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
         Thread.sleep(3000);
 
+    }
+
+    private void ensureIsDisconnected(SMTPClient client) throws IOException, InterruptedException {
+        int initialConnections = smtpServer.getCurrentConnections();
+        client.quit();
+        client.disconnect();
+        assertIsDisconnected(initialConnections);
+    }
+
+    private void assertIsDisconnected(int initialConnections) throws InterruptedException {
+        int iterations = 0;
+        while (smtpServer.getCurrentConnections() >= initialConnections && iterations++ < MAX_ITERATIONS) {
+            Thread.sleep(HALF_SECOND);
+        }
     }
 
     @After
