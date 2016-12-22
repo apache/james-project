@@ -229,7 +229,7 @@ public class CriterionConverter {
     }
 
     private QueryBuilder uidRangeFilter(SearchQuery.UidRange numericRange) {
-        return rangeQuery(JsonMessageConstants.ID)
+        return rangeQuery(JsonMessageConstants.UID)
                 .lte(numericRange.getHighValue().asLong())
                 .gte(numericRange.getLowValue().asLong());
     }

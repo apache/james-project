@@ -24,7 +24,8 @@ public interface JsonMessageConstants {
     /*
     Properties defined by JMAP
      */
-    String ID = "id";
+    String MESSAGE_ID = "messageId";
+    String UID = "uid";
     String MAILBOX_ID = "mailboxId";
     String USERS = "users";
     String IS_UNREAD = "isUnread";

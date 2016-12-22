@@ -33,6 +33,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mime4j.MimeException;
@@ -89,7 +90,8 @@ public class IndexableMessage {
     }
 
     private void copyMessageFields(MailboxMessage message, ZoneId zoneId) {
-        this.id = message.getUid();
+        this.messageId = message.getMessageId();
+        this.uid = message.getUid();
         this.mailboxId = message.getMailboxId().serialize();
         this.modSeq = message.getModSeq();
         this.size = message.getFullContentOctets();
@@ -127,7 +129,8 @@ public class IndexableMessage {
             .collect(Collectors.joining(" "));
     }
 
-    private MessageUid id;
+    private MessageId messageId;
+    private MessageUid uid;
     private String mailboxId;
     private List<String> users;
     private long modSeq;
@@ -156,9 +159,14 @@ public class IndexableMessage {
     private Optional<String> bodyHtml;
     private String text;
 
-    @JsonProperty(JsonMessageConstants.ID)
-    public Long getId() {
-        return id.asLong();
+    @JsonProperty(JsonMessageConstants.MESSAGE_ID)
+    public String getId() {
+        return messageId.serialize();
+    }
+
+    @JsonProperty(JsonMessageConstants.UID)
+    public Long getUid() {
+        return uid.asLong();
     }
 
     @JsonProperty(JsonMessageConstants.MAILBOX_ID)

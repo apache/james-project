@@ -85,7 +85,7 @@ public class ElasticSearchSearcher {
                 client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
                     .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
                     .setScroll(TIMEOUT)
-                    .addFields(JsonMessageConstants.ID, JsonMessageConstants.MAILBOX_ID)
+                    .addFields(JsonMessageConstants.UID, JsonMessageConstants.MAILBOX_ID, JsonMessageConstants.MESSAGE_ID)
                     .setQuery(queryConverter.from(users, query))
                     .setSize(size),
                 (searchBuilder, sort) -> searchBuilder.addSort(SortConverter.convertSort(sort)),
@@ -101,7 +101,7 @@ public class ElasticSearchSearcher {
 
     private Optional<Pair<MailboxId, MessageUid>> extractContentFromHit(SearchHit hit) {
         SearchHitField mailboxId = hit.field(JsonMessageConstants.MAILBOX_ID);
-        SearchHitField uid = hit.field(JsonMessageConstants.ID);
+        SearchHitField uid = hit.field(JsonMessageConstants.UID);
         if (mailboxId != null && uid != null) {
             Number uidAsNumber = uid.getValue();
             return Optional.of(Pair.of(mailboxIdFactory.fromString(mailboxId.getValue()), MessageUid.of(uidAsNumber.longValue())));

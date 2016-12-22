@@ -57,7 +57,7 @@ public class SortConverter {
             case SentDate :
                 return SortBuilders.fieldSort(JsonMessageConstants.SENT_DATE);
             case Uid :
-                return SortBuilders.fieldSort(JsonMessageConstants.ID);
+                return SortBuilders.fieldSort(JsonMessageConstants.UID);
             case DisplayFrom:
                 return SortBuilders.fieldSort(JsonMessageConstants.FROM + PATH_SEPARATOR + JsonMessageConstants.EMailer.NAME + PATH_SEPARATOR + NodeMappingFactory.RAW)
                     .setNestedPath(JsonMessageConstants.FROM);
@@ -65,7 +65,7 @@ public class SortConverter {
                 return SortBuilders.fieldSort(JsonMessageConstants.TO + PATH_SEPARATOR + JsonMessageConstants.EMailer.NAME + PATH_SEPARATOR + NodeMappingFactory.RAW)
                     .setNestedPath(JsonMessageConstants.TO);
             case Id:
-                return SortBuilders.fieldSort(JsonMessageConstants.ID);
+                return SortBuilders.fieldSort(JsonMessageConstants.MESSAGE_ID);
             default:
                 throw new RuntimeException("Sort is not implemented");
         }
