@@ -70,7 +70,7 @@ public class SortConverter {
     }
 
     private static SortOrder getOrder(SearchQuery.Sort sort) {
-        if( sort.isReverse() ) {
+        if(sort.isReverse()) {
             return SortOrder.DESC;
         } else {
             return SortOrder.ASC;

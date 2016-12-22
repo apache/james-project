@@ -145,7 +145,12 @@ public class SearchQuery implements Serializable {
             /**
              * Uid of the message. This is the DEFAULT if no other is specified
              */
-            Uid
+            Uid,
+
+            /**
+             * Unique Id of the message.
+             */
+            Id
         }
 
         private final boolean reverse;
@@ -181,6 +186,21 @@ public class SearchQuery implements Serializable {
          */
         public SortClause getSortClause() {
             return sortClause;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof Sort) {
+                Sort that = (Sort) o;
+                return Objects.equal(this.sortClause, that.sortClause)
+                    && Objects.equal(this.reverse, that.reverse);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(sortClause, reverse);
         }
     }
 
