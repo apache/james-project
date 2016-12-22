@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.MessageUid;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
@@ -63,7 +65,7 @@ public class SearchQuery implements Serializable {
     /**
      * Allow to sort a {@link SearchQuery} response in different ways.
      */
-    public static final class Sort implements Serializable {
+    public static class Sort implements Serializable {
         private static final long serialVersionUID = 1L;
 
         /**
@@ -212,7 +214,7 @@ public class SearchQuery implements Serializable {
      *            the returned criterion
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion sizeLessThan(long value) {
+    public static Criterion sizeLessThan(long value) {
         return new SizeCriterion(new NumericOperator(value, NumericComparator.LESS_THAN));
     }
 
@@ -224,7 +226,7 @@ public class SearchQuery implements Serializable {
      *            the returned criterion
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion sizeGreaterThan(long value) {
+    public static Criterion sizeGreaterThan(long value) {
         return new SizeCriterion(new NumericOperator(value, NumericComparator.GREATER_THAN));
     }
 
@@ -236,7 +238,7 @@ public class SearchQuery implements Serializable {
      *            returned criterion
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion sizeEquals(long value) {
+    public static Criterion sizeEquals(long value) {
         return new SizeCriterion(new NumericOperator(value, NumericComparator.EQUALS));
     }
 
@@ -248,7 +250,7 @@ public class SearchQuery implements Serializable {
      *            selected by the returned criterion
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion modSeqLessThan(long value) {
+    public static Criterion modSeqLessThan(long value) {
         return new ModSeqCriterion(new NumericOperator(value, NumericComparator.LESS_THAN));
     }
 
@@ -260,7 +262,7 @@ public class SearchQuery implements Serializable {
      *            selected by the returned criterion
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion modSeqGreaterThan(long value) {
+    public static Criterion modSeqGreaterThan(long value) {
         return new ModSeqCriterion(new NumericOperator(value, NumericComparator.GREATER_THAN));
     }
 
@@ -272,7 +274,7 @@ public class SearchQuery implements Serializable {
      *            selected by the returned criterion
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion modSeqEquals(long value) {
+    public static Criterion modSeqEquals(long value) {
         return new ModSeqCriterion(new NumericOperator(value, NumericComparator.EQUALS));
     }
 
@@ -289,7 +291,7 @@ public class SearchQuery implements Serializable {
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion internalDateAfter(Date date, DateResolution res) {
+    public static Criterion internalDateAfter(Date date, DateResolution res) {
         return new InternalDateCriterion(new DateOperator(DateComparator.AFTER, date, res));
     }
 
@@ -305,7 +307,7 @@ public class SearchQuery implements Serializable {
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion internalDateOn(Date date, DateResolution res) {
+    public static Criterion internalDateOn(Date date, DateResolution res) {
         return new InternalDateCriterion(new DateOperator(DateComparator.ON, date, res));
     }
 
@@ -322,7 +324,7 @@ public class SearchQuery implements Serializable {
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion internalDateBefore(Date date, DateResolution res) {
+    public static Criterion internalDateBefore(Date date, DateResolution res) {
         return new InternalDateCriterion(new DateOperator(DateComparator.BEFORE, date, res));
     }
 
@@ -342,7 +344,7 @@ public class SearchQuery implements Serializable {
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion headerDateAfter(String headerName, Date date, DateResolution res) {
+    public static Criterion headerDateAfter(String headerName, Date date, DateResolution res) {
         return new HeaderCriterion(headerName, new DateOperator(DateComparator.AFTER, date, res));
     }
 
@@ -362,7 +364,7 @@ public class SearchQuery implements Serializable {
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion headerDateOn(String headerName, Date date, DateResolution res) {
+    public static Criterion headerDateOn(String headerName, Date date, DateResolution res) {
         return new HeaderCriterion(headerName, new DateOperator(DateComparator.ON, date, res));
     }
 
@@ -382,7 +384,7 @@ public class SearchQuery implements Serializable {
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion headerDateBefore(String headerName, Date date, DateResolution res) {
+    public static Criterion headerDateBefore(String headerName, Date date, DateResolution res) {
         return new HeaderCriterion(headerName, new DateOperator(DateComparator.BEFORE, date, res));
     }
 
@@ -395,7 +397,7 @@ public class SearchQuery implements Serializable {
      * @param address
      * @return <code>Criterion</code>
      */
-    public static final Criterion address(AddressType type, String address) {
+    public static Criterion address(AddressType type, String address) {
         return new HeaderCriterion(type.name(), new AddressOperator(address));
     }
 
@@ -413,7 +415,7 @@ public class SearchQuery implements Serializable {
      *            checked, otherwise contained value
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion headerContains(String headerName, String value) {
+    public static Criterion headerContains(String headerName, String value) {
         if (value == null || value.length() == 0) {
             return headerExists(headerName);
         } else {
@@ -431,7 +433,7 @@ public class SearchQuery implements Serializable {
      *            name of the header whose value will be compared, not null
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion headerExists(String headerName) {
+    public static Criterion headerExists(String headerName) {
         return new HeaderCriterion(headerName, ExistsOperator.exists());
     }
 
@@ -447,7 +449,7 @@ public class SearchQuery implements Serializable {
      *            search value
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion mailContains(String value) {
+    public static Criterion mailContains(String value) {
         return new TextCriterion(value, Scope.FULL);
     }
 
@@ -463,7 +465,7 @@ public class SearchQuery implements Serializable {
      *            search value
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion textContains(String value) {
+    public static Criterion textContains(String value) {
         return new TextCriterion(value, Scope.TEXT);
     }
 
@@ -479,7 +481,7 @@ public class SearchQuery implements Serializable {
      *            search value
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion bodyContains(String value) {
+    public static Criterion bodyContains(String value) {
         return new TextCriterion(value, Scope.BODY);
     }
 
@@ -490,7 +492,7 @@ public class SearchQuery implements Serializable {
      *            <code>NumericRange</code>'s, not null
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion uid(UidRange[] range) {
+    public static Criterion uid(UidRange[] range) {
         return new UidCriterion(range);
     }
 
@@ -503,7 +505,7 @@ public class SearchQuery implements Serializable {
      *            <code>Criterion</code>, not null
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion or(Criterion one, Criterion two) {
+    public static Criterion or(Criterion one, Criterion two) {
         final List<Criterion> criteria = new ArrayList<Criterion>();
         criteria.add(one);
         criteria.add(two);
@@ -517,7 +519,7 @@ public class SearchQuery implements Serializable {
      *            <code>List</code> of {@link Criterion}
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion or(List<Criterion> criteria) {
+    public static Criterion or(List<Criterion> criteria) {
         return new ConjunctionCriterion(Conjunction.OR, criteria);
     }
 
@@ -530,7 +532,7 @@ public class SearchQuery implements Serializable {
      *            <code>Criterion</code>, not null
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion and(Criterion one, Criterion two) {
+    public static Criterion and(Criterion one, Criterion two) {
         final List<Criterion> criteria = new ArrayList<Criterion>();
         criteria.add(one);
         criteria.add(two);
@@ -544,7 +546,7 @@ public class SearchQuery implements Serializable {
      *            <code>List</code> of {@link Criterion}
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion and(List<Criterion> criteria) {
+    public static Criterion and(List<Criterion> criteria) {
         return new ConjunctionCriterion(Conjunction.AND, criteria);
     }
 
@@ -555,7 +557,7 @@ public class SearchQuery implements Serializable {
      *            <code>Criterion</code>, not null
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion not(Criterion criterion) {
+    public static Criterion not(Criterion criterion) {
         final List<Criterion> criteria = new ArrayList<Criterion>();
         criteria.add(criterion);
         return new ConjunctionCriterion(Conjunction.NOR, criteria);
@@ -568,7 +570,7 @@ public class SearchQuery implements Serializable {
      *            <code>List</code> of {@link Criterion}
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion not(List<Criterion> criteria) {
+    public static Criterion not(List<Criterion> criteria) {
         return new ConjunctionCriterion(Conjunction.NOR, criteria);
     }
 
@@ -582,7 +584,7 @@ public class SearchQuery implements Serializable {
      *            false otherwise
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion flagSet(Flag flag, boolean isSet) {
+    public static Criterion flagSet(Flag flag, boolean isSet) {
         final Criterion result;
         if (isSet) {
             result = flagIsSet(flag);
@@ -600,7 +602,7 @@ public class SearchQuery implements Serializable {
      *            <code>Flag</code>, not null
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion flagIsSet(Flag flag) {
+    public static Criterion flagIsSet(Flag flag) {
         return new FlagCriterion(flag, BooleanOperator.set());
     }
 
@@ -612,7 +614,7 @@ public class SearchQuery implements Serializable {
      *            <code>Flag</code>, not null
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion flagIsUnSet(Flag flag) {
+    public static Criterion flagIsUnSet(Flag flag) {
         return new FlagCriterion(flag, BooleanOperator.unset());
     }
 
@@ -626,7 +628,7 @@ public class SearchQuery implements Serializable {
      *            false otherwise
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion flagSet(String flag, boolean isSet) {
+    public static Criterion flagSet(String flag, boolean isSet) {
         final Criterion result;
         if (isSet) {
             result = flagIsSet(flag);
@@ -644,7 +646,7 @@ public class SearchQuery implements Serializable {
      *            <code>Flag</code>, not null
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion flagIsSet(String flag) {
+    public static Criterion flagIsSet(String flag) {
         return new CustomFlagCriterion(flag, BooleanOperator.set());
     }
 
@@ -656,7 +658,7 @@ public class SearchQuery implements Serializable {
      *            <code>Flag</code>, not null
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion flagIsUnSet(String flag) {
+    public static Criterion flagIsUnSet(String flag) {
         return new CustomFlagCriterion(flag, BooleanOperator.unset());
     }
 
@@ -665,7 +667,7 @@ public class SearchQuery implements Serializable {
      * 
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion all() {
+    public static Criterion all() {
         return AllCriterion.all();
     }
 
@@ -673,7 +675,7 @@ public class SearchQuery implements Serializable {
 
     private final List<Criterion> criterias = new ArrayList<Criterion>();
 
-    private List<Sort> sorts = new ArrayList<Sort>(Arrays.asList(new Sort(Sort.SortClause.Uid, false)));
+    private List<Sort> sorts = Collections.singletonList(new Sort(Sort.SortClause.Uid, false));
 
     public void andCriteria(Criterion crit) {
         criterias.add(crit);
@@ -734,35 +736,19 @@ public class SearchQuery implements Serializable {
         return "Search:" + criterias.toString();
     }
 
-    /**
-     * @see java.lang.Object#hashCode()
-     */
     @Override
     public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + ((criterias == null) ? 0 : criterias.hashCode());
-        return result;
+        return Objects.hashCode(criterias);
     }
 
-    /**
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        final SearchQuery other = (SearchQuery) obj;
-        if (criterias == null) {
-            if (other.criterias != null)
-                return false;
-        } else if (!criterias.equals(other.criterias))
-            return false;
-        return true;
+        if (obj instanceof SearchQuery) {
+            SearchQuery that = (SearchQuery) obj;
+
+            return Objects.equal(this.criterias, that.criterias);
+        }
+        return false;
     }
 
     /**
@@ -770,7 +756,7 @@ public class SearchQuery implements Serializable {
      * boundaries. May be a single value. {@link Long#MAX_VALUE} represents
      * unlimited in either direction.
      */
-    public static final class NumericRange implements Serializable {
+    public static class NumericRange implements Serializable {
         private static final long serialVersionUID = 1L;
 
         private final long lowValue;
@@ -811,45 +797,26 @@ public class SearchQuery implements Serializable {
             return lowValue <= value && highValue >= value;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + (int) (highValue ^ (highValue >>> 32));
-            result = PRIME * result + (int) (lowValue ^ (lowValue >>> 32));
-            return result;
+            return Objects.hashCode(lowValue, highValue);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final NumericRange other = (NumericRange) obj;
-            if (highValue != other.highValue)
-                return false;
-            if (lowValue != other.lowValue)
-                return false;
-            return true;
+            if (obj instanceof NumericRange) {
+                NumericRange that = (NumericRange) obj;
+                return Objects.equal(this.lowValue, that.lowValue)
+                    && Objects.equal(this.highValue, that.highValue);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            return new StringBuffer().append(this.lowValue).append("->").append(this.highValue).toString();
+            return MoreObjects.toStringHelper(this)
+                .add("lowValue", lowValue)
+                .add("highValue", highValue)
+                .toString();
         }
 
     }
@@ -859,7 +826,7 @@ public class SearchQuery implements Serializable {
      * boundaries. May be a single value. {@link Long#MAX_VALUE} represents
      * unlimited in either direction.
      */
-    public static final class UidRange implements Serializable {
+    public static class UidRange implements Serializable {
 
         private final MessageUid lowValue;
         private final MessageUid highValue;
@@ -903,15 +870,18 @@ public class SearchQuery implements Serializable {
         @Override
         public boolean equals(Object obj) {
             if (obj instanceof UidRange) {
-                UidRange other = (UidRange) obj;
-                return Objects.equal(this.lowValue, other.lowValue)
-                        && Objects.equal(this.highValue, other.highValue);
+                UidRange that = (UidRange) obj;
+                return Objects.equal(this.lowValue, that.lowValue)
+                    && Objects.equal(this.highValue, that.highValue);
             }
             return false;
         }
 
         public String toString() {
-            return new StringBuffer().append(this.lowValue).append("->").append(this.highValue).toString();
+            return MoreObjects.toStringHelper(this)
+                .add("lowValue", lowValue)
+                .add("highValue", highValue)
+                .toString();
         }
 
     }
@@ -932,7 +902,7 @@ public class SearchQuery implements Serializable {
      * Conjunction applying to the contained criteria. {@link #getType}
      * indicates how the conjoined criteria should be related.
      */
-    public static final class ConjunctionCriterion extends Criterion {
+    public static class ConjunctionCriterion extends Criterion {
         private static final long serialVersionUID = 1L;
 
         private final Conjunction type;
@@ -963,54 +933,26 @@ public class SearchQuery implements Serializable {
             return type;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + ((criteria == null) ? 0 : criteria.hashCode());
-            return result;
+            return Objects.hashCode(criteria);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final ConjunctionCriterion other = (ConjunctionCriterion) obj;
-            if (criteria == null) {
-                if (other.criteria != null)
-                    return false;
-            } else if (!criteria.equals(other.criteria))
-                return false;
-            if (type != other.type)
-                return false;
-            return true;
+            if (obj instanceof ConjunctionCriterion) {
+                ConjunctionCriterion that = (ConjunctionCriterion) obj;
+
+                return Objects.equal(this.criteria, that.criteria);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("ConjunctionCriterion ( ").append("criteria = ").append(this.criteria).append(TAB)
-                    .append("type = ").append(this.type).append(TAB).append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("criteria", criteria)
+                .add("type", type)
+                .toString();
         }
 
     }
@@ -1018,7 +960,7 @@ public class SearchQuery implements Serializable {
     /**
      * Any message.
      */
-    public static final class AllCriterion extends Criterion {
+    public static class AllCriterion extends Criterion {
         private static final long serialVersionUID = 1L;
 
         private static final AllCriterion ALL = new AllCriterion();
@@ -1064,7 +1006,7 @@ public class SearchQuery implements Serializable {
     /**
      * Message text.
      */
-    public static final class TextCriterion extends Criterion {
+    public static class TextCriterion extends Criterion {
         private static final long serialVersionUID = 1L;
 
         private final Scope type;
@@ -1095,61 +1037,32 @@ public class SearchQuery implements Serializable {
             return operator;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + ((operator == null) ? 0 : operator.hashCode());
-            return result;
+            return Objects.hashCode(operator);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final TextCriterion other = (TextCriterion) obj;
-            if (operator == null) {
-                if (other.operator != null)
-                    return false;
-            } else if (!operator.equals(other.operator))
-                return false;
-            if (type != other.type)
-                return false;
-            return true;
+            if (obj instanceof TextCriterion) {
+                TextCriterion that = (TextCriterion) obj;
+
+                return Objects.equal(this.operator, that.operator);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("TextCriterion ( ").append("operator = ").append(this.operator).append(TAB)
-                    .append("type = ").append(this.type).append(TAB).append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("operator", operator)
+                .toString();
         }
     }
 
     /**
      * Header value content search.
      */
-    public static final class HeaderCriterion extends Criterion {
+    public static class HeaderCriterion extends Criterion {
         private static final long serialVersionUID = 1L;
 
         private final HeaderOperator operator;
@@ -1180,58 +1093,27 @@ public class SearchQuery implements Serializable {
             return operator;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + ((headerName == null) ? 0 : headerName.hashCode());
-            result = PRIME * result + ((operator == null) ? 0 : operator.hashCode());
-            return result;
+            return Objects.hashCode(headerName, operator);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final HeaderCriterion other = (HeaderCriterion) obj;
-            if (headerName == null) {
-                if (other.headerName != null)
-                    return false;
-            } else if (!headerName.equals(other.headerName))
-                return false;
-            if (operator == null) {
-                if (other.operator != null)
-                    return false;
-            } else if (!operator.equals(other.operator))
-                return false;
-            return true;
+            if (obj instanceof HeaderCriterion) {
+                HeaderCriterion that = (HeaderCriterion) obj;
+
+                return Objects.equal(this.operator, that.operator)
+                    && Objects.equal(this.headerName, that.headerName);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("HeaderCriterion ( ").append("headerName = ").append(this.headerName).append(TAB)
-                    .append("operator = ").append(this.operator).append(TAB).append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("operator", operator)
+                .add("headerName", headerName)
+                .toString();
         }
 
     }
@@ -1239,7 +1121,7 @@ public class SearchQuery implements Serializable {
     /**
      * Filters on the internal date.
      */
-    public static final class InternalDateCriterion extends Criterion {
+    public static class InternalDateCriterion extends Criterion {
         private static final long serialVersionUID = 1L;
 
         private final DateOperator operator;
@@ -1258,59 +1140,32 @@ public class SearchQuery implements Serializable {
             return operator;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + ((operator == null) ? 0 : operator.hashCode());
-            return result;
+            return Objects.hashCode(operator);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final InternalDateCriterion other = (InternalDateCriterion) obj;
-            if (operator == null) {
-                if (other.operator != null)
-                    return false;
-            } else if (!operator.equals(other.operator))
-                return false;
-            return true;
+            if (obj instanceof InternalDateCriterion) {
+                InternalDateCriterion that = (InternalDateCriterion) obj;
+
+                return Objects.equal(this.operator, that.operator);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("InternalDateCriterion ( ").append("operator = ").append(this.operator).append(TAB)
-                    .append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("operator", operator)
+                .toString();
         }
     }
 
     /**
      * Filters on the mod-sequence of the messages.
      */
-    public static final class ModSeqCriterion extends Criterion {
+    public static class ModSeqCriterion extends Criterion {
         private static final long serialVersionUID = 1L;
 
         private final NumericOperator operator;
@@ -1329,55 +1184,30 @@ public class SearchQuery implements Serializable {
             return operator;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + ((operator == null) ? 0 : operator.hashCode());
-            return result;
+            return Objects.hashCode(operator);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
+
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final ModSeqCriterion other = (ModSeqCriterion) obj;
-            if (operator == null) {
-                if (other.operator != null)
-                    return false;
-            } else if (!operator.equals(other.operator))
-                return false;
-            return true;
+            if (obj instanceof ModSeqCriterion) {
+                ModSeqCriterion that = (ModSeqCriterion) obj;
+
+                return Objects.equal(this.operator, that.operator);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("SizeCriterion ( ").append("operator = ").append(this.operator).append(TAB).append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("operator", operator)
+                .toString();
         }
     }
 
-    public static final class SizeCriterion extends Criterion {
+    public static class SizeCriterion extends Criterion {
         private static final long serialVersionUID = 1L;
 
         private final NumericOperator operator;
@@ -1396,58 +1226,33 @@ public class SearchQuery implements Serializable {
             return operator;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + ((operator == null) ? 0 : operator.hashCode());
-            return result;
+            return Objects.hashCode(operator);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
+
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final SizeCriterion other = (SizeCriterion) obj;
-            if (operator == null) {
-                if (other.operator != null)
-                    return false;
-            } else if (!operator.equals(other.operator))
-                return false;
-            return true;
+            if (obj instanceof SizeCriterion) {
+                SizeCriterion that = (SizeCriterion) obj;
+
+                return Objects.equal(this.operator, that.operator);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("SizeCriterion ( ").append("operator = ").append(this.operator).append(TAB).append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("operator", operator)
+                .toString();
         }
     }
 
     /**
      * Filters on a custom flag valuation.
      */
-    public static final class CustomFlagCriterion extends Criterion {
+    public static class CustomFlagCriterion extends Criterion {
         private static final long serialVersionUID = 1L;
 
         private final String flag;
@@ -1478,65 +1283,35 @@ public class SearchQuery implements Serializable {
             return operator;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + ((flag == null) ? 0 : flag.hashCode());
-            result = PRIME * result + ((operator == null) ? 0 : operator.hashCode());
-            return result;
+            return Objects.hashCode(flag, operator);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
+
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final CustomFlagCriterion other = (CustomFlagCriterion) obj;
-            if (flag == null) {
-                if (other.flag != null)
-                    return false;
-            } else if (!flag.equals(other.flag))
-                return false;
-            if (operator == null) {
-                if (other.operator != null)
-                    return false;
-            } else if (!operator.equals(other.operator))
-                return false;
-            return true;
+            if (obj instanceof CustomFlagCriterion) {
+                CustomFlagCriterion that = (CustomFlagCriterion) obj;
+
+                return Objects.equal(this.operator, that.operator)
+                    && Objects.equal(this.flag, that.flag);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("CustomFlagCriterion ( ").append("flag = ").append(this.flag).append(TAB)
-                    .append("operator = ").append(this.operator).append(TAB).append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("operator", operator)
+                .add("flag", flag)
+                .toString();
         }
     }
 
     /**
      * Filters on a standard flag.
      */
-    public static final class FlagCriterion extends Criterion {
+    public static class FlagCriterion extends Criterion {
         private static final long serialVersionUID = 1L;
 
         // Flags not Flag because Flags are serializable and Flag is not
@@ -1569,66 +1344,35 @@ public class SearchQuery implements Serializable {
             return operator;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + ((flag == null) ? 0 : flag.hashCode());
-            result = PRIME * result + ((operator == null) ? 0 : operator.hashCode());
-            return result;
+            return Objects.hashCode(flag, operator);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
+
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final FlagCriterion other = (FlagCriterion) obj;
-            if (flag == null) {
-                if (other.flag != null)
-                    return false;
-            } else if (!flag.equals(other.flag))
-                return false;
-            if (operator == null) {
-                if (other.operator != null)
-                    return false;
-            } else if (!operator.equals(other.operator))
-                return false;
-            return true;
+            if (obj instanceof FlagCriterion) {
+                FlagCriterion that = (FlagCriterion) obj;
+
+                return Objects.equal(this.operator, that.operator)
+                    && Objects.equal(this.flag, that.flag);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("FlagCriterion ( ").append("flag = ").append(this.flag).append(TAB).append("operator = ")
-                    .append(this.operator).append(TAB).append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("operator", operator)
+                .add("flag", flag)
+                .toString();
         }
-
     }
 
     /**
      * Filters on message identity.
      */
-    public static final class UidCriterion extends Criterion {
+    public static class UidCriterion extends Criterion {
         private static final long serialVersionUID = 1L;
 
         private final UidInOperator operator;
@@ -1647,48 +1391,25 @@ public class SearchQuery implements Serializable {
 
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + ((operator == null) ? 0 : operator.hashCode());
-            return result;
+            return Objects.hashCode(operator);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
+
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final UidCriterion other = (UidCriterion) obj;
-            if (operator == null) {
-                if (other.operator != null)
-                    return false;
-            } else if (!operator.equals(other.operator))
-                return false;
-            return true;
+            if (obj instanceof UidCriterion) {
+                UidCriterion that = (UidCriterion) obj;
+
+                return Objects.equal(this.operator, that.operator);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("UidCriterion ( ").append("operator = ").append(this.operator).append(TAB).append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("operator", operator)
+                .toString();
         }
-
     }
 
     /**
@@ -1703,7 +1424,7 @@ public class SearchQuery implements Serializable {
     public interface HeaderOperator extends Operator {
     }
 
-    public static final class AddressOperator implements HeaderOperator {
+    public static class AddressOperator implements HeaderOperator {
         private static final long serialVersionUID = 1L;
 
         private final String address;
@@ -1722,58 +1443,33 @@ public class SearchQuery implements Serializable {
             return address;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + ((address == null) ? 0 : address.hashCode());
-            return result;
+            return Objects.hashCode(address);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
+
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final AddressOperator other = (AddressOperator) obj;
-            if (address == null) {
-                if (other.address != null)
-                    return false;
-            } else if (!address.equals(other.address))
-                return false;
-            return true;
+            if (obj instanceof AddressOperator) {
+                AddressOperator that = (AddressOperator) obj;
+
+                return Objects.equal(this.address, that.address);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("AdressOperator ( ").append("address = ").append(this.address).append(TAB).append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("address", address)
+                .toString();
         }
     }
 
     /**
      * Contained value search.
      */
-    public static final class ContainsOperator implements HeaderOperator {
+    public static class ContainsOperator implements HeaderOperator {
         private static final long serialVersionUID = 1L;
 
         private final String value;
@@ -1792,58 +1488,33 @@ public class SearchQuery implements Serializable {
             return value;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + ((value == null) ? 0 : value.hashCode());
-            return result;
+            return Objects.hashCode(value);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
+
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final ContainsOperator other = (ContainsOperator) obj;
-            if (value == null) {
-                if (other.value != null)
-                    return false;
-            } else if (!value.equals(other.value))
-                return false;
-            return true;
+            if (obj instanceof ContainsOperator) {
+                ContainsOperator that = (ContainsOperator) obj;
+
+                return Objects.equal(this.value, that.value);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("ContainsOperator ( ").append("value = ").append(this.value).append(TAB).append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("value", value)
+                .toString();
         }
     }
 
     /**
      * Existance search.
      */
-    public static final class ExistsOperator implements HeaderOperator {
+    public static class ExistsOperator implements HeaderOperator {
         private static final long serialVersionUID = 1L;
 
         private static final ExistsOperator EXISTS = new ExistsOperator();
@@ -1852,25 +1523,16 @@ public class SearchQuery implements Serializable {
             return EXISTS;
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
         @Override
         public boolean equals(Object obj) {
             return obj instanceof ExistsOperator;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
             return 42;
         }
 
-        /**
-         * @see java.lang.Object#toString()
-         */
         @Override
         public String toString() {
             return "ExistsCriterion";
@@ -1881,7 +1543,7 @@ public class SearchQuery implements Serializable {
     /**
      * Boolean value search.
      */
-    public static final class BooleanOperator implements Operator {
+    public static class BooleanOperator implements Operator {
         private static final long serialVersionUID = 1L;
 
         private static final BooleanOperator SET = new BooleanOperator(true);
@@ -1913,48 +1575,26 @@ public class SearchQuery implements Serializable {
             return set;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + (set ? 1231 : 1237);
-            return result;
+            return Objects.hashCode(set);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
+
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final BooleanOperator other = (BooleanOperator) obj;
-            if (set != other.set)
-                return false;
-            return true;
+            if (obj instanceof BooleanOperator) {
+                BooleanOperator that = (BooleanOperator) obj;
+
+                return Objects.equal(this.set, that.set);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("BooleanOperator ( ").append("set = ").append(this.set).append(TAB).append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("set", set)
+                .toString();
         }
 
     }
@@ -1966,7 +1606,7 @@ public class SearchQuery implements Serializable {
     /**
      * Searches numeric values.
      */
-    public static final class NumericOperator implements Operator {
+    public static class NumericOperator implements Operator {
         private static final long serialVersionUID = 1L;
 
         private final long value;
@@ -1997,51 +1637,28 @@ public class SearchQuery implements Serializable {
             return value;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + (int) (value ^ (value >>> 32));
-            return result;
+            return Objects.hashCode(value, type);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
+
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final NumericOperator other = (NumericOperator) obj;
-            if (type != other.type)
-                return false;
-            if (value != other.value)
-                return false;
-            return true;
+            if (obj instanceof NumericOperator) {
+                NumericOperator that = (NumericOperator) obj;
+
+                return Objects.equal(this.value, that.value)
+                    && Objects.equal(this.type, that.type);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("NumericOperator ( ").append("type = ").append(this.type).append(TAB).append("value = ")
-                    .append(this.value).append(TAB).append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("value", value)
+                .add("type", type)
+                .toString();
         }
     }
 
@@ -2052,7 +1669,7 @@ public class SearchQuery implements Serializable {
     /**
      * Operates on a date.
      */
-    public static final class DateOperator implements HeaderOperator {
+    public static class DateOperator implements HeaderOperator {
         private static final long serialVersionUID = 1L;
 
         public static final int BEFORE = 1;
@@ -2092,55 +1709,29 @@ public class SearchQuery implements Serializable {
             return type;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            // result = PRIME * result + (int)date.getTime();
-            result = PRIME * result + type.hashCode();
-            return result;
+            return Objects.hashCode(res, type);
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
+
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final DateOperator other = (DateOperator) obj;
-            // if (date != other.date)
-            // return false;
-            if (res != other.res)
-                return false;
-            if (type != other.type)
-                return false;
-            return true;
+            if (obj instanceof DateOperator) {
+                DateOperator that = (DateOperator) obj;
+
+                return Objects.equal(this.res, that.res)
+                    && Objects.equal(this.type, that.type);
+            }
+            return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("DateOperator ( ").append("date = ").append(date.toString()).append(TAB).append("res = ")
-                    .append(this.res.name()).append(TAB).append("type = ").append(this.type).append(TAB).append(TAB)
-                    .append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("date", date)
+                .add("res", res)
+                .add("type", type)
+                .toString();
         }
 
     }
@@ -2148,7 +1739,7 @@ public class SearchQuery implements Serializable {
     /**
      * Search for numbers within set of ranges.
      */
-    public static final class InOperator implements Operator {
+    public static class InOperator implements Operator {
         private static final long serialVersionUID = 1L;
 
         private final NumericRange[] range;
@@ -2168,17 +1759,12 @@ public class SearchQuery implements Serializable {
             return range;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
             return range.length;
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
+
         @Override
         public boolean equals(Object obj) {
             if (this == obj)
@@ -2193,21 +1779,10 @@ public class SearchQuery implements Serializable {
             return true;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("InOperator ( ").append("range = ").append(Arrays.toString(this.range)).append(TAB)
-                    .append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("range", Arrays.toString(range))
+                .toString();
         }
 
     }
@@ -2215,7 +1790,7 @@ public class SearchQuery implements Serializable {
     /**
      * Search for uids within set of ranges.
      */
-    public static final class UidInOperator implements Operator {
+    public static class UidInOperator implements Operator {
         private static final long serialVersionUID = 1L;
 
         private final UidRange[] ranges;
@@ -2250,21 +1825,10 @@ public class SearchQuery implements Serializable {
             return false;
         }
 
-        /**
-         * Constructs a <code>String</code> with all attributes in name = value
-         * format.
-         * 
-         * @return a <code>String</code> representation of this object.
-         */
         public String toString() {
-            final String TAB = " ";
-
-            StringBuffer retValue = new StringBuffer();
-
-            retValue.append("UidInOperator ( ").append("range = ").append(Arrays.toString(this.ranges)).append(TAB)
-                    .append(" )");
-
-            return retValue.toString();
+            return MoreObjects.toStringHelper(this)
+                .add("ranges", Arrays.toString(ranges))
+                .toString();
         }
 
     }
