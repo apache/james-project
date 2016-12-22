@@ -64,6 +64,8 @@ public class SortConverter {
             case DisplayTo:
                 return SortBuilders.fieldSort(JsonMessageConstants.TO + PATH_SEPARATOR + JsonMessageConstants.EMailer.NAME + PATH_SEPARATOR + NodeMappingFactory.RAW)
                     .setNestedPath(JsonMessageConstants.TO);
+            case Id:
+                return SortBuilders.fieldSort(JsonMessageConstants.ID);
             default:
                 throw new RuntimeException("Sort is not implemented");
         }
