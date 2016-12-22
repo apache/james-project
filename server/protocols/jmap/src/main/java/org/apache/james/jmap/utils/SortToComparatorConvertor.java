@@ -65,7 +65,7 @@ public class SortToComparatorConvertor {
     @SuppressWarnings("rawtypes")
     private static Function<Map.Entry<MailboxPath, MessageResult>, Comparable> functionForField(String field) {
         if (!fieldsMessageFunctionMap.containsKey(field)) {
-            throw new IllegalArgumentException("Unknown sorting field");
+            throw new IllegalArgumentException("Unknown sorting field " + field);
         }
         return fieldsMessageFunctionMap.get(field);
     }
