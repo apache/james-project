@@ -29,7 +29,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -70,12 +69,14 @@ import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.utils.search.MessageMatcher;
 
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 
 /**
  * Utility methods to help perform search operations.
  */
-public class MessageSearches implements Iterable<MessageUid> {
+public class MessageSearches implements Iterable<SimpleMessageSearchIndex.SearchResult> {
 
     private Iterator<MailboxMessage> messages;
     private SearchQuery query;
@@ -93,7 +94,7 @@ public class MessageSearches implements Iterable<MessageUid> {
     public MessageSearches() {
     }
 
-    private Set<MessageUid> search() {
+    private Set<SimpleMessageSearchIndex.SearchResult> search() {
         TreeSet<MailboxMessage> matched = new TreeSet<MailboxMessage>(CombinedComparator.create(query.getSorts()));
         while (messages.hasNext()) {
             MailboxMessage m = messages.next();
@@ -107,12 +108,16 @@ public class MessageSearches implements Iterable<MessageUid> {
                 }
             }
         }
-        Set<MessageUid> uids = new HashSet<MessageUid>();
-        Iterator<MailboxMessage> matchedIt = matched.iterator();
-        while (matchedIt.hasNext()) {
-            uids.add(matchedIt.next().getUid());
-        }
-        return uids;
+        return FluentIterable.from(matched)
+            .transform(new Function<MailboxMessage, SimpleMessageSearchIndex.SearchResult>() {
+                @Override
+                public SimpleMessageSearchIndex.SearchResult apply(MailboxMessage input) {
+                    return new SimpleMessageSearchIndex.SearchResult(
+                        input.getMessageId(),
+                        input.getMailboxId(),
+                        input.getUid());
+                }
+            }).toSet();
     }
 
     /**
@@ -631,7 +636,7 @@ public class MessageSearches implements Iterable<MessageUid> {
      * according to the SearchQuery
      * 
      */
-    public Iterator<MessageUid> iterator() {
+    public Iterator<SimpleMessageSearchIndex.SearchResult> iterator() {
         return search().iterator();
     }
 

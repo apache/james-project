@@ -20,11 +20,10 @@ package org.apache.james.mailbox.elasticsearch.events;
 
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -38,6 +37,7 @@ import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -49,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -85,17 +86,20 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         MailboxId mailboxId = mailbox.getMailboxId();
         MultimailboxesSearchQuery query = MultimailboxesSearchQuery.from(searchQuery).inMailboxes(mailboxId).build();
+        Optional<Long> noLimit = Optional.empty();
         return searcher
-                .search(ImmutableList.of(session.getUser()), query)
-                .get(mailboxId)
+                .search(ImmutableList.of(session.getUser()), query, noLimit)
+                .map(SearchResult::getMessageUid)
                 .iterator();
     }
     
     @Override
-    public Map<MailboxId, Collection<MessageUid>> search(MailboxSession session, MultimailboxesSearchQuery searchQuery)
+    public List<MessageId> search(MailboxSession session, MultimailboxesSearchQuery searchQuery, long limit)
             throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
-        return searcher.search(ImmutableList.of(session.getUser()), searchQuery).asMap();
+        return searcher.search(ImmutableList.of(session.getUser()), searchQuery, Optional.of(limit))
+            .map(SearchResult::getMessageId)
+            .collect(Guavate.toImmutableList());
     }
 
     @Override
@@ -156,5 +160,5 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     private String indexIdFor(Mailbox mailbox, MessageUid uid) {
         return String.join(ID_SEPARATOR, mailbox.getMailboxId().serialize(), String.valueOf(uid.asLong()));
     }
-    
+
 }

@@ -19,10 +19,7 @@
 
 package org.apache.james.jmap.methods;
 
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -38,39 +35,25 @@ import org.apache.james.jmap.model.GetMessageListRequest;
 import org.apache.james.jmap.model.GetMessageListResponse;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.utils.FilterToSearchQuery;
-import org.apache.james.jmap.utils.SortToComparatorConvertor;
+import org.apache.james.jmap.utils.SortConverter;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimap;
 
 public class GetMessageListMethod implements Method {
 
     public static final String MAXIMUM_LIMIT = "maximumLimit";
     public static final int DEFAULT_MAXIMUM_LIMIT = 256;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GetMailboxesMethod.class);
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMessageList");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messageList");
 
@@ -103,66 +86,39 @@ public class GetMessageListMethod implements Method {
     public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMessageListRequest);
         GetMessageListRequest messageListRequest = (GetMessageListRequest) request;
-        GetMessageListResponse messageListResponse = getMessageListResponse(messageListRequest, clientId, mailboxSession);
+        GetMessageListResponse messageListResponse = getMessageListResponse(messageListRequest, mailboxSession);
  
         Stream<JmapResponse> jmapResponse = Stream.of(JmapResponse.builder().clientId(clientId)
                 .response(messageListResponse)
                 .responseName(RESPONSE_NAME)
                 .build());
-        return Stream.<JmapResponse> concat(jmapResponse, 
+        return Stream.concat(jmapResponse,
                 processGetMessages(messageListRequest, messageListResponse, clientId, mailboxSession));
     }
 
-    private GetMessageListResponse getMessageListResponse(GetMessageListRequest messageListRequest, ClientId clientId, MailboxSession mailboxSession) {
+    private GetMessageListResponse getMessageListResponse(GetMessageListRequest messageListRequest, MailboxSession mailboxSession) {
         GetMessageListResponse.Builder builder = GetMessageListResponse.builder();
         try {
             MultimailboxesSearchQuery searchQuery = convertToSearchQuery(messageListRequest);
-            Map<MailboxId, Collection<MessageUid>> searchResults = mailboxManager.search(searchQuery, mailboxSession);
-            
-            aggregateResults(mailboxSession, searchResults).entries().stream()
-                .sorted(comparatorFor(messageListRequest))
-                .map(entry -> entry.getValue().getMessageId())
+            mailboxManager.search(searchQuery,
+                mailboxSession,
+                messageListRequest.getLimit().orElse(maximumLimit) + messageListRequest.getPosition())
+                .stream()
                 .skip(messageListRequest.getPosition())
-                .limit(limit(messageListRequest.getLimit()))
                 .forEach(builder::messageId);
-
             return builder.build();
         } catch (MailboxException e) {
             throw Throwables.propagate(e);
         }
     }
 
-    private Multimap<MailboxPath, MessageResult> aggregateResults(MailboxSession mailboxSession, Map<MailboxId, Collection<MessageUid>> searchResults) {
-        Multimap<MailboxPath, MessageResult> messages = LinkedHashMultimap.create();
-        for (Map.Entry<MailboxId, Collection<MessageUid>> mailboxResults: searchResults.entrySet()) {
-            try {
-                aggregate(mailboxSession, messages, mailboxResults);
-            } catch (MailboxException e) {
-                LOGGER.error("Error retrieving mailbox", e);
-                throw Throwables.propagate(e);
-            }
-        }
-        return messages;
-    }
-
-    private void aggregate(MailboxSession mailboxSession, Multimap<MailboxPath, MessageResult> aggregation, Map.Entry<MailboxId, Collection<MessageUid>> mailboxResults) throws MailboxNotFoundException, MailboxException {
-        MailboxPath mailboxPath = mailboxManager.getMailbox(mailboxResults.getKey(), mailboxSession).getMailboxPath();
-        MessageManager messageManager = getMessageManager(mailboxPath, mailboxSession)
-            .orElseThrow(() -> new MailboxNotFoundException(mailboxPath));
-        List<MessageResult> mailboxMessages = MessageRange.toRanges(mailboxResults.getValue()).stream()
-            .map(Throwing.function(range -> messageManager.getMessages(range, FetchGroupImpl.MINIMAL, mailboxSession)))
-            .map(messageIterator -> ImmutableList.copyOf(messageIterator))
-            .flatMap(List::stream)
-            .collect(Guavate.toImmutableList());
-        aggregation.putAll(mailboxPath, mailboxMessages);
-    }
-
     private MultimailboxesSearchQuery convertToSearchQuery(GetMessageListRequest messageListRequest) {
         SearchQuery searchQuery = messageListRequest.getFilter()
                 .map(filter -> new FilterToSearchQuery().convert(filter))
                 .orElse(new SearchQuery());
-        Set<MailboxId> inMailboxes = buildFilterMailboxesSet(messageListRequest.getFilter(), condition -> condition.getInMailboxes());
-        Set<MailboxId> notInMailboxes = buildFilterMailboxesSet(messageListRequest.getFilter(), condition -> condition.getNotInMailboxes());
+        Set<MailboxId> inMailboxes = buildFilterMailboxesSet(messageListRequest.getFilter(), FilterCondition::getInMailboxes);
+        Set<MailboxId> notInMailboxes = buildFilterMailboxesSet(messageListRequest.getFilter(), FilterCondition::getNotInMailboxes);
+        searchQuery.setSorts(SortConverter.convertToSorts(messageListRequest.getSort()));
         return MultimailboxesSearchQuery
                 .from(searchQuery)
                 .inMailboxes(inMailboxes)
@@ -202,23 +158,6 @@ public class GetMessageListMethod implements Method {
     private boolean shouldChainToGetMessages(GetMessageListRequest messageListRequest) {
         return messageListRequest.isFetchMessages().orElse(false) 
                 && !messageListRequest.isFetchThreads().orElse(false);
-    }
-
-    private long limit(Optional<Integer> limit) {
-        return limit.orElse(maximumLimit);
-    }
-
-    private Comparator<Map.Entry<MailboxPath, MessageResult>> comparatorFor(GetMessageListRequest messageListRequest) {
-        return SortToComparatorConvertor.comparatorFor(messageListRequest.getSort());
-    }
-
-    private Optional<MessageManager> getMessageManager(MailboxPath mailboxPath, MailboxSession mailboxSession) {
-        try {
-            return Optional.of(mailboxManager.getMailbox(mailboxPath, mailboxSession));
-        } catch (MailboxException e) {
-            LOGGER.warn("Error retrieveing mailbox :" + mailboxPath, e);
-            return Optional.empty();
-        }
     }
 
 }

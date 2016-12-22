@@ -23,10 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -38,6 +38,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
@@ -45,9 +46,9 @@ import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.SimpleMailboxMembership;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.lucene.store.RAMDirectory;
 import org.junit.Before;
@@ -55,7 +56,8 @@ import org.junit.Test;
 
 public class LuceneMailboxMessageSearchIndexTest {
 
-	private LuceneMessageSearchIndex index;
+    public static final long LIMIT = 100L;
+    private LuceneMessageSearchIndex index;
     
     private SimpleMailbox mailbox = new SimpleMailbox(0);
     private SimpleMailbox mailbox2 = new SimpleMailbox(1);
@@ -79,6 +81,11 @@ public class LuceneMailboxMessageSearchIndexTest {
     private MessageUid uid3;
     private MessageUid uid4;
     private MessageUid uid5;
+    private MessageId id1;
+    private MessageId id2;
+    private MessageId id3;
+    private MessageId id4;
+    private MessageId id5;
 
     protected boolean useLenient() {
         return true;
@@ -86,7 +93,13 @@ public class LuceneMailboxMessageSearchIndexTest {
     
     @Before
     public void setUp() throws Exception {
-        index = new LuceneMessageSearchIndex(null, new TestId.Factory(), new RAMDirectory(), true, useLenient());
+        TestMessageId.Factory factory = new TestMessageId.Factory();
+        id1 = factory.generate();
+        id2 = factory.generate();
+        id3 = factory.generate();
+        id4 = factory.generate();
+        id5 = factory.generate();
+        index = new LuceneMessageSearchIndex(null, new TestId.Factory(), new RAMDirectory(), true, useLenient(), factory);
         index.setEnableSuffixMatch(true);
         Map<String, String> headersSubject = new HashMap<String, String>();
         headersSubject.put("Subject", "test (fwd)");
@@ -107,23 +120,23 @@ public class LuceneMailboxMessageSearchIndexTest {
         headersTestSubject.put("Cc", "test211 <test21@localhost>, test6 <test6@foobar>");
         
         uid1 = MessageUid.of(1);
-        SimpleMailboxMembership m = new SimpleMailboxMembership(new DefaultMessageId(), mailbox.getMailboxId(), uid1, 0, new Date(), 200, new Flags(Flag.ANSWERED), "My Body".getBytes(), headersSubject);
+        SimpleMailboxMembership m = new SimpleMailboxMembership(id1, mailbox.getMailboxId(), uid1, 0, new Date(), 200, new Flags(Flag.ANSWERED), "My Body".getBytes(), headersSubject);
         index.add(null, mailbox, m);
 
         uid2 = MessageUid.of(1);
-        SimpleMailboxMembership m2 = new SimpleMailboxMembership(new DefaultMessageId(), mailbox2.getMailboxId(), uid2, 0, new Date(), 20, new Flags(Flag.ANSWERED), "My Body".getBytes(), headersSubject);
+        SimpleMailboxMembership m2 = new SimpleMailboxMembership(id2, mailbox2.getMailboxId(), uid2, 0, new Date(), 20, new Flags(Flag.ANSWERED), "My Body".getBytes(), headersSubject);
         index.add(null, mailbox2, m2);
         
         uid3 = MessageUid.of(2);
         Calendar cal = Calendar.getInstance();
         cal.set(1980, 2, 10);
-        SimpleMailboxMembership m3 = new SimpleMailboxMembership(new DefaultMessageId(), mailbox.getMailboxId(), uid3, 0, cal.getTime(), 20, new Flags(Flag.DELETED), "My Otherbody".getBytes(), headersTest);
+        SimpleMailboxMembership m3 = new SimpleMailboxMembership(id3, mailbox.getMailboxId(), uid3, 0, cal.getTime(), 20, new Flags(Flag.DELETED), "My Otherbody".getBytes(), headersTest);
         index.add(null, mailbox, m3);
         
         uid4 = MessageUid.of(3);
         Calendar cal2 = Calendar.getInstance();
         cal2.set(8000, 2, 10);
-        SimpleMailboxMembership m4 = new SimpleMailboxMembership(new DefaultMessageId(), mailbox.getMailboxId(), uid4, 0, cal2.getTime(), 20, new Flags(Flag.DELETED), "My Otherbody2".getBytes(), headersTestSubject);
+        SimpleMailboxMembership m4 = new SimpleMailboxMembership(id4, mailbox.getMailboxId(), uid4, 0, cal2.getTime(), 20, new Flags(Flag.DELETED), "My Otherbody2".getBytes(), headersTestSubject);
         index.add(null, mailbox, m4);
         
         uid5 = MessageUid.of(10);
@@ -136,7 +149,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         builder.uid = uid5;
         builder.mailboxId = mailbox3.getMailboxId();
         
-        index.add(null, mailbox3, builder.build());
+        index.add(null, mailbox3, builder.build(id5));
 
         session = new MockMailboxSession("username");
     }
@@ -267,29 +280,44 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void searchBodyInAllMailboxesShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains("My Body"));
-        Map<MailboxId, Collection<MessageUid>> result = index.search(session, MultimailboxesSearchQuery.from(query).build());
-        assertThat(result).hasSize(2);
-        assertThat(result.get(mailbox.id)).containsExactly(uid1);
-        assertThat(result.get(mailbox2.id)).containsExactly(uid2);
+
+        List<MessageId> result = index.search(session, MultimailboxesSearchQuery.from(query).build(), LIMIT);
+
+        assertThat(result).containsOnly(id1, id2);
     }
 
     @Test
     public void searchBodyInSpecificMailboxesShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains("My Body"));
-        Map<MailboxId, Collection<MessageUid>> result = index.search(session, 
-                MultimailboxesSearchQuery.from(query).inMailboxes(mailbox.id, mailbox3.id).build());
-        assertThat(result).hasSize(1);
-        assertThat(result.get(mailbox.id)).containsExactly(uid1);
-    }
 
+        List<MessageId> result = index.search(session,
+                MultimailboxesSearchQuery.from(query).inMailboxes(mailbox.id, mailbox3.id).build(),
+                LIMIT);
+
+        assertThat(result).containsOnly(id1);
+    }
 
     @Test
     public void searchAllShouldMatchAllUserEmails() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
-        Map<MailboxId, Collection<MessageUid>> result = index.search(session, MultimailboxesSearchQuery.from(query).build());
-        assertThat(result).hasSize(3);
+
+        List<MessageId> result = index.search(session, MultimailboxesSearchQuery.from(query).build(), LIMIT);
+
+        // The query is not limited to one mailbox and we have 5 indexed messages
+        assertThat(result).hasSize(5);
+    }
+
+    @Test
+    public void searchAllShouldLimitTheSize() throws Exception {
+        SearchQuery query = new SearchQuery();
+        query.andCriteria(SearchQuery.all());
+
+        int limit = 1;
+        List<MessageId> result = index.search(session, MultimailboxesSearchQuery.from(query).build(), limit);
+
+        assertThat(result).hasSize(limit);
     }
     
     @Test

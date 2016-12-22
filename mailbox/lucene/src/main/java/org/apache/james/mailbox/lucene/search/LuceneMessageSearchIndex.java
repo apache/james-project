@@ -33,7 +33,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -48,6 +47,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -117,10 +117,11 @@ import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.Version;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimap;
 
 /**
  * Lucene based {@link ListeningMessageSearchIndex} which offers message searching via a Lucene index
@@ -264,6 +265,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     public final static String MAILBOX_ID_FIELD ="mailboxid";
 
     /**
+     * {@link Field} which will contain the id of the {@link MessageId}
+     */
+    public final static String MESSAGE_ID_FIELD ="messageid";
+
+    /**
      * {@link Field} which contain the Date header of the message with YEAR-Resolution
      */
     public final static String SENT_DATE_FIELD_YEAR_RESOLUTION ="sentdateYearResolution";
@@ -341,6 +347,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private final static SortField FIRST_FROM_MAILBOX_DISPLAY_SORT_REVERSE = new SortField(FIRST_FROM_MAILBOX_DISPLAY_FIELD, SortField.STRING, true);
     
     private final Factory mailboxIdFactory;
+    private final MessageId.Factory messageIdFactory;
     private final IndexWriter writer;
     
     private int maxQueryResults = DEFAULT_MAX_QUERY_RESULTS;
@@ -348,21 +355,23 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private boolean suffixMatch = false;
 
     @Inject
-    public LuceneMessageSearchIndex(MessageMapperFactory factory, MailboxId.Factory mailboxIdFactory, Directory directory) throws CorruptIndexException, LockObtainFailedException, IOException {
-        this(factory, mailboxIdFactory, directory, false, true);
+    public LuceneMessageSearchIndex(MessageMapperFactory factory, Factory mailboxIdFactory, Directory directory, MessageId.Factory messageIdFactory) throws CorruptIndexException, LockObtainFailedException, IOException {
+        this(factory, mailboxIdFactory, directory, false, true, messageIdFactory);
     }
     
     
-    public LuceneMessageSearchIndex(MessageMapperFactory factory, MailboxId.Factory mailboxIdFactory, Directory directory, boolean dropIndexOnStart, boolean lenient) throws CorruptIndexException, LockObtainFailedException, IOException {
+    public LuceneMessageSearchIndex(MessageMapperFactory factory, Factory mailboxIdFactory, Directory directory, boolean dropIndexOnStart, boolean lenient, MessageId.Factory messageIdFactory) throws CorruptIndexException, LockObtainFailedException, IOException {
         super(factory);
         this.mailboxIdFactory = mailboxIdFactory;
+        this.messageIdFactory = messageIdFactory;
         this.writer = new IndexWriter(directory,  createConfig(createAnalyzer(lenient), dropIndexOnStart));
     }
     
     
-    public LuceneMessageSearchIndex(MessageMapperFactory factory, MailboxId.Factory mailboxIdFactory, IndexWriter writer) {
+    public LuceneMessageSearchIndex(MessageMapperFactory factory, Factory mailboxIdFactory, MessageId.Factory messageIdFactory, IndexWriter writer) {
         super(factory);
         this.mailboxIdFactory = mailboxIdFactory;
+        this.messageIdFactory = messageIdFactory;
         this.writer = writer;
     }
 
@@ -431,24 +440,36 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     public Iterator<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         MailboxId mailboxId = mailbox.getMailboxId();
-        Multimap<MailboxId, MessageUid> results = 
-                searchMultimap(
-                    session, 
-                    MultimailboxesSearchQuery
-                        .from(searchQuery)
-                        .inMailboxes(mailboxId)
-                        .build());
-        return results.get(mailboxId).iterator();
+        return FluentIterable.from(searchMultimap(
+            MultimailboxesSearchQuery
+                .from(searchQuery)
+                .inMailboxes(mailboxId)
+                .build()))
+            .transform(new Function<SearchResult, MessageUid>() {
+                @Override
+                public MessageUid apply(SearchResult input) {
+                    return input.getMessageUid();
+                }
+            })
+            .iterator();
     }
 
     @Override
-    public Map<MailboxId, Collection<MessageUid>> search(MailboxSession session, MultimailboxesSearchQuery searchQuery) throws MailboxException {
+    public List<MessageId> search(MailboxSession session, MultimailboxesSearchQuery searchQuery, long limit) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
-        return searchMultimap(session, searchQuery).asMap();
+        return FluentIterable.from(searchMultimap(searchQuery))
+            .transform(new Function<SearchResult, MessageId>() {
+                @Override
+                public MessageId apply(SearchResult input) {
+                    return input.getMessageId();
+                }
+            })
+            .limit(Long.valueOf(limit).intValue())
+            .toList();
     }
     
-    private Multimap<MailboxId, MessageUid> searchMultimap(MailboxSession session, MultimailboxesSearchQuery searchQuery) throws MailboxException {
-        Multimap<MailboxId, MessageUid> results = LinkedHashMultimap.create();
+    private List<SearchResult> searchMultimap(MultimailboxesSearchQuery searchQuery) throws MailboxException {
+        ImmutableList.Builder<SearchResult> results = ImmutableList.builder();
         IndexSearcher searcher = null;
 
         Query inMailboxes = buildQueryFromMailboxes(searchQuery.getInMailboxes());
@@ -471,7 +492,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 Document doc = searcher.doc(sDoc.doc);
                 MessageUid uid = MessageUid.of(Long.valueOf(doc.get(UID_FIELD)));
                 MailboxId mailboxId = mailboxIdFactory.fromString(doc.get(MAILBOX_ID_FIELD));
-                results.put(mailboxId, uid);
+                MessageId messageId = messageIdFactory.fromString(doc.get(MESSAGE_ID_FIELD));
+                results.add(new SearchResult(messageId, mailboxId, uid));
             }
         } catch (IOException e) {
             throw new MailboxException("Unable to search the mailbox", e);
@@ -484,7 +506,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 }
             }
         }
-        return results;
+        return results.build();
     }
    
     private Query buildQueryFromMailboxes(ImmutableSet<MailboxId> mailboxIds) {
@@ -513,6 +535,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         // TODO: Better handling
         doc.add(new Field(MAILBOX_ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.ENGLISH), Store.YES, Index.NOT_ANALYZED));
         doc.add(new NumericField(UID_FIELD,Store.YES, true).setLongValue(membership.getUid().asLong()));
+        doc.add(new Field(MESSAGE_ID_FIELD, membership.getMessageId().serialize(), Store.YES, Index.NOT_ANALYZED));
         
         // create an unqiue key for the document which can be used later on updates to find the document
         doc.add(new Field(ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.ENGLISH) +"-" + Long.toString(membership.getUid().asLong()), Store.YES, Index.NOT_ANALYZED));

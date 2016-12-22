@@ -26,6 +26,7 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -42,8 +43,9 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
 
     @Override
     protected void initializeMailboxManager() throws Exception {
+        TestMessageId.Factory messageIdFactory = new TestMessageId.Factory();
         MailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
-        messageSearchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), new RAMDirectory());
+        messageSearchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), new RAMDirectory(), messageIdFactory);
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,
             new FakeAuthenticator(),
@@ -51,7 +53,7 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
             new UnionMailboxACLResolver(),
             new SimpleGroupMembershipResolver(),
             new MessageParser(),
-            new InMemoryMessageId.Factory());
+            messageIdFactory);
         storeMailboxManager.setMessageSearchIndex(messageSearchIndex);
         storeMailboxManager.init();
     }

@@ -67,9 +67,10 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             IndexCreationFactory.createIndex(new TestingClientProvider(embeddedElasticSearch.getNode()).get())
         );
         MailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
+        InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         messageSearchIndex = new ElasticSearchListeningMessageSearchIndex(mapperFactory,
             new ElasticSearchIndexer(client, new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor(), BATCH_SIZE)),
-            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE, new InMemoryId.Factory()),
+            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE, new InMemoryId.Factory(), messageIdFactory),
             new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES));
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,
@@ -78,7 +79,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             new UnionMailboxACLResolver(),
             new SimpleGroupMembershipResolver(),
             new MessageParser(),
-            new InMemoryMessageId.Factory());
+            messageIdFactory);
         storeMailboxManager.setMessageSearchIndex(messageSearchIndex);
         storeMailboxManager.init();
     }

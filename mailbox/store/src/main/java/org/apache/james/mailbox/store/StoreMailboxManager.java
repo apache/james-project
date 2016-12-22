@@ -20,12 +20,10 @@
 package org.apache.james.mailbox.store;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -40,7 +38,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MailboxSessionIdGenerator;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.RequestAware;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -84,6 +81,8 @@ import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 import org.slf4j.Logger;
+
+import com.google.common.base.Optional;
 
 /**
  * This base class of an {@link MailboxManager} implementation provides a high-level api for writing your own
@@ -699,8 +698,8 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public Map<MailboxId, Collection<MessageUid>> search(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException {
-        return index.search(session, expression);
+    public List<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException {
+        return index.search(session, expression, limit);
     }
 
     public boolean belongsToNamespaceAndUser(MailboxPath base, Mailbox mailbox) {
