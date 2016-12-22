@@ -153,8 +153,8 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         }
     }
 
-    private String indexIdFor(Mailbox mailbox, MessageUid messageId) {
-        return String.join(ID_SEPARATOR, mailbox.getMailboxId().serialize(), String.valueOf(messageId));
+    private String indexIdFor(Mailbox mailbox, MessageUid uid) {
+        return String.join(ID_SEPARATOR, mailbox.getMailboxId().serialize(), String.valueOf(uid.asLong()));
     }
     
 }
