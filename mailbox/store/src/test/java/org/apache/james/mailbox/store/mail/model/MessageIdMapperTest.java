@@ -392,10 +392,7 @@ public class MessageIdMapperTest<T extends MapperProvider> {
             .add("userflag")
             .build();
 
-        Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), newFlags, FlagsUpdateMode.REMOVE);
-
-        long modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
-        UpdatedFlags expectedUpdatedFlags = new UpdatedFlags(message1.getUid(), modSeq, messageFlags, new Flags(Flags.Flag.RECENT));
+        sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), newFlags, FlagsUpdateMode.REMOVE);
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);

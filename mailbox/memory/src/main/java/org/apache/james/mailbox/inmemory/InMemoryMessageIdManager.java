@@ -45,7 +45,6 @@ import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -133,19 +132,6 @@ public class InMemoryMessageIdManager implements MessageIdManager {
             @Override
             public MailboxId apply(MailboxMetaData input) {
                 return input.getId();
-            }
-        };
-    }
-
-    private Function<MailboxPath, MailboxId> getMailboxIdFromMailboxPath(final MailboxSession mailboxSession) {
-        return new Function<MailboxPath, MailboxId>() {
-            @Override
-            public MailboxId apply(MailboxPath input) {
-                try {
-                    return mailboxManager.getMailbox(input, mailboxSession).getId();
-                } catch (MailboxException e) {
-                    throw Throwables.propagate(e);
-                }
             }
         };
     }

@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.cassandra.cucumber;
 
-import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 import cucumber.api.CucumberOptions;

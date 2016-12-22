@@ -65,7 +65,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 
 public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSystem {
-    private static final long UID_VALIDITY = 18L;
 
     private static final CassandraCluster CASSANDRA = CassandraCluster.create(new CassandraModuleComposite(
         new CassandraAclModule(),
