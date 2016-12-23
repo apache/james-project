@@ -35,10 +35,12 @@
         <constructor-arg index="1" ref="mailboxIdFactory"/>
         <constructor-arg index="2" type="org.apache.lucene.store.Directory" ref="fsDirectory"/>
         <constructor-arg index="3" ref="messageIdFactory"/>
+        <constructor-arg index="4" ref="mailboxmanager"/>
         <property name="enableSuffixMatch" value="true"/>
     </bean>
     <bean id="fsDirectory"  class="org.apache.lucene.store.FSDirectory" factory-method="open">
         <constructor-arg index="0" value="../var/store/lucene"/>
     </bean>
     <alias name="jpa-mailboxIdFactory" alias="mailboxIdFactory"/>
+    <alias name="jpa-mailboxmanager" alias="mailboxmanager"/>
 </beans>

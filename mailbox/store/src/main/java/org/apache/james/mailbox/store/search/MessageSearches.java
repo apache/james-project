@@ -68,6 +68,7 @@ import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.utils.search.MessageMatcher;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -114,7 +115,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                 @Override
                 public SimpleMessageSearchIndex.SearchResult apply(MailboxMessage input) {
                     return new SimpleMessageSearchIndex.SearchResult(
-                        input.getMessageId(),
+                        Optional.of(input.getMessageId()),
                         input.getMailboxId(),
                         input.getUid());
                 }

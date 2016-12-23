@@ -40,6 +40,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.elasticsearch.client.Client;
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
@@ -71,7 +72,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         messageSearchIndex = new ElasticSearchListeningMessageSearchIndex(mapperFactory,
             new ElasticSearchIndexer(client, new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor(), BATCH_SIZE)),
             new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE, new InMemoryId.Factory(), messageIdFactory),
-            new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES));
+            new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES, MessageSearchIndex.IndexMessageId.Required));
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,
             new FakeAuthenticator(),

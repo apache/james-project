@@ -33,6 +33,8 @@ import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
+import com.google.common.base.Optional;
+
 /**
  * An index which can be used to search for MailboxMessage UID's that match a {@link SearchQuery}.
  * 
@@ -40,6 +42,11 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  * 
  */
 public interface MessageSearchIndex {
+
+    enum IndexMessageId {
+        Required,
+        Optional
+    }
 
     /**
      * Return all uids of the previous indexed {@link Mailbox}'s which match the {@link SearchQuery}
@@ -54,17 +61,17 @@ public interface MessageSearchIndex {
     EnumSet<MailboxManager.SearchCapabilities> getSupportedCapabilities();
 
     class SearchResult {
-        private final MessageId messageId;
+        private final Optional<MessageId> messageId;
         private final MailboxId mailboxId;
         private final MessageUid messageUid;
 
-        public SearchResult(MessageId messageId, MailboxId mailboxId, MessageUid messageUid) {
+        public SearchResult(Optional<MessageId> messageId, MailboxId mailboxId, MessageUid messageUid) {
             this.messageId = messageId;
             this.mailboxId = mailboxId;
             this.messageUid = messageUid;
         }
 
-        public MessageId getMessageId() {
+        public Optional<MessageId> getMessageId() {
             return messageId;
         }
 

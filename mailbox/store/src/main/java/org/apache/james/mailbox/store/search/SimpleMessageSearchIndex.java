@@ -182,7 +182,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         return new Function<SearchResult, MessageId>() {
             @Override
             public MessageId apply(SearchResult input) {
-                return input.getMessageId();
+                return input.getMessageId().get();
             }
         };
     }

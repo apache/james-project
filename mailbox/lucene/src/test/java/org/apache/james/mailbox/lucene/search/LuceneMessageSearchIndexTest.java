@@ -45,7 +45,6 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
     protected void initializeMailboxManager() throws Exception {
         TestMessageId.Factory messageIdFactory = new TestMessageId.Factory();
         MailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
-        messageSearchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), new RAMDirectory(), messageIdFactory);
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,
             new FakeAuthenticator(),
@@ -54,6 +53,7 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
             new SimpleGroupMembershipResolver(),
             new MessageParser(),
             messageIdFactory);
+        messageSearchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), new RAMDirectory(), messageIdFactory, storeMailboxManager);
         storeMailboxManager.setMessageSearchIndex(messageSearchIndex);
         storeMailboxManager.init();
     }

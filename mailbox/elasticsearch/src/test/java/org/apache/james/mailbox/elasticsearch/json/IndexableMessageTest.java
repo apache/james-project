@@ -29,6 +29,7 @@ import java.time.ZoneId;
 import javax.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.TestId;
@@ -40,6 +41,8 @@ import com.google.common.collect.ImmutableList;
 
 public class IndexableMessageTest {
 
+    public static final MessageUid MESSAGE_UID = MessageUid.of(154);
+
     @Test
     public void textShouldBeEmptyWhenNoMatchingHeaders() throws Exception {
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
@@ -50,6 +53,8 @@ public class IndexableMessageTest {
             .thenReturn(new ByteArrayInputStream("".getBytes()));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
 
         IndexableMessage indexableMessage = IndexableMessage.from(mailboxMessage, ImmutableList.of(new MockMailboxSession("username").getUser()),
                 new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.NO);
@@ -67,6 +72,8 @@ public class IndexableMessageTest {
             .thenReturn(new ByteArrayInputStream("From: First user <user@james.org>\nFrom: Second user <user2@james.org>".getBytes()));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
 
         IndexableMessage indexableMessage = IndexableMessage.from(mailboxMessage, ImmutableList.of(new MockMailboxSession("username").getUser()),
                 new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.NO);
@@ -84,6 +91,8 @@ public class IndexableMessageTest {
             .thenReturn(new ByteArrayInputStream("To: First to <user@james.org>\nTo: Second to <user2@james.org>".getBytes()));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
 
         IndexableMessage indexableMessage = IndexableMessage.from(mailboxMessage, ImmutableList.of(new MockMailboxSession("username").getUser()),
                 new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.NO);
@@ -101,6 +110,8 @@ public class IndexableMessageTest {
             .thenReturn(new ByteArrayInputStream("Cc: First cc <user@james.org>\nCc: Second cc <user2@james.org>".getBytes()));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
 
         IndexableMessage indexableMessage = IndexableMessage.from(mailboxMessage, ImmutableList.of(new MockMailboxSession("username").getUser()),
                 new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.NO);
@@ -114,6 +125,8 @@ public class IndexableMessageTest {
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
             .thenReturn(mailboxId);
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
         when(mailboxMessage.getFullContent())
             .thenReturn(new ByteArrayInputStream("Bcc: First bcc <user@james.org>\nBcc: Second bcc <user2@james.org>".getBytes()));
         when(mailboxMessage.createFlags())
@@ -135,6 +148,8 @@ public class IndexableMessageTest {
             .thenReturn(new ByteArrayInputStream("Subject: subject1\nSubject: subject2".getBytes()));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
 
         IndexableMessage indexableMessage = IndexableMessage.from(mailboxMessage, ImmutableList.of(new MockMailboxSession("username").getUser()),
                 new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.NO);
@@ -152,6 +167,8 @@ public class IndexableMessageTest {
             .thenReturn(new ByteArrayInputStream("\nMy body".getBytes()));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
 
         IndexableMessage indexableMessage = IndexableMessage.from(mailboxMessage, ImmutableList.of(new MockMailboxSession("username").getUser()),
                 new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.NO);
@@ -169,6 +186,8 @@ public class IndexableMessageTest {
             .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/mailWithHeaders.eml"))));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
 
         IndexableMessage indexableMessage = IndexableMessage.from(mailboxMessage, ImmutableList.of(new MockMailboxSession("username").getUser()),
                 new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.NO);
@@ -195,6 +214,8 @@ public class IndexableMessageTest {
             .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/Toto.eml"))));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
 
         // When
         IndexableMessage indexableMessage = IndexableMessage.from(mailboxMessage, ImmutableList.of(new MockMailboxSession("username").getUser()),
@@ -215,6 +236,8 @@ public class IndexableMessageTest {
             .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/Toto.eml"))));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
 
         // When
         IndexableMessage indexableMessage = IndexableMessage.from(mailboxMessage, ImmutableList.of(new MockMailboxSession("username").getUser()),

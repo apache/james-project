@@ -99,6 +99,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         return searcher.search(ImmutableList.of(session.getUser()), searchQuery, Optional.of(limit))
             .map(SearchResult::getMessageId)
+            .map(com.google.common.base.Optional::get)
             .collect(Guavate.toImmutableList());
     }
 

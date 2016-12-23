@@ -50,6 +50,7 @@ import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.SimpleMailboxMembership;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.lucene.store.RAMDirectory;
 import org.junit.Before;
 import org.junit.Test;
@@ -99,7 +100,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         id3 = factory.generate();
         id4 = factory.generate();
         id5 = factory.generate();
-        index = new LuceneMessageSearchIndex(null, new TestId.Factory(), new RAMDirectory(), true, useLenient(), factory);
+        index = new LuceneMessageSearchIndex(null, new TestId.Factory(), new RAMDirectory(), true, useLenient(), factory, MessageSearchIndex.IndexMessageId.Required);
         index.setEnableSuffixMatch(true);
         Map<String, String> headersSubject = new HashMap<String, String>();
         headersSubject.put("Subject", "test (fwd)");
