@@ -354,7 +354,7 @@ public abstract class GetMessageListMethodTest {
 
         given()
             .header("Authorization", accessToken.serialize())
-            .body(String.format("[[\"getMessageList\", {\"filter\":{\"notInMailboxes\":[]}}, \"#0\"]]"))
+            .body("[[\"getMessageList\", {\"filter\":{\"notInMailboxes\":[]}}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
