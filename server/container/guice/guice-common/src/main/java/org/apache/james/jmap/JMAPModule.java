@@ -106,8 +106,12 @@ public class JMAPModule extends AbstractModule {
         public void initModule() {
             Preconditions.checkArgument(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move),
                     "MOVE support in MailboxManager is required by JMAP Module");
-            Preconditions.checkArgument(mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.Attachment),
+
+            EnumSet<MailboxManager.MessageCapabilities> messageCapabilities = mailboxManager.getSupportedMessageCapabilities();
+            Preconditions.checkArgument(messageCapabilities.contains(MailboxManager.MessageCapabilities.Attachment),
                     "Attachment support in MailboxManager is required by JMAP Module");
+            Preconditions.checkArgument(messageCapabilities.contains(MailboxManager.MessageCapabilities.UniqueID),
+                    "MessageIdManager is not defined by this Mailbox implementation");
 
             EnumSet<SearchCapabilities> searchCapabilities = mailboxManager.getSupportedSearchCapabilities();
             Preconditions.checkArgument(searchCapabilities.contains(MailboxManager.SearchCapabilities.MultimailboxSearch),

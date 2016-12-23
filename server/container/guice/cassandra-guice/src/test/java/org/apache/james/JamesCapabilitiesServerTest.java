@@ -33,7 +33,6 @@ import org.apache.james.modules.TestElasticSearchModule;
 import org.apache.james.modules.TestFilesystemModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -45,7 +44,6 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
-@Ignore("needs messageIdManager cassandra impl")
 public class JamesCapabilitiesServerTest {
 
     private GuiceJamesServerImpl server;
@@ -91,9 +89,9 @@ public class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedMailboxCapabilities())
             .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MailboxCapabilities.Move)));
         when(mailboxManager.getSupportedMessageCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.MessageCapabilities.Attachment));
+            .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch, MailboxManager.SearchCapabilities.Text));
+            .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
 
         server = createCassandraJamesServer(mailboxManager);
         
@@ -106,9 +104,9 @@ public class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedMailboxCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
         when(mailboxManager.getSupportedMessageCapabilities())
-            .thenReturn(EnumSet.noneOf(MailboxManager.MessageCapabilities.class));
+            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MessageCapabilities.Attachment)));
         when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch, MailboxManager.SearchCapabilities.Text));
+            .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
 
         server = createCassandraJamesServer(mailboxManager);
 
@@ -123,7 +121,7 @@ public class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch));
+            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.SearchCapabilities.Text)));
 
         server = createCassandraJamesServer(mailboxManager);
 
@@ -138,7 +136,22 @@ public class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.Text));
+            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch)));
+
+        server = createCassandraJamesServer(mailboxManager);
+
+        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void startShouldFailWhenNoUniqueIDCapability() throws Exception {
+        MailboxManager mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.getSupportedMailboxCapabilities())
+            .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
+        when(mailboxManager.getSupportedMessageCapabilities())
+            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MessageCapabilities.UniqueID)));
+        when(mailboxManager.getSupportedSearchCapabilities())
+            .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
 
         server = createCassandraJamesServer(mailboxManager);
 
@@ -148,11 +161,12 @@ public class JamesCapabilitiesServerTest {
     @Test
     public void startShouldSucceedWhenRequiredCapabilities() throws Exception {
         MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move)).thenReturn(true);
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move))
+            .thenReturn(true);
         when(mailboxManager.getSupportedMessageCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.MessageCapabilities.Attachment));
+            .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch, MailboxManager.SearchCapabilities.Text));
+            .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
 
         server = createCassandraJamesServer(mailboxManager);
 
