@@ -100,7 +100,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
 
     @Override
     public EnumSet<MessageCapabilities> getSupportedMessageCapabilities() {
-        return EnumSet.of(MessageCapabilities.Attachment, MessageCapabilities.Unique_ID);
+        return EnumSet.of(MessageCapabilities.Attachment, MessageCapabilities.UniqueID);
     }
     
     @Override
