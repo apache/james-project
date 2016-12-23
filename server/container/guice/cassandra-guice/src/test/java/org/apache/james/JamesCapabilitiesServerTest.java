@@ -144,6 +144,21 @@ public class JamesCapabilitiesServerTest {
     }
 
     @Test
+    public void startShouldFailWhenNoUniqueIDCapability() throws Exception {
+        MailboxManager mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.getSupportedMailboxCapabilities())
+            .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
+        when(mailboxManager.getSupportedMessageCapabilities())
+            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MessageCapabilities.Unique_ID)));
+        when(mailboxManager.getSupportedSearchCapabilities())
+            .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
+
+        server = createCassandraJamesServer(mailboxManager);
+
+        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     public void startShouldSucceedWhenRequiredCapabilities() throws Exception {
         MailboxManager mailboxManager = mock(MailboxManager.class);
         when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move))
