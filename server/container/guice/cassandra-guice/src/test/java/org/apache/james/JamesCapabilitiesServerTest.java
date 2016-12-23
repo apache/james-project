@@ -91,9 +91,9 @@ public class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedMailboxCapabilities())
             .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MailboxCapabilities.Move)));
         when(mailboxManager.getSupportedMessageCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.MessageCapabilities.Attachment));
+            .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch, MailboxManager.SearchCapabilities.Text));
+            .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
 
         server = createCassandraJamesServer(mailboxManager);
         
@@ -106,9 +106,9 @@ public class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedMailboxCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
         when(mailboxManager.getSupportedMessageCapabilities())
-            .thenReturn(EnumSet.noneOf(MailboxManager.MessageCapabilities.class));
+            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MessageCapabilities.Attachment)));
         when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch, MailboxManager.SearchCapabilities.Text));
+            .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
 
         server = createCassandraJamesServer(mailboxManager);
 
@@ -123,7 +123,7 @@ public class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch));
+            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.SearchCapabilities.Text)));
 
         server = createCassandraJamesServer(mailboxManager);
 
@@ -138,7 +138,7 @@ public class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.Text));
+            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch)));
 
         server = createCassandraJamesServer(mailboxManager);
 
@@ -148,11 +148,12 @@ public class JamesCapabilitiesServerTest {
     @Test
     public void startShouldSucceedWhenRequiredCapabilities() throws Exception {
         MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move)).thenReturn(true);
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move))
+            .thenReturn(true);
         when(mailboxManager.getSupportedMessageCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.MessageCapabilities.Attachment));
+            .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch, MailboxManager.SearchCapabilities.Text));
+            .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
 
         server = createCassandraJamesServer(mailboxManager);
 
