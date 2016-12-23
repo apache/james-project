@@ -74,13 +74,13 @@ public class ElasticSearchSearcher {
     }
     
     public Stream<MessageSearchIndex.SearchResult> search(List<User> users, MultimailboxesSearchQuery query, Optional<Long> limit) throws MailboxException {
-        Stream<MessageSearchIndex.SearchResult> pairStream = new ScrollIterable(client, getSearchRequestBuilder(client, users, query)).stream()
+        Stream<MessageSearchIndex.SearchResult> pairStream = new ScrollIterable(client, getSearchRequestBuilder(client, users, query, limit)).stream()
             .flatMap(this::transformResponseToUidStream);
         return limit.map(pairStream::limit)
             .orElse(pairStream);
     }
     
-    private SearchRequestBuilder getSearchRequestBuilder(Client client, List<User> users, MultimailboxesSearchQuery query) {
+    private SearchRequestBuilder getSearchRequestBuilder(Client client, List<User> users, MultimailboxesSearchQuery query, Optional<Long> limit) {
         return query.getSearchQuery().getSorts()
             .stream()
             .reduce(
@@ -89,9 +89,14 @@ public class ElasticSearchSearcher {
                     .setScroll(TIMEOUT)
                     .addFields(JsonMessageConstants.UID, JsonMessageConstants.MAILBOX_ID, JsonMessageConstants.MESSAGE_ID)
                     .setQuery(queryConverter.from(users, query))
-                    .setSize(size),
+                    .setSize(computeRequiredSize(limit)),
                 (searchBuilder, sort) -> searchBuilder.addSort(SortConverter.convertSort(sort)),
                 (partialResult1, partialResult2) -> partialResult1);
+    }
+
+    private int computeRequiredSize(Optional<Long> limit) {
+        return limit.map(value -> Math.min(value.intValue(), size))
+            .orElse(size);
     }
 
     private Stream<MessageSearchIndex.SearchResult> transformResponseToUidStream(SearchResponse searchResponse) {
