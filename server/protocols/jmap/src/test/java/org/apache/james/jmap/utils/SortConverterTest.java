@@ -45,9 +45,9 @@ public class SortConverterTest {
     }
 
     @Test
-    public void convertToSortsShouldReturnDefaultSortOnEmptyEntry() {
+    public void convertToSortsShouldReturnEmptyOnEmptyEntry() {
         assertThat(SortConverter.convertToSorts(ImmutableList.of()))
-            .containsOnly(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Arrival, REVERSE));
+            .isEmpty();
     }
 
     @Test

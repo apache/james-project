@@ -38,19 +38,13 @@ public class SortConverter {
     private static final Map<String, SearchQuery.Sort.SortClause> SORT_CLAUSE_MAP = ImmutableMap.of(
         "date", SearchQuery.Sort.SortClause.Arrival,
         "id", SearchQuery.Sort.SortClause.Id);
-    public static final boolean REVERSE = true;
-    public static final SearchQuery.Sort DEFAULT_SORT = new SearchQuery.Sort(SearchQuery.Sort.SortClause.Arrival, REVERSE);
 
 
     public static List<SearchQuery.Sort> convertToSorts(List<String> jmapSorts) {
         Preconditions.checkNotNull(jmapSorts);
-        ImmutableList<SearchQuery.Sort> result = jmapSorts.stream()
+        return jmapSorts.stream()
             .map(SortConverter::toSort)
             .collect(Guavate.toImmutableList());
-        if (result.isEmpty()) {
-            return ImmutableList.of(DEFAULT_SORT);
-        }
-        return result;
     }
 
     private static SearchQuery.Sort toSort(String jmapSort) {

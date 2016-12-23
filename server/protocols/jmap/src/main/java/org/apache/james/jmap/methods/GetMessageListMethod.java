@@ -118,7 +118,10 @@ public class GetMessageListMethod implements Method {
                 .orElse(new SearchQuery());
         Set<MailboxId> inMailboxes = buildFilterMailboxesSet(messageListRequest.getFilter(), FilterCondition::getInMailboxes);
         Set<MailboxId> notInMailboxes = buildFilterMailboxesSet(messageListRequest.getFilter(), FilterCondition::getNotInMailboxes);
-        searchQuery.setSorts(SortConverter.convertToSorts(messageListRequest.getSort()));
+        List<SearchQuery.Sort> sorts = SortConverter.convertToSorts(messageListRequest.getSort());
+        if (!sorts.isEmpty()) {
+            searchQuery.setSorts(sorts);
+        }
         return MultimailboxesSearchQuery
                 .from(searchQuery)
                 .inMailboxes(inMailboxes)
