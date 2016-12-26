@@ -26,6 +26,8 @@ import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.JmapJamesServer;
@@ -52,6 +54,7 @@ public class TemporaryJamesServer {
 
         jamesServer = new JmapJamesServer()
             .combineWith(MemoryJamesServerMain.inMemoryServerModule)
+            .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(ImmutableList.<Module>builder().addAll(Arrays.asList(additionalModules))
                 .add(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
                 .add(new TemporaryFilesystemModule(temporaryFolder))

@@ -17,77 +17,22 @@
 
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:amq="http://activemq.apache.org/schema/core"
-       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
-         http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-         http://activemq.apache.org/schema/core
-         http://activemq.apache.org/schema/core/activemq-core.xsd
-         http://www.springframework.org/schema/util
-         http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+         http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
     <!-- James Mail Queue Factory -->
-    <bean id="mailqueuefactory" class="org.apache.james.queue.activemq.ActiveMQMailQueueFactory" depends-on="broker">
-        <constructor-arg index="0" ref="jmsConnectionFactory"/>
+    <bean id="mailqueuefactory" class="org.apache.james.queue.activemq.ActiveMQMailQueueFactory">
+        <constructor-arg index="0" ref="embeddedActiveMQ"/>
         <constructor-arg index="1" ref="rawMailQueueItemDecoratorFactory"/>
         <constructor-arg index="2" ref="metricFactory"/>
     </bean>
 
-    <!-- 
-      ActiveMQ Broker, Connections, Blob
-     -->
-    <amq:broker useJmx="true" persistent="true" brokerName="james"
-                dataDirectory="filesystem=file://var/store/activemq/brokers"
-                useShutdownHook="false" schedulerSupport="false" id="broker">
-        <amq:destinationPolicy>
-            <amq:policyMap>
-                <amq:policyEntries>
-                    <!-- Support priority handling of messages -->
-                    <!-- http://activemq.apache.org/how-can-i-support-priority-queues.html -->
-                    <amq:policyEntry queue=">" prioritizedMessages="true"/>
-                </amq:policyEntries>
-            </amq:policyMap>
-        </amq:destinationPolicy>
-        <amq:managementContext>
-            <amq:managementContext createConnector="false"/>
-        </amq:managementContext>
-        <amq:persistenceAdapter>
-            <amq:kahaDB/>
-        </amq:persistenceAdapter>
-        <amq:plugins>
-            <amq:statisticsBrokerPlugin/>
-        </amq:plugins>
-        <amq:transportConnectors>
-            <amq:transportConnector uri="tcp://localhost:0"/>
-        </amq:transportConnectors>
-    </amq:broker>
+    <bean id="rawMailQueueItemDecoratorFactory" class="org.apache.james.queue.api.RawMailQueueItemDecoratorFactory"/>
 
-    <amq:connectionFactory id="amqConnectionFactory" brokerURL="vm://james?create=false">
-        <amq:prefetchPolicy>
-            <!-- Disable prefetch so slow consuming can not block other threads -->
-            <!-- See JAMES-1253 -->
-            <amq:prefetchPolicy queuePrefetch="0" topicPrefetch="0"/>
-        </amq:prefetchPolicy>
-        <property name="blobTransferPolicy" ref="blobTransferPolicy"/>
-    </amq:connectionFactory>
-
-    <bean id="blobTransferPolicy" class="org.apache.james.queue.activemq.FileSystemBlobTransferPolicy"
-          autowire="byName">
-        <property name="defaultUploadUrl" value="file://var/store/activemq/blob-transfer"/>
+    <bean id="embeddedActiveMQ" class="org.apache.james.queue.activemq.EmbeddedActiveMQ">
+        <constructor-arg index="0" ref="filesystem"/>
+        <constructor-arg index="1" ref="persistenceAdapter"/>
     </bean>
 
-    <bean id="jmsConnectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
-        <property name="targetConnectionFactory" ref="amqConnectionFactory"/>
-        <property name="sessionCacheSize" value="10"/>
-        <property name="cacheConsumers" value="false"/>
-        <property name="cacheProducers" value="true"/>
-    </bean>
-
-    <bean id="jmsTransactionManager" class="org.springframework.jms.connection.JmsTransactionManager">
-        <property name="connectionFactory" ref="jmsConnectionFactory"/>
-    </bean>
-
-    <bean id="rawMailQueueItemDecoratorFactory" class="org.apache.james.queue.api.RawMailQueueItemDecoratorFactory">
-    </bean>
-
+    <bean id="persistenceAdapter" class="org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter"/>
 </beans>

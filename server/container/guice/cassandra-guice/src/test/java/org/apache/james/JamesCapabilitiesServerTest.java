@@ -24,6 +24,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.EnumSet;
 
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
@@ -64,6 +66,7 @@ public class JamesCapabilitiesServerTest {
         
         return new GuiceJamesServerImpl()
             .combineWith(CassandraJamesServerMain.cassandraServerModule)
+            .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(new TestElasticSearchModule(embeddedElasticSearch),
                 new TestFilesystemModule(temporaryFolder),
                 new TestJMAPServerModule(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT),

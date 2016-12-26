@@ -19,6 +19,8 @@
 
 package org.apache.james;
 
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.james.modules.TestFilesystemModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.rules.TemporaryFolder;
@@ -36,7 +38,8 @@ public class MemoryJmapTestRule implements TestRule {
         return new JmapJamesServer()
                 .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                 .overrideWith(new TestFilesystemModule(temporaryFolder),
-                        new TestJMAPServerModule(LIMIT_TO_3_MESSAGES));
+                        new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
+                .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class));
     }
 
     @Override
