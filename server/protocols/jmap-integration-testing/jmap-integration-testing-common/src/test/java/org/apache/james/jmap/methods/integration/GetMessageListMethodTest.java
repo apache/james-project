@@ -427,6 +427,29 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", contains(message2.getMessageId().serialize(), message1.getMessageId().serialize()));
     }
 
+
+    @Test
+    public void getMessageListShouldSupportIdSorting() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+
+        LocalDate date = LocalDate.now();
+        ComposedMessageId message1 = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
+        ComposedMessageId message2 = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+            new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessageList\", {\"sort\":[\"id\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", containsInAnyOrder(message2.getMessageId().serialize(), message1.getMessageId().serialize()));
+    }
+
     @Test
     public void getMessageListShouldSortMessagesWhenSortedByDateDesc() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
