@@ -54,6 +54,11 @@
                 <artifactId>james-server-guice-pop</artifactId>
                 <version>3.0.0-beta6-SNAPSHOT</version>
             </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-smtp</artifactId>
+                <version>3.0.0-beta6-SNAPSHOT</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -68,6 +73,7 @@
         <module>onami</module>
         <module>protocols/imap</module>
         <module>protocols/pop</module>
+        <module>protocols/smtp</module>
     </modules>
 </project>
 
