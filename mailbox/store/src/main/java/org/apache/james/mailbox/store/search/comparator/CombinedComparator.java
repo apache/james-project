@@ -74,6 +74,8 @@ public class CombinedComparator implements Comparator<MailboxMessage>{
                 return HeaderDisplayComparator.FROM_COMPARATOR;
             case DisplayTo:
                 return HeaderDisplayComparator.TO_COMPARATOR;
+            case Id:
+                return MessageIdComparator.MESSAGE_ID_COMPARATOR;
             default:
                 throw new NotImplementedException("Combined comparator does not support sort " + sort.getSortClause());
         }

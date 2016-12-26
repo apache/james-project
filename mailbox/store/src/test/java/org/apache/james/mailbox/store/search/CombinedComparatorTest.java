@@ -21,13 +21,13 @@ package org.apache.james.mailbox.store.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.search.comparator.BaseSubjectComparator;
 import org.apache.james.mailbox.store.search.comparator.CombinedComparator;
 import org.apache.james.mailbox.store.search.comparator.HeaderDisplayComparator;
 import org.apache.james.mailbox.store.search.comparator.HeaderMailboxComparator;
 import org.apache.james.mailbox.store.search.comparator.InternalDateComparator;
+import org.apache.james.mailbox.store.search.comparator.MessageIdComparator;
 import org.apache.james.mailbox.store.search.comparator.ReverseComparator;
 import org.apache.james.mailbox.store.search.comparator.SentDateComparator;
 import org.apache.james.mailbox.store.search.comparator.SizeComparator;
@@ -119,10 +119,9 @@ public class CombinedComparatorTest {
     }
 
     @Test
-    public void createShouldThrowOnIdConversion() {
-        expectedException.expect(NotImplementedException.class);
-
-        CombinedComparator.create(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Id)));
+    public void createShouldConvertId() {
+        assertThat(CombinedComparator.create(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Id))).getComparators())
+            .containsOnly(MessageIdComparator.MESSAGE_ID_COMPARATOR);
     }
 
     @Test
