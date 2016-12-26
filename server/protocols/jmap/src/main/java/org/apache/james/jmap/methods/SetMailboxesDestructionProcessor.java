@@ -40,6 +40,8 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.TooLongMailboxNameException;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.slf4j.Logger;
@@ -114,9 +116,14 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
                     .build());
         } catch (SystemMailboxNotUpdatableException e) {
             builder.notDestroyed(entry.getKey(), SetError.builder()
-                    .type("invalidArguments")
-                    .description(String.format("The mailbox '%s' is a system mailbox.", entry.getKey().serialize()))
-                    .build());
+                .type("invalidArguments")
+                .description(String.format("The mailbox '%s' is a system mailbox.", entry.getKey().serialize()))
+                .build());
+        } catch (TooLongMailboxNameException e) {
+            builder.notDestroyed(entry.getKey(), SetError.builder()
+                .type("invalidArguments")
+                .description("The mailbox name length is too long")
+                .build());
         } catch (MailboxException e) {
             String message = String.format("An error occurred when deleting the mailbox '%s'", entry.getKey().serialize());
             LOGGER.error(message, e);

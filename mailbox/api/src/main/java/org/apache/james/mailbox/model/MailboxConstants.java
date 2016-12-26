@@ -45,5 +45,4 @@ public interface MailboxConstants {
 
     /** The maximum number of annotations on a mailbox */
     int DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX = 10;
-
 }

@@ -30,6 +30,7 @@ import org.apache.james.imap.message.request.CreateRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
+import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxPath;
 
 public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
@@ -57,6 +58,11 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
                 session.getLog().debug("Create failed for mailbox " + mailboxPath + " as it already exists", e);
             }
             no(command, tag, responder, HumanReadableText.MAILBOX_EXISTS);
+        } catch (TooLongMailboxNameException e) {
+            if (session.getLog().isDebugEnabled()) {
+                session.getLog().debug("The mailbox name is over limit: " + mailboxPath.getName(), e);
+            }
+            taggedBad(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
         } catch (MailboxException e) {
             if (session.getLog().isInfoEnabled()) {
                 session.getLog().info("Create failed for mailbox " + mailboxPath, e);

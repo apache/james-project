@@ -46,7 +46,9 @@ import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
+import org.apache.james.mailbox.exception.MailboxNameException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -504,6 +506,7 @@ public class StoreMailboxManager implements MailboxManager {
         if (length == 0) {
             mailboxSession.getLog().warn("Ignoring mailbox with empty name");
         } else {
+            validateMailboxName(mailboxPath.getName());
             if (mailboxPath.getName().charAt(length - 1) == getDelimiter())
                 mailboxPath.setName(mailboxPath.getName().substring(0, length - 1));
             if (mailboxExists(mailboxPath, mailboxSession))
@@ -541,6 +544,7 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public void deleteMailbox(final MailboxPath mailboxPath, final MailboxSession session) throws MailboxException {
         session.getLog().info("deleteMailbox " + mailboxPath);
+        validateMailboxName(mailboxPath.getName());
         final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         Mailbox mailbox = mapper.execute(new Mapper.Transaction<Mailbox>() {
@@ -569,6 +573,7 @@ public class StoreMailboxManager implements MailboxManager {
         final Logger log = session.getLog();
         if (log.isDebugEnabled())
             log.debug("renameMailbox " + from + " to " + to);
+        validateMailboxName(to.getName());
         if (mailboxExists(to, session)) {
             throw new MailboxExistsException(to.toString());
         }
@@ -908,5 +913,11 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
         return mapper.hasChildren(mailbox, session.getPathDelimiter());
+    }
+
+    private void validateMailboxName(String mailboxName) throws MailboxNameException {
+        if (mailboxName.length() >= MailboxConstants.DEFAULT_LIMIT_MAILBOX_NAME_LENGTH) {
+            throw new TooLongMailboxNameException("too long mailbox name");
+        }
     }
 }

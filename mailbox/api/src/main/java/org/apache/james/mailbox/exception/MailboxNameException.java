@@ -17,42 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mpt.helper;
+package org.apache.james.mailbox.exception;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
-
-
-public class ByteBufferInputStream extends InputStream {
-    private final ByteBuffer buffer = ByteBuffer.allocate(160384);
-
-    private final CharsetEncoder encoder = Charset.forName("ASCII").newEncoder();
-
-    private boolean readLast = true;
-
-    public int read() throws IOException {
-        if (!readLast) {
-            readLast = true;
-            buffer.flip();
-        }
-        int result = -1;
-        if (buffer.hasRemaining()) {
-            result = buffer.get();
-        }
-        return result;
+public class MailboxNameException extends MailboxException {
+    public MailboxNameException() {
+        super();
     }
 
-    public void nextLine(String line) {
-        if (buffer.position() > 0 && readLast) {
-            buffer.compact();
-        }
-        encoder.encode(CharBuffer.wrap(line), buffer, true);
-        buffer.put((byte) '\r');
-        buffer.put((byte) '\n');
-        readLast = false;
+    public MailboxNameException(String message) {
+        super(message);
     }
+
+    public MailboxNameException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

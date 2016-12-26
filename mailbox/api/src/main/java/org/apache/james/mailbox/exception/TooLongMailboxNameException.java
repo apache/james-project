@@ -17,11 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.exceptions;
+package org.apache.james.mailbox.exception;
 
-public class MailboxNameException extends RuntimeException {
+public class TooLongMailboxNameException extends MailboxNameException {
+    public TooLongMailboxNameException() {
+        super();
+    }
 
-    public MailboxNameException(String message) {
+    public TooLongMailboxNameException(String message) {
         super(message);
     }
+
+    public TooLongMailboxNameException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

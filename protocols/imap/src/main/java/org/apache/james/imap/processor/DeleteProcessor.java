@@ -31,6 +31,7 @@ import org.apache.james.imap.message.request.DeleteRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxPath;
 
 public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
@@ -62,6 +63,11 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
                 session.getLog().debug("Delete failed for mailbox " + mailboxPath + " as it not exist", e);
             }
             no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
+        } catch (TooLongMailboxNameException e) {
+            if (session.getLog().isDebugEnabled()) {
+                session.getLog().debug("The mailbox name is over limit: " + mailboxPath.getName(), e);
+            }
+            taggedBad(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
         } catch (MailboxException e) {
             if (session.getLog().isInfoEnabled()) {
                 session.getLog().info("Delete failed for mailbox " + mailboxPath, e);

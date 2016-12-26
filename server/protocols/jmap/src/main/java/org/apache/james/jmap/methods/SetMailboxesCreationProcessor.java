@@ -25,7 +25,6 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.exceptions.MailboxNameException;
 import org.apache.james.jmap.exceptions.MailboxParentNotFoundException;
 import org.apache.james.jmap.model.MailboxCreationId;
 import org.apache.james.jmap.model.MailboxFactory;
@@ -41,7 +40,9 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
+import org.apache.james.mailbox.exception.MailboxNameException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -111,10 +112,15 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
                 creationIdsToCreatedMailboxId.put(mailboxCreationId, mailbox.get().getId());
             } else {
                 builder.notCreated(mailboxCreationId, SetError.builder()
-                        .type("anErrorOccurred")
-                        .description("An error occurred when creating the mailbox")
-                        .build());
+                    .type("anErrorOccurred")
+                    .description("An error occurred when creating the mailbox")
+                    .build());
             }
+        } catch (TooLongMailboxNameException e) {
+            builder.notCreated(mailboxCreationId, SetError.builder()
+                .type("invalidArguments")
+                .description("The mailbox name length is too long")
+                .build());
         } catch (MailboxNameException | MailboxParentNotFoundException e) {
             builder.notCreated(mailboxCreationId, SetError.builder()
                     .type("invalidArguments")
@@ -136,7 +142,7 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
         }
     }
 
-    private void ensureValidMailboxName(MailboxCreateRequest mailboxRequest, MailboxSession mailboxSession) {
+    private void ensureValidMailboxName(MailboxCreateRequest mailboxRequest, MailboxSession mailboxSession) throws MailboxNameException {
         String name = mailboxRequest.getName();
         char pathDelimiter = mailboxSession.getPathDelimiter();
         if (name.contains(String.valueOf(pathDelimiter))) {
