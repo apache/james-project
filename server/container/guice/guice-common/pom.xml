@@ -185,6 +185,10 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
+                    <artifactId>james-server-guice-lmtp</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-pop</artifactId>
                 </dependency>
                 <dependency>
@@ -230,10 +234,6 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-protocols-library</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>james-server-protocols-lmtp</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

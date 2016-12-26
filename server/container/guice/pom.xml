@@ -46,6 +46,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-lmtp</artifactId>
+                <version>3.0.0-beta6-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-mailbox</artifactId>
                 <version>3.0.0-beta6-SNAPSHOT</version>
             </dependency>
@@ -72,6 +77,7 @@
         <module>jpa-guice</module>
         <module>onami</module>
         <module>protocols/imap</module>
+        <module>protocols/lmtp</module>
         <module>protocols/pop</module>
         <module>protocols/smtp</module>
     </modules>
