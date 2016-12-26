@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -40,14 +41,14 @@ public class AttachmentLoader {
         this.attachmentMapper = attachmentMapper;
     }
 
-    public Collection<MessageAttachment> getAttachments(Set<CassandraMessageDAO.MessageAttachmentRepresentation> attachmentRepresentations) {
+    public Collection<MessageAttachment> getAttachments(List<CassandraMessageDAO.MessageAttachmentRepresentation> attachmentRepresentations) {
         Map<AttachmentId, Attachment> attachmentsById = attachmentsById(attachmentRepresentations.stream()
             .map(CassandraMessageDAO.MessageAttachmentRepresentation::getAttachmentId)
             .collect(Guavate.toImmutableSet()));
 
         return attachmentRepresentations.stream()
             .map(representation -> constructMessageAttachment(attachmentsById.get(representation.getAttachmentId()), representation))
-            .collect(Guavate.toImmutableSet());
+            .collect(Guavate.toImmutableList());
     }
 
     private MessageAttachment constructMessageAttachment(Attachment attachment, CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation) {
