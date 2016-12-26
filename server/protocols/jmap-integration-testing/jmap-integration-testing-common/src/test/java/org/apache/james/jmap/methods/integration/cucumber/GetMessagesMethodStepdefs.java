@@ -152,6 +152,11 @@ public class GetMessagesMethodStepdefs {
         appendMessage(messageName, "eml/twoAttachmentsTextPlain.eml");
     }
 
+    @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with two same attachments in text$")
+    public void appendTextMessageWithTwoSameAttachments(String messageName, String mailbox) throws Throwable {
+        appendMessage(messageName, "eml/twoSameAttachments.eml");
+    }
+
     @Given("^the user has a multipart message \"([^\"]*)\" in \"([^\"]*)\" mailbox$")
     public void appendMultipartMessageWithOneAttachments(String messageName, String arg1) throws Throwable {
         appendMessage(messageName, "eml/htmlAndTextMultipartWithOneAttachment.eml");
