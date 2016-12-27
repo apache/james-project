@@ -27,7 +27,7 @@ import com.google.inject.util.Modules;
 
 public class CassandraLdapJamesServerMain {
 
-    public static final Module cassandraLdapServerModule = Modules.override(CassandraJamesServerMain.cassandraServerModule)
+    public static final Module cassandraLdapServerModule = Modules.override(CassandraJamesServerMain.cassandraServerModule, CassandraJamesServerMain.protocols)
         .with(new LdapUsersRepositoryModule());
 
     public static void main(String[] args) throws Exception {

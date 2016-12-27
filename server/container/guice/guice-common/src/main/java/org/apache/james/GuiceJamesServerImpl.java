@@ -24,7 +24,6 @@ import javax.annotation.PreDestroy;
 
 import org.apache.james.modules.CommonServicesModule;
 import org.apache.james.modules.MailetProcessingModule;
-import org.apache.james.modules.ProtocolsModule;
 import org.apache.james.onami.lifecycle.Stager;
 import org.apache.james.utils.ConfigurationsPerformer;
 import org.apache.james.utils.GuiceProbeProvider;
@@ -46,7 +45,6 @@ public class GuiceJamesServerImpl implements GuiceJamesServer {
     public GuiceJamesServerImpl() {
         this(Modules.combine(
                         new CommonServicesModule(),
-                        new ProtocolsModule(),
                         new MailetProcessingModule()));
     }
 

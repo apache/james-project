@@ -23,16 +23,32 @@ import org.apache.james.modules.data.JPADataModule;
 import org.apache.james.modules.data.SieveFileRepositoryModule;
 import org.apache.james.modules.mailbox.JPAMailboxModule;
 import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
+import org.apache.james.modules.protocols.IMAPServerModule;
+import org.apache.james.modules.protocols.LMTPServerModule;
+import org.apache.james.modules.protocols.ManageSieveServerModule;
+import org.apache.james.modules.protocols.POP3ServerModule;
+import org.apache.james.modules.protocols.ProtocolHandlerModule;
+import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.QuotaModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
+import org.apache.james.modules.server.WebAdminServerModule;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
 public class JPAJamesServerMain {
 
+    private static final Module protocols = Modules.combine(
+            new IMAPServerModule(),
+            new ProtocolHandlerModule(),
+            new POP3ServerModule(),
+            new SMTPServerModule(),
+            new LMTPServerModule(),
+            new ManageSieveServerModule(),
+            new WebAdminServerModule());
+    
     public static final Module jpaServerModule = Modules.combine(
         new JPAMailboxModule(),
         new JPADataModule(),
@@ -43,7 +59,7 @@ public class JPAJamesServerMain {
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServerImpl server = new GuiceJamesServerImpl()
-                    .combineWith(jpaServerModule, 
+                    .combineWith(jpaServerModule, protocols, 
                             new JMXServerModule(), 
                             new LuceneSearchMailboxModule());
         server.start();

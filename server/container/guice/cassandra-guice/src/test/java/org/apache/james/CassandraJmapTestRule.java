@@ -47,7 +47,7 @@ public class CassandraJmapTestRule implements TestRule {
 
     public JmapJamesServer jmapServer(Module... additionals) {
         return new JmapJamesServer()
-            .combineWith(CassandraJamesServerMain.cassandraServerModule)
+            .combineWith(CassandraJamesServerMain.cassandraServerModule, CassandraJamesServerMain.protocols)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
             .overrideWith(new TestESMetricReporterModule())
             .overrideWith(guiceModuleTestRule.getModule())

@@ -60,7 +60,7 @@ public class CassandraStepdefs {
         embeddedElasticSearch.before();
         mainStepdefs.messageIdFactory = new CassandraMessageId.Factory();
         mainStepdefs.jmapServer = new JmapJamesServer()
-                .combineWith(CassandraJamesServerMain.cassandraServerModule)
+                .combineWith(CassandraJamesServerMain.cassandraServerModule, CassandraJamesServerMain.protocols)
                 .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra))
                 .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class));
         mainStepdefs.awaitMethod = () -> embeddedElasticSearch.awaitForElasticSearch();
