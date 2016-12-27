@@ -20,6 +20,8 @@ package org.apache.james.mailbox.store.user.model.impl;
 
 import org.apache.james.mailbox.store.user.model.Subscription;
 
+import com.google.common.base.Objects;
+
 public class SimpleSubscription implements Subscription {
 
     private final String user;
@@ -30,18 +32,27 @@ public class SimpleSubscription implements Subscription {
         this.mailbox = mailbox;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.user.model.Subscription#getMailbox()
-     */
     public String getMailbox() {
         return mailbox;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.user.model.Subscription#getUser()
-     */
     public String getUser() {
         return user;
     }
 
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof SimpleSubscription) {
+            SimpleSubscription that = (SimpleSubscription) o;
+
+            return Objects.equal(this.user, that.user)
+                && Objects.equal(this.mailbox, that.mailbox);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hashCode(user, mailbox);
+    }
 }

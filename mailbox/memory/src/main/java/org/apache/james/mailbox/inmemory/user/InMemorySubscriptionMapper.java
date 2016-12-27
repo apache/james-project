@@ -28,6 +28,8 @@ import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 
+import com.google.common.collect.ImmutableList;
+
 public class InMemorySubscriptionMapper extends NonTransactionalMapper implements SubscriptionMapper {
     
     private static final int INITIAL_SIZE = 64;
@@ -37,9 +39,6 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
         subscriptionsByUser = new ConcurrentHashMap<String, List<Subscription>>(INITIAL_SIZE);
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#delete(org.apache.james.mailbox.store.user.model.Subscription)
-     */
     public synchronized void delete(Subscription subscription) {
         final String user = subscription.getUser();
         final List<Subscription> subscriptions = subscriptionsByUser.get(user);
@@ -48,9 +47,6 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
         }
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#findMailboxSubscriptionForUser(java.lang.String, java.lang.String)
-     */
     public Subscription findMailboxSubscriptionForUser(String user, String mailbox) {
         final List<Subscription> subscriptions = subscriptionsByUser.get(user);
         Subscription result = null;
@@ -65,25 +61,17 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
         return result;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#findSubscriptionsForUser(java.lang.String)
-     */
-    @SuppressWarnings("unchecked")
     public List<Subscription> findSubscriptionsForUser(String user) {
         final List<Subscription> subcriptions = subscriptionsByUser.get(user);
         final List<Subscription> results;
         if (subcriptions == null) {
-            results = Collections.EMPTY_LIST;
+            results = ImmutableList.of();
         } else {
-            // Make a copy to prevent concurrent modifications
-            results = new ArrayList<Subscription>(subcriptions);
+            results = ImmutableList.copyOf(subcriptions);
         }
         return results;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#save(org.apache.james.mailbox.store.user.model.Subscription)
-     */
     public synchronized void save(Subscription subscription) {
         final String user = subscription.getUser();
         final List<Subscription> subscriptions = subscriptionsByUser.get(user);
@@ -100,12 +88,8 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
         subscriptionsByUser.clear();
     }
 
-    /**
-     * Do nothing
-     */
     public void endRequest() {
-        // nothing todo
-        
+        // nothing to do
     }
 
 }
