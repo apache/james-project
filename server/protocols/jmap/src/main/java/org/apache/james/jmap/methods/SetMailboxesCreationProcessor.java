@@ -38,6 +38,7 @@ import org.apache.james.jmap.utils.DependencyGraph.CycleDetectedException;
 import org.apache.james.jmap.utils.SortingHierarchicalCollections;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -59,11 +60,13 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
     private final SortingHierarchicalCollections<Map.Entry<MailboxCreationId, MailboxCreateRequest>, MailboxCreationId> sortingHierarchicalCollections;
     private final MailboxFactory mailboxFactory;
     private final Factory mailboxIdFactory;
+    private final SubscriptionManager subscriptionManager;
 
     @Inject
     @VisibleForTesting
-    SetMailboxesCreationProcessor(MailboxManager mailboxManager, MailboxFactory mailboxFactory, MailboxId.Factory mailboxIdFactory) {
+    SetMailboxesCreationProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, MailboxFactory mailboxFactory, MailboxId.Factory mailboxIdFactory) {
         this.mailboxManager = mailboxManager;
+        this.subscriptionManager = subscriptionManager;
         this.sortingHierarchicalCollections =
             new SortingHierarchicalCollections<Map.Entry<MailboxCreationId, MailboxCreateRequest>, MailboxCreationId>(
                 x -> x.getKey(),
@@ -101,6 +104,7 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
             ensureValidMailboxName(mailboxRequest, mailboxSession);
             MailboxPath mailboxPath = getMailboxPath(mailboxRequest, creationIdsToCreatedMailboxId, mailboxSession);
             mailboxManager.createMailbox(mailboxPath, mailboxSession);
+            subscriptionManager.subscribe(mailboxSession, mailboxPath.getName());
             Optional<Mailbox> mailbox = mailboxFactory.fromMailboxPath(mailboxPath, mailboxSession);
             if (mailbox.isPresent()) {
                 builder.created(mailboxCreationId, mailbox.get());

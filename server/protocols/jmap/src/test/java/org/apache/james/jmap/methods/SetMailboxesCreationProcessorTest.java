@@ -31,6 +31,7 @@ import org.apache.james.jmap.model.SetMailboxesResponse;
 import org.apache.james.jmap.model.mailbox.MailboxCreateRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryId.Factory;
@@ -44,12 +45,13 @@ public class SetMailboxesCreationProcessorTest {
     private MailboxFactory mailboxFactory;
     private SetMailboxesCreationProcessor sut;
     private MailboxManager mailboxManager;
+    private SubscriptionManager subscriptionManager;
 
     @Before
     public void setup() {
         mailboxManager = mock(MailboxManager.class);
         mailboxIdFactory = new InMemoryId.Factory();
-        sut = new SetMailboxesCreationProcessor(mailboxManager, mailboxFactory, mailboxIdFactory);
+        sut = new SetMailboxesCreationProcessor(mailboxManager, subscriptionManager, mailboxFactory, mailboxIdFactory);
     }
 
     @Test

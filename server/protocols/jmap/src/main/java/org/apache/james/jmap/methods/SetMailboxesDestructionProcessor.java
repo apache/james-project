@@ -38,6 +38,7 @@ import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.jmap.utils.SortingHierarchicalCollections;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -52,14 +53,16 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMailboxesDestructionProcessor.class);
 
     private final MailboxManager mailboxManager;
+    private final SubscriptionManager subscriptionManager;
     private final SortingHierarchicalCollections<Map.Entry<MailboxId, Mailbox>, MailboxId> sortingHierarchicalCollections;
     private final MailboxUtils mailboxUtils;
     private final MailboxFactory mailboxFactory;
 
     @Inject
     @VisibleForTesting
-    SetMailboxesDestructionProcessor(MailboxManager mailboxManager, MailboxUtils mailboxUtils, MailboxFactory mailboxFactory) {
+    SetMailboxesDestructionProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, MailboxUtils mailboxUtils, MailboxFactory mailboxFactory) {
         this.mailboxManager = mailboxManager;
+        this.subscriptionManager = subscriptionManager;
         this.sortingHierarchicalCollections =
             new SortingHierarchicalCollections<>(
                     Entry::getKey,
@@ -102,6 +105,7 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
 
             MailboxPath mailboxPath = mailboxManager.getMailbox(mailbox.getId(), mailboxSession).getMailboxPath();
             mailboxManager.deleteMailbox(mailboxPath, mailboxSession);
+            subscriptionManager.unsubscribe(mailboxSession, mailboxPath.getName());
             builder.destroyed(entry.getKey());
         } catch (MailboxHasChildException e) {
             builder.notDestroyed(entry.getKey(), SetError.builder()

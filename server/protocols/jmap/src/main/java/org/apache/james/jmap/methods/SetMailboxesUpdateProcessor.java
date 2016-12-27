@@ -38,6 +38,7 @@ import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -55,12 +56,14 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
     private final MailboxUtils mailboxUtils;
     private final MailboxManager mailboxManager;
     private final MailboxFactory mailboxFactory;
+    private final SubscriptionManager subscriptionManager;
 
     @Inject
     @VisibleForTesting
-    SetMailboxesUpdateProcessor(MailboxUtils mailboxUtils, MailboxManager mailboxManager, MailboxFactory mailboxFactory) {
+    SetMailboxesUpdateProcessor(MailboxUtils mailboxUtils, MailboxManager mailboxManager, SubscriptionManager subscriptionManager, MailboxFactory mailboxFactory) {
         this.mailboxUtils = mailboxUtils;
         this.mailboxManager = mailboxManager;
+        this.subscriptionManager = subscriptionManager;
         this.mailboxFactory = mailboxFactory;
     }
 
@@ -188,6 +191,9 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
         MailboxPath destinationMailboxPath = computeNewMailboxPath(mailbox, originMailboxPath, updateRequest, mailboxSession);
         if (!originMailboxPath.equals(destinationMailboxPath)) {
             mailboxManager.renameMailbox(originMailboxPath, destinationMailboxPath, mailboxSession);
+
+            subscriptionManager.unsubscribe(mailboxSession, originMailboxPath.getName());
+            subscriptionManager.subscribe(mailboxSession, destinationMailboxPath.getName());
         }
     }
 

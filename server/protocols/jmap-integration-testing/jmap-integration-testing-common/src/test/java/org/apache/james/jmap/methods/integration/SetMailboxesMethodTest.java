@@ -23,6 +23,7 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
@@ -93,6 +94,226 @@ public abstract class SetMailboxesMethodTest {
     @After
     public void teardown() {
         jmapServer.stop();
+    }
+
+    @Test
+    public void userShouldBeSubscribedOnCreatedMailboxWhenCreateMailbox() throws Exception{
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"create\": {" +
+                "        \"create-id01\" : {" +
+                "          \"name\" : \"foo\"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".created", hasKey("create-id01"));
+
+        assertThat(jmapServer.serverProbe().listSubscriptions(username)).containsOnly("foo");
+    }
+
+    @Test
+    public void userShouldBeSubscribedOnCreatedMailboxWhenCreateChildOfInboxMailbox() throws Exception {
+        String inboxId =
+            with()
+                .header("Authorization", this.accessToken.serialize())
+                .body("[[\"getMailboxes\", {}, \"#0\"]]")
+            .when()
+                .post("/jmap")
+            .then()
+                .extract()
+                .jsonPath()
+                .getString(ARGUMENTS + ".list[0].id");
+
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"create\": {" +
+                "        \"create-id01\" : {" +
+                "          \"name\" : \"foo\"," +
+                "          \"parentId\" : \"" + inboxId + "\"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap");
+
+        assertThat(jmapServer.serverProbe().listSubscriptions(username)).containsOnly("inbox.foo");
+    }
+
+    @Test
+    public void subscriptionUserShouldBeChangedWhenUpdateMailbox() throws Exception {
+        jmapServer.serverProbe().createMailbox("#private", username, "root");
+
+        jmapServer.serverProbe().createMailbox("#private", username, "root.myBox");
+        Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, "root.myBox");
+        String mailboxId = mailbox.getMailboxId().serialize();
+
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + mailboxId + "\" : {" +
+                "          \"name\" : \"mySecondBox\"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+        with()
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+            .post("/jmap");
+
+        assertThat(jmapServer.serverProbe().listSubscriptions(username)).containsOnly("mySecondBox");
+    }
+
+    @Test
+    public void subscriptionUserShouldBeChangedWhenCreateThenUpdateMailboxNameWithJMAP() throws Exception {
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"create\": {" +
+                "        \"create-id01\" : {" +
+                "          \"name\" : \"foo\"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".created", hasKey("create-id01"));
+
+        Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, "foo");
+        String mailboxId = mailbox.getMailboxId().serialize();
+
+        requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + mailboxId + "\" : {" +
+                "          \"name\" : \"mySecondBox\"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        with()
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+            .post("/jmap");
+
+        assertThat(jmapServer.serverProbe().listSubscriptions(username)).containsOnly("mySecondBox");
+    }
+
+    @Test
+    public void subscriptionUserShouldBeDeletedWhenDestroyMailbox() throws Exception {
+        jmapServer.serverProbe().createMailbox("#private", username, "myBox");
+        Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, "myBox");
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"destroy\": [\"" + mailbox.getMailboxId().serialize() + "\"]" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200);
+
+        assertThat(jmapServer.serverProbe().listSubscriptions(username)).isEmpty();
+    }
+
+    @Test
+    public void subscriptionUserShouldBeDeletedWhenCreateThenDestroyMailboxWithJMAP() throws Exception {
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"create\": {" +
+                "        \"create-id01\" : {" +
+                "          \"name\" : \"foo\"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".created", hasKey("create-id01"));
+
+        Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, "foo");
+
+        requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"destroy\": [\"" + mailbox.getMailboxId().serialize() + "\"]" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200);
+
+        assertThat(jmapServer.serverProbe().listSubscriptions(username)).isEmpty();
     }
 
     @Test

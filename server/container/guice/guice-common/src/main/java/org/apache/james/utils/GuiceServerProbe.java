@@ -35,6 +35,7 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -65,17 +66,19 @@ public class GuiceServerProbe implements ExtendedServerProbe, GuiceProbe {
     private final UsersRepository usersRepository;
     private final RecipientRewriteTable recipientRewriteTable;
     private final SieveRepository sieveRepository;
+    private final SubscriptionManager subscriptionManager;
 
     @Inject
     private GuiceServerProbe(MailboxManager mailboxManager, MailboxMapperFactory mailboxMapperFactory,
                              DomainList domainList, UsersRepository usersRepository, SieveRepository sieveRepository,
-                             RecipientRewriteTable recipientRewriteTable) {
+                             RecipientRewriteTable recipientRewriteTable, SubscriptionManager subscriptionManager) {
         this.mailboxManager = mailboxManager;
         this.mailboxMapperFactory = mailboxMapperFactory;
         this.domainList = domainList;
         this.usersRepository = usersRepository;
         this.sieveRepository = sieveRepository;
         this.recipientRewriteTable = recipientRewriteTable;
+        this.subscriptionManager = subscriptionManager;
     }
 
     @Override
@@ -354,5 +357,11 @@ public class GuiceServerProbe implements ExtendedServerProbe, GuiceProbe {
     public void addActiveSieveScript(String user, String name, String script) throws Exception {
         sieveRepository.putScript(user, name, script);
         sieveRepository.setActive(user, name);
+    }
+
+    @Override
+    public Collection<String> listSubscriptions(String user) throws Exception {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(user, LOGGER);
+        return subscriptionManager.subscriptions(mailboxSession);
     }
 }
