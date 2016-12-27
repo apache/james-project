@@ -37,53 +37,58 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-configuration</artifactId>
-                <version>3.0.0-beta6-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-imap</artifactId>
-                <version>3.0.0-beta6-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-jmap</artifactId>
-                <version>3.0.0-beta6-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-jmap</artifactId>
-                <version>3.0.0-beta6-SNAPSHOT</version>
+                <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-lmtp</artifactId>
-                <version>3.0.0-beta6-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-mailbox</artifactId>
-                <version>3.0.0-beta6-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-mailet</artifactId>
-                <version>3.0.0-beta6-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-managedsieve</artifactId>
-                <version>3.0.0-beta6-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-pop</artifactId>
-                <version>3.0.0-beta6-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-smtp</artifactId>
-                <version>3.0.0-beta6-SNAPSHOT</version>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-webadmin</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -104,6 +109,7 @@
         <module>protocols/managedsieve</module>
         <module>protocols/pop</module>
         <module>protocols/smtp</module>
+        <module>protocols/webadmin</module>
     </modules>
 </project>
 
