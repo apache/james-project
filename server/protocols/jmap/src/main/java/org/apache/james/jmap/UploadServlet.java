@@ -21,6 +21,7 @@ package org.apache.james.jmap;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 
+import java.io.EOFException;
 import java.io.IOException;
 
 import javax.inject.Inject;
@@ -54,11 +55,21 @@ public class UploadServlet extends HttpServlet {
         } else {
             try {
                 uploadHandler.handle(contentType, req.getInputStream(), getMailboxSession(req), resp);
-            } catch (IOException | MailboxException e) {
-                LOGGER.error("Error while uploading content", e);
-                resp.setStatus(SC_INTERNAL_SERVER_ERROR);
+            } catch (IOException e) {
+                if (e instanceof EOFException) {
+                    LOGGER.info("An upload has been canceled before the end", e);
+                } else {
+                    internalServerError(resp, e);
+                }
+            } catch (MailboxException e) {
+                internalServerError(resp, e);
             }
         }
+    }
+
+    private void internalServerError(HttpServletResponse resp, Exception e) {
+        LOGGER.error("Error while uploading content", e);
+        resp.setStatus(SC_INTERNAL_SERVER_ERROR);
     }
 
     private MailboxSession getMailboxSession(HttpServletRequest req) {
