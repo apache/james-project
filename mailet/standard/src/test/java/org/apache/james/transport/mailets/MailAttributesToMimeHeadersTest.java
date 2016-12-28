@@ -24,12 +24,12 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -84,10 +84,10 @@ public class MailAttributesToMimeHeadersTest {
                 .setProperty("simplemapping", MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1)
                 .build();
         mailet.init(mailetConfig);
-        
-        MimeMessage mimeMessage = MailUtil.createMimeMessage();
-        mimeMessage.addHeader(HEADER_NAME1, "first value");
-		FakeMail mockedMail = MailUtil.createMockMail2Recipients(mimeMessage);
+
+        FakeMail mockedMail = MailUtil.createMockMail2Recipients(MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader(HEADER_NAME1, "first value")
+            .build());
         mockedMail.setAttribute(MAIL_ATTRIBUTE_NAME1, MAIL_ATTRIBUTE_VALUE1);
         
         mailet.service(mockedMail);

@@ -19,7 +19,6 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.james.transport.mailets.UnwrapText;
 import org.junit.Assert;
 import org.junit.Test;
 

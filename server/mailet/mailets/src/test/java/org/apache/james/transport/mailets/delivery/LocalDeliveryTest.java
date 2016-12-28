@@ -29,17 +29,10 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
-import java.util.Properties;
 
-import javax.activation.DataHandler;
 import javax.mail.Flags;
 import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
@@ -57,6 +50,7 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -143,26 +137,19 @@ public class LocalDeliveryTest {
     }
 
     private Mail createMail() throws MessagingException, IOException {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("Subject");
-        message.setSender(new InternetAddress("sender@any.com"));
-        message.setRecipient(MimeMessage.RecipientType.TO, new InternetAddress(RECEIVER_DOMAIN_COM));
-        MimeMultipart multipart = new MimeMultipart();
-        MimeBodyPart scriptPart = new MimeBodyPart();
-        scriptPart.setDataHandler(
-            new DataHandler(
-                new ByteArrayDataSource(
-                    "toto",
-                    "application/sieve; charset=UTF-8")
-            ));
-        scriptPart.setDisposition(MimeBodyPart.ATTACHMENT);
-        scriptPart.setHeader("Content-Type", "application/sieve; charset=UTF-8");
-        scriptPart.setFileName("file.txt");
-        multipart.addBodyPart(scriptPart);
-        message.setContent(multipart);
-        message.saveChanges();
         return FakeMail.builder()
-                .mimeMessage(message)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setSender("sender@any.com")
+                    .setSubject("Subject")
+                    .addToRecipient(RECEIVER_DOMAIN_COM)
+                    .setMultipartWithBodyParts(
+                        MimeMessageBuilder.bodyPartBuilder()
+                            .data("toto")
+                            .disposition(MimeBodyPart.ATTACHMENT)
+                            .filename("file.txt")
+                            .addHeader("Content-Type", "application/sieve; charset=UTF-8")
+                            .build())
+                    .build())
                 .state(Mail.DEFAULT)
                 .recipient(new MailAddress("receiver@domain.com"))
                 .build();

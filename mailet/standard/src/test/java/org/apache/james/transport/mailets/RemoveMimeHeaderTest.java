@@ -31,7 +31,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.apache.mailet.base.test.MailUtil;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,11 +65,10 @@ public class RemoveMimeHeaderTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage mimeMessage = MailUtil.createMimeMessage();
-        mimeMessage.setHeader(HEADER1, "true");
-        mimeMessage.setHeader(HEADER2, "true");
-        mimeMessage.saveChanges();
-        Mail mail = createMail(mimeMessage);
+        Mail mail = createMail(MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader(HEADER1, "true")
+            .addHeader(HEADER2, "true")
+            .build());
 
         mailet.service(mail);
 
@@ -85,11 +84,10 @@ public class RemoveMimeHeaderTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage mimeMessage = MailUtil.createMimeMessage();
-        mimeMessage.setHeader(HEADER1, "true");
-        mimeMessage.setHeader(HEADER2, "true");
-        mimeMessage.saveChanges();
-        Mail mail = createMail(mimeMessage);
+        Mail mail = createMail(MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader(HEADER1, "true")
+            .addHeader(HEADER2, "true")
+            .build());
 
         mailet.service(mail);
 
@@ -106,11 +104,10 @@ public class RemoveMimeHeaderTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage mimeMessage = MailUtil.createMimeMessage();
-        mimeMessage.setHeader(HEADER1, "true");
-        mimeMessage.setHeader(HEADER2, "true");
-        mimeMessage.saveChanges();
-        Mail mail = createMail(mimeMessage);
+        Mail mail = createMail(MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader(HEADER1, "true")
+            .addHeader(HEADER2, "true")
+            .build());
 
         mailet.service(mail);
 
@@ -126,11 +123,10 @@ public class RemoveMimeHeaderTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage mimeMessage = MailUtil.createMimeMessage();
-        mimeMessage.setHeader(HEADER1, "true");
-        mimeMessage.setHeader(HEADER2, "true");
-        mimeMessage.saveChanges();
-        Mail mail = createMail(mimeMessage);
+        Mail mail = createMail(MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader(HEADER1, "true")
+            .addHeader(HEADER2, "true")
+            .build());
 
         mailet.service(mail);
 

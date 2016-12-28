@@ -56,6 +56,7 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -193,29 +194,22 @@ public class ToRecipientFolderTest {
     }
 
     private Mail createMail() throws MessagingException, IOException {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("Subject");
-        message.setSender(new InternetAddress("sender@any.com"));
-        message.setRecipient(MimeMessage.RecipientType.TO, new InternetAddress(USER));
-        MimeMultipart multipart = new MimeMultipart();
-        MimeBodyPart scriptPart = new MimeBodyPart();
-        scriptPart.setDataHandler(
-                new DataHandler(
-                        new ByteArrayDataSource(
-                                "toto",
-                                "application/sieve; charset=UTF-8")
-                ));
-        scriptPart.setDisposition(MimeBodyPart.ATTACHMENT);
-        scriptPart.setHeader("Content-Type", "application/sieve; charset=UTF-8");
-        scriptPart.setFileName("file.txt");
-        multipart.addBodyPart(scriptPart);
-        message.setContent(multipart);
-        message.saveChanges();
         return FakeMail.builder()
-                .mimeMessage(message)
-                .state(Mail.DEFAULT)
-                .recipient(new MailAddress(USER))
-                .build();
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setSender("sender@any.com")
+                .setSubject("Subject")
+                .addToRecipient(USER)
+                .setMultipartWithBodyParts(
+                    MimeMessageBuilder.bodyPartBuilder()
+                        .data("toto")
+                        .disposition(MimeBodyPart.ATTACHMENT)
+                        .filename("file.txt")
+                        .addHeader("Content-Type", "application/sieve; charset=UTF-8")
+                        .build())
+                .build())
+            .state(Mail.DEFAULT)
+            .recipient(new MailAddress("receiver@domain.com"))
+            .build();
     }
 
 }

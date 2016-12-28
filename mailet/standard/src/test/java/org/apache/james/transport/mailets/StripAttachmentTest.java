@@ -27,16 +27,13 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
+import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.Part;
-import javax.mail.Session;
-import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -48,6 +45,7 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -61,10 +59,29 @@ import com.google.common.base.Optional;
 public class StripAttachmentTest {
 
     private static final String EXPECTED_ATTACHMENT_CONTENT = "\u0023\u00A4\u00E3\u00E0\u00E9";
-    private static final Optional<String> ABSENT_MIME_TYPE = Optional.<String> absent();
-    private static final String MIME_HEADER_DEFAULT = "Content-Transfer-Encoding: 8bit\r\nContent-Type: application/octet-stream; charset=utf-8\r\n\r\n";
-    private static final String MIME_HEADER_TEXT_CALENDAR = "Content-Transfer-Encoding: 8bit\r\nContent-Type: text/calendar; charset=utf-8\r\n\r\n";
-    private static final String MIME_HEADER_TEXT_HTML = "Content-Transfer-Encoding: 8bit\r\nContent-Type: text/html; charset=utf-8\r\n\r\n";
+    private static final Optional<String> ABSENT_MIME_TYPE = Optional.absent();
+    private static final String CONTENT_TRANSFER_ENCODING_VALUE ="8bit";
+
+    public static final String CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding";
+    public static final String CONTENT_TYPE = "Content-Type";
+    public static final String CONTENT_TYPE_DEFAULT = "application/octet-stream; charset=utf-8";
+    public static final String TEXT_CALENDAR_CHARSET_UTF_8 = "text/calendar; charset=utf-8";
+    public static final String TEXT_HTML_CHARSET_UTF_8 = "text/html; charset=utf-8";
+
+    private static MimeMessageBuilder.Header[] TEXT_HEADERS = {
+        new MimeMessageBuilder.Header(CONTENT_TRANSFER_ENCODING, CONTENT_TRANSFER_ENCODING_VALUE),
+        new MimeMessageBuilder.Header(CONTENT_TYPE, CONTENT_TYPE_DEFAULT)
+    };
+
+    private static MimeMessageBuilder.Header[] HTML_HEADERS = {
+        new MimeMessageBuilder.Header(CONTENT_TRANSFER_ENCODING, CONTENT_TRANSFER_ENCODING_VALUE),
+        new MimeMessageBuilder.Header(CONTENT_TYPE, TEXT_HTML_CHARSET_UTF_8)
+    };
+
+    private static MimeMessageBuilder.Header[] CALENDAR_HEADERS = {
+        new MimeMessageBuilder.Header(CONTENT_TRANSFER_ENCODING, CONTENT_TRANSFER_ENCODING_VALUE),
+        new MimeMessageBuilder.Header(CONTENT_TYPE, TEXT_CALENDAR_CHARSET_UTF_8)
+    };
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -86,19 +103,15 @@ public class StripAttachmentTest {
     @Test
     public void serviceShouldNotModifyMailWhenNotMultipart() throws MessagingException, IOException {
         Mailet mailet = initMailet();
-        MimeMessage message = mimeMessage();
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .setSubject("test")
+            .setText("simple text")
+            .build();
 
-        MimeBodyPart part = new MimeBodyPart();
-        part.setText("simple text");
-        
-        message.setSubject("test");
-        message.setContent(part, "text/plain");
-        message.saveChanges();
-
-        MimeMessage expectedMessage = mimeMessage();
-        message.setSubject("test");
-        message.setContent(part, "text/plain");
-        message.saveChanges();
+        MimeMessage expectedMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .setSubject("test")
+            .setText("simple text")
+            .build();
 
         Mail mail = FakeMail.builder()
                 .mimeMessage(message)
@@ -110,26 +123,23 @@ public class StripAttachmentTest {
         mailet.service(mail);
 
         assertThat(mail).isEqualToComparingFieldByField(expectedMail);
-        assertThat(mail.getMessage()).isEqualToComparingFieldByField(expectedMessage);
-        assertThat(mail.getMessage().getContent()).isEqualTo(part);
+        BodyPart content = (BodyPart) mail.getMessage().getContent();
+        assertThat(IOUtils.toString(content.getInputStream(), Charsets.UTF_8)).isEqualTo("simple text");
     }
     
     @Test
     public void serviceShouldSaveAttachmentInAFolderWhenPatternMatch() throws MessagingException, IOException {
         Mailet mailet = initMailet();
-        MimeMessage message = mimeMessage();
 
-        MimeMultipart multiPart = new MimeMultipart();
-        MimeBodyPart textPart = new MimeBodyPart();
-        textPart.setText("simple text");
-        multiPart.addBodyPart(textPart);
         String expectedAttachmentContent = EXPECTED_ATTACHMENT_CONTENT;
-        multiPart.addBodyPart(createAttachmentBodyPart(expectedAttachmentContent, "10.tmp", MIME_HEADER_DEFAULT));
-        multiPart.addBodyPart(createAttachmentBodyPart("\u0014\u00A3\u00E1\u00E2\u00E4", "temp.zip", MIME_HEADER_DEFAULT));
-        
-        message.setSubject("test");
-        message.setContent(multiPart);
-        message.saveChanges();
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .build(),
+                createAttachmentBodyPart(expectedAttachmentContent, "10.tmp", TEXT_HEADERS),
+                createAttachmentBodyPart("\u0014\u00A3\u00E1\u00E2\u00E4", "temp.zip", TEXT_HEADERS))
+            .build();
 
         Mail mail = FakeMail.builder()
                 .mimeMessage(message)
@@ -157,19 +167,17 @@ public class StripAttachmentTest {
         Mailet mailet = new StripAttachment();
         mailet.init(mci);
 
-        MimeMultipart multiPart = new MimeMultipart();
-        MimeBodyPart textPart = new MimeBodyPart();
-        textPart.setText("simple text");
-        multiPart.addBodyPart(textPart);
         String expectedFileName = "10.ical";
-        multiPart.addBodyPart(createAttachmentBodyPart("content", expectedFileName, MIME_HEADER_TEXT_CALENDAR));
-        multiPart.addBodyPart(createAttachmentBodyPart("other content", "11.ical", MIME_HEADER_DEFAULT));
-        multiPart.addBodyPart(createAttachmentBodyPart("<p>html</p>", "index.html", MIME_HEADER_TEXT_HTML));
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .build(),
+                createAttachmentBodyPart("content", expectedFileName, CALENDAR_HEADERS),
+                createAttachmentBodyPart("other content", "11.ical", TEXT_HEADERS),
+                createAttachmentBodyPart("<p>html</p>", "index.html", HTML_HEADERS))
+            .build();
 
-        MimeMessage message = mimeMessage();
-        message.setSubject("test");
-        message.setContent(multiPart);
-        message.saveChanges();
 
         Mail mail = FakeMail.builder()
                 .mimeMessage(message)
@@ -182,21 +190,13 @@ public class StripAttachmentTest {
         assertThat(removedAttachments).containsOnly(expectedFileName);
     }
 
-    private MimeMessage mimeMessage() {
-        return new MimeMessage(Session
-                .getDefaultInstance(new Properties()));
-    }
-
-    private MimeBodyPart createAttachmentBodyPart(String body, String fileName, String mimeHeaders) throws MessagingException, UnsupportedEncodingException {
-        MimeBodyPart part = createBodyPart(body, mimeHeaders);
-        part.setDisposition("attachment");
-        part.setFileName(fileName);
-        return part;
-    }
-
-    private MimeBodyPart createBodyPart(String body, String mimeHeaders) throws MessagingException, UnsupportedEncodingException {
-        byte[] content = (mimeHeaders + body).getBytes("UTF-8");
-        return new MimeBodyPart(new ByteArrayInputStream(content));
+    private BodyPart createAttachmentBodyPart(String body, String fileName, MimeMessageBuilder.Header... headers) throws MessagingException, IOException {
+        return MimeMessageBuilder.bodyPartBuilder()
+            .data(body)
+            .addHeaders(headers)
+            .disposition(MimeBodyPart.ATTACHMENT)
+            .filename(fileName)
+            .build();
     }
 
     @Test
@@ -211,19 +211,15 @@ public class StripAttachmentTest {
                 .build();
         mailet.init(mci);
 
-        MimeMessage message = mimeMessage();
-
-        MimeMultipart multiPart = new MimeMultipart();
-        MimeBodyPart part = new MimeBodyPart();
-        part.setText("simple text");
-        multiPart.addBodyPart(part);
         String expectedAttachmentContent = EXPECTED_ATTACHMENT_CONTENT;
-        multiPart.addBodyPart(createAttachmentBodyPart(expectedAttachmentContent, "temp.tmp", MIME_HEADER_DEFAULT));
-        multiPart.addBodyPart(createAttachmentBodyPart("\u0014\u00A3\u00E1\u00E2\u00E4", "winmail.dat", MIME_HEADER_DEFAULT));
-        
-        message.setSubject("test");
-        message.setContent(multiPart);
-        message.saveChanges();
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .build(),
+                createAttachmentBodyPart(expectedAttachmentContent, "temp.tmp", TEXT_HEADERS),
+                createAttachmentBodyPart("\u0014\u00A3\u00E1\u00E2\u00E4", "winmail.dat", TEXT_HEADERS))
+            .build();
 
         Mail mail = FakeMail.builder()
                 .mimeMessage(message)
@@ -245,19 +241,16 @@ public class StripAttachmentTest {
     public void serviceShouldDecodeFilenameAndSaveAttachmentInAFolderWhenPatternMatchAndDecodeFilenameTrue() throws MessagingException, IOException {
         Mailet mailet = initMailet();
 
-        MimeMessage message = mimeMessage();
-
-        MimeMultipart multiPart = new MimeMultipart();
-        MimeBodyPart part = new MimeBodyPart();
-        part.setText("simple text");
-        multiPart.addBodyPart(part);
         String expectedAttachmentContent = EXPECTED_ATTACHMENT_CONTENT;
-        multiPart.addBodyPart(createAttachmentBodyPart(expectedAttachmentContent, "=?iso-8859-15?Q?=E9_++++Pubblicit=E0_=E9_vietata____Milano9052.tmp?=", MIME_HEADER_DEFAULT));
-        multiPart.addBodyPart(createAttachmentBodyPart("\u0014\u00A3\u00E1\u00E2\u00E4", "temp.zip", MIME_HEADER_DEFAULT));
-        
-        message.setSubject("test");
-        message.setContent(multiPart);
-        message.saveChanges();
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .build(),
+                createAttachmentBodyPart(expectedAttachmentContent,
+                    "=?iso-8859-15?Q?=E9_++++Pubblicit=E0_=E9_vietata____Milano9052.tmp?=", TEXT_HEADERS),
+                createAttachmentBodyPart("\u0014\u00A3\u00E1\u00E2\u00E4", "temp.zip", TEXT_HEADERS))
+            .build();
 
         Mail mail = FakeMail.builder()
                 .mimeMessage(message)
@@ -290,20 +283,16 @@ public class StripAttachmentTest {
                 .setProperty("attribute", customAttribute)
                 .build();
         mailet.init(mci);
-        
-        MimeMessage message = mimeMessage();
 
-        MimeMultipart multiPart = new MimeMultipart();
-        MimeBodyPart part = new MimeBodyPart();
-        part.setText("simple text");
-        multiPart.addBodyPart(part);
         String expectedKey = "10.tmp";
-        multiPart.addBodyPart(createAttachmentBodyPart(EXPECTED_ATTACHMENT_CONTENT, expectedKey, MIME_HEADER_DEFAULT));
-        multiPart.addBodyPart(createAttachmentBodyPart("\u0014\u00A3\u00E1\u00E2\u00E4", "temp.zip", MIME_HEADER_DEFAULT));
-        
-        message.setSubject("test");
-        message.setContent(multiPart);
-        message.saveChanges();
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .build(),
+                createAttachmentBodyPart(EXPECTED_ATTACHMENT_CONTENT, expectedKey, TEXT_HEADERS),
+                createAttachmentBodyPart("\u0014\u00A3\u00E1\u00E2\u00E4", "temp.zip", TEXT_HEADERS))
+            .build();
 
         Mail mail = FakeMail.builder()
                 .mimeMessage(message)
@@ -542,17 +531,15 @@ public class StripAttachmentTest {
                 .setProperty("pattern", ".*")
                 .build();
         mailet.init(mci);
-        MimeMultipart multiPart = new MimeMultipart();
-        
-        MimeBodyPart part = new MimeBodyPart(new ByteArrayInputStream(new byte[0]));
-        part.setFileName("removeMe.tmp");
-        multiPart.addBodyPart(part);
-        MimeMessage message = mimeMessage();
-        message.setContent(multiPart);
-        message.saveChanges();
+
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(MimeMessageBuilder.bodyPartBuilder()
+                .filename("removeMe.tmp")
+                .build())
+            .build();
         Mail mail = mock(Mail.class);
         //When
-        boolean actual = mailet.processMultipartPartMessage(message, mail);
+        boolean actual = mailet.processMultipartPartMessage(mimeMessage, mail);
         //Then
         assertThat(actual).isTrue();
     }
@@ -568,17 +555,16 @@ public class StripAttachmentTest {
                 .setProperty("pattern", ".*")
                 .build();
         mailet.init(mci);
-        MimeMultipart multiPart = new MimeMultipart();
-        
-        MimeBodyPart part = new MimeBodyPart(new ByteArrayInputStream(new byte[0]));
-        part.setFileName("removeMe.tmp");
-        multiPart.addBodyPart(part);
-        MimeMessage message = mimeMessage();
-        message.setContent(multiPart);
-        message.saveChanges();
+
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(MimeMessageBuilder.bodyPartBuilder()
+                .filename("removeMe.tmp")
+                .build())
+            .build();
+
         Mail mail = mock(Mail.class);
         //When
-        boolean actual = mailet.processMultipartPartMessage(message, mail);
+        boolean actual = mailet.processMultipartPartMessage(mimeMessage, mail);
         //Then
         assertThat(actual).isTrue();
     }
@@ -595,18 +581,20 @@ public class StripAttachmentTest {
                 .setProperty("pattern", ".*")
                 .build();
         mailet.init(mci);
-        MimeMultipart multiPart = new MimeMultipart();
-        
-        MimeBodyPart part = new MimeBodyPart(new ByteArrayInputStream(new byte[0]));
-        part.setFileName("removeMe.tmp");
-        multiPart.addBodyPart(part);
-        multiPart.addBodyPart(part);
-        MimeMessage message = mimeMessage();
-        message.setContent(multiPart);
-        message.saveChanges();
+
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .filename("removeMe.tmp")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .filename("removeMe.tmp")
+                    .build())
+            .build();
+
         Mail mail = FakeMail.builder().build();
         //When
-        boolean actual = mailet.processMultipartPartMessage(message, mail);
+        boolean actual = mailet.processMultipartPartMessage(mimeMessage, mail);
         //Then
         assertThat(actual).isTrue();
         @SuppressWarnings("unchecked")
@@ -628,24 +616,21 @@ public class StripAttachmentTest {
                 .setProperty("attribute", customAttribute)
                 .build();
         mailet.init(mci);
-        
-        // Message with two matching attachments
-        MimeMultipart multiPart = new MimeMultipart();
-        MimeBodyPart attachmentPart1 = new MimeBodyPart(new ByteArrayInputStream(new byte[0]));
-        attachmentPart1.setFileName("removeMe1.tmp");
-        multiPart.addBodyPart(attachmentPart1);
-        MimeBodyPart attachmentPart2 = new MimeBodyPart(new ByteArrayInputStream(new byte[0]));
-        attachmentPart2.setFileName("removeMe2.tmp");
-        multiPart.addBodyPart(attachmentPart2);
-        
-        MimeMessage message = mimeMessage();
-        message.setContent(multiPart);
-        message.saveChanges();
+
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .filename("removeMe1.tmp")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .filename("removeMe2.tmp")
+                    .build())
+            .build();
         
         Mail mail = FakeMail.builder().build();
         
         //When
-        boolean actual = mailet.processMultipartPartMessage(message, mail);
+        boolean actual = mailet.processMultipartPartMessage(mimeMessage, mail);
         
         //Then
         assertThat(actual).isTrue();
@@ -666,23 +651,15 @@ public class StripAttachmentTest {
                 .build();
         mailet .init(mci);
 
-        MimeBodyPart attachmentPart = new MimeBodyPart(new ByteArrayInputStream(new byte[0]));
-        attachmentPart.setFileName("removeMe.tmp");
-        
-        MimeMultipart subMultiPart = new MimeMultipart();
-        subMultiPart.addBodyPart(attachmentPart);
-        
-        MimeMessage subMessage = mimeMessage();
-        subMessage.setContent(subMultiPart);
-        subMessage.saveChanges();
-        
-        MimeMultipart multiPartMixed = new MimeMultipart();
-        multiPartMixed.addBodyPart(new MimeBodyPart(new InternetHeaders(new ByteArrayInputStream("Content-Type: multipart/mixed".getBytes(Charsets.US_ASCII)))
-                , IOUtils.toByteArray(subMessage.getInputStream())));
-
-        MimeMessage message = mimeMessage();
-        message.setContent(multiPartMixed);
-        message.saveChanges();
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithSubMessage(
+                MimeMessageBuilder.mimeMessageBuilder()
+                    .setMultipartWithBodyParts(
+                        MimeMessageBuilder.bodyPartBuilder()
+                            .filename("removeMe.tmp")
+                            .build())
+                    .build())
+            .build();
         Mail mail = mock(Mail.class);
         //When
         boolean actual = mailet.processMultipartPartMessage(message, mail);
@@ -701,20 +678,16 @@ public class StripAttachmentTest {
                 .setProperty("pattern", ".*\\.tmp")
                 .build();
         mailet.init(mci);
-        MimeMultipart mainMultiPart = new MimeMultipart();
-        MimeMessage subMessage = mimeMessage();
-        MimeMultipart subMultiPart = new MimeMultipart();
-        MimeBodyPart part = new MimeBodyPart(new ByteArrayInputStream(new byte[0]));
-        part.setFileName("dontRemoveMe.other");
-        subMultiPart.addBodyPart(part);
-        subMessage.setContent(subMultiPart);
-        subMessage.saveChanges();
-        mainMultiPart.addBodyPart(new MimeBodyPart(new InternetHeaders(new ByteArrayInputStream("Content-Type: multipart/mixed".getBytes(Charsets.US_ASCII)))
-                ,
-                IOUtils.toByteArray(subMessage.getInputStream())));
-        MimeMessage message = mimeMessage();
-        message.setContent(mainMultiPart);
-        message.saveChanges();
+
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithSubMessage(
+                MimeMessageBuilder.mimeMessageBuilder()
+                    .setMultipartWithBodyParts(
+                        MimeMessageBuilder.bodyPartBuilder()
+                            .filename("dontRemoveMe.other")
+                            .build())
+                    .build())
+            .build();
         Mail mail = mock(Mail.class);
         //When
         boolean actual = mailet.processMultipartPartMessage(message, mail);
@@ -733,19 +706,21 @@ public class StripAttachmentTest {
                 .setProperty("pattern", ".*")
                 .build();
         mailet.init(mci);
-        MimeMultipart multiPart = new MimeMultipart();
-        
-        MimeBodyPart part = new MimeBodyPart(new ByteArrayInputStream(new byte[0]));
-        part.setFileName("removeMe.tmp");
-        multiPart.addBodyPart(part);
-        MimeMessage message = mimeMessage();
-        message.setContent(multiPart);
-        message.saveChanges();
+
+        MimeMultipart mimeMultipart = MimeMessageBuilder.multipartBuilder()
+            .addBody(MimeMessageBuilder.bodyPartBuilder()
+                .filename("removeMe.tmp")
+                .build())
+            .build();
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .setContent(mimeMultipart)
+            .build();
+
         Mail mail = mock(Mail.class);
         //When
-        mailet.processMultipartPartMessage(message, mail);
+        mailet.processMultipartPartMessage(mimeMessage, mail);
         //Then
-        assertThat(multiPart.getCount()).isZero();
+        assertThat(mimeMultipart.getCount()).isZero();
     }
 
     @Test
@@ -757,8 +732,10 @@ public class StripAttachmentTest {
                 .setProperty("pattern", ".*\\.tmp")
                 .build();
         mailet.init(mci);
-        Part part = new MimeBodyPart(new ByteArrayInputStream(new byte[0]));
-        part.setFileName("example.tmp");
+
+        Part part = MimeMessageBuilder.bodyPartBuilder()
+            .filename("example.tmp")
+            .build();
         //When
         Optional<String> maybeFilename = mailet.saveAttachmentToFile(part, ABSENT_MIME_TYPE);
         //Then
@@ -776,7 +753,7 @@ public class StripAttachmentTest {
                 .setProperty("pattern", ".*\\.tmp")
                 .build();
         mailet.init(mci);
-        Part part = new MimeBodyPart(new ByteArrayInputStream(new byte[0]));
+        Part part = MimeMessageBuilder.bodyPartBuilder().build();
 
         Optional<String> maybeFilename = mailet.saveAttachmentToFile(part, ABSENT_MIME_TYPE);
         assertThat(maybeFilename).isAbsent();
@@ -791,7 +768,7 @@ public class StripAttachmentTest {
                 .setProperty("pattern", ".*")
                 .build();
         mailet.init(mci);
-        Part part = new MimeBodyPart(new ByteArrayInputStream(new byte[0]));
+        Part part = MimeMessageBuilder.bodyPartBuilder().build();
         String fileName = "exampleWithoutSuffix";
         //When
         Optional<String> maybeFilename = mailet.saveAttachmentToFile(part, Optional.of(fileName));

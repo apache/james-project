@@ -68,7 +68,7 @@ public class MimeMessageBuilder {
             return this;
         }
 
-        public MultipartBuilder addBodys(BodyPart... bodyParts) {
+        public MultipartBuilder addBodies(BodyPart... bodyParts) {
             this.bodyParts.addAll(Arrays.asList(bodyParts));
             return this;
         }
@@ -255,7 +255,7 @@ public class MimeMessageBuilder {
 
     public MimeMessageBuilder setMultipartWithBodyParts(BodyPart... bobyParts) throws MessagingException {
         this.content = Optional.of(MimeMessageBuilder.multipartBuilder()
-            .addBodys(bobyParts)
+            .addBodies(bobyParts)
             .build());
         return this;
     }

@@ -21,15 +21,16 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 import java.util.Collection;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMatcher;
 
 /**
  * This is a generic matcher that uses regular expressions.  If any of
@@ -77,10 +78,8 @@ abstract public class GenericRegexMatcher extends GenericMatcher {
             //Loop through the header values
             if (headers != null) for (String header : headers) {
                 if (pattern.matcher(header).matches()) {
-                    // log("Match: " + headerName + "[" + j + "]: " + headers[j]);
                     return mail.getRecipients();
                 }
-                //log("       " + headerName + "[" + j + "]: " + headers[j]);
             }
         }
         return null;

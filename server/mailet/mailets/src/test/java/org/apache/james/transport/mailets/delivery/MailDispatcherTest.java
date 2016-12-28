@@ -28,16 +28,9 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
-import javax.activation.DataHandler;
 import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -47,6 +40,7 @@ import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -76,7 +70,7 @@ public class MailDispatcherTest {
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .state("state")
-            .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
+            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
             .build();
         testee.dispatch(mail);
 
@@ -97,7 +91,7 @@ public class MailDispatcherTest {
         FakeMail mail = FakeMail.builder()
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .state("state")
-            .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
+            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
             .build();
         testee.dispatch(mail);
 
@@ -116,7 +110,7 @@ public class MailDispatcherTest {
         String state = "state";
         FakeMail mail = FakeMail.builder()
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
-            .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
+            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
             .state(state)
             .build();
         testee.dispatch(mail);
@@ -136,18 +130,12 @@ public class MailDispatcherTest {
             .when(mailStore)
             .storeMail(any(MailAddress.class), any(Mail.class));
 
-        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        Multipart multipart = new MimeMultipart();
-        MimeBodyPart bodyPart = new MimeBodyPart();
-        bodyPart.setDataHandler(
-            new DataHandler(
-                new ByteArrayDataSource(
-                    "toto",
-                    "text/plain; charset=UTF-8")
-            ));
-        multipart.addBodyPart(bodyPart);
-        mimeMessage.setContent(multipart);
-        mimeMessage.saveChanges();
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("toto")
+                    .build())
+            .build();
 
         FakeMail mail = FakeMail.builder()
             .sender(MailAddressFixture.OTHER_AT_JAMES)
@@ -179,7 +167,7 @@ public class MailDispatcherTest {
         FakeMail mail = FakeMail.builder()
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES)
-            .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
+            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
             .state("state")
             .build();
         testee.dispatch(mail);
@@ -200,11 +188,12 @@ public class MailDispatcherTest {
             .consume(false)
             .build();
 
-        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
         String delivered_to_1 = "delivered_to_1";
         String delivered_to_2 = "delivered_to_2";
-        mimeMessage.addHeader(MailDispatcher.DELIVERED_TO, delivered_to_1);
-        mimeMessage.addHeader(MailDispatcher.DELIVERED_TO, delivered_to_2);
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .addHeaders(new MimeMessageBuilder.Header(MailDispatcher.DELIVERED_TO, delivered_to_1),
+                new MimeMessageBuilder.Header(MailDispatcher.DELIVERED_TO, delivered_to_2))
+            .build();
         FakeMail mail = FakeMail.builder()
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES)
@@ -229,7 +218,7 @@ public class MailDispatcherTest {
         FakeMail mail = FakeMail.builder()
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
-            .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
+            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
             .state("state")
             .build();
         testee.dispatch(mail);

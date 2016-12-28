@@ -23,8 +23,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
@@ -35,8 +33,8 @@ import org.apache.mailet.MailAddress;
  */
 public class MailUtil {
 
-    private static final Session NO_SESSION = null;
-    
+    public static final String SENDER = "test@james.apache.org";
+    public static final String RECIPIENT = "test2@james.apache.org";
     private static int m_counter = 0;
 
     public static String newId() {
@@ -72,17 +70,14 @@ public class MailUtil {
     }
     
     private static MimeMessage createMimeMessage(String headerName, String headerValue, String subject) throws MessagingException {
-        String sender = "test@james.apache.org";
-        String rcpt = "test2@james.apache.org";
-
-        MimeMessage mimeMessage = new MimeMessage(NO_SESSION);
-        mimeMessage.setFrom(new InternetAddress(sender));
-        mimeMessage.setRecipients(MimeMessage.RecipientType.TO, rcpt);
-        if (headerName != null) mimeMessage.setHeader(headerName, headerValue);
-        if (subject != null) mimeMessage.setSubject(subject);
-        mimeMessage.setText("testtext");
-        mimeMessage.saveChanges();
-        return mimeMessage;
+        MimeMessageBuilder mimeMessageBuilder = MimeMessageBuilder.mimeMessageBuilder()
+            .addToRecipient(RECIPIENT)
+            .setFrom(SENDER)
+            .setSubject(subject);
+        if (headerName != null) {
+            mimeMessageBuilder.addHeader(headerName, headerValue);
+        }
+        return mimeMessageBuilder.build();
     }
     
     public static String toString(Mail mail, String charset) throws IOException, MessagingException {

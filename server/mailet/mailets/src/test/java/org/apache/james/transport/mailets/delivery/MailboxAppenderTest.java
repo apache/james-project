@@ -22,16 +22,8 @@ package org.apache.james.transport.mailets.delivery;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import java.util.Properties;
-
-import javax.activation.DataHandler;
 import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -42,6 +34,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -67,18 +60,12 @@ public class MailboxAppenderTest {
 
     @Before
     public void setUp() throws Exception {
-        mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        Multipart multipart = new MimeMultipart();
-        MimeBodyPart bodyPart = new MimeBodyPart();
-        bodyPart.setDataHandler(
-            new DataHandler(
-                new ByteArrayDataSource(
-                    "toto",
-                    "text/plain; charset=UTF-8")
-            ));
-        multipart.addBodyPart(bodyPart);
-        mimeMessage.setContent(multipart);
-        mimeMessage.saveChanges();
+        mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("toto")
+                    .build())
+            .build();
 
         integrationResources = new InMemoryIntegrationResources();
         integrationResources.init();

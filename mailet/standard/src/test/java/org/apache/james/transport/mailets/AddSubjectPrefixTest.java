@@ -53,8 +53,8 @@ public class AddSubjectPrefixTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage mockedMimeMessage = MailUtil.createMimeMessageWithSubject("test");
-        FakeMail mail = MailUtil.createMockMail2Recipients(mockedMimeMessage);
+        MimeMessage mimeMessage = MailUtil.createMimeMessageWithSubject("test");
+        FakeMail mail = MailUtil.createMockMail2Recipients(mimeMessage);
         
         mailet.service(mail);
 
@@ -72,8 +72,8 @@ public class AddSubjectPrefixTest {
 
         String subject = 
                 "=?iso8859-15?Q?Beno=EEt_TELLIER_vous_a_d=E9pos=E9_des_fichiers?=";
-        MimeMessage mockedMimeMessage = MailUtil.createMimeMessageWithSubject(subject);
-        FakeMail mail = MailUtil.createMockMail2Recipients(mockedMimeMessage);
+        MimeMessage mimeMessage = MailUtil.createMimeMessageWithSubject(subject);
+        FakeMail mail = MailUtil.createMockMail2Recipients(mimeMessage);
         
         mailet.service(mail);
 
@@ -90,8 +90,8 @@ public class AddSubjectPrefixTest {
         mailet.init(mailetConfig);
 
         String noSubject = null;
-        MimeMessage mockedMimeMessage = MailUtil.createMimeMessageWithSubject(noSubject);
-        FakeMail mail = MailUtil.createMockMail2Recipients(mockedMimeMessage);
+        MimeMessage mimeMessage = MailUtil.createMimeMessageWithSubject(noSubject);
+        FakeMail mail = MailUtil.createMockMail2Recipients(mimeMessage);
 
         mailet.service(mail);
 
@@ -106,8 +106,8 @@ public class AddSubjectPrefixTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage mockedMimeMessage = MailUtil.createMimeMessageWithSubject("");
-        FakeMail mail = MailUtil.createMockMail2Recipients(mockedMimeMessage);
+        MimeMessage mimeMessage = MailUtil.createMimeMessageWithSubject("");
+        FakeMail mail = MailUtil.createMockMail2Recipients(mimeMessage);
 
         mailet.service(mail);
 

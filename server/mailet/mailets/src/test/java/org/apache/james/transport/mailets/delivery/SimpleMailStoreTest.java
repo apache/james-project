@@ -25,15 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Properties;
-
-import javax.activation.DataHandler;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.james.metrics.api.Metric;
@@ -42,6 +34,7 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -65,18 +58,12 @@ public class SimpleMailStoreTest {
             .log(mock(Log.class))
             .build();
 
-        mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        Multipart multipart = new MimeMultipart();
-        MimeBodyPart bodyPart = new MimeBodyPart();
-        bodyPart.setDataHandler(
-            new DataHandler(
-                new ByteArrayDataSource(
-                    "toto",
-                    "text/plain; charset=UTF-8")
-            ));
-        multipart.addBodyPart(bodyPart);
-        mimeMessage.setContent(multipart);
-        mimeMessage.saveChanges();
+        mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("toto")
+                    .build())
+            .build();
     }
 
     @Test

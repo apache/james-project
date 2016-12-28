@@ -24,16 +24,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.util.Properties;
 
-import javax.activation.DataHandler;
 import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
@@ -45,6 +38,8 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.apache.mailet.base.test.MimeMessageBuilder;
+import org.apache.mailet.base.test.MimeMessageBuilder.Header;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -56,16 +51,6 @@ public class SieveIntegrationTest {
 
     public static final String LOCAL_PART = "receiver";
     public static final String RECEIVER_DOMAIN_COM = LOCAL_PART + "@domain.com";
-
-    class Header {
-        String name;
-        String value;
-
-        public Header(String name, String value) {
-            this.name = name;
-            this.value = value;
-        }
-    }
 
     public static DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-mm-dd HH:mm:ss");
     public static final DateTime DATE_CLOSE = formatter.parseDateTime("2016-01-16 00:00:00");
@@ -364,7 +349,6 @@ public class SieveIntegrationTest {
 
         assertThat(mail.getAttribute(MailStore.DELIVERY_PATH_PREFIX + LOCAL_PART)).isEqualTo(expressMailboxNameWithSlash(SELECTED_MAILBOX.getName()));
     }
-
 
     @Test
     public void addressDomainShouldOnlyMatchLocalPart() throws Exception {
@@ -940,34 +924,26 @@ public class SieveIntegrationTest {
         return createMailWithSubjectAndHeaders(subject);
     }
 
-    private FakeMail createMailWithSubjectAndHeaders(String subject, Header... headers) throws MessagingException, IOException {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject(subject);
-        message.setSender(new InternetAddress("sender@any.com"));
-        message.setRecipient(MimeMessage.RecipientType.TO, new InternetAddress(RECEIVER_DOMAIN_COM));
-        MimeMultipart multipart = new MimeMultipart();
-        MimeBodyPart scriptPart = new MimeBodyPart();
-        scriptPart.setDataHandler(
-            new DataHandler(
-                new ByteArrayDataSource(
-                    "A text to match",
-                    "text/plain; charset=UTF-8")
-            ));
-        scriptPart.setDisposition(MimeBodyPart.ATTACHMENT);
-        scriptPart.setHeader("Content-Type", "text/plain; charset=UTF-8");
-        scriptPart.setFileName("file.txt");
-        multipart.addBodyPart(scriptPart);
-        message.setContent(multipart);
-        for (Header header : headers) {
-            message.addHeader(header.name, header.value);
-        }
-        message.saveChanges();
+    private FakeMail createMailWithSubjectAndHeaders(String subject, MimeMessageBuilder.Header... headers) throws MessagingException, IOException {
         return FakeMail.builder()
-                .mimeMessage(message)
-                .state(Mail.DEFAULT)
-                .recipient(new MailAddress(RECEIVER_DOMAIN_COM))
-                .sender(new MailAddress("sender@any.com"))
-                .build();
+            .mimeMessage(
+                MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject(subject)
+                    .addHeaders(headers)
+                    .setSender("sender@any.com")
+                    .addToRecipient(RECEIVER_DOMAIN_COM)
+                    .setMultipartWithBodyParts(
+                        MimeMessageBuilder.bodyPartBuilder()
+                            .data("A text to match")
+                            .addHeader("Content-Type", "text/plain; charset=UTF-8")
+                            .filename("file.txt")
+                            .disposition(MimeBodyPart.ATTACHMENT)
+                            .build())
+                    .build())
+            .state(Mail.DEFAULT)
+            .recipient(new MailAddress(RECEIVER_DOMAIN_COM))
+            .sender(new MailAddress("sender@any.com"))
+            .build();
     }
 
     private String expressMailboxNameWithSlash(String name) {
