@@ -122,6 +122,11 @@ public class FakeMailContext implements MailetContext {
                 return this;
             }
 
+            public Builder recipients(MailAddress... recipients) {
+                this.recipients = Optional.<Collection<MailAddress>>of(ImmutableList.copyOf(recipients));
+                return this;
+            }
+
             public Builder recipient(MailAddress recipient) {
                 Preconditions.checkNotNull(recipient);
                 return recipients(ImmutableList.of(recipient));

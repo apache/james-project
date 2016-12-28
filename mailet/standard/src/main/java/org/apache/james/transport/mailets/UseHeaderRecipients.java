@@ -20,16 +20,29 @@
 
 package org.apache.james.transport.mailets;
 
+import java.io.UnsupportedEncodingException;
+import java.util.Collection;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeUtility;
+
+import org.apache.james.mime4j.dom.address.Address;
+import org.apache.james.mime4j.dom.address.AddressList;
+import org.apache.james.mime4j.dom.address.Group;
+import org.apache.james.mime4j.dom.address.Mailbox;
+import org.apache.james.mime4j.field.address.LenientAddressParser;
+import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import java.util.Collection;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import com.google.common.base.Function;
+import com.google.common.base.Splitter;
+import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 
 /**
  * <p>Mailet designed to process the recipients from the mail headers rather
@@ -55,6 +68,17 @@ import java.util.Vector;
  */
 public class UseHeaderRecipients extends GenericMailet {
 
+    public static final Function<Mailbox, MailAddress> TO_MAIL_ADDRESS = new Function<Mailbox, MailAddress>() {
+        @Override
+        public MailAddress apply(Mailbox input) {
+            try {
+                return new MailAddress(input.getAddress());
+            } catch (AddressException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+    };
+
     /**
      * Controls certain log messages
      */
@@ -79,26 +103,28 @@ public class UseHeaderRecipients extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
 
-        // Utilise features of Set Collections such that they automatically
-        // ensure that no two entries are equal using the equality method
-        // of the element objects.  MailAddress objects test equality based
-        // on equivalent but not necessarily visually identical addresses.
-        Collection<MailAddress> recipients = mail.getRecipients();
-        // Wipe all the exist recipients
-        recipients.clear();
-        recipients.addAll(getHeaderMailAddresses(message, "Mail-For"));
-        if (recipients.isEmpty()) {
-            recipients.addAll(getHeaderMailAddresses(message, "To"));
-            recipients.addAll(getHeaderMailAddresses(message, "Cc"));
-        }
+        mail.setRecipients(headersAddresses(message));
+
         if (isDebug) {
-            log("All recipients = " + recipients.toString());
+            log("All recipients = " + mail.getRecipients());
             log("Reprocessing mail using recipients in message headers");
         }
 
         // Return email to the "root" process.
         getMailetContext().sendMail(mail.getSender(), mail.getRecipients(), mail.getMessage());
         mail.setState(Mail.GHOST);
+    }
+
+    public Collection<MailAddress> headersAddresses(MimeMessage mimeMessage) throws MessagingException {
+        Collection<MailAddress> mailForHeaderAddresses = getHeaderMailAddresses(mimeMessage, "Mail-For");
+        if (!mailForHeaderAddresses.isEmpty()) {
+            return mailForHeaderAddresses;
+        }
+        return ImmutableList.<MailAddress>builder()
+            .addAll(getHeaderMailAddresses(mimeMessage, "To"))
+            .addAll(getHeaderMailAddresses(mimeMessage, "Cc"))
+            .addAll(getHeaderMailAddresses(mimeMessage, "Bcc"))
+            .build();
     }
 
 
@@ -120,28 +146,67 @@ public class UseHeaderRecipients extends GenericMailet {
      * @return the collection of MailAddress objects.
      */
     private Collection<MailAddress> getHeaderMailAddresses(MimeMessage message, String name) throws MessagingException {
-
         if (isDebug) {
             log("Checking " + name + " headers");
         }
-        Collection<MailAddress> addresses = new Vector<MailAddress>();
         String[] headers = message.getHeader(name);
-        String addressString;
-        InternetAddress iAddress;
+        ImmutableList.Builder<MailAddress> addresses = ImmutableList.builder();
+
         if (headers != null) {
             for (String header : headers) {
-                StringTokenizer st = new StringTokenizer(header, ",", false);
-                while (st.hasMoreTokens()) {
-                    addressString = st.nextToken();
-                    iAddress = new InternetAddress(addressString);
-                    if (isDebug) {
-                        log("Address = " + iAddress.toString());
-                    }
-                    addresses.add(new MailAddress(iAddress));
-                }
+               addresses.addAll(getMailAddressesFromHeaderLine(header));
             }
         }
-        return addresses;
+        return addresses.build();
+    }
+
+    private ImmutableList<MailAddress> getMailAddressesFromHeaderLine(String header) throws MessagingException {
+        String unfoldedDecodedString = sanitizeHeaderString(header);
+        Iterable<String> headerParts = Splitter.on(",").split(unfoldedDecodedString);
+        return getMailAddressesFromHeadersParts(headerParts);
+    }
+
+    private ImmutableList<MailAddress> getMailAddressesFromHeadersParts(Iterable<String> headerParts) throws AddressException {
+        ImmutableList.Builder<MailAddress> result = ImmutableList.builder();
+        for (String headerPart : headerParts) {
+            if (isDebug) {
+                log("Address = " + headerPart);
+            }
+            result.addAll(readMailAddresses(headerPart));
+        }
+        return result.build();
+    }
+
+    private Collection<MailAddress> readMailAddresses(String headerPart) throws AddressException {
+        AddressList addressList = LenientAddressParser.DEFAULT
+            .parseAddressList(MimeUtil.unfold(headerPart));
+
+        ImmutableList.Builder<Mailbox> mailboxList = ImmutableList.builder();
+
+        for (Address address: addressList) {
+            mailboxList.addAll(convertAddressToMailboxCollection(address));
+        }
+
+        return FluentIterable.from(mailboxList.build())
+            .transform(TO_MAIL_ADDRESS)
+            .toList();
+    }
+
+    private Collection<Mailbox> convertAddressToMailboxCollection(Address address) {
+        if (address instanceof Mailbox) {
+            return ImmutableList.of((Mailbox) address);
+        } else if (address instanceof Group) {
+            return ImmutableList.copyOf(((Group) address).getMailboxes());
+        }
+        return ImmutableList.of();
+    }
+
+    private String sanitizeHeaderString(String header) throws MessagingException {
+        try {
+            return MimeUtility.unfold(MimeUtility.decodeText(header));
+        } catch (UnsupportedEncodingException e) {
+            throw new MessagingException("Can not decode header", e);
+        }
     }
 
 }
