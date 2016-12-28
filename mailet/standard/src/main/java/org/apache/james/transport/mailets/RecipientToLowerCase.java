@@ -18,16 +18,19 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
+
+import com.google.common.base.Function;
+import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 
 /**
  * {@link GenericMailet} which convert all Recipients to lowercase
@@ -36,14 +39,22 @@ import org.apache.mailet.base.GenericMailet;
  */
 public class RecipientToLowerCase extends GenericMailet{
 
+    public static final Function<MailAddress, MailAddress> TO_LOWERCASE = new Function<MailAddress, MailAddress>() {
+        @Override
+        public MailAddress apply(MailAddress input) {
+            try {
+                return new MailAddress(input.asString().toLowerCase(Locale.US));
+            } catch (AddressException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+    };
+
     @Override
     public void service(Mail mail) throws MessagingException {
-        Iterator<MailAddress> rcpts = mail.getRecipients().iterator();
-        List<MailAddress> newRcpts = new ArrayList<MailAddress>();
-        while(rcpts.hasNext()) {
-            newRcpts.add(new MailAddress(rcpts.next().toString().toLowerCase(Locale.US)));
-        }
-        mail.setRecipients(newRcpts);
+        mail.setRecipients(FluentIterable.from(mail.getRecipients())
+            .transform(TO_LOWERCASE)
+            .toList());
     }
 
 }
