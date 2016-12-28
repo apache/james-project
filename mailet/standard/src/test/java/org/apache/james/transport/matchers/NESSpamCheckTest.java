@@ -17,80 +17,46 @@
  * under the License.                                           *
  ****************************************************************/
 
-
 package org.apache.james.transport.matchers;
 
-import java.util.Collection;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
-import org.apache.mailet.MailAddress;
-import org.apache.mailet.Matcher;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.RFC2822Headers;
-import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class NESSpamCheckTest {
 
-    private MimeMessage mockedMimeMessage;
+    private NESSpamCheck matcher;
 
-    private FakeMail mockedMail;
-
-    private Matcher matcher;
-
-    private String headerName = "defaultHeaderName";
-
-    private String headerValue = "defaultHeaderValue";
-
-    private void setHeaderName(String headerName) {
-        this.headerName = headerName;
-    }
-
-    private void setHeaderValue(String headerValue) {
-        this.headerValue = headerValue;
-    }
-
-    private void setupMockedMimeMessage() throws MessagingException {
-        mockedMimeMessage = MailUtil.createMimeMessage(headerName, headerValue);
-    }
-
-    private void setupMatcher() throws MessagingException {
-        setupMockedMimeMessage();
+    @Before
+    public void setUp() throws Exception {
         matcher = new NESSpamCheck();
         FakeMatcherConfig mci = FakeMatcherConfig.builder()
-                .matcherName("NESSpamCheck")
-                .build();
+            .matcherName("NESSpamCheck")
+            .build();
 
         matcher.init(mci);
     }
 
     @Test
     public void testNESSpamCheckMatched() throws MessagingException {
-        setHeaderName(RFC2822Headers.RECEIVED);
-        setHeaderValue("xxxxxxxxxxxxxxxxxxxxx");
+        Mail mail = MailUtil.createMockMail2Recipients(
+            MailUtil.createMimeMessage(RFC2822Headers.RECEIVED, "xxxxxxxxxxxxxxxxxxxxx"));
 
-        setupMockedMimeMessage();
-        mockedMail = MailUtil.createMockMail2Recipients(mockedMimeMessage);
-        setupMatcher();
-
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        Assert.assertNotNull(matchedRecipients);
-        Assert.assertEquals(matchedRecipients.size(), mockedMail.getRecipients().size());
+        assertThat(matcher.match(mail)).hasSize(2);
     }
 
     @Test
     public void testNESSpamCheckNotMatched() throws MessagingException {
-        setupMockedMimeMessage();
-        mockedMail = MailUtil.createMockMail2Recipients(mockedMimeMessage);
-        setupMatcher();
+        Mail mail = MailUtil.createMockMail2Recipients(
+            MailUtil.createMimeMessage("defaultHeaderName", "defaultHeaderValue"));
 
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        Assert.assertNull(matchedRecipients);
+        assertThat(matcher.match(mail)).isNull();
     }
 }
