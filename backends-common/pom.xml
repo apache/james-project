@@ -39,6 +39,7 @@
 
     <modules>
         <module>cassandra</module>
+        <module>jpa</module>
     </modules>
 
     <dependencyManagement>

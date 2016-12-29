@@ -18,13 +18,10 @@
  ****************************************************************/
 package org.apache.james.domainlist.jpa;
 
-import java.util.HashMap;
-
+import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.domainlist.lib.AbstractDomainListTest;
-import org.apache.openjpa.persistence.OpenJPAEntityManagerFactory;
-import org.apache.openjpa.persistence.OpenJPAPersistence;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -32,31 +29,18 @@ import org.slf4j.LoggerFactory;
  */
 public class JPADomainListTest extends AbstractDomainListTest {
 
+    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPADomain.class);
+
     @Override
     protected DomainList createDomainList() {
-        // Use a memory database.
-        HashMap<String, String> properties = new HashMap<String, String>();
-        properties.put("openjpa.ConnectionDriverName", org.apache.derby.jdbc.EmbeddedDriver.class.getName());
-        properties.put("openjpa.ConnectionURL", "jdbc:derby:memory:JPADomainListTestDB;create=true");
-        properties.put("openjpa.Log", "JDBC=WARN, SQL=WARN, Runtime=WARN");
-        properties.put("openjpa.ConnectionFactoryProperties", "PrettyPrint=true, PrettyPrintLineLength=72");
-        properties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)");
-        properties.put("openjpa.MetaDataFactory", "jpa(Types=" + JPADomain.class.getName() + ")");
-        /*
-      The OpenJPA Entity Manager used for the tests.
-     */
-        OpenJPAEntityManagerFactory factory = OpenJPAPersistence.getEntityManagerFactory(properties);
-
-        // Initialize the JPADomainList (no autodetect,...).
         JPADomainList jpaDomainList = new JPADomainList();
         jpaDomainList.setLog(LoggerFactory.getLogger("JPADomainListMockLog"));
         jpaDomainList.setDNSService(getDNSServer("localhost"));
         jpaDomainList.setAutoDetect(false);
         jpaDomainList.setAutoDetectIP(false);
-        jpaDomainList.setEntityManagerFactory(factory);
+        jpaDomainList.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
         
         return jpaDomainList;
-
     }
 
 }

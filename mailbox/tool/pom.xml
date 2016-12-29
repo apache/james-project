@@ -34,6 +34,10 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.james</groupId>
+            <artifactId>apache-james-backends-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
         </dependency>
         <dependency>
@@ -51,14 +55,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-annotation_1.0_spec</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

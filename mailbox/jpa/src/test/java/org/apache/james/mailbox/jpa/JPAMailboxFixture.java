@@ -16,32 +16,30 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.user.jpa;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.james.backends.jpa.JpaTestCluster;
-import org.apache.james.user.jpa.model.JPAUser;
-import org.apache.james.user.lib.AbstractUsersRepository;
-import org.apache.james.user.lib.AbstractUsersRepositoryTest;
-import org.junit.After;
-import org.slf4j.LoggerFactory;
+package org.apache.james.mailbox.jpa;
 
-public class JpaUsersRepositoryTest extends AbstractUsersRepositoryTest {
+import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
+import org.apache.james.mailbox.jpa.mail.model.JPAMailboxAnnotation;
+import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
+import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
+import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage;
+import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
+import org.apache.james.mailbox.jpa.user.model.JPASubscription;
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAUser.class);
+public interface JPAMailboxFixture {
 
-    @After
-    @Override
-    public void tearDown() throws Exception {
-        JPA_TEST_CLUSTER.clear("JAMES_USER");
-    }
+    Class[] MAILBOX_PERSISTANCE_CLASSES = new Class[] {JPAMailbox.class,
+        AbstractJPAMailboxMessage.class,
+        JPAMailboxMessage.class,
+        JPAProperty.class,
+        JPAUserFlag.class,
+        JPAMailboxAnnotation.class,
+        JPASubscription.class};
 
-    @Override
-    protected AbstractUsersRepository getUsersRepository() throws Exception {
-        JPAUsersRepository repos = new JPAUsersRepository();
-        repos.setLog(LoggerFactory.getLogger("JPA"));
-        repos.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
-        repos.configure(new DefaultConfigurationBuilder());
-        return repos;
-    }
+    String[] MAILBOX_TABLE_NAMES = new String[] {"JAMES_MAIL_USERFLAG",
+        "JAMES_MAIL_PROPERTY",
+        "JAMES_MAILBOX_ANNOTATION",
+        "JAMES_MAILBOX",
+        "JAMES_MAIL"};
 }
