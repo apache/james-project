@@ -50,6 +50,9 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     private static final int DEFAULT_CONNECTION_MAX_RETRIES = 7;
     private static final int DEFAULT_CONNECTION_MIN_DELAY = 3000;
     private static final boolean DEFAULT_INDEX_ATTACHMENTS = true;
+    public static final String ES_CONFIG_FILE = FileSystem.FILE_PROTOCOL_AND_CONF + "elasticsearch.properties";
+    public static final String ELASTICSEARCH_MASTER_HOST = "elasticsearch.masterHost";
+    public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
 
     @Override
     protected void configure() {
@@ -64,10 +67,10 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     @Provides
     @Singleton
     protected Client provideClientProvider(FileSystem fileSystem, AsyncRetryExecutor executor) throws ConfigurationException, FileNotFoundException, ExecutionException, InterruptedException {
-        PropertiesConfiguration propertiesReader = new PropertiesConfiguration(fileSystem.getFile(FileSystem.FILE_PROTOCOL_AND_CONF + "elasticsearch.properties"));
+        PropertiesConfiguration propertiesReader = new PropertiesConfiguration(fileSystem.getFile(ES_CONFIG_FILE));
 
-        ClientProvider clientProvider = new ClientProviderImpl(propertiesReader.getString("elasticsearch.masterHost"),
-                propertiesReader.getInt("elasticsearch.port"));
+        ClientProvider clientProvider = new ClientProviderImpl(propertiesReader.getString(ELASTICSEARCH_MASTER_HOST),
+                propertiesReader.getInt(ELASTICSEARCH_PORT));
         Client client = getRetryer(executor, propertiesReader)
                 .getWithRetry(ctx -> clientProvider.get()).get();
         IndexCreationFactory.createIndex(client,

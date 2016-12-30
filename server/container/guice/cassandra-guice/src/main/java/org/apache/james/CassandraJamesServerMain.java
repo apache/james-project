@@ -29,6 +29,7 @@ import org.apache.james.modules.mailbox.CassandraSessionModule;
 import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
 import org.apache.james.modules.protocols.JMAPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
+import org.apache.james.modules.server.ESMetricReporterModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.QuotaModule;
 
@@ -48,7 +49,8 @@ public class CassandraJamesServerMain {
         new CassandraSessionModule(),
         new ElasticSearchMailboxModule(),
         new QuotaModule(),
-        new ActiveMQQueueModule());
+        new ActiveMQQueueModule(),
+        new ESMetricReporterModule());
 
 
     public static void main(String[] args) throws Exception {
