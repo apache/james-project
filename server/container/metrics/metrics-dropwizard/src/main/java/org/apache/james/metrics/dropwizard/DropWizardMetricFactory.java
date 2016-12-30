@@ -39,6 +39,10 @@ public class DropWizardMetricFactory implements MetricFactory {
             .build();
     }
 
+    public ESMetricReporter provideEsReporter(ESReporterConfiguration esReporterConfiguration) {
+        return new ESMetricReporter(esReporterConfiguration, metricRegistry);
+    }
+
     @Override
     public Metric generate(String name) {
         return new DropWizardMetric(metricRegistry.counter(name));

@@ -1561,6 +1561,11 @@
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.elasticsearch</groupId>
+                <artifactId>metrics-elasticsearch-reporter</artifactId>
+                <version>2.2.0</version>
+            </dependency>
+            <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers</artifactId>
                 <version>${testcontainers-version}</version>
