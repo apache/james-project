@@ -26,6 +26,8 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import org.apache.james.mailbox.store.search.SearchUtil;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.Group;
 import org.apache.james.mime4j.dom.address.Mailbox;
@@ -81,7 +83,7 @@ public class HeaderCollection {
             Preconditions.checkNotNull(field);
             String headerName = field.getName().toLowerCase();
             String headerValue = field.getBody();
-            headers.put(headerName, headerValue);
+            headers.put(headerName, DecoderUtil.decodeEncodedWords(headerValue, DecodeMonitor.SILENT));
             handleSpecificHeader(headerName, headerValue);
             return this;
         }

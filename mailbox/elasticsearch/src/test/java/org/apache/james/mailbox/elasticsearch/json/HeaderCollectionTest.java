@@ -62,7 +62,15 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void addressWithTwoDisplayNamesOnTheSameFieldShouldBeRetreived() {
+    public void displayNamesShouldBeRetrievedWhenEncodedWord() {
+        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("From", "=?UTF-8?B?RnLDqWTDqXJpYyBNQVJUSU4=?= <fmartin@linagora.com>, Graham CROSMARIE <gcrosmarie@linagora.com>")).build();
+        assertThat(headerCollection.getFromAddressSet())
+            .extracting(EMailer::getName)
+            .contains("Frédéric MARTIN");
+    }
+
+    @Test
+    public void addressWithTwoDisplayNamesOnTheSameFieldShouldBeRetrieved() {
         HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("From", "Christophe Hamerling <chamerling@linagora.com>, Graham CROSMARIE <gcrosmarie@linagora.com>")).build();
         assertThat(headerCollection.getFromAddressSet())
             .containsOnly(new EMailer("Christophe Hamerling", "chamerling@linagora.com"),
