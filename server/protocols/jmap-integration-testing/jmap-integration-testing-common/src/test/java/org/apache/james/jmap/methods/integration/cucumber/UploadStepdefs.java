@@ -24,21 +24,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.BufferedInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 
 import javax.inject.Inject;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.fluent.Async;
+import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
+import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.util.CountDownConsumeInputStream;
 import org.apache.james.util.ZeroedInputStream;
 
 import com.google.common.base.Charsets;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-
+import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import cucumber.runtime.java.guice.ScenarioScoped;
@@ -53,12 +59,45 @@ public class UploadStepdefs {
     private final MainStepdefs mainStepdefs;
     private final URI uploadUri;
     private HttpResponse response;
+    private Future<Content> async;
+    private boolean isCanceled;
 
     @Inject
     private UploadStepdefs(UserStepdefs userStepdefs, MainStepdefs mainStepdefs) throws URISyntaxException {
         this.userStepdefs = userStepdefs;
         this.mainStepdefs = mainStepdefs;
         uploadUri = mainStepdefs.baseUri().setPath("/upload").build();
+    }
+
+    @Given("^\"([^\"]*)\" is starting uploading a content$")
+    public void userStartUploadContent(String username) throws Throwable {
+        AccessToken accessToken = userStepdefs.tokenByUser.get(username);
+
+        CountDownLatch startSignal = new CountDownLatch(2);
+        CountDownConsumeInputStream bodyStream = new CountDownConsumeInputStream(startSignal);
+        Request request = Request.Post(uploadUri)
+            .bodyStream(new BufferedInputStream(bodyStream, _1M), org.apache.http.entity.ContentType.DEFAULT_BINARY);
+        if (accessToken != null) {
+            request.addHeader("Authorization", accessToken.serialize());
+        }
+        async = Async.newInstance().execute(request, new FutureCallback<Content>() {
+            
+            @Override
+            public void failed(Exception ex) {
+            }
+            
+            @Override
+            public void completed(Content result) {
+            }
+            
+            @Override
+            public void cancelled() {
+                bodyStream.getStartSignal().countDown();
+                if (bodyStream.getStartSignal().getCount() == 1) {
+                    isCanceled = true;
+                }
+            }
+        });
     }
 
     @When("^\"([^\"]*)\" upload a content$")
@@ -104,6 +143,11 @@ public class UploadStepdefs {
         response = request.execute().returnResponse();
     }
 
+    @Then("^the user disconnect$")
+    public void stopUpload() throws Throwable {
+        async.cancel(true);
+    }
+
     @Then("^the user should receive an authorized response$")
     public void httpAuthorizedStatus() throws Exception {
         assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
@@ -147,5 +191,10 @@ public class UploadStepdefs {
         }
         response = request.execute().returnResponse();
         httpAuthorizedStatus();
+    }
+
+    @Then("^the request should be marked as canceled$")
+    public void requestHasBeenCanceled() throws Exception {
+        assertThat(isCanceled).isTrue();
     }
 }
