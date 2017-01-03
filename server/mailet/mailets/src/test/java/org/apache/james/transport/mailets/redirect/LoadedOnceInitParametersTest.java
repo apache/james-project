@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 
+import com.google.common.base.Optional;
+
 public class LoadedOnceInitParametersTest {
 
     @Test
@@ -97,28 +99,28 @@ public class LoadedOnceInitParametersTest {
         }
 
         @Override
-        public String getRecipients() {
-            return "recipients";
+        public Optional<String> getRecipients() {
+            return Optional.of("recipients");
         }
 
         @Override
-        public String getTo() {
-            return "to";
+        public Optional<String> getTo() {
+            return Optional.of("to");
         }
 
         @Override
-        public String getReversePath() {
-            return "reversePath";
+        public Optional<String> getReversePath() {
+            return Optional.of("reversePath");
         }
 
         @Override
-        public String getSender() {
-            return "sender";
+        public Optional<String> getSender() {
+            return Optional.of("sender");
         }
 
         @Override
-        public String getReplyTo() {
-            return "replyTo";
+        public Optional<String> getReplyTo() {
+            return Optional.of("replyTo");
         }
 
         @Override

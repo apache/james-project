@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.mailets.redirect;
 
+import com.google.common.base.Optional;
+
 public class LoadedOnceInitParameters implements InitParameters {
 
     public static LoadedOnceInitParameters from(InitParameters initParameters) {
@@ -50,15 +52,16 @@ public class LoadedOnceInitParameters implements InitParameters {
     private final String prefix;
     private final boolean attachError;
     private final boolean isReply;
-    private final String recipients;
-    private final String to;
-    private final String reversePath;
-    private final String sender;
-    private final String replyTo;
+    private final Optional<String> recipients;
+    private final Optional<String> to;
+    private final Optional<String> reversePath;
+    private final Optional<String> sender;
+    private final Optional<String> replyTo;
     private final boolean debug;
 
     private LoadedOnceInitParameters(boolean isStatic, boolean passThrough, boolean fakeDomainCheck, TypeCode inline, TypeCode attachment, String message,
-            String subject, String prefix, boolean attachError, boolean isReply, String recipients, String to, String reversePath, String sender, String replyTo, boolean debug) {
+            String subject, String prefix, boolean attachError, boolean isReply, 
+            Optional<String> recipients, Optional<String> to, Optional<String> reversePath, Optional<String> sender, Optional<String> replyTo, boolean debug) {
         this.isStatic = isStatic;
         this.passThrough = passThrough;
         this.fakeDomainCheck = fakeDomainCheck;
@@ -123,27 +126,27 @@ public class LoadedOnceInitParameters implements InitParameters {
     }
 
     @Override
-    public String getRecipients() {
+    public Optional<String> getRecipients() {
         return recipients;
     }
 
     @Override
-    public String getTo() {
+    public Optional<String> getTo() {
         return to;
     }
 
     @Override
-    public String getReversePath() {
+    public Optional<String> getReversePath() {
         return reversePath;
     }
 
     @Override
-    public String getSender() {
+    public Optional<String> getSender() {
         return sender;
     }
 
     @Override
-    public String getReplyTo() {
+    public Optional<String> getReplyTo() {
         return replyTo;
     }
 

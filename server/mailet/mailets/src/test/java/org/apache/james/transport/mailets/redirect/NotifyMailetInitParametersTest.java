@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets.redirect;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.guava.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
 
@@ -28,6 +29,8 @@ import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.base.Optional;
 
 public class NotifyMailetInitParametersTest {
 
@@ -303,12 +306,12 @@ public class NotifyMailetInitParametersTest {
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String recipients = testee.getRecipients();
-        assertThat(recipients).isEqualTo("user@james.org, user2@james.org");
+        Optional<String> recipients = testee.getRecipients();
+        assertThat(recipients).contains("user@james.org, user2@james.org");
     }
 
     @Test
-    public void getRecipientsShouldReturnNullWhenEmpty() throws Exception {
+    public void getRecipientsShouldReturnAbsentWhenEmpty() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("recipients", "")
@@ -316,20 +319,20 @@ public class NotifyMailetInitParametersTest {
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String recipients = testee.getRecipients();
-        assertThat(recipients).isNull();
+        Optional<String> recipients = testee.getRecipients();
+        assertThat(recipients).isAbsent();
     }
 
     @Test
-    public void getRecipientsShouldReturnNullWhenNotSet() throws Exception {
+    public void getRecipientsShouldReturnAbsentWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String recipients = testee.getRecipients();
-        assertThat(recipients).isNull();
+        Optional<String> recipients = testee.getRecipients();
+        assertThat(recipients).isAbsent();
     }
 
     @Test
@@ -341,12 +344,12 @@ public class NotifyMailetInitParametersTest {
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String to = testee.getTo();
-        assertThat(to).isEqualTo("user@james.org, user2@james.org");
+        Optional<String> to = testee.getTo();
+        assertThat(to).contains("user@james.org, user2@james.org");
     }
 
     @Test
-    public void getToShouldReturnNullWhenEmpty() throws Exception {
+    public void getToShouldReturnAbsentWhenEmpty() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("to", "")
@@ -354,20 +357,20 @@ public class NotifyMailetInitParametersTest {
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String to = testee.getTo();
-        assertThat(to).isNull();
+        Optional<String> to = testee.getTo();
+        assertThat(to).isAbsent();
     }
 
     @Test
-    public void getToShouldReturnNullWhenNotSet() throws Exception {
+    public void getToShouldReturnAbsentWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String to = testee.getTo();
-        assertThat(to).isNull();
+        Optional<String> to = testee.getTo();
+        assertThat(to).isAbsent();
     }
 
     @Test
@@ -379,12 +382,12 @@ public class NotifyMailetInitParametersTest {
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String reversePath = testee.getReversePath();
-        assertThat(reversePath).isEqualTo("user@james.org, user2@james.org");
+        Optional<String> reversePath = testee.getReversePath();
+        assertThat(reversePath).contains("user@james.org, user2@james.org");
     }
 
     @Test
-    public void getReversePathShouldReturnNullWhenEmpty() throws Exception {
+    public void getReversePathShouldReturnAbsentWhenEmpty() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("reversePath", "")
@@ -392,20 +395,20 @@ public class NotifyMailetInitParametersTest {
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String reversePath = testee.getReversePath();
-        assertThat(reversePath).isNull();
+        Optional<String> reversePath = testee.getReversePath();
+        assertThat(reversePath).isAbsent();
     }
 
     @Test
-    public void getReversePathShouldReturnNullWhenNotSet() throws Exception {
+    public void getReversePathShouldReturnAbsentWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String reversePath = testee.getReversePath();
-        assertThat(reversePath).isNull();
+        Optional<String> reversePath = testee.getReversePath();
+        assertThat(reversePath).isAbsent();
     }
 
     @Test
@@ -417,12 +420,12 @@ public class NotifyMailetInitParametersTest {
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String sender = testee.getSender();
-        assertThat(sender).isEqualTo("user@james.org, user2@james.org");
+        Optional<String> sender = testee.getSender();
+        assertThat(sender).contains("user@james.org, user2@james.org");
     }
 
     @Test
-    public void getSenderShouldReturnNullWhenEmpty() throws Exception {
+    public void getSenderShouldReturnAbsentWhenEmpty() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("sender", "")
@@ -430,20 +433,20 @@ public class NotifyMailetInitParametersTest {
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String sender = testee.getSender();
-        assertThat(sender).isNull();
+        Optional<String> sender = testee.getSender();
+        assertThat(sender).isAbsent();
     }
 
     @Test
-    public void getSenderShouldReturnNullWhenNotSet() throws Exception {
+    public void getSenderShouldReturnAbsentWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String sender = testee.getSender();
-        assertThat(sender).isNull();
+        Optional<String> sender = testee.getSender();
+        assertThat(sender).isAbsent();
     }
 
     @Test
@@ -455,8 +458,8 @@ public class NotifyMailetInitParametersTest {
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String replyTo = testee.getReplyTo();
-        assertThat(replyTo).isEqualTo("user@james.org, user2@james.org");
+        Optional<String> replyTo = testee.getReplyTo();
+        assertThat(replyTo).contains("user@james.org, user2@james.org");
     }
 
     @Test
@@ -468,12 +471,12 @@ public class NotifyMailetInitParametersTest {
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String replyTo = testee.getReplyTo();
-        assertThat(replyTo).isEqualTo("user@james.org, user2@james.org");
+        Optional<String> replyTo = testee.getReplyTo();
+        assertThat(replyTo).contains("user@james.org, user2@james.org");
     }
 
     @Test
-    public void getReplyToShouldReturnNullWhenEmpty() throws Exception {
+    public void getReplyToShouldReturnAbsentWhenEmpty() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .setProperty("replyTo", "")
@@ -481,20 +484,20 @@ public class NotifyMailetInitParametersTest {
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String replyTo = testee.getReplyTo();
-        assertThat(replyTo).isNull();
+        Optional<String> replyTo = testee.getReplyTo();
+        assertThat(replyTo).isAbsent();
     }
 
     @Test
-    public void getReplyToShouldReturnNullWhenNotSet() throws Exception {
+    public void getReplyToShouldReturnAbsentWhenNotSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("mailet")
                 .build();
         mailet.init(mailetConfig);
         InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
-        String replyTo = testee.getReplyTo();
-        assertThat(replyTo).isNull();
+        Optional<String> replyTo = testee.getReplyTo();
+        assertThat(replyTo).isAbsent();
     }
 
     @Test

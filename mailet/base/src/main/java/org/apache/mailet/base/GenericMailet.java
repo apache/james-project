@@ -35,6 +35,9 @@ import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.MailetContext.LogLevel;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
+
 /**
  * GenericMailet makes writing mailets easier. It provides simple
  * versions of the lifecycle methods init and destroy and of the methods
@@ -80,6 +83,14 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
             throw new NullPointerException("Mailet configuration must be set before getInitParameter is called.");
         }
         return MailetUtil.getInitParameter(config, name).or(defaultValue);
+    }
+
+    public Optional<String> getInitParameterAsOptional(String name) {
+        String value = getInitParameter(name);
+        if (Strings.isNullOrEmpty(value)) {
+            return Optional.absent();
+        }
+        return Optional.of(value);
     }
 
     /**

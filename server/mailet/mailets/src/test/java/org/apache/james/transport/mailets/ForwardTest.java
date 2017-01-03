@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.guava.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -146,13 +147,13 @@ public class ForwardTest {
     }
 
     @Test
-    public void getReversePathShouldReturnNull() throws Exception {
-        assertThat(forward.getReversePath()).isNull();
+    public void getReversePathShouldReturnAbsent() throws Exception {
+        assertThat(forward.getReversePath()).isAbsent();
     }
 
     @Test
-    public void getSenderShouldReturnNull() throws Exception {
-        assertThat(forward.getSender()).isNull();
+    public void getSenderShouldReturnAbsent() throws Exception {
+        assertThat(forward.getSender()).isAbsent();
     }
 
     @Test

@@ -21,6 +21,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.guava.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -119,7 +120,7 @@ public class DSNBounceTest {
     @Test
     public void getReversePathShouldReturnNullSpecialAddress() {
         Mail mail = null;
-        assertThat(dsnBounce.getReversePath(mail)).isEqualTo(SpecialAddress.NULL);
+        assertThat(dsnBounce.getReversePath(mail)).contains(SpecialAddress.NULL);
     }
 
     @Test

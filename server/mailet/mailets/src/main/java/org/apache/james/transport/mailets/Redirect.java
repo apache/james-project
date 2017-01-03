@@ -45,7 +45,7 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -366,7 +366,7 @@ public class Redirect extends GenericMailet implements RedirectNotify {
         ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
         List<MailAddress> mailAddresses = AddressExtractor.withContext(getMailetContext())
                 .allowedSpecials(ALLOWED_SPECIALS)
-                .extract(recipientsOrTo);
+                .extract(Optional.of(recipientsOrTo));
         for (MailAddress address : mailAddresses) {
             builder.add(address);
         }
@@ -394,7 +394,7 @@ public class Redirect extends GenericMailet implements RedirectNotify {
         return MailAddressUtils.toInternetAddresses(
                 AddressExtractor.withContext(getMailetContext())
                     .allowedSpecials(ALLOWED_SPECIALS)
-                    .extract(toOrRecipients));
+                    .extract(Optional.of(toOrRecipients)));
     }
 
     private String getToOrRecipients() throws MessagingException {
@@ -408,18 +408,13 @@ public class Redirect extends GenericMailet implements RedirectNotify {
 
     @Override
     public MailAddress getReplyTo() throws MessagingException {
-        String replyTo = getInitParameters().getReplyTo();
-        if (Strings.isNullOrEmpty(replyTo)) {
-            return null;
-        }
-
+        Optional<String> replyTo = getInitParameters().getReplyTo();
         List<MailAddress> extractAddresses = AddressExtractor.withContext(getMailetContext())
                 .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
                 .extract(replyTo);
-        if (extractAddresses.isEmpty()) {
-            return null;
-        }
-        return extractAddresses.get(0);
+        return FluentIterable.from(extractAddresses)
+                .first()
+                .orNull();
     }
 
     @Override

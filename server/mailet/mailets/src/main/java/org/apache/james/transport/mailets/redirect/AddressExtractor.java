@@ -57,7 +57,7 @@ public class AddressExtractor {
             return this;
         }
 
-        public List<MailAddress> extract(String addressList) throws MessagingException {
+        public List<MailAddress> extract(Optional<String> addressList) throws MessagingException {
             checkParameters();
             return new AddressExtractor(mailetContext, allowedSpecials).extract(addressList);
         }
@@ -81,7 +81,11 @@ public class AddressExtractor {
         this.allowedSpecials = allowedSpecials;
     }
 
-    private List<MailAddress> extract(String addressList) throws MessagingException {
+    private List<MailAddress> extract(Optional<String> maybeAddressList) throws MessagingException {
+        if (!maybeAddressList.isPresent()) {
+            return ImmutableList.of();
+        }
+        String addressList = maybeAddressList.get();
         try {
             return toMailAddresses(ImmutableList.copyOf(InternetAddress.parse(addressList, ENFORCE_RFC822_SYNTAX)));
         } catch (AddressException e) {

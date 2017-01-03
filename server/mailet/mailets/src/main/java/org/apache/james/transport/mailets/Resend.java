@@ -44,7 +44,6 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -362,8 +361,8 @@ public class Resend extends GenericMailet implements RedirectNotify {
 
     @Override
     public MailAddress getReplyTo() throws MessagingException {
-        String replyTo = getInitParameters().getReplyTo();
-        if (Strings.isNullOrEmpty(replyTo)) {
+        Optional<String> replyTo = getInitParameters().getReplyTo();
+        if (!replyTo.isPresent()) {
             return null;
         }
 

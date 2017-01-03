@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.mailets.redirect;
 
+import com.google.common.base.Optional;
+
 public interface InitParameters {
 
     boolean getPassThrough();
@@ -39,15 +41,15 @@ public interface InitParameters {
 
     boolean isReply();
 
-    String getRecipients();
+    Optional<String> getRecipients();
 
-    String getTo();
+    Optional<String> getTo();
 
-    String getReversePath();
+    Optional<String> getReversePath();
 
-    String getSender();
+    Optional<String> getSender();
 
-    String getReplyTo();
+    Optional<String> getReplyTo();
 
     boolean isDebug();
 

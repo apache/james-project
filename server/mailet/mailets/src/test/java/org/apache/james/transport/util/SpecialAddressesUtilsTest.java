@@ -39,12 +39,17 @@ import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class SpecialAddressesUtilsTest {
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
     private MailAddress postmaster;
     private SpecialAddressesUtils testee;
@@ -449,22 +454,28 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnAbsentWhenSenderInitParameterIsNull() throws Exception {
-        Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(null, ImmutableList.of("postmaster", "sender", "unaltered"));
+    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldThrowWhenSenderInitParameterIsNull() throws Exception {
+        expectedException.expect(NullPointerException.class);
+        testee.getFirstSpecialAddressIfMatchingOrGivenAddress(null, ImmutableList.of("postmaster", "sender", "unaltered"));
+    }
+
+    @Test
+    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnAbsentWhenSenderInitParameterIsAbsent() throws Exception {
+        Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.<String> absent(), ImmutableList.of("postmaster", "sender", "unaltered"));
 
         assertThat(sender).isAbsent();
     }
 
     @Test
     public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnAbsentWhenSenderInitParameterIsEmpty() throws Exception {
-        Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress("", ImmutableList.of("postmaster", "sender", "unaltered"));
+        Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.of(""), ImmutableList.of("postmaster", "sender", "unaltered"));
 
         assertThat(sender).isAbsent();
     }
 
     @Test
     public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnGivenAddressWhenNoSpecialAddressMatches() throws Exception {
-        Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress("test@james.org", ImmutableList.of("postmaster", "sender", "unaltered"));
+        Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.of("test@james.org"), ImmutableList.of("postmaster", "sender", "unaltered"));
 
         MailAddress expectedMailAddress = new MailAddress("test", "james.org");
         assertThat(sender).contains(expectedMailAddress);
@@ -472,14 +483,14 @@ public class SpecialAddressesUtilsTest {
 
     @Test
     public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnFirstSpecialAddressWhenMatching() throws Exception {
-        Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress("postmaster", ImmutableList.of("postmaster", "sender", "unaltered"));
+        Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.of("postmaster"), ImmutableList.of("postmaster", "sender", "unaltered"));
 
         assertThat(sender).contains(postmaster);
     }
 
     @Test
     public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnSecondSpecialAddressWhenMatching() throws Exception {
-        Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress("sender", ImmutableList.of("postmaster", "sender", "unaltered"));
+        Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.of("sender"), ImmutableList.of("postmaster", "sender", "unaltered"));
 
         MailAddress expectedMailAddress = SpecialAddress.SENDER;
         assertThat(sender).contains(expectedMailAddress);
@@ -487,7 +498,7 @@ public class SpecialAddressesUtilsTest {
 
     @Test
     public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnLastSpecialAddressWhenMatching() throws Exception {
-        Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress("unaltered", ImmutableList.of("postmaster", "sender", "unaltered"));
+        Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.of("unaltered"), ImmutableList.of("postmaster", "sender", "unaltered"));
 
         MailAddress expectedMailAddress = SpecialAddress.UNALTERED;
         assertThat(sender).contains(expectedMailAddress);

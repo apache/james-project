@@ -226,14 +226,14 @@ public class RedirectTest {
     }
 
     @Test
-    public void getReversePathShouldReturnNullWhenNoReversePathParameter() throws Exception {
+    public void getReversePathShouldReturnAbsentWhenNoReversePathParameter() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
                 .build();
         redirect.init(mailetConfig);
 
-        assertThat(redirect.getReversePath()).isNull();
+        assertThat(redirect.getReversePath()).isAbsent();
     }
 
     @Test
@@ -258,7 +258,7 @@ public class RedirectTest {
                 .build();
         redirect.init(mailetConfig);
 
-        assertThat(redirect.getReversePath()).isEqualTo(postmaster);
+        assertThat(redirect.getReversePath()).contains(postmaster);
     }
 
     @Test
@@ -270,11 +270,11 @@ public class RedirectTest {
                 .build();
         redirect.init(mailetConfig);
 
-        assertThat(redirect.getReversePath()).isEqualTo(new MailAddress("reverse@james.org"));
+        assertThat(redirect.getReversePath()).contains(new MailAddress("reverse@james.org"));
     }
 
     @Test
-    public void getReversePathWithMailShouldReturnNullWhenNotStaticAndReversePathParameters() throws Exception {
+    public void getReversePathWithMailShouldReturnAbsentWhenNotStaticAndReversePathParameters() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -286,7 +286,7 @@ public class RedirectTest {
         message.setText("This is a fake mail");
         FakeMail mail = FakeMail.from(message);
 
-        assertThat(redirect.getReversePath(mail)).isNull();
+        assertThat(redirect.getReversePath(mail)).isAbsent();
     }
 
     @Test
@@ -303,7 +303,7 @@ public class RedirectTest {
         message.setText("This is a fake mail");
         FakeMail mail = FakeMail.from(message);
 
-        assertThat(redirect.getReversePath(mail)).isEqualTo(new MailAddress("reverse@james.org"));
+        assertThat(redirect.getReversePath(mail)).contains(new MailAddress("reverse@james.org"));
     }
 
     @Test
@@ -320,7 +320,7 @@ public class RedirectTest {
         message.setText("This is a fake mail");
         FakeMail mail = FakeMail.from(message);
 
-        assertThat(redirect.getReversePath(mail)).isEqualTo(postmaster);
+        assertThat(redirect.getReversePath(mail)).contains(postmaster);
     }
 
     @Test
@@ -338,7 +338,7 @@ public class RedirectTest {
         message.setText("This is a fake mail");
         FakeMail mail = FakeMail.from(message);
 
-        assertThat(redirect.getReversePath(mail)).isEqualTo(postmaster);
+        assertThat(redirect.getReversePath(mail)).contains(postmaster);
     }
 
     @Test
@@ -355,7 +355,7 @@ public class RedirectTest {
         message.setText("This is a fake mail");
         FakeMail mail = FakeMail.from(message);
 
-        assertThat(redirect.getReversePath(mail)).isEqualTo(new MailAddress("sender@james.org"));
+        assertThat(redirect.getReversePath(mail)).contains(new MailAddress("sender@james.org"));
     }
 
     @Test

@@ -99,40 +99,33 @@ public class RedirectMailetInitParameters implements InitParameters {
 
 
     @Override
-    public String getRecipients() {
-        return initParameterOrNull("recipients");
+    public Optional<String> getRecipients() {
+        return mailet.getInitParameterAsOptional("recipients");
     }
 
-    private String initParameterOrNull(String parameter) {
-        String value = mailet.getInitParameter(parameter);
-        if (Strings.isNullOrEmpty(value)) {
-            return null;
-        }
-        return value;
+
+    @Override
+    public Optional<String> getTo() {
+        return mailet.getInitParameterAsOptional("to");
     }
 
     @Override
-    public String getTo() {
-        return initParameterOrNull("to");
+    public Optional<String> getReversePath() {
+        return mailet.getInitParameterAsOptional("reversePath");
     }
 
     @Override
-    public String getReversePath() {
-        return initParameterOrNull("reversePath");
+    public Optional<String> getSender() {
+        return mailet.getInitParameterAsOptional("sender");
     }
 
     @Override
-    public String getSender() {
-        return initParameterOrNull("sender");
-    }
-
-    @Override
-    public String getReplyTo() {
+    public Optional<String> getReplyTo() {
         String recipients = mailet.getInitParameter("replyTo", mailet.getInitParameter("replyto"));
         if (Strings.isNullOrEmpty(recipients)) {
-            return null;
+            return Optional.absent();
         }
-        return recipients;
+        return Optional.of(recipients);
     }
 
     @Override

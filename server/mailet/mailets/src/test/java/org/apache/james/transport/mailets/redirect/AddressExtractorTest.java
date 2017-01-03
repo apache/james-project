@@ -59,14 +59,14 @@ public class AddressExtractorTest {
     public void extractShouldThrowWhenMailetContextIsNull() throws Exception {
         expectedException.expect(NullPointerException.class);
         AddressExtractor.withContext(null)
-            .extract("user@james.org, user2@james.org");
+            .extract(Optional.of("user@james.org, user2@james.org"));
     }
 
     @Test
     public void extractShouldThrowWhenAllowedSpecialsIsNotGiven() throws Exception {
         expectedException.expect(NullPointerException.class);
         AddressExtractor.withContext(mailetContext)
-            .extract("user@james.org, user2@james.org");
+            .extract(Optional.of("user@james.org, user2@james.org"));
     }
 
     @Test
@@ -74,7 +74,7 @@ public class AddressExtractorTest {
         expectedException.expect(NullPointerException.class);
         AddressExtractor.withContext(mailetContext)
             .allowedSpecials(null)
-            .extract("user@james.org, user2@james.org");
+            .extract(Optional.of("user@james.org, user2@james.org"));
     }
 
     @Test
@@ -100,10 +100,19 @@ public class AddressExtractorTest {
     }
 
     @Test
+    public void extractShouldReturnEmptyWhenAddressListIsAbsent() throws Exception {
+        List<MailAddress> extract = AddressExtractor.withContext(mailetContext)
+                .allowedSpecials(ImmutableList.<String> of())
+                .extract(Optional.<String> absent());
+
+        assertThat(extract).isEmpty();;
+    }
+
+    @Test
     public void extractShouldReturnListWhenParsingSucceed() throws Exception {
         List<MailAddress> extract = AddressExtractor.withContext(mailetContext)
                 .allowedSpecials(ImmutableList.<String> of())
-                .extract("user@james.org, user2@james.org");
+                .extract(Optional.of("user@james.org, user2@james.org"));
 
         assertThat(extract).containsOnly(new MailAddress("user", "james.org"),
                 new MailAddress("user2", "james.org"));
@@ -113,7 +122,7 @@ public class AddressExtractorTest {
     public void extractShouldReturnSpecialAddressesWhenAddressesAreSpecial() throws Exception {
         List<MailAddress> extract = AddressExtractor.withContext(mailetContext)
                 .allowedSpecials(ImmutableList.<String> of("postmaster", "to"))
-                .extract("postmaster, to");
+                .extract(Optional.of("postmaster, to"));
 
         assertThat(extract).containsOnly(new MailAddress("postmaster", "james.org"),
                 new MailAddress("to", "address.marker"));
@@ -124,7 +133,7 @@ public class AddressExtractorTest {
         expectedException.expect(MessagingException.class);
         AddressExtractor.withContext(mailetContext)
             .allowedSpecials(ImmutableList.<String> of())
-            .extract("user@james@org");
+            .extract(Optional.of("user@james@org"));
     }
 
     @Test
