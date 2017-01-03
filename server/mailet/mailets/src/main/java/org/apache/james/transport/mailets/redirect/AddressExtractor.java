@@ -28,14 +28,16 @@ import javax.mail.internet.InternetAddress;
 
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
+import org.apache.mailet.base.StringUtils;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 public class AddressExtractor {
+
+    private static final boolean ENFORCE_RFC822_SYNTAX = false;
 
     public static Builder withContext(MailetContext mailetContext) {
         return new Builder(mailetContext);
@@ -81,7 +83,7 @@ public class AddressExtractor {
 
     private List<MailAddress> extract(String addressList) throws MessagingException {
         try {
-            return toMailAddresses(ImmutableList.copyOf(InternetAddress.parse(addressList, false)));
+            return toMailAddresses(ImmutableList.copyOf(InternetAddress.parse(addressList, ENFORCE_RFC822_SYNTAX)));
         } catch (AddressException e) {
             throw new MessagingException("Exception thrown parsing: " + addressList, e);
         }
@@ -126,15 +128,11 @@ public class AddressExtractor {
         Optional<MailAddress> specialAddress = asSpecialAddress(addressString);
         if (specialAddress.isPresent()) {
             if (!isAllowed(addressString, allowedSpecials)) {
-                throw new MessagingException("Special (\"magic\") address found not allowed: " + addressString + ", allowed values are \"" + asString(allowedSpecials) + "\"");
+                throw new MessagingException("Special (\"magic\") address found not allowed: " + addressString + ", allowed values are \"" + StringUtils.listToString(allowedSpecials) + "\"");
             }
             return specialAddress;
         }
         return Optional.absent();
-    }
-
-    private String asString(List<String> allowedSpecials) {
-        return "[" + Joiner.on(", ").join(allowedSpecials) + "]";
     }
 
     private Optional<MailAddress> asSpecialAddress(String addressString) {

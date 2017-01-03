@@ -24,6 +24,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import com.google.common.collect.ImmutableList;
+
 public class StringUtilsTest {
 
     @Rule
@@ -57,5 +59,35 @@ public class StringUtilsTest {
     public void arrayToStringShouldThrowWhenArrayContainsANullElement() {
         expectedException.expect(NullPointerException.class);
         StringUtils.arrayToString(new String[] { "first", null, "fourth" });
+    }
+
+    @Test
+    public void listToStringShouldThrowWhenListIsNull() {
+        expectedException.expect(NullPointerException.class);
+        StringUtils.listToString(null);
+    }
+
+    @Test
+    public void listToStringShouldReturnOnlyBracketsWhenListIsEmpty() {
+        String listToString = StringUtils.listToString(ImmutableList.<String> of());
+        assertThat(listToString).isEqualTo("[]");
+    }
+
+    @Test
+    public void listToStringShouldReturnOneElementWhenListContainsOneElement() {
+        String listToString = StringUtils.listToString(ImmutableList.of("first"));
+        assertThat(listToString).isEqualTo("[first]");
+    }
+
+    @Test
+    public void listToStringShouldReturnSeparatedElementsWhenListContainsMultipleElements() {
+        String listToString = StringUtils.listToString(ImmutableList.of("first", "second", "fourth"));
+        assertThat(listToString).isEqualTo("[first,second,fourth]");
+    }
+
+    @Test
+    public void listToStringShouldThrowWhenListContainsANullElement() {
+        expectedException.expect(NullPointerException.class);
+        StringUtils.listToString(ImmutableList.of("first", null, "fourth"));
     }
 }

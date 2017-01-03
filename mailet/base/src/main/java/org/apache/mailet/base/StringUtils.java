@@ -22,8 +22,10 @@ package org.apache.mailet.base;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.List;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 
 /**
  * Collects useful string utility methods.
@@ -122,5 +124,9 @@ public final class StringUtils {
         sb.append(Joiner.on(",").join(array));
         sb.append("]");
         return sb.toString();
+    }
+
+    public static String listToString(List<String> strings) {
+        return arrayToString(Iterables.toArray(strings, String.class));
     }
 }
