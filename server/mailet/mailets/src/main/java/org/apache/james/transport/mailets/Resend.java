@@ -399,17 +399,17 @@ public class Resend extends GenericMailet implements RedirectNotify {
     }
 
     @Override
-    public MailAddress getReversePath() throws MessagingException {
+    public Optional<MailAddress> getReversePath() throws MessagingException {
         return SpecialAddressesUtils.from(this)
                 .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getReversePath(), RedirectNotify.REVERSE_PATH_ALLOWED_SPECIALS);
     }
 
     @Override
-    public MailAddress getReversePath(Mail originalMail) throws MessagingException {
-        MailAddress reversePath = getReversePath();
-        if (reversePath != null) {
-            if (MailAddressUtils.isUnalteredOrReversePathOrSender(reversePath)) {
-                return null;
+    public Optional<MailAddress> getReversePath(Mail originalMail) throws MessagingException {
+        Optional<MailAddress> reversePath = getReversePath();
+        if (reversePath.isPresent()) {
+            if (MailAddressUtils.isUnalteredOrReversePathOrSender(reversePath.get())) {
+                return Optional.absent();
             }
         }
         return reversePath;
@@ -418,7 +418,8 @@ public class Resend extends GenericMailet implements RedirectNotify {
     @Override
     public MailAddress getSender() throws MessagingException {
         return SpecialAddressesUtils.from(this)
-                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), RedirectNotify.SENDER_ALLOWED_SPECIALS);
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), RedirectNotify.SENDER_ALLOWED_SPECIALS)
+                .orNull();
     }
 
     @Override

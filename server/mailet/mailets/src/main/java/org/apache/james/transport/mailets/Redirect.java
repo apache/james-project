@@ -428,25 +428,25 @@ public class Redirect extends GenericMailet implements RedirectNotify {
     }
 
     @Override
-    public MailAddress getReversePath() throws MessagingException {
+    public Optional<MailAddress> getReversePath() throws MessagingException {
         return SpecialAddressesUtils.from(this)
                 .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getReversePath(), ImmutableList.of("postmaster", "sender", "null"));
     }
 
     @Override
-    public MailAddress getReversePath(Mail originalMail) throws MessagingException {
-        MailAddress reversePath = retrieveReversePath();
-        if (reversePath != null) {
+    public Optional<MailAddress> getReversePath(Mail originalMail) throws MessagingException {
+        Optional<MailAddress> reversePath = retrieveReversePath();
+        if (reversePath.isPresent()) {
             return reversePath;
         }
-        return getSender(originalMail).orNull();
+        return getSender(originalMail);
     }
 
-    private MailAddress retrieveReversePath() throws MessagingException {
-        MailAddress reversePath = getReversePath();
-        if (reversePath != null) {
-            if (MailAddressUtils.isUnalteredOrReversePathOrSender(reversePath)) {
-                return null;
+    private Optional<MailAddress> retrieveReversePath() throws MessagingException {
+        Optional<MailAddress> reversePath = getReversePath();
+        if (reversePath.isPresent()) {
+            if (MailAddressUtils.isUnalteredOrReversePathOrSender(reversePath.get())) {
+                return Optional.absent();
             }
         }
         return reversePath;
@@ -455,7 +455,8 @@ public class Redirect extends GenericMailet implements RedirectNotify {
     @Override
     public MailAddress getSender() throws MessagingException {
         return SpecialAddressesUtils.from(this)
-                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), RedirectNotify.SENDER_ALLOWED_SPECIALS);
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), RedirectNotify.SENDER_ALLOWED_SPECIALS)
+                .orNull();
     }
 
     @Override

@@ -235,7 +235,7 @@ public interface RedirectNotify extends Mailet, MailetConfig {
      *         <code>SpecialAddress.UNALTERED</code> or <code>null</code> if
      *         missing
      */
-    MailAddress getReversePath() throws MessagingException; 
+    Optional<MailAddress> getReversePath() throws MessagingException; 
 
     /**
      * Gets the <code>reversePath</code> property, built dynamically using the
@@ -248,7 +248,7 @@ public interface RedirectNotify extends Mailet, MailetConfig {
      *         but not replacing <code>SpecialAddress.NULL</code> that will be
      *         handled by {@link #setReversePath}
      */
-    MailAddress getReversePath(Mail originalMail) throws MessagingException;
+    Optional<MailAddress> getReversePath(Mail originalMail) throws MessagingException;
 
     /**
      * Gets the <code>sender</code> property. Returns the new sender as a

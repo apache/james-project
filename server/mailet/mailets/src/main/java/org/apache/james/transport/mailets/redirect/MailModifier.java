@@ -157,8 +157,9 @@ public class MailModifier {
      * requested value is <code>SpecialAddress.NULL</code> sets it to "<>". If
      * the requested value is null does nothing.
      */
-    public void setReversePath(MailAddress reversePath, Mail originalMail) {
-        if (reversePath != null) {
+    public void setReversePath(Optional<MailAddress> maybeReversePath, Mail originalMail) {
+        if (maybeReversePath.isPresent()) {
+            MailAddress reversePath = maybeReversePath.get();
             if (reversePath.equals(SpecialAddress.NULL)) {
                 mail.setSender(null);
                 if (mailet.getInitParameters().isDebug()) {

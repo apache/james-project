@@ -194,20 +194,21 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     }
 
     @Override
-    public MailAddress getReversePath() throws MessagingException {
+    public Optional<MailAddress> getReversePath() throws MessagingException {
         return SpecialAddressesUtils.from(this)
                 .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getReversePath(), RedirectNotify.REVERSE_PATH_ALLOWED_SPECIALS);
     }
 
     @Override
-    public MailAddress getReversePath(Mail originalMail) {
-        return SpecialAddress.NULL;
+    public Optional<MailAddress> getReversePath(Mail originalMail) {
+        return Optional.of(SpecialAddress.NULL);
     }
 
     @Override
     public MailAddress getSender() throws MessagingException {
         return SpecialAddressesUtils.from(this)
-                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), RedirectNotify.SENDER_ALLOWED_SPECIALS);
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), RedirectNotify.SENDER_ALLOWED_SPECIALS)
+                .orNull();
     }
 
     @Override

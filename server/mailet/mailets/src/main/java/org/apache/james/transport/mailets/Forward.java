@@ -211,13 +211,13 @@ public class Forward extends GenericMailet implements RedirectNotify {
     }
 
     @Override
-    public MailAddress getReversePath() throws MessagingException {
-        return null;
+    public Optional<MailAddress> getReversePath() throws MessagingException {
+        return Optional.absent();
     }
 
     @Override
-    public MailAddress getReversePath(Mail originalMail) throws MessagingException {
-        return null;
+    public Optional<MailAddress> getReversePath(Mail originalMail) throws MessagingException {
+        return Optional.absent();
     }
 
     @Override
