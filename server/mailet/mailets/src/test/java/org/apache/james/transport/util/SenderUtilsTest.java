@@ -30,8 +30,8 @@ import com.google.common.base.Optional;
 public class SenderUtilsTest {
 
     @Test
-    public void getSenderShouldReturnAbsentWhenSenderIsNull() throws Exception {
-        SenderUtils testee = SenderUtils.from(null);
+    public void getSenderShouldReturnAbsentWhenSenderIsAbsent() throws Exception {
+        SenderUtils testee = SenderUtils.from(Optional.<MailAddress> absent());
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 
@@ -42,7 +42,7 @@ public class SenderUtilsTest {
 
     @Test
     public void getSenderShouldReturnAbsentWhenSenderEqualsToUnaltered() throws Exception {
-        SenderUtils testee = SenderUtils.from(SpecialAddress.UNALTERED);
+        SenderUtils testee = SenderUtils.from(Optional.of(SpecialAddress.UNALTERED));
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 
@@ -53,7 +53,7 @@ public class SenderUtilsTest {
 
     @Test
     public void getSenderShouldReturnAbsentWhenSenderEqualsToSender() throws Exception {
-        SenderUtils testee = SenderUtils.from(SpecialAddress.SENDER);
+        SenderUtils testee = SenderUtils.from(Optional.of(SpecialAddress.SENDER));
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 
@@ -65,7 +65,7 @@ public class SenderUtilsTest {
     @Test
     public void getSenderShouldReturnSenderWhenSenderIsCommon() throws Exception {
         MailAddress expectedMailAddress = new MailAddress("sender", "james.org");
-        SenderUtils testee = SenderUtils.from(expectedMailAddress);
+        SenderUtils testee = SenderUtils.from(Optional.of(expectedMailAddress));
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 

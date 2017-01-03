@@ -28,23 +28,23 @@ import com.google.common.base.Optional;
 
 public class SenderUtils {
 
-    public static SenderUtils from(MailAddress sender) {
+    public static SenderUtils from(Optional<MailAddress> sender) {
         return new SenderUtils(sender);
     }
 
-    private final MailAddress sender;
+    private final Optional<MailAddress> sender;
 
-    private SenderUtils(MailAddress sender) {
+    private SenderUtils(Optional<MailAddress> sender) {
         this.sender = sender;
     }
 
     public Optional<MailAddress> getSender(Mail originalMail) throws MessagingException {
-        if (sender != null) {
-            if (isUnalteredOrSender(sender)) {
+        if (sender.isPresent()) {
+            if (isUnalteredOrSender(sender.get())) {
                 return Optional.absent();
             }
         }
-        return Optional.fromNullable(sender);
+        return sender;
     }
 
     private boolean isUnalteredOrSender(MailAddress sender) {

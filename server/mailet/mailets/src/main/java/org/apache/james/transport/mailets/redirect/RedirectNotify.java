@@ -259,7 +259,7 @@ public interface RedirectNotify extends Mailet, MailetConfig {
      *         <code>SpecialAddress.UNALTERED</code> or <code>null</code> if
      *         missing
      */
-    MailAddress getSender() throws MessagingException; 
+    Optional<MailAddress> getSender() throws MessagingException; 
 
     /**
      * Gets the <code>sender</code> property, built dynamically using the
