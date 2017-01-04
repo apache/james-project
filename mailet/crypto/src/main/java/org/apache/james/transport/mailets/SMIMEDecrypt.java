@@ -23,6 +23,7 @@ package org.apache.james.transport.mailets;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,6 +37,7 @@ import org.apache.james.transport.SMIMEKeyHolder;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.GenericMailet;
+import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.RecipientId;
 import org.bouncycastle.cms.RecipientInformation;
@@ -72,6 +74,7 @@ import org.bouncycastle.mail.smime.SMIMEUtil;
 public class SMIMEDecrypt extends GenericMailet {
 
     private SMIMEKeyHolder keyHolder;
+    private X509CertificateHolder certificateHolder;
     protected String mailAttribute = "org.apache.james.SMIMEDecrypt";
     
     public void init() throws MessagingException {
@@ -100,7 +103,17 @@ public class SMIMEDecrypt extends GenericMailet {
             throw new MessagingException("Error loading keystore", e);
         }
 
-        
+        certificateHolder = from(keyHolder.getCertificate());
+    }
+
+    private X509CertificateHolder from(X509Certificate certificate) throws MessagingException {
+        try {
+            return new X509CertificateHolder(certificate.getEncoded());
+        } catch (CertificateEncodingException e) {
+            throw new MessagingException("Error during the parsing of the certificate",e);
+        } catch (IOException e) {
+            throw new MessagingException("Error during the parsing of the certificate",e);
+        }
     }
     
     /**
@@ -118,7 +131,7 @@ public class SMIMEDecrypt extends GenericMailet {
                 Collection<RecipientInformation> recipients = informationStore.getRecipients();
                 for (RecipientInformation info : recipients) {
                     RecipientId id = info.getRID();
-                    if (id.match(keyHolder.getCertificate())) {
+                    if (id.match(certificateHolder)) {
                         try {
                             JceKeyTransEnvelopedRecipient recipient = new JceKeyTransEnvelopedRecipient(keyHolder.getPrivateKey());
                             // strippedMessage contains the decrypted message.

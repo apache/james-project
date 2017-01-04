@@ -1,0 +1,29 @@
+To: sender@localdomain
+From: sender <sender@localdomain>
+Subject: test
+Message-ID: <7fe4c217-ab73-d149-9bd0-e6aa3aebfc14@localdomain>
+Date: Tue, 3 Jan 2017 16:30:03 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
+ Thunderbird/45.5.1
+MIME-Version: 1.0
+Content-Type: application/pkcs7-mime; name="smime.p7m"; smime-type=enveloped-data
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7m"
+Content-Description: =?UTF-8?Q?Message_chiffr=c3=a9_S/MIME?=
+
+MIAGCSqGSIb3DQEHA6CAMIACAQAxggKHMIICgwIBADBrMGYxCzAJBgNVBAYTAkZSMQ8wDQYD
+VQQIDAZGcmFuY2UxDTALBgNVBAcMBEx5b24xETAPBgNVBAoMCExpbmFnb3JhMQ4wDAYDVQQL
+DAVKYW1lczEUMBIGA1UEAwwLbG9jYWxkb21haW4CAQEwDQYJKoZIhvcNAQEBBQAEggIAjNnW
+2EhtDcfG/naGChQPZ2EOiPo5BRabR3dXvLcOPImX97mV51B4sggqpYdUrirD/beRkpbr814i
+0LCFbNh3Xm6ojhZGiBHscStNysNjun7MOtUHXs5eDVOthsPVes/YjkHklxtJKH9J7QYwJY/m
+L9MgQES2HkALhfqiQDN9UDtn7AE89m70FZfkxJQZSD1NByF7dxiFvhZbd8CFmcV1C0vZRlH9
+opZcVg9AkbDytKO+U4FF9/uGmiIQ99Qng0YqcG7abZqwouJ59yxmKTwrggk1+MyJ0NqB1wVP
+w2t1C/8hmvMISiij2bidoTTIYCybwvbuM/35POmDJVsvakLMZLG7aHSKvA+Bj+iR/RBgHHvd
+c7UdDMvkH0O8tYDsuAW8uh0H8LkvJ/ZWbOsev8DuAVYTm85Zd8d7islgDqfYmjvPeTHqSSgA
+sIFdPikRxtetU3JJKRls2BrKV6gM06++/Su+IFvTMaQYRbiQOeGc0ZfGHtlz3BSAeK32tjZu
+OrVrxR+BLP4huBqctvcfgjiqtRB5i06wX4q5v/5UNMq9BAtQEDEhERAoXSOWSu3wvocBWtlX
+xY5xw34KoFvsztHewakENjgfBG3ysH031UoOIZD0OvHyQ7BGUiu+lM22rj4Pnp6M2W+V1Jjm
+OHmV9siU2YsUBE78Lu+hiOcrbydgptswgAYJKoZIhvcNAQcBMBQGCCqGSIb3DQMHBAiTtikP
+UrH82KCABHhPrx30MofZ4L1e9dmHrvHo32h93dFJpTLqG0E3T8y8Y5fySEu7x3jWtZNIXERs
+/SJYDeww9tOi4tjV2z+3OCXMQjy7P9Pzb+sekX9GuVo640q7Z/2F6C1hShqyLVa7eJFZK8Na
+1JasVj9lst+HD+A0SBA63Z+90bsECIXa4/tJqoBPAAAAAAAAAAAAAA==

@@ -1,0 +1,36 @@
+Return-Path: <bad@localdomain>
+MIME-Version: 1.0
+Delivered-To: bad@localdomain
+Received: from 172.17.0.1 (EHLO [127.0.0.1]) ([172.17.0.1])
+          by HOSTNAME (JAMES SMTP Server ) with ESMTP ID 1133072046
+          for <bad@localdomain>;
+          Wed, 04 Jan 2017 11:00:49 +0000 (UTC)
+To: bad@localdomain
+From: bad <bad@localdomain>
+Subject: test
+Message-ID: <6a568227-58c9-a3bc-f0d4-dd3eeb6bce43@localdomain>
+Date: Wed, 4 Jan 2017 12:00:49 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
+ Thunderbird/45.5.1
+Content-Type: application/pkcs7-mime; name="smime.p7m"; smime-type=enveloped-data
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7m"
+Content-Description: =?UTF-8?Q?Message_chiffr=c3=a9_S/MIME?=
+
+MIAGCSqGSIb3DQEHA6CAMIACAQAxggKpMIICpQIBADCBjDCBhjELMAkGA1UEBhMCRlIxDzAN
+BgNVBAgMBkZyYW5jZTENMAsGA1UEBwwETHlvbjERMA8GA1UECgwITGluYWdvcmExDjAMBgNV
+BAsMBUphbWVzMRQwEgYDVQQDDAtsb2NhbGRvbWFpbjEeMBwGCSqGSIb3DQEJARYPYmFkQGxv
+Y2FsZG9tYWluAgEBMA0GCSqGSIb3DQEBAQUABIICAI1UxuCdpInNJ0BRSWReJNkt1N+hX+dr
+JrRlFRT2BnLcpzumGtVr9uEYC6JIkgAg3NVMqI7E9LQG260NSoQfKgDkBli/x9S5DJMtvqCz
+wlOj3uyMKXK1rRKvLlVm3wJJHsO2n2oMRsDkf8cStshGBYsvMObxENt5n6X7HGsa9oF8KpwD
+WPwdjN6OvFIkfRW+v5y6SLrjH4sZUm2kSIAdDgrZym3ELgUrtus0LMklMzpRiUAuqgRKXoga
+DmX/7TrbdZrZPjQi7Pe4jc1A2i8m9xQFcctgcn2IbCxAV9o8wHkmMAOh70SOijMI+kNeyh6r
+PiLcRH18EWhv/kdWcRX41wEGhV9RFQObH1CyOBoy5LJIkfITggo4qz4Pa1Z25LM5ma3ajHu8
+6u2TImH/Dx2szQm3FiQ3+zA3WlRQjnN+TbOPvfx0wl+Ve7jDHC0wkW0L5w3c3esUsH1ftk2b
+S8hG1RLK3gBSOF0nKPcG0nK7AF0d2sd7FA71ao4PR4de7LE2tABNVDuMWVggwCYL4pfh77VM
+kKH7vhA1YWwn7oAo/3ZWoPOWUSJaHJYbb65APjRQ+yVl3ucwl/ok6vrU+YoQZATIcu+kU56e
+ZsaJiFyEmv7j9K3sEtjvwkoAYwf5sQmIbtZo+Dux6IisTFNWDQhGSmjfImuoYQ8kLckj2Wx1
+wyv+MIAGCSqGSIb3DQEHATAUBggqhkiG9w0DBwQIlSYUQVkU/yqggAR44PWcNvdwIMSxYl/t
+ZtCd6BGwHPDRGOKAzsYcRuIWwA2wHQljjqTDiORW7uqVDyiEMDPd2nVXtAbjkZN4sujVbh5q
+TNbDUOihMiUn+gXcYq4Go6UD4djqx6K7YT6LIHONtP6zgygeS+EfM/9CaJd/7Z/bfuY4Jcko
+BAhb/n3N2DrjfgAAAAAAAAAAAAA=

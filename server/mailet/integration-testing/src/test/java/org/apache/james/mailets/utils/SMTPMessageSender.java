@@ -76,6 +76,17 @@ public class SMTPMessageSender implements Closeable {
         }
     }
 
+    public void sendMessageWithHeaders(String from, String recipient, String message) {
+        try {
+            smtpClient.helo(senderDomain);
+            smtpClient.setSender(from);
+            smtpClient.rcpt("<" + recipient + ">");
+            smtpClient.sendShortMessageData(message);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
     public void sendMessage(Mail mail) throws MessagingException {
         try {
             String from = mail.getSender().asString();
