@@ -44,7 +44,6 @@ import com.jayway.awaitility.core.ConditionFactory;
 
 public class SMIMESignIntegrationTest {
 
-
     private static final ZonedDateTime DATE_2015 = ZonedDateTime.parse("2015-10-15T14:10:00Z");
     private static final String DEFAULT_DOMAIN = "domain";
     private static final String LOCALHOST_IP = "127.0.0.1";
@@ -63,8 +62,6 @@ public class SMIMESignIntegrationTest {
 
     @Before
     public void setup() throws Exception {
-        temporaryFolder.newFile("smime.pk12");
-
         MailetContainer mailetContainer = MailetContainer.builder()
             .postmaster("postmaster@" + DEFAULT_DOMAIN)
             .threads(5)
@@ -101,8 +98,8 @@ public class SMIMESignIntegrationTest {
                 .addMailet(MailetConfiguration.builder()
                     .clazz("SMIMESign")
                     .match("SenderIsLocal")
-                    .addProperty("keyStoreFileName", temporaryFolder.getRoot().getAbsoluteFile().getAbsolutePath() + "/conf/smime_1.p12")
-                    .addProperty("keyStorePassword", "totototo")
+                    .addProperty("keyStoreFileName", temporaryFolder.getRoot().getAbsoluteFile().getAbsolutePath() + "/conf/smime.p12")
+                    .addProperty("keyStorePassword", "secret")
                     .addProperty("keyStoreType", "PKCS12")
                     .addProperty("debug", "true")
                     .build())
@@ -135,7 +132,7 @@ public class SMIMESignIntegrationTest {
             .build();
 
         jamesServer = new TemporaryJamesServer(temporaryFolder, mailetContainer,
-            binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(() -> DATE_2015));
+                binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(() -> DATE_2015));
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
 
