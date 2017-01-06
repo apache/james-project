@@ -115,11 +115,15 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     private Function<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<CassandraMessageDAO.MessageAttachmentRepresentation>>, Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<MessageAttachment>>> loadAttachments() {
         return pair -> Pair.of(pair.getLeft(),
-            new AttachmentLoader(attachmentMapper).getAttachments(pair.getRight().collect(Guavate.toImmutableSet())).stream());
+            new AttachmentLoader(attachmentMapper)
+                .getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
+                .stream());
     }
 
     private FunctionChainer<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<MessageAttachment>>, SimpleMailboxMessage> toMailboxMessages() {
-        return Throwing.function(pair -> pair.getLeft().toMailboxMessage(pair.getRight().collect(Guavate.toImmutableList())));
+        return Throwing.function(pair -> pair.getLeft()
+            .toMailboxMessage(pair.getRight()
+                .collect(Guavate.toImmutableList())));
     }
 
     @Override

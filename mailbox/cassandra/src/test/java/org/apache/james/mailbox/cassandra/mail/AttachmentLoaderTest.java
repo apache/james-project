@@ -39,7 +39,6 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 public class AttachmentLoaderTest {
 
@@ -50,6 +49,31 @@ public class AttachmentLoaderTest {
     public void setup() {
         attachmentMapper = mock(AttachmentMapper.class);
         testee = new AttachmentLoader(attachmentMapper);
+    }
+
+    @Test
+    public void getAttachmentsShouldWorkWithDuplicatedAttachments() {
+        AttachmentId attachmentId = AttachmentId.from("1");
+        Set<AttachmentId> attachmentIds = ImmutableSet.of(attachmentId);
+
+        Attachment attachment = Attachment.builder()
+            .attachmentId(attachmentId)
+            .bytes("attachment".getBytes())
+            .type("type")
+            .build();
+        when(attachmentMapper.getAttachments(attachmentIds))
+            .thenReturn(ImmutableList.of(attachment));
+
+        Optional<String> name = Optional.of("name1");
+        Optional<Cid> cid = Optional.empty();
+        boolean isInlined = false;
+        CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, name, cid, isInlined);
+
+        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation, attachmentRepresentation));
+
+        MessageAttachment expectedAttachment = new MessageAttachment(attachment, OptionalConverter.toGuava(name), OptionalConverter.toGuava(cid), isInlined);
+        assertThat(attachments).hasSize(2)
+            .containsOnly(expectedAttachment, expectedAttachment);
     }
 
     @Test
@@ -72,7 +96,7 @@ public class AttachmentLoaderTest {
         CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation1 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, name1, cid, isInlined);
         CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation2 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, name2, cid, isInlined);
 
-        Collection<MessageAttachment> attachments = testee.getAttachments(Sets.newHashSet(attachmentRepresentation1, attachmentRepresentation2));
+        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2));
 
         assertThat(attachments).hasSize(2)
             .containsOnly(new MessageAttachment(attachment, OptionalConverter.toGuava(name1), OptionalConverter.toGuava(cid), isInlined),
@@ -105,7 +129,7 @@ public class AttachmentLoaderTest {
         CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation1 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId1, name1, cid, isInlined);
         CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation2 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId2, name2, cid, isInlined);
 
-        Collection<MessageAttachment> attachments = testee.getAttachments(Sets.newHashSet(attachmentRepresentation1, attachmentRepresentation2));
+        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2));
 
         assertThat(attachments).hasSize(2)
             .containsOnly(new MessageAttachment(attachment1, OptionalConverter.toGuava(name1), OptionalConverter.toGuava(cid), isInlined),
@@ -125,7 +149,7 @@ public class AttachmentLoaderTest {
         when(attachmentMapper.getAttachments(attachmentIds))
             .thenReturn(ImmutableList.of(attachment));
 
-        Collection<MessageAttachment> attachments = testee.getAttachments(Sets.newHashSet());
+        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of());
 
         assertThat(attachments).isEmpty();
     }

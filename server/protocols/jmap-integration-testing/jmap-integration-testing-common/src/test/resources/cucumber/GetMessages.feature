@@ -202,9 +202,15 @@ Feature: GetMessages method
     And the textBody of the message is "Hello text body\n"
     And the htmlBody of the message is "<html>Hello html body</html>\n"
     
-Scenario: Retrieving message with more than 1000 char by line should return message when exists
+  Scenario: Retrieving message with more than 1000 char by line should return message when exists
     Given the user has a message "m1" in "inbox" mailbox beginning by a long line
     When the user ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"
+
+  Scenario:
+    Given the user has a message "m1" in "inbox" mailbox with two same attachments in text
+    When the user ask for messages "m1"
+    Then no error is returned
+    And the list of attachments of the message contains 2 attachments

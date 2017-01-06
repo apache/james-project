@@ -151,8 +151,13 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private Stream<SimpleMailboxMessage> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
         return messageDAO.retrieveMessages(messageIds, fetchType, limit).join()
-                .map(pair -> Pair.of(pair.getLeft(), new AttachmentLoader(attachmentMapper).getAttachments(pair.getRight().collect(Guavate.toImmutableSet()))))
-                .map(Throwing.function(pair -> pair.getLeft().toMailboxMessage(pair.getRight().stream().collect(Guavate.toImmutableList()))));
+            .map(pair -> Pair.of(pair.getLeft(), new AttachmentLoader(attachmentMapper)
+                .getAttachments(pair.getRight()
+                    .collect(Guavate.toImmutableList()))))
+            .map(Throwing.function(pair -> pair.getLeft()
+                .toMailboxMessage(pair.getRight()
+                    .stream()
+                    .collect(Guavate.toImmutableList()))));
     }
 
     @Override
