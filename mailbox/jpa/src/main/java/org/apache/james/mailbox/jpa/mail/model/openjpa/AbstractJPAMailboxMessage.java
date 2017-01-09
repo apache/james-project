@@ -61,6 +61,8 @@ import org.apache.openjpa.persistence.jdbc.ElementJoinColumn;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
 import org.apache.openjpa.persistence.jdbc.Index;
 
+import com.google.common.base.Objects;
+
 /**
  * Abstract base class for JPA based implementations of
  * {@link DelegatingMailboxMessage}
@@ -297,32 +299,17 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
 
     @Override
     public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + (int) (getMailboxId().getRawId() ^ (getMailboxId().getRawId() >>> 32));
-        result = PRIME * result + (int) (uid ^ (uid >>> 32));
-        return result;
+        return Objects.hashCode(getMailboxId().getRawId(), uid);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        final AbstractJPAMailboxMessage other = (AbstractJPAMailboxMessage) obj;
-        if (getMailboxId() != null) {
-            if (!getMailboxId().equals(other.getMailboxId()))
-                return false;
-        } else {
-            if (other.getMailboxId() != null)
-                return false;
+        if (obj instanceof AbstractJPAMailboxMessage) {
+            AbstractJPAMailboxMessage other = (AbstractJPAMailboxMessage) obj;
+            return Objects.equal(getMailboxId(), other.getMailboxId())
+                    && Objects.equal(uid, other.getUid());
         }
-        if (uid != other.uid)
-            return false;
-        return true;
+        return false;
     }
 
     /**

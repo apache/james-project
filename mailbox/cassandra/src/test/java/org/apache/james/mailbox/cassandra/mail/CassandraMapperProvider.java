@@ -134,8 +134,8 @@ public class CassandraMapperProvider implements MapperProvider {
     }
 
     @Override
-    public List<Capabilities> getNotImplemented() {
-        return ImmutableList.of();
+    public List<Capabilities> getSupportedCapabilities() {
+        return ImmutableList.copyOf(Capabilities.values());
     }
 
     @Override

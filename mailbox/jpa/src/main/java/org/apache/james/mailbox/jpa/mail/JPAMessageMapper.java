@@ -23,9 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
+import javax.mail.Flags;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 
@@ -33,6 +32,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
+import org.apache.james.mailbox.jpa.JPATransactionalMapper;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAEncryptedMailboxMessage;
@@ -41,85 +41,31 @@ import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMailboxMessag
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
+import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
-import org.apache.james.mailbox.store.mail.AbstractMessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.MessageUtils;
+import org.apache.james.mailbox.store.mail.MessageUtils.MessageChangedFlags;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.openjpa.persistence.ArgumentException;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 /**
  * JPA implementation of a {@link MessageMapper}. This class is not thread-safe!
  */
-public class JPAMessageMapper extends AbstractMessageMapper implements MessageMapper {
-    protected EntityManagerFactory entityManagerFactory;
-    protected EntityManager entityManager;
+public class JPAMessageMapper extends JPATransactionalMapper implements MessageMapper {
+    private static final int UNLIMIT_MAX_SIZE = -1;
+    private final MessageUtils messageMetadataMapper;
 
-    public JPAMessageMapper(MailboxSession session, UidProvider uidProvider,
-            ModSeqProvider modSeqProvider, EntityManagerFactory entityManagerFactory) {
-        super(session, uidProvider, modSeqProvider);
-        this.entityManagerFactory = entityManagerFactory;
-    }
-
-    /**
-     * Return the currently used {@link EntityManager} or a new one if none
-     * exists.
-     * 
-     * @return entitymanger
-     */
-    public EntityManager getEntityManager() {
-        if (entityManager != null)
-            return entityManager;
-        entityManager = entityManagerFactory.createEntityManager();
-        return entityManager;
-    }
-
-    /**
-     * @see org.apache.james.mailbox.store.transaction.TransactionalMapper#begin()
-     */
-    protected void begin() throws MailboxException {
-        try {
-            getEntityManager().getTransaction().begin();
-        } catch (PersistenceException e) {
-            throw new MailboxException("Begin of transaction failed", e);
-        }
-    }
-
-    /**
-     * Commit the Transaction and close the EntityManager
-     */
-    protected void commit() throws MailboxException {
-        try {
-            getEntityManager().getTransaction().commit();
-        } catch (PersistenceException e) {
-            throw new MailboxException("Commit of transaction failed", e);
-        }
-    }
-
-    /**
-     * @see org.apache.james.mailbox.store.transaction.TransactionalMapper#rollback()
-     */
-    protected void rollback() throws MailboxException {
-        EntityTransaction transaction = entityManager.getTransaction();
-        // check if we have a transaction to rollback
-        if (transaction.isActive()) {
-            getEntityManager().getTransaction().rollback();
-        }
-    }
-
-    /**
-     * Close open {@link EntityManager}
-     */
-    public void endRequest() {
-        if (entityManager != null) {
-            if (entityManager.isOpen())
-                entityManager.close();
-            entityManager = null;
-        }
+    public JPAMessageMapper(MailboxSession mailboxSession, UidProvider uidProvider, ModSeqProvider modSeqProvider, EntityManagerFactory entityManagerFactory) {
+        super(entityManagerFactory);
+        this.messageMetadataMapper = new MessageUtils(mailboxSession, uidProvider, modSeqProvider);
     }
 
     /**
@@ -127,6 +73,7 @@ public class JPAMessageMapper extends AbstractMessageMapper implements MessageMa
      *      org.apache.james.mailbox.model.MessageRange,
      *      org.apache.james.mailbox.store.mail.MessageMapper.FetchType, int)
      */
+    @Override
     public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange set, FetchType fType, int max)
             throws MailboxException {
         try {
@@ -191,10 +138,20 @@ public class JPAMessageMapper extends AbstractMessageMapper implements MessageMa
      */
     public void delete(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         try {
-            getEntityManager().remove(message);
+            AbstractJPAMailboxMessage jpaMessage = getEntityManager().find(AbstractJPAMailboxMessage.class, buildKey(mailbox, message));
+            getEntityManager().remove(jpaMessage);
+
         } catch (PersistenceException e) {
             throw new MailboxException("Delete of message " + message + " failed in mailbox " + mailbox, e);
         }
+    }
+
+    private AbstractJPAMailboxMessage.MailboxIdUidKey buildKey(Mailbox mailbox, MailboxMessage message) {
+        JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+        AbstractJPAMailboxMessage.MailboxIdUidKey key = new AbstractJPAMailboxMessage.MailboxIdUidKey();
+        key.mailbox = mailboxId.getRawId();
+        key.uid = message.getUid().asLong();
+        return key;
     }
 
     @Override
@@ -262,8 +219,8 @@ public class JPAMessageMapper extends AbstractMessageMapper implements MessageMa
             default:
             case ALL:
                 results = findDeletedMessagesInMailbox(mailboxId);
-                data = createMetaData(results);
                 deleteDeletedMessagesInMailbox(mailboxId);
+                data = createMetaData(results);
                 break;
             }
 
@@ -285,15 +242,52 @@ public class JPAMessageMapper extends AbstractMessageMapper implements MessageMa
     }
 
     @Override
-    protected MessageMetaData copy(Mailbox mailbox, MessageUid uid, long modSeq, MailboxMessage original)
+    public MessageMetaData add(Mailbox mailbox, MailboxMessage message) throws MailboxException {
+        messageMetadataMapper.enrichMessage(mailbox, message);
+
+        return save(mailbox, message);
+    }
+
+    @Override
+    public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator,
+            MessageRange set) throws MailboxException {
+        Iterator<MailboxMessage> messages = findInMailbox(mailbox, set, FetchType.Metadata, UNLIMIT_MAX_SIZE);
+
+        MessageChangedFlags messageChangedFlags = messageMetadataMapper.updateFlags(mailbox, flagsUpdateCalculator, messages);
+
+        for (MailboxMessage mailboxMessage : messageChangedFlags.getChangedFlags()) {
+            save(mailbox, mailboxMessage);
+        }
+
+        return messageChangedFlags.getUpdatedFlags();
+    }
+
+    @Override
+    public MessageMetaData copy(Mailbox mailbox, MailboxMessage original) throws MailboxException {
+        return copy(mailbox, messageMetadataMapper.nextUid(mailbox), messageMetadataMapper.nextModSeq(mailbox), original);  
+    }
+
+    @Override
+    public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
+        return messageMetadataMapper.getLastUid(mailbox);
+    }
+
+    @Override
+    public long getHighestModSeq(Mailbox mailbox) throws MailboxException {
+        return messageMetadataMapper.getHighestModSeq(mailbox);
+    }
+
+    private MessageMetaData copy(Mailbox mailbox, MessageUid uid, long modSeq, MailboxMessage original)
             throws MailboxException {
         MailboxMessage copy;
+        JPAMailbox currentMailbox = JPAMailbox.from(mailbox);
+
         if (original instanceof JPAStreamingMailboxMessage) {
-            copy = new JPAStreamingMailboxMessage((JPAMailbox) mailbox, uid, modSeq, original);
+            copy = new JPAStreamingMailboxMessage(currentMailbox, uid, modSeq, original);
         } else if (original instanceof JPAEncryptedMailboxMessage) {
-            copy = new JPAEncryptedMailboxMessage((JPAMailbox) mailbox, uid, modSeq, original);
+            copy = new JPAEncryptedMailboxMessage(currentMailbox, uid, modSeq, original);
         } else {
-            copy = new JPAMailboxMessage((JPAMailbox) mailbox, uid, modSeq, original);
+            copy = new JPAMailboxMessage(currentMailbox, uid, modSeq, original);
         }
         return save(mailbox, copy);
     }
@@ -303,19 +297,25 @@ public class JPAMessageMapper extends AbstractMessageMapper implements MessageMa
      *      MailboxMessage)
      */
     protected MessageMetaData save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
-
         try {
-
             // We need to reload a "JPA attached" mailbox, because the provide
             // mailbox is already "JPA detached"
             // If we don't this, we will get an
             // org.apache.openjpa.persistence.ArgumentException.
             JPAId mailboxId = (JPAId) mailbox.getMailboxId();
-            ((AbstractJPAMailboxMessage) message)
-                    .setMailbox(getEntityManager().find(JPAMailbox.class, mailboxId.getRawId()));
+            JPAMailbox currentMailbox = getEntityManager().find(JPAMailbox.class, mailboxId.getRawId());
+            if (message instanceof AbstractJPAMailboxMessage) {
+                ((AbstractJPAMailboxMessage) message).setMailbox(currentMailbox);
 
-            getEntityManager().persist(message);
-            return new SimpleMessageMetaData(message);
+                getEntityManager().persist(message);
+                return new SimpleMessageMetaData(message);
+            } else {
+                JPAMailboxMessage persistData = new JPAMailboxMessage(currentMailbox, message.getUid(), message.getModSeq(), message);
+                persistData.setFlags(new Flags());
+                getEntityManager().persist(persistData);
+                return new SimpleMessageMetaData(persistData);
+            }
+
         } catch (PersistenceException e) {
             throw new MailboxException("Save of message " + message + " failed in mailbox " + mailbox, e);
         } catch (ArgumentException e) {

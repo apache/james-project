@@ -93,8 +93,8 @@ public class InMemoryMapperProvider implements MapperProvider {
     }
 
     @Override
-    public List<Capabilities> getNotImplemented() {
-        return ImmutableList.of(Capabilities.UNIQUE_MESSAGE_ID);
+    public List<Capabilities> getSupportedCapabilities() {
+        return ImmutableList.copyOf(Capabilities.values());
     }
 
     @Override

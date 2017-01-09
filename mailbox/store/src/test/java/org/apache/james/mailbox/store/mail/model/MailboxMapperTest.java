@@ -89,7 +89,7 @@ public class MailboxMapperTest<T extends MapperProvider> {
     @Contract.Inject
     public final void setProducer(IProducer<T> producer) throws MailboxException {
         this.mapperProvider = producer.newInstance();
-        Assume.assumeFalse(mapperProvider.getNotImplemented().contains(MapperProvider.Capabilities.MAILBOX));
+        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.MAILBOX));
 
         this.producer = producer;
         this.mailboxMapper = mapperProvider.createMailboxMapper();

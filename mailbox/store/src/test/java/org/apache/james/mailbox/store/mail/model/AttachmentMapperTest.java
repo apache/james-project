@@ -52,7 +52,7 @@ public class AttachmentMapperTest<T extends MapperProvider> {
     public final void setProducer(IProducer<T> producer) throws MailboxException {
         this.producer = producer;
         T newInstance = producer.newInstance();
-        Assume.assumeFalse(newInstance.getNotImplemented().contains(MapperProvider.Capabilities.ATTACHMENT));
+        Assume.assumeTrue(newInstance.getSupportedCapabilities().contains(MapperProvider.Capabilities.ATTACHMENT));
         this.attachmentMapper = newInstance.createAttachmentMapper();
     }
 

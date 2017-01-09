@@ -37,8 +37,10 @@ import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.jpa.user.model.JPASubscription;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
@@ -60,7 +62,15 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public MessageMapper createMessageMapper() throws MailboxException {
-        throw new NotImplementedException();
+        EntityManagerFactory entityManagerFactory = createEntityManagerFactory();
+        JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
+
+        JPAMessageMapper messageMapper = new JPAMessageMapper(new MockMailboxSession("benwa"), 
+            new JPAUidProvider(locker, entityManagerFactory), 
+            new JPAModSeqProvider(locker, entityManagerFactory), 
+            entityManagerFactory);
+
+        return new TransactionalMessageMapper((JPAMessageMapper)messageMapper);
     }
 
     @Override
@@ -126,8 +136,8 @@ public class JPAMapperProvider implements MapperProvider {
     }
 
     @Override
-    public List<Capabilities> getNotImplemented() {
-        return ImmutableList.of(Capabilities.MESSAGE, Capabilities.ATTACHMENT, Capabilities.MOVE, Capabilities.UNIQUE_MESSAGE_ID);
+    public List<Capabilities> getSupportedCapabilities() {
+        return ImmutableList.of(Capabilities.ANNOTATION, Capabilities.MAILBOX, Capabilities.MESSAGE);
     }
 
     @Override

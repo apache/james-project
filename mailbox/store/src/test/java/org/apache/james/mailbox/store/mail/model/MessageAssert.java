@@ -25,6 +25,7 @@ import javax.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.assertj.core.api.AbstractAssert;
 
 import com.google.common.base.Objects;
@@ -39,7 +40,33 @@ public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage>
         return new MessageAssert(actual);
     }
 
+    public MessageAssert isEqualTo(MailboxMessage expected, MessageMapper.FetchType usedFetchType) throws IOException {
+        isNotNull();
+        if (!Objects.equal(actual.getUid(), expected.getUid())) {
+            failWithMessage("Expected UID to be <%s> but was <%s>", expected.getUid(), actual.getUid());
+        }
+        return isEqualToWithoutUid(expected, usedFetchType);
+    }
+
+    public MessageAssert isEqualToWithoutAttachment(MailboxMessage expected, MessageMapper.FetchType usedFetchType) throws IOException {
+        isNotNull();
+        if (!Objects.equal(actual.getUid(), expected.getUid())) {
+            failWithMessage("Expected UID to be <%s> but was <%s>", expected.getUid(), actual.getUid());
+        }
+        return isEqualToWithoutUidAndAttachment(expected, usedFetchType);
+    }
+
     public MessageAssert isEqualToWithoutUid(MailboxMessage expected, MessageMapper.FetchType usedFetchType) throws IOException {
+        isEqualToWithoutUidAndAttachment(expected, usedFetchType);
+        if (usedFetchType == MessageMapper.FetchType.Full || usedFetchType == MessageMapper.FetchType.Body) {
+            if (!Objects.equal(actual.getAttachments(), expected.getAttachments())) {
+                failWithMessage("Expected attachments to be <%s> but was <%s>", expected.getAttachments(), actual.getAttachments());
+            }
+        }
+        return this;
+    }
+
+    public MessageAssert isEqualToWithoutUidAndAttachment(MailboxMessage expected, FetchType usedFetchType)  throws IOException {
         isNotNull();
         if (!Objects.equal(actual.getMailboxId(), expected.getMailboxId())) {
             failWithMessage("Expected Mailbox ID to be <%s> but was <%s>", expected.getMailboxId().toString(), actual.getMailboxId().toString());
@@ -74,20 +101,7 @@ public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage>
                 failWithMessage("Expected Body content to be <%s> but was <%s>", IOUtils.toString(expected.getBodyContent()), IOUtils.toString(actual.getBodyContent()));
             }
         }
-        if (usedFetchType == MessageMapper.FetchType.Full || usedFetchType == MessageMapper.FetchType.Body) {
-            if (!Objects.equal(actual.getAttachments(), expected.getAttachments())) {
-                failWithMessage("Expected attachments to be <%s> but was <%s>", expected.getAttachments(), actual.getAttachments());
-            }
-        }
         return this;
-    }
-
-    public MessageAssert isEqualTo(MailboxMessage expected, MessageMapper.FetchType usedFetchType) throws IOException {
-        isNotNull();
-        if (!Objects.equal(actual.getUid(), expected.getUid())) {
-            failWithMessage("Expected UID to be <%s> but was <%s>", expected.getUid(), actual.getUid());
-        }
-        return isEqualToWithoutUid(expected, usedFetchType);
     }
 
     public MessageAssert hasFlags(Flags flags) {

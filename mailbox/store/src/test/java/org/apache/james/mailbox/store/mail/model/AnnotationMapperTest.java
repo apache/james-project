@@ -65,7 +65,7 @@ public class AnnotationMapperTest<T extends MapperProvider> {
     @Contract.Inject
     public final void setProducer(IProducer<T> producer) throws MailboxException {
         T newInstance = producer.newInstance();
-        Assume.assumeFalse(newInstance.getNotImplemented().contains(MapperProvider.Capabilities.ANNOTATION));
+        Assume.assumeTrue(newInstance.getSupportedCapabilities().contains(MapperProvider.Capabilities.ANNOTATION));
 
         this.producer = producer;
         this.annotationMapper = newInstance.createAnnotationMapper();
