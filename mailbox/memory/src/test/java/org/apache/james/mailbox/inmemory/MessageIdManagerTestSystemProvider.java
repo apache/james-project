@@ -26,6 +26,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.manager.MailboxManagerFixture;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.FakeAuthenticator;
+import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 
@@ -40,6 +41,11 @@ public class MessageIdManagerTestSystemProvider {
 
     public static MessageIdManagerTestSystem createTestingData() {
         return new InMemoryMessageIdManagerTestSystem(createMailboxManager());
+    }
+
+    public static CombinationManagerTestSystem createManagersTestingData() {
+        InMemoryMailboxManager mailboxManager = createMailboxManager();
+        return new InMemoryCombinationManagerTestSystem(mailboxManager, new InMemoryMessageIdManager(mailboxManager));
     }
 
     private static InMemoryMailboxManager createMailboxManager() {
