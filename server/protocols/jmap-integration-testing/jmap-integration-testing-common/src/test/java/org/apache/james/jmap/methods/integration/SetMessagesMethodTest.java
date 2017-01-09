@@ -2515,7 +2515,7 @@ public abstract class SetMessagesMethodTest {
 
     private Matcher<Map<? extends String, ? extends String>> allHeadersMatcher(ImmutableList<String> expectedHeaders) {
         return Matchers.allOf(expectedHeaders.stream()
-                .map(header -> hasEntry(equalTo(header), not(isEmptyOrNullString())))
+                .map((String header) -> hasEntry(equalTo(header), not(isEmptyOrNullString())))
                 .collect(Collectors.toList()));
     }
 
