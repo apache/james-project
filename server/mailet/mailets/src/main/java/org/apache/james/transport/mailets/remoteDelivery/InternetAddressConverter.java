@@ -17,42 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.streams;
+package org.apache.james.transport.mailets.remoteDelivery;
 
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Collection;
 
-import java.util.stream.Stream;
+import javax.mail.internet.InternetAddress;
 
-import org.junit.Test;
+import org.apache.mailet.MailAddress;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.UnmodifiableIterator;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 
-public class IteratorsTest {
+public class InternetAddressConverter {
 
-    @Test
-    public void toStreamShouldReturnEmptyStreamWhenEmptyIterator() {
-        //Given
-        UnmodifiableIterator<String> emptyIterator = ImmutableList.<String>of().iterator();
-
-        //When
-        Stream<String> actual = Iterators.toStream(emptyIterator);
-
-        //Then
-        assertThat(actual.count()).isEqualTo(0);
-    }
-
-    @Test
-    public void toStreamShouldReturnSameContent() {
-        //Given
-        UnmodifiableIterator<String> iterator = ImmutableList.of("a", "b", "c").iterator();
-
-        //When
-        Stream<String> actual = Iterators.toStream(iterator);
-
-        //Then
-        assertThat(actual.collect(toList())).containsExactly("a", "b", "c");
+    public static InternetAddress[] convert(Collection<MailAddress> recipients) {
+        Preconditions.checkNotNull(recipients);
+        return FluentIterable.from(recipients).transform(new Function<MailAddress, InternetAddress>() {
+            @Override
+            public InternetAddress apply(MailAddress input) {
+                return input.toInternetAddress();
+            }
+        }).toArray(InternetAddress.class);
     }
 
 }

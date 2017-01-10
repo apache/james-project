@@ -38,9 +38,12 @@ import javax.mail.internet.MimeMessage;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -54,6 +57,19 @@ public class FakeMail implements Mail {
                     Session.getInstance(javamailProperties),
                     new ByteArrayInputStream(text.getBytes(javaEncodingCharset))))
                 .build();
+    }
+
+    public static FakeMail fromMail(Mail mail) throws MessagingException {
+        return new FakeMail(mail.getMessage(),
+            Lists.newArrayList(mail.getRecipients()),
+            mail.getName(),
+            mail.getSender(),
+            mail.getState(),
+            mail.getErrorMessage(),
+            mail.getLastUpdated(),
+            attributes(mail),
+            mail.getMessageSize(),
+            mail.getRemoteAddr());
     }
     
     public static Builder builder() {
@@ -174,6 +190,14 @@ public class FakeMail implements Mail {
 
     public static FakeMail defaultFakeMail() throws MessagingException {
         return FakeMail.builder().build();
+    }
+
+    private static Map<String, Serializable> attributes(Mail mail) {
+        ImmutableMap.Builder<String, Serializable> builder = ImmutableMap.builder();
+        for (String attributeName: ImmutableList.copyOf(mail.getAttributeNames())) {
+            builder.put(attributeName, mail.getAttribute(attributeName));
+        }
+        return builder.build();
     }
 
     private MimeMessage msg;
@@ -321,5 +345,45 @@ public class FakeMail implements Mail {
 
     public void setMessageSize(long size) {
         this.size = size;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof FakeMail) {
+            FakeMail that = (FakeMail) o;
+
+            return Objects.equal(this.size, that.size)
+                && Objects.equal(this.msg, that.msg)
+                && Objects.equal(this.recipients, that.recipients)
+                && Objects.equal(this.name, that.name)
+                && Objects.equal(this.sender, that.sender)
+                && Objects.equal(this.state, that.state)
+                && Objects.equal(this.errorMessage, that.errorMessage)
+                && Objects.equal(this.lastUpdated, that.lastUpdated)
+                && Objects.equal(this.attributes, that.attributes)
+                && Objects.equal(this.remoteAddr, that.remoteAddr);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hashCode(msg, name, sender, recipients, state, errorMessage, lastUpdated, attributes, size, recipients, remoteAddr);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("msg", msg)
+            .add("recipients", recipients)
+            .add("name", name)
+            .add("sender", sender)
+            .add("state", state)
+            .add("errorMessage", errorMessage)
+            .add("lastUpdated", lastUpdated)
+            .add("attributes", attributes)
+            .add("size", size)
+            .add("remoteAddr", remoteAddr)
+            .toString();
     }
 }

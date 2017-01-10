@@ -17,42 +17,40 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.streams;
+package org.apache.james.transport.mailets.remoteDelivery;
 
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.stream.Stream;
-
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.UnmodifiableIterator;
+public class RepeatTest {
 
-public class IteratorsTest {
+    public static final String ELEMENT = "a";
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
-    public void toStreamShouldReturnEmptyStreamWhenEmptyIterator() {
-        //Given
-        UnmodifiableIterator<String> emptyIterator = ImmutableList.<String>of().iterator();
+    public void repeatShouldThrowOnNegativeTimes() {
+        expectedException.expect(IllegalArgumentException.class);
 
-        //When
-        Stream<String> actual = Iterators.toStream(emptyIterator);
-
-        //Then
-        assertThat(actual.count()).isEqualTo(0);
+        Repeat.repeat(new Object(), -1);
     }
 
     @Test
-    public void toStreamShouldReturnSameContent() {
-        //Given
-        UnmodifiableIterator<String> iterator = ImmutableList.of("a", "b", "c").iterator();
+    public void repeatShouldReturnEmptyListOnZeroTimes() {
+        assertThat(Repeat.repeat(new Object(), 0)).isEmpty();
+    }
 
-        //When
-        Stream<String> actual = Iterators.toStream(iterator);
+    @Test
+    public void repeatShouldWorkWithOneElement() {
+        assertThat(Repeat.repeat(ELEMENT, 1)).containsExactly(ELEMENT);
+    }
 
-        //Then
-        assertThat(actual.collect(toList())).containsExactly("a", "b", "c");
+    @Test
+    public void repeatShouldWorkWithTwoElements() {
+        assertThat(Repeat.repeat(ELEMENT, 2)).containsExactly(ELEMENT, ELEMENT);
     }
 
 }

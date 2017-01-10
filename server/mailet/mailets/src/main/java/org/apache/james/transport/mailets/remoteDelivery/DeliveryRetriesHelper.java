@@ -17,42 +17,34 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.streams;
+package org.apache.james.transport.mailets.remoteDelivery;
 
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
+import java.io.Serializable;
 
-import java.util.stream.Stream;
+import org.apache.mailet.Mail;
 
-import org.junit.Test;
+public class DeliveryRetriesHelper {
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.UnmodifiableIterator;
+    public static final String DELIVERY_RETRY_COUNT = "delivery_retry_count";
 
-public class IteratorsTest {
-
-    @Test
-    public void toStreamShouldReturnEmptyStreamWhenEmptyIterator() {
-        //Given
-        UnmodifiableIterator<String> emptyIterator = ImmutableList.<String>of().iterator();
-
-        //When
-        Stream<String> actual = Iterators.toStream(emptyIterator);
-
-        //Then
-        assertThat(actual.count()).isEqualTo(0);
+    public static int retrieveRetries(Mail mail) {
+        try {
+            Serializable value = mail.getAttribute(DELIVERY_RETRY_COUNT);
+            if (value != null) {
+                return (Integer) value;
+            }
+            return 0;
+        } catch (ClassCastException e) {
+            return 0;
+        }
     }
 
-    @Test
-    public void toStreamShouldReturnSameContent() {
-        //Given
-        UnmodifiableIterator<String> iterator = ImmutableList.of("a", "b", "c").iterator();
+    public static void initRetries(Mail mail) {
+        mail.setAttribute(DELIVERY_RETRY_COUNT, 0);
+    }
 
-        //When
-        Stream<String> actual = Iterators.toStream(iterator);
-
-        //Then
-        assertThat(actual.collect(toList())).containsExactly("a", "b", "c");
+    public static void incrementRetries(Mail mail) {
+        mail.setAttribute(DELIVERY_RETRY_COUNT, retrieveRetries(mail) + 1);
     }
 
 }

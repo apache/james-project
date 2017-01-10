@@ -17,42 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.streams;
+package org.apache.mailet.base.test;
 
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
-import java.util.stream.Stream;
+import javax.mail.internet.MimeMessage;
 
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.UnmodifiableIterator;
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 
-public class IteratorsTest {
-
-    @Test
-    public void toStreamShouldReturnEmptyStreamWhenEmptyIterator() {
-        //Given
-        UnmodifiableIterator<String> emptyIterator = ImmutableList.<String>of().iterator();
-
-        //When
-        Stream<String> actual = Iterators.toStream(emptyIterator);
-
-        //Then
-        assertThat(actual.count()).isEqualTo(0);
-    }
+public class FakeMailTest {
 
     @Test
-    public void toStreamShouldReturnSameContent() {
-        //Given
-        UnmodifiableIterator<String> iterator = ImmutableList.of("a", "b", "c").iterator();
-
-        //When
-        Stream<String> actual = Iterators.toStream(iterator);
-
-        //Then
-        assertThat(actual.collect(toList())).containsExactly("a", "b", "c");
+    public void beanShouldRespectBeanContract() {
+        EqualsVerifier.forClass(FakeMail.class)
+            .suppress(Warning.NONFINAL_FIELDS)
+            .withPrefabValues(MimeMessage.class, mock(MimeMessage.class), mock(MimeMessage.class))
+            .verify();
     }
 
 }

@@ -19,6 +19,7 @@
 package org.apache.james.util;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,20 +27,26 @@ public class TimeConverter {
 
     private static final HashMap<String, Integer> multipliers = new HashMap<String, Integer>(10);
 
-    private static final String PATTERN_STRING = "\\s*([0-9]+)\\s*([a-z,A-Z]+)\\s*";
+    private static final String PATTERN_STRING = "\\s*([0-9]+)\\s*([a-z,A-Z]*)\\s*";
 
     private static Pattern PATTERN = null;
 
     static {
         // add allowed units and their respective multiplier
+        multipliers.put("", 1);
+        multipliers.put("ms", 1);
         multipliers.put("msec", 1);
         multipliers.put("msecs", 1);
+        multipliers.put("s", 1000);
         multipliers.put("sec", 1000);
         multipliers.put("secs", 1000);
+        multipliers.put("m", 1000 * 60);
         multipliers.put("minute", 1000 * 60);
         multipliers.put("minutes", 1000 * 60);
+        multipliers.put("h", 1000 * 60 * 60);
         multipliers.put("hour", 1000 * 60 * 60);
         multipliers.put("hours", 1000 * 60 * 60);
+        multipliers.put("d", 1000 * 60 * 60 * 24);
         multipliers.put("day", 1000 * 60 * 60 * 24);
         multipliers.put("days", 1000 * 60 * 60 * 24);
 
@@ -63,7 +70,7 @@ public class TimeConverter {
      *             Get thrown if an illegal unit was used
      */
     public static long getMilliSeconds(long amount, String unit) throws NumberFormatException {
-        Object multiplierObject = multipliers.get(unit);
+        Object multiplierObject = multipliers.get(unit.toLowerCase(Locale.US));
         if (multiplierObject == null) {
             throw new NumberFormatException("Unknown unit: " + unit);
         }

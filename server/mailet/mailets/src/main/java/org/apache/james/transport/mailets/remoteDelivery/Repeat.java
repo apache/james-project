@@ -17,42 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.streams;
+package org.apache.james.transport.mailets.remoteDelivery;
 
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.List;
 
-import java.util.stream.Stream;
-
-import org.junit.Test;
-
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.UnmodifiableIterator;
+import com.google.common.collect.Iterables;
 
-public class IteratorsTest {
+public class Repeat {
 
-    @Test
-    public void toStreamShouldReturnEmptyStreamWhenEmptyIterator() {
-        //Given
-        UnmodifiableIterator<String> emptyIterator = ImmutableList.<String>of().iterator();
-
-        //When
-        Stream<String> actual = Iterators.toStream(emptyIterator);
-
-        //Then
-        assertThat(actual.count()).isEqualTo(0);
-    }
-
-    @Test
-    public void toStreamShouldReturnSameContent() {
-        //Given
-        UnmodifiableIterator<String> iterator = ImmutableList.of("a", "b", "c").iterator();
-
-        //When
-        Stream<String> actual = Iterators.toStream(iterator);
-
-        //Then
-        assertThat(actual.collect(toList())).containsExactly("a", "b", "c");
+    public static <T> List<T> repeat(T element, int times) {
+        Preconditions.checkArgument(times >= 0, "Times argument should be strictly positive");
+        return ImmutableList.copyOf(
+            Iterables.limit(
+                Iterables.cycle(element), times));
     }
 
 }

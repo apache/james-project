@@ -56,6 +56,25 @@ public class FakeMailContext implements MailetContext {
         return new SentMail.Builder();
     }
 
+    public static SentMail fromMail(Mail mail ) throws MessagingException {
+        return sentMailBuilder()
+            .sender(mail.getSender())
+            .recipients(mail.getRecipients())
+            .message(mail.getMessage())
+            .state(mail.getState())
+            .attributes(buildAttributesMap(mail))
+            .build();
+    }
+
+    private static ImmutableMap<String, Serializable> buildAttributesMap(Mail mail) {
+        Map<String, Serializable> result = new HashMap<String, Serializable>();
+        List<String> attributesNames = Lists.newArrayList(mail.getAttributeNames());
+        for (String attributeName: attributesNames) {
+            result.put(attributeName, mail.getAttribute(attributeName));
+        }
+        return ImmutableMap.copyOf(result);
+    }
+
     public static FakeMailContext defaultContext() {
         return builder().build();
     }
@@ -80,7 +99,7 @@ public class FakeMailContext implements MailetContext {
             private MailAddress sender;
             private Optional<Collection<MailAddress>> recipients = Optional.absent();
             private MimeMessage msg;
-            private Optional<Map<String, Serializable>> attributes = Optional.absent();
+            private Map<String, Serializable> attributes = new HashMap<String, Serializable>();
             private Optional<String> state = Optional.absent();
 
             public Builder sender(MailAddress sender) {
@@ -104,7 +123,12 @@ public class FakeMailContext implements MailetContext {
             }
 
             public Builder attributes(Map<String, Serializable> attributes) {
-                this.attributes = Optional.of(attributes);
+                this.attributes.putAll(attributes);
+                return this;
+            }
+
+            public Builder attribute(String key, Serializable value) {
+                this.attributes.put(key, value);
                 return this;
             }
 
@@ -115,7 +139,7 @@ public class FakeMailContext implements MailetContext {
 
             public SentMail build() {
                 return new SentMail(sender, recipients.or(ImmutableList.<MailAddress>of()), msg,
-                    attributes.or(ImmutableMap.<String, Serializable>of()), state.or(Mail.DEFAULT));
+                    ImmutableMap.copyOf(attributes), state.or(Mail.DEFAULT));
             }
         }
 
@@ -179,22 +203,73 @@ public class FakeMailContext implements MailetContext {
         }
     }
 
+    public static class BouncedMail {
+        private final SentMail sentMail;
+        private final String message;
+        private final Optional<MailAddress> bouncer;
+
+        public BouncedMail(SentMail sentMail, String message, Optional<MailAddress> bouncer) {
+            this.sentMail = sentMail;
+            this.message = message;
+            this.bouncer = bouncer;
+        }
+
+        public SentMail getSentMail() {
+            return sentMail;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public Optional<MailAddress> getBouncer() {
+            return bouncer;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof BouncedMail) {
+                BouncedMail that = (BouncedMail) o;
+                return Objects.equal(this.sentMail, that.sentMail)
+                    && Objects.equal(this.message, that.message)
+                    && Objects.equal(this.bouncer, that.bouncer);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(sentMail, message, bouncer);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("sentMail", sentMail)
+                .add("message", message)
+                .add("bouncer", bouncer)
+                .toString();
+        }
+    }
+
     private final HashMap<String, Object> attributes;
     private final List<SentMail> sentMails;
+    private final List<BouncedMail> bouncedMails;
     private final Optional<Logger> logger;
 
     private FakeMailContext(Optional<Logger> logger) {
         attributes = new HashMap<String, Object>();
         sentMails = new ArrayList<SentMail>();
+        bouncedMails = new ArrayList<BouncedMail>();
         this.logger = logger;
     }
 
     public void bounce(Mail mail, String message) throws MessagingException {
-        // trivial implementation
+        bouncedMails.add(new BouncedMail(fromMail(mail), message, Optional.<MailAddress>absent()));
     }
 
     public void bounce(Mail mail, String message, MailAddress bouncer) throws MessagingException {
-        // trivial implementation
+        bouncedMails.add(new BouncedMail(fromMail(mail), message, Optional.fromNullable(bouncer)));
     }
 
     /**
@@ -263,13 +338,13 @@ public class FakeMailContext implements MailetContext {
     }
 
     public void sendMail(MimeMessage mimemessage) throws MessagingException {
-        sentMails.add(new SentMail.Builder()
+        sentMails.add(sentMailBuilder()
             .message(mimemessage)
             .build());
     }
 
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg) throws MessagingException {
-        sentMails.add(new SentMail.Builder()
+        sentMails.add(sentMailBuilder()
             .recipients(recipients)
             .sender(sender)
             .message(msg)
@@ -277,7 +352,7 @@ public class FakeMailContext implements MailetContext {
     }
 
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg, String state) throws MessagingException {
-        sentMails.add(new SentMail.Builder()
+        sentMails.add(sentMailBuilder()
             .recipients(recipients)
             .message(msg)
             .state(state)
@@ -286,22 +361,7 @@ public class FakeMailContext implements MailetContext {
     }
 
     public void sendMail(Mail mail) throws MessagingException {
-        sentMails.add(new SentMail.Builder()
-            .sender(mail.getSender())
-            .recipients(mail.getRecipients())
-            .message(mail.getMessage())
-            .state(mail.getState())
-            .attributes(buildAttributesMap(mail))
-            .build());
-    }
-
-    private ImmutableMap<String, Serializable> buildAttributesMap(Mail mail) {
-        Map<String, Serializable> result = new HashMap<String, Serializable>();
-        List<String> attributesNames = Lists.newArrayList(mail.getAttributeNames());
-        for (String attributeName: attributesNames) {
-            result.put(attributeName, mail.getAttribute(attributeName));
-        }
-        return ImmutableMap.copyOf(result);
+        sentMails.add(fromMail(mail));
     }
 
     public void setAttribute(String name, Serializable object) {
@@ -370,6 +430,10 @@ public class FakeMailContext implements MailetContext {
 
     public List<SentMail> getSentMails() {
         return sentMails;
+    }
+
+    public List<BouncedMail> getBouncedMails() {
+        return bouncedMails;
     }
 
     @Override

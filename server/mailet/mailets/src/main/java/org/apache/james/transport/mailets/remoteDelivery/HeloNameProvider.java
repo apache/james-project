@@ -17,42 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.streams;
+package org.apache.james.transport.mailets.remoteDelivery;
 
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.domainlist.api.DomainListException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.stream.Stream;
+public class HeloNameProvider {
 
-import org.junit.Test;
+    private static final Logger LOGGER = LoggerFactory.getLogger(HeloNameProvider.class);
+    public static final String LOCALHOST = "localhost";
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.UnmodifiableIterator;
+    private final String heloName;
+    private final DomainList domainList;
 
-public class IteratorsTest {
-
-    @Test
-    public void toStreamShouldReturnEmptyStreamWhenEmptyIterator() {
-        //Given
-        UnmodifiableIterator<String> emptyIterator = ImmutableList.<String>of().iterator();
-
-        //When
-        Stream<String> actual = Iterators.toStream(emptyIterator);
-
-        //Then
-        assertThat(actual.count()).isEqualTo(0);
+    public HeloNameProvider(String heloName, DomainList domainList) {
+        this.heloName = heloName;
+        this.domainList = domainList;
     }
 
-    @Test
-    public void toStreamShouldReturnSameContent() {
-        //Given
-        UnmodifiableIterator<String> iterator = ImmutableList.of("a", "b", "c").iterator();
-
-        //When
-        Stream<String> actual = Iterators.toStream(iterator);
-
-        //Then
-        assertThat(actual.collect(toList())).containsExactly("a", "b", "c");
+    public String getHeloName() {
+        if (heloName == null) {
+            // TODO: Maybe we should better just lookup the hostname via dns
+            try {
+                return domainList.getDefaultDomain();
+            } catch (DomainListException e) {
+                LOGGER.warn("Unable to access DomainList", e);
+                return LOCALHOST;
+            }
+        } else {
+            return heloName;
+        }
     }
-
 }

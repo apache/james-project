@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets;
+package org.apache.james.transport.mailets.remoteDelivery;
 
 import javax.net.SocketFactory;
 
@@ -68,7 +68,7 @@ public class RemoteDeliverySocketFactory extends SocketFactory {
      * @param addr
      *            the ip address or host name the delivery socket will bind to
      */
-    static void setBindAdress(String addr) throws UnknownHostException {
+    public static void setBindAdress(String addr) throws UnknownHostException {
         if (addr == null)
             bindAddress = null;
         else
