@@ -120,6 +120,20 @@ public class SMIMEDecryptIntegrationTest {
     }
 
     @Test
+    public void cryptedMessageWithAttachmentShouldBeDecryptedWhenCertificateMatches() throws Exception {
+
+        try (SMTPMessageSender messageSender = SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_SECURE_PORT, DEFAULT_DOMAIN, FROM, PASSWORD);
+             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+            messageSender.sendMessageWithHeaders(FROM, FROM, IOUtils.toString(ClassLoader.getSystemResourceAsStream("eml/crypted_with_attachment.eml"))); 
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(FROM, PASSWORD));
+
+            assertThat(imapMessageReader.readFirstMessageInInbox(FROM, PASSWORD))
+                .containsSequence("Crypted Content with attachment");
+        }
+    }
+
+    @Test
     public void cryptedMessageShouldNotBeDecryptedWhenCertificateDoesntMatch() throws Exception {
 
         try (SMTPMessageSender messageSender = SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_SECURE_PORT, DEFAULT_DOMAIN, FROM, PASSWORD);
