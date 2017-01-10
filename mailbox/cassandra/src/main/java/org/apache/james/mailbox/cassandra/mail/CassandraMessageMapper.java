@@ -241,7 +241,7 @@ public class CassandraMessageMapper implements MessageMapper {
                 .map(message -> updateFlagsOnMessage(mailbox, flagUpdateCalculator, message))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .map((updatedFlags) -> manageUnseenMessageCounts(mailbox, updatedFlags.getOldFlags(), updatedFlags.getNewFlags())
+                .map((UpdatedFlags updatedFlags) -> manageUnseenMessageCounts(mailbox, updatedFlags.getOldFlags(), updatedFlags.getNewFlags())
                     .thenApply(voidValue -> updatedFlags))
                 .map(CompletableFuture::join)
                 .collect(Collectors.toList()) // This collect is here as we need to consume all the stream before returning result
