@@ -146,7 +146,7 @@ public class RemoteDeliveryConfiguration {
                 Optional.fromNullable(mailetConfig.getInitParameter(CONNECTIONTIMEOUT))
                     .or(String.valueOf(DEFAULT_CONNECTION_TIMEOUT)));
         } catch (Exception e) {
-            LOGGER.warn("Invalid timeout setting: " + mailetConfig.getInitParameter(TIMEOUT));
+            LOGGER.warn("Invalid timeout setting: {}", mailetConfig.getInitParameter(TIMEOUT));
             return DEFAULT_CONNECTION_TIMEOUT;
         }
     }
@@ -159,7 +159,7 @@ public class RemoteDeliveryConfiguration {
                 return DEFAULT_SMTP_TIMEOUT;
             }
         } catch (Exception e) {
-            LOGGER.warn("Invalid timeout setting: " + mailetConfig.getInitParameter(TIMEOUT));
+            LOGGER.warn("Invalid timeout setting: {}", mailetConfig.getInitParameter(TIMEOUT));
             return DEFAULT_SMTP_TIMEOUT;
         }
     }
@@ -171,7 +171,7 @@ public class RemoteDeliveryConfiguration {
                     .or(String.valueOf(DEFAULT_MAX_RETRY)));
             return DelaysAndMaxRetry.from(intendedMaxRetries, mailetConfig.getInitParameter(DELAY_TIME));
         } catch (Exception e) {
-            LOGGER.warn("Invalid maxRetries setting: " + mailetConfig.getInitParameter(MAX_RETRIES));
+            LOGGER.warn("Invalid maxRetries setting: {}", mailetConfig.getInitParameter(MAX_RETRIES));
             return DelaysAndMaxRetry.defaults();
         }
     }

@@ -96,7 +96,7 @@ public class DeliveryRunnable implements Runnable {
 
             try {
                 if (configuration.isDebug()) {
-                    logger.debug(Thread.currentThread().getName() + " will process mail " + mail.getName());
+                    logger.debug("{} will process mail {}", Thread.currentThread().getName(), mail.getName());
                 }
                 attemptDelivery(mail);
                 LifecycleUtil.dispose(mail);
@@ -146,13 +146,13 @@ public class DeliveryRunnable implements Runnable {
         if (retries < configuration.getMaxRetries()) {
             reAttemptDelivery(mail, retries);
         } else {
-            logger.debug("Bouncing message " + mail.getName() + " after " + retries + " retries");
+            logger.debug("Bouncing message {} after {} retries", mail.getName(), retries);
             bouncer.bounce(mail, new Exception("Too many retries failure. Bouncing after " + retries + " retries.", executionResult.getException().orNull()));
         }
     }
 
     private void reAttemptDelivery(Mail mail, int retries) throws MailQueue.MailQueueException {
-        logger.debug("Storing message " + mail.getName() + " into outgoing after " + retries + " retries");
+        logger.debug("Storing message {} into outgoing after {} retries", mail.getName(), retries);
         DeliveryRetriesHelper.incrementRetries(mail);
         mail.setLastUpdated(dateSupplier.get());
         // Something happened that will delay delivery. Store it back in the retry repository.
