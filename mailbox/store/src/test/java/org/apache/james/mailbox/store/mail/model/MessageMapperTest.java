@@ -28,6 +28,10 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
@@ -61,6 +65,37 @@ import com.google.common.collect.Lists;
 
 @Contract(MapperProvider.class)
 public class MessageMapperTest<T extends MapperProvider> {
+
+    private class ConcurrentSetFlagTestRunnable implements Runnable {
+        private final int threadNumber;
+        private final int updateCount;
+        private final Mailbox mailbox;
+        private final MessageUid uid;
+        private final CountDownLatch countDownLatch;
+
+        public ConcurrentSetFlagTestRunnable(int threadNumber, int updateCount, Mailbox mailbox, MessageUid uid, CountDownLatch countDownLatch) {
+            this.threadNumber = threadNumber;
+            this.updateCount = updateCount;
+            this.mailbox = mailbox;
+            this.uid = uid;
+            this.countDownLatch = countDownLatch;
+        }
+
+        @Override
+        public void run() {
+            countDownLatch.countDown();
+            for (int i = 0; i < updateCount; i++) {
+                try {
+                    messageMapper.updateFlags(mailbox,
+                        new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + i),
+                            FlagsUpdateMode.ADD),
+                        MessageRange.one(uid));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     private final static char DELIMITER = '.';
     private static final int LIMIT = 10;
@@ -692,6 +727,28 @@ public class MessageMapperTest<T extends MapperProvider> {
         long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(USER_FLAG), FlagsUpdateMode.ADD), MessageRange.one(message1.getUid())))
             .containsOnly(new UpdatedFlags(message1.getUid(), modSeq + 1, new Flags(), new Flags(USER_FLAG)));
+    }
+
+    @ContractTest
+    public void userFlagsUpdateShouldWorkInConcurrentEnvironment() throws Exception {
+        saveMessages();
+
+        int threadCount = 2;
+        int updateCount = 10;
+        CountDownLatch countDownLatch = new CountDownLatch(threadCount);
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        for (int i = 0; i < threadCount; i++) {
+            executorService.submit(new ConcurrentSetFlagTestRunnable(i, updateCount,
+                benwaInboxMailbox, message1.getUid(), countDownLatch));
+        }
+        executorService.shutdown();
+        assertThat(executorService.awaitTermination(1, TimeUnit.MINUTES))
+            .isTrue();
+
+        Iterator<MailboxMessage> messages = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()),
+            FetchType.Metadata, 1);
+        assertThat(messages.hasNext()).isTrue();
+        assertThat(messages.next().createFlags().getUserFlags()).hasSize(threadCount * updateCount);
     }
 
     @ContractTest

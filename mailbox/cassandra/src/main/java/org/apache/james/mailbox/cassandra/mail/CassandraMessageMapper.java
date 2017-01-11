@@ -42,6 +42,7 @@ import org.apache.james.mailbox.cassandra.mail.utils.MessageDeletedDuringFlagsUp
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -335,11 +336,7 @@ public class CassandraMessageMapper implements MessageMapper {
             return Optional.of(
                 new FunctionRunnerWithRetry(maxRetries)
                     .executeAndRetrieveObject(() -> retryMessageFlagsUpdate(mailbox,
-                            ComposedMessageIdWithMetaData.builder()
-                                .composedMessageId(new ComposedMessageId(mailbox.getMailboxId(), message.getMessageId(), message.getUid()))
-                                .modSeq(message.getModSeq())
-                                .flags(message.createFlags())
-                            .build(),
+                            message.getMessageId(),
                             flagUpdateCalculator)));
         } catch (MessageDeletedDuringFlagsUpdateException e) {
             mailboxSession.getLog().warn(e.getMessage());
@@ -349,13 +346,17 @@ public class CassandraMessageMapper implements MessageMapper {
         }
     }
 
-    private Optional<UpdatedFlags> retryMessageFlagsUpdate(Mailbox mailbox, ComposedMessageIdWithMetaData composedMessageIdWithMetaData, FlagsUpdateCalculator flagUpdateCalculator) {
-        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+    private Optional<UpdatedFlags> retryMessageFlagsUpdate(Mailbox mailbox, MessageId messageId, FlagsUpdateCalculator flagUpdateCalculator) {
+        CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.of(cassandraId))
+            .join()
+            .findFirst()
+            .orElseThrow(MailboxDeleteDuringUpdate::new);
         return tryMessageFlagsUpdate(flagUpdateCalculator,
                 mailbox,
                 messageDAO.retrieveMessages(ImmutableList.of(composedMessageIdWithMetaData), FetchType.Metadata, Optional.empty()).join()
                     .findFirst()
                     .map(pair -> pair.getLeft().toMailboxMessage(ImmutableList.of()))
-                    .orElseThrow(() -> new MessageDeletedDuringFlagsUpdateException(mailboxId, (CassandraMessageId) composedMessageIdWithMetaData.getComposedMessageId().getMessageId())));
+                    .orElseThrow(() -> new MessageDeletedDuringFlagsUpdateException(cassandraId, (CassandraMessageId) messageId)));
     }
 }
