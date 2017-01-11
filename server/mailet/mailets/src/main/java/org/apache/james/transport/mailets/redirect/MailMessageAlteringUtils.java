@@ -197,14 +197,14 @@ public class MailMessageAlteringUtils {
         }
         switch (mailet.getInitParameters().getInLineType()) {
             case ALL:
-                appendHead(builder, head);
-                appendBody(builder, originalMessage);
+                builder.append(headText(head));
+                builder.append(bodyText(originalMessage));
                 break;
             case HEADS:
-                appendHead(builder, head);
+                builder.append(headText(head));
                 break;
             case BODY:
-                appendBody(builder, originalMessage);
+                builder.append(bodyText(originalMessage));
                 break;
             case NONE:
                 break;
@@ -216,14 +216,12 @@ public class MailMessageAlteringUtils {
         return builder.toString();
     }
 
-    private void appendHead(StringBuilder builder, String head) {
-        builder.append("Message Headers:")
-            .append(LINE_BREAK)
-            .append(head)
-            .append(LINE_BREAK);
+    private String headText(String head) {
+        return "Message Headers:" + LINE_BREAK + head + LINE_BREAK;
     }
 
-    private void appendBody(StringBuilder builder, MimeMessage originalMessage) {
+    private String bodyText(MimeMessage originalMessage) {
+        StringBuilder builder = new StringBuilder();
         builder.append("Message:")
             .append(LINE_BREAK);
         try {
@@ -233,6 +231,7 @@ public class MailMessageAlteringUtils {
             builder.append("body unavailable")
                 .append(LINE_BREAK);
         }
+        return builder.toString();
     }
 
     /**
