@@ -117,7 +117,7 @@ public class MailMessageAlteringUtils {
                 mailet.log("attachmentType:" + mailet.getInitParameters().getAttachmentType());
             }
             if (!mailet.getInitParameters().getAttachmentType().equals(TypeCode.NONE)) {
-                multipart.addBodyPart(getAttachmentPart(originalMail, originalMessage, head));
+                multipart.addBodyPart(getAttachmentPart(originalMessage, head));
             }
 
             if (mailet.getInitParameters().isAttachError() && originalMail.getErrorMessage() != null) {
@@ -134,11 +134,11 @@ public class MailMessageAlteringUtils {
     private BodyPart getBodyPart(Mail originalMail, MimeMessage originalMessage, String head) throws MessagingException, Exception {
         MimeBodyPart part = new MimeBodyPart();
         part.setText(getText(originalMail, originalMessage, head));
-        part.setDisposition("inline");
+        part.setDisposition(javax.mail.Part.INLINE);
         return part;
     }
 
-    private MimeBodyPart getAttachmentPart(Mail originalMail, MimeMessage originalMessage, String head) throws MessagingException, Exception {
+    private MimeBodyPart getAttachmentPart(MimeMessage originalMessage, String head) throws MessagingException, Exception {
         MimeBodyPart attachmentPart = new MimeBodyPart();
         switch (mailet.getInitParameters().getAttachmentType()) {
             case HEADS:
@@ -163,7 +163,7 @@ public class MailMessageAlteringUtils {
                 break;
         }
         attachmentPart.setFileName(getFileName(originalMessage.getSubject()));
-        attachmentPart.setDisposition("Attachment");
+        attachmentPart.setDisposition(javax.mail.Part.ATTACHMENT);
         return attachmentPart;
     }
 
