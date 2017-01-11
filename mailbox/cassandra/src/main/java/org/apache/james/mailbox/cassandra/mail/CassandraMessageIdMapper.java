@@ -211,6 +211,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
 
         return mailboxIds.stream()
+            .distinct()
             .map(mailboxId -> (CassandraId) mailboxId)
             .flatMap(mailboxId -> imapUidDAO.retrieve(cassandraMessageId, Optional.of(mailboxId)).join())
             .map(composedMessageId -> flagsUpdateWithRetry(newState, updateMode, composedMessageId))
