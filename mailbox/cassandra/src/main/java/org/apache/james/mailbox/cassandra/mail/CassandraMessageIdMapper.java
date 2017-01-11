@@ -222,7 +222,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private Pair<MailboxId, UpdatedFlags> flagsUpdateWithRetry(Flags newState, MessageManager.FlagsUpdateMode updateMode, ComposedMessageIdWithMetaData composedMessageId) {
         try {
             Pair<Flags, Long> newFlagsWithModSeq = new FunctionRunnerWithRetry(MAX_RETRY)
-                .executeAndRetrieveObject(() -> tryFlagsUpdate(newState, updateMode, composedMessageId, oldModSeq(composedMessageId.getComposedMessageId())));
+                .executeAndRetrieveObject(() -> tryFlagsUpdate(newState, updateMode, composedMessageId, composedMessageId.getModSeq()));
             return Pair.of(composedMessageId.getComposedMessageId().getMailboxId(),
                     new UpdatedFlags(composedMessageId.getComposedMessageId().getUid(),
                         newFlagsWithModSeq.getRight(),
@@ -253,14 +253,6 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             return mailboxCounterDAO.decrementUnseen(cassandraId);
         }
         return CompletableFuture.completedFuture(null);
-    }
-
-    private long oldModSeq(ComposedMessageId composedMessageId) {
-        try {
-            return modSeqProvider.highestModSeq(mailboxSession, composedMessageId.getMailboxId());
-        } catch (MailboxException e) {
-            throw Throwables.propagate(e);
-        }
     }
 
     private Optional<Pair<Flags, Long>> tryFlagsUpdate(Flags newState, MessageManager.FlagsUpdateMode updateMode, ComposedMessageIdWithMetaData composedMessageId, long oldModSeq) {

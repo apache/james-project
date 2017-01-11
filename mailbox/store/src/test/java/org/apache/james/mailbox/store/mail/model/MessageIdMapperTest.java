@@ -549,6 +549,29 @@ public class MessageIdMapperTest<T extends MapperProvider> {
     }
 
     @ContractTest
+    public void setFlagsShouldWorkWhenCalledOnFirstMessage() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message1);
+        message2.setUid(mapperProvider.generateMessageUid());
+        message2.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message2);
+        message3.setUid(mapperProvider.generateMessageUid());
+        message3.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message3);
+        message4.setUid(mapperProvider.generateMessageUid());
+        message4.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message4);
+
+        MessageId messageId = message1.getMessageId();
+        sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), new Flags(Flag.ANSWERED), FlagsUpdateMode.ADD);
+
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.Body);
+        assertThat(messages).hasSize(1);
+        assertThat(messages.get(0).isAnswered()).isTrue();
+    }
+
+    @ContractTest
     public void countMessageShouldReturnWhenCreateNewMessage() throws Exception {
         message1.setUid(mapperProvider.generateMessageUid());
         message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
