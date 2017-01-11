@@ -55,6 +55,8 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -62,6 +64,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 public class CassandraMessageMapper implements MessageMapper {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageMapper.class);
 
     private final ModSeqProvider modSeqProvider;
     private final MailboxSession mailboxSession;
@@ -341,6 +344,9 @@ public class CassandraMessageMapper implements MessageMapper {
         } catch (MessageDeletedDuringFlagsUpdateException e) {
             mailboxSession.getLog().warn(e.getMessage());
             return Optional.empty();
+        } catch (MailboxDeleteDuringUpdateException e) {
+            LOGGER.info("Mailbox {} was deleted during flag update", mailbox.getMailboxId());
+            return Optional.empty();
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
@@ -351,7 +357,7 @@ public class CassandraMessageMapper implements MessageMapper {
         ComposedMessageIdWithMetaData composedMessageIdWithMetaData = imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.of(cassandraId))
             .join()
             .findFirst()
-            .orElseThrow(MailboxDeleteDuringUpdate::new);
+            .orElseThrow(MailboxDeleteDuringUpdateException::new);
         return tryMessageFlagsUpdate(flagUpdateCalculator,
                 mailbox,
                 messageDAO.retrieveMessages(ImmutableList.of(composedMessageIdWithMetaData), FetchType.Metadata, Optional.empty()).join()
