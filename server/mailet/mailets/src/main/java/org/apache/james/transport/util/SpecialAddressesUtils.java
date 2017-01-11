@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.transport.util;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -73,46 +74,37 @@ public class SpecialAddressesUtils {
     public List<MailAddress> replaceSpecialAddresses(Mail mailWithReplacementAddresses, List<MailAddress> mailAddresses) {
         ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
         for (MailAddress mailAddress : mailAddresses) {
-            if (!SpecialAddress.isSpecialAddress(mailAddress)) {
-                builder.add(mailAddress);
-                continue;
-            }
+            builder.addAll(getCorrespondingAddress(mailWithReplacementAddresses, mailAddress));
+        }
+        return builder.build();
+    }
 
-            SpecialAddressKind specialAddressKind = SpecialAddressKind.forValue(mailAddress.getLocalPart());
-            if (specialAddressKind == null) {
-                builder.add(mailAddress);
-                continue;
-            }
-            switch (specialAddressKind) {
+    private Collection<MailAddress> getCorrespondingAddress(Mail mail, MailAddress mailAddress) {
+        if (!SpecialAddress.isSpecialAddress(mailAddress)) {
+            return ImmutableSet.of(mailAddress);
+        }
+
+        SpecialAddressKind specialAddressKind = SpecialAddressKind.forValue(mailAddress.getLocalPart());
+        if (specialAddressKind == null) {
+            return ImmutableSet.of(mailAddress);
+        }
+        switch (specialAddressKind) {
             case SENDER:
             case FROM:
-                MailAddress sender = mailWithReplacementAddresses.getSender();
-                if (sender != null) {
-                    builder.add(sender);
-                }
-                break;
-            case REPLY_TO:
-                builder.addAll(getReplyTosFromMail(mailWithReplacementAddresses));
-                break;
             case REVERSE_PATH:
-                MailAddress reversePath = mailWithReplacementAddresses.getSender();
-                if (reversePath != null) {
-                    builder.add(reversePath);
-                }
-                break;
+                return Optional.fromNullable(mail.getSender()).asSet();
+            case REPLY_TO:
+                return getReplyTosFromMail(mail);
             case RECIPIENTS:
             case TO:
-                builder.addAll(mailWithReplacementAddresses.getRecipients());
-                break;
+                return mail.getRecipients();
             case UNALTERED:
             case NULL:
                 break;
             case DELETE:
-                builder.add(mailAddress);
-                break;
-            }
+                return ImmutableSet.of(mailAddress);
         }
-        return builder.build();
+        return ImmutableList.of();
     }
 
     private Set<MailAddress> getReplyTosFromMail(Mail mail) {
@@ -170,60 +162,52 @@ public class SpecialAddressesUtils {
     public List<MailAddress> replaceInternetAddresses(Mail mailWithReplacementAddresses, List<InternetAddress> internetAddresses) throws MessagingException {
         ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
         for (InternetAddress internetAddress : internetAddresses) {
-            MailAddress mailAddress = new MailAddress(internetAddress);
-            if (!SpecialAddress.isSpecialAddress(mailAddress)) {
-                builder.add(new MailAddress(internetAddress));
-                continue;
-            }
-
-            SpecialAddressKind specialAddressKind = SpecialAddressKind.forValue(mailAddress.getLocalPart());
-            if (specialAddressKind == null) {
-                builder.add(mailAddress);
-                continue;
-            }
-
-            switch (specialAddressKind) {
-            case SENDER:
-                MailAddress sender = mailWithReplacementAddresses.getSender();
-                if (sender != null) {
-                    builder.add(sender);
-                }
-                break;
-            case REVERSE_PATH:
-                MailAddress reversePath = mailWithReplacementAddresses.getSender();
-                if (reversePath != null) {
-                    builder.add(reversePath);
-                }
-                break;
-            case FROM:
-                try {
-                    InternetAddress[] fromArray = (InternetAddress[]) mailWithReplacementAddresses.getMessage().getFrom();
-                    builder.addAll(allOrSender(mailWithReplacementAddresses, fromArray));
-                } catch (MessagingException me) {
-                    mailet.log("Unable to parse the \"FROM\" header in the original message; ignoring.");
-                }
-                break;
-            case REPLY_TO:
-                try {
-                    InternetAddress[] replyToArray = (InternetAddress[]) mailWithReplacementAddresses.getMessage().getReplyTo();
-                    builder.addAll(allOrSender(mailWithReplacementAddresses, replyToArray));
-                } catch (MessagingException me) {
-                    mailet.log("Unable to parse the \"REPLY_TO\" header in the original message; ignoring.");
-                }
-                break;
-            case TO:
-            case RECIPIENTS:
-                builder.addAll(toHeaders(mailWithReplacementAddresses));
-                break;
-            case NULL:
-            case UNALTERED:
-                break;
-            case DELETE:
-                builder.add(new MailAddress(internetAddress));
-                break;
-            }
+            builder.addAll(getCorrespondingAddress(internetAddress, mailWithReplacementAddresses));
         }
         return builder.build();
+    }
+
+    private Collection<MailAddress> getCorrespondingAddress(InternetAddress internetAddress, Mail mail) throws AddressException {
+        MailAddress mailAddress = new MailAddress(internetAddress);
+        if (!SpecialAddress.isSpecialAddress(mailAddress)) {
+            return ImmutableSet.of(new MailAddress(internetAddress));
+        }
+
+        SpecialAddressKind specialAddressKind = SpecialAddressKind.forValue(mailAddress.getLocalPart());
+        if (specialAddressKind == null) {
+            return ImmutableSet.of(new MailAddress(internetAddress));
+        }
+
+        switch (specialAddressKind) {
+            case SENDER:
+            case REVERSE_PATH:
+                return Optional.fromNullable(mail.getSender()).asSet();
+            case FROM:
+                try {
+                    InternetAddress[] fromArray = (InternetAddress[]) mail.getMessage().getFrom();
+                    return allOrSender(mail, fromArray);
+                } catch (MessagingException me) {
+                    mailet.log("Unable to parse the \"FROM\" header in the original message; ignoring.");
+                    return ImmutableSet.of();
+                }
+            case REPLY_TO:
+                try {
+                    InternetAddress[] replyToArray = (InternetAddress[]) mail.getMessage().getReplyTo();
+                    return allOrSender(mail, replyToArray);
+                } catch (MessagingException me) {
+                    mailet.log("Unable to parse the \"REPLY_TO\" header in the original message; ignoring.");
+                    return ImmutableSet.of();
+                }
+            case TO:
+            case RECIPIENTS:
+                return toHeaders(mail);
+            case NULL:
+            case UNALTERED:
+                return ImmutableList.of();
+            case DELETE:
+                return ImmutableSet.of(new MailAddress(internetAddress));
+        }
+        return ImmutableList.of();
     }
 
     private List<MailAddress> allOrSender(Mail mail, InternetAddress[] addresses) throws AddressException {
