@@ -17,23 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
+package org.apache.james.transport.mailets.utils;
 
-package org.apache.mailet.base;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
-import java.util.Locale;
-import java.util.TimeZone;
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 
-import org.apache.commons.lang.time.FastDateFormat;
+public class MimeMessageModifier {
 
-public class DateFormats {
+    private final MimeMessage message;
 
-    public static FastDateFormat getRFC822FormatForTimeZone(TimeZone timeZone) {
-        return FastDateFormat.getInstance("EEE, d MMM yyyy HH:mm:ss 'XXXXX' (z)", timeZone, Locale.US);
+    public MimeMessageModifier(MimeMessage message) {
+        this.message = message;
     }
 
-    public static FastDateFormat RFC822_DATE_FORMAT = FastDateFormat.getInstance("EEE, d MMM yyyy HH:mm:ss 'XXXXX' (z)", Locale.US);
-    public static FastDateFormat RFC977_SHORT_DATE_FORMAT = FastDateFormat.getInstance("yyMMdd HHmmss", Locale.US);
-    public static FastDateFormat RFC977_LONG_DATE_FORMAT = FastDateFormat.getInstance("yyyyMMdd HHmmss", Locale.US);
-    public static FastDateFormat RFC2980_LONG_DATE_FORMAT = FastDateFormat.getInstance("yyyyMMddHHmmss", Locale.US);
+    public void replaceSubject(Optional<String> newSubject) throws MessagingException {
+        if (newSubject.isPresent()) {
+            message.setSubject(null);
+            message.setSubject(newSubject.get(), Charsets.UTF_8.displayName());
+        }
+    }
 }
-

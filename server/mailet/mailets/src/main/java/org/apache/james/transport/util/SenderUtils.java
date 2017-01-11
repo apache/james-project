@@ -16,24 +16,38 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.transport.util;
 
+import javax.mail.MessagingException;
 
-package org.apache.mailet.base;
+import org.apache.james.transport.mailets.redirect.SpecialAddress;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
 
-import java.util.Locale;
-import java.util.TimeZone;
+import com.google.common.base.Optional;
 
-import org.apache.commons.lang.time.FastDateFormat;
+public class SenderUtils {
 
-public class DateFormats {
-
-    public static FastDateFormat getRFC822FormatForTimeZone(TimeZone timeZone) {
-        return FastDateFormat.getInstance("EEE, d MMM yyyy HH:mm:ss 'XXXXX' (z)", timeZone, Locale.US);
+    public static SenderUtils from(Optional<MailAddress> sender) {
+        return new SenderUtils(sender);
     }
 
-    public static FastDateFormat RFC822_DATE_FORMAT = FastDateFormat.getInstance("EEE, d MMM yyyy HH:mm:ss 'XXXXX' (z)", Locale.US);
-    public static FastDateFormat RFC977_SHORT_DATE_FORMAT = FastDateFormat.getInstance("yyMMdd HHmmss", Locale.US);
-    public static FastDateFormat RFC977_LONG_DATE_FORMAT = FastDateFormat.getInstance("yyyyMMdd HHmmss", Locale.US);
-    public static FastDateFormat RFC2980_LONG_DATE_FORMAT = FastDateFormat.getInstance("yyyyMMddHHmmss", Locale.US);
-}
+    private final Optional<MailAddress> sender;
 
+    private SenderUtils(Optional<MailAddress> sender) {
+        this.sender = sender;
+    }
+
+    public Optional<MailAddress> getSender(Mail originalMail) throws MessagingException {
+        if (sender.isPresent()) {
+            if (isUnalteredOrSender(sender.get())) {
+                return Optional.absent();
+            }
+        }
+        return sender;
+    }
+
+    private boolean isUnalteredOrSender(MailAddress sender) {
+        return sender.equals(SpecialAddress.UNALTERED) || sender.equals(SpecialAddress.SENDER);
+    }
+}

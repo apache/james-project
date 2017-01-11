@@ -1,0 +1,125 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+package org.apache.james.transport.util;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.Properties;
+
+import javax.mail.Session;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMessage.RecipientType;
+
+import org.apache.james.transport.mailets.redirect.RedirectNotify;
+import org.apache.james.transport.mailets.redirect.SpecialAddress;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.test.FakeMail;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
+
+public class TosUtilsTest {
+
+    private RedirectNotify mailet;
+    private TosUtils testee;
+
+    @Before
+    public void setup() {
+        mailet = mock(RedirectNotify.class);
+        testee = TosUtils.from(mailet);
+    }
+
+    @Test
+    public void getToShouldReturnEmptyWhenMailetToIsEmpty() throws Exception {
+        when(mailet.getTo())
+            .thenReturn(ImmutableList.<InternetAddress> of());
+
+        FakeMail fakeMail = FakeMail.defaultFakeMail();
+
+        List<MailAddress> to = testee.getTo(fakeMail);
+
+        assertThat(to).isEmpty();
+    }
+
+    @Test
+    public void getToShouldReturnEmptyWhenMailetToContainsOnlyUnaltered() throws Exception {
+        when(mailet.getTo())
+            .thenReturn(ImmutableList.of(SpecialAddress.UNALTERED.toInternetAddress()));
+
+        FakeMail fakeMail = FakeMail.defaultFakeMail();
+
+        List<MailAddress> to = testee.getTo(fakeMail);
+
+        assertThat(to).isEmpty();
+    }
+
+    @Test
+    public void getToShouldReturnEmptyWhenMailetToContainsOnlyRecipients() throws Exception {
+        when(mailet.getTo())
+            .thenReturn(ImmutableList.of(SpecialAddress.RECIPIENTS.toInternetAddress()));
+
+        FakeMail fakeMail = FakeMail.defaultFakeMail();
+
+        List<MailAddress> to = testee.getTo(fakeMail);
+
+        assertThat(to).isEmpty();
+    }
+
+    @Test
+    public void getToShouldReturnToWhenMailetToAreCommon() throws Exception {
+        MailAddress mailAddress = new MailAddress("test", "james.org");
+        MailAddress mailAddress2 = new MailAddress("test2", "james.org");
+        when(mailet.getTo())
+            .thenReturn(ImmutableList.of(mailAddress.toInternetAddress(), mailAddress2.toInternetAddress()));
+
+        FakeMail fakeMail = FakeMail.defaultFakeMail();
+
+        List<MailAddress> to = testee.getTo(fakeMail);
+
+        ImmutableList<MailAddress> expectedTo = ImmutableList.of(mailAddress, mailAddress2);
+        assertThat(to).containsOnlyElementsOf(expectedTo);
+    }
+
+    @Test
+    public void getToShouldReturnAddressesFromOriginalMailWhenMailetToAreSpecialAddresses() throws Exception {
+        when(mailet.getTo())
+            .thenReturn(ImmutableList.of(SpecialAddress.FROM.toInternetAddress(), SpecialAddress.TO.toInternetAddress()));
+
+        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        mimeMessage.setRecipients(RecipientType.TO, "to@james.org, to2@james.org");
+        MailAddress from = new MailAddress("from", "james.org");
+        MailAddress toMailAddress = new MailAddress("to", "james.org");
+        MailAddress toMailAddress2 = new MailAddress("to2", "james.org");
+        FakeMail fakeMail = FakeMail.builder()
+                .sender(from)
+                .recipients(toMailAddress, toMailAddress2)
+                .mimeMessage(mimeMessage)
+                .build();
+
+        List<MailAddress> to = testee.getTo(fakeMail);
+
+        ImmutableList<MailAddress> expectedTo = ImmutableList.of(from, toMailAddress, toMailAddress2);
+        assertThat(to).containsOnlyElementsOf(expectedTo);
+    }
+}

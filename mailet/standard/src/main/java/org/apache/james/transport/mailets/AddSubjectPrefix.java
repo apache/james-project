@@ -20,15 +20,15 @@
 
 package org.apache.james.transport.mailets;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.james.transport.mailets.utils.MimeMessageModifier;
+import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 /**
  * Add an prefix (tag) to the subject of a message <br>
@@ -55,29 +55,13 @@ public class AddSubjectPrefix extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        MimeMessage m = mail.getMessage();
-        String newSubject = prefixSubject(m);
-        replaceSubject(m, newSubject);
+        MimeMessage message = mail.getMessage();
+        new MimeMessageModifier(message)
+            .replaceSubject(new MimeMessageUtils(message).subjectWithPrefix(subjectPrefix));
     }
 
-    private void replaceSubject(MimeMessage m, String newSubject) throws MessagingException {
-        m.setSubject(null);
-        m.setSubject(newSubject, Charsets.UTF_8.displayName());
-    }
-
-    private String prefixSubject(MimeMessage m) throws MessagingException {
-        String subject = m.getSubject();
-
-        if (subject != null) {
-            return Joiner.on(' ').join(subjectPrefix, subject);
-        } else {
-            return subjectPrefix;
-        }
-    }
-
+    @Override
     public String getMailetInfo() {
         return "AddSubjectPrefix Mailet";
     }
-
-
 }

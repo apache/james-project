@@ -17,23 +17,35 @@
  * under the License.                                           *
  ****************************************************************/
 
+package org.apache.james.transport.mailets.redirect;
 
-package org.apache.mailet.base;
+public enum SpecialAddressKind {
+    SENDER("sender"),
+    REVERSE_PATH("reverse.path"),
+    FROM("from"),
+    REPLY_TO("reply.to"),
+    TO("to"),
+    RECIPIENTS("recipients"),
+    DELETE("delete"),
+    UNALTERED("unaltered"),
+    NULL("null");
 
-import java.util.Locale;
-import java.util.TimeZone;
+    private String value;
 
-import org.apache.commons.lang.time.FastDateFormat;
-
-public class DateFormats {
-
-    public static FastDateFormat getRFC822FormatForTimeZone(TimeZone timeZone) {
-        return FastDateFormat.getInstance("EEE, d MMM yyyy HH:mm:ss 'XXXXX' (z)", timeZone, Locale.US);
+    private SpecialAddressKind(String value) {
+        this.value = value;
     }
 
-    public static FastDateFormat RFC822_DATE_FORMAT = FastDateFormat.getInstance("EEE, d MMM yyyy HH:mm:ss 'XXXXX' (z)", Locale.US);
-    public static FastDateFormat RFC977_SHORT_DATE_FORMAT = FastDateFormat.getInstance("yyMMdd HHmmss", Locale.US);
-    public static FastDateFormat RFC977_LONG_DATE_FORMAT = FastDateFormat.getInstance("yyyyMMdd HHmmss", Locale.US);
-    public static FastDateFormat RFC2980_LONG_DATE_FORMAT = FastDateFormat.getInstance("yyyyMMddHHmmss", Locale.US);
-}
+    public static SpecialAddressKind forValue(String value) {
+        for (SpecialAddressKind kind : values()) {
+            if (kind.value.equals(value)) {
+                return kind;
+            }
+        }
+        return null;
+    }
 
+    public String getValue() {
+        return value;
+    }
+}

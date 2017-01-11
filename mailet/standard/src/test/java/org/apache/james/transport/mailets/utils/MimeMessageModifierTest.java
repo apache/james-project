@@ -17,23 +17,40 @@
  * under the License.                                           *
  ****************************************************************/
 
+package org.apache.james.transport.mailets.utils;
 
-package org.apache.mailet.base;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.Properties;
 
-import org.apache.commons.lang.time.FastDateFormat;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
 
-public class DateFormats {
+import org.junit.Test;
 
-    public static FastDateFormat getRFC822FormatForTimeZone(TimeZone timeZone) {
-        return FastDateFormat.getInstance("EEE, d MMM yyyy HH:mm:ss 'XXXXX' (z)", timeZone, Locale.US);
+import com.google.common.base.Optional;
+
+public class MimeMessageModifierTest {
+
+    @Test
+    public void replaceSubjectShouldReplaceTheSubjectWhenSubjectIsPresent() throws Exception {
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        message.setSubject("subject");
+
+        String expectedSubject = "new subject";
+        new MimeMessageModifier(message).replaceSubject(Optional.of(expectedSubject));
+
+        assertThat(message.getSubject()).isEqualTo(expectedSubject);
     }
 
-    public static FastDateFormat RFC822_DATE_FORMAT = FastDateFormat.getInstance("EEE, d MMM yyyy HH:mm:ss 'XXXXX' (z)", Locale.US);
-    public static FastDateFormat RFC977_SHORT_DATE_FORMAT = FastDateFormat.getInstance("yyMMdd HHmmss", Locale.US);
-    public static FastDateFormat RFC977_LONG_DATE_FORMAT = FastDateFormat.getInstance("yyyyMMdd HHmmss", Locale.US);
-    public static FastDateFormat RFC2980_LONG_DATE_FORMAT = FastDateFormat.getInstance("yyyyMMddHHmmss", Locale.US);
-}
+    @Test
+    public void replaceSubjectShouldNotAlterTheSubjectWhenSubjectIsAbsent() throws Exception {
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        String expectedSubject = "subject";
+        message.setSubject(expectedSubject);
 
+        new MimeMessageModifier(message).replaceSubject(Optional.<String> absent());
+
+        assertThat(message.getSubject()).isEqualTo(expectedSubject);
+    }
+}

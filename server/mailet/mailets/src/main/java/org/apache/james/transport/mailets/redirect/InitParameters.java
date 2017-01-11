@@ -17,23 +17,43 @@
  * under the License.                                           *
  ****************************************************************/
 
+package org.apache.james.transport.mailets.redirect;
 
-package org.apache.mailet.base;
+import com.google.common.base.Optional;
 
-import java.util.Locale;
-import java.util.TimeZone;
+public interface InitParameters {
 
-import org.apache.commons.lang.time.FastDateFormat;
+    boolean getPassThrough();
 
-public class DateFormats {
+    boolean getFakeDomainCheck();
 
-    public static FastDateFormat getRFC822FormatForTimeZone(TimeZone timeZone) {
-        return FastDateFormat.getInstance("EEE, d MMM yyyy HH:mm:ss 'XXXXX' (z)", timeZone, Locale.US);
-    }
+    TypeCode getInLineType();
 
-    public static FastDateFormat RFC822_DATE_FORMAT = FastDateFormat.getInstance("EEE, d MMM yyyy HH:mm:ss 'XXXXX' (z)", Locale.US);
-    public static FastDateFormat RFC977_SHORT_DATE_FORMAT = FastDateFormat.getInstance("yyMMdd HHmmss", Locale.US);
-    public static FastDateFormat RFC977_LONG_DATE_FORMAT = FastDateFormat.getInstance("yyyyMMdd HHmmss", Locale.US);
-    public static FastDateFormat RFC2980_LONG_DATE_FORMAT = FastDateFormat.getInstance("yyyyMMddHHmmss", Locale.US);
+    TypeCode getAttachmentType();
+
+    String getMessage();
+
+    String getSubject();
+
+    String getSubjectPrefix();
+
+    boolean isAttachError();
+
+    boolean isReply();
+
+    Optional<String> getRecipients();
+
+    Optional<String> getTo();
+
+    Optional<String> getReversePath();
+
+    Optional<String> getSender();
+
+    Optional<String> getReplyTo();
+
+    boolean isDebug();
+
+    boolean isStatic();
+
+    String asString();
 }
-

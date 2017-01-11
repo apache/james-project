@@ -17,23 +17,33 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-package org.apache.mailet.base;
-
+package org.apache.james.transport.mailets.redirect;
 import java.util.Locale;
-import java.util.TimeZone;
 
-import org.apache.commons.lang.time.FastDateFormat;
+public enum TypeCode {
 
-public class DateFormats {
+    UNALTERED, HEADS, BODY, ALL, NONE, MESSAGE;
 
-    public static FastDateFormat getRFC822FormatForTimeZone(TimeZone timeZone) {
-        return FastDateFormat.getInstance("EEE, d MMM yyyy HH:mm:ss 'XXXXX' (z)", timeZone, Locale.US);
+    public static TypeCode from(String parameter) {
+        String lowerCase = parameter.toLowerCase(Locale.US);
+        if (lowerCase.equals("unaltered")) {
+            return UNALTERED;
+        }
+        if (lowerCase.equals("heads")) {
+            return HEADS;
+        }
+        if (lowerCase.equals("body")) {
+            return BODY;
+        }
+        if (lowerCase.equals("all")) {
+            return ALL;
+        }
+        if (lowerCase.equals("none")) {
+            return NONE;
+        }
+        if (lowerCase.equals("message")) {
+            return MESSAGE;
+        }
+        return NONE;
     }
-
-    public static FastDateFormat RFC822_DATE_FORMAT = FastDateFormat.getInstance("EEE, d MMM yyyy HH:mm:ss 'XXXXX' (z)", Locale.US);
-    public static FastDateFormat RFC977_SHORT_DATE_FORMAT = FastDateFormat.getInstance("yyMMdd HHmmss", Locale.US);
-    public static FastDateFormat RFC977_LONG_DATE_FORMAT = FastDateFormat.getInstance("yyyyMMdd HHmmss", Locale.US);
-    public static FastDateFormat RFC2980_LONG_DATE_FORMAT = FastDateFormat.getInstance("yyyyMMddHHmmss", Locale.US);
 }
-

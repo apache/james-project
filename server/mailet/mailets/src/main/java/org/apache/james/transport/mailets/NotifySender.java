@@ -19,12 +19,34 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.mailet.MailAddress;
+import java.util.List;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
-import java.util.HashSet;
-import java.util.Collection;
+
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.transport.mailets.redirect.AddressExtractor;
+import org.apache.james.transport.mailets.redirect.InitParameters;
+import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
+import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
+import org.apache.james.transport.mailets.redirect.ProcessRedirectNotify;
+import org.apache.james.transport.mailets.redirect.RedirectNotify;
+import org.apache.james.transport.mailets.redirect.SpecialAddress;
+import org.apache.james.transport.mailets.utils.MimeMessageModifier;
+import org.apache.james.transport.mailets.utils.MimeMessageUtils;
+import org.apache.james.transport.util.RecipientsUtils;
+import org.apache.james.transport.util.ReplyToUtils;
+import org.apache.james.transport.util.SenderUtils;
+import org.apache.james.transport.util.SpecialAddressesUtils;
+import org.apache.james.transport.util.TosUtils;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.MailetConfig;
+import org.apache.mailet.base.GenericMailet;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 /**
  * <p>
@@ -38,7 +60,7 @@ import java.util.Collection;
  * A notice text can be specified, and in such case will be inserted into the
  * notification inline text.<br>
  * If the notified message has an "error message" set, it will be inserted into
- * the notification inline text. If the <code>attachStackTrace</code> init
+ * the notification inline text. If the <code>attachError</code> init
  * parameter is set to true, such error message will be attached to the
  * notification message.<br>
  * The notified messages are attached in their entirety (headers and content)
@@ -92,68 +114,147 @@ import java.util.Collection;
  * </code>
  * </pre>
  * <p>
- * <i>notice</i>, <i>sendingAddress</i> and <i>attachStackTrace</i> can be used
+ * <i>notice</i>, <i>sendingAddress</i> and <i>attachError</i> can be used
  * instead of <i>message</i>, <i>sender</i> and <i>attachError</i>; such names
  * are kept for backward compatibility.
  * </p>
  */
-public class NotifySender extends AbstractNotify {
+public class NotifySender extends GenericMailet implements RedirectNotify {
 
-    /**
-     * Return a string describing this mailet.
-     * 
-     * @return a string describing this mailet
-     */
+    private static final String[] CONFIGURABLE_PARAMETERS = new String[]{
+            "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "to" };
+    private static final List<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableList.of(SpecialAddress.SENDER);
+    private static final List<String> ALLOWED_SPECIALS = ImmutableList.of("sender", "unaltered", "from");
+
+    private final DNSService dns;
+    private Optional<String> to = Optional.absent();
+
+    @Inject
+    public NotifySender(DNSService dns) {
+        this.dns = dns;
+    }
+
+    @Override
+    public void init(MailetConfig mailetConfig) throws MessagingException {
+        super.init(mailetConfig);
+        to = Optional.fromNullable(getInitParameter("to"));
+    }
+
+    @Override
     public String getMailetInfo() {
         return "NotifySender Mailet";
     }
 
-    /** Gets the expected init parameters. */
-    protected String[] getAllowedInitParameters() {
-        return new String[]{
-                // "static",
-                "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "attachStackTrace", "to" };
+    @Override
+    public InitParameters getInitParameters() {
+        return NotifyMailetInitParameters.from(this);
     }
 
-    /**
-     * @return <code>SpecialAddress.SENDER</code>, indicating the sender of the
-     *         current mail
-     */
-    protected Collection<MailAddress> getRecipients() {
-        Collection<MailAddress> newRecipients = new HashSet<MailAddress>();
-        newRecipients.add(SpecialAddress.SENDER);
-        return newRecipients;
+    @Override
+    public String[] getAllowedInitParameters() {
+        return CONFIGURABLE_PARAMETERS;
     }
 
-    /**
-     * @return <code>SpecialAddress.UNALTERED</code> if specified or
-     *         <code>SpecialAddress.SENDER</code> if missing
-     */
-    protected InternetAddress[] getTo() throws MessagingException {
-        String addressList = getInitParameter("to");
-        InternetAddress[] iaarray = new InternetAddress[1];
-        iaarray[0] = SpecialAddress.SENDER.toInternetAddress();
-        if (addressList != null) {
-            MailAddress specialAddress = getSpecialAddress(addressList, new String[] { "sender", "unaltered", "from" });
-            if (specialAddress != null) {
-                iaarray[0] = specialAddress.toInternetAddress();
-            } else {
-                log("\"to\" parameter ignored, set to sender");
+    @Override
+    public DNSService getDNSService() {
+        return dns;
+    }
+
+    @Override
+    public void init() throws MessagingException {
+        if (getInitParameters().isDebug()) {
+            log("Initializing");
+        }
+
+        // check that all init parameters have been declared in
+        // allowedInitParameters
+        checkInitParameters(getAllowedInitParameters());
+
+        if (getInitParameters().isStatic()) {
+            if (getInitParameters().isDebug()) {
+                log(getInitParameters().asString());
             }
         }
-        return iaarray;
     }
 
-    /**
-     * @return the <code>attachStackTrace</code> init parameter, or the
-     *         <code>attachError</code> init parameter if missing, or false if
-     *         missing
-     */
-    protected boolean attachError() throws MessagingException {
-        String parameter = getInitParameter("attachStackTrace");
-        if (parameter == null) {
-            return super.attachError();
+    @Override
+    public String getMessage(Mail originalMail) throws MessagingException {
+        return new NotifyMailetsMessage().generateMessage(getInitParameters().getMessage(), originalMail);
+    }
+
+    @Override
+    public List<MailAddress> getRecipients() {
+        return RECIPIENT_MAIL_ADDRESSES;
+    }
+
+    @Override
+    public List<MailAddress> getRecipients(Mail originalMail) throws MessagingException {
+        return RecipientsUtils.from(this).getRecipients(originalMail);
+    }
+
+    @Override
+    public List<InternetAddress> getTo() throws MessagingException {
+        if (to.isPresent()) {
+            Optional<MailAddress> specialAddress = AddressExtractor.withContext(getMailetContext())
+                    .allowedSpecials(ALLOWED_SPECIALS)
+                    .getSpecialAddress(to.get());
+            if (specialAddress.isPresent()) {
+                return ImmutableList.of(specialAddress.get().toInternetAddress());
+            }
+            log("\"to\" parameter ignored, set to sender");
         }
-        return Boolean.valueOf(parameter);
+        return ImmutableList.of(SpecialAddress.SENDER.toInternetAddress());
+    }
+
+    @Override
+    public List<MailAddress> getTo(Mail originalMail) throws MessagingException {
+        return TosUtils.from(this).getTo(originalMail);
+    }
+
+    @Override
+    public Optional<MailAddress> getReplyTo() throws MessagingException {
+        return Optional.of(SpecialAddress.NULL);
+    }
+
+    @Override
+    public Optional<MailAddress> getReplyTo(Mail originalMail) throws MessagingException {
+        return ReplyToUtils.from(getReplyTo()).getReplyTo(originalMail);
+    }
+
+    @Override
+    public Optional<MailAddress> getReversePath() throws MessagingException {
+        return SpecialAddressesUtils.from(this)
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getReversePath(), RedirectNotify.REVERSE_PATH_ALLOWED_SPECIALS);
+    }
+
+    @Override
+    public Optional<MailAddress> getReversePath(Mail originalMail) throws MessagingException {
+        return getSender(originalMail);
+    }
+
+    @Override
+    public Optional<MailAddress> getSender() throws MessagingException {
+        return SpecialAddressesUtils.from(this)
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), RedirectNotify.SENDER_ALLOWED_SPECIALS);
+    }
+
+    @Override
+    public Optional<MailAddress> getSender(Mail originalMail) throws MessagingException {
+        return SenderUtils.from(getSender()).getSender(originalMail);
+    }
+
+    @Override
+    public Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
+        return new MimeMessageUtils(originalMail.getMessage()).subjectWithPrefix(subjectPrefix);
+    }
+
+    @Override
+    public MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException {
+        return new MimeMessageModifier(originalMail.getMessage());
+    }
+
+    @Override
+    public void service(Mail originalMail) throws MessagingException {
+        ProcessRedirectNotify.from(this).process(originalMail);
     }
 }

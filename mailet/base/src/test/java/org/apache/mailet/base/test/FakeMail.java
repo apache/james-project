@@ -71,7 +71,13 @@ public class FakeMail implements Mail {
             mail.getMessageSize(),
             mail.getRemoteAddr());
     }
-    
+
+    public static FakeMail from(MimeMessage message) throws MessagingException {
+        return builder()
+                .mimeMessage(message)
+                .build();
+    }
+
     public static Builder builder() {
         return new Builder();
     }

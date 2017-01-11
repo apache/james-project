@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.guava.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -31,43 +32,47 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
+import org.apache.mailet.base.test.FakeMailContext.SentMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class BounceTest {
+public class ResendTest {
 
     private static final String MAILET_NAME = "mailetName";
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-    private Bounce bounce;
+    private Resend resend;
     private FakeMailContext fakeMailContext;
+    private MailAddress postmaster;
 
     @Before
     public void setUp() throws Exception {
         DNSService dnsService = mock(DNSService.class);
-        bounce = new Bounce(dnsService);
-        fakeMailContext = FakeMailContext.defaultContext();
+        resend = new Resend(dnsService);
+        postmaster = new MailAddress("postmaster@james.org");
+        fakeMailContext = FakeMailContext.builder()
+                .postmaster(postmaster)
+                .build();
 
         when(dnsService.getLocalHost()).thenThrow(new UnknownHostException());
     }
 
     @Test
     public void getMailetInfoShouldReturnValue() {
-        assertThat(bounce.getMailetInfo()).isEqualTo("Bounce Mailet");
+        assertThat(resend.getMailetInfo()).isEqualTo("Redirect Mailet");
     }
 
     @Test
-    public void initShouldThrowWhenUnkownParameter() throws Exception {
+    public void initShouldThrowWhenUnknownParameter() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -75,7 +80,7 @@ public class BounceTest {
                 .build();
         expectedException.expect(MessagingException.class);
 
-        bounce.init(mailetConfig);
+        resend.init(mailetConfig);
     }
 
     @Test
@@ -86,113 +91,74 @@ public class BounceTest {
                 .setProperty("debug", "true")
                 .setProperty("passThrough", "false")
                 .setProperty("fakeDomainCheck", "false")
-                .setProperty("inline", "all")
-                .setProperty("attachment", "none")
-                .setProperty("message", "custom message")
-                .setProperty("notice", "")
-                .setProperty("sender", "sender@domain.org")
-                .setProperty("sendingAddress", "sender@domain.org")
-                .setProperty("prefix", "my prefix")
+                .setProperty("inline", "true")
+                .setProperty("attachment", "true")
+                .setProperty("message", "mess")
+                .setProperty("recipients", "user@james.org, user2@james.org")
+                .setProperty("to", "to@james.org")
+                .setProperty("replyTo", "replyTo@james.org")
+                .setProperty("replyto", "replyto@james.org")
+                .setProperty("reversePath", "reverse@james.org")
+                .setProperty("sender", "sender@james.org")
+                .setProperty("subject", "subj")
+                .setProperty("prefix", "pref")
                 .setProperty("attachError", "true")
+                .setProperty("isReply", "true")
                 .build();
 
-        bounce.init(mailetConfig);
+        resend.init(mailetConfig);
     }
 
     @Test
-    public void bounceShouldReturnAMailToTheSenderWithoutAttributes() throws Exception {
+    public void resendShouldNotModifyOriginalSubject() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
+                .setProperty("subject", "subj")
+                .setProperty("prefix", "pref")
+                .setProperty("recipients", "user@james.org, user2@james.org")
+                .setProperty("to", "to@james.org")
                 .build();
-        bounce.init(mailetConfig);
-
-        MailAddress senderMailAddress = new MailAddress("sender@domain.com");
-        FakeMail mail = FakeMail.builder()
-                .sender(senderMailAddress)
-                .name(MAILET_NAME)
-                .recipient(MailAddressFixture.ANY_AT_JAMES)
-                .build();
-        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        mimeMessage.setText("My content");
-        mail.setMessage(mimeMessage);
-
-        bounce.service(mail);
-
-        FakeMailContext.SentMail expected = FakeMailContext.sentMailBuilder()
-            .recipient(senderMailAddress)
-            .build();
-        assertThat(fakeMailContext.getSentMails()).containsOnly(expected);
-    }
-
-    @Test
-    public void bounceShouldChangeTheStateWhenNoSenderAndPassThroughEqualsFalse() throws Exception {
-        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-                .mailetName(MAILET_NAME)
-                .mailetContext(fakeMailContext)
-                .setProperty("passThrough", "false")
-                .build();
-        bounce.init(mailetConfig);
-
-        FakeMail mail = FakeMail.builder()
-                .name(MAILET_NAME)
-                .recipient(MailAddressFixture.ANY_AT_JAMES)
-                .build();
-
-        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        mimeMessage.setText("My content");
-        mail.setMessage(mimeMessage);
-
-        bounce.service(mail);
-
-        assertThat(mail.getState()).isEqualTo(Mail.GHOST);
-    }
-
-    @Test
-    public void bounceShouldNotChangeTheStateWhenNoSenderAndPassThroughEqualsTrue() throws Exception {
-        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-                .mailetName(MAILET_NAME)
-                .mailetContext(fakeMailContext)
-                .setProperty("passThrough", "true")
-                .build();
-        bounce.init(mailetConfig);
-
-        String initialState = "initial";
-        FakeMail mail = FakeMail.builder()
-                .state(initialState)
-                .name(MAILET_NAME)
-                .recipient(MailAddressFixture.ANY_AT_JAMES)
-                .build();
-
-        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        mimeMessage.setText("My content");
-        mail.setMessage(mimeMessage);
-
-        bounce.service(mail);
-
-        assertThat(mail.getState()).isEqualTo(initialState);
-    }
-
-    @Test
-    public void bounceShouldAddPrefixToSubjectWhenPrefixIsConfigured() throws Exception {
-        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-                .mailetName(MAILET_NAME)
-                .mailetContext(fakeMailContext)
-                .setProperty("prefix", "pre")
-                .build();
-        bounce.init(mailetConfig);
+        resend.init(mailetConfig);
 
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
         mimeMessage.setSubject("My subject");
+        mimeMessage.setText("content");
         FakeMail mail = FakeMail.builder()
                 .name(MAILET_NAME)
                 .sender(MailAddressFixture.ANY_AT_JAMES)
-                .recipient(MailAddressFixture.ANY_AT_JAMES2)
                 .mimeMessage(mimeMessage)
                 .build();
 
-        bounce.service(mail);
+        resend.service(mail);
 
-        assertThat(mail.getMessage().getSubject()).isEqualTo("pre My subject");
+        assertThat(mail.getMessage().getSubject()).isEqualTo("My subject");
+    }
+
+    @Test
+    public void resendShouldAddPrefixAndSubjectToSentMail() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("subject", "subj")
+                .setProperty("prefix", "pre")
+                .setProperty("recipients", "user@james.org, user2@james.org")
+                .setProperty("to", "to@james.org")
+                .build();
+        resend.init(mailetConfig);
+
+        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        mimeMessage.setSubject("My subject");
+        mimeMessage.setText("content");
+        FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(MailAddressFixture.ANY_AT_JAMES)
+                .mimeMessage(mimeMessage)
+                .build();
+
+        resend.service(mail);
+
+        SentMail newMail = fakeMailContext.getSentMails().get(0);
+        assertThat(newMail.getSubject()).contains("pre subj");
     }
 }

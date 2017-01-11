@@ -19,6 +19,34 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
+
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.transport.mailets.redirect.AddressExtractor;
+import org.apache.james.transport.mailets.redirect.InitParameters;
+import org.apache.james.transport.mailets.redirect.ProcessRedirectNotify;
+import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
+import org.apache.james.transport.mailets.redirect.RedirectNotify;
+import org.apache.james.transport.mailets.utils.MimeMessageModifier;
+import org.apache.james.transport.mailets.utils.MimeMessageUtils;
+import org.apache.james.transport.util.MailAddressUtils;
+import org.apache.james.transport.util.RecipientsUtils;
+import org.apache.james.transport.util.ReplyToUtils;
+import org.apache.james.transport.util.SenderUtils;
+import org.apache.james.transport.util.SpecialAddressesUtils;
+import org.apache.james.transport.util.TosUtils;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMailet;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+
 /**
  * <p>
  * A mailet providing configurable redirection services.
@@ -266,22 +294,147 @@ package org.apache.james.transport.mailets;
  * @since 2.2.0
  */
 
-public class Resend extends AbstractRedirect {
+public class Resend extends GenericMailet implements RedirectNotify {
 
-    /**
-     * Returns a string describing this mailet.
-     * 
-     * @return a string describing this mailet
-     */
+    private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
+            "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };
+    private final DNSService dns;
+
+    @Inject
+    public Resend(DNSService dns) {
+        this.dns = dns;
+    }
+
+    @Override
     public String getMailetInfo() {
         return "Redirect Mailet";
     }
 
-    /** Gets the expected init parameters. */
-    protected String[] getAllowedInitParameters() {
-        return new String[]{
-                // "static",
-                "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };
+    @Override
+    public InitParameters getInitParameters() {
+        return RedirectMailetInitParameters.from(this);
     }
 
+    @Override
+    public String[] getAllowedInitParameters() {
+        return CONFIGURABLE_PARAMETERS;
+    }
+
+    @Override
+    public DNSService getDNSService() {
+        return dns;
+    }
+
+    @Override
+    public void init() throws MessagingException {
+        if (getInitParameters().isDebug()) {
+            log("Initializing");
+        }
+
+        // check that all init parameters have been declared in
+        // allowedInitParameters
+        checkInitParameters(getAllowedInitParameters());
+
+        if (getInitParameters().isStatic()) {
+            if (getInitParameters().isDebug()) {
+                log(getInitParameters().asString());
+            }
+        }
+    }
+
+    @Override
+    public String getMessage(Mail originalMail) throws MessagingException {
+        return getInitParameters().getMessage();
+    }
+
+    @Override
+    public List<InternetAddress> getTo() throws MessagingException {
+      return MailAddressUtils.toInternetAddresses(
+              AddressExtractor.withContext(getMailetContext())
+                  .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
+                  .extract(getInitParameters().getTo()));
+    }
+
+    @Override
+    public List<MailAddress> getTo(Mail originalMail) throws MessagingException {
+        return TosUtils.from(this).getTo(originalMail);
+    }
+
+    @Override
+    public Optional<MailAddress> getReplyTo() throws MessagingException {
+        Optional<String> replyTo = getInitParameters().getReplyTo();
+        if (!replyTo.isPresent()) {
+            return Optional.absent();
+        }
+
+        return FluentIterable.from(AddressExtractor.withContext(getMailetContext())
+                .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
+                .extract(replyTo))
+            .first();
+    }
+
+    @Override
+    public Optional<MailAddress> getReplyTo(Mail originalMail) throws MessagingException {
+        return ReplyToUtils.from(getReplyTo()).getReplyTo(originalMail);
+    }
+
+    @Override
+    public List<MailAddress> getRecipients() throws MessagingException {
+          ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
+          List<MailAddress> mailAddresses = AddressExtractor.withContext(getMailetContext())
+                  .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
+                  .extract(getInitParameters().getRecipients());
+          for (MailAddress address : mailAddresses) {
+              builder.add(address);
+          }
+          return builder.build();
+      }
+
+    @Override
+    public List<MailAddress> getRecipients(Mail originalMail) throws MessagingException {
+        return RecipientsUtils.from(this).getRecipients(originalMail);
+    }
+
+    @Override
+    public Optional<MailAddress> getReversePath() throws MessagingException {
+        return SpecialAddressesUtils.from(this)
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getReversePath(), RedirectNotify.REVERSE_PATH_ALLOWED_SPECIALS);
+    }
+
+    @Override
+    public Optional<MailAddress> getReversePath(Mail originalMail) throws MessagingException {
+        Optional<MailAddress> reversePath = getReversePath();
+        if (reversePath.isPresent()) {
+            if (MailAddressUtils.isUnalteredOrReversePathOrSender(reversePath.get())) {
+                return Optional.absent();
+            }
+        }
+        return reversePath;
+    }
+
+    @Override
+    public Optional<MailAddress> getSender() throws MessagingException {
+        return SpecialAddressesUtils.from(this)
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), RedirectNotify.SENDER_ALLOWED_SPECIALS);
+    }
+
+    @Override
+    public Optional<MailAddress> getSender(Mail originalMail) throws MessagingException {
+        return SenderUtils.from(getSender()).getSender(originalMail);
+    }
+
+    @Override
+    public Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
+        return new MimeMessageUtils(newMail.getMessage()).subjectWithPrefix(subjectPrefix, originalMail, getInitParameters().getSubject());
+    }
+
+    @Override
+    public MimeMessageModifier getMimeMessageModifier(Mail newMail, Mail originalMail) throws MessagingException {
+        return new MimeMessageModifier(newMail.getMessage());
+    }
+
+    @Override
+    public void service(Mail originalMail) throws MessagingException {
+        ProcessRedirectNotify.from(this).process(originalMail);
+    }
 }

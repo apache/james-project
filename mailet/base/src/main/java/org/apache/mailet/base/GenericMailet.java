@@ -35,6 +35,9 @@ import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.MailetContext.LogLevel;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
+
 /**
  * GenericMailet makes writing mailets easier. It provides simple
  * versions of the lifecycle methods init and destroy and of the methods
@@ -80,6 +83,14 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
             throw new NullPointerException("Mailet configuration must be set before getInitParameter is called.");
         }
         return MailetUtil.getInitParameter(config, name).or(defaultValue);
+    }
+
+    public Optional<String> getInitParameterAsOptional(String name) {
+        String value = getInitParameter(name);
+        if (Strings.isNullOrEmpty(value)) {
+            return Optional.absent();
+        }
+        return Optional.of(value);
     }
 
     /**
@@ -284,27 +295,8 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
         
         if (bad.size() > 0) {
             throw new MessagingException("Unexpected init parameters found: "
-                    + arrayToString(bad.toArray()));
+                    + org.apache.mailet.base.StringUtils.arrayToString(bad.toArray()));
         }
-    }
-    
-    /**
-     * Utility method for obtaining a string representation of an array of Objects.
-     */
-    protected final String arrayToString(Object[] array) {
-        if (array == null) {
-            return "null";
-        }
-        StringBuilder sb = new StringBuilder(1024);
-        sb.append("[");
-        for (int i = 0; i < array.length; i++) {
-            if (i > 0) {
-                sb.append(",");
-            }
-            sb.append(array[i]);
-        }
-        sb.append("]");
-        return sb.toString();
     }
 
 }
