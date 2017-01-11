@@ -39,6 +39,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.mail.MimeMultipartReport;
@@ -47,7 +48,6 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailContext.SentMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.joda.time.DateTime;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,15 +62,11 @@ public class DSNBounceTest {
 
     private DSNBounce dsnBounce;
     private FakeMailContext fakeMailContext;
-    private TimeZone timeZone;
 
     @Before
     public void setUp() throws Exception {
-        timeZone = TimeZone.getDefault();
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-
         DNSService dnsService = mock(DNSService.class);
-        dsnBounce = new DSNBounce(dnsService);
+        dsnBounce = new DSNBounce(dnsService, DateFormats.getRFC822FormatForTimeZone(TimeZone.getTimeZone("UTC")));
         fakeMailContext = FakeMailContext.defaultContext();
 
         InetAddress localHost = InetAddress.getLocalHost();
@@ -78,11 +74,6 @@ public class DSNBounceTest {
             .thenReturn(localHost);
         when(dnsService.getHostName(localHost))
             .thenReturn("myhost");
-    }
-
-    @After
-    public void tearDown() {
-        TimeZone.setDefault(timeZone);
     }
 
     @Test

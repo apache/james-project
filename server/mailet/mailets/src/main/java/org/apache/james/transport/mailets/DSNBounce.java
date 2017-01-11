@@ -32,6 +32,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.james.core.MailImpl;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.redirect.InitParameters;
@@ -112,11 +113,17 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private static final String LINE_BREAK = "\n";
 
     private final DNSService dns;
+    private final FastDateFormat dateFormatter;
     private String messageString = null;
 
     @Inject
     public DSNBounce(DNSService dns) {
+        this(dns, DateFormats.RFC822_DATE_FORMAT);
+    }
+
+    public DSNBounce(DNSService dns, FastDateFormat dateFormatter) {
         this.dns = dns;
+        this.dateFormatter = dateFormatter;
     }
 
     @Override
@@ -281,7 +288,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private String getDateHeader(Mail originalMail) throws MessagingException {
         String[] date = originalMail.getMessage().getHeader(RFC2822Headers.DATE);
         if (date == null) {
-            return DateFormats.RFC822_DATE_FORMAT.format(new Date());
+            return dateFormatter.format(new Date());
         }
         return date[0];
     }
@@ -401,7 +408,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         buffer.append("Action: failed").append(LINE_BREAK);
         buffer.append("Status: " + deliveryError).append(LINE_BREAK);
         buffer.append("Diagnostic-Code: " + getDiagnosticType(deliveryError) + "; " + deliveryError).append(LINE_BREAK);
-        buffer.append("Last-Attempt-Date: " + DateFormats.RFC822_DATE_FORMAT.format(lastUpdated))
+        buffer.append("Last-Attempt-Date: " + dateFormatter.format(lastUpdated))
             .append(LINE_BREAK);
     }
 
