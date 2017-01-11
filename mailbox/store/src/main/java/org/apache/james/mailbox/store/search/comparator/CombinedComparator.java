@@ -18,27 +18,86 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.search.comparator;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.model.SearchQuery.Sort;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 
 /**
  * {@link Comparator} which takes a Array of other {@link Comparator}'s and use them to compare two {@link MailboxMessage} instances till one of them
  * return <> 0
- *
  */
 public class CombinedComparator implements Comparator<MailboxMessage>{
 
-    private final Comparator<MailboxMessage>[] comparators;
-    public CombinedComparator(Comparator<MailboxMessage>[] comparators) {
-        if(comparators == null || comparators.length < 1) {
-            throw new IllegalArgumentException();
+    public static CombinedComparator create(List<Sort> sorts) {
+        Preconditions.checkNotNull(sorts);
+        Preconditions.checkArgument(!sorts.isEmpty());
+        return new CombinedComparator(FluentIterable.from(sorts)
+            .transform(toComparator())
+            .toList());
+    }
+
+    private static Function<Sort, Comparator<MailboxMessage>> toComparator() {
+        return new Function<Sort, Comparator<MailboxMessage>>() {
+            @Override
+            public Comparator<MailboxMessage> apply(Sort input) {
+                return optionalResverse(toComparator(input), input.isReverse());
+            }
+        };
+    }
+
+    private static Comparator<MailboxMessage> toComparator(Sort sort) {
+        switch (sort.getSortClause()) {
+            case Arrival:
+                return InternalDateComparator.INTERNALDATE;
+            case MailboxCc:
+                return HeaderMailboxComparator.CC_COMPARATOR;
+            case MailboxFrom:
+                return HeaderMailboxComparator.FROM_COMPARATOR;
+            case Size:
+                return SizeComparator.SIZE;
+            case BaseSubject:
+                return BaseSubjectComparator.BASESUBJECT;
+            case MailboxTo:
+                return HeaderMailboxComparator.TO_COMPARATOR;
+            case Uid:
+                return UidComparator.UID;
+            case SentDate:
+                return SentDateComparator.SENTDATE;
+            case DisplayFrom:
+                return HeaderDisplayComparator.FROM_COMPARATOR;
+            case DisplayTo:
+                return HeaderDisplayComparator.TO_COMPARATOR;
+            case Id:
+                return MessageIdComparator.MESSAGE_ID_COMPARATOR;
+            default:
+                throw new NotImplementedException("Combined comparator does not support sort " + sort.getSortClause());
         }
+    }
+
+    private static Comparator<MailboxMessage> optionalResverse(Comparator<MailboxMessage> comparator, boolean isReverse) {
+        if (isReverse) {
+            return new ReverseComparator(comparator);
+        }
+        return comparator;
+    }
+
+    private final List<Comparator<MailboxMessage>> comparators;
+
+    public List<Comparator<MailboxMessage>> getComparators() {
+        return comparators;
+    }
+
+    private CombinedComparator(List<Comparator<MailboxMessage>> comparators) {
         this.comparators = comparators;
     }
+
     @Override
     public int compare(MailboxMessage o1, MailboxMessage o2) {
         int i = 0;
@@ -49,53 +108,6 @@ public class CombinedComparator implements Comparator<MailboxMessage>{
             }
         }
         return i;
-    }
-    
-    @SuppressWarnings("unchecked")
-    public static Comparator<MailboxMessage> create(List<Sort> sorts) {
-        List<Comparator<MailboxMessage>> comps = new ArrayList<Comparator<MailboxMessage>>();
-        for (Sort sort : sorts) {
-            boolean reverse = sort.isReverse();
-            Comparator<MailboxMessage> comparator = null;
-
-            switch (sort.getSortClause()) {
-                case Arrival:
-                    comparator = InternalDateComparator.internalDate(reverse);
-                    break;
-                case MailboxCc:
-                    comparator = HeaderMailboxComparator.cc(reverse);
-                    break;
-                case MailboxFrom:
-                    comparator = HeaderMailboxComparator.from(reverse);
-                    break;
-                case Size:
-                    comparator = SizeComparator.size(reverse);
-                    break;
-                case BaseSubject:
-                    comparator = BaseSubjectComparator.baseSubject(reverse);
-                    break;
-                case MailboxTo:
-                    comparator = HeaderMailboxComparator.to(reverse);
-                    break;
-                case Uid:
-                    comparator = UidComparator.uid(reverse);
-                    break;
-                case SentDate:
-                    comparator = SentDateComparator.sentDate(reverse);
-                case DisplayFrom:
-                    comparator = HeaderDisplayComparator.from(reverse);
-                    break;
-                case DisplayTo:
-                    comparator = HeaderDisplayComparator.to(reverse);
-                    break;
-                default:
-                    break;
-            }
-            if (comparator != null) {
-                comps.add(comparator);
-            }
-        }
-        return new CombinedComparator(comps.toArray(new Comparator[0]));
     }
 
 }

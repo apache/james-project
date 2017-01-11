@@ -29,13 +29,10 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.TimeZone;
-import java.util.TreeSet;
 
 import javax.mail.Flags;
 
@@ -70,12 +67,16 @@ import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.utils.search.MessageMatcher;
 
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
  * Utility methods to help perform search operations.
  */
-public class MessageSearches implements Iterable<MessageUid> {
+public class MessageSearches implements Iterable<SimpleMessageSearchIndex.SearchResult> {
 
     private Iterator<MailboxMessage> messages;
     private SearchQuery query;
@@ -93,13 +94,13 @@ public class MessageSearches implements Iterable<MessageUid> {
     public MessageSearches() {
     }
 
-    private Set<MessageUid> search() {
-        TreeSet<MailboxMessage> matched = new TreeSet<MailboxMessage>(CombinedComparator.create(query.getSorts()));
+    public Iterator<SimpleMessageSearchIndex.SearchResult> iterator() {
+        ImmutableList.Builder<MailboxMessage> builder = ImmutableList.builder();
         while (messages.hasNext()) {
             MailboxMessage m = messages.next();
             try {
                 if (isMatch(query, m)) {
-                    matched.add(m);
+                    builder.add(m);
                 }
             } catch (MailboxException e) {
                 if (session != null && session.getLog() != null) {
@@ -107,12 +108,19 @@ public class MessageSearches implements Iterable<MessageUid> {
                 }
             }
         }
-        Set<MessageUid> uids = new HashSet<MessageUid>();
-        Iterator<MailboxMessage> matchedIt = matched.iterator();
-        while (matchedIt.hasNext()) {
-            uids.add(matchedIt.next().getUid());
-        }
-        return uids;
+        List<MailboxMessage> sortedResults = FluentIterable.from(builder.build())
+            .toSortedList(CombinedComparator.create(query.getSorts()));
+        return FluentIterable.from(sortedResults)
+            .transform(new Function<MailboxMessage, SimpleMessageSearchIndex.SearchResult>() {
+                @Override
+                public SimpleMessageSearchIndex.SearchResult apply(MailboxMessage input) {
+                    return new SimpleMessageSearchIndex.SearchResult(
+                        Optional.of(input.getMessageId()),
+                        input.getMailboxId(),
+                        input.getUid());
+                }
+            })
+            .iterator();
     }
 
     /**
@@ -624,15 +632,6 @@ public class MessageSearches implements Iterable<MessageUid> {
 
     private Calendar getGMT() {
         return Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.ENGLISH);
-    }
-
-    /**
-     * Return a {@link Iterator} which holds all uids which matched, sorted
-     * according to the SearchQuery
-     * 
-     */
-    public Iterator<MessageUid> iterator() {
-        return search().iterator();
     }
 
 }

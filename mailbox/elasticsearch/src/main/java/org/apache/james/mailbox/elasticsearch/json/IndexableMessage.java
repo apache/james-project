@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.james.mailbox.MailboxSession.User;
-import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -47,8 +46,8 @@ import com.google.common.collect.Multimap;
 
 public class IndexableMessage {
 
-    public static IndexableMessage from(MailboxMessage message, List<User> users, TextExtractor textExtractor, 
-            ZoneId zoneId, IndexAttachments indexAttachments) {
+    public static IndexableMessage from(MailboxMessage message, List<User> users, TextExtractor textExtractor,
+                                        ZoneId zoneId, IndexAttachments indexAttachments) {
 
         Preconditions.checkNotNull(message.getMailboxId());
         Preconditions.checkArgument(!users.isEmpty());
@@ -89,7 +88,7 @@ public class IndexableMessage {
     }
 
     private void copyMessageFields(MailboxMessage message, ZoneId zoneId) {
-        this.id = message.getUid();
+        this.uid = message.getUid().asLong();
         this.mailboxId = message.getMailboxId().serialize();
         this.modSeq = message.getModSeq();
         this.size = message.getFullContentOctets();
@@ -127,7 +126,7 @@ public class IndexableMessage {
             .collect(Collectors.joining(" "));
     }
 
-    private MessageUid id;
+    private long uid;
     private String mailboxId;
     private List<String> users;
     private long modSeq;
@@ -156,9 +155,47 @@ public class IndexableMessage {
     private Optional<String> bodyHtml;
     private String text;
 
-    @JsonProperty(JsonMessageConstants.ID)
-    public Long getId() {
-        return id.asLong();
+    public IndexableMessage(long uid, String mailboxId, List<String> users, long modSeq, long size, String date, String mediaType,
+                            String subType, boolean isUnRead, boolean isRecent, boolean isFlagged, boolean isDeleted, boolean isDraft,
+                            boolean isAnswered, String[] userFlags, Multimap<String, String> headers, EMailers from, EMailers to,
+                            EMailers cc, EMailers bcc, EMailers replyTo, Subjects subjects, String sentDate, List<Property> properties,
+                            List<MimePart> attachments, Optional<String> bodyText, Optional<String> bodyHtml, String text) {
+        this.uid = uid;
+        this.mailboxId = mailboxId;
+        this.users = users;
+        this.modSeq = modSeq;
+        this.size = size;
+        this.date = date;
+        this.mediaType = mediaType;
+        this.subType = subType;
+        this.isUnRead = isUnRead;
+        this.isRecent = isRecent;
+        this.isFlagged = isFlagged;
+        this.isDeleted = isDeleted;
+        this.isDraft = isDraft;
+        this.isAnswered = isAnswered;
+        this.userFlags = userFlags;
+        this.headers = headers;
+        this.from = from;
+        this.to = to;
+        this.cc = cc;
+        this.bcc = bcc;
+        this.replyTo = replyTo;
+        this.subjects = subjects;
+        this.sentDate = sentDate;
+        this.properties = properties;
+        this.attachments = attachments;
+        this.bodyText = bodyText;
+        this.bodyHtml = bodyHtml;
+        this.text = text;
+    }
+
+    public IndexableMessage() {
+    }
+
+    @JsonProperty(JsonMessageConstants.UID)
+    public Long getUid() {
+        return uid;
     }
 
     @JsonProperty(JsonMessageConstants.MAILBOX_ID)

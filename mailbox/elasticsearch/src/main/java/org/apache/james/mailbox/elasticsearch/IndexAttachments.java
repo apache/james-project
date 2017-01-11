@@ -20,6 +20,5 @@
 package org.apache.james.mailbox.elasticsearch;
 
 public enum IndexAttachments {
-
-    NO, YES;
+    NO, YES
 }

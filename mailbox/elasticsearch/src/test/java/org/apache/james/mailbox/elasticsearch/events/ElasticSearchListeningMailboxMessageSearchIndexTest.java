@@ -87,13 +87,13 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
             .andReturn(user);
 
         Mailbox mailbox = control.createMock(Mailbox.class);
-        MessageUid messageId = MessageUid.of(1);
+        MessageUid messageUid = MessageUid.of(1);
         TestId mailboxId = TestId.of(12);
         expect(mailbox.getMailboxId()).andReturn(mailboxId);
-        MailboxMessage message = mockedMessage(messageId);
+        MailboxMessage message = mockedMessage(messageUid);
         
         IndexResponse expectedIndexResponse = control.createMock(IndexResponse.class);
-        expect(indexer.indexMessage(eq(mailboxId.serialize() + ":" + messageId), anyString()))
+        expect(indexer.indexMessage(eq(mailboxId.serialize() + ":" + messageUid.asLong()), anyString()))
             .andReturn(expectedIndexResponse);
         
         control.replay();
@@ -116,12 +116,12 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
 
         Mailbox mailbox = control.createMock(Mailbox.class);
         
-        MessageUid messageId = MessageUid.of(1);
+        MessageUid messageUid = MessageUid.of(1);
         TestId mailboxId = TestId.of(12);
-        MailboxMessage message = mockedMessage(messageId);
+        MailboxMessage message = mockedMessage(messageUid);
         expect(mailbox.getMailboxId()).andReturn(mailboxId);
         
-        expect(indexer.indexMessage(eq(mailboxId.serialize() + ":" + messageId), anyString()))
+        expect(indexer.indexMessage(eq(mailboxId.serialize() + ":" + messageUid.asLong()), anyString()))
             .andThrow(new ElasticsearchException(""));
         
         control.replay();
@@ -134,7 +134,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     public void deleteShouldWork() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
         Mailbox mailbox = control.createMock(Mailbox.class);
-        MessageUid messageId = MessageUid.of(1);
+        MessageUid messageUid = MessageUid.of(1);
         TestId mailboxId = TestId.of(12);
         expect(mailbox.getMailboxId()).andReturn(mailboxId);
         
@@ -143,7 +143,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
             .andReturn(expectedBulkResponse);
         
         control.replay();
-        testee.delete(session, mailbox, Lists.newArrayList(messageId));
+        testee.delete(session, mailbox, Lists.newArrayList(messageUid));
         control.verify();
     }
     
@@ -152,11 +152,11 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     public void deleteShouldWorkWhenMultipleMessageIds() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
         Mailbox mailbox = control.createMock(Mailbox.class);
-        MessageUid messageId1 = MessageUid.of(1);
-        MessageUid messageId2 = MessageUid.of(2);
-        MessageUid messageId3 = MessageUid.of(3);
-        MessageUid messageId4 = MessageUid.of(4);
-        MessageUid messageId5 = MessageUid.of(5);
+        MessageUid messageUid1 = MessageUid.of(1);
+        MessageUid messageUid2 = MessageUid.of(2);
+        MessageUid messageUid3 = MessageUid.of(3);
+        MessageUid messageUid4 = MessageUid.of(4);
+        MessageUid messageUid5 = MessageUid.of(5);
         TestId mailboxId = TestId.of(12);
         expect(mailbox.getMailboxId()).andReturn(mailboxId).times(5);
 
@@ -165,7 +165,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
             .andReturn(expectedBulkResponse);
         
         control.replay();
-        testee.delete(session, mailbox, Lists.newArrayList(messageId1, messageId2, messageId3, messageId4, messageId5));
+        testee.delete(session, mailbox, Lists.newArrayList(messageUid1, messageUid2, messageUid3, messageUid4, messageUid5));
         control.verify();
     }
     
@@ -174,7 +174,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     public void deleteShouldNotPropagateExceptionWhenExceptionOccurs() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
         Mailbox mailbox = control.createMock(Mailbox.class);
-        MessageUid messageId = MessageUid.of(1);
+        MessageUid messageUid = MessageUid.of(1);
         TestId mailboxId = TestId.of(12);
         expect(mailbox.getMailboxId()).andReturn(mailboxId).times(2);
         
@@ -182,7 +182,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
             .andThrow(new ElasticsearchException(""));
         
         control.replay();
-        testee.delete(session, mailbox, Lists.newArrayList(messageId));
+        testee.delete(session, mailbox, Lists.newArrayList(messageUid));
         control.verify();
     }
 
@@ -194,8 +194,8 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
         Mailbox mailbox = control.createMock(Mailbox.class);
 
         Flags flags = new Flags();
-        MessageUid messageId = MessageUid.of(1);
-        UpdatedFlags updatedFlags = new UpdatedFlags(messageId, MODSEQ, flags, flags);
+        MessageUid messageUid = MessageUid.of(1);
+        UpdatedFlags updatedFlags = new UpdatedFlags(messageUid, MODSEQ, flags, flags);
         TestId mailboxId = TestId.of(12);
 
         expectLastCall();
@@ -217,8 +217,8 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
 
         Mailbox mailbox = control.createMock(Mailbox.class);
         Flags flags = new Flags();
-        MessageUid messageId = MessageUid.of(1);
-        UpdatedFlags updatedFlags = new UpdatedFlags(messageId, MODSEQ, flags, flags);
+        MessageUid messageUid = MessageUid.of(1);
+        UpdatedFlags updatedFlags = new UpdatedFlags(messageUid, MODSEQ, flags, flags);
         TestId mailboxId = TestId.of(12);
 
         expectLastCall();

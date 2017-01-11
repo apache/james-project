@@ -40,6 +40,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.elasticsearch.client.Client;
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
@@ -67,10 +68,11 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             IndexCreationFactory.createIndex(new TestingClientProvider(embeddedElasticSearch.getNode()).get())
         );
         MailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
+        InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         messageSearchIndex = new ElasticSearchListeningMessageSearchIndex(mapperFactory,
             new ElasticSearchIndexer(client, new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor(), BATCH_SIZE)),
-            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE, new InMemoryId.Factory()),
-            new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES));
+            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE, new InMemoryId.Factory(), messageIdFactory),
+            new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES, MessageSearchIndex.IndexMessageId.Required));
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,
             new FakeAuthenticator(),
@@ -78,7 +80,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             new UnionMailboxACLResolver(),
             new SimpleGroupMembershipResolver(),
             new MessageParser(),
-            new InMemoryMessageId.Factory());
+            messageIdFactory);
         storeMailboxManager.setMessageSearchIndex(messageSearchIndex);
         storeMailboxManager.init();
     }

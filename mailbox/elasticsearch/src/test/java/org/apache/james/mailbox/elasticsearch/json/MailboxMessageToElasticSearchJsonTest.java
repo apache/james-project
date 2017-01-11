@@ -35,16 +35,17 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession.User;
-import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,7 +59,7 @@ public class MailboxMessageToElasticSearchJsonTest {
     public static final int SIZE = 25;
     public static final int BODY_START_OCTET = 100;
     public static final TestId MAILBOX_ID = TestId.of(18L);
-    public static final MessageId MESSAGE_ID = new DefaultMessageId();
+    public static final MessageId MESSAGE_ID = TestMessageId.of(184L);
     public static final long MOD_SEQ = 42L;
     public static final MessageUid UID = MessageUid.of(25);
     public static final Charset CHARSET = Charsets.UTF_8;
@@ -81,7 +82,8 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void convertToJsonShouldThrowWhenNoUser() throws Exception {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
                 new DefaultTextExtractor(),
-                ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+                ZoneId.of("Europe/Paris"), IndexAttachments.YES,
+            MessageSearchIndex.IndexMessageId.Required);
         MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
                 date,
                 SIZE,
@@ -100,7 +102,8 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void spamEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES,
+            MessageSearchIndex.IndexMessageId.Required);
         MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
                 date,
                 SIZE,
@@ -120,7 +123,8 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void htmlEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES,
+            MessageSearchIndex.IndexMessageId.Required);
         MailboxMessage htmlMail = new SimpleMailboxMessage(MESSAGE_ID,
                 date,
                 SIZE,
@@ -140,7 +144,8 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void pgpSignedEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES,
+            MessageSearchIndex.IndexMessageId.Required);
         MailboxMessage pgpSignedMail = new SimpleMailboxMessage(MESSAGE_ID,
                 date,
                 SIZE,
@@ -160,7 +165,8 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void simpleEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES,
+            MessageSearchIndex.IndexMessageId.Required);
         MailboxMessage mail = new SimpleMailboxMessage(MESSAGE_ID,
                 date,
                 SIZE,
@@ -181,7 +187,8 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void recursiveEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES,
+            MessageSearchIndex.IndexMessageId.Required);
         MailboxMessage recursiveMail = new SimpleMailboxMessage(MESSAGE_ID, 
                 date,
                 SIZE,
@@ -201,7 +208,8 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void emailWithNoInternalDateShouldUseNowDate() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES,
+            MessageSearchIndex.IndexMessageId.Required);
         MailboxMessage mailWithNoInternalDate = new SimpleMailboxMessage(MESSAGE_ID,
                 null,
                 SIZE,
@@ -235,7 +243,8 @@ public class MailboxMessageToElasticSearchJsonTest {
         // When
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES,
+            MessageSearchIndex.IndexMessageId.Required);
         String convertToJson = messageToElasticSearchJson.convertToJson(mailWithNoInternalDate, ImmutableList.of(new MockMailboxSession("username").getUser()));
 
         // Then
@@ -262,7 +271,8 @@ public class MailboxMessageToElasticSearchJsonTest {
         // When
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.NO);
+            ZoneId.of("Europe/Paris"), IndexAttachments.NO,
+            MessageSearchIndex.IndexMessageId.Required);
         String convertToJson = messageToElasticSearchJson.convertToJson(mailWithNoInternalDate, ImmutableList.of(new MockMailboxSession("username").getUser()));
 
         // Then
@@ -276,7 +286,8 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void emailWithNoMailboxIdShouldThrow() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES,
+            MessageSearchIndex.IndexMessageId.Required);
         MailboxMessage mailWithNoMailboxId;
         try {
             mailWithNoMailboxId = new SimpleMailboxMessage(MESSAGE_ID, date,
@@ -298,7 +309,8 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void getUpdatedJsonMessagePartShouldBehaveWellOnEmptyFlags() throws Exception {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES,
+            MessageSearchIndex.IndexMessageId.Required);
         assertThatJson(messageToElasticSearchJson.getUpdatedJsonMessagePart(new Flags(), MOD_SEQ))
             .isEqualTo("{\"modSeq\":42,\"isAnswered\":false,\"isDeleted\":false,\"isDraft\":false,\"isFlagged\":false,\"isRecent\":false,\"userFlags\":[],\"isUnread\":true}");
     }
@@ -307,7 +319,8 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void getUpdatedJsonMessagePartShouldBehaveWellOnNonEmptyFlags() throws Exception {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES,
+            MessageSearchIndex.IndexMessageId.Required);
         assertThatJson(messageToElasticSearchJson.getUpdatedJsonMessagePart(new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.FLAGGED).add("user").build(), MOD_SEQ))
             .isEqualTo("{\"modSeq\":42,\"isAnswered\":false,\"isDeleted\":true,\"isDraft\":false,\"isFlagged\":true,\"isRecent\":false,\"userFlags\":[\"user\"],\"isUnread\":true}");
     }
@@ -316,7 +329,8 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void getUpdatedJsonMessagePartShouldThrowIfFlagsIsNull() throws Exception {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES,
+            MessageSearchIndex.IndexMessageId.Required);
         messageToElasticSearchJson.getUpdatedJsonMessagePart(null, MOD_SEQ);
     }
 
@@ -324,7 +338,8 @@ public class MailboxMessageToElasticSearchJsonTest {
     public void spamEmailShouldBeWellConvertedToJsonWithApacheTika() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new TikaTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES,
+            MessageSearchIndex.IndexMessageId.Required);
         MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID, date,
             SIZE,
             BODY_START_OCTET,

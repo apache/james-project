@@ -22,19 +22,35 @@ import java.util.Comparator;
 
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
+import com.google.common.base.Objects;
+
 /**
  * {@link Comparator} which wraps an other {@link Comparator} and reverse it
- *
  */
 public class ReverseComparator implements Comparator<MailboxMessage>{
 
     private final Comparator<MailboxMessage> comparator;
+
     public ReverseComparator(Comparator<MailboxMessage> comparator) {
         this.comparator = comparator;
     }
+
     @Override
     public int compare(MailboxMessage o1, MailboxMessage o2) {
         return comparator.compare(o2, o1);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof ReverseComparator) {
+            ReverseComparator that = (ReverseComparator) o;
+            return Objects.equal(this.comparator, that.comparator);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(comparator);
+    }
 }

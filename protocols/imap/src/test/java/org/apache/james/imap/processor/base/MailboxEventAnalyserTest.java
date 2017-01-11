@@ -428,7 +428,7 @@ public class MailboxEventAnalyserTest {
         }
 
         @Override
-        public Map<MailboxId, Collection<MessageUid>> search(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException {
+        public List<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException {
             return null;
         }
 

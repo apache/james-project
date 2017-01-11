@@ -70,7 +70,11 @@ public class NodeMappingFactory {
 
                     .startObject(ElasticSearchIndexer.MESSAGE_TYPE)
                         .startObject(PROPERTIES)
-                            .startObject(JsonMessageConstants.ID)
+                            .startObject(JsonMessageConstants.MESSAGE_ID)
+                                .field(TYPE, STRING)
+                                .field(INDEX, NOT_ANALYZED)
+                            .endObject()
+                            .startObject(JsonMessageConstants.UID)
                                 .field(TYPE, LONG)
                             .endObject()
                             .startObject(JsonMessageConstants.MODSEQ)

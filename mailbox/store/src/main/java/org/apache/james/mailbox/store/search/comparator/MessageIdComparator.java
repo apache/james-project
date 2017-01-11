@@ -16,20 +16,20 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.mailbox.store.search.comparator;
 
 import java.util.Comparator;
 
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-/**
- * {@link Comparator} which compares {@link MailboxMessage}'s with their {@link MailboxMessage#getFullContentOctets()} value
- */
-public class SizeComparator implements Comparator<MailboxMessage>{
-    public final static Comparator<MailboxMessage> SIZE = new SizeComparator();
+public class MessageIdComparator implements Comparator<MailboxMessage> {
+    public static final MessageIdComparator MESSAGE_ID_COMPARATOR = new MessageIdComparator();
 
     @Override
-    public int compare(MailboxMessage o1, MailboxMessage o2) {
-        return (int) (o1.getFullContentOctets() - o2.getFullContentOctets());
+    public int compare(MailboxMessage mailboxMessage1, MailboxMessage mailboxMessage2) {
+        return mailboxMessage1.getMessageId()
+            .serialize()
+            .compareToIgnoreCase(mailboxMessage2.getMessageId().serialize());
     }
 }

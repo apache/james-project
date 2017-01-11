@@ -24,25 +24,13 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 /**
  * {@link Comparator} which compares {@link MailboxMessage}'s with their {@link MailboxMessage#getInternalDate()} value
- *
  */
 public class InternalDateComparator  implements Comparator<MailboxMessage>{
+    public final static Comparator<MailboxMessage> INTERNALDATE = new InternalDateComparator();
 
-
-    private final static Comparator<MailboxMessage> INTERNALDATE = new InternalDateComparator();
-    private final static Comparator<MailboxMessage> REVERSE_INTERNALDATE = new ReverseComparator(INTERNALDATE);
-
-    
     @Override
     public int compare(MailboxMessage o1, MailboxMessage o2) {
         return (o1.getInternalDate().compareTo(o2.getInternalDate()));
     }
 
-    public static Comparator<MailboxMessage> internalDate(boolean reverse){
-        if (reverse) {
-            return REVERSE_INTERNALDATE;
-        } else {
-            return INTERNALDATE;
-        }
-    }
 }
