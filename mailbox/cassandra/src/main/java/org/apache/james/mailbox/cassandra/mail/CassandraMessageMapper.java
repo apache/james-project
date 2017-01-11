@@ -320,9 +320,14 @@ public class CassandraMessageMapper implements MessageMapper {
                 .modSeq(message.getModSeq())
                 .flags(message.createFlags())
                 .build();
-        CompletableFuture<Boolean> messageIdFuture = messageIdDAO.updateMetadata(composedMessageIdWithMetaData, oldModSeq);
-        CompletableFuture<Boolean> imapUidFuture = imapUidDAO.updateMetadata(composedMessageIdWithMetaData, oldModSeq);
-        return messageIdFuture.join() && imapUidFuture.join();
+        return imapUidDAO.updateMetadata(composedMessageIdWithMetaData, oldModSeq)
+            .thenCompose(success -> {
+                if (success) {
+                    return messageIdDAO.updateMetadata(composedMessageIdWithMetaData).thenApply(any -> success);
+                }
+                return CompletableFuture.completedFuture(success);
+            })
+            .join();
     }
 
     private Optional<UpdatedFlags> handleRetries(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, MailboxMessage message) {

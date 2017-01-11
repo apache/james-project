@@ -24,6 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -58,6 +62,35 @@ import com.google.common.collect.ImmutableList;
 
 @Contract(MapperProvider.class)
 public class MessageIdMapperTest<T extends MapperProvider> {
+
+    private class ConcurentSetFlagTestRunnable implements Runnable {
+        private final int threadNumber;
+        private final int updateCount;
+        private final MailboxMessage mailboxMessage;
+        private final CountDownLatch countDownLatch;
+
+        public ConcurentSetFlagTestRunnable(int threadNumber, int updateCount, MailboxMessage mailboxMessage, CountDownLatch countDownLatch) {
+            this.threadNumber = threadNumber;
+            this.updateCount = updateCount;
+            this.mailboxMessage = mailboxMessage;
+            this.countDownLatch = countDownLatch;
+        }
+
+        @Override
+        public void run() {
+            countDownLatch.countDown();
+            for (int i = 0; i < updateCount; i++) {
+                try {
+                    sut.setFlags(mailboxMessage.getMessageId(),
+                        ImmutableList.of(mailboxMessage.getMailboxId()),
+                        new Flags("custom-" + threadNumber + "-" + i),
+                        FlagsUpdateMode.ADD);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -592,6 +625,28 @@ public class MessageIdMapperTest<T extends MapperProvider> {
         List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);
         assertThat(messages.get(0).isAnswered()).isTrue();
+    }
+
+    @ContractTest
+    public void setFlagsShouldWorkWithConcurrency() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message1);
+
+        int threadCount = 2;
+        int updateCount = 10;
+        CountDownLatch countDownLatch = new CountDownLatch(threadCount);
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        for (int i = 0; i < threadCount; i++) {
+            executorService.submit(new ConcurentSetFlagTestRunnable(i, updateCount, message1, countDownLatch));
+        }
+        executorService.shutdown();
+        assertThat(executorService.awaitTermination(1, TimeUnit.MINUTES))
+            .isTrue();
+
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
+        assertThat(messages).hasSize(1);
+        assertThat(messages.get(0).createFlags().getUserFlags()).hasSize(threadCount * updateCount);
     }
 
     @ContractTest

@@ -131,8 +131,7 @@ public class CassandraMessageIdDAO {
                 .and(set(USER, bindMarker(USER)))
                 .and(set(USER_FLAGS, bindMarker(USER_FLAGS)))
                 .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-                .and(eq(IMAP_UID, bindMarker(IMAP_UID)))
-                .onlyIf(eq(MOD_SEQ, bindMarker(MOD_SEQ_CONDITION))));
+                .and(eq(IMAP_UID, bindMarker(IMAP_UID))));
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -187,10 +186,10 @@ public class CassandraMessageIdDAO {
                 .setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags())));
     }
 
-    public CompletableFuture<Boolean> updateMetadata(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, long oldModSeq) {
+    public CompletableFuture<Void> updateMetadata(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
         ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
         Flags flags = composedMessageIdWithMetaData.getFlags();
-        return cassandraAsyncExecutor.executeReturnApplied(update.bind()
+        return cassandraAsyncExecutor.executeVoid(update.bind()
                 .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq())
                 .setBool(ANSWERED, flags.contains(Flag.ANSWERED))
                 .setBool(DELETED, flags.contains(Flag.DELETED))
@@ -201,8 +200,7 @@ public class CassandraMessageIdDAO {
                 .setBool(USER, flags.contains(Flag.USER))
                 .setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()))
                 .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
-                .setLong(IMAP_UID, composedMessageId.getUid().asLong())
-                .setLong(MOD_SEQ_CONDITION, oldModSeq));
+                .setLong(IMAP_UID, composedMessageId.getUid().asLong()));
     }
 
     public CompletableFuture<Optional<ComposedMessageIdWithMetaData>> retrieve(CassandraId mailboxId, MessageUid uid) {
