@@ -143,7 +143,7 @@ public class ForwardTest {
 
     @Test
     public void getReplyToShouldReturnNull() throws Exception {
-        assertThat(forward.getReplyTo()).isNull();
+        assertThat(forward.getReplyTo()).isAbsent();
     }
 
     @Test

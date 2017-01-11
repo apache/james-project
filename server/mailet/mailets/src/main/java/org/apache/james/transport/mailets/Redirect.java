@@ -407,14 +407,13 @@ public class Redirect extends GenericMailet implements RedirectNotify {
     }
 
     @Override
-    public MailAddress getReplyTo() throws MessagingException {
+    public Optional<MailAddress> getReplyTo() throws MessagingException {
         Optional<String> replyTo = getInitParameters().getReplyTo();
         List<MailAddress> extractAddresses = AddressExtractor.withContext(getMailetContext())
                 .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
                 .extract(replyTo);
         return FluentIterable.from(extractAddresses)
-                .first()
-                .orNull();
+                .first();
     }
 
     @Override

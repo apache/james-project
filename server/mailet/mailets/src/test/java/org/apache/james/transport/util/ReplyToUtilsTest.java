@@ -30,8 +30,8 @@ import com.google.common.base.Optional;
 public class ReplyToUtilsTest {
 
     @Test
-    public void getReplyToShouldReturnNullWhenReplyToIsNull() throws Exception {
-        ReplyToUtils testee = ReplyToUtils.from(null);
+    public void getReplyToShouldReturnAbsentWhenReplyToIsNull() throws Exception {
+        ReplyToUtils testee = ReplyToUtils.from((MailAddress) null);
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 

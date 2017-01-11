@@ -28,19 +28,23 @@ import com.google.common.base.Optional;
 
 public class ReplyToUtils {
 
-    public static ReplyToUtils from(MailAddress replyTo) {
+    public static ReplyToUtils from(Optional<MailAddress> replyTo) {
         return new ReplyToUtils(replyTo);
     }
 
-    private final MailAddress replyTo;
+    public static ReplyToUtils from(MailAddress replyTo) {
+        return new ReplyToUtils(Optional.fromNullable(replyTo));
+    }
 
-    private ReplyToUtils(MailAddress replyTo) {
+    private final Optional<MailAddress> replyTo;
+
+    private ReplyToUtils(Optional<MailAddress> replyTo) {
         this.replyTo = replyTo;
     }
 
     public Optional<MailAddress> getReplyTo(Mail originalMail) throws MessagingException {
-        if (replyTo != null) {
-            if (replyTo.equals(SpecialAddress.UNALTERED)) {
+        if (replyTo.isPresent()) {
+            if (replyTo.get().equals(SpecialAddress.UNALTERED)) {
                 return Optional.absent();
             }
             return Optional.fromNullable(originalMail.getSender());

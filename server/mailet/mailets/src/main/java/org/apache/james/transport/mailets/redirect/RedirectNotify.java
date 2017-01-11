@@ -213,7 +213,7 @@ public interface RedirectNotify extends Mailet, MailetConfig {
      *         <code>SpecialAddress.UNALTERED</code> or
      *         <code>SpecialAddress.NULL</code> or <code>null</code> if missing
      */
-    MailAddress getReplyTo() throws MessagingException;
+    Optional<MailAddress> getReplyTo() throws MessagingException;
 
     /**
      * Gets the <code>replyTo</code> property, built dynamically using the

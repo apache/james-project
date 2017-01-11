@@ -44,6 +44,7 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -360,19 +361,16 @@ public class Resend extends GenericMailet implements RedirectNotify {
     }
 
     @Override
-    public MailAddress getReplyTo() throws MessagingException {
+    public Optional<MailAddress> getReplyTo() throws MessagingException {
         Optional<String> replyTo = getInitParameters().getReplyTo();
         if (!replyTo.isPresent()) {
-            return null;
+            return Optional.absent();
         }
 
-        List<MailAddress> extractAddresses = AddressExtractor.withContext(getMailetContext())
+        return FluentIterable.from(AddressExtractor.withContext(getMailetContext())
                 .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
-                .extract(replyTo);
-        if (extractAddresses.isEmpty()) {
-            return null;
-        }
-        return extractAddresses.get(0);
+                .extract(replyTo))
+            .first();
     }
 
     @Override

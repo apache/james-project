@@ -212,8 +212,8 @@ public class NotifySender extends GenericMailet implements RedirectNotify {
     }
 
     @Override
-    public MailAddress getReplyTo() throws MessagingException {
-        return SpecialAddress.NULL;
+    public Optional<MailAddress> getReplyTo() throws MessagingException {
+        return Optional.of(SpecialAddress.NULL);
     }
 
     @Override

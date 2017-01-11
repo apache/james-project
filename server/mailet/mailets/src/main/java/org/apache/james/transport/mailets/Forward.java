@@ -201,8 +201,8 @@ public class Forward extends GenericMailet implements RedirectNotify {
     }
 
     @Override
-    public MailAddress getReplyTo() throws MessagingException {
-        return null;
+    public Optional<MailAddress> getReplyTo() throws MessagingException {
+        return Optional.absent();
     }
 
     @Override
