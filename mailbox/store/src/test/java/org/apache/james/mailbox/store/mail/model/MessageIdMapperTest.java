@@ -24,10 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -46,6 +42,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
+import org.apache.james.mailbox.store.mail.model.concurrency.ConcurrentTestRunner;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -62,35 +59,6 @@ import com.google.common.collect.ImmutableList;
 
 @Contract(MapperProvider.class)
 public class MessageIdMapperTest<T extends MapperProvider> {
-
-    private class ConcurentSetFlagTestRunnable implements Runnable {
-        private final int threadNumber;
-        private final int updateCount;
-        private final MailboxMessage mailboxMessage;
-        private final CountDownLatch countDownLatch;
-
-        public ConcurentSetFlagTestRunnable(int threadNumber, int updateCount, MailboxMessage mailboxMessage, CountDownLatch countDownLatch) {
-            this.threadNumber = threadNumber;
-            this.updateCount = updateCount;
-            this.mailboxMessage = mailboxMessage;
-            this.countDownLatch = countDownLatch;
-        }
-
-        @Override
-        public void run() {
-            countDownLatch.countDown();
-            for (int i = 0; i < updateCount; i++) {
-                try {
-                    sut.setFlags(mailboxMessage.getMessageId(),
-                        ImmutableList.of(mailboxMessage.getMailboxId()),
-                        new Flags("custom-" + threadNumber + "-" + i),
-                        FlagsUpdateMode.ADD);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -635,14 +603,15 @@ public class MessageIdMapperTest<T extends MapperProvider> {
 
         int threadCount = 2;
         int updateCount = 10;
-        CountDownLatch countDownLatch = new CountDownLatch(threadCount);
-        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-        for (int i = 0; i < threadCount; i++) {
-            executorService.submit(new ConcurentSetFlagTestRunnable(i, updateCount, message1, countDownLatch));
-        }
-        executorService.shutdown();
-        assertThat(executorService.awaitTermination(1, TimeUnit.MINUTES))
-            .isTrue();
+        new ConcurrentTestRunner(threadCount, updateCount) {
+            @Override
+            protected void performOperation(int threadNumber, int step) throws Exception {
+                sut.setFlags(message1.getMessageId(),
+                    ImmutableList.of(message1.getMailboxId()),
+                    new Flags("custom-" + threadNumber + "-" + step),
+                    FlagsUpdateMode.ADD);
+            }
+        }.run();
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);
