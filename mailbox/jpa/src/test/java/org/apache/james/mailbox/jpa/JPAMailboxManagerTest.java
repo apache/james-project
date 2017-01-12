@@ -18,10 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa;
 
-import java.util.HashMap;
-
 import javax.persistence.EntityManagerFactory;
 
+import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
@@ -30,17 +29,10 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
-import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
-import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
-import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
-import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage;
-import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
-import org.apache.james.mailbox.jpa.user.model.JPASubscription;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.openjpa.persistence.OpenJPAPersistence;
 import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
 import org.xenei.junit.contract.Contract;
@@ -54,6 +46,8 @@ import com.google.common.base.Throwables;
 @ContractImpl(OpenJPAMailboxManager.class)
 public class JPAMailboxManagerTest {
 
+    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
+
     /**
      * The entity manager factory.
      */
@@ -65,21 +59,7 @@ public class JPAMailboxManagerTest {
 
         @Override
         public OpenJPAMailboxManager newInstance() {
-            HashMap<String, String> properties = new HashMap<String, String>();
-            properties.put("openjpa.ConnectionDriverName", "org.h2.Driver");
-            properties.put("openjpa.ConnectionURL", "jdbc:h2:mem:imap;DB_CLOSE_DELAY=-1");
-            properties.put("openjpa.Log", "JDBC=WARN, SQL=WARN, Runtime=WARN");
-            properties.put("openjpa.ConnectionFactoryProperties", "PrettyPrint=true, PrettyPrintLineLength=72");
-            properties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)");
-            properties.put("openjpa.MetaDataFactory", "jpa(Types=" +
-                JPAMailbox.class.getName() + ";" +
-                AbstractJPAMailboxMessage.class.getName() + ";" +
-                JPAMailboxMessage.class.getName() + ";" +
-                JPAProperty.class.getName() + ";" +
-                JPAUserFlag.class.getName() + ";" +
-                JPASubscription.class.getName() + ")");
-
-            entityManagerFactory = OpenJPAPersistence.getEntityManagerFactory(properties);
+            entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
             JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
             JPAMailboxSessionMapperFactory mf = new JPAMailboxSessionMapperFactory(entityManagerFactory, new JPAUidProvider(locker, entityManagerFactory), new JPAModSeqProvider(locker, entityManagerFactory));
 

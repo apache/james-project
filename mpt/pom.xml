@@ -169,6 +169,12 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-backends-jpa</artifactId>
+                <type>test-jar</type>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-mailbox-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -208,6 +214,13 @@
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-mailbox-jpa</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-jpa</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>

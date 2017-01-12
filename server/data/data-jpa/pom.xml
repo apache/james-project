@@ -35,6 +35,16 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.james</groupId>
+            <artifactId>apache-james-backends-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>apache-james-backends-jpa</artifactId>
+            <scope>test</scope>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
             <artifactId>james-server-lifecycle-api</artifactId>
         </dependency>
         <dependency>
@@ -69,14 +79,6 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-jpa_2.0_spec</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-annotation_1.1_spec</artifactId>
-        </dependency>
 
         <!-- Test dependencies -->
         <dependency>
@@ -106,11 +108,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.derby</groupId>
-            <artifactId>derby</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.james</groupId>
             <artifactId>james-server-dnsservice-api</artifactId>
             <scope>test</scope>
@@ -131,11 +128,7 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa</artifactId>
-            <scope>test</scope>
+            <version>${h2.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

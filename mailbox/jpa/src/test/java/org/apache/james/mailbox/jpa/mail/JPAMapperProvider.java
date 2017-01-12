@@ -19,24 +19,17 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
-import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
-import org.apache.james.mailbox.jpa.mail.model.JPAMailboxAnnotation;
-import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
-import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
-import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage;
-import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
-import org.apache.james.mailbox.jpa.user.model.JPASubscription;
+import org.apache.james.mailbox.jpa.JPAMailboxFixture;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -49,20 +42,21 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
-import org.apache.openjpa.persistence.OpenJPAPersistence;
 
 import com.google.common.collect.ImmutableList;
 
 public class JPAMapperProvider implements MapperProvider {
 
+    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
+
     @Override
     public MailboxMapper createMailboxMapper() throws MailboxException {
-        return new TransactionalMailboxMapper(new JPAMailboxMapper(createEntityManagerFactory()));
+        return new TransactionalMailboxMapper(new JPAMailboxMapper(JPA_TEST_CLUSTER.getEntityManagerFactory()));
     }
 
     @Override
     public MessageMapper createMessageMapper() throws MailboxException {
-        EntityManagerFactory entityManagerFactory = createEntityManagerFactory();
+        EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
 
         JPAMessageMapper messageMapper = new JPAMessageMapper(new MockMailboxSession("benwa"), 
@@ -70,7 +64,7 @@ public class JPAMapperProvider implements MapperProvider {
             new JPAModSeqProvider(locker, entityManagerFactory), 
             entityManagerFactory);
 
-        return new TransactionalMessageMapper((JPAMessageMapper)messageMapper);
+        return new TransactionalMessageMapper(messageMapper);
     }
 
     @Override
@@ -80,7 +74,7 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public AnnotationMapper createAnnotationMapper() throws MailboxException {
-        return new TransactionalAnnotationMapper(new JPAAnnotationMapper(createEntityManagerFactory()));
+        return new TransactionalAnnotationMapper(new JPAAnnotationMapper(JPA_TEST_CLUSTER.getEntityManagerFactory()));
     }
 
     @Override
@@ -95,15 +89,7 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public void clearMapper() throws MailboxException {
-        EntityManager entityManager = createEntityManagerFactory().createEntityManager();
-        entityManager.getTransaction().begin();
-        entityManager.createNativeQuery("TRUNCATE table JAMES_MAIL_USERFLAG;").executeUpdate();
-        entityManager.createNativeQuery("TRUNCATE table JAMES_MAIL_PROPERTY;").executeUpdate();
-        entityManager.createNativeQuery("TRUNCATE table JAMES_MAILBOX_ANNOTATION;").executeUpdate();
-        entityManager.createNativeQuery("TRUNCATE table JAMES_MAILBOX;").executeUpdate();
-        entityManager.createNativeQuery("TRUNCATE table JAMES_MAIL;").executeUpdate();
-        entityManager.getTransaction().commit();
-        entityManager.close();
+        JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
 
     @Override
@@ -114,25 +100,6 @@ public class JPAMapperProvider implements MapperProvider {
     @Override
     public boolean supportPartialAttachmentFetch() {
         return false;
-    }
-
-    private EntityManagerFactory createEntityManagerFactory() {
-        HashMap<String, String> properties = new HashMap<String, String>();
-        properties.put("openjpa.ConnectionDriverName", "org.h2.Driver");
-        properties.put("openjpa.ConnectionURL", "jdbc:h2:mem:imap;DB_CLOSE_DELAY=-1");
-        properties.put("openjpa.Log", "JDBC=WARN, SQL=WARN, Runtime=WARN");
-        properties.put("openjpa.ConnectionFactoryProperties", "PrettyPrint=true, PrettyPrintLineLength=72");
-        properties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)");
-        properties.put("openjpa.MetaDataFactory", "jpa(Types=" +
-            JPAMailbox.class.getName() + ";" +
-            AbstractJPAMailboxMessage.class.getName() + ";" +
-            JPAMailboxMessage.class.getName() + ";" +
-            JPAProperty.class.getName() + ";" +
-            JPAUserFlag.class.getName() + ";" +
-            JPAMailboxAnnotation.class.getName() + ";" +
-            JPASubscription.class.getName() + ")");
-
-        return OpenJPAPersistence.getEntityManagerFactory(properties);
     }
 
     @Override

@@ -41,12 +41,14 @@
             <artifactId>apache-james-mailbox-store</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.openjpa</groupId>
-            <artifactId>openjpa</artifactId>
+            <groupId>org.apache.james</groupId>
+            <artifactId>apache-james-backends-jpa</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-jpa_2.0_spec</artifactId>
+            <groupId>org.apache.james</groupId>
+            <artifactId>apache-james-backends-jpa</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${javax.mail.groupId}</groupId>

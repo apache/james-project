@@ -254,14 +254,6 @@
                     <artifactId>mockito-core</artifactId>
                     <scope>test</scope>
                 </dependency>
-                <dependency>
-                    <groupId>org.apache.openjpa</groupId>
-                    <artifactId>openjpa</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.geronimo.specs</groupId>
-                    <artifactId>geronimo-jpa_2.0_spec</artifactId>
-                </dependency>
             </dependencies>
         </profile>
         <profile>

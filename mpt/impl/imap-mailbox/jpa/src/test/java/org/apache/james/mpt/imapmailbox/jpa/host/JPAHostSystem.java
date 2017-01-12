@@ -20,11 +20,11 @@
 package org.apache.james.mpt.imapmailbox.jpa.host;
 
 import java.io.File;
-import java.util.HashMap;
 
 import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
@@ -35,18 +35,12 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.jpa.JPAMailboxFixture;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
 import org.apache.james.mailbox.jpa.JPASubscriptionManager;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
-import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
-import org.apache.james.mailbox.jpa.mail.model.JPAMailboxAnnotation;
-import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
-import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
-import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage;
-import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
-import org.apache.james.mailbox.jpa.user.model.JPASubscription;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
@@ -58,10 +52,11 @@ import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
-import org.apache.openjpa.persistence.OpenJPAPersistence;
 import org.slf4j.LoggerFactory;
 
 public class JPAHostSystem extends JamesImapHostSystem {
+
+    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 
     public static final String META_DATA_DIRECTORY = "target/user-meta-data";
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT, Feature.USER_FLAGS_SUPPORT, Feature.ANNOTATION_SUPPORT);
@@ -75,48 +70,9 @@ public class JPAHostSystem extends JamesImapHostSystem {
     private final EntityManagerFactory entityManagerFactory;
 
     public JPAHostSystem() throws Exception {
-
-        HashMap<String, String> properties = new HashMap<String, String>();
-        
-        // Configure OpenJPA for H2 Memory Database
-        properties.put("openjpa.ConnectionDriverName", org.h2.Driver.class.getName());
-        properties.put("openjpa.ConnectionURL", "jdbc:h2:mem:mailboxintegration;DB_CLOSE_DELAY=-1"); // Memory H2 database
-        
-        // Configure OpenJPA for Derby Memory Database
-        // properties.put("openjpa.ConnectionDriverName", org.apache.derby.jdbc.EmbeddedDriver.class.getName());
-        // properties.put("openjpa.ConnectionURL", "jdbc:derby:memory:mailboxintegration;create=true"); // Memory Derby database
-        
-        // Configure OpenJPA for Derby Embedded Database
-        //properties.put("openjpa.ConnectionURL", "jdbc:derby:test;create=true");
-        //properties.put("openjpa.ConnectionFactoryProperties", "PrettyPrint=true, PrettyPrintLineLength=72");
-
-        // Configure OpenJPA Tables creation
-        properties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)"); // Create Foreign Keys
-        properties.put("openjpa.jdbc.MappingDefaults", "ForeignKeyDeleteAction=restrict, JoinForeignKeyDeleteAction=restrict");
-        properties.put("openjpa.jdbc.SchemaFactory", "native(ForeignKeys=true)");
-        properties.put("openjpa.jdbc.MappingDefaults", "ForeignKeyDeleteAction=cascade, JoinForeignKeyDeleteAction=cascade");
-
-
-        // Configure OpenJPA Cache
-        properties.put("openjpa.jdbc.QuerySQLCache", "false");
-        
-        // Configure OpenJPA Log
-        properties.put("openjpa.Log", "JDBC=WARN, SQL=WARN, Runtime=WARN");
-        //properties.put("openjpa.Log", "SQL=TRACE");          // Use SQL=TRACE to trace SQL.
-        //properties.put("openjpa.Log", "DefaultLevel=TRACE"); // Use the DefaultLevel=TRACE to trace all.
-
-        // Configure OpenJPA Metadata
-        properties.put("openjpa.MetaDataFactory", "jpa(Types=" +
-                JPAMailbox.class.getName() + ";" +
-                AbstractJPAMailboxMessage.class.getName() + ";" +
-                JPAMailboxMessage.class.getName() + ";" +
-                JPAProperty.class.getName() + ";" +
-                JPAUserFlag.class.getName() + ";" + 
-                JPASubscription.class.getName() + ";" +
-                JPAMailboxAnnotation.class.getName() + ")");
         
         userManager = new FakeAuthenticator();
-        entityManagerFactory = OpenJPAPersistence.getEntityManagerFactory(properties);
+        entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
         JPAUidProvider uidProvider = new JPAUidProvider(locker, entityManagerFactory);
         JPAModSeqProvider modSeqProvider = new JPAModSeqProvider(locker, entityManagerFactory);

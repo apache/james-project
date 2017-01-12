@@ -18,20 +18,19 @@
  ****************************************************************/
 package org.apache.james.rrt.jpa;
 
-import java.util.HashMap;
-import java.util.UUID;
-
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
-import org.apache.openjpa.persistence.OpenJPAEntityManagerFactory;
-import org.apache.openjpa.persistence.OpenJPAPersistence;
 import org.slf4j.LoggerFactory;
 
+import cucumber.api.java.After;
 import cucumber.api.java.Before;
 
 public class JPAStepdefs {
+
+    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPARecipientRewrite.class);
 
     private final RewriteTablesStepdefs mainStepdefs;
 
@@ -44,27 +43,15 @@ public class JPAStepdefs {
         mainStepdefs.rewriteTable = getRecipientRewriteTable(); 
     }
 
-    private OpenJPAEntityManagerFactory managerFactory() throws Exception {
-
-        // Use a memory database.
-        /*
-      The properties for the OpenJPA Entity Manager.
-     */
-        HashMap<String, String> properties = new HashMap<String, String>();
-        properties.put("openjpa.ConnectionDriverName", "org.h2.Driver");
-        properties.put("openjpa.ConnectionURL", "jdbc:h2:target/users/" + UUID.randomUUID());
-        properties.put("openjpa.Log", "JDBC=WARN, SQL=WARN, Runtime=WARN");
-        properties.put("openjpa.ConnectionFactoryProperties", "PrettyPrint=true, PrettyPrintLineLength=72");
-        properties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)");
-        properties.put("openjpa.MetaDataFactory", "jpa(Types=" + JPARecipientRewrite.class.getName() + ")");
-
-        return OpenJPAPersistence.getEntityManagerFactory(properties);
+    @After
+    public void tearDown() {
+        JPA_TEST_CLUSTER.clear(JPARecipientRewrite.JAMES_RECIPIENT_REWRITE);
     }
 
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         JPARecipientRewriteTable localVirtualUserTable = new JPARecipientRewriteTable();
         localVirtualUserTable.setLog(LoggerFactory.getLogger("MockLog"));
-        localVirtualUserTable.setEntityManagerFactory(managerFactory());
+        localVirtualUserTable.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
         DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
         localVirtualUserTable.configure(defaultConfiguration);
         return localVirtualUserTable;
