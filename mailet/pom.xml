@@ -56,6 +56,7 @@
         <mime4j.version>0.8.0</mime4j.version>
         <qdox.version>1.12.1</qdox.version>
         <assertj-1.version>1.7.1</assertj-1.version>
+        <assertj-3.version>3.3.0</assertj-3.version>
         <assertj-1-guava.version>1.3.1</assertj-1-guava.version>
         <slf4j.version>1.7.7</slf4j.version>
     </properties>
@@ -68,6 +69,7 @@
         <module>crypto</module>
         <module>standard</module>
         <module>ai</module>
+        <module>icalendar</module>
     </modules>
 
     <dependencyManagement>
@@ -81,6 +83,12 @@
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-mailet-base</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-mailet-base</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
