@@ -48,12 +48,12 @@
    },
    {
      "name" : "Make sure default (JPA + Lucene) backends work well",
-     "completion" : 90,
+     "completion" : 100,
      "complexity" : 10
    },
    {
      "name" : "Implement a Guice JPA + Lucene module",
-     "completion" : 50,
+     "completion" : 80,
      "complexity" : 5
    },
    {
@@ -74,9 +74,9 @@
    {
      "name": "Mailet refactor",
      "children": [        
-        {"name": "AbstractNotify", "completion": 80, "complexity" : 10},
+        {"name": "AbstractNotify", "completion": 100, "complexity" : 10},
         {"name": "LocalDelivery", "completion": 100, "complexity" : 10},
-        {"name": "RemoteDelivery", "completion": 25, "complexity" : 10},
+        {"name": "RemoteDelivery", "completion": 100, "complexity" : 10},
         {"name": "RecipientRewriteTable", "completion": 100, "complexity" : 5},
         {"name": "All other mailets", "completion": 100, "complexity" : 25}
      ],
