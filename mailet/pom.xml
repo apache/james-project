@@ -61,6 +61,8 @@
         <slf4j.version>1.7.7</slf4j.version>
         <jackson-data.version>2.6.3</jackson-data.version>
         <guavate.version>1.0.0</guavate.version>
+        <ical4j.version>1.0.2</ical4j.version>
+        <assertj-3.version>3.3.0</assertj-3.version>
     </properties>
 
 
@@ -146,6 +148,11 @@
                 <groupId>org.apache.maven.reporting</groupId>
                 <artifactId>maven-reporting-api</artifactId>
                 <version>${maven-reporting-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mnode.ical4j</groupId>
+                <artifactId>ical4j</artifactId>
+                <version>${ical4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>commons-collections</groupId>
