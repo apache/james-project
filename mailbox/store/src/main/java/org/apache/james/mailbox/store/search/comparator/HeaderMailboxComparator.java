@@ -23,8 +23,6 @@ import java.util.Comparator;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.SearchUtil;
 
-import com.google.common.base.Objects;
-
 public class HeaderMailboxComparator extends AbstractHeaderComparator{
     public final static Comparator<MailboxMessage> FROM_COMPARATOR = new HeaderMailboxComparator(FROM);
     public final static Comparator<MailboxMessage> TO_COMPARATOR = new HeaderMailboxComparator(TO);

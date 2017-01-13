@@ -29,7 +29,7 @@ import org.apache.james.mailbox.jpa.user.model.JPASubscription;
 
 public interface JPAMailboxFixture {
 
-    Class[] MAILBOX_PERSISTANCE_CLASSES = new Class[] {JPAMailbox.class,
+    Class<?>[] MAILBOX_PERSISTANCE_CLASSES = new Class[] {JPAMailbox.class,
         AbstractJPAMailboxMessage.class,
         JPAMailboxMessage.class,
         JPAProperty.class,
