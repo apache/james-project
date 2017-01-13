@@ -596,7 +596,7 @@ public class MessageIdMapperTest<T extends MapperProvider> {
     }
 
     @ContractTest
-    public void setFlagsShouldWorkWithConcurrency() throws Exception {
+    public void setFlagsShouldWorkWithConcurrencyWithAdd() throws Exception {
         message1.setUid(mapperProvider.generateMessageUid());
         message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
         sut.save(message1);
@@ -616,6 +616,36 @@ public class MessageIdMapperTest<T extends MapperProvider> {
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);
         assertThat(messages.get(0).createFlags().getUserFlags()).hasSize(threadCount * updateCount);
+    }
+
+    @ContractTest
+    public void setFlagsShouldWorkWithConcurrencyWithRemove() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message1);
+
+        final int threadCount = 4;
+        final int updateCount = 20;
+        new ConcurrentTestRunner(threadCount, updateCount) {
+            @Override
+            protected void performOperation(int threadNumber, int step) throws Exception {
+                if (step  < updateCount / 2) {
+                    sut.setFlags(message1.getMessageId(),
+                        ImmutableList.of(message1.getMailboxId()),
+                        new Flags("custom-" + threadNumber + "-" + step),
+                        FlagsUpdateMode.ADD);
+                } else {
+                    sut.setFlags(message1.getMessageId(),
+                        ImmutableList.of(message1.getMailboxId()),
+                        new Flags("custom-" + threadNumber + "-" + (updateCount - step - 1)),
+                        FlagsUpdateMode.REMOVE);
+                }
+            }
+        }.run();
+
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
+        assertThat(messages).hasSize(1);
+        assertThat(messages.get(0).createFlags().getUserFlags()).isEmpty();
     }
 
     @ContractTest

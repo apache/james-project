@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.mail.Flags;
@@ -58,6 +59,7 @@ import org.xenei.junit.contract.ContractTest;
 import org.xenei.junit.contract.IProducer;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 @Contract(MapperProvider.class)
@@ -714,6 +716,34 @@ public class MessageMapperTest<T extends MapperProvider> {
             FetchType.Metadata, 1);
         assertThat(messages.hasNext()).isTrue();
         assertThat(messages.next().createFlags().getUserFlags()).hasSize(threadCount * updateCount);
+    }
+
+    @ContractTest
+    public void setFlagsShouldWorkWithConcurrencyWithRemove() throws Exception {
+        saveMessages();
+
+        final int threadCount = 4;
+        final int updateCount = 20;
+        new ConcurrentTestRunner(threadCount, updateCount) {
+            @Override
+            protected void performOperation(int threadNumber, int step) throws Exception {
+                if (step  < updateCount / 2) {
+                    messageMapper.updateFlags(benwaInboxMailbox,
+                        new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + step), FlagsUpdateMode.ADD),
+                        MessageRange.one(message1.getUid()));
+                } else {
+                    messageMapper.updateFlags(benwaInboxMailbox,
+                        new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + (updateCount - step - 1)),
+                            FlagsUpdateMode.REMOVE),
+                        MessageRange.one(message1.getUid()));
+                }
+            }
+        }.run();
+
+        Iterator<MailboxMessage> messages = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()),
+            FetchType.Metadata, 1);
+        assertThat(messages.hasNext()).isTrue();
+        assertThat(messages.next().createFlags().getUserFlags()).isEmpty();
     }
 
     @ContractTest
