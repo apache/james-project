@@ -19,16 +19,11 @@
 
 package org.apache.james.transport.mailets;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeBodyPart;
-
-import org.apache.commons.io.IOUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
@@ -70,6 +65,7 @@ public class AmqpForwardAttribute extends GenericMailet {
     private ConnectionFactory connectionFactory;
     @VisibleForTesting String routingKey;
 
+    @Override
     public void init() throws MailetException {
         String uri = getInitParameter(URI_PARAMETER_NAME);
         if (Strings.isNullOrEmpty(uri)) {
@@ -100,6 +96,7 @@ public class AmqpForwardAttribute extends GenericMailet {
         this.connectionFactory = connectionFactory;
     }
 
+    @Override
     public void service(Mail mail) throws MailetException {
         if (mail.getAttribute(attribute) == null) {
             return;
@@ -144,22 +141,15 @@ public class AmqpForwardAttribute extends GenericMailet {
     }
 
     private void sendContentOnChannel(Channel channel, Map<String, byte[]> content) throws IOException {
-        for (Map.Entry<String, byte[]> entry: content.entrySet()) {
-            byte[] rawMime = entry.getValue();
-            byte[] attachmentContent = extractContent(rawMime);
-            channel.basicPublish(exchange, routingKey, new AMQP.BasicProperties(), attachmentContent);
+        for (byte[] body: content.values()) {
+            channel.basicPublish(exchange, 
+                    routingKey, 
+                    new AMQP.BasicProperties(), 
+                    body);
         }
     }
 
-    private byte[] extractContent(byte[] rawMime) throws IOException {
-        try {
-            MimeBodyPart mimeBodyPart = new MimeBodyPart(new ByteArrayInputStream(rawMime));
-            return IOUtils.toByteArray(mimeBodyPart.getInputStream());
-        } catch (MessagingException e) {
-            throw new IOException(e);
-        }
-    }
-
+    @Override
     public String getMailetInfo() {
         return "AmqpForwardAttribute";
     }
