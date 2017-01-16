@@ -168,12 +168,45 @@
                     <version>0.5.0</version>
                 </dependency>
                 <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                    <version>${jackson-data.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.datatype</groupId>
+                    <artifactId>jackson-datatype-jdk8</artifactId>
+                    <version>${jackson-data.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.github.steveash.guavate</groupId>
+                    <artifactId>guavate</artifactId>
+                    <version>${guavate.version}</version>
+                </dependency>
+                <dependency>
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>junit</groupId>
                     <artifactId>junit</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>net.javacrumbs.json-unit</groupId>
+                    <artifactId>json-unit</artifactId>
+                    <version>1.5.5</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>net.javacrumbs.json-unit</groupId>
+                    <artifactId>json-unit-fluent</artifactId>
+                    <version>1.5.5</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>nl.jqno.equalsverifier</groupId>
+                    <artifactId>equalsverifier</artifactId>
+                    <version>1.7.5</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
