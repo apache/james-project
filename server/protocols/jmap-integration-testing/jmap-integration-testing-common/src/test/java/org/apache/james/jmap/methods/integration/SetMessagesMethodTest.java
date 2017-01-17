@@ -88,6 +88,8 @@ public abstract class SetMessagesMethodTest {
     private static final String SECOND_NAME = "[1][0]";
     private static final String SECOND_ARGUMENTS = "[1][1]";
     private static final String USERS_DOMAIN = "domain.tld";
+    private static final String USERNAME = "username@" + USERS_DOMAIN;
+    public static final MailboxPath USER_MAILBOX = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
     private static final String NOT_UPDATED = ARGUMENTS + ".notUpdated";
 
     private ConditionFactory calmlyAwait;
@@ -99,7 +101,6 @@ public abstract class SetMessagesMethodTest {
     protected abstract void await();
 
     private AccessToken accessToken;
-    private String username;
     private JmapJamesServer jmapServer;
 
     @Before
@@ -115,14 +116,13 @@ public abstract class SetMessagesMethodTest {
                 .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
 
-        username = "username@" + USERS_DOMAIN;
         String password = "password";
         jmapServer.serverProbe().addDomain(USERS_DOMAIN);
-        jmapServer.serverProbe().addUser(username, password);
-        jmapServer.serverProbe().createMailbox("#private", username, "inbox");
-        accessToken = JmapAuthentication.authenticateJamesUser(username, password);
+        jmapServer.serverProbe().addUser(USERNAME, password);
+        jmapServer.serverProbe().createMailbox("#private", USERNAME, "inbox");
+        accessToken = JmapAuthentication.authenticateJamesUser(USERNAME, password);
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "outbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "outbox");
         await();
 
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
@@ -207,7 +207,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesShouldReturnNotDestroyedWhenNoMatchingMessage() throws Exception {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         String messageId = randomMessageId().serialize();
         given()
@@ -230,9 +230,9 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldReturnDestroyedWhenMatchingMessage() throws Exception {
         // Given
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
-        ComposedMessageId message = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
@@ -253,9 +253,9 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldDeleteMessageWhenMatchingMessage() throws Exception {
         // Given
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
-        ComposedMessageId message = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
@@ -284,15 +284,15 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesShouldReturnDestroyedNotDestroyWhenMixed() throws Exception {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
-        ComposedMessageId message1 = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
-        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
-        ComposedMessageId message3 = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message3 = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
@@ -321,15 +321,15 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldDeleteMatchingMessagesWhenMixed() throws Exception {
         // Given
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
-        ComposedMessageId message1 = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
-        ComposedMessageId message2 = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
-        ComposedMessageId message3 = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message3 = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
@@ -361,9 +361,9 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldReturnUpdatedIdAndNoErrorWhenIsUnreadPassedToFalse() throws MailboxException {
         // Given
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
-        ComposedMessageId message = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
@@ -395,9 +395,9 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldMarkAsReadWhenIsUnreadPassedToFalse() throws MailboxException {
         // Given
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
-        ComposedMessageId message = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
@@ -424,9 +424,9 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldReturnUpdatedIdAndNoErrorWhenIsUnreadPassed() throws MailboxException {
         // Given
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
-        ComposedMessageId message = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
         await();
 
@@ -446,9 +446,9 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldMarkAsUnreadWhenIsUnreadPassed() throws MailboxException {
         // Given
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
-        ComposedMessageId message = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
         await();
 
@@ -475,9 +475,9 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldReturnUpdatedIdAndNoErrorWhenIsFlaggedPassed() throws MailboxException {
         // Given
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
-        ComposedMessageId message = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
@@ -497,9 +497,9 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldMarkAsFlaggedWhenIsFlaggedPassed() throws MailboxException {
         // Given
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
-        ComposedMessageId message = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
@@ -524,8 +524,8 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesShouldRejectUpdateWhenPropertyHasWrongType() throws MailboxException {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
+        jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
         await();
@@ -552,13 +552,13 @@ public abstract class SetMessagesMethodTest {
     @Test
     @Ignore("Jackson json deserializer stops after first error found")
     public void setMessagesShouldRejectUpdateWhenPropertiesHaveWrongTypes() throws MailboxException {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
+        jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
         await();
 
-        String messageId = username + "|mailbox|1";
+        String messageId = USERNAME + "|mailbox|1";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -580,9 +580,9 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldMarkMessageAsAnsweredWhenIsAnsweredPassed() throws MailboxException {
         // Given
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
-        ComposedMessageId message = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
@@ -602,9 +602,9 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldMarkAsAnsweredWhenIsAnsweredPassed() throws MailboxException {
         // Given
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
-        ComposedMessageId message = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
@@ -629,7 +629,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessageShouldReturnNotFoundWhenUpdateUnknownMessage() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         String nonExistingMessageId = randomMessageId().serialize();
 
@@ -651,7 +651,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessageShouldReturnCreatedMessageWhenSendingMessage() {
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -702,7 +702,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessageShouldReturnCreatedMessageWithEmptySubjectWhenSubjectIsNull() {
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -736,7 +736,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessageShouldReturnCreatedMessageWithEmptySubjectWhenSubjectIsEmpty() {
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -770,7 +770,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessageShouldReturnCreatedMessageWithNonASCIICharactersInSubjectWhenPresent() {
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -804,7 +804,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessageShouldSupportArbitraryMessageId() {
         String messageCreationId = "1717fcd1-603e-44a5-b2a6-1234dbcd5723";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
             "  [" +
             "    \"setMessages\","+
@@ -838,7 +838,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldCreateMessageInOutboxWhenSendingMessage() throws MailboxException {
         // Given
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String messageSubject = "Thank you for joining example.com!";
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
@@ -885,10 +885,10 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldMoveMessageInSentWhenMessageIsSent() throws MailboxException {
         // Given
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
         String sentMailboxId = getMailboxId(accessToken, Role.SENT);
 
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String messageCreationId = "creationId1337";
         String messageSubject = "Thank you for joining example.com!";
         String requestBody = "[" +
@@ -938,7 +938,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldRejectWhenSendingMessageHasNoValidAddress() {
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -1011,7 +1011,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldSucceedWhenSendingMessageWithOnlyFromAddress() {
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -1048,7 +1048,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldSucceedWithHtmlBody() {
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -1084,11 +1084,11 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesShouldMoveToSentWhenSendingMessageWithOnlyFromAddress() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
         String sentMailboxId = getMailboxId(accessToken, Role.SENT);
 
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -1120,7 +1120,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldNotRejectWhenSendingMessageHasMissingSubject() {
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -1189,7 +1189,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldDeliverMessageToRecipient() throws Exception {
         // Sender
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
         // Recipient
         String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
         String password = "password";
@@ -1199,7 +1199,7 @@ public abstract class SetMessagesMethodTest {
         AccessToken recipientToken = JmapAuthentication.authenticateJamesUser(recipientAddress, password);
 
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -1232,7 +1232,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldStripBccFromDeliveredEmail() throws Exception {
         // Sender
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
         // Recipient
         String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
         String bccRecipient = "bob@" + USERS_DOMAIN;
@@ -1244,7 +1244,7 @@ public abstract class SetMessagesMethodTest {
         AccessToken recipientToken = JmapAuthentication.authenticateJamesUser(recipientAddress, password);
 
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -1289,7 +1289,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldKeepBccInSentMailbox() throws Exception {
         // Sender
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
         String sentMailboxId = getMailboxId(accessToken, Role.SENT);
 
         // Recipient
@@ -1300,7 +1300,7 @@ public abstract class SetMessagesMethodTest {
         await();
 
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -1345,7 +1345,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldSendMessageToBcc() throws Exception {
         // Sender
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         // Recipient
         String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
@@ -1360,7 +1360,7 @@ public abstract class SetMessagesMethodTest {
         AccessToken bccToken = JmapAuthentication.authenticateJamesUser(bccAddress, password);
 
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -1424,7 +1424,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldSendAReadableHtmlMessage() throws Exception {
         // Sender
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
         // Recipient
         String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
         String password = "password";
@@ -1434,7 +1434,7 @@ public abstract class SetMessagesMethodTest {
         AccessToken recipientToken = JmapAuthentication.authenticateJamesUser(recipientAddress, password);
 
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -1466,7 +1466,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesWhenSavingToDraftsShouldNotSendMessage() throws Exception {
-        String sender = username;
+        String sender = USERNAME;
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, sender, "sent");
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, sender, "drafts");
         String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
@@ -1479,7 +1479,7 @@ public abstract class SetMessagesMethodTest {
         String senderDraftsMailboxId = getMailboxId(accessToken, Role.DRAFTS);
 
         String messageCreationId = "creationId";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -1514,7 +1514,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesWhenSavingToRegularMailboxShouldNotSendMessage() throws Exception {
-        String sender = username;
+        String sender = USERNAME;
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, sender, "sent");
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, sender, "drafts");
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, sender, "regular");
@@ -1525,7 +1525,7 @@ public abstract class SetMessagesMethodTest {
         await();
 
         String messageCreationId = "creationId";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -1579,7 +1579,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldSendAReadableTextPlusHtmlMessage() throws Exception {
         // Sender
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
         // Recipient
         String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
         String password = "password";
@@ -1589,7 +1589,7 @@ public abstract class SetMessagesMethodTest {
         AccessToken recipientToken = JmapAuthentication.authenticateJamesUser(recipientAddress, password);
 
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -1639,14 +1639,14 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void movingAMessageIsNotSupported() throws Exception {
+    public void movingShouldBeSupported() throws Exception {
         String newMailboxName = "heartFolder";
-        jmapServer.serverProbe().createMailbox("#private", username, newMailboxName);
-        Mailbox heartFolder = jmapServer.serverProbe().getMailbox("#private", username, newMailboxName);
+        jmapServer.serverProbe().createMailbox("#private", USERNAME, newMailboxName);
+        Mailbox heartFolder = jmapServer.serverProbe().getMailbox("#private", USERNAME, newMailboxName);
         String heartFolderId = heartFolder.getMailboxId().serialize();
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
-        ComposedMessageId message = jmapServer.serverProbe().appendMessage(username, new MailboxPath("#private", username, "inbox"),
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, new MailboxPath("#private", USERNAME, "inbox"),
                 new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         String messageToMoveId = message.getMessageId().serialize();
@@ -1680,10 +1680,10 @@ public abstract class SetMessagesMethodTest {
     
     @Test
     public void setMessagesShouldReturnAttachmentsNotFoundWhenBlobIdDoesntExist() throws Exception {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
         await();
         String messageCreationId = "creationId";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
                 "  [" +
@@ -1723,7 +1723,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesShouldReturnAttachmentsWhenMessageHasAttachment() throws Exception {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         Attachment attachment = Attachment.builder()
                 .bytes("attachment".getBytes(Charsets.UTF_8))
@@ -1737,7 +1737,7 @@ public abstract class SetMessagesMethodTest {
         uploadAttachment(attachment2);
 
         String messageCreationId = "creationId";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
                 "  [" +
@@ -1794,7 +1794,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesShouldReturnAttachmentsWithNonASCIINames() throws Exception {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         Attachment attachment = Attachment.builder()
                 .bytes("attachment".getBytes(Charsets.UTF_8))
@@ -1813,7 +1813,7 @@ public abstract class SetMessagesMethodTest {
         uploadAttachment(attachment3);
 
         String messageCreationId = "creationId";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
                 "  [" +
@@ -1882,7 +1882,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void filenamesAttachmentsWithNonASCIICharactersShouldBeRetrievedWhenChainingSetMessagesAndGetMessages() throws Exception {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         Attachment attachment = Attachment.builder()
                 .bytes("attachment".getBytes(Charsets.UTF_8))
@@ -1903,7 +1903,7 @@ public abstract class SetMessagesMethodTest {
         uploadAttachment(attachment3);
 
         String messageCreationId = "creationId";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
                 "  [" +
@@ -2006,7 +2006,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void attachmentsShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesBinaryAttachment() throws Exception {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         byte[] rawBytes = new byte[]{-128,-127,-126,-125,-124,-123,-122,-121,-120,-119,-118,-117,-116,-115,-114,-113,-112,-111,-110,-109,-108,-107,-106,-105,-104,-103,-102,-101,-100,
                 -99,-98,-97,-96,-95,-94,-93,-92,-91,-90,-89,-88,-87,-86,-85,-84,-83,-82,-81,-80,-79,-78,-77,-76,-75,-74,-73,-72,-71,-70,-69,-68,-67,-66,-65,-64,-63,-62,-61,-60,-59,-58,-57,-56,-55,-54,-53,-52,-51,
@@ -2023,7 +2023,7 @@ public abstract class SetMessagesMethodTest {
         String expectedBlobId = attachment.getAttachmentId().getId();
 
         String messageCreationId = "creationId";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
                 "  [" +
@@ -2086,7 +2086,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void attachmentsShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesTextAttachment() throws Exception {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         Attachment attachment = Attachment.builder()
                 .bytes(ByteStreams.toByteArray(new ZeroedInputStream(_1MB)))
@@ -2096,7 +2096,7 @@ public abstract class SetMessagesMethodTest {
         String expectedBlobId = attachment.getAttachmentId().getId();
 
         String messageCreationId = "creationId";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
                 "  [" +
@@ -2179,7 +2179,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void attachmentsAndBodysShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesWithMixedTextAndHtmlBodyAndHtmlAttachment() throws Exception {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         Attachment attachment = Attachment.builder()
                 .bytes(("<html>\n" +
@@ -2190,7 +2190,7 @@ public abstract class SetMessagesMethodTest {
         uploadTextAttachment(attachment);
 
         String messageCreationId = "creationId";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
                 "  [" +
@@ -2255,7 +2255,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void attachmentsAndBodyShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesWithTextBodyAndHtmlAttachment() throws Exception {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         Attachment attachment = Attachment.builder()
                 .bytes(("<html>\n" +
@@ -2266,7 +2266,7 @@ public abstract class SetMessagesMethodTest {
         uploadTextAttachment(attachment);
 
         String messageCreationId = "creationId";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
                 "  [" +
@@ -2329,7 +2329,7 @@ public abstract class SetMessagesMethodTest {
     }
     @Test
     public void attachmentAndEmptyBodyShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesWithTextAttachmentWithoutMailBody() throws Exception {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         Attachment attachment = Attachment.builder()
                 .bytes(("some text").getBytes(Charsets.UTF_8))
@@ -2338,7 +2338,7 @@ public abstract class SetMessagesMethodTest {
         uploadTextAttachment(attachment);
 
         String messageCreationId = "creationId";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
                 "  [" +
@@ -2405,9 +2405,9 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().addUser(toUsername, password);
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, toUsername, "inbox");
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
             "  [" +
             "    \"setMessages\","+
@@ -2443,9 +2443,9 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().addUser(toUsername, password);
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, toUsername, "inbox");
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
         String messageCreationId = "creationId1337";
-        String fromAddress = username;
+        String fromAddress = USERNAME;
         String requestBody = "[" +
             "  [" +
             "    \"setMessages\","+
