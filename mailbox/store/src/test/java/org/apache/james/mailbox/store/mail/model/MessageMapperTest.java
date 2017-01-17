@@ -27,8 +27,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
@@ -59,7 +59,6 @@ import org.xenei.junit.contract.ContractTest;
 import org.xenei.junit.contract.IProducer;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 @Contract(MapperProvider.class)
@@ -703,14 +702,16 @@ public class MessageMapperTest<T extends MapperProvider> {
 
         int threadCount = 2;
         int updateCount = 10;
-        new ConcurrentTestRunner(threadCount, updateCount) {
+        assertThat(new ConcurrentTestRunner(threadCount, updateCount, new ConcurrentTestRunner.BiConsumer() {
             @Override
-            protected void performOperation(int threadNumber, int step) throws Exception {
+            public void consume(int threadNumber, int step) throws Exception {
                 messageMapper.updateFlags(benwaInboxMailbox,
                     new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + step), FlagsUpdateMode.ADD),
                     MessageRange.one(message1.getUid()));
             }
-        }.run();
+        }).run()
+            .awaitTermination(1, TimeUnit.MINUTES))
+            .isTrue();
 
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()),
             FetchType.Metadata, 1);
@@ -724,9 +725,9 @@ public class MessageMapperTest<T extends MapperProvider> {
 
         final int threadCount = 4;
         final int updateCount = 20;
-        new ConcurrentTestRunner(threadCount, updateCount) {
+        assertThat(new ConcurrentTestRunner(threadCount, updateCount, new ConcurrentTestRunner.BiConsumer() {
             @Override
-            protected void performOperation(int threadNumber, int step) throws Exception {
+            public void consume(int threadNumber, int step) throws Exception {
                 if (step  < updateCount / 2) {
                     messageMapper.updateFlags(benwaInboxMailbox,
                         new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + step), FlagsUpdateMode.ADD),
@@ -738,7 +739,9 @@ public class MessageMapperTest<T extends MapperProvider> {
                         MessageRange.one(message1.getUid()));
                 }
             }
-        }.run();
+        }).run()
+            .awaitTermination(1, TimeUnit.MINUTES))
+            .isTrue();
 
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()),
             FetchType.Metadata, 1);

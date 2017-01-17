@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.store.mail.model.concurrency;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,15 +27,23 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class ConcurrentTestRunner {
+import com.google.common.base.Preconditions;
+
+public class ConcurrentTestRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentTestRunner.class);
 
-    public class ConcurrentRunnableTask implements Runnable {
-        private final int threadNumber;
+    public interface BiConsumer {
+        void consume(int threadNumber, int step) throws Exception;
+    }
 
-        public ConcurrentRunnableTask(int threadNumber) {
+    private class ConcurrentRunnableTask implements Runnable {
+        private final int threadNumber;
+        private final BiConsumer biConsumer;
+
+        public ConcurrentRunnableTask(int threadNumber, BiConsumer biConsumer) {
             this.threadNumber = threadNumber;
+            this.biConsumer = biConsumer;
         }
 
         @Override
@@ -45,7 +51,7 @@ public abstract class ConcurrentTestRunner {
             countDownLatch.countDown();
             for (int i = 0; i < operationCount; i++) {
                 try {
-                    performOperation(threadNumber, i);
+                    biConsumer.consume(threadNumber, i);
                 } catch (Exception e) {
                     LOGGER.error("Error caught during concurrent testing", e);
                 }
@@ -56,22 +62,29 @@ public abstract class ConcurrentTestRunner {
     private final int threadCount;
     private final int operationCount;
     private final CountDownLatch countDownLatch;
+    private final BiConsumer biConsumer;
+    private final ExecutorService executorService;
 
-    public ConcurrentTestRunner(int threadCount, int operationCount) {
+    public ConcurrentTestRunner(int threadCount, int operationCount, BiConsumer biConsumer) {
+        Preconditions.checkArgument(threadCount > 0, "Thread count should be strictly positive");
+        Preconditions.checkArgument(operationCount > 0, "Operation count should be strictly positive");
+        Preconditions.checkNotNull(biConsumer);
         this.threadCount = threadCount;
         this.operationCount = operationCount;
         this.countDownLatch = new CountDownLatch(threadCount);
+        this.biConsumer = biConsumer;
+        this.executorService = Executors.newFixedThreadPool(threadCount);
     }
 
-    public void run() throws Exception {
-        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+    public ConcurrentTestRunner run() {
         for (int i = 0; i < threadCount; i++) {
-            executorService.submit(new ConcurrentRunnableTask(i));
+            executorService.submit(new ConcurrentRunnableTask(i, biConsumer));
         }
-        executorService.shutdown();
-        assertThat(executorService.awaitTermination(1, TimeUnit.MINUTES))
-            .isTrue();
+        return this;
     }
 
-    protected abstract void performOperation(int threadNumber, int step) throws Exception;
+    public boolean awaitTermination(long time, TimeUnit unit) throws InterruptedException {
+        executorService.shutdown();
+        return executorService.awaitTermination(time, unit);
+    }
 }

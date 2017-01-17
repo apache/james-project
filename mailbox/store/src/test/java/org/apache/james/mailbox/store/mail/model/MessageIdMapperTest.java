@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -603,15 +604,17 @@ public class MessageIdMapperTest<T extends MapperProvider> {
 
         int threadCount = 2;
         int updateCount = 10;
-        new ConcurrentTestRunner(threadCount, updateCount) {
+        assertThat(new ConcurrentTestRunner(threadCount, updateCount, new ConcurrentTestRunner.BiConsumer() {
             @Override
-            protected void performOperation(int threadNumber, int step) throws Exception {
+            public void consume(int threadNumber, int step) throws Exception {
                 sut.setFlags(message1.getMessageId(),
                     ImmutableList.of(message1.getMailboxId()),
                     new Flags("custom-" + threadNumber + "-" + step),
                     FlagsUpdateMode.ADD);
             }
-        }.run();
+        }).run()
+            .awaitTermination(1, TimeUnit.MINUTES))
+            .isTrue();
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);
@@ -626,9 +629,9 @@ public class MessageIdMapperTest<T extends MapperProvider> {
 
         final int threadCount = 4;
         final int updateCount = 20;
-        new ConcurrentTestRunner(threadCount, updateCount) {
+        assertThat(new ConcurrentTestRunner(threadCount, updateCount, new ConcurrentTestRunner.BiConsumer() {
             @Override
-            protected void performOperation(int threadNumber, int step) throws Exception {
+            public void consume(int threadNumber, int step) throws Exception {
                 if (step  < updateCount / 2) {
                     sut.setFlags(message1.getMessageId(),
                         ImmutableList.of(message1.getMailboxId()),
@@ -641,7 +644,9 @@ public class MessageIdMapperTest<T extends MapperProvider> {
                         FlagsUpdateMode.REMOVE);
                 }
             }
-        }.run();
+        }).run()
+            .awaitTermination(1, TimeUnit.MINUTES))
+            .isTrue();
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);
