@@ -25,14 +25,14 @@ import java.util.Set;
 
 import javax.mail.Flags;
 
-import com.google.common.collect.ImmutableSet;
-
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.ValidationResult;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 @JsonDeserialize(builder = UpdateMessagePatch.Builder.class)
 public class UpdateMessagePatch {
@@ -43,16 +43,14 @@ public class UpdateMessagePatch {
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
-        private ImmutableList.Builder<String> mailboxIds = ImmutableList.builder();
+        private Optional<List<String>> mailboxIds = Optional.empty();
         private Optional<Boolean> isFlagged = Optional.empty();
         private Optional<Boolean> isUnread = Optional.empty();
         private Optional<Boolean> isAnswered = Optional.empty();
-        private Set<ValidationResult> validationResult = ImmutableSet.of();
+        private Set<ValidationResult> validationResult = Sets.newHashSet();
 
-        public Builder mailboxIds(Optional<List<String>> mailboxIds) {
-            if (mailboxIds.isPresent()) {
-                throw new NotImplementedException("moving a message is not supported");
-            }
+        public Builder mailboxIds(List<String> mailboxIds) {
+            this.mailboxIds = Optional.of(ImmutableList.copyOf(mailboxIds));
             return this;
         }
 
@@ -72,16 +70,22 @@ public class UpdateMessagePatch {
         }
 
         public Builder validationResult(Set<ValidationResult> validationResult) {
-            this.validationResult = ImmutableSet.copyOf(validationResult);
+            this.validationResult.addAll(validationResult);
             return this;
         }
 
         public UpdateMessagePatch build() {
-            return new UpdateMessagePatch(mailboxIds.build(), isUnread, isFlagged, isAnswered, ImmutableList.copyOf(validationResult));
+            if (mailboxIds.isPresent() && mailboxIds.get().isEmpty()) {
+                validationResult(ImmutableSet.of(ValidationResult.builder()
+                    .property("mailboxIds")
+                    .message("mailboxIds property is not supposed to be empty")
+                    .build()));
+            }
+            return new UpdateMessagePatch(mailboxIds, isUnread, isFlagged, isAnswered, ImmutableList.copyOf(validationResult));
         }
     }
 
-    private final List<String> mailboxIds;
+    private final Optional<List<String>> mailboxIds;
     private final Optional<Boolean> isUnread;
     private final Optional<Boolean> isFlagged;
     private final Optional<Boolean> isAnswered;
@@ -89,7 +93,7 @@ public class UpdateMessagePatch {
     private final ImmutableList<ValidationResult> validationErrors;
 
     @VisibleForTesting
-    UpdateMessagePatch(List<String> mailboxIds,
+    UpdateMessagePatch(Optional<List<String>> mailboxIds,
                        Optional<Boolean> isUnread,
                        Optional<Boolean> isFlagged,
                        Optional<Boolean> isAnswered,
@@ -102,7 +106,7 @@ public class UpdateMessagePatch {
         this.validationErrors = validationResults;
     }
 
-    public List<String> getMailboxIds() {
+    public Optional<List<String>> getMailboxIds() {
         return mailboxIds;
     }
 

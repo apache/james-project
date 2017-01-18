@@ -28,21 +28,28 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
 import org.apache.james.jmap.model.UpdateMessagePatch;
+import org.apache.james.jmap.model.mailbox.Role;
+import org.apache.james.jmap.utils.SystemMailboxesProvider;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -54,13 +61,21 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
     private final UpdateMessagePatchConverter updatePatchConverter;
     private final MessageIdManager messageIdManager;
+    private final Factory mailboxIdFactory;
+    private final MailboxManager mailboxManager;
+    private final SystemMailboxesProvider systemMailboxesProvider;
 
     @Inject
     @VisibleForTesting SetMessagesUpdateProcessor(
-            UpdateMessagePatchConverter updatePatchConverter,
-            MessageIdManager messageIdManager) {
+        UpdateMessagePatchConverter updatePatchConverter,
+        MessageIdManager messageIdManager,
+        Factory mailboxIdFactory,
+        MailboxManager mailboxManager, SystemMailboxesProvider systemMailboxesProvider) {
         this.updatePatchConverter = updatePatchConverter;
         this.messageIdManager = messageIdManager;
+        this.mailboxIdFactory = mailboxIdFactory;
+        this.mailboxManager = mailboxManager;
+        this.systemMailboxesProvider = systemMailboxesProvider;
     }
 
     public SetMessagesResponse process(SetMessagesRequest request,  MailboxSession mailboxSession) {
@@ -78,14 +93,16 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                         SetMessagesResponse.Builder builder) {
         try {
             List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, mailboxSession);
+
             if (messages.isEmpty()) {
                 addMessageIdNotFoundToResponse(messageId, builder);
             } else {
+                setInMailboxes(messageId, updateMessagePatch, mailboxSession);
                 Optional<MailboxException> updateError = messages.stream()
                     .flatMap(message -> updateFlags(messageId, updateMessagePatch, mailboxSession, message))
                     .findAny();
                 if (updateError.isPresent()) {
-                    updateError.ifPresent(e -> handleMessageUpdateException(messageId, builder, e));
+                    handleMessageUpdateException(messageId, builder, updateError.get());
                 } else {
                     builder.updated(ImmutableList.of(messageId));
                 }
@@ -106,6 +123,28 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         }
     }
 
+    private void setInMailboxes(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession) throws MailboxException {
+        Optional<List<String>> serializedMailboxIds = updateMessagePatch.getMailboxIds();
+        if (serializedMailboxIds.isPresent()) {
+            List<MailboxId> mailboxIds = serializedMailboxIds.get()
+                .stream()
+                .map(mailboxId -> mailboxIdFactory.fromString(mailboxId))
+                .collect(Guavate.toImmutableList());
+
+            if (isMoveToTrash(mailboxSession, mailboxIds)) {
+                throw new NotImplementedException("Do not support move to trash");
+            }
+
+            messageIdManager.setInMailboxes(messageId, mailboxIds, mailboxSession);
+        }
+    }
+
+    private boolean isMoveToTrash(MailboxSession mailboxSession, List<MailboxId> mailboxIds) throws MailboxException {
+        return mailboxIds.size() == 1
+            && mailboxIds.get(0)
+                .equals(systemMailboxesProvider.findMailbox(Role.TRASH, mailboxSession).getId());
+    }
+
     private void addMessageIdNotFoundToResponse(MessageId messageId, SetMessagesResponse.Builder builder) {
         builder.notUpdated(ImmutableMap.of(messageId,
                 SetError.builder()
@@ -115,11 +154,11 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                         .build()));
     }
 
-    private void handleMessageUpdateException(MessageId messageId,
+    private SetMessagesResponse.Builder handleMessageUpdateException(MessageId messageId,
                                               SetMessagesResponse.Builder builder,
                                               MailboxException e) {
         LOGGER.error("An error occurred when updating a message", e);
-        builder.notUpdated(ImmutableMap.of(messageId, SetError.builder()
+        return builder.notUpdated(ImmutableMap.of(messageId, SetError.builder()
                 .type("anErrorOccurred")
                 .description("An error occurred when updating a message")
                 .build()));
