@@ -34,7 +34,6 @@ import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -43,7 +42,6 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-@Ignore("needs messageIdManager cassandra impl")
 public class WebAdminServerIntegrationTest {
 
     public static final String DOMAIN = "domain";
@@ -152,8 +150,6 @@ public class WebAdminServerIntegrationTest {
 
         assertThat(guiceJamesServer.serverProbe().listUserMailboxes(USERNAME)).containsExactly(MAILBOX);
     }
-
-
 
     @Test
     public void deleteMailboxShouldRemoveAMailbox() throws Exception {
