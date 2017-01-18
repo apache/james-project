@@ -7,6 +7,15 @@ Feature: GetMessages method
     And a connected user "username@domain.tld"
     And "username@domain.tld" has a mailbox "inbox"
 
+  Scenario: Retrieving a message in several mailboxes should return a single message in these mailboxes
+    Given "username@domain.tld" has a mailbox "custom"
+    And the user has a message "m1" in "inbox" and "custom" mailboxes with subject "my test subject", content "testmail"
+    When the user ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the id of the message is "m1"
+    And the message is in "custom,inbox" mailboxes
+
   Scenario: Retrieving messages with a non null accountId should return a NotSupported error
     When the user ask for messages using its accountId
     Then an error "Not yet implemented" is returned

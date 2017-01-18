@@ -19,6 +19,8 @@
 
 package org.apache.james.utils;
 
+import java.util.Arrays;
+
 import javax.inject.Inject;
 
 import org.apache.james.jmap.JMAPServer;
@@ -26,16 +28,30 @@ import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.jmap.api.vacation.VacationRepository;
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JmapGuiceProbe implements GuiceProbe {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(JmapGuiceProbe.class);
+
     private final VacationRepository vacationRepository;
     private final JMAPServer jmapServer;
+    private final MessageIdManager messageIdManager;
+    private final MailboxManager mailboxManager;
 
     @Inject
-    private JmapGuiceProbe(VacationRepository vacationRepository, JMAPServer jmapServer) {
+    private JmapGuiceProbe(VacationRepository vacationRepository, JMAPServer jmapServer, MessageIdManager messageIdManager, MailboxManager mailboxManager) {
         this.vacationRepository = vacationRepository;
         this.jmapServer = jmapServer;
+        this.messageIdManager = messageIdManager;
+        this.mailboxManager = mailboxManager;
     }
 
     public int getJmapPort() {
@@ -48,5 +64,10 @@ public class JmapGuiceProbe implements GuiceProbe {
 
     public Vacation retrieveVacation(AccountId accountId) {
         return vacationRepository.retrieveVacation(accountId).join();
+    }
+
+    public void setInMailboxes(MessageId messageId, String username, MailboxId... mailboxIds) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(username, LOGGER);
+        messageIdManager.setInMailboxes(messageId, Arrays.asList(mailboxIds), mailboxSession);
     }
 }

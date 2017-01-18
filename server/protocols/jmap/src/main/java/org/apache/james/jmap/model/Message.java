@@ -21,6 +21,7 @@ package org.apache.james.jmap.model;
 
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -99,16 +100,17 @@ public class Message {
             return this;
         }
 
+        @JsonIgnore
         public Builder mailboxId(MailboxId mailboxId) {
-            return this.mailboxIds(ImmutableList.of(mailboxId));
+            return this.fluentMailboxIds(mailboxId);
         }
 
         @JsonIgnore
-        public Builder mailboxIds(MailboxId... mailboxIds) {
+        public Builder fluentMailboxIds(MailboxId... mailboxIds) {
             return this.mailboxIds(Arrays.asList((mailboxIds)));
         }
 
-        public Builder mailboxIds(List<MailboxId> mailboxIds) {
+        public Builder mailboxIds(Collection<MailboxId> mailboxIds) {
             this.mailboxIds = ImmutableList.copyOf(mailboxIds);
             return this;
         }

@@ -131,6 +131,7 @@ public class GetMessagesMethod implements Method {
                     .collect(Guavate.toImmutableList());
                 List<MailboxId> mailboxIds = messageResults.stream()
                     .map(MessageResult::getMailboxId)
+                    .distinct()
                     .collect(Guavate.toImmutableList());
                 return messageResults.stream()
                     .findFirst()

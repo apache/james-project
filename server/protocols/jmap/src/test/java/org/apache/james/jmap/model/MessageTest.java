@@ -60,41 +60,41 @@ public class MessageTest {
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenHeadersIsNull() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").mailboxIds(ImmutableList.of()).build();
+        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenSubjectIsNull() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of()).build();
+        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of()).build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenSubjectIsEmpty() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
+        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
             .subject("").build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenSizeIsNull() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
+        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
             .subject("subject").build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenDateIsNull() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
+        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
             .subject("subject").size(123).build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenPreviewIsNull() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
+        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
             .subject("subject").size(123).date(ZonedDateTime.now()).build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenPreviewIsEmpty() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
+        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
             .subject("subject").size(123).date(ZonedDateTime.now()).preview("").build();
     }
 
@@ -107,7 +107,7 @@ public class MessageTest {
                 .id(TestMessageId.of(1))
                 .blobId(BlobId.of("blobId"))
                 .threadId("threadId")
-                .mailboxIds(ImmutableList.of(InMemoryId.of(456)))
+                .mailboxId(InMemoryId.of(456))
                 .headers(ImmutableMap.of("key", "value"))
                 .subject("subject")
                 .size(123)
@@ -131,7 +131,7 @@ public class MessageTest {
             .id(TestMessageId.of(1))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
-            .mailboxIds(ImmutableList.of(InMemoryId.of(456)))
+            .mailboxId(InMemoryId.of(456))
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
             .size(123)
@@ -187,7 +187,7 @@ public class MessageTest {
             .id(TestMessageId.of(1))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
-            .mailboxIds(ImmutableList.of(InMemoryId.of(456)))
+            .mailboxId(InMemoryId.of(456))
             .inReplyToMessageId("inReplyToMessageId")
             .isUnread(true)
             .isFlagged(true)
@@ -217,7 +217,7 @@ public class MessageTest {
             .id(TestMessageId.of(1))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
-            .mailboxIds(ImmutableList.of(InMemoryId.of(456)))
+            .mailboxId(InMemoryId.of(456))
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
             .size(1)
@@ -237,7 +237,7 @@ public class MessageTest {
             .id(TestMessageId.of(1))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
-            .mailboxIds(ImmutableList.of(InMemoryId.of(456)))
+            .mailboxId(InMemoryId.of(456))
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
             .size(1)

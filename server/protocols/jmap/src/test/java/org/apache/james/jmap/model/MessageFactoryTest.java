@@ -148,7 +148,7 @@ public class MessageFactoryTest {
                 .id(TestMessageId.of(2))
                 .blobId(BlobId.of("2"))
                 .threadId("2")
-                .mailboxIds(ImmutableList.of(MAILBOX_ID))
+                .mailboxId(MAILBOX_ID)
                 .inReplyToMessageId("<SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>")
                 .headers(headersMap)
                 .from(user)

@@ -41,13 +41,16 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.james.jmap.methods.integration.cucumber.util.TableRow;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.javatuples.Pair;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
@@ -59,6 +62,7 @@ import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import cucumber.runtime.java.guice.ScenarioScoped;
+import net.minidev.json.JSONArray;
 
 @ScenarioScoped
 public class GetMessagesMethodStepdefs {
@@ -85,6 +89,16 @@ public class GetMessagesMethodStepdefs {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
         this.messageIdsByName = new HashMap<>();
+    }
+
+    @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" and \"([^\"]*)\" mailboxes with subject \"([^\"]*)\", content \"([^\"]*)\"$")
+    public void appendMessageInTwoMailboxes(String messageName, String mailbox1, String mailbox2, String subject, String content) throws Throwable {
+        MessageId id = appendMessage(mailbox1, ContentType.noContentType(), subject, content, NO_HEADERS);
+        MailboxId mailboxId1 = mainStepdefs.jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox1).getMailboxId();
+        MailboxId mailboxId2 = mainStepdefs.jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox2).getMailboxId();
+
+        mainStepdefs.jmapServer.getJmapProbe().setInMailboxes(id, userStepdefs.lastConnectedUser, mailboxId1, mailboxId2);
+        messageIdsByName.put(messageName, id);
     }
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with subject \"([^\"]*)\", content \"([^\"]*)\"$")
@@ -313,6 +327,23 @@ public class GetMessagesMethodStepdefs {
     public void assertIdOfTheFirstMessage(String messageName) throws Throwable {
         MessageId id = messageIdsByName.get(messageName);
         assertThat(jsonPath.<String>read(FIRST_MESSAGE + ".id")).isEqualTo(id.serialize());
+    }
+
+    @Then("^the message is in \"([^\"]*)\" mailboxes")
+    public void assertMailboxIdsOfTheFirstMessage(String mailboxIds) throws Throwable {
+        List<String> values = Splitter.on(",")
+            .splitToList(mailboxIds).stream()
+            .map(Throwing.function(name -> mainStepdefs.jmapServer
+                .serverProbe()
+                .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, name)
+                .getMailboxId()
+                .serialize()))
+            .distinct()
+            .collect(Guavate.toImmutableList());
+
+        assertThat(jsonPath.<JSONArray>read(FIRST_MESSAGE + ".mailboxIds"))
+            .hasSize(2)
+            .containsOnlyElementsOf(values);
     }
 
     @Then("^the threadId of the message is \"([^\"]*)\"$")

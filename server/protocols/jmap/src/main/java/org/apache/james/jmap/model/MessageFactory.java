@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -55,8 +56,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
 
 public class MessageFactory {
 
@@ -235,7 +236,7 @@ public class MessageFactory {
             private InputStream content;
             private SharedInputStream sharedContent;
             private List<MessageAttachment> attachments;
-            private List<MailboxId> mailboxIds = Lists.newArrayList();
+            private Set<MailboxId> mailboxIds = Sets.newHashSet();
             private MessageId messageId;
 
             public Builder uid(MessageUid uid) {
@@ -317,10 +318,10 @@ public class MessageFactory {
         private final InputStream content;
         private final SharedInputStream sharedContent;
         private final List<MessageAttachment> attachments;
-        private final List<MailboxId> mailboxIds;
+        private final Set<MailboxId> mailboxIds;
         private final MessageId messageId;
 
-        private MetaDataWithContent(MessageUid uid, long modSeq, Flags flags, long size, Date internalDate, InputStream content, SharedInputStream sharedContent, List<MessageAttachment> attachments, List<MailboxId> mailboxIds, MessageId messageId) {
+        private MetaDataWithContent(MessageUid uid, long modSeq, Flags flags, long size, Date internalDate, InputStream content, SharedInputStream sharedContent, List<MessageAttachment> attachments, Set<MailboxId> mailboxIds, MessageId messageId) {
             this.uid = uid;
             this.modSeq = modSeq;
             this.flags = flags;
@@ -370,7 +371,7 @@ public class MessageFactory {
             return attachments;
         }
 
-        public List<MailboxId> getMailboxIds() {
+        public Set<MailboxId> getMailboxIds() {
             return mailboxIds;
         }
 
