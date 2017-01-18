@@ -51,15 +51,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.UnmodifiableIterator;
 import com.sun.mail.smtp.SMTPSenderFailedException;
 
+@SuppressWarnings("deprecation")
 public class MailDelivrerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailDelivrerTest.class);
     public static final String MX1_HOSTNAME = "mx1." + MailAddressFixture.JAMES2_APACHE_ORG;
     public static final String MX2_HOSTNAME = "mx2." + MailAddressFixture.JAMES2_APACHE_ORG;
     public static final String SMTP_URI2 = "protocol://userid:password@host:119/file1";
     public static final String SMTP_URI1 = "protocol://userid:password@host:119/file2";
-    @SuppressWarnings("deprecation")
     public static final HostAddress HOST_ADDRESS_1 = new HostAddress(MX1_HOSTNAME, SMTP_URI1);
-    @SuppressWarnings("deprecation")
     public static final HostAddress HOST_ADDRESS_2 = new HostAddress(MX2_HOSTNAME, SMTP_URI2);
 
     private MailDelivrer testee;
@@ -242,7 +241,6 @@ public class MailDelivrerTest {
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.TEMPORARY_FAILURE);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void deliverShouldReturnTemporaryErrorWhenFirstDNSProblem() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
@@ -255,7 +253,6 @@ public class MailDelivrerTest {
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.TEMPORARY_FAILURE);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void deliverShouldReturnTemporaryErrorWhenToleratedDNSProblem() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
@@ -269,7 +266,6 @@ public class MailDelivrerTest {
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.TEMPORARY_FAILURE);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void deliverShouldReturnPermanentErrorWhenLimitDNSProblemReached() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
@@ -285,7 +281,6 @@ public class MailDelivrerTest {
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.PERMANENT_FAILURE);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void deliverShouldReturnPermanentErrorWhenLimitDNSProblemExceeded() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
@@ -303,7 +298,6 @@ public class MailDelivrerTest {
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.PERMANENT_FAILURE);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void deliverShouldWork() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
@@ -320,7 +314,6 @@ public class MailDelivrerTest {
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.SUCCESS);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void deliverShouldAbortWhenServerError() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
@@ -337,7 +330,6 @@ public class MailDelivrerTest {
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.PERMANENT_FAILURE);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void deliverShouldAbortWithTemporaryWhenMessagingExceptionCauseUnknown() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
@@ -354,7 +346,6 @@ public class MailDelivrerTest {
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.TEMPORARY_FAILURE);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void deliverShouldTryTwiceOnIOException() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
@@ -373,7 +364,6 @@ public class MailDelivrerTest {
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.SUCCESS);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void deliverShouldAbortWhenServerErrorSFE() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
@@ -390,7 +380,6 @@ public class MailDelivrerTest {
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.PERMANENT_FAILURE);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void deliverShouldAttemptDeliveryOnlyOnceIfNoMoreValidUnsent() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
@@ -407,7 +396,6 @@ public class MailDelivrerTest {
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.TEMPORARY_FAILURE);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void deliverShouldAttemptDeliveryOnBothMXIfStillRecipients() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
@@ -432,7 +420,6 @@ public class MailDelivrerTest {
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.TEMPORARY_FAILURE);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void deliverShouldWorkIfOnlyMX2Valid() throws Exception {
         Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();

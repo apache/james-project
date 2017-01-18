@@ -128,7 +128,6 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>
-            <version>${h2.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

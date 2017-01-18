@@ -82,8 +82,6 @@ import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
-
 /**
  * This base class of an {@link MailboxManager} implementation provides a high-level api for writing your own
  * {@link MailboxManager} implementation. If you plan to write your own {@link MailboxManager} its most times so easiest

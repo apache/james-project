@@ -40,6 +40,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 
+@SuppressWarnings("deprecation")
 public class MailDelivrer {
 
     private final RemoteDeliveryConfiguration configuration;
@@ -88,7 +89,6 @@ public class MailDelivrer {
         }
     }
 
-    @SuppressWarnings("deprecation")
     private ExecutionResult tryDeliver(Mail mail) throws MessagingException {
         if (mail.getRecipients().isEmpty()) {
             logger.info("No recipients specified... not sure how this could have happened.");
@@ -119,7 +119,6 @@ public class MailDelivrer {
         return rcpt.getDomain();
     }
 
-    @SuppressWarnings("deprecation")
     private ExecutionResult doDeliver(Mail mail, InternetAddress[] addr, Iterator<HostAddress> targetServers) throws MessagingException {
         MessagingException lastError = null;
 

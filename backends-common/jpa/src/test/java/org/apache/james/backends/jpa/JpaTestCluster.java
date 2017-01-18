@@ -21,6 +21,7 @@ package org.apache.james.backends.jpa;
 
 import java.util.Arrays;
 import java.util.HashMap;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
@@ -32,7 +33,7 @@ import com.google.common.collect.FluentIterable;
 
 public class JpaTestCluster {
 
-    public static JpaTestCluster create(Class... clazz) {
+    public static JpaTestCluster create(Class<?>... clazz) {
         HashMap<String, String> properties = new HashMap<String, String>();
         properties.put("openjpa.ConnectionDriverName", org.h2.Driver.class.getName());
         properties.put("openjpa.ConnectionURL", "jdbc:h2:mem:mailboxintegration;DB_CLOSE_DELAY=-1"); // Memory H2 database
@@ -51,10 +52,10 @@ public class JpaTestCluster {
         return new JpaTestCluster(OpenJPAPersistence.getEntityManagerFactory(properties));
     }
 
-    private static Function<Class, String> toFQDN() {
-        return new Function<Class, String>() {
+    private static Function<Class<?>, String> toFQDN() {
+        return new Function<Class<?>, String>() {
             @Override
-            public String apply(Class input) {
+            public String apply(Class<?> input) {
                 return input.getName();
             }
         };
