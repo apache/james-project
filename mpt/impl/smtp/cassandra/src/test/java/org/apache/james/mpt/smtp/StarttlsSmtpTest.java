@@ -20,7 +20,6 @@ package org.apache.james.mpt.smtp;
 
 import org.apache.james.mpt.onami.test.OnamiSuite;
 import org.apache.james.mpt.onami.test.annotation.GuiceModules;
-import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -29,7 +28,6 @@ import org.junit.runners.Suite;
     SmtpStarttlsCommandTest.class
 })
 @GuiceModules({ StarttlsSmtpTestModule.class })
-@Ignore("needs messageIdManager cassandra impl")
 public class StarttlsSmtpTest {
 
 }
