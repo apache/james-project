@@ -65,6 +65,7 @@ public class JMAPModule extends AbstractModule {
         bind(RequestHandler.class).in(Scopes.SINGLETON);
         bind(UploadHandler.class).in(Scopes.SINGLETON);
         bind(MailboxBasedHtmlTextExtractor.class).in(Scopes.SINGLETON);
+        bind(SystemMailboxesProviderImpl.class).in(Scopes.SINGLETON);
 
         bind(HtmlTextExtractor.class).to(MailboxBasedHtmlTextExtractor.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(RequiredCapabilitiesPrecondition.class);
