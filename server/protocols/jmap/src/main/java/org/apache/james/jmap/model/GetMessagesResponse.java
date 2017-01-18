@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import org.apache.james.jmap.methods.Method;
 import org.apache.james.mailbox.model.MessageId;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -45,6 +46,12 @@ public class GetMessagesResponse implements Method.Response {
 
         private Builder() {
             this.messages = ImmutableList.of();
+        }
+
+        @JsonIgnore
+        public Builder message(Message message) {
+            this.messages = ImmutableList.of(message);
+            return this;
         }
 
         public Builder messages(List<Message> messages) {

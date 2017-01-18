@@ -55,6 +55,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
 
 public class MessageFactory {
@@ -80,7 +81,7 @@ public class MessageFactory {
                 .id(message.getMessageId())
                 .blobId(BlobId.of(String.valueOf(message.getUid().asLong())))
                 .threadId(message.getMessageId().serialize())
-                .mailboxIds(ImmutableList.of(message.getMailboxId()))
+                .mailboxIds(message.getMailboxIds())
                 .inReplyToMessageId(getHeader(mimeMessage, "in-reply-to"))
                 .isUnread(! message.getFlags().contains(Flags.Flag.SEEN))
                 .isFlagged(message.getFlags().contains(Flags.Flag.FLAGGED))
@@ -234,7 +235,7 @@ public class MessageFactory {
             private InputStream content;
             private SharedInputStream sharedContent;
             private List<MessageAttachment> attachments;
-            private MailboxId mailboxId;
+            private List<MailboxId> mailboxIds = Lists.newArrayList();
             private MessageId messageId;
 
             public Builder uid(MessageUid uid) {
@@ -278,7 +279,12 @@ public class MessageFactory {
             }
             
             public Builder mailboxId(MailboxId mailboxId) {
-                this.mailboxId = mailboxId;
+                this.mailboxIds.add(mailboxId);
+                return this;
+            }
+
+            public Builder mailboxIds(List<MailboxId> mailboxIds) {
+                this.mailboxIds.addAll(mailboxIds);
                 return this;
             }
             
@@ -297,9 +303,9 @@ public class MessageFactory {
                 Preconditions.checkArgument(internalDate != null);
                 Preconditions.checkArgument(content != null ^ sharedContent != null);
                 Preconditions.checkArgument(attachments != null);
-                Preconditions.checkArgument(mailboxId != null);
+                Preconditions.checkArgument(mailboxIds != null);
                 Preconditions.checkArgument(messageId != null);
-                return new MetaDataWithContent(uid, modSeq, flags, size, internalDate, content, sharedContent, attachments, mailboxId, messageId);
+                return new MetaDataWithContent(uid, modSeq, flags, size, internalDate, content, sharedContent, attachments, mailboxIds, messageId);
             }
         }
 
@@ -311,10 +317,10 @@ public class MessageFactory {
         private final InputStream content;
         private final SharedInputStream sharedContent;
         private final List<MessageAttachment> attachments;
-        private final MailboxId mailboxId;
+        private final List<MailboxId> mailboxIds;
         private final MessageId messageId;
 
-        private MetaDataWithContent(MessageUid uid, long modSeq, Flags flags, long size, Date internalDate, InputStream content, SharedInputStream sharedContent, List<MessageAttachment> attachments, MailboxId mailboxId, MessageId messageId) {
+        private MetaDataWithContent(MessageUid uid, long modSeq, Flags flags, long size, Date internalDate, InputStream content, SharedInputStream sharedContent, List<MessageAttachment> attachments, List<MailboxId> mailboxIds, MessageId messageId) {
             this.uid = uid;
             this.modSeq = modSeq;
             this.flags = flags;
@@ -323,7 +329,7 @@ public class MessageFactory {
             this.content = content;
             this.sharedContent = sharedContent;
             this.attachments = attachments;
-            this.mailboxId = mailboxId;
+            this.mailboxIds = mailboxIds;
             this.messageId = messageId;
         }
 
@@ -364,8 +370,8 @@ public class MessageFactory {
             return attachments;
         }
 
-        public MailboxId getMailboxId() {
-            return mailboxId;
+        public List<MailboxId> getMailboxIds() {
+            return mailboxIds;
         }
 
         public MessageId getMessageId() {

@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -45,13 +46,21 @@ import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.inmemory.InMemoryMessageIdManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.store.MessageResultImpl;
+import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.assertj.core.api.Condition;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.groups.Tuple;
@@ -105,6 +114,7 @@ public class GetMessagesMethodTest {
 
     private MailboxSession session;
     private MailboxPath inboxPath;
+    private MailboxPath customMailboxPath;
     private ClientId clientId;
 
     @Before
@@ -121,7 +131,9 @@ public class GetMessagesMethodTest {
 
         session = new MockMailboxSession(ROBERT.username);
         inboxPath = MailboxPath.inbox(session);
+        customMailboxPath = new MailboxPath(inboxPath, "custom");
         mailboxManager.createMailbox(inboxPath, session);
+        mailboxManager.createMailbox(customMailboxPath, session);
         testee = new GetMessagesMethod(messageFactory, inMemoryIntegrationResources.createMessageIdManager(mailboxManager));
     }
     
@@ -345,5 +357,35 @@ public class GetMessagesMethodTest {
         objectMapper.setFilterProvider(actualFilterProvider.setDefaultFilter(SimpleBeanPropertyFilter.serializeAll()));
         String response = objectMapper.writer().writeValueAsString(result.get(0));
         assertThat(JsonPath.parse(response).<Map<String, String>>read("$.response.list[0].headers")).containsOnly(MapEntry.entry("From", "user@domain.tld"), MapEntry.entry("HEADer2", "Header2Content"));
+    }
+
+    @Test
+    public void processShouldReturnOneMessageWhenMessageInSeveralMailboxes() throws Exception {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+        Date now = new Date();
+        ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
+            + "header1: Header1Content\r\n"
+            + "HEADer2: Header2Content\r\n"
+            + "Subject: message 1 subject\r\n\r\nmy message").getBytes(Charsets.UTF_8));
+        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+        MessageIdManager messageIdManager = new InMemoryMessageIdManager(mailboxManager);
+        MailboxId customMailboxId = mailboxManager.getMailbox(customMailboxPath, session).getId();
+        messageIdManager.setInMailboxes(message1.getMessageId(),
+            ImmutableList.of(message1.getMailboxId(), customMailboxId),
+            session);
+
+        GetMessagesRequest request = GetMessagesRequest.builder()
+            .ids(ImmutableList.of(message1.getMessageId()))
+            .properties(ImmutableList.of("mailboxIds"))
+            .build();
+
+        List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
+
+        assertThat(result).hasSize(1);
+        Method.Response response = result.get(0).getResponse();
+        assertThat(response).isInstanceOf(GetMessagesResponse.class);
+        GetMessagesResponse getMessagesResponse = (GetMessagesResponse) response;
+        assertThat(getMessagesResponse.list()).hasSize(1);
+        assertThat(getMessagesResponse.list().get(0).getMailboxIds()).containsOnly(customMailboxId, message1.getMailboxId());
     }
 }

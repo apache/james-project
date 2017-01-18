@@ -118,7 +118,7 @@ public class JmapResponse {
         return method;
     }
     
-    public Object getResponse() {
+    public Method.Response getResponse() {
         return response;
     }
     
