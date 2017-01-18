@@ -44,6 +44,7 @@ public class MailboxNotFoundException extends MailboxException {
      *            name of the mailbox, not null
      */
     public MailboxNotFoundException(MailboxPath mailboxPath) {
+        super(mailboxPath + " can not be found");
         this.mailboxName = mailboxPath.toString();
     }
 
