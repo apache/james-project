@@ -31,7 +31,7 @@ import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class CassandraCombinationManagerTestSystem extends CombinationManagerTestSystem {
-    private final CassandraMessageId.Factory messageIdFactory;
+
     private final CassandraMailboxSessionMapperFactory mapperFactory;
     private final CassandraMailboxManager cassandraMailboxManager;
 
@@ -39,14 +39,12 @@ public class CassandraCombinationManagerTestSystem extends CombinationManagerTes
         CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory();
 
         return new CassandraCombinationManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, dispatcher),
-            new CassandraMessageId.Factory(),
             mapperFactory,
             CassandraTestSystemFixture.createMailboxManager(mapperFactory));
     }
 
-    private CassandraCombinationManagerTestSystem(MessageIdManager messageIdManager, CassandraMessageId.Factory messageIdFactory, CassandraMailboxSessionMapperFactory mapperFactory, MailboxManager cassandraMailboxManager) {
+    private CassandraCombinationManagerTestSystem(MessageIdManager messageIdManager, CassandraMailboxSessionMapperFactory mapperFactory, MailboxManager cassandraMailboxManager) {
         super(cassandraMailboxManager, messageIdManager);
-        this.messageIdFactory = messageIdFactory;
         this.mapperFactory = mapperFactory;
         this.cassandraMailboxManager = (CassandraMailboxManager)cassandraMailboxManager;
     }

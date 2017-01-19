@@ -69,7 +69,6 @@ import com.google.common.collect.ImmutableSet;
 
 public class CassandraMessageIdDAO {
 
-    private static final String MOD_SEQ_CONDITION = "modSeqCondition";
     private static final String IMAP_UID_GTE = IMAP_UID + "_GTE";
     private static final String IMAP_UID_LTE = IMAP_UID + "_LTE";
 

@@ -48,7 +48,6 @@
             <artifactId>apache-mailet-base</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

@@ -170,17 +170,14 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-databind</artifactId>
-                    <version>${jackson-data.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.fasterxml.jackson.datatype</groupId>
                     <artifactId>jackson-datatype-jdk8</artifactId>
-                    <version>${jackson-data.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.github.steveash.guavate</groupId>
                     <artifactId>guavate</artifactId>
-                    <version>${guavate.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.google.guava</groupId>
@@ -216,7 +213,7 @@
                 <dependency>
                     <groupId>org.assertj</groupId>
                     <artifactId>assertj-core</artifactId>
-                    <version>${assertj-3.version}</version>
+                    <version>${assertj-3.version}</version><!--$NO-MVN-MAN-VER$-->
                     <scope>test</scope>
                 </dependency>
                 <dependency>

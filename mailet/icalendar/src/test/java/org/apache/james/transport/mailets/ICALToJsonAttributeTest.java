@@ -231,7 +231,6 @@ public class ICALToJsonAttributeTest {
             .isNull();
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void serviceShouldAttachEmptyListWhenNoRecipient() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
@@ -246,7 +245,7 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        assertThat((Map) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME))
+        assertThat((Map<?,?>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME))
             .isEmpty();
     }
 

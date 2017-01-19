@@ -33,6 +33,7 @@ import org.apache.mailet.base.GenericMailet;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
@@ -92,6 +93,7 @@ public class ICalendarParser extends GenericMailet {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void service(Mail mail) throws MessagingException {
         Object icsAttachmentsObj = mail.getAttribute(sourceAttributeName);
         if (icsAttachmentsObj == null || !(icsAttachmentsObj instanceof Map)) {
