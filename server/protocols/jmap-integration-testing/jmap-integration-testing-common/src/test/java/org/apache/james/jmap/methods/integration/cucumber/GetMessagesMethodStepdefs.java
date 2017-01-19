@@ -91,6 +91,10 @@ public class GetMessagesMethodStepdefs {
         this.messageIdsByName = new HashMap<>();
     }
 
+    public MessageId getMessageId(String name) {
+        return messageIdsByName.get(name);
+    }
+
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" and \"([^\"]*)\" mailboxes with subject \"([^\"]*)\", content \"([^\"]*)\"$")
     public void appendMessageInTwoMailboxes(String messageName, String mailbox1, String mailbox2, String subject, String content) throws Throwable {
         MessageId id = appendMessage(mailbox1, ContentType.noContentType(), subject, content, NO_HEADERS);

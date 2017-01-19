@@ -46,8 +46,12 @@ public class IMAPMessageReader implements Closeable {
     }
 
     public boolean userDoesNotReceiveMessage(String user, String password) throws IOException {
+        return userDoesNotReceiveMessageInMailbox(user, password, "INBOX");
+    }
+
+    public boolean userDoesNotReceiveMessageInMailbox(String user, String password, String mailboxName) throws IOException {
         imapClient.login(user, password);
-        imapClient.select("INBOX");
+        imapClient.select(mailboxName);
         imapClient.fetch("1:1", "ALL");
         return imapClient.getReplyString()
              .contains("BAD FETCH failed. Invalid messageset");
