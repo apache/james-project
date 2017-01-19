@@ -29,25 +29,14 @@ import com.google.common.collect.ImmutableList;
 
 public class ClusterFactory {
 
-    public static class CassandraServer {
-        private final String ip;
-        private final int port;
-
-        public CassandraServer(String ip, int port) {
-            this.ip = ip;
-            this.port = port;
-        }
-    }
-
     private final static String DEFAULT_CLUSTER_IP = "localhost";
-    private final static int DEFAULT_CLUSTER_PORT = 9042;
 
-    public static Cluster createClusterForClusterWithPassWord(List<CassandraServer> servers, String userName, String password, 
+    public static Cluster createClusterForClusterWithPassWord(List<CassandraNodeIpAndPort> servers, String userName, String password,
             Optional<Integer> refreshSchemaIntervalMillis) {
 
         Cluster.Builder clusterBuilder = Cluster.builder();
         servers.forEach(
-            (server) -> clusterBuilder.addContactPoint(server.ip).withPort(server.port)
+            (server) -> clusterBuilder.addContactPoint(server.getIp()).withPort(server.getPort())
         );
         if(!Strings.isNullOrEmpty(userName) && !Strings.isNullOrEmpty(password)) {
             clusterBuilder.withCredentials(userName, password);
@@ -58,23 +47,23 @@ public class ClusterFactory {
         return clusterBuilder.build();
     }
 
-    public static Cluster createClusterForClusterWithoutPassWord(List<CassandraServer> servers) {
+    public static Cluster createClusterForClusterWithoutPassWord(List<CassandraNodeIpAndPort> servers) {
         return createClusterForClusterWithPassWord(servers, null, null, Optional.empty());
     }
 
     public static Cluster createClusterForSingleServerWithPassWord(String ip, int port, String userName, String password) {
-        return createClusterForClusterWithPassWord(ImmutableList.of(new CassandraServer(ip, port)), userName, password, Optional.empty());
+        return createClusterForClusterWithPassWord(ImmutableList.of(new CassandraNodeIpAndPort(ip, port)), userName, password, Optional.empty());
     }
 
     public static Cluster createClusterForSingleServerWithoutPassWord(String ip, int port) {
-        return createClusterForClusterWithPassWord(ImmutableList.of(new CassandraServer(ip, port)), null, null, Optional.empty());
+        return createClusterForClusterWithPassWord(ImmutableList.of(new CassandraNodeIpAndPort(ip, port)), null, null, Optional.empty());
     }
 
     public static Cluster createTestingCluster(String ip, int port) {
-        return createClusterForClusterWithPassWord(ImmutableList.of(new CassandraServer(ip, port)), null, null, Optional.of(0));
+        return createClusterForClusterWithPassWord(ImmutableList.of(new CassandraNodeIpAndPort(ip, port)), null, null, Optional.of(0));
     }
 
     public static Cluster createDefaultSession() {
-        return createClusterForSingleServerWithoutPassWord(DEFAULT_CLUSTER_IP, DEFAULT_CLUSTER_PORT);
+        return createClusterForSingleServerWithoutPassWord(DEFAULT_CLUSTER_IP, CassandraNodeIpAndPort.DEFAULT_CASSANDRA_PORT);
     }
 }

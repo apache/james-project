@@ -30,10 +30,8 @@
     <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/cassandra-template.properties">cassandra-template.properties</a> to get some examples and hints.</p>
 
       <dl>
-        <dt><strong>cassandra.ip</strong></dt>
-        <dd>Is the IP (or host) of the Cassandra used. (cluster is not yet supported)</dd>
-        <dt><strong>cassandra.port</strong></dt>
-        <dd>Is the port used to connect to Cassandra.</dd>
+        <dt><strong>cassandra.nodes</strong></dt>
+        <dd>List of some nodes of the cassandra's cluster in following format host:port or host, if the port is not specified we use 9042</dd>
         <dt><strong>cassandra.keyspace</strong></dt>
         <dd>Is the name of the keyspace used by James.</dd>
         <dt><strong>cassandra.replication.factor</strong></dt>

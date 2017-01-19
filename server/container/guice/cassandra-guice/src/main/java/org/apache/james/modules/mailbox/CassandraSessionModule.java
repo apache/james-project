@@ -19,6 +19,8 @@
 package org.apache.james.modules.mailbox;
 
 import java.io.FileNotFoundException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -27,6 +29,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.init.CassandraNodeIpAndPort;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.init.ClusterFactory;
 import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
@@ -36,6 +39,7 @@ import org.apache.james.filesystem.api.FileSystem;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.exceptions.NoHostAvailableException;
+import com.github.steveash.guavate.Guavate;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -54,7 +58,7 @@ public class CassandraSessionModule extends AbstractModule {
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().to(CassandraZonedDateTimeModule.class);
     }
-    
+
     @Provides
     @Singleton
     CassandraModule composeDataDefinitions(Set<CassandraModule> modules) {
@@ -63,28 +67,40 @@ public class CassandraSessionModule extends AbstractModule {
 
     @Provides
     @Singleton
-    Session provideSession(FileSystem fileSystem, Cluster cluster, CassandraModule cassandraModule)
+    Session provideSession(CassandraSessionConfiguration configuration, Cluster cluster, CassandraModule cassandraModule)
             throws FileNotFoundException, ConfigurationException{
-        PropertiesConfiguration configuration = getConfiguration(fileSystem);
-        String keyspace = configuration.getString("cassandra.keyspace");
+        String keyspace = configuration.getConfiguration().getString("cassandra.keyspace");
         return new SessionWithInitializedTablesFactory(cassandraModule).createSession(cluster, keyspace);
     }
 
     @Provides
     @Singleton
-    Cluster provideCluster(FileSystem fileSystem, AsyncRetryExecutor executor) throws FileNotFoundException, ConfigurationException, ExecutionException, InterruptedException {
-        PropertiesConfiguration configuration = getConfiguration(fileSystem);
+    CassandraSessionConfiguration getCassandraSessionConfiguration(FileSystem fileSystem) {
+        return () -> getConfiguration(fileSystem);
+    }
+
+    @Provides
+    @Singleton
+    Cluster provideCluster(CassandraSessionConfiguration cassandraSessionConfiguration, AsyncRetryExecutor executor) throws FileNotFoundException, ConfigurationException, ExecutionException, InterruptedException {
+        PropertiesConfiguration configuration = cassandraSessionConfiguration.getConfiguration();
+        List<CassandraNodeIpAndPort> servers = listCassandraServers(configuration);
 
         return getRetryer(executor, configuration)
                 .getWithRetry(ctx -> ClusterWithKeyspaceCreatedFactory
                         .config(
-                            ClusterFactory.createClusterForSingleServerWithoutPassWord(
-                                    configuration.getString("cassandra.ip"),
-                                    configuration.getInt("cassandra.port")),
+                            ClusterFactory.createClusterForClusterWithoutPassWord(servers),
                             configuration.getString("cassandra.keyspace"))
                         .replicationFactor(configuration.getInt("cassandra.replication.factor"))
                         .clusterWithInitializedKeyspace())
                 .get();
+    }
+
+    private List<CassandraNodeIpAndPort> listCassandraServers(PropertiesConfiguration configuration) {
+        String[] ipAndPorts = configuration.getStringArray("cassandra.nodes");
+
+        return Arrays.stream(ipAndPorts)
+                .map(CassandraNodeIpAndPort::parseConfString)
+                .collect(Guavate.toImmutableList());
     }
 
     private static AsyncRetryExecutor getRetryer(AsyncRetryExecutor executor, PropertiesConfiguration configuration) {
