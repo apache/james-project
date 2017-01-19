@@ -144,20 +144,20 @@ public abstract class SetMessagesMethodTest {
 
     private String getMailboxId(AccessToken accessToken, Role role) {
         return getAllMailboxesIds(accessToken).stream()
-                .filter(x -> x.get("role").equals(role.serialize()))
-                .map(x -> x.get("id"))
-                .findFirst().get();
+            .filter(x -> x.get("role").equals(role.serialize()))
+            .map(x -> x.get("id"))
+            .findFirst().get();
     }
     
     private List<Map<String, String>> getAllMailboxesIds(AccessToken accessToken) {
         return with()
-                .header("Authorization", accessToken.serialize())
-                .body("[[\"getMailboxes\", {\"properties\": [\"role\", \"id\"]}, \"#0\"]]")
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"properties\": [\"role\", \"id\"]}, \"#0\"]]")
         .post("/jmap")
-                .andReturn()
-                .body()
-                .jsonPath()
-                .getList(ARGUMENTS + ".list");
+            .andReturn()
+            .body()
+            .jsonPath()
+            .getList(ARGUMENTS + ".list");
     }
 
     @Test
@@ -203,9 +203,9 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".destroyed", empty())
             .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(unknownMailboxMessageId), Matchers.allOf(
-                    hasEntry("type", "notFound"),
-                    hasEntry("description", "The message " + unknownMailboxMessageId + " can't be found"),
-                    hasEntry(equalTo("properties"), isEmptyOrNullString())))
+                hasEntry("type", "notFound"),
+                hasEntry("description", "The message " + unknownMailboxMessageId + " can't be found"),
+                hasEntry(equalTo("properties"), isEmptyOrNullString())))
             );
     }
 
@@ -225,9 +225,9 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".destroyed", empty())
             .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(messageId), Matchers.allOf(
-                    hasEntry("type", "notFound"),
-                    hasEntry("description", "The message " + messageId + " can't be found"),
-                    hasEntry(equalTo("properties"), isEmptyOrNullString())))
+                hasEntry("type", "notFound"),
+                hasEntry("description", "The message " + messageId + " can't be found"),
+                hasEntry(equalTo("properties"), isEmptyOrNullString())))
             );
     }
 
@@ -237,7 +237,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         given()
@@ -260,7 +260,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         // When
@@ -291,22 +291,22 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message1 = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
         jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
         ComposedMessageId message3 = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String missingMessageId = randomMessageId().serialize();
         given()
             .header("Authorization", accessToken.serialize())
             .body(String.format("[[\"setMessages\", {\"destroy\": [\"%s\", \"%s\", \"%s\"]}, \"#0\"]]",
-                    message1.getMessageId().serialize(),
-                    missingMessageId,
-                    message3.getMessageId().serialize()))
+                message1.getMessageId().serialize(),
+                missingMessageId,
+                message3.getMessageId().serialize()))
         .when()
             .post("/jmap")
         .then()
@@ -317,8 +317,8 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notDestroyed", aMapWithSize(1))
             .body(ARGUMENTS + ".destroyed", contains(message1.getMessageId().serialize(), message3.getMessageId().serialize()))
             .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(missingMessageId), Matchers.allOf(
-                    hasEntry("type", "notFound"),
-                    hasEntry("description", "The message " + missingMessageId + " can't be found")))
+                hasEntry("type", "notFound"),
+                hasEntry("description", "The message " + missingMessageId + " can't be found")))
             );
     }
 
@@ -328,31 +328,31 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message1 = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
         ComposedMessageId message2 = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
         ComposedMessageId message3 = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         // When
         with()
             .header("Authorization", accessToken.serialize())
             .body(String.format("[[\"setMessages\", {\"destroy\": [\"%s\", \"%s\", \"%s\"]}, \"#0\"]]",
-                    message1.getMessageId().serialize(),
-                    randomMessageId().serialize(),
-                    message3.getMessageId().serialize()))
+                message1.getMessageId().serialize(),
+                randomMessageId().serialize(),
+                message3.getMessageId().serialize()))
         .post("/jmap");
         
         // Then
         given()
             .header("Authorization", accessToken.serialize())
             .body(String.format("[[\"getMessages\", {\"ids\": [\"%s\", \"%s\", \"%s\"]}, \"#0\"]]",
-                    message1.getMessageId().serialize(),
-                    message2.getMessageId().serialize(),
-                    message3.getMessageId().serialize()))
+                message1.getMessageId().serialize(),
+                message2.getMessageId().serialize(),
+                message3.getMessageId().serialize()))
         .when()
             .post("/jmap")
         .then()
@@ -368,7 +368,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -387,12 +387,12 @@ public abstract class SetMessagesMethodTest {
 
     private ResponseSpecification getSetMessagesUpdateOKResponseAssertions(String messageId) {
         ResponseSpecBuilder builder = new ResponseSpecBuilder()
-                .expectStatusCode(200)
-                .expectBody(NAME, equalTo("messagesSet"))
-                .expectBody(ARGUMENTS + ".updated", hasSize(1))
-                .expectBody(ARGUMENTS + ".updated", contains(messageId))
-                .expectBody(ARGUMENTS + ".error", isEmptyOrNullString())
-                .expectBody(NOT_UPDATED, not(hasKey(messageId)));
+            .expectStatusCode(200)
+            .expectBody(NAME, equalTo("messagesSet"))
+            .expectBody(ARGUMENTS + ".updated", hasSize(1))
+            .expectBody(ARGUMENTS + ".updated", contains(messageId))
+            .expectBody(ARGUMENTS + ".error", isEmptyOrNullString())
+            .expectBody(NOT_UPDATED, not(hasKey(messageId)));
         return builder.build();
     }
 
@@ -402,7 +402,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -431,7 +431,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -453,7 +453,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -482,7 +482,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -504,7 +504,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -530,7 +530,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldRejectUpdateWhenPropertyHasWrongType() throws MailboxException {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
         jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
         await();
 
@@ -558,7 +558,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldRejectUpdateWhenPropertiesHaveWrongTypes() throws MailboxException {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
         jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
         await();
 
@@ -587,7 +587,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -609,7 +609,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -657,20 +657,20 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-                "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -688,17 +688,17 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".created", aMapWithSize(1))
             // assert server-set attributes are returned
             .body(ARGUMENTS + ".created", hasEntry(equalTo(messageCreationId), Matchers.allOf(
-                    hasEntry(equalTo("id"), not(isEmptyOrNullString())),
-                    hasEntry(equalTo("blobId"), not(isEmptyOrNullString())),
-                    hasEntry(equalTo("threadId"), not(isEmptyOrNullString())),
-                    hasEntry(equalTo("size"), not(isEmptyOrNullString()))
+                hasEntry(equalTo("id"), not(isEmptyOrNullString())),
+                hasEntry(equalTo("blobId"), not(isEmptyOrNullString())),
+                hasEntry(equalTo("threadId"), not(isEmptyOrNullString())),
+                hasEntry(equalTo("size"), not(isEmptyOrNullString()))
             )))
             // assert that message flags are all unset
             .body(ARGUMENTS + ".created", hasEntry(equalTo(messageCreationId), Matchers.allOf(
-                    hasEntry(equalTo("isDraft"), equalTo(false)),
-                    hasEntry(equalTo("isUnread"), equalTo(false)),
-                    hasEntry(equalTo("isFlagged"), equalTo(false)),
-                    hasEntry(equalTo("isAnswered"), equalTo(false))
+                hasEntry(equalTo("isDraft"), equalTo(false)),
+                hasEntry(equalTo("isUnread"), equalTo(false)),
+                hasEntry(equalTo("isFlagged"), equalTo(false)),
+                hasEntry(equalTo("isAnswered"), equalTo(false))
             )))
             ;
     }
@@ -708,19 +708,19 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-                "        \"subject\": null," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": null," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -742,19 +742,19 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-                "        \"subject\": \"\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -776,19 +776,19 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-                "        \"subject\": \"تصور واضح للعلاقة بين النموذج الرياضي المثالي ومنظومة الظواهر\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"تصور واضح للعلاقة بين النموذج الرياضي المثالي ومنظومة الظواهر\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -846,20 +846,20 @@ public abstract class SetMessagesMethodTest {
         String messageSubject = "Thank you for joining example.com!";
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-                "        \"subject\": \"" + messageSubject + "\"," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + outboxId + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"" + messageSubject + "\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + outboxId + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         String messageId = with()
             .header("Authorization", accessToken.serialize())
@@ -896,27 +896,27 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String messageSubject = "Thank you for joining example.com!";
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-                "        \"subject\": \"" + messageSubject + "\"," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"" + messageSubject + "\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
         // When
         .when()
-                .post("/jmap");
+            .post("/jmap");
 
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
@@ -925,14 +925,14 @@ public abstract class SetMessagesMethodTest {
     private boolean messageHasBeenMovedToSentBox(String sentMailboxId) {
         try {
             with()
-                    .header("Authorization", accessToken.serialize())
-                    .body("[[\"getMessageList\", {\"fetchMessages\":true, \"filter\":{\"inMailboxes\":[\"" + sentMailboxId + "\"]}}, \"#0\"]]")
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMessageList\", {\"fetchMessages\":true, \"filter\":{\"inMailboxes\":[\"" + sentMailboxId + "\"]}}, \"#0\"]]")
             .when()
-                    .post("/jmap")
+                .post("/jmap")
             .then()
-                    .statusCode(200)
-                    .body(SECOND_NAME, equalTo("messages"))
-                    .body(SECOND_ARGUMENTS + ".list", hasSize(1));
+                .statusCode(200)
+                .body(SECOND_NAME, equalTo("messages"))
+                .body(SECOND_ARGUMENTS + ".list", hasSize(1));
             return true;
         } catch(AssertionError e) {
             return false;
@@ -944,21 +944,21 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com@example.com\"}]," +
-                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
-                "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com@example.com\"}]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -980,20 +980,20 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldRejectWhenSendingMessageHasMissingFrom() {
         String messageCreationId = "creationId1337";
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
-                "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -1017,21 +1017,21 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
-                "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -1054,21 +1054,21 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
-                "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"htmlBody\": \"Hello <i>someone</i>, and thank <b>you</b> for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"htmlBody\": \"Hello <i>someone</i>, and thank <b>you</b> for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -1094,29 +1094,29 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
-                "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         // Given
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
         // When
         .when()
-                .post("/jmap");
+            .post("/jmap");
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
     }
@@ -1126,20 +1126,20 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -1205,29 +1205,29 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + recipientAddress + "\"}]," +
-                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
-                "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + recipientAddress + "\"}]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         // Given
         given()
-                .header("Authorization", this.accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
         // When
         .when()
-                .post("/jmap");
+            .post("/jmap");
 
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
@@ -1250,30 +1250,30 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"recipient\", \"email\": \"" + recipientAddress + "\"}]," +
-                "        \"bcc\": [{ \"name\": \"BOB\", \"email\": \"" + bccRecipient + "\"}]," +
-                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
-                "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"recipient\", \"email\": \"" + recipientAddress + "\"}]," +
+            "        \"bcc\": [{ \"name\": \"BOB\", \"email\": \"" + bccRecipient + "\"}]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         // Given
         given()
-                .header("Authorization", this.accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
         // When
         .when()
-                .post("/jmap");
+            .post("/jmap");
 
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
@@ -1306,30 +1306,30 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"recipient\", \"email\": \"" + recipientAddress + "\"}]," +
-                "        \"bcc\": [{ \"name\": \"BOB\", \"email\": \"bob@" + USERS_DOMAIN + "\" }]," +
-                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
-                "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"recipient\", \"email\": \"" + recipientAddress + "\"}]," +
+            "        \"bcc\": [{ \"name\": \"BOB\", \"email\": \"bob@" + USERS_DOMAIN + "\" }]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         // Given
         given()
-                .header("Authorization", this.accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
         // When
         .when()
-                .post("/jmap");
+            .post("/jmap");
 
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
@@ -1366,30 +1366,30 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"recipient\", \"email\": \"" + recipientAddress + "\"}]," +
-                "        \"bcc\": [{ \"name\": \"BOB\", \"email\": \"" + bccAddress + "\" }]," +
-                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
-                "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"recipient\", \"email\": \"" + recipientAddress + "\"}]," +
+            "        \"bcc\": [{ \"name\": \"BOB\", \"email\": \"" + bccAddress + "\" }]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         // Given
         given()
-                .header("Authorization", this.accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
         // When
         .when()
-                .post("/jmap");
+            .post("/jmap");
 
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(bccToken));
@@ -1409,14 +1409,14 @@ public abstract class SetMessagesMethodTest {
     private boolean isAnyMessageFoundInRecipientsMailboxes(AccessToken recipientToken) {
         try {
             with()
-                    .header("Authorization", recipientToken.serialize())
-                    .body("[[\"getMessageList\", {}, \"#0\"]]")
+                .header("Authorization", recipientToken.serialize())
+                .body("[[\"getMessageList\", {}, \"#0\"]]")
             .when()
-                    .post("/jmap")
+                .post("/jmap")
             .then()
-                    .statusCode(200)
-                    .body(NAME, equalTo("messageList"))
-                    .body(ARGUMENTS + ".messageIds", hasSize(1));
+                .statusCode(200)
+                .body(NAME, equalTo("messageList"))
+                .body(ARGUMENTS + ".messageIds", hasSize(1));
             return true;
             
         } catch (AssertionError e) {
@@ -1440,28 +1440,28 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + recipientAddress + "\"}]," +
-                "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"htmlBody\": \"Hello <b>someone</b>, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + recipientAddress + "\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"htmlBody\": \"Hello <b>someone</b>, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         // Given
         given()
-                .header("Authorization", this.accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
         // When
         .when()
-                .post("/jmap");
+            .post("/jmap");
 
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isHtmlMessageReceived(recipientToken));
@@ -1485,22 +1485,22 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + recipientAddress + "\"}]," +
-                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
-                "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + senderDraftsMailboxId + "\"], " +
-                "        \"isDraft\": false" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + recipientAddress + "\"}]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + senderDraftsMailboxId + "\"], " +
+            "        \"isDraft\": false" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", this.accessToken.serialize())
@@ -1531,21 +1531,21 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + recipientAddress + "\"}]," +
-                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
-                "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + regularMailbox.getMailboxId().serialize() + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + recipientAddress + "\"}]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + regularMailbox.getMailboxId().serialize() + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         String notCreatedMessage = ARGUMENTS + ".notCreated[\""+messageCreationId+"\"]";
         given()
@@ -1595,29 +1595,29 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + recipientAddress + "\"}]," +
-                "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"htmlBody\": \"Hello <b>someone</b>, and thank you for joining example.com!\"," +
-                "        \"textBody\": \"Hello someone, and thank you for joining example.com, text version!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + recipientAddress + "\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"htmlBody\": \"Hello <b>someone</b>, and thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com, text version!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         // Given
         given()
-                .header("Authorization", this.accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
         // When
         .when()
-                .post("/jmap");
+            .post("/jmap");
 
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isTextPlusHtmlMessageReceived(recipientToken));
@@ -1665,9 +1665,9 @@ public abstract class SetMessagesMethodTest {
         given()
             .header("Authorization", accessToken.serialize())
             .body(requestBody)
-            .when()
+        .when()
             .post("/jmap")
-            .then()
+        .then()
             .log().ifValidationFails()
             .spec(getSetMessagesUpdateOKResponseAssertions(messageToMoveId));
     }
@@ -1699,16 +1699,16 @@ public abstract class SetMessagesMethodTest {
         given()
             .header("Authorization", accessToken.serialize())
             .body(requestBody)
-            .when()
+        .when()
             .post("/jmap");
 
         String firstMessage = ARGUMENTS + ".list[0]";
         given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
-            .when()
+        .when()
             .post("/jmap")
-            .then()
+        .then()
             .statusCode(200)
             .log().ifValidationFails()
             .body(NAME, equalTo("messages"))
@@ -1796,9 +1796,9 @@ public abstract class SetMessagesMethodTest {
         given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
-            .when()
+        .when()
             .post("/jmap")
-            .then()
+        .then()
             .statusCode(200)
             .log().ifValidationFails()
             .body(NAME, equalTo("messages"))
@@ -1829,16 +1829,16 @@ public abstract class SetMessagesMethodTest {
         given()
             .header("Authorization", accessToken.serialize())
             .body(requestBody)
-            .when()
+        .when()
             .post("/jmap");
 
         String firstMessage = ARGUMENTS + ".list[0]";
         given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
-            .when()
+        .when()
             .post("/jmap")
-            .then()
+        .then()
             .statusCode(200)
             .log().ifValidationFails()
             .body(NAME, equalTo("messages"))
@@ -1874,9 +1874,9 @@ public abstract class SetMessagesMethodTest {
         given()
             .header("Authorization", accessToken.serialize())
             .body(requestBody)
-            .when()
+        .when()
             .post("/jmap")
-            .then()
+        .then()
             .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("messagesSet"))
@@ -1907,9 +1907,9 @@ public abstract class SetMessagesMethodTest {
         given()
             .header("Authorization", accessToken.serialize())
             .body(requestBody)
-            .when()
+        .when()
             .post("/jmap")
-            .then()
+        .then()
             .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("messagesSet"))
@@ -1948,9 +1948,9 @@ public abstract class SetMessagesMethodTest {
         given()
             .header("Authorization", accessToken.serialize())
             .body(requestBody)
-            .when()
+        .when()
             .post("/jmap")
-            .then()
+        .then()
             .log().ifValidationFails()
             .spec(getSetMessagesUpdateOKResponseAssertions(messageToMoveId));
     }
@@ -1983,16 +1983,16 @@ public abstract class SetMessagesMethodTest {
         given()
             .header("Authorization", accessToken.serialize())
             .body(requestBody)
-            .when()
+        .when()
             .post("/jmap");
 
         String firstMessage = ARGUMENTS + ".list[0]";
         given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
-            .when()
+        .when()
             .post("/jmap")
-            .then()
+        .then()
             .statusCode(200)
             .log().ifValidationFails()
             .body(NAME, equalTo("messages"))
@@ -2086,24 +2086,24 @@ public abstract class SetMessagesMethodTest {
         String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-                "        \"subject\": \"Message with a broken blobId\"," +
-                "        \"textBody\": \"Test body\"," +
-                "        \"mailboxIds\": [\"" + outboxId + "\"], " +
-                "        \"attachments\": [" +
-                "                {\"blobId\" : \"brokenId1\", \"type\" : \"image/gif\", \"size\" : 1337}," +
-                "                {\"blobId\" : \"brokenId2\", \"type\" : \"image/jpeg\", \"size\" : 1337}" +
-                "             ]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"Message with a broken blobId\"," +
+            "        \"textBody\": \"Test body\"," +
+            "        \"mailboxIds\": [\"" + outboxId + "\"], " +
+            "        \"attachments\": [" +
+            "                {\"blobId\" : \"brokenId1\", \"type\" : \"image/gif\", \"size\" : 1337}," +
+            "                {\"blobId\" : \"brokenId2\", \"type\" : \"image/jpeg\", \"size\" : 1337}" +
+            "             ]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         String notCreatedPath = ARGUMENTS + ".notCreated[\""+messageCreationId+"\"]";
 
@@ -2126,44 +2126,44 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         Attachment attachment = Attachment.builder()
-                .bytes("attachment".getBytes(Charsets.UTF_8))
-                .type("application/octet-stream")
-                .build();
+            .bytes("attachment".getBytes(Charsets.UTF_8))
+            .type("application/octet-stream")
+            .build();
         uploadAttachment(attachment);
         Attachment attachment2 = Attachment.builder()
-                .bytes("attachment2".getBytes(Charsets.UTF_8))
-                .type("application/octet-stream")
-                .build();
+            .bytes("attachment2".getBytes(Charsets.UTF_8))
+            .type("application/octet-stream")
+            .build();
         uploadAttachment(attachment2);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-                "        \"subject\": \"Message with two attachments\"," +
-                "        \"textBody\": \"Test body\"," +
-                "        \"mailboxIds\": [\"" + outboxId + "\"], " +
-                "        \"attachments\": [" +
-                "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
-                "               \"type\" : \"" + attachment.getType() + "\", " +
-                "               \"size\" : " + attachment.getSize() + "}," +
-                "               {\"blobId\" : \"" + attachment2.getAttachmentId().getId() + "\", " +
-                "               \"type\" : \"" + attachment2.getType() + "\", " +
-                "               \"size\" : " + attachment2.getSize() + ", " +
-                "               \"cid\" : \"123456789\", " +
-                "               \"isInline\" : true }" +
-                "           ]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"Message with two attachments\"," +
+            "        \"textBody\": \"Test body\"," +
+            "        \"mailboxIds\": [\"" + outboxId + "\"], " +
+            "        \"attachments\": [" +
+            "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "               \"type\" : \"" + attachment.getType() + "\", " +
+            "               \"size\" : " + attachment.getSize() + "}," +
+            "               {\"blobId\" : \"" + attachment2.getAttachmentId().getId() + "\", " +
+            "               \"type\" : \"" + attachment2.getType() + "\", " +
+            "               \"size\" : " + attachment2.getSize() + ", " +
+            "               \"cid\" : \"123456789\", " +
+            "               \"isInline\" : true }" +
+            "           ]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         String createdPath = ARGUMENTS + ".created[\""+messageCreationId+"\"]";
         String firstAttachment = createdPath + ".attachments[0]";
@@ -2197,67 +2197,67 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         Attachment attachment = Attachment.builder()
-                .bytes("attachment".getBytes(Charsets.UTF_8))
-                .type("application/octet-stream")
-                .build();
+            .bytes("attachment".getBytes(Charsets.UTF_8))
+            .type("application/octet-stream")
+            .build();
         uploadAttachment(attachment);
         Attachment attachment2 = Attachment.builder()
-                .bytes("attachment2".getBytes(Charsets.UTF_8))
-                .type("application/octet-stream")
-                .build();
+            .bytes("attachment2".getBytes(Charsets.UTF_8))
+            .type("application/octet-stream")
+            .build();
         uploadAttachment(attachment2);
         Attachment attachment3 = Attachment.builder()
-                .bytes("attachment3".getBytes(Charsets.UTF_8))
-                .type("application/octet-stream")
-                .build();
+            .bytes("attachment3".getBytes(Charsets.UTF_8))
+            .type("application/octet-stream")
+            .build();
         uploadAttachment(attachment3);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\":" +
-                "      {" +
-                "        \"" + messageCreationId  + "\" : "+
-                "        {" +
-                "          \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "          \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-                "          \"subject\": \"Message with three attachments with non ASCII name\"," +
-                "          \"textBody\": \"Test body\"," +
-                "          \"mailboxIds\": [\"" + outboxId + "\"], " +
-                "          \"attachments\":" +
-                "          [" +
-                "            {" +
-                "              \"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
-                "              \"type\" : \"" + attachment.getType() + "\", " +
-                "              \"size\" : " + attachment.getSize() + "," +
-                "              \"name\" : \"ديناصور.png\", " +
-                "              \"isInline\" : false" +
-                "            }," +
-                "            {" +
-                "              \"blobId\" : \"" + attachment2.getAttachmentId().getId() + "\", " +
-                "              \"type\" : \"" + attachment2.getType() + "\", " +
-                "              \"size\" : " + attachment2.getSize() + "," +
-                "              \"name\" : \"эволюционировать.png\", " +
-                "              \"isInline\" : false" +
-                "            }," +
-                "            {" +
-                "              \"blobId\" : \"" + attachment3.getAttachmentId().getId() + "\", " +
-                "              \"type\" : \"" + attachment3.getType() + "\", " +
-                "              \"size\" : " + attachment3.getSize() + "," +
-                "              \"name\" : \"进化还是不.png\"," +
-                "              \"isInline\" : false" +
-                "            }" +
-                "          ]" +
-                "        }" +
-                "      }" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\":" +
+            "      {" +
+            "        \"" + messageCreationId  + "\" : "+
+            "        {" +
+            "          \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "          \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "          \"subject\": \"Message with three attachments with non ASCII name\"," +
+            "          \"textBody\": \"Test body\"," +
+            "          \"mailboxIds\": [\"" + outboxId + "\"], " +
+            "          \"attachments\":" +
+            "          [" +
+            "            {" +
+            "              \"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "              \"type\" : \"" + attachment.getType() + "\", " +
+            "              \"size\" : " + attachment.getSize() + "," +
+            "              \"name\" : \"ديناصور.png\", " +
+            "              \"isInline\" : false" +
+            "            }," +
+            "            {" +
+            "              \"blobId\" : \"" + attachment2.getAttachmentId().getId() + "\", " +
+            "              \"type\" : \"" + attachment2.getType() + "\", " +
+            "              \"size\" : " + attachment2.getSize() + "," +
+            "              \"name\" : \"эволюционировать.png\", " +
+            "              \"isInline\" : false" +
+            "            }," +
+            "            {" +
+            "              \"blobId\" : \"" + attachment3.getAttachmentId().getId() + "\", " +
+            "              \"type\" : \"" + attachment3.getType() + "\", " +
+            "              \"size\" : " + attachment3.getSize() + "," +
+            "              \"name\" : \"进化还是不.png\"," +
+            "              \"isInline\" : false" +
+            "            }" +
+            "          ]" +
+            "        }" +
+            "      }" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         String createdPath = ARGUMENTS + ".created[\""+messageCreationId+"\"]";
         String firstAttachment = createdPath + ".attachments[0]";
@@ -2285,69 +2285,69 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         Attachment attachment = Attachment.builder()
-                .bytes("attachment".getBytes(Charsets.UTF_8))
-                .type("application/octet-stream")
-                .build();
+            .bytes("attachment".getBytes(Charsets.UTF_8))
+            .type("application/octet-stream")
+            .build();
         uploadAttachment(attachment);
 
         Attachment attachment2 = Attachment.builder()
-                .bytes("attachment2".getBytes(Charsets.UTF_8))
-                .type("application/octet-stream")
-                .build();
+            .bytes("attachment2".getBytes(Charsets.UTF_8))
+            .type("application/octet-stream")
+            .build();
         uploadAttachment(attachment2);
 
         Attachment attachment3 = Attachment.builder()
-                .bytes("attachment3".getBytes(Charsets.UTF_8))
-                .type("application/octet-stream")
-                .build();
+            .bytes("attachment3".getBytes(Charsets.UTF_8))
+            .type("application/octet-stream")
+            .build();
         uploadAttachment(attachment3);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\":" +
-                "      {" +
-                "        \"" + messageCreationId  + "\" : "+
-                "        {" +
-                "          \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "          \"to\": [{ \"name\": \"BOB\", \"email\": \"" + fromAddress + "\"}]," +
-                "          \"subject\": \"Message with three attachments with non ASCII name\"," +
-                "          \"textBody\": \"Test body\"," +
-                "          \"mailboxIds\": [\"" + outboxId + "\"], " +
-                "          \"attachments\":" +
-                "          [" +
-                "            {" +
-                "              \"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
-                "              \"type\" : \"" + attachment.getType() + "\", " +
-                "              \"size\" : " + attachment.getSize() + "," +
-                "              \"name\" : \"ديناصور.png\", " +
-                "              \"isInline\" : false" +
-                "            }," +
-                "            {" +
-                "              \"blobId\" : \"" + attachment2.getAttachmentId().getId() + "\", " +
-                "              \"type\" : \"" + attachment2.getType() + "\", " +
-                "              \"size\" : " + attachment2.getSize() + "," +
-                "              \"name\" : \"эволюционировать.png\", " +
-                "              \"isInline\" : false" +
-                "            }," +
-                "            {" +
-                "              \"blobId\" : \"" + attachment3.getAttachmentId().getId() + "\", " +
-                "              \"type\" : \"" + attachment3.getType() + "\", " +
-                "              \"size\" : " + attachment3.getSize() + "," +
-                "              \"name\" : \"进化还是不.png\"," +
-                "              \"isInline\" : false" +
-                "            }" +
-                "          ]" +
-                "        }" +
-                "      }" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\":" +
+            "      {" +
+            "        \"" + messageCreationId  + "\" : "+
+            "        {" +
+            "          \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "          \"to\": [{ \"name\": \"BOB\", \"email\": \"" + fromAddress + "\"}]," +
+            "          \"subject\": \"Message with three attachments with non ASCII name\"," +
+            "          \"textBody\": \"Test body\"," +
+            "          \"mailboxIds\": [\"" + outboxId + "\"], " +
+            "          \"attachments\":" +
+            "          [" +
+            "            {" +
+            "              \"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "              \"type\" : \"" + attachment.getType() + "\", " +
+            "              \"size\" : " + attachment.getSize() + "," +
+            "              \"name\" : \"ديناصور.png\", " +
+            "              \"isInline\" : false" +
+            "            }," +
+            "            {" +
+            "              \"blobId\" : \"" + attachment2.getAttachmentId().getId() + "\", " +
+            "              \"type\" : \"" + attachment2.getType() + "\", " +
+            "              \"size\" : " + attachment2.getSize() + "," +
+            "              \"name\" : \"эволюционировать.png\", " +
+            "              \"isInline\" : false" +
+            "            }," +
+            "            {" +
+            "              \"blobId\" : \"" + attachment3.getAttachmentId().getId() + "\", " +
+            "              \"type\" : \"" + attachment3.getType() + "\", " +
+            "              \"size\" : " + attachment3.getSize() + "," +
+            "              \"name\" : \"进化还是不.png\"," +
+            "              \"isInline\" : false" +
+            "            }" +
+            "          ]" +
+            "        }" +
+            "      }" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -2367,7 +2367,7 @@ public abstract class SetMessagesMethodTest {
             with()
                 .header("Authorization", accessToken.serialize())
                 .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
-            .post("/jmap")
+                .post("/jmap")
             .then()
                 .extract()
                 .path(ARGUMENTS + ".messageIds[0]");
@@ -2393,7 +2393,7 @@ public abstract class SetMessagesMethodTest {
             .header("Authorization", accessToken.serialize())
             .contentType(attachment.getType())
             .content(attachment.getStream())
-        .post("/upload");
+            .post("/upload");
     }
 
     private void uploadTextAttachment(Attachment attachment) throws IOException {
@@ -2401,7 +2401,7 @@ public abstract class SetMessagesMethodTest {
             .header("Authorization", accessToken.serialize())
             .contentType(attachment.getType())
             .content(new String(IOUtils.toByteArray(attachment.getStream()), Charsets.UTF_8))
-        .post("/upload");
+            .post("/upload");
     }
 
     @Test
@@ -2409,16 +2409,16 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         byte[] rawBytes = new byte[]{-128,-127,-126,-125,-124,-123,-122,-121,-120,-119,-118,-117,-116,-115,-114,-113,-112,-111,-110,-109,-108,-107,-106,-105,-104,-103,-102,-101,-100,
-                -99,-98,-97,-96,-95,-94,-93,-92,-91,-90,-89,-88,-87,-86,-85,-84,-83,-82,-81,-80,-79,-78,-77,-76,-75,-74,-73,-72,-71,-70,-69,-68,-67,-66,-65,-64,-63,-62,-61,-60,-59,-58,-57,-56,-55,-54,-53,-52,-51,
-                -50,-49,-48,-47,-46,-45,-44,-43,-42,-41,-40,-39,-38,-37,-36,-35,-34,-33,-32,-31,-30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,
-                0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,
-                50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,
-                100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127};
+            -99,-98,-97,-96,-95,-94,-93,-92,-91,-90,-89,-88,-87,-86,-85,-84,-83,-82,-81,-80,-79,-78,-77,-76,-75,-74,-73,-72,-71,-70,-69,-68,-67,-66,-65,-64,-63,-62,-61,-60,-59,-58,-57,-56,-55,-54,-53,-52,-51,
+            -50,-49,-48,-47,-46,-45,-44,-43,-42,-41,-40,-39,-38,-37,-36,-35,-34,-33,-32,-31,-30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,
+            0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,
+            50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,
+            100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127};
         
         Attachment attachment = Attachment.builder()
-                .bytes(rawBytes)
-                .type("application/octet-stream")
-                .build();
+            .bytes(rawBytes)
+            .type("application/octet-stream")
+            .build();
         uploadAttachment(attachment);
         String expectedBlobId = attachment.getAttachmentId().getId();
 
@@ -2426,27 +2426,27 @@ public abstract class SetMessagesMethodTest {
         String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
-                "        \"subject\": \"Message with an attachment\"," +
-                "        \"textBody\": \"Test body\"," +
-                "        \"mailboxIds\": [\"" + outboxId + "\"], " +
-                "        \"attachments\": [" +
-                "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
-                "               \"type\" : \"" + attachment.getType() + "\", " +
-                "               \"size\" : " + attachment.getSize() + ", " +
-                "               \"cid\" : \"123456789\", " +
-                "               \"isInline\" : true }" +
-                "           ]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
+            "        \"subject\": \"Message with an attachment\"," +
+            "        \"textBody\": \"Test body\"," +
+            "        \"mailboxIds\": [\"" + outboxId + "\"], " +
+            "        \"attachments\": [" +
+            "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "               \"type\" : \"" + attachment.getType() + "\", " +
+            "               \"size\" : " + attachment.getSize() + ", " +
+            "               \"cid\" : \"123456789\", " +
+            "               \"isInline\" : true }" +
+            "           ]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         with()
             .header("Authorization", accessToken.serialize())
@@ -2489,9 +2489,9 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         Attachment attachment = Attachment.builder()
-                .bytes(ByteStreams.toByteArray(new ZeroedInputStream(_1MB)))
-                .type("application/octet-stream")
-                .build();
+            .bytes(ByteStreams.toByteArray(new ZeroedInputStream(_1MB)))
+            .type("application/octet-stream")
+            .build();
         uploadAttachment(attachment);
         String expectedBlobId = attachment.getAttachmentId().getId();
 
@@ -2499,27 +2499,27 @@ public abstract class SetMessagesMethodTest {
         String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
-                "        \"subject\": \"Message with an attachment\"," +
-                "        \"textBody\": \"Test body\"," +
-                "        \"mailboxIds\": [\"" + outboxId + "\"], " +
-                "        \"attachments\": [" +
-                "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
-                "               \"type\" : \"" + attachment.getType() + "\", " +
-                "               \"size\" : " + attachment.getSize() + ", " +
-                "               \"cid\" : \"123456789\", " +
-                "               \"isInline\" : true }" +
-                "           ]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
+            "        \"subject\": \"Message with an attachment\"," +
+            "        \"textBody\": \"Test body\"," +
+            "        \"mailboxIds\": [\"" + outboxId + "\"], " +
+            "        \"attachments\": [" +
+            "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "               \"type\" : \"" + attachment.getType() + "\", " +
+            "               \"size\" : " + attachment.getSize() + ", " +
+            "               \"cid\" : \"123456789\", " +
+            "               \"isInline\" : true }" +
+            "           ]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -2562,14 +2562,14 @@ public abstract class SetMessagesMethodTest {
         try {
             String inboxId = getMailboxId(accessToken, Role.INBOX);
             with()
-                    .header("Authorization", recipientToken.serialize())
-                    .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
+                .header("Authorization", recipientToken.serialize())
+                .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
             .when()
-                    .post("/jmap")
+                .post("/jmap")
             .then()
-                    .statusCode(200)
-                    .body(NAME, equalTo("messageList"))
-                    .body(ARGUMENTS + ".messageIds", hasSize(1));
+                .statusCode(200)
+                .body(NAME, equalTo("messageList"))
+                .body(ARGUMENTS + ".messageIds", hasSize(1));
             return true;
             
         } catch (AssertionError e) {
@@ -2582,38 +2582,38 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         Attachment attachment = Attachment.builder()
-                .bytes(("<html>\n" +
-                        "  <body>attachment</body>\n" + // needed indentation, else restassured is adding some
-                        "</html>").getBytes(Charsets.UTF_8))
-                .type("text/html; charset=UTF-8")
-                .build();
+            .bytes(("<html>\n" +
+                    "  <body>attachment</body>\n" + // needed indentation, else restassured is adding some
+                    "</html>").getBytes(Charsets.UTF_8))
+            .type("text/html; charset=UTF-8")
+            .build();
         uploadTextAttachment(attachment);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
-                "        \"subject\": \"Message with an attachment\"," +
-                "        \"textBody\": \"Test body, plain text version\"," +
-                "        \"htmlBody\": \"Test <b>body</b>, HTML version\"," +
-                "        \"mailboxIds\": [\"" + outboxId + "\"], " +
-                "        \"attachments\": [" +
-                "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
-                "               \"type\" : \"" + attachment.getType() + "\", " +
-                "               \"size\" : " + attachment.getSize() + ", " +
-                "               \"isInline\" : false }" +
-                "           ]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
+            "        \"subject\": \"Message with an attachment\"," +
+            "        \"textBody\": \"Test body, plain text version\"," +
+            "        \"htmlBody\": \"Test <b>body</b>, HTML version\"," +
+            "        \"mailboxIds\": [\"" + outboxId + "\"], " +
+            "        \"attachments\": [" +
+            "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "               \"type\" : \"" + attachment.getType() + "\", " +
+            "               \"size\" : " + attachment.getSize() + ", " +
+            "               \"isInline\" : false }" +
+            "           ]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -2658,37 +2658,37 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         Attachment attachment = Attachment.builder()
-                .bytes(("<html>\n" +
-                        "  <body>attachment</body>\n" + // needed indentation, else restassured is adding some
-                        "</html>").getBytes(Charsets.UTF_8))
-                .type("text/html; charset=UTF-8")
-                .build();
+            .bytes(("<html>\n" +
+                    "  <body>attachment</body>\n" + // needed indentation, else restassured is adding some
+                    "</html>").getBytes(Charsets.UTF_8))
+            .type("text/html; charset=UTF-8")
+            .build();
         uploadTextAttachment(attachment);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
-                "        \"subject\": \"Message with an attachment\"," +
-                "        \"textBody\": \"Test body, plain text version\"," +
-                "        \"mailboxIds\": [\"" + outboxId + "\"], " +
-                "        \"attachments\": [" +
-                "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
-                "               \"type\" : \"" + attachment.getType() + "\", " +
-                "               \"size\" : " + attachment.getSize() + ", " +
-                "               \"isInline\" : false }" +
-                "           ]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
+            "        \"subject\": \"Message with an attachment\"," +
+            "        \"textBody\": \"Test body, plain text version\"," +
+            "        \"mailboxIds\": [\"" + outboxId + "\"], " +
+            "        \"attachments\": [" +
+            "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "               \"type\" : \"" + attachment.getType() + "\", " +
+            "               \"size\" : " + attachment.getSize() + ", " +
+            "               \"isInline\" : false }" +
+            "           ]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -2732,34 +2732,34 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "sent");
 
         Attachment attachment = Attachment.builder()
-                .bytes(("some text").getBytes(Charsets.UTF_8))
-                .type("text/plain; charset=UTF-8")
-                .build();
+            .bytes(("some text").getBytes(Charsets.UTF_8))
+            .type("text/plain; charset=UTF-8")
+            .build();
         uploadTextAttachment(attachment);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-                "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
-                "        \"subject\": \"Message with an attachment\"," +
-                "        \"mailboxIds\": [\"" + outboxId + "\"], " +
-                "        \"attachments\": [" +
-                "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
-                "               \"type\" : \"" + attachment.getType() + "\", " +
-                "               \"size\" : " + attachment.getSize() + ", " +
-                "               \"isInline\" : false }" +
-                "           ]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
+            "        \"subject\": \"Message with an attachment\"," +
+            "        \"mailboxIds\": [\"" + outboxId + "\"], " +
+            "        \"attachments\": [" +
+            "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "               \"type\" : \"" + attachment.getType() + "\", " +
+            "               \"size\" : " + attachment.getSize() + ", " +
+            "               \"isInline\" : false }" +
+            "           ]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -2875,16 +2875,16 @@ public abstract class SetMessagesMethodTest {
 
     private ImmutableList<String> buildExpectedHeaders() {
         return ImmutableList.<String>builder()
-                .add("Sender")
-                .add("Content-Transfer-Encoding")
-                .add("From")
-                .add("To")
-                .add("MIME-Version")
-                .add("Subject")
-                .add("Content-Type")
-                .add("Message-ID")
-                .add("Date")
-                .build();
+            .add("Sender")
+            .add("Content-Transfer-Encoding")
+            .add("From")
+            .add("To")
+            .add("MIME-Version")
+            .add("Subject")
+            .add("Content-Type")
+            .add("Message-ID")
+            .add("Date")
+            .build();
     }
 
     private boolean messageInMailboxHasHeaders(String mailboxId, ImmutableList<String> expectedHeaders) {
@@ -2915,8 +2915,8 @@ public abstract class SetMessagesMethodTest {
 
     private Matcher<Map<? extends String, ? extends String>> allHeadersMatcher(ImmutableList<String> expectedHeaders) {
         return Matchers.allOf(expectedHeaders.stream()
-                .map((String header) -> hasEntry(equalTo(header), not(isEmptyOrNullString())))
-                .collect(Collectors.toList()));
+            .map((String header) -> hasEntry(equalTo(header), not(isEmptyOrNullString())))
+            .collect(Collectors.toList()));
     }
 
 }
