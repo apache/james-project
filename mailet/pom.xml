@@ -280,6 +280,7 @@
                                 <exclude>**/LICENSE*</exclude>
                                 <exclude>**/target/**</exclude>
                                 <exclude>**/*.iml</exclude>
+                                <exclude>**/*.ics</exclude>
                                 <exclude>src/site/**</exclude>
                             </excludes>
                         </configuration>
