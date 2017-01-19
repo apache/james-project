@@ -50,20 +50,19 @@ public class UpdateMessagePatchValidator implements Validator<ObjectNode> {
 
     @Override
     public Set<ValidationResult> validate(ObjectNode json) {
-        ImmutableSet<ValidationResult> compilation = ImmutableSet.of();
         try {
             parser.readValue(json.toString(), UpdateMessagePatch.class);
         } catch (JsonMappingException e) {
-            compilation = ImmutableSet.of(ValidationResult.builder()
+            return ImmutableSet.of(ValidationResult.builder()
                     .property(firstFieldFrom(e.getPath()).orElse(ValidationResult.UNDEFINED_PROPERTY))
                     .message(e.getMessage())
                     .build());
         } catch (IOException e) {
-            compilation = ImmutableSet.of(ValidationResult.builder()
+            return ImmutableSet.of(ValidationResult.builder()
                     .message(e.getMessage())
                     .build());
         }
-        return compilation;
+        return ImmutableSet.of();
     }
 
     private Optional<String> firstFieldFrom(List<JsonMappingException.Reference> references) {
