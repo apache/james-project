@@ -27,7 +27,7 @@ import org.junit.Rule;
 public class CassandraGetMessageListMethodTest extends GetMessageListMethodTest {
 
     @Rule 
-    public CassandraJmapTestRule rule = new CassandraJmapTestRule();
+    public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
     
     @Override
     protected JmapJamesServer createJmapServer() {

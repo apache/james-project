@@ -17,25 +17,39 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra;
+package org.apache.james;
+import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
+import org.apache.james.modules.TestElasticSearchModule;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TemporaryFolder;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
-import org.apache.james.CassandraJmapTestRule;
-import org.apache.james.JmapJamesServer;
-import org.apache.james.jmap.methods.integration.SetMailboxesMethodTest;
-import org.junit.Rule;
+import com.google.inject.Module;
 
-public class CassandraSetMailboxesMethodTest extends SetMailboxesMethodTest {
 
-    @Rule 
-    public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
-    
+public class EmbeddedElasticSearchRule implements GuiceModuleTestRule {
+
+    private final TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private final EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
+
+    private final RuleChain chain = RuleChain
+        .outerRule(temporaryFolder)
+        .around(embeddedElasticSearch);
+
     @Override
-    protected JmapJamesServer createJmapServer() {
-        return rule.jmapServer();
+    public Statement apply(Statement base, Description description) {
+        return chain.apply(base, description);
     }
 
     @Override
-    protected void await() {
-        rule.await();
+    public void await() {
+        embeddedElasticSearch.awaitForElasticSearch();
+    }
+
+
+    @Override
+    public Module getModule() {
+        return new TestElasticSearchModule(embeddedElasticSearch);
     }
 }

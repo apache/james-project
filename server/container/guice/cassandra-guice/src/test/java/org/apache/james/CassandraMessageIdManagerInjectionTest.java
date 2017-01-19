@@ -41,7 +41,7 @@ import com.google.inject.multibindings.Multibinder;
 public class CassandraMessageIdManagerInjectionTest {
 
     @Rule
-    public CassandraJmapTestRule cassandraJmap = new CassandraJmapTestRule();
+    public CassandraJmapTestRule cassandraJmap = CassandraJmapTestRule.defaultTestRule();
     private JmapJamesServer server;
 
     @Before

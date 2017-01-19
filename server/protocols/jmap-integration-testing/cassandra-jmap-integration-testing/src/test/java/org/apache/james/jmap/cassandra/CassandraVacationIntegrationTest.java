@@ -28,7 +28,7 @@ public class CassandraVacationIntegrationTest extends VacationIntegrationTest {
 
 
     @Rule 
-    public CassandraJmapTestRule rule = new CassandraJmapTestRule();
+    public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
     
     @Override
     protected JmapJamesServer createJmapServer() {

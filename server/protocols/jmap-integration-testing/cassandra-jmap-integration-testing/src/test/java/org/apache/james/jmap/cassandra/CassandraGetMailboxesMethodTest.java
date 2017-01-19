@@ -27,7 +27,7 @@ import org.junit.Rule;
 public class CassandraGetMailboxesMethodTest extends GetMailboxesMethodTest {
 
     @Rule 
-    public CassandraJmapTestRule rule = new CassandraJmapTestRule();
+    public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
     
     @Override
     protected JmapJamesServer createJmapServer() {

@@ -18,46 +18,58 @@
  ****************************************************************/
 
 package org.apache.james;
-import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.rules.TestRule;
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import com.datastax.driver.core.Session;
 import com.google.inject.Module;
+import com.google.inject.Scopes;
+import com.google.inject.util.Modules;
 
 
-public class CassandraJmapTestRule implements TestRule {
+public class EmbeddedCassandraRule implements GuiceModuleTestRule {
 
-    private static final int LIMIT_TO_3_MESSAGES = 3;
+    public static class SessionProvider implements Provider<Session> {
 
-    public static CassandraJmapTestRule defaultTestRule() {
-        return new CassandraJmapTestRule(
-                AggregateGuiceModuleTestRule.of(new EmbeddedElasticSearchRule(), new EmbeddedCassandraRule()));
+        private final Session session;
+
+        @Inject
+        private SessionProvider(CassandraCluster cluster) {
+            session = cluster.getConf();
+        }
+
+        @Override
+        public Session get() {
+            return session;
+        }
     }
 
-    private GuiceModuleTestRule guiceModuleTestRule;
-
-    public CassandraJmapTestRule(GuiceModuleTestRule... guiceModuleTestRule) {
-        this.guiceModuleTestRule =
-                AggregateGuiceModuleTestRule
-                    .of(guiceModuleTestRule)
-                    .aggregate(new TempFilesystemTestRule());
-    }
-
-    public JmapJamesServer jmapServer(Module... additionals) {
-        return new JmapJamesServer()
-            .combineWith(CassandraJamesServerMain.cassandraServerModule)
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
-            .overrideWith(guiceModuleTestRule.getModule())
-            .overrideWith(additionals);
-    }
+    private EmbeddedCassandra cassandra;
 
     @Override
     public Statement apply(Statement base, Description description) {
-        return guiceModuleTestRule.apply(base, description);
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                cassandra = EmbeddedCassandra.createStartServer();
+                base.evaluate();
+            }
+        };
     }
 
+    @Override
     public void await() {
-        guiceModuleTestRule.await();
+    }
+
+    @Override
+    public Module getModule() {
+        return Modules.combine(
+                (binder) -> binder.bind(EmbeddedCassandra.class).toInstance(cassandra),
+                (binder) -> binder.bind(Session.class).toProvider(SessionProvider.class).in(Scopes.SINGLETON));
     }
 }

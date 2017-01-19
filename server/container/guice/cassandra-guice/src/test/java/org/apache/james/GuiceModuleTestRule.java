@@ -17,25 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra;
+package org.apache.james;
 
-import org.apache.james.CassandraJmapTestRule;
-import org.apache.james.JmapJamesServer;
-import org.apache.james.jmap.methods.integration.SetMailboxesMethodTest;
-import org.junit.Rule;
+import org.junit.rules.TestRule;
 
-public class CassandraSetMailboxesMethodTest extends SetMailboxesMethodTest {
+import com.google.inject.Module;
 
-    @Rule 
-    public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
-    
-    @Override
-    protected JmapJamesServer createJmapServer() {
-        return rule.jmapServer();
-    }
-
-    @Override
-    protected void await() {
-        rule.await();
-    }
+public interface GuiceModuleTestRule extends TestRule {
+    Module getModule();
+    void await();
 }

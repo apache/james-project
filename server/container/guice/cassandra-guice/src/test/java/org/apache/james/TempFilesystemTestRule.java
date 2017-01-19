@@ -17,25 +17,35 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra;
+package org.apache.james;
 
-import org.apache.james.CassandraJmapTestRule;
-import org.apache.james.JmapJamesServer;
-import org.apache.james.jmap.methods.integration.SetMailboxesMethodTest;
-import org.junit.Rule;
+import org.apache.james.modules.TestFilesystemModule;
+import org.junit.rules.TemporaryFolder;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
-public class CassandraSetMailboxesMethodTest extends SetMailboxesMethodTest {
+import com.google.inject.Module;
 
-    @Rule 
-    public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
-    
-    @Override
-    protected JmapJamesServer createJmapServer() {
-        return rule.jmapServer();
+public class TempFilesystemTestRule implements GuiceModuleTestRule {
+
+    private final TemporaryFolder temporaryFolder;
+
+    public TempFilesystemTestRule() {
+        this.temporaryFolder = new TemporaryFolder();
     }
 
     @Override
-    protected void await() {
-        rule.await();
+    public Statement apply(Statement base, Description description) {
+        return temporaryFolder.apply(base, description);
     }
+
+    @Override
+    public Module getModule() {
+        return new TestFilesystemModule(temporaryFolder::getRoot);
+    }
+
+    @Override
+    public void await() {
+    }
+
 }

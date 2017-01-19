@@ -24,7 +24,7 @@ import org.junit.Rule;
 public class CassandraJamesServerTest extends AbstractJmapJamesServerTest {
 
     @Rule
-    public CassandraJmapTestRule cassandraJmap = new CassandraJmapTestRule();
+    public CassandraJmapTestRule cassandraJmap = CassandraJmapTestRule.defaultTestRule();
 
     @Override
     protected JmapJamesServer createJamesServer() {

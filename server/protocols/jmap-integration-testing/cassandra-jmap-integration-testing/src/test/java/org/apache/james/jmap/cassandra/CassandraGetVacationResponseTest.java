@@ -28,7 +28,7 @@ import org.junit.Rule;
 public class CassandraGetVacationResponseTest extends GetVacationResponseTest {
 
     @Rule 
-    public CassandraJmapTestRule rule = new CassandraJmapTestRule();
+    public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
     
     @Override
     protected JmapJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) {

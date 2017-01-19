@@ -29,7 +29,7 @@ import org.junit.Rule;
 public class CassandraSetMessagesMethodTest extends SetMessagesMethodTest {
 
     @Rule 
-    public CassandraJmapTestRule rule = new CassandraJmapTestRule();
+    public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
 
     @Override
     protected JmapJamesServer createJmapServer() {

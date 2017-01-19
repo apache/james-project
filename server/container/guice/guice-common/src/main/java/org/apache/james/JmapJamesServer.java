@@ -19,6 +19,7 @@
 package org.apache.james;
 
 import java.util.Arrays;
+import java.util.Collection;
 
 import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.WebAdminGuiceProbe;
@@ -42,6 +43,10 @@ public class JmapJamesServer extends GuiceJamesServerImpl implements GuiceJamesS
     }
 
     public JmapJamesServer overrideWith(Module... overrides) {
+        return overrideWith(Arrays.asList(overrides));
+    }
+
+    public JmapJamesServer overrideWith(Collection<Module> overrides) {
         return new JmapJamesServer(Modules.override(module).with(overrides));
     }
 
@@ -55,5 +60,5 @@ public class JmapJamesServer extends GuiceJamesServerImpl implements GuiceJamesS
         return getGuiceProbeProvider().getProbe(WebAdminGuiceProbe.class);
     }
 
-    
+
 }
