@@ -21,6 +21,7 @@ package org.apache.james.jmap.utils;
 
 import java.util.stream.Stream;
 
+import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -28,4 +29,9 @@ import org.apache.james.mailbox.exception.MailboxException;
 
 public interface SystemMailboxesProvider {
     Stream<MessageManager> listMailboxes(Role aRole, MailboxSession session) throws MailboxException;
+
+    default MessageManager findMailbox(Role role, MailboxSession session) throws MailboxException {
+        return listMailboxes(role, session).findAny()
+            .orElseThrow(() -> new MailboxRoleNotFoundException(role));
+    }
 }

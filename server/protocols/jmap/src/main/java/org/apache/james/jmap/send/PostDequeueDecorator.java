@@ -24,15 +24,13 @@ import java.util.List;
 import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.send.exception.MailShouldBeInOutboxException;
+import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxMetaData;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.MessageResult;
@@ -51,15 +49,18 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
     private final MailboxManager mailboxManager;
     private final Factory messageIdFactory;
     private final MessageIdManager messageIdManager;
+    private final SystemMailboxesProvider systemMailboxesProvider;
 
     public PostDequeueDecorator(MailQueueItem mailQueueItem,
-            MailboxManager mailboxManager,
-            MessageId.Factory messageIdFactory,
-            MessageIdManager messageIdManager) {
+                                MailboxManager mailboxManager,
+                                Factory messageIdFactory,
+                                MessageIdManager messageIdManager,
+                                SystemMailboxesProvider systemMailboxesProvider) {
         super(mailQueueItem);
         this.mailboxManager = mailboxManager;
         this.messageIdFactory = messageIdFactory;
         this.messageIdManager = messageIdManager;
+        this.systemMailboxesProvider = systemMailboxesProvider;
     }
 
     @Override
@@ -95,7 +96,7 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
         try {
             messageIdFactory.fromString((String) messageId);
         } catch (Exception e) {
-            LOG.error("Invalid messageId: " + (String) messageId);
+            LOG.error("Invalid messageId: " + messageId);
             return false;
         }
         return true;
@@ -123,28 +124,13 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
     }
 
     private MailboxId getSentMailboxId(MailboxSession session) throws MailboxRoleNotFoundException, MailboxException {
-        return getMailboxIdForRole(Role.SENT, session);
+        return systemMailboxesProvider.findMailbox(Role.SENT, session)
+            .getId();
     }
     
     private MailboxId getOutboxMailboxId(MailboxSession session) throws MailboxRoleNotFoundException, MailboxException {
-        return getMailboxIdForRole(Role.OUTBOX, session);
+        return systemMailboxesProvider.findMailbox(Role.OUTBOX, session)
+            .getId();
     }
     
-    private MailboxId getMailboxIdForRole(Role role, MailboxSession session) throws MailboxRoleNotFoundException, MailboxException {
-        MailboxQuery allUserMailboxesQuery = MailboxQuery.builder(session)
-            .privateUserMailboxes()
-            .build();
-        return mailboxManager.search(allUserMailboxesQuery, session)
-                .stream()
-                .filter(meta -> hasRole(meta.getPath(), role))
-                .map(MailboxMetaData::getId)
-                .findFirst()
-                .orElseThrow(() -> new MailboxRoleNotFoundException(role));
-    }
-    
-    private boolean hasRole(MailboxPath mailBoxPath, Role role) {
-        return Role.from(mailBoxPath.getName())
-                .map(role::equals)
-                .orElse(false);
-    }
 }

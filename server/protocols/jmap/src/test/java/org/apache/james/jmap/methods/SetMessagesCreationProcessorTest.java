@@ -36,6 +36,7 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.james.jmap.exceptions.AttachmentsNotFoundException;
+import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.model.Attachment;
 import org.apache.james.jmap.model.BlobId;

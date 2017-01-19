@@ -41,7 +41,8 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
     private final MailboxManager mailboxManager;
 
     @Inject
-    @VisibleForTesting SystemMailboxesProviderImpl(MailboxManager mailboxManager) {
+    @VisibleForTesting
+    public SystemMailboxesProviderImpl(MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
     }
 

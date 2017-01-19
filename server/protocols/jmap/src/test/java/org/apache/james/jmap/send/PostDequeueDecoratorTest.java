@@ -31,6 +31,7 @@ import javax.mail.Flags;
 
 import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.send.exception.MailShouldBeInOutboxException;
+import org.apache.james.jmap.utils.SystemMailboxesProviderImpl;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -76,7 +77,7 @@ public class PostDequeueDecoratorTest {
         mail = FakeMail.defaultFakeMail();
         when(mockedMailQueueItem.getMail()).thenReturn(mail);
         testee = new PostDequeueDecorator(mockedMailQueueItem, mailboxManager, new InMemoryMessageId.Factory(), 
-                inMemoryIntegrationResources.createMessageIdManager(mailboxManager));
+                inMemoryIntegrationResources.createMessageIdManager(mailboxManager), new SystemMailboxesProviderImpl(mailboxManager));
     }
     
     @Test
