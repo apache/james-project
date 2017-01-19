@@ -325,7 +325,7 @@ public class CassandraMessageMapper implements MessageMapper {
         return imapUidDAO.updateMetadata(composedMessageIdWithMetaData, oldModSeq)
             .thenCompose(success -> Optional.of(success)
                 .filter(b -> b)
-                .map(any -> messageIdDAO.updateMetadata(composedMessageIdWithMetaData)
+                .map((Boolean any) -> messageIdDAO.updateMetadata(composedMessageIdWithMetaData)
                     .thenApply(v -> success))
                 .orElse(CompletableFuture.completedFuture(success)))
             .join();
