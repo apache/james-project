@@ -67,10 +67,11 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
     @Inject
     @VisibleForTesting SetMessagesUpdateProcessor(
-        UpdateMessagePatchConverter updatePatchConverter,
-        MessageIdManager messageIdManager,
-        Factory mailboxIdFactory,
-        MailboxManager mailboxManager, SystemMailboxesProvider systemMailboxesProvider) {
+            UpdateMessagePatchConverter updatePatchConverter,
+            MessageIdManager messageIdManager,
+            Factory mailboxIdFactory,
+            MailboxManager mailboxManager,
+            SystemMailboxesProvider systemMailboxesProvider) {
         this.updatePatchConverter = updatePatchConverter;
         this.messageIdManager = messageIdManager;
         this.mailboxIdFactory = mailboxIdFactory;

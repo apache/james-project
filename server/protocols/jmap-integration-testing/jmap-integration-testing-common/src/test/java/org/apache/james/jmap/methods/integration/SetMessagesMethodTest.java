@@ -24,7 +24,9 @@ import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.notIn;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
@@ -1641,7 +1643,37 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void movingShouldBeSupported() throws Exception {
+    public void mailboxIdsShouldReturnUpdatedWhenNoChange() throws Exception {
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, new MailboxPath("#private", USERNAME, "inbox"),
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+
+        String messageToMoveId = message.getMessageId().serialize();
+        String mailboxId = message.getMailboxId().serialize();
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + messageToMoveId + "\" : {" +
+            "        \"mailboxIds\": [\"" + mailboxId + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+            .when()
+            .post("/jmap")
+            .then()
+            .log().ifValidationFails()
+            .spec(getSetMessagesUpdateOKResponseAssertions(messageToMoveId));
+    }
+
+    @Test
+    public void mailboxIdsShouldBeInDestinationWhenUsingForMove() throws Exception {
         String newMailboxName = "heartFolder";
         jmapServer.serverProbe().createMailbox("#private", USERNAME, newMailboxName);
         Mailbox heartFolder = jmapServer.serverProbe().getMailbox("#private", USERNAME, newMailboxName);
@@ -1649,41 +1681,328 @@ public abstract class SetMessagesMethodTest {
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, new MailboxPath("#private", USERNAME, "inbox"),
-                new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         String messageToMoveId = message.getMessageId().serialize();
         String requestBody = "[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"update\": { \"" + messageToMoveId + "\" : {" +
-                "        \"mailboxIds\": [\"" + heartFolderId + "\"]" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + messageToMoveId + "\" : {" +
+            "        \"mailboxIds\": [\"" + heartFolderId + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
 
         given()
-                .header("Authorization", this.accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+            .when()
+            .post("/jmap");
+
+        String firstMessage = ARGUMENTS + ".list[0]";
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
+            .when()
+            .post("/jmap")
+            .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(firstMessage + ".mailboxIds", contains(heartFolderId));
+    }
+
+    @Test
+    public void mailboxIdsShouldNotBeAnymoreInSourceWhenUsingForMove() throws Exception {
+        String newMailboxName = "heartFolder";
+        jmapServer.serverProbe().createMailbox("#private", USERNAME, newMailboxName);
+        Mailbox heartFolder = jmapServer.serverProbe().getMailbox("#private", USERNAME, newMailboxName);
+        String heartFolderId = heartFolder.getMailboxId().serialize();
+
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, new MailboxPath("#private", USERNAME, "inbox"),
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+
+        String messageToMoveId = message.getMessageId().serialize();
+        String inboxId = message.getMailboxId().serialize();
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + messageToMoveId + "\" : {" +
+            "        \"mailboxIds\": [\"" + heartFolderId + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
         .when()
-                .post("/jmap")
+            .post("/jmap");
+
+        String firstMessage = ARGUMENTS + ".list[0]";
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
         .then()
-                .statusCode(200)
-                .body(NAME, equalTo("messagesSet"))
-                .body(NOT_UPDATED, hasKey(messageToMoveId))
-                .body(NOT_UPDATED + "[\""+messageToMoveId+"\"].type", equalTo("invalidProperties"))
-                .body(NOT_UPDATED + "[\""+messageToMoveId+"\"].properties[0]", equalTo("mailboxIds"))
-                .body(NOT_UPDATED + "[\""+messageToMoveId+"\"].description", equalTo("mailboxIds: moving a message is not supported "
-                        + "(through reference chain: org.apache.james.jmap.model.Builder[\"mailboxIds\"])"))
-               .body(ARGUMENTS + ".updated", hasSize(0));
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(firstMessage + ".mailboxIds", not(contains(inboxId)));
+    }
+
+    @Test
+    public void mailboxIdsShouldBeInBothMailboxWhenUsingForCopy() throws Exception {
+        String newMailboxName = "heartFolder";
+        jmapServer.serverProbe().createMailbox("#private", USERNAME, newMailboxName);
+        Mailbox heartFolder = jmapServer.serverProbe().getMailbox("#private", USERNAME, newMailboxName);
+        String heartFolderId = heartFolder.getMailboxId().serialize();
+
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, new MailboxPath("#private", USERNAME, "inbox"),
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+
+        String messageToMoveId = message.getMessageId().serialize();
+        String inboxId = message.getMailboxId().serialize();
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + messageToMoveId + "\" : {" +
+            "        \"mailboxIds\": [\"" + heartFolderId + "\",\"" + inboxId + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap");
+
+        String firstMessage = ARGUMENTS + ".list[0]";
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
+            .when()
+            .post("/jmap")
+            .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(firstMessage + ".mailboxIds", containsInAnyOrder(heartFolderId, inboxId));
+    }
+
+    @Test
+    public void mailboxIdsShouldBeInOriginalMailboxWhenNoChange() throws Exception {
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, new MailboxPath("#private", USERNAME, "inbox"),
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+
+        String messageToMoveId = message.getMessageId().serialize();
+        String mailboxId = message.getMailboxId().serialize();
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + messageToMoveId + "\" : {" +
+            "        \"mailboxIds\": [\"" + mailboxId + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+            .when()
+            .post("/jmap");
+
+        String firstMessage = ARGUMENTS + ".list[0]";
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
+            .when()
+            .post("/jmap")
+            .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(firstMessage + ".mailboxIds", contains(mailboxId));
+    }
+
+    @Test
+    public void mailboxIdsShouldReturnErrorWhenMovingToADeletedMailbox() throws Exception {
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, new MailboxPath("#private", USERNAME, "inbox"),
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "any");
+        String mailboxId = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "any")
+            .getMailboxId()
+            .serialize();
+        jmapServer.serverProbe().deleteMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "any");
+
+        String messageToMoveId = message.getMessageId().serialize();
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + messageToMoveId + "\" : {" +
+            "        \"mailboxIds\": [\"" + mailboxId + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+            .when()
+            .post("/jmap")
+            .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(NOT_UPDATED, hasKey(messageToMoveId))
+            .body(NOT_UPDATED + "[\""+messageToMoveId+"\"].type", equalTo("anErrorOccurred"))
+            .body(ARGUMENTS + ".updated", hasSize(0));
+    }
+
+    @Test
+    public void mailboxIdsShouldReturnErrorWhenSetToEmpty() throws Exception {
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, new MailboxPath("#private", USERNAME, "inbox"),
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+
+        String messageToMoveId = message.getMessageId().serialize();
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + messageToMoveId + "\" : {" +
+            "        \"mailboxIds\": []" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+            .when()
+            .post("/jmap")
+            .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(NOT_UPDATED, hasKey(messageToMoveId))
+            .body(NOT_UPDATED + "[\""+messageToMoveId+"\"].type", equalTo("invalidProperties"))
+            .body(NOT_UPDATED + "[\""+messageToMoveId+"\"].properties", hasSize(1))
+            .body(NOT_UPDATED + "[\""+messageToMoveId+"\"].properties[0]", equalTo("mailboxIds"))
+            .body(ARGUMENTS + ".updated", hasSize(0));
+    }
+
+    @Test
+    public void updateShouldNotReturnErrorWithFlagsAndMailboxUpdate() throws Exception {
+        String newMailboxName = "heartFolder";
+        jmapServer.serverProbe().createMailbox("#private", USERNAME, newMailboxName);
+        Mailbox heartFolder = jmapServer.serverProbe().getMailbox("#private", USERNAME, newMailboxName);
+        String heartFolderId = heartFolder.getMailboxId().serialize();
+
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, new MailboxPath("#private", USERNAME, "inbox"),
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+
+        String messageToMoveId = message.getMessageId().serialize();
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + messageToMoveId + "\" : {" +
+            "        \"mailboxIds\": [\"" + heartFolderId + "\"]," +
+            "        \"isUnread\": true" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+            .when()
+            .post("/jmap")
+            .then()
+            .log().ifValidationFails()
+            .spec(getSetMessagesUpdateOKResponseAssertions(messageToMoveId));
+    }
+
+    @Test
+    public void updateShouldWorkWithFlagsAndMailboxUpdate() throws Exception {
+        String newMailboxName = "heartFolder";
+        jmapServer.serverProbe().createMailbox("#private", USERNAME, newMailboxName);
+        Mailbox heartFolder = jmapServer.serverProbe().getMailbox("#private", USERNAME, newMailboxName);
+        String heartFolderId = heartFolder.getMailboxId().serialize();
+
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, new MailboxPath("#private", USERNAME, "inbox"),
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+
+        String messageToMoveId = message.getMessageId().serialize();
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + messageToMoveId + "\" : {" +
+            "        \"mailboxIds\": [\"" + heartFolderId + "\"]," +
+            "        \"isUnread\": true" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+            .when()
+            .post("/jmap");
+
+        String firstMessage = ARGUMENTS + ".list[0]";
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
+            .when()
+            .post("/jmap")
+            .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(firstMessage + ".mailboxIds", contains(heartFolderId))
+            .body(firstMessage + ".isUnread", equalTo(true));
     }
 
     @Test
     public void moveToTrashIsNotYetSupported() throws Exception {
-        String newMailboxName = "heartFolder";
-        jmapServer.serverProbe().createMailbox("#private", USERNAME, newMailboxName);
         String trashId = jmapServer.serverProbe().getMailbox("#private", USERNAME, "trash").getMailboxId().serialize();
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
@@ -1711,12 +2030,8 @@ public abstract class SetMessagesMethodTest {
         .then()
             .log().ifValidationFails()
             .statusCode(200)
-            .body(NAME, equalTo("messagesSet"))
-            .body(NOT_UPDATED, hasKey(messageToMoveId))
-            .body(NOT_UPDATED + "[\""+messageToMoveId+"\"].type", equalTo("invalidProperties"))
-            .body(NOT_UPDATED + "[\""+messageToMoveId+"\"].properties", hasSize(1))
-            .body(NOT_UPDATED + "[\""+messageToMoveId+"\"].properties[0]", equalTo("inMailboxes"))
-            .body(ARGUMENTS + ".updated", hasSize(0));
+            .body(NAME, equalTo("error"))
+            .body(ARGUMENTS + ".type", equalTo("Not yet implemented"));
     }
 
     @Test
@@ -1736,7 +2051,7 @@ public abstract class SetMessagesMethodTest {
             "    \"setMessages\","+
             "    {" +
             "      \"update\": { \"" + messageToMoveId + "\" : {" +
-            "        \"mailboxIds\": [\"" + trashId + "," + mailboxId + "\"]" +
+            "        \"mailboxIds\": [\"" + trashId + "\",\"" + mailboxId + "\"]" +
             "      }}" +
             "    }," +
             "    \"#0\"" +
@@ -1760,7 +2075,7 @@ public abstract class SetMessagesMethodTest {
             .log().ifValidationFails()
             .body(NAME, equalTo("messages"))
             .body(ARGUMENTS + ".list", hasSize(1))
-            .body(firstMessage + ".mailboxIds", contains(trashId, mailboxId));
+            .body(firstMessage + ".mailboxIds", containsInAnyOrder(trashId, mailboxId));
     }
     
     @Test
