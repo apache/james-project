@@ -47,6 +47,7 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
@@ -243,6 +244,7 @@ public class ICSAttachmentWorkflowTest {
     private MimeMessage messageWithoutICSAttached;
     private MimeMessage messageWithICSAttached;
     private MimeMessage messageWithICSBase64Attached;
+    private MimeMessage messageWithThreeICSAttached;
 
     @Before
     public void setup() throws Exception {
@@ -347,6 +349,29 @@ public class ICSAttachmentWorkflowTest {
                     .data("simple text")
                     .build(),
                 MimeMessageBuilder.bodyPartFromBytes(ICS_BASE64.getBytes(Charsets.UTF_8)))
+            .setSubject("test")
+            .build();
+
+        messageWithThreeICSAttached = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data(ICS_1.getBytes(Charsets.UTF_8))
+                    .filename("test1.txt")
+                    .disposition("attachment")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data(ICS_2.getBytes(Charsets.UTF_8))
+                    .filename("test2.txt")
+                    .disposition("attachment")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data(ICS_3.getBytes(Charsets.UTF_8))
+                    .filename("test3.txt")
+                    .disposition("attachment")
+                    .build())
             .setSubject("test")
             .build();
     }
@@ -507,29 +532,6 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void headersShouldBeFilledOnlyWithOneICalAttachmentWhenMailHasSeveral() throws Exception {
-        MimeMessage messageWithThreeICSAttached = MimeMessageBuilder.mimeMessageBuilder()
-            .setMultipartWithBodyParts(
-                MimeMessageBuilder.bodyPartBuilder()
-                    .data("simple text")
-                    .build(),
-                MimeMessageBuilder.bodyPartBuilder()
-                    .data(ICS_1.getBytes(Charsets.UTF_8))
-                    .filename("test1.txt")
-                    .disposition("attachment")
-                    .build(),
-                MimeMessageBuilder.bodyPartBuilder()
-                    .data(ICS_2.getBytes(Charsets.UTF_8))
-                    .filename("test2.txt")
-                    .disposition("attachment")
-                    .build(),
-                MimeMessageBuilder.bodyPartBuilder()
-                    .data(ICS_3.getBytes(Charsets.UTF_8))
-                    .filename("test3.txt")
-                    .disposition("attachment")
-                    .build())
-            .setSubject("test")
-            .build();
-        
         Mail mail = FakeMail.builder()
               .mimeMessage(messageWithThreeICSAttached)
               .sender(new MailAddress(FROM))
@@ -549,6 +551,44 @@ public class ICSAttachmentWorkflowTest {
             assertThat(receivedHeaders).contains("X-MEETING-SEQUENCE: " + ICS_SEQUENCE);
             assertThat(receivedHeaders).contains("X-MEETING-DTSTAMP: " + ICS_DTSTAMP);
         }
+    }
+
+    @Test
+    public void pipelineShouldSendSeveralJSONOverRabbitMQWhenSeveralAttachments() throws Exception {
+        Mail mail = FakeMail.builder()
+            .mimeMessage(messageWithThreeICSAttached)
+            .sender(new MailAddress(FROM))
+            .recipient(new MailAddress(RECIPIENT))
+            .build();
+
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
+             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+            messageSender.sendMessage(mail);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+        }
+
+        Optional<String> content1 = amqpRule.readContent();
+        assertThat(content1).isPresent();
+        DocumentContext jsonPath1 = toJsonPath(content1.get());
+
+        Optional<String> content2 = amqpRule.readContent();
+        assertThat(content2).isPresent();
+        DocumentContext jsonPath2 = toJsonPath(content2.get());
+
+        Optional<String> content3 = amqpRule.readContent();
+        assertThat(content3).isPresent();
+        DocumentContext jsonPath3 = toJsonPath(content3.get());
+
+        assertThat(
+            ImmutableList.of(jsonPath1.read("uid"),
+                jsonPath2.read("uid"),
+                jsonPath3.read("uid")))
+            .containsOnly(ICS_UID,
+                "f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bd",
+                "f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962be");
+
+        assertThat(amqpRule.readContent()).isEmpty();
     }
 
 }
