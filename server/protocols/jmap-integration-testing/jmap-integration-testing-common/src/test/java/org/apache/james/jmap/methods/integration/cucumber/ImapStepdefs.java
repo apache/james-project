@@ -51,6 +51,17 @@ public class ImapStepdefs {
             .isTrue();
     }
 
+    @Then("^the user has a IMAP notification about (\\d+) new message on mailbox \"([^\"]*)\"$")
+    public void hasANotificationAboutNewMessagesInMailbox(int numOfNewMessage, String mailbox) throws Throwable {
+        IMAPMessageReader imapMessageReader = new IMAPMessageReader("127.0.0.1", 1143);
+
+        assertThat(
+            imapMessageReader.userGetNotifiedForNewMessagesWhenSelectingMailbox(userStepdefs.lastConnectedUser,
+                userStepdefs.passwordByUser.get(userStepdefs.lastConnectedUser),
+                numOfNewMessage, mailbox))
+            .isTrue();
+    }
+
     @Then("^the user does not have a IMAP message in mailbox \"([^\"]*)\"$")
     public void hasNoMessageInMailbox(String mailbox) throws Throwable {
         IMAPMessageReader imapMessageReader = new IMAPMessageReader("127.0.0.1", 1143);
