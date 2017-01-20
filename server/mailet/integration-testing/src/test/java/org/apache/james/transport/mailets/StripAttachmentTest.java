@@ -21,15 +21,7 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.Properties;
-
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
@@ -42,6 +34,7 @@ import org.apache.james.mailets.utils.SMTPMessageSender;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -135,20 +128,24 @@ public class StripAttachmentTest {
      */
     @Test
     public void stripAttachmentShouldPutAttachmentsInMailAttributeWhenConfiguredForIt() throws Exception {
-        MimeMessage message = new MimeMessage(Session
-                .getDefaultInstance(new Properties()));
-        
-        MimeMultipart multiPart = new MimeMultipart();
-        MimeBodyPart part = new MimeBodyPart();
-        part.setText("simple text");
-        multiPart.addBodyPart(part);
-        multiPart.addBodyPart(createAttachmentBodyPart("Not matching attachment", "not_matching.tmp"));
-        multiPart.addBodyPart(createAttachmentBodyPart("Matching attachment", "temp.zip"));
-        
-        message.setSubject("test");
-        message.setContent(multiPart);
-        message.saveChanges();
-        
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("Not matching attachment")
+                    .filename("not_matching.tmp")
+                    .disposition("attachment")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("Matching attachment")
+                    .filename("temp.zip")
+                    .disposition("attachment")
+                    .build())
+            .setSubject("test")
+            .build();
+
         Mail mail = FakeMail.builder()
               .mimeMessage(message)
               .sender(new MailAddress(FROM))
@@ -163,18 +160,5 @@ public class StripAttachmentTest {
             String processedMessage = imapMessageReader.readFirstMessageInInbox(RECIPIENT, PASSWORD);
             assertThat(processedMessage).contains("Matching attachment");
         }
-    }
-
-    private MimeBodyPart createAttachmentBodyPart(String body, String fileName) throws MessagingException, UnsupportedEncodingException {
-        MimeBodyPart part = createBodyPart(body);
-        part.setDisposition("attachment");
-        part.setFileName(fileName);
-        return part;
-    }
-
-    private MimeBodyPart createBodyPart(String body) throws MessagingException, UnsupportedEncodingException {
-        return new MimeBodyPart(new ByteArrayInputStream(
-                ("Content-Transfer-Encoding: 8bit\r\nContent-Type: application/octet-stream; charset=utf-8\r\n\r\n"
-                        + body).getBytes("UTF-8")));
     }
 }

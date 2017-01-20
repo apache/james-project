@@ -21,16 +21,9 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.Optional;
-import java.util.Properties;
 
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
@@ -45,6 +38,7 @@ import org.apache.james.util.streams.SwarmGenericContainer;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -54,7 +48,6 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
-import com.google.common.primitives.Bytes;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
@@ -219,6 +212,8 @@ public class ICSAttachmentWorkflowTest {
 
     private ConditionFactory calmlyAwait;
     private TemporaryJamesServer jamesServer;
+    private MimeMessage messageWithoutICSAttached;
+    private MimeMessage messageWithICSAttached;
 
     @Before
     public void setup() throws Exception {
@@ -290,6 +285,32 @@ public class ICSAttachmentWorkflowTest {
         jamesServer.getServerProbe().addUser(FROM, PASSWORD);
         jamesServer.getServerProbe().addUser(RECIPIENT, PASSWORD);
         jamesServer.getServerProbe().createMailbox(MailboxConstants.USER_NAMESPACE, RECIPIENT, "INBOX");
+
+        messageWithoutICSAttached = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("My attachment")
+                    .filename("test.txt")
+                    .disposition("attachment")
+                    .build())
+            .setSubject("test")
+            .build();
+
+        messageWithICSAttached = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data(ICS_1.getBytes(Charsets.UTF_8))
+                    .filename("meeting.ics")
+                    .disposition("attachment")
+                    .build())
+            .setSubject("test")
+            .build();
     }
 
     @After
@@ -299,20 +320,8 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void calendarAttachmentShouldNotBePublishedInMQWhenNoICalAttachment() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        
-        MimeMultipart multiPart = new MimeMultipart();
-        MimeBodyPart part = new MimeBodyPart();
-        part.setText("simple text");
-        multiPart.addBodyPart(part);
-        multiPart.addBodyPart(createAttachmentBodyPart("My attachment".getBytes(Charsets.UTF_8), "test.txt"));
-        
-        message.setSubject("test");
-        message.setContent(multiPart);
-        message.saveChanges();
-        
         Mail mail = FakeMail.builder()
-              .mimeMessage(message)
+              .mimeMessage(messageWithoutICSAttached)
               .sender(new MailAddress(FROM))
               .recipient(new MailAddress(RECIPIENT))
               .build();
@@ -329,20 +338,8 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void calendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        
-        MimeMultipart multiPart = new MimeMultipart();
-        MimeBodyPart part = new MimeBodyPart();
-        part.setText("simple text");
-        multiPart.addBodyPart(part);
-        multiPart.addBodyPart(createAttachmentBodyPart(ICS_1.getBytes(Charsets.UTF_8), "meeting.ics"));
-        
-        message.setSubject("test");
-        message.setContent(multiPart);
-        message.saveChanges();
-        
         Mail mail = FakeMail.builder()
-              .mimeMessage(message)
+              .mimeMessage(messageWithICSAttached)
               .sender(new MailAddress(FROM))
               .recipient(new MailAddress(RECIPIENT))
               .build();
@@ -375,20 +372,8 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void headersShouldNotBeAddedInMailWhenNoICalAttachment() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        
-        MimeMultipart multiPart = new MimeMultipart();
-        MimeBodyPart part = new MimeBodyPart();
-        part.setText("simple text");
-        multiPart.addBodyPart(part);
-        multiPart.addBodyPart(createAttachmentBodyPart("My attachment".getBytes(Charsets.UTF_8), "test.txt"));
-        
-        message.setSubject("test");
-        message.setContent(multiPart);
-        message.saveChanges();
-        
         Mail mail = FakeMail.builder()
-              .mimeMessage(message)
+              .mimeMessage(messageWithoutICSAttached)
               .sender(new MailAddress(FROM))
               .recipient(new MailAddress(RECIPIENT))
               .build();
@@ -411,21 +396,8 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void headersShouldBeAddedInMailWhenOneICalAttachment() throws Exception {
-        MimeMessage message = new MimeMessage(Session
-                .getDefaultInstance(new Properties()));
-        
-        MimeMultipart multiPart = new MimeMultipart();
-        MimeBodyPart part = new MimeBodyPart();
-        part.setText("simple text");
-        multiPart.addBodyPart(part);
-        multiPart.addBodyPart(createAttachmentBodyPart(ICS_1.getBytes(Charsets.UTF_8), "test.txt"));
-        
-        message.setSubject("test");
-        message.setContent(multiPart);
-        message.saveChanges();
-        
         Mail mail = FakeMail.builder()
-              .mimeMessage(message)
+              .mimeMessage(messageWithICSAttached)
               .sender(new MailAddress(FROM))
               .recipient(new MailAddress(RECIPIENT))
               .build();
@@ -448,23 +420,31 @@ public class ICSAttachmentWorkflowTest {
     @Ignore("See JIRA issue MAILET-151")
     @Test
     public void headersShouldBeFilledOnlyWithOneICalAttachmentWhenMailHasSeveral() throws Exception {
-        MimeMessage message = new MimeMessage(Session
-                .getDefaultInstance(new Properties()));
-        
-        MimeMultipart multiPart = new MimeMultipart();
-        MimeBodyPart part = new MimeBodyPart();
-        part.setText("simple text");
-        multiPart.addBodyPart(part);
-        multiPart.addBodyPart(createAttachmentBodyPart(ICS_1.getBytes(Charsets.UTF_8), "test.txt"));
-        multiPart.addBodyPart(createAttachmentBodyPart(ICS_2.getBytes(Charsets.UTF_8), "test.txt"));
-        multiPart.addBodyPart(createAttachmentBodyPart(ICS_3.getBytes(Charsets.UTF_8), "test.txt"));
-        
-        message.setSubject("test");
-        message.setContent(multiPart);
-        message.saveChanges();
+        MimeMessage messageWithThreeICSAttached = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data(ICS_1.getBytes(Charsets.UTF_8))
+                    .filename("test.txt")
+                    .disposition("attachment")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data(ICS_2.getBytes(Charsets.UTF_8))
+                    .filename("test.txt")
+                    .disposition("attachment")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data(ICS_3.getBytes(Charsets.UTF_8))
+                    .filename("test.txt")
+                    .disposition("attachment")
+                    .build())
+            .setSubject("test")
+            .build();
         
         Mail mail = FakeMail.builder()
-              .mimeMessage(message)
+              .mimeMessage(messageWithThreeICSAttached)
               .sender(new MailAddress(FROM))
               .recipient(new MailAddress(RECIPIENT))
               .build();
@@ -483,20 +463,6 @@ public class ICSAttachmentWorkflowTest {
             assertThat(receivedHeaders).contains("X-MEETING-SEQUENCE: " + ICS_SEQUENCE);
             assertThat(receivedHeaders).contains("X-MEETING-DTSTAMP: " + ICS_DTSTAMP);
         }
-    }
-
-
-    private MimeBodyPart createAttachmentBodyPart(byte[] body, String fileName) throws MessagingException, UnsupportedEncodingException {
-        MimeBodyPart part = createBodyPart(body);
-        part.setDisposition("attachment");
-        part.setFileName(fileName);
-        return part;
-    }
-
-    private MimeBodyPart createBodyPart(byte[] body) throws MessagingException, UnsupportedEncodingException {
-        return new MimeBodyPart(new ByteArrayInputStream(
-                Bytes.concat("Content-Transfer-Encoding: 8bit\r\nContent-Type: application/octet-stream; charset=utf-8\r\n\r\n".getBytes(Charsets.UTF_8),
-                        body)));
     }
 
 }

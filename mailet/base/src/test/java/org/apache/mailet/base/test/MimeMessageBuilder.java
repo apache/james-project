@@ -91,7 +91,8 @@ public class MimeMessageBuilder {
         private Optional<String> filename = Optional.absent();
         private ImmutableList.Builder<Header> headers = ImmutableList.builder();
         private Optional<String> disposition = Optional.absent();
-        private Optional<String> data = Optional.absent();
+        private Optional<String> dataAsString = Optional.absent();
+        private Optional<byte[]> dataAsBytes = Optional.absent();
         private Optional<String> type = Optional.absent();
 
         public BodyPartBuilder cid(String cid) {
@@ -110,7 +111,12 @@ public class MimeMessageBuilder {
         }
 
         public BodyPartBuilder data(String data) {
-            this.data = Optional.of(data);
+            this.dataAsString = Optional.of(data);
+            return this;
+        }
+
+        public BodyPartBuilder data(byte[] data) {
+            this.dataAsBytes = Optional.of(data);
             return this;
         }
 
@@ -130,14 +136,24 @@ public class MimeMessageBuilder {
         }
 
         public BodyPart build() throws IOException, MessagingException {
-            Preconditions.checkNotNull(data);
+            Preconditions.checkState(dataAsString.isPresent() ^ dataAsBytes.isPresent(), "one and only one of data as string or data as bytes should be specified");
             MimeBodyPart bodyPart = new MimeBodyPart();
-            bodyPart.setDataHandler(
-                new DataHandler(
-                    new ByteArrayDataSource(
-                        data.or(DEFAULT_VALUE),
-                        type.or(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
-                ));
+            if (dataAsString.isPresent()) {
+                bodyPart.setDataHandler(
+                    new DataHandler(
+                        new ByteArrayDataSource(
+                            dataAsString.or(DEFAULT_VALUE),
+                            type.or(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
+                    ));
+            }
+            if (dataAsBytes.isPresent()) {
+                bodyPart.setDataHandler(
+                    new DataHandler(
+                        new ByteArrayDataSource(
+                            dataAsBytes.get(),
+                            type.or(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
+                    ));
+            }
             if (filename.isPresent()) {
                 bodyPart.setFileName(filename.get());
             }
