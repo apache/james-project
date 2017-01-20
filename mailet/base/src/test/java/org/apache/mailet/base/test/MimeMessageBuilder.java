@@ -186,6 +186,10 @@ public class MimeMessageBuilder {
         return new MimeMessage(Session.getDefaultInstance(new Properties()));
     }
 
+    public static MimeMessage mimeMessageFromStream(InputStream inputStream) throws MessagingException {
+        return new MimeMessage(Session.getDefaultInstance(new Properties()), inputStream);
+    }
+
     public static MimeMessageBuilder mimeMessageBuilder() {
         return new MimeMessageBuilder();
     }

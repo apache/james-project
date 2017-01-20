@@ -310,6 +310,42 @@ public class StripAttachmentTest {
     }
 
     @Test
+    public void serviceShouldDecodeHeaderFilenames() throws MessagingException, IOException {
+        StripAttachment mailet = new StripAttachment();
+
+        String customAttribute = "my.custom.attribute";
+        FakeMailetConfig mci = FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("pattern", ".*\\.tmp")
+            .setProperty("attribute", customAttribute)
+            .build();
+        mailet.init(mci);
+
+        String expectedKey = "invite.tmp";
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .build(),
+                createAttachmentBodyPart(EXPECTED_ATTACHMENT_CONTENT, "=?US-ASCII?Q?" + expectedKey + "?=", TEXT_HEADERS))
+            .build();
+
+        Mail mail = FakeMail.builder()
+            .mimeMessage(message)
+            .build();
+
+        mailet.service(mail);
+
+        @SuppressWarnings("unchecked")
+        Map<String, byte[]> saved = (Map<String, byte[]>) mail.getAttribute(customAttribute);
+        assertThat(saved).hasSize(1);
+        assertThat(saved).containsKey(expectedKey);
+        MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream(saved.get(expectedKey)));
+        String content = IOUtils.toString(savedBodyPart.getInputStream());
+        assertThat(content).isEqualTo(EXPECTED_ATTACHMENT_CONTENT);
+    }
+
+    @Test
     public void initShouldThrowWhenPatternAndNotPatternAndMimeTypeAreNull() throws MessagingException {
         Mailet mailet = new StripAttachment();
 

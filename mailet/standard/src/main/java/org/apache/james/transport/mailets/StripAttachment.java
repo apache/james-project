@@ -43,6 +43,8 @@ import javax.mail.internet.MimeUtility;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
@@ -313,9 +315,10 @@ public class StripAttachment extends GenericMailet {
         }
 
         boolean shouldRemove = removeAttachments.equals(REMOVE_ALL);
-        if (isMatching(bodyPart, fileName)) {
-            storeBodyPartAsFile(bodyPart, mail, fileName);
-            storeBodyPartAsMailAttribute(bodyPart, mail, fileName);
+        String decodedName = DecoderUtil.decodeEncodedWords(fileName, DecodeMonitor.SILENT);
+        if (isMatching(bodyPart, decodedName)) {
+            storeBodyPartAsFile(bodyPart, mail, decodedName);
+            storeBodyPartAsMailAttribute(bodyPart, mail, decodedName);
             if (removeAttachments.equals(REMOVE_MATCHED)) {
                 shouldRemove = true;
             }
