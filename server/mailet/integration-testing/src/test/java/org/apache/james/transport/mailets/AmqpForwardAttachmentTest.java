@@ -22,12 +22,8 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -43,6 +39,7 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.utils.IMAPMessageReader;
 import org.apache.james.mailets.utils.SMTPMessageSender;
+import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -55,16 +52,10 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
-import com.google.common.net.InetAddresses;
 import com.google.common.primitives.Bytes;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
-import com.rabbitmq.client.BuiltinExchangeType;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.GetResponse;
 
 public class AmqpForwardAttachmentTest {
 
@@ -88,22 +79,16 @@ public class AmqpForwardAttachmentTest {
             .withAffinityToContainer();
 
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    public AmqpRule amqpRule = new AmqpRule(rabbitMqContainer, EXCHANGE_NAME, ROUTING_KEY);
 
     @Rule
-    public final RuleChain chain = RuleChain.outerRule(temporaryFolder).around(rabbitMqContainer);
+    public final RuleChain chain = RuleChain.outerRule(temporaryFolder).around(rabbitMqContainer).around(amqpRule);
     
     private TemporaryJamesServer jamesServer;
     private ConditionFactory calmlyAwait;
-    private Channel channel;
-    private String queueName;
-    private Connection connection;
 
     @Before
     public void setup() throws Exception {
-        @SuppressWarnings("deprecation")
-        InetAddress containerIp = InetAddresses.forString(rabbitMqContainer.getContainerInfo().getNetworkSettings().getIpAddress());
-        String amqpUri = "amqp://" + containerIp.getHostAddress();
-
         MailetContainer mailetContainer = MailetContainer.builder()
             .postmaster("postmaster@" + JAMES_APACHE_ORG)
             .threads(5)
@@ -131,7 +116,7 @@ public class AmqpForwardAttachmentTest {
                     .addMailet(MailetConfiguration.builder()
                             .match("All")
                             .clazz("AmqpForwardAttribute")
-                            .addProperty("uri", amqpUri)
+                            .addProperty("uri", amqpRule.getAmqpUri())
                             .addProperty("exchange", EXCHANGE_NAME)
                             .addProperty("attribute", MAIL_ATTRIBUTE)
                             .addProperty("routing_key", ROUTING_KEY)
@@ -149,27 +134,21 @@ public class AmqpForwardAttachmentTest {
 
         jamesServer = new TemporaryJamesServer(temporaryFolder, mailetContainer);
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
+        calmlyAwait = Awaitility.with()
+            .pollInterval(slowPacedPollInterval)
+            .and()
+            .with()
+            .pollDelay(slowPacedPollInterval)
+            .await();
 
         jamesServer.getServerProbe().addDomain(JAMES_APACHE_ORG);
         jamesServer.getServerProbe().addUser(FROM, PASSWORD);
         jamesServer.getServerProbe().addUser(RECIPIENT, PASSWORD);
         jamesServer.getServerProbe().createMailbox(MailboxConstants.USER_NAMESPACE, RECIPIENT, "INBOX");
-        
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setUri(amqpUri);
-        waitingForRabbitToBeReady(factory);
-        connection = factory.newConnection();
-        channel = connection.createChannel();
-        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-        queueName = channel.queueDeclare().getQueue();
-        channel.queueBind(queueName, EXCHANGE_NAME, ROUTING_KEY);
     }
 
     @After
     public void tearDown() throws Exception {
-        channel.close();
-        connection.close();
         jamesServer.shutdown();
     }
 
@@ -200,10 +179,8 @@ public class AmqpForwardAttachmentTest {
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
         }
-        
-        boolean autoAck = true;
-        GetResponse basicGet = channel.basicGet(queueName, autoAck);
-        assertThat(basicGet.getBody()).isEqualTo(TEST_ATTACHMENT_CONTENT);
+
+        assertThat(amqpRule.readContentAsBytes()).contains(TEST_ATTACHMENT_CONTENT);
     }
 
     private MimeBodyPart createAttachmentBodyPart(byte[] body, String fileName) throws MessagingException, UnsupportedEncodingException {
@@ -217,25 +194,6 @@ public class AmqpForwardAttachmentTest {
         return new MimeBodyPart(new ByteArrayInputStream(
                 Bytes.concat("Content-Transfer-Encoding: 8bit\r\nContent-Type: application/octet-stream; charset=utf-8\r\n\r\n".getBytes(Charsets.UTF_8),
                         body)));
-    }
-
-    private void waitingForRabbitToBeReady(ConnectionFactory factory) {
-        Awaitility
-            .await()
-            .atMost(30, TimeUnit.SECONDS)
-            .with()
-            .pollInterval(10, TimeUnit.MILLISECONDS)
-            .until(() -> isReady(factory));
-    }
-
-    private boolean isReady(ConnectionFactory factory) {
-        try (Connection connection = factory.newConnection()) {
-            return true;
-        } catch (IOException e) {
-            return false;
-        } catch (TimeoutException e) {
-            return false;
-        }
     }
 
 }

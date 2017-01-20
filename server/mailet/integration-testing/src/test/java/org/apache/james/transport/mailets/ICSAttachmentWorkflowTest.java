@@ -22,12 +22,9 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
+import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -43,6 +40,7 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.utils.IMAPMessageReader;
 import org.apache.james.mailets.utils.SMTPMessageSender;
+import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -56,7 +54,6 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
-import com.google.common.net.InetAddresses;
 import com.google.common.primitives.Bytes;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
@@ -65,11 +62,6 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
-import com.rabbitmq.client.BuiltinExchangeType;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.GetResponse;
 
 public class ICSAttachmentWorkflowTest {
 
@@ -82,7 +74,7 @@ public class ICSAttachmentWorkflowTest {
 
     private static final String FROM = "fromUser@" + JAMES_APACHE_ORG;
     private static final String RECIPIENT = "touser@" + JAMES_APACHE_ORG;
-    
+
     private static final String MAIL_ATTRIBUTE = "my.attribute";
     private static final String EXCHANGE_NAME = "myExchange";
     private static final String ROUTING_KEY = "myRoutingKey";
@@ -219,24 +211,17 @@ public class ICSAttachmentWorkflowTest {
 
     public SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer("rabbitmq:3")
             .withAffinityToContainer();
-
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    public AmqpRule amqpRule = new AmqpRule(rabbitMqContainer, EXCHANGE_NAME, ROUTING_KEY);
 
     @Rule
-    public final RuleChain chain = RuleChain.outerRule(temporaryFolder).around(rabbitMqContainer);
-    
-    private TemporaryJamesServer jamesServer;
+    public final RuleChain chain = RuleChain.outerRule(temporaryFolder).around(rabbitMqContainer).around(amqpRule);
+
     private ConditionFactory calmlyAwait;
-    private Channel channel;
-    private String queueName;
-    private Connection connection;
+    private TemporaryJamesServer jamesServer;
 
     @Before
     public void setup() throws Exception {
-        @SuppressWarnings("deprecation")
-        InetAddress containerIp = InetAddresses.forString(rabbitMqContainer.getContainerInfo().getNetworkSettings().getIpAddress());
-        String amqpUri = "amqp://" + containerIp.getHostAddress();
-
         MailetContainer mailetContainer = MailetContainer.builder()
             .postmaster("postmaster@" + JAMES_APACHE_ORG)
             .threads(5)
@@ -281,7 +266,7 @@ public class ICSAttachmentWorkflowTest {
                     .addMailet(MailetConfiguration.builder()
                             .match("All")
                             .clazz("AmqpForwardAttribute")
-                            .addProperty("uri", amqpUri)
+                            .addProperty("uri", amqpRule.getAmqpUri())
                             .addProperty("exchange", EXCHANGE_NAME)
                             .addProperty("attribute", MAIL_ATTRIBUTE)
                             .addProperty("routing_key", ROUTING_KEY)
@@ -305,21 +290,10 @@ public class ICSAttachmentWorkflowTest {
         jamesServer.getServerProbe().addUser(FROM, PASSWORD);
         jamesServer.getServerProbe().addUser(RECIPIENT, PASSWORD);
         jamesServer.getServerProbe().createMailbox(MailboxConstants.USER_NAMESPACE, RECIPIENT, "INBOX");
-        
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setUri(amqpUri);
-        waitingForRabbitToBeReady(factory);
-        connection = factory.newConnection();
-        channel = connection.createChannel();
-        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-        queueName = channel.queueDeclare().getQueue();
-        channel.queueBind(queueName, EXCHANGE_NAME, ROUTING_KEY);
     }
 
     @After
     public void tearDown() throws Exception {
-        channel.close();
-        connection.close();
         jamesServer.shutdown();
     }
 
@@ -350,9 +324,7 @@ public class ICSAttachmentWorkflowTest {
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
         }
 
-        boolean autoAck = true;
-        GetResponse basicGet = channel.basicGet(queueName, autoAck);
-        assertThat(basicGet).isNull();
+        assertThat(amqpRule.readContent()).isEmpty();
     }
 
     @Test
@@ -382,10 +354,9 @@ public class ICSAttachmentWorkflowTest {
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
         }
 
-        boolean autoAck = true;
-        GetResponse basicGet = channel.basicGet(queueName, autoAck);
-
-        DocumentContext jsonPath = toJsonPath(basicGet);
+        Optional<String> content = amqpRule.readContent();
+        assertThat(content).isPresent();
+        DocumentContext jsonPath = toJsonPath(content.get());
         assertThat(jsonPath.<String> read("ical")).isEqualTo(ICS_1);
         assertThat(jsonPath.<String> read("sender")).isEqualTo(FROM);
         assertThat(jsonPath.<String> read("recipient")).isEqualTo(RECIPIENT);
@@ -396,10 +367,10 @@ public class ICSAttachmentWorkflowTest {
         assertThat(jsonPath.<String> read("recurrence-id")).isNull();
     }
 
-    private DocumentContext toJsonPath(GetResponse basicGet) {
+    private DocumentContext toJsonPath(String content) {
         return JsonPath.using(Configuration.defaultConfiguration()
                 .addOptions(Option.SUPPRESS_EXCEPTIONS))
-            .parse(new String(basicGet.getBody(), Charsets.UTF_8));
+            .parse(content);
     }
 
     @Test
@@ -526,25 +497,6 @@ public class ICSAttachmentWorkflowTest {
         return new MimeBodyPart(new ByteArrayInputStream(
                 Bytes.concat("Content-Transfer-Encoding: 8bit\r\nContent-Type: application/octet-stream; charset=utf-8\r\n\r\n".getBytes(Charsets.UTF_8),
                         body)));
-    }
-
-    private void waitingForRabbitToBeReady(ConnectionFactory factory) {
-        Awaitility
-            .await()
-            .atMost(30, TimeUnit.SECONDS)
-            .with()
-            .pollInterval(10, TimeUnit.MILLISECONDS)
-            .until(() -> isReady(factory));
-    }
-
-    private boolean isReady(ConnectionFactory factory) {
-        try (Connection connection = factory.newConnection()) {
-            return true;
-        } catch (IOException e) {
-            return false;
-        } catch (TimeoutException e) {
-            return false;
-        }
     }
 
 }
