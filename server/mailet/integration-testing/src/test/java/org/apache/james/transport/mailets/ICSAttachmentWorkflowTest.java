@@ -41,7 +41,6 @@ import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -417,7 +416,6 @@ public class ICSAttachmentWorkflowTest {
         }
     }
 
-    @Ignore("See JIRA issue MAILET-151")
     @Test
     public void headersShouldBeFilledOnlyWithOneICalAttachmentWhenMailHasSeveral() throws Exception {
         MimeMessage messageWithThreeICSAttached = MimeMessageBuilder.mimeMessageBuilder()
@@ -427,17 +425,17 @@ public class ICSAttachmentWorkflowTest {
                     .build(),
                 MimeMessageBuilder.bodyPartBuilder()
                     .data(ICS_1.getBytes(Charsets.UTF_8))
-                    .filename("test.txt")
+                    .filename("test1.txt")
                     .disposition("attachment")
                     .build(),
                 MimeMessageBuilder.bodyPartBuilder()
                     .data(ICS_2.getBytes(Charsets.UTF_8))
-                    .filename("test.txt")
+                    .filename("test2.txt")
                     .disposition("attachment")
                     .build(),
                 MimeMessageBuilder.bodyPartBuilder()
                     .data(ICS_3.getBytes(Charsets.UTF_8))
-                    .filename("test.txt")
+                    .filename("test3.txt")
                     .disposition("attachment")
                     .build())
             .setSubject("test")
@@ -456,8 +454,7 @@ public class ICSAttachmentWorkflowTest {
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
 
             String receivedHeaders = imapMessageReader.readFirstMessageHeadersInInbox(RECIPIENT, PASSWORD);
-            
-            //Here only the third ICal attachment is used to fill headers
+
             assertThat(receivedHeaders).contains("X-MEETING-UID: " + ICS_UID);
             assertThat(receivedHeaders).contains("X-MEETING-METHOD: " + ICS_METHOD);
             assertThat(receivedHeaders).contains("X-MEETING-SEQUENCE: " + ICS_SEQUENCE);
