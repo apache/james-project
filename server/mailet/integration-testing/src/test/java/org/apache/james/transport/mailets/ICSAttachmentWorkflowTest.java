@@ -201,6 +201,35 @@ public class ICSAttachmentWorkflowTest {
             "END:VEVENT\n" +
             "END:VCALENDAR\n";
 
+    private static final String ICS_BASE64 = "Content-Type: application/ics;\n" +
+        " name=\"invite.ics\"\n" +
+        "Content-Transfer-Encoding: base64\n" +
+        "Content-Disposition: attachment;\n" +
+        " filename=\"invite.ics\"\n" +
+        "\n" +
+        "QkVHSU46VkNBTEVOREFSDQpQUk9ESUQ6LS8vR29vZ2xlIEluYy8vR29vZ2xlIENhbGVuZGFy\n" +
+        "IDcwLjkwNTQvL0VODQpWRVJTSU9OOjIuMA0KQ0FMU0NBTEU6R1JFR09SSUFODQpNRVRIT0Q6\n" +
+        "UkVRVUVTVA0KQkVHSU46VkVWRU5UDQpEVFNUQVJUOjIwMTcwMTIwVDEzMDAwMFoNCkRURU5E\n" +
+        "OjIwMTcwMTIwVDE0MDAwMFoNCkRUU1RBTVA6MjAxNzAxMTlUMTkxODIzWg0KT1JHQU5JWkVS\n" +
+        "O0NOPUFudG9pbmUgRHVwcmF0Om1haWx0bzphbnRkdXByYXRAZ21haWwuY29tDQpVSUQ6YWg4\n" +
+        "Nms1bTM0MmJtY3JiZTlraGtraGxuMDBAZ29vZ2xlLmNvbQ0KQVRURU5ERUU7Q1VUWVBFPUlO\n" +
+        "RElWSURVQUw7Uk9MRT1SRVEtUEFSVElDSVBBTlQ7UEFSVFNUQVQ9TkVFRFMtQUNUSU9OO1JT\n" +
+        "VlA9DQogVFJVRTtDTj1hZHVwcmF0QGxpbmFnb3JhLmNvbTtYLU5VTS1HVUVTVFM9MDptYWls\n" +
+        "dG86YWR1cHJhdEBsaW5hZ29yYS5jb20NCkFUVEVOREVFO0NVVFlQRT1JTkRJVklEVUFMO1JP\n" +
+        "TEU9UkVRLVBBUlRJQ0lQQU5UO1BBUlRTVEFUPUFDQ0VQVEVEO1JTVlA9VFJVRQ0KIDtDTj1B\n" +
+        "bnRvaW5lIER1cHJhdDtYLU5VTS1HVUVTVFM9MDptYWlsdG86YW50ZHVwcmF0QGdtYWlsLmNv\n" +
+        "bQ0KQ1JFQVRFRDoyMDE3MDExOVQxOTE4MjNaDQpERVNDUklQVElPTjpBZmZpY2hleiB2b3Ry\n" +
+        "ZSDDqXbDqW5lbWVudCBzdXIgbGEgcGFnZSBodHRwczovL3d3dy5nb29nbGUuY29tL2NhbA0K\n" +
+        "IGVuZGFyL2V2ZW50P2FjdGlvbj1WSUVXJmVpZD1ZV2c0Tm1zMWJUTTBNbUp0WTNKaVpUbHJh\n" +
+        "R3RyYUd4dU1EQWdZV1IxY0hKaGRFQg0KIHNhVzVoWjI5eVlTNWpiMjAmdG9rPU1Ua2pZVzUw\n" +
+        "WkhWd2NtRjBRR2R0WVdsc0xtTnZiVGcxT1RNNU5XTTRNR1JsWW1FMVlUSTROeg0KIFJqTjJV\n" +
+        "eU5qVTBNMll5Wm1RNE56UmtOVGhoWVRRJmN0ej1FdXJvcGUvUGFyaXMmaGw9ZnIuDQpMQVNU\n" +
+        "LU1PRElGSUVEOjIwMTcwMTE5VDE5MTgyM1oNCkxPQ0FUSU9OOg0KU0VRVUVOQ0U6MA0KU1RB\n" +
+        "VFVTOkNPTkZJUk1FRA0KU1VNTUFSWToNClRSQU5TUDpPUEFRVUUNCkVORDpWRVZFTlQNCkVO\n" +
+        "RDpWQ0FMRU5EQVINCg==";
+    public static final String ICS_BASE64_UID = "ah86k5m342bmcrbe9khkkhln00@google.com";
+    public static final String ICS_BASE64_DTSTAMP = "20170119T191823Z";
+
     public SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer("rabbitmq:3")
             .withAffinityToContainer();
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -213,6 +242,7 @@ public class ICSAttachmentWorkflowTest {
     private TemporaryJamesServer jamesServer;
     private MimeMessage messageWithoutICSAttached;
     private MimeMessage messageWithICSAttached;
+    private MimeMessage messageWithICSBase64Attached;
 
     @Before
     public void setup() throws Exception {
@@ -308,6 +338,15 @@ public class ICSAttachmentWorkflowTest {
                     .filename("meeting.ics")
                     .disposition("attachment")
                     .build())
+            .setSubject("test")
+            .build();
+
+        messageWithICSBase64Attached = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .build(),
+                MimeMessageBuilder.bodyPartFromBytes(ICS_BASE64.getBytes(Charsets.UTF_8)))
             .setSubject("test")
             .build();
     }
@@ -414,6 +453,56 @@ public class ICSAttachmentWorkflowTest {
             assertThat(receivedHeaders).contains("X-MEETING-SEQUENCE: " + ICS_SEQUENCE);
             assertThat(receivedHeaders).contains("X-MEETING-DTSTAMP: " + ICS_DTSTAMP);
         }
+    }
+
+    @Test
+    public void headersShouldBeAddedInMailWhenOneBase64ICalAttachment() throws Exception {
+        Mail mail = FakeMail.builder()
+            .mimeMessage(messageWithICSBase64Attached)
+            .sender(new MailAddress(FROM))
+            .recipient(new MailAddress(RECIPIENT))
+            .build();
+
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
+             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+            messageSender.sendMessage(mail);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+
+            String receivedHeaders = imapMessageReader.readFirstMessageHeadersInInbox(RECIPIENT, PASSWORD);
+
+            assertThat(receivedHeaders).contains("X-MEETING-UID: " + ICS_BASE64_UID);
+            assertThat(receivedHeaders).contains("X-MEETING-METHOD: " + ICS_METHOD);
+            assertThat(receivedHeaders).contains("X-MEETING-SEQUENCE: " + ICS_SEQUENCE);
+            assertThat(receivedHeaders).contains("X-MEETING-DTSTAMP: " + ICS_BASE64_DTSTAMP);
+        }
+    }
+
+    @Test
+    public void base64CalendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
+        Mail mail = FakeMail.builder()
+            .mimeMessage(messageWithICSBase64Attached)
+            .sender(new MailAddress(FROM))
+            .recipient(new MailAddress(RECIPIENT))
+            .build();
+
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
+             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+            messageSender.sendMessage(mail);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+        }
+
+        Optional<String> content = amqpRule.readContent();
+        assertThat(content).isPresent();
+        DocumentContext jsonPath = toJsonPath(content.get());
+        assertThat(jsonPath.<String> read("sender")).isEqualTo(FROM);
+        assertThat(jsonPath.<String> read("recipient")).isEqualTo(RECIPIENT);
+        assertThat(jsonPath.<String> read("uid")).isEqualTo(ICS_BASE64_UID);
+        assertThat(jsonPath.<String> read("sequence")).isEqualTo(ICS_SEQUENCE);
+        assertThat(jsonPath.<String> read("dtstamp")).isEqualTo(ICS_BASE64_DTSTAMP);
+        assertThat(jsonPath.<String> read("method")).isEqualTo(ICS_METHOD);
+        assertThat(jsonPath.<String> read("recurrence-id")).isNull();
     }
 
     @Test

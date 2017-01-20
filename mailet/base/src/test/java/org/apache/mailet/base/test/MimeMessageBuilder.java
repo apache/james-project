@@ -21,6 +21,7 @@ package org.apache.mailet.base.test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -136,21 +137,20 @@ public class MimeMessageBuilder {
         }
 
         public BodyPart build() throws IOException, MessagingException {
-            Preconditions.checkState(dataAsString.isPresent() ^ dataAsBytes.isPresent(), "one and only one of data as string or data as bytes should be specified");
+            Preconditions.checkState(!(dataAsString.isPresent() && dataAsBytes.isPresent()), "Can not specify data as bytes and data as string at the same time");
             MimeBodyPart bodyPart = new MimeBodyPart();
-            if (dataAsString.isPresent()) {
-                bodyPart.setDataHandler(
-                    new DataHandler(
-                        new ByteArrayDataSource(
-                            dataAsString.or(DEFAULT_VALUE),
-                            type.or(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
-                    ));
-            }
             if (dataAsBytes.isPresent()) {
                 bodyPart.setDataHandler(
                     new DataHandler(
                         new ByteArrayDataSource(
                             dataAsBytes.get(),
+                            type.or(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
+                    ));
+            } else {
+                bodyPart.setDataHandler(
+                    new DataHandler(
+                        new ByteArrayDataSource(
+                            dataAsString.or(DEFAULT_VALUE),
                             type.or(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
                     ));
             }
@@ -196,6 +196,10 @@ public class MimeMessageBuilder {
 
     public static BodyPartBuilder bodyPartBuilder() {
         return new BodyPartBuilder();
+    }
+
+    public static BodyPart bodyPartFromBytes(byte[] bytes) throws MessagingException {
+        return new MimeBodyPart(new ByteArrayInputStream(bytes));
     }
 
     private Optional<String> text = Optional.absent();
