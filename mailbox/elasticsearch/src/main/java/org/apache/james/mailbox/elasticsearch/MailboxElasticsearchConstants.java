@@ -16,11 +16,10 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.mailbox.elasticsearch;
 
-import org.elasticsearch.client.Client;
-
-public interface ClientProvider {
-
-    Client get();
+public interface MailboxElasticsearchConstants {
+    String MAILBOX_INDEX = "mailbox";
+    String MESSAGE_TYPE = "message";
 }

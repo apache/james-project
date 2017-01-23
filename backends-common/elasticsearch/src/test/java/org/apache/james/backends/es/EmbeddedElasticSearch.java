@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.elasticsearch;
+package org.apache.james.backends.es;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
@@ -45,6 +45,7 @@ public class EmbeddedElasticSearch extends ExternalResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmbeddedElasticSearch.class);
 
     private final Supplier<Path> folder;
+    private final String indexName;
     private Node node;
 
     private static Path createTempDir(TemporaryFolder temporaryFolder) {
@@ -55,16 +56,17 @@ public class EmbeddedElasticSearch extends ExternalResource {
         }
     }
 
-    public EmbeddedElasticSearch(TemporaryFolder temporaryFolder) {
-        this(() -> EmbeddedElasticSearch.createTempDir(temporaryFolder));
+    public EmbeddedElasticSearch(TemporaryFolder temporaryFolder, String indexName) {
+        this(() -> EmbeddedElasticSearch.createTempDir(temporaryFolder), indexName);
     }
 
-    public EmbeddedElasticSearch(Path folder) {
-        this(() -> folder);
+    public EmbeddedElasticSearch(Path folder, String indexName) {
+        this(() -> folder, indexName);
     }
 
-    private EmbeddedElasticSearch(Supplier<Path> folder) {
+    private EmbeddedElasticSearch(Supplier<Path> folder, String indexName) {
         this.folder = folder;
+        this.indexName = indexName;
     }
 
     @Override
@@ -84,7 +86,7 @@ public class EmbeddedElasticSearch extends ExternalResource {
         try (Client client = node.client()) {
             client.admin()
                 .indices()
-                .delete(new DeleteIndexRequest(ElasticSearchIndexer.MAILBOX_INDEX))
+                .delete(new DeleteIndexRequest(indexName))
                 .actionGet();
         } catch (Exception e) {
             LOGGER.warn("Error while closing ES connection", e);

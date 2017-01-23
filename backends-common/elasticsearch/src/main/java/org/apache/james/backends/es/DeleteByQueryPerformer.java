@@ -17,14 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.elasticsearch;
+package org.apache.james.backends.es;
 
 import java.util.concurrent.ExecutorService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.james.mailbox.elasticsearch.search.ScrollIterable;
+import org.apache.james.backends.es.search.ScrollIterable;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -43,17 +43,21 @@ public class DeleteByQueryPerformer {
     private final Client client;
     private final ExecutorService executor;
     private final int batchSize;
+    private final String indexName;
+    private final String typeName;
 
     @Inject
-    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor) {
-        this(client, executor, DEFAULT_BATCH_SIZE);
+    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, String indexName, String typeName) {
+        this(client, executor, DEFAULT_BATCH_SIZE, indexName, typeName);
     }
 
     @VisibleForTesting
-    DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, int batchSize) {
+    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, int batchSize, String indexName, String typeName) {
         this.client = client;
         this.executor = executor;
         this.batchSize = batchSize;
+        this.indexName = indexName;
+        this.typeName = typeName;
     }
 
     public void perform(QueryBuilder queryBuilder) {
@@ -62,8 +66,8 @@ public class DeleteByQueryPerformer {
 
     protected void doDeleteByQuery(QueryBuilder queryBuilder) {
         new ScrollIterable(client,
-            client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
-                .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
+            client.prepareSearch(indexName)
+                .setTypes(typeName)
                 .setScroll(TIMEOUT)
                 .setNoFields()
                 .setQuery(queryBuilder)
@@ -76,8 +80,8 @@ public class DeleteByQueryPerformer {
         BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
         for (SearchHit hit : searchResponse.getHits()) {
             bulkRequestBuilder.add(client.prepareDelete()
-                .setIndex(ElasticSearchIndexer.MAILBOX_INDEX)
-                .setType(ElasticSearchIndexer.MESSAGE_TYPE)
+                .setIndex(indexName)
+                .setType(typeName)
                 .setId(hit.getId()));
         }
         return bulkRequestBuilder.execute();

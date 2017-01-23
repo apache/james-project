@@ -33,6 +33,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>cassandra-jmap-integration-testing</module>
         <module>jmap-integration-testing-common</module>
     </modules>
 

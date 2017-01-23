@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.elasticsearch.search;
+package org.apache.james.backends.es.search;
 
 import java.util.Iterator;
 import java.util.stream.Stream;

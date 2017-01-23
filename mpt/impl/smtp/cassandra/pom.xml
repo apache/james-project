@@ -160,9 +160,9 @@
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
-                    <artifactId>apache-james-mailbox-elasticsearch</artifactId>
-                    <scope>test</scope>
+                    <artifactId>apache-james-backends-es</artifactId>
                     <type>test-jar</type>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
@@ -255,7 +255,7 @@
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
-                    <artifactId>apache-james-mailbox-elasticsearch</artifactId>
+                    <artifactId>apache-james-backends-es</artifactId>
                     <scope>test</scope>
                     <type>test-jar</type>
                 </dependency>

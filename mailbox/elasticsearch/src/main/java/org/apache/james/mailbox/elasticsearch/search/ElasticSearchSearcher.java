@@ -26,9 +26,10 @@ import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.es.search.ScrollIterable;
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.elasticsearch.ElasticSearchIndexer;
+import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.query.SortConverter;
@@ -82,8 +83,8 @@ public class ElasticSearchSearcher {
         return query.getSearchQuery().getSorts()
             .stream()
             .reduce(
-                client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
-                    .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
+                client.prepareSearch(MailboxElasticsearchConstants.MAILBOX_INDEX)
+                    .setTypes(MailboxElasticsearchConstants.MESSAGE_TYPE)
                     .setScroll(TIMEOUT)
                     .addFields(JsonMessageConstants.UID, JsonMessageConstants.MAILBOX_ID, JsonMessageConstants.MESSAGE_ID)
                     .setQuery(queryConverter.from(users, query))

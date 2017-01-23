@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.elasticsearch.utils;
+package org.apache.james.backends.es.utils;
 
-import org.apache.james.mailbox.elasticsearch.ClientProvider;
+import org.apache.james.backends.es.ClientProvider;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.node.Node;
 

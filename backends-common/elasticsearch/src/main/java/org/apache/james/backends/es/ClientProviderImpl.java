@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.elasticsearch;
+package org.apache.james.backends.es;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

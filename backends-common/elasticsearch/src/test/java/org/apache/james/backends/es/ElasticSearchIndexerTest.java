@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.elasticsearch;
+package org.apache.james.backends.es;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
@@ -25,8 +25,7 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 
-import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
-import org.apache.james.mailbox.elasticsearch.utils.TestingClientProvider;
+import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -43,8 +42,11 @@ import com.google.common.collect.Lists;
 public class ElasticSearchIndexerTest {
 
     private static final int MINIMUM_BATCH_SIZE = 1;
+    private static final String CONTENT = "content";
+    private static final String INDEX_NAME = "index_name";
+    private static final String TYPE_NAME = "type_name";
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder);
+    private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder, INDEX_NAME);
 
     @Rule
     public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
@@ -56,13 +58,17 @@ public class ElasticSearchIndexerTest {
     public void setup() throws IOException {
         node = embeddedElasticSearch.getNode();
         TestingClientProvider clientProvider = new TestingClientProvider(node);
-        DeleteByQueryPerformer deleteByQueryPerformer = new DeleteByQueryPerformer(clientProvider.get(), Executors.newSingleThreadExecutor(), MINIMUM_BATCH_SIZE) {
+        DeleteByQueryPerformer deleteByQueryPerformer = new DeleteByQueryPerformer(clientProvider.get(),
+            Executors.newSingleThreadExecutor(),
+            MINIMUM_BATCH_SIZE,
+            INDEX_NAME,
+            TYPE_NAME) {
             @Override
             public void perform(QueryBuilder queryBuilder) {
                 doDeleteByQuery(queryBuilder);
             }
         };
-        testee = new ElasticSearchIndexer(clientProvider.get(), deleteByQueryPerformer);
+        testee = new ElasticSearchIndexer(clientProvider.get(), deleteByQueryPerformer, INDEX_NAME, TYPE_NAME);
     }
     
     @Test
@@ -74,8 +80,8 @@ public class ElasticSearchIndexerTest {
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {
-            SearchResponse searchResponse = client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
-                    .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
+            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME)
+                    .setTypes(TYPE_NAME)
                     .setQuery(QueryBuilders.matchQuery("message", "trying"))
                     .get();
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
@@ -99,16 +105,16 @@ public class ElasticSearchIndexerTest {
         embeddedElasticSearch.awaitForElasticSearch();
 
         try (Client client = node.client()) {
-            SearchResponse searchResponse = client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
-                .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
+            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME)
+                .setTypes(TYPE_NAME)
                 .setQuery(QueryBuilders.matchQuery("message", "mastering"))
                 .get();
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
         }
 
         try (Client client = node.client()) {
-            SearchResponse searchResponse = client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
-                .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
+            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME)
+                .setTypes(TYPE_NAME)
                 .setQuery(QueryBuilders.matchQuery("field", "unchanged"))
                 .get();
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
@@ -138,17 +144,17 @@ public class ElasticSearchIndexerTest {
     @Test
     public void deleteByQueryShouldWorkOnSingleMessage() throws Exception {
         String messageId = "1:2";
-        String content = "{\"message\": \"trying out Elasticsearch\", \"mailboxId\":\"1\"}";
+        String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
 
         testee.indexMessage(messageId, content);
         embeddedElasticSearch.awaitForElasticSearch();
         
-        testee.deleteAllMatchingQuery(termQuery(JsonMessageConstants.MAILBOX_ID, "1"));
+        testee.deleteAllMatchingQuery(termQuery("property", "1"));
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {
-            SearchResponse searchResponse = client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
-                    .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
+            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME)
+                    .setTypes(TYPE_NAME)
                     .setQuery(QueryBuilders.matchAllQuery())
                     .get();
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(0);
@@ -158,27 +164,27 @@ public class ElasticSearchIndexerTest {
     @Test
     public void deleteByQueryShouldWorkWhenMultipleMessages() throws Exception {
         String messageId = "1:1";
-        String content = "{\"message\": \"trying out Elasticsearch\", \"mailboxId\":\"1\"}";
+        String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
         
         testee.indexMessage(messageId, content);
         
         String messageId2 = "1:2";
-        String content2 = "{\"message\": \"trying out Elasticsearch 2\", \"mailboxId\":\"1\"}";
+        String content2 = "{\"message\": \"trying out Elasticsearch 2\", \"property\":\"1\"}";
         
         testee.indexMessage(messageId2, content2);
         
         String messageId3 = "2:3";
-        String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"mailboxId\":\"2\"}";
+        String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"property\":\"2\"}";
         
         testee.indexMessage(messageId3, content3);
         embeddedElasticSearch.awaitForElasticSearch();
 
-        testee.deleteAllMatchingQuery(termQuery(JsonMessageConstants.MAILBOX_ID, "1"));
+        testee.deleteAllMatchingQuery(termQuery("property", "1"));
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {
-            SearchResponse searchResponse = client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
-                    .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
+            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME)
+                    .setTypes(TYPE_NAME)
                     .setQuery(QueryBuilders.matchAllQuery())
                     .get();
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
@@ -197,8 +203,8 @@ public class ElasticSearchIndexerTest {
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {
-            SearchResponse searchResponse = client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
-                    .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
+            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME)
+                    .setTypes(TYPE_NAME)
                     .setQuery(QueryBuilders.matchAllQuery())
                     .get();
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(0);
@@ -227,8 +233,8 @@ public class ElasticSearchIndexerTest {
         embeddedElasticSearch.awaitForElasticSearch();
 
         try (Client client = node.client()) {
-            SearchResponse searchResponse = client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
-                .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
+            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME)
+                .setTypes(TYPE_NAME)
                 .setQuery(QueryBuilders.matchAllQuery())
                 .get();
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);

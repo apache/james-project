@@ -26,7 +26,7 @@ import javax.inject.Singleton;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
-import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
+import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.junit.rules.TemporaryFolder;
 
 import com.datastax.driver.core.Session;

@@ -16,42 +16,11 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.backends.es;
 
-package org.apache.james;
+import org.elasticsearch.client.Client;
 
-import org.apache.james.backends.es.EmbeddedElasticSearch;
-import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
-import org.apache.james.modules.TestElasticSearchModule;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+public interface ClientProvider {
 
-import com.google.inject.Module;
-
-
-public class EmbeddedElasticSearchRule implements GuiceModuleTestRule {
-
-    private final TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private final EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.MAILBOX_INDEX);
-
-    private final RuleChain chain = RuleChain
-        .outerRule(temporaryFolder)
-        .around(embeddedElasticSearch);
-
-    @Override
-    public Statement apply(Statement base, Description description) {
-        return chain.apply(base, description);
-    }
-
-    @Override
-    public void await() {
-        embeddedElasticSearch.awaitForElasticSearch();
-    }
-
-
-    @Override
-    public Module getModule() {
-        return new TestElasticSearchModule(embeddedElasticSearch);
-    }
+    Client get();
 }

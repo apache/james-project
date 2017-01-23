@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.elasticsearch;
+package org.apache.james.backends.es;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
@@ -36,29 +36,29 @@ public class IndexCreationFactory {
     private static final int DEFAULT_NB_REPLICA = 0;
     public static final String CASE_INSENSITIVE = "case_insensitive";
 
-    public static Client createIndex(Client client, int nbShards, int nbReplica) {
+    public static Client createIndex(Client client, String name, int nbShards, int nbReplica) {
         try {
-            return createIndex(client, generateSetting(nbShards, nbReplica));
+            return createIndex(client, name, generateSetting(nbShards, nbReplica));
         } catch (IOException e) {
             LOGGER.error("Error while creating index : ", e);
             return client;
         }
     }
 
-    public static Client createIndex(Client client) {
-        return createIndex(client, DEFAULT_NB_SHARDS, DEFAULT_NB_REPLICA);
+    public static Client createIndex(Client client, String name) {
+        return createIndex(client, name, DEFAULT_NB_SHARDS, DEFAULT_NB_REPLICA);
     }
 
-    private static Client createIndex(Client client, XContentBuilder settings) {
+    private static Client createIndex(Client client, String name, XContentBuilder settings) {
         try {
                 client.admin()
                     .indices()
-                    .prepareCreate(ElasticSearchIndexer.MAILBOX_INDEX)
+                    .prepareCreate(name)
                     .setSettings(settings)
                     .execute()
                     .actionGet();
         } catch (IndexAlreadyExistsException exception) {
-            LOGGER.info("Index [" + ElasticSearchIndexer.MAILBOX_INDEX + "] already exist");
+            LOGGER.info("Index [" + name + "] already exist");
         }
         return client;
     }

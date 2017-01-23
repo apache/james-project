@@ -159,6 +159,16 @@
             </build>
 	        <dependencies>
                 <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-backends-es</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-backends-es</artifactId>
+                    <type>test-jar</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-mailbox-api</artifactId>
                 </dependency>
@@ -203,11 +213,6 @@
                 <dependency>
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>com.jayway.awaitility</groupId>
-                    <artifactId>awaitility</artifactId>
-                    <version>1.6.3</version>
                 </dependency>
                 <dependency>
                     <groupId>javax.inject</groupId>

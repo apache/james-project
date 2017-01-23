@@ -31,10 +31,10 @@ import java.util.List;
 
 import javax.mail.Flags;
 
+import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MailboxSession.User;
-import org.apache.james.mailbox.elasticsearch.ElasticSearchIndexer;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.model.TestId;

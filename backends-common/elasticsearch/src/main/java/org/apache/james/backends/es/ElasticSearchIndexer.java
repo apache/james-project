@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.elasticsearch;
+package org.apache.james.backends.es;
 
 import java.util.List;
 
@@ -56,22 +56,24 @@ public class ElasticSearchIndexer {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchIndexer.class);
-    public static final String MAILBOX_INDEX = "mailbox";
-    public static final String MESSAGE_TYPE = "message";
     
     private final Client client;
     private final DeleteByQueryPerformer deleteByQueryPerformer;
+    private final String indexName;
+    private final String typeName;
 
     @Inject
-    public ElasticSearchIndexer(Client client, DeleteByQueryPerformer deleteByQueryPerformer) {
+    public ElasticSearchIndexer(Client client, DeleteByQueryPerformer deleteByQueryPerformer, String indexName, String typeName) {
         this.client = client;
         this.deleteByQueryPerformer = deleteByQueryPerformer;
+        this.indexName = indexName;
+        this.typeName = typeName;
     }
     
     public IndexResponse indexMessage(String id, String content) {
         checkArgument(content);
         LOGGER.debug(String.format("Indexing %s: %s", id, content));
-        return client.prepareIndex(MAILBOX_INDEX, MESSAGE_TYPE, id)
+        return client.prepareIndex(indexName, typeName, id)
             .setSource(content)
             .get();
     }
@@ -79,14 +81,14 @@ public class ElasticSearchIndexer {
     public BulkResponse updateMessages(List<UpdatedRepresentation> updatedDocumentParts) {
         Preconditions.checkNotNull(updatedDocumentParts);
         BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-        updatedDocumentParts.forEach(updatedDocumentPart -> bulkRequestBuilder.add(client.prepareUpdate(MAILBOX_INDEX, MESSAGE_TYPE, updatedDocumentPart.getId())
+        updatedDocumentParts.forEach(updatedDocumentPart -> bulkRequestBuilder.add(client.prepareUpdate(indexName, typeName, updatedDocumentPart.getId())
             .setDoc(updatedDocumentPart.getUpdatedDocumentPart())));
         return bulkRequestBuilder.get();
     }
 
     public BulkResponse deleteMessages(List<String> ids) {
         BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-        ids.forEach(id -> bulkRequestBuilder.add(client.prepareDelete(MAILBOX_INDEX, MESSAGE_TYPE, id)));
+        ids.forEach(id -> bulkRequestBuilder.add(client.prepareDelete(indexName, typeName, id)));
         return bulkRequestBuilder.get();
     }
     
