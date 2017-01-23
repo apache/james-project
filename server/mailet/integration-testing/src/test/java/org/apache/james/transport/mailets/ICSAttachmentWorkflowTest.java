@@ -33,6 +33,7 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.utils.IMAPMessageReader;
 import org.apache.james.mailets.utils.SMTPMessageSender;
+import org.apache.james.queue.activemq.MimeMessageBlobMessageSource;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.apache.mailet.Mail;
@@ -68,7 +69,9 @@ public class ICSAttachmentWorkflowTest {
     private static final String FROM = "fromUser@" + JAMES_APACHE_ORG;
     private static final String RECIPIENT = "touser@" + JAMES_APACHE_ORG;
 
-    private static final String MAIL_ATTRIBUTE = "my.attribute";
+    private static final String MAIL_ATTRIBUTE = "ical.attachments";
+    private static final String PARSED_ICAL_MAIL_ATTRIBUTE = "ical.parsed";
+    private static final String JSON_MAIL_ATTRIBUTE = "ical.json";
     private static final String EXCHANGE_NAME = "myExchange";
     private static final String ROUTING_KEY = "myRoutingKey";
     
@@ -228,8 +231,202 @@ public class ICSAttachmentWorkflowTest {
         "LU1PRElGSUVEOjIwMTcwMTE5VDE5MTgyM1oNCkxPQ0FUSU9OOg0KU0VRVUVOQ0U6MA0KU1RB\n" +
         "VFVTOkNPTkZJUk1FRA0KU1VNTUFSWToNClRSQU5TUDpPUEFRVUUNCkVORDpWRVZFTlQNCkVO\n" +
         "RDpWQ0FMRU5EQVINCg==";
-    public static final String ICS_BASE64_UID = "ah86k5m342bmcrbe9khkkhln00@google.com";
-    public static final String ICS_BASE64_DTSTAMP = "20170119T191823Z";
+    private static final String ICS_BASE64_UID = "ah86k5m342bmcrbe9khkkhln00@google.com";
+    private static final String ICS_BASE64_DTSTAMP = "20170119T191823Z";
+    private static final String ICS_YAHOO = "BEGIN:VCALENDAR\r\n" +
+            "PRODID://Yahoo//Calendar//EN\r\n" +
+            "VERSION:2.0\r\n" +
+            "METHOD:REQUEST\r\n" +
+            "BEGIN:VEVENT\r\n" +
+            "SUMMARY:Test from Yahoo\r\n" +
+            "CLASS:PUBLIC\r\n" +
+            "DTSTART;TZID=Europe/Brussels:20170127T150000\r\n" +
+            "DTEND;TZID=Europe/Brussels:20170127T160000\r\n" +
+            "LOCATION:Somewhere\r\n" +
+            "PRIORITY:0\r\n" +
+            "SEQUENCE:0\r\n" +
+            "STATUS:CONFIRMED\r\n" +
+            "UID:5014513f-1026-4b58-82cf-80d4fc060bbe\r\n" +
+            "DTSTAMP:20170123T121635Z\r\n" +
+            "ATTENDEE;PARTSTAT=NEEDS-ACTION;ROLE=REQ_PARTICIPANT;RSVP=TRUE;SCHEDULE-STAT\r\n" +
+            " US=1.1:mailto:ddolcimascolo@linagora.com\r\n" +
+            "ATTENDEE;PARTSTAT=NEEDS-ACTION;ROLE=REQ_PARTICIPANT;RSVP=TRUE;SCHEDULE-STAT\r\n" +
+            " US=1.1:mailto:rouazana@linagora.com\r\n" +
+            "ATTENDEE;PARTSTAT=NEEDS-ACTION;ROLE=REQ_PARTICIPANT;RSVP=TRUE;SCHEDULE-STAT\r\n" +
+            " US=1.1:mailto:aduprat@linagora.com\r\n" +
+            "ATTENDEE;PARTSTAT=NEEDS-ACTION;ROLE=REQ_PARTICIPANT;RSVP=TRUE;SCHEDULE-STAT\r\n" +
+            " US=1.1:mailto:btellier@linagora.com\r\n" +
+            "ORGANIZER;CN=OBM Linagora;SENT-BY=\"mailto:obmlinagora@yahoo.fr\":mailto:obml\r\n" +
+            " inagora@yahoo.fr\r\n" +
+            "X-YAHOO-YID:obmlinagora\r\n" +
+            "TRANSP:OPAQUE\r\n" +
+            "STATUS:CONFIRMED\r\n" +
+            "X-YAHOO-USER-STATUS:BUSY\r\n" +
+            "X-YAHOO-EVENT-STATUS:BUSY\r\n" +
+            "END:VEVENT\r\n" +
+            "BEGIN:VTIMEZONE\r\n" +
+            "TZID:Europe/Brussels\r\n" +
+            "TZURL:http://tzurl.org/zoneinfo/Europe/Brussels\r\n" +
+            "X-LIC-LOCATION:Europe/Brussels\r\n" +
+            "BEGIN:DAYLIGHT\r\n" +
+            "TZOFFSETFROM:+0100\r\n" +
+            "TZOFFSETTO:+0200\r\n" +
+            "TZNAME:CEST\r\n" +
+            "DTSTART:19810329T020000\r\n" +
+            "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\r\n" +
+            "END:DAYLIGHT\r\n" +
+            "BEGIN:STANDARD\r\n" +
+            "TZOFFSETFROM:+0200\r\n" +
+            "TZOFFSETTO:+0100\r\n" +
+            "TZNAME:CET\r\n" +
+            "DTSTART:19961027T030000\r\n" +
+            "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\r\n" +
+            "END:STANDARD\r\n" +
+            "BEGIN:STANDARD\r\n" +
+            "TZOFFSETFROM:+001730\r\n" +
+            "TZOFFSETTO:+001730\r\n" +
+            "TZNAME:BMT\r\n" +
+            "DTSTART:18800101T000000\r\n" +
+            "RDATE:18800101T000000\r\n" +
+            "END:STANDARD\r\n" +
+            "BEGIN:STANDARD\r\n" +
+            "TZOFFSETFROM:+001730\r\n" +
+            "TZOFFSETTO:+0000\r\n" +
+            "TZNAME:WET\r\n" +
+            "DTSTART:18920501T120000\r\n" +
+            "RDATE:18920501T120000\r\n" +
+            "END:STANDARD\r\n" +
+            "BEGIN:STANDARD\r\n" +
+            "TZOFFSETFROM:+0000\r\n" +
+            "TZOFFSETTO:+0100\r\n" +
+            "TZNAME:CET\r\n" +
+            "DTSTART:19141108T000000\r\n" +
+            "RDATE:19141108T000000\r\n" +
+            "END:STANDARD\r\n" +
+            "BEGIN:DAYLIGHT\r\n" +
+            "TZOFFSETFROM:+0100\r\n" +
+            "TZOFFSETTO:+0200\r\n" +
+            "TZNAME:CEST\r\n" +
+            "DTSTART:19160501T000000\r\n" +
+            "RDATE:19160501T000000\r\n" +
+            "RDATE:19170416T020000\r\n" +
+            "RDATE:19180415T020000\r\n" +
+            "RDATE:19400520T030000\r\n" +
+            "RDATE:19430329T020000\r\n" +
+            "RDATE:19440403T020000\r\n" +
+            "RDATE:19450402T020000\r\n" +
+            "RDATE:19460519T020000\r\n" +
+            "RDATE:19770403T020000\r\n" +
+            "RDATE:19780402T020000\r\n" +
+            "RDATE:19790401T020000\r\n" +
+            "RDATE:19800406T020000\r\n" +
+            "END:DAYLIGHT\r\n" +
+            "BEGIN:STANDARD\r\n" +
+            "TZOFFSETFROM:+0200\r\n" +
+            "TZOFFSETTO:+0100\r\n" +
+            "TZNAME:CET\r\n" +
+            "DTSTART:19161001T010000\r\n" +
+            "RDATE:19161001T010000\r\n" +
+            "RDATE:19170917T030000\r\n" +
+            "RDATE:19180916T030000\r\n" +
+            "RDATE:19421102T030000\r\n" +
+            "RDATE:19431004T030000\r\n" +
+            "RDATE:19440917T030000\r\n" +
+            "RDATE:19450916T030000\r\n" +
+            "RDATE:19461007T030000\r\n" +
+            "RDATE:19770925T030000\r\n" +
+            "RDATE:19781001T030000\r\n" +
+            "RDATE:19790930T030000\r\n" +
+            "RDATE:19800928T030000\r\n" +
+            "RDATE:19810927T030000\r\n" +
+            "RDATE:19820926T030000\r\n" +
+            "RDATE:19830925T030000\r\n" +
+            "RDATE:19840930T030000\r\n" +
+            "RDATE:19850929T030000\r\n" +
+            "RDATE:19860928T030000\r\n" +
+            "RDATE:19870927T030000\r\n" +
+            "RDATE:19880925T030000\r\n" +
+            "RDATE:19890924T030000\r\n" +
+            "RDATE:19900930T030000\r\n" +
+            "RDATE:19910929T030000\r\n" +
+            "RDATE:19920927T030000\r\n" +
+            "RDATE:19930926T030000\r\n" +
+            "RDATE:19940925T030000\r\n" +
+            "RDATE:19950924T030000\r\n" +
+            "END:STANDARD\r\n" +
+            "BEGIN:STANDARD\r\n" +
+            "TZOFFSETFROM:+0100\r\n" +
+            "TZOFFSETTO:+0000\r\n" +
+            "TZNAME:WET\r\n" +
+            "DTSTART:19181111T120000\r\n" +
+            "RDATE:19181111T120000\r\n" +
+            "RDATE:19191005T000000\r\n" +
+            "RDATE:19201024T000000\r\n" +
+            "RDATE:19211026T000000\r\n" +
+            "RDATE:19221008T000000\r\n" +
+            "RDATE:19231007T000000\r\n" +
+            "RDATE:19241005T000000\r\n" +
+            "RDATE:19251004T000000\r\n" +
+            "RDATE:19261003T000000\r\n" +
+            "RDATE:19271002T000000\r\n" +
+            "RDATE:19281007T030000\r\n" +
+            "RDATE:19291006T030000\r\n" +
+            "RDATE:19301005T030000\r\n" +
+            "RDATE:19311004T030000\r\n" +
+            "RDATE:19321002T030000\r\n" +
+            "RDATE:19331008T030000\r\n" +
+            "RDATE:19341007T030000\r\n" +
+            "RDATE:19351006T030000\r\n" +
+            "RDATE:19361004T030000\r\n" +
+            "RDATE:19371003T030000\r\n" +
+            "RDATE:19381002T030000\r\n" +
+            "RDATE:19391119T030000\r\n" +
+            "END:STANDARD\r\n" +
+            "BEGIN:DAYLIGHT\r\n" +
+            "TZOFFSETFROM:+0000\r\n" +
+            "TZOFFSETTO:+0100\r\n" +
+            "TZNAME:WEST\r\n" +
+            "DTSTART:19190301T230000\r\n" +
+            "RDATE:19190301T230000\r\n" +
+            "RDATE:19200214T230000\r\n" +
+            "RDATE:19210314T230000\r\n" +
+            "RDATE:19220325T230000\r\n" +
+            "RDATE:19230421T230000\r\n" +
+            "RDATE:19240329T230000\r\n" +
+            "RDATE:19250404T230000\r\n" +
+            "RDATE:19260417T230000\r\n" +
+            "RDATE:19270409T230000\r\n" +
+            "RDATE:19280414T230000\r\n" +
+            "RDATE:19290421T020000\r\n" +
+            "RDATE:19300413T020000\r\n" +
+            "RDATE:19310419T020000\r\n" +
+            "RDATE:19320403T020000\r\n" +
+            "RDATE:19330326T020000\r\n" +
+            "RDATE:19340408T020000\r\n" +
+            "RDATE:19350331T020000\r\n" +
+            "RDATE:19360419T020000\r\n" +
+            "RDATE:19370404T020000\r\n" +
+            "RDATE:19380327T020000\r\n" +
+            "RDATE:19390416T020000\r\n" +
+            "RDATE:19400225T020000\r\n" +
+            "END:DAYLIGHT\r\n" +
+            "BEGIN:DAYLIGHT\r\n" +
+            "TZOFFSETFROM:+0200\r\n" +
+            "TZOFFSETTO:+0200\r\n" +
+            "TZNAME:CEST\r\n" +
+            "DTSTART:19440903T000000\r\n" +
+            "RDATE:19440903T000000\r\n" +
+            "END:DAYLIGHT\r\n" +
+            "BEGIN:STANDARD\r\n" +
+            "TZOFFSETFROM:+0100\r\n" +
+            "TZOFFSETTO:+0100\r\n" +
+            "TZNAME:CET\r\n" +
+            "DTSTART:19770101T000000\r\n" +
+            "RDATE:19770101T000000\r\n" +
+            "END:STANDARD\r\n" +
+            "END:VTIMEZONE\r\n" +
+            "END:VCALENDAR\r\n" +
+            "";
 
     public SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer("rabbitmq:3")
             .withAffinityToContainer();
@@ -245,6 +442,7 @@ public class ICSAttachmentWorkflowTest {
     private MimeMessage messageWithICSAttached;
     private MimeMessage messageWithICSBase64Attached;
     private MimeMessage messageWithThreeICSAttached;
+    private MimeMessage yahooInvitationMessage;
 
     @Before
     public void setup() throws Exception {
@@ -276,25 +474,26 @@ public class ICSAttachmentWorkflowTest {
                             .match("All")
                             .clazz("ICalendarParser")
                             .addProperty("sourceAttribute", MAIL_ATTRIBUTE)
-                            .addProperty("destinationAttribute", MAIL_ATTRIBUTE)
+                            .addProperty("destinationAttribute", PARSED_ICAL_MAIL_ATTRIBUTE)
                             .build())
                     .addMailet(MailetConfiguration.builder()
                             .match("All")
                             .clazz("ICALToHeader")
-                            .addProperty("attribute", MAIL_ATTRIBUTE)
+                            .addProperty("attribute", PARSED_ICAL_MAIL_ATTRIBUTE)
                             .build())
                     .addMailet(MailetConfiguration.builder()
                             .match("All")
                             .clazz("ICALToJsonAttribute")
-                            .addProperty("source", MAIL_ATTRIBUTE)
-                            .addProperty("destination", MAIL_ATTRIBUTE)
+                            .addProperty("source", PARSED_ICAL_MAIL_ATTRIBUTE)
+                            .addProperty("rawSource", MAIL_ATTRIBUTE)
+                            .addProperty("destination", JSON_MAIL_ATTRIBUTE)
                             .build())
                     .addMailet(MailetConfiguration.builder()
                             .match("All")
                             .clazz("AmqpForwardAttribute")
                             .addProperty("uri", amqpRule.getAmqpUri())
                             .addProperty("exchange", EXCHANGE_NAME)
-                            .addProperty("attribute", MAIL_ATTRIBUTE)
+                            .addProperty("attribute", JSON_MAIL_ATTRIBUTE)
                             .addProperty("routing_key", ROUTING_KEY)
                             .build())
                     .addMailet(MailetConfiguration.builder()
@@ -351,6 +550,8 @@ public class ICSAttachmentWorkflowTest {
                 MimeMessageBuilder.bodyPartFromBytes(ICS_BASE64.getBytes(Charsets.UTF_8)))
             .setSubject("test")
             .build();
+
+        yahooInvitationMessage = new MimeMessage(null, ClassLoader.getSystemResourceAsStream("yahooInvitation.eml"));
 
         messageWithThreeICSAttached = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
@@ -527,6 +728,34 @@ public class ICSAttachmentWorkflowTest {
         assertThat(jsonPath.<String> read("sequence")).isEqualTo(ICS_SEQUENCE);
         assertThat(jsonPath.<String> read("dtstamp")).isEqualTo(ICS_BASE64_DTSTAMP);
         assertThat(jsonPath.<String> read("method")).isEqualTo(ICS_METHOD);
+        assertThat(jsonPath.<String> read("recurrence-id")).isNull();
+    }
+
+    @Test
+    public void yahooBase64CalendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
+        Mail mail = FakeMail.builder()
+            .mimeMessage(yahooInvitationMessage)
+            .sender(new MailAddress(FROM))
+            .recipient(new MailAddress(RECIPIENT))
+            .build();
+
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
+             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+            messageSender.sendMessage(mail);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+        }
+
+        Optional<String> content = amqpRule.readContent();
+        assertThat(content).isPresent();
+        DocumentContext jsonPath = toJsonPath(content.get());
+        assertThat(jsonPath.<String> read("sender")).isEqualTo(FROM);
+        assertThat(jsonPath.<String> read("recipient")).isEqualTo(RECIPIENT);
+        assertThat(jsonPath.<String> read("uid")).isEqualTo("5014513f-1026-4b58-82cf-80d4fc060bbe");
+        assertThat(jsonPath.<String> read("sequence")).isEqualTo("0");
+        assertThat(jsonPath.<String> read("dtstamp")).isEqualTo("20170123T121635Z");
+        assertThat(jsonPath.<String> read("method")).isEqualTo("REQUEST");
+        assertThat(jsonPath.<String> read("ical")).isEqualTo(ICS_YAHOO);
         assertThat(jsonPath.<String> read("recurrence-id")).isNull();
     }
 

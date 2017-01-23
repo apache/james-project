@@ -25,6 +25,7 @@ import java.util.Optional;
 import org.apache.mailet.MailAddress;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 
 import net.fortuna.ical4j.model.Calendar;
@@ -45,8 +46,8 @@ public class ICAL {
         private Optional<String> method = Optional.empty();
         private Optional<String> recurrenceId = Optional.empty();
 
-        public Builder from(Calendar calendar) {
-            this.ical = calendar.toString();
+        public Builder from(Calendar calendar, byte[] originalEvent) {
+            this.ical = new String(originalEvent, Charsets.UTF_8);
             VEvent vevent = (VEvent) calendar.getComponent("VEVENT");
             this.uid = optionalOf(vevent.getUid());
             this.method = optionalOf(calendar.getMethod());
