@@ -21,7 +21,7 @@ package org.apache.james.modules.server;
 
 import java.io.FileNotFoundException;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+import java.util.Optional;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -29,15 +29,13 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
-import org.apache.james.metrics.dropwizard.ESMetricReporter;
-import org.apache.james.metrics.dropwizard.ESReporterConfiguration;
+import org.apache.james.metrics.es.ESMetricReporter;
+import org.apache.james.metrics.es.ESReporterConfiguration;
 import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -65,8 +63,8 @@ public class ESMetricReporterModule extends AbstractModule {
                 return ESReporterConfiguration.enabled(
                     propertiesReader.getString(ElasticSearchMailboxModule.ELASTICSEARCH_MASTER_HOST),
                     propertiesReader.getInt("elasticsearch.http.port", DEFAULT_ES_HTTP_PORT),
-                    Optional.fromNullable(propertiesReader.getString("elasticsearch.metrics.reports.index", null)),
-                    Optional.fromNullable(propertiesReader.getLong("elasticsearch.metrics.reports.period", null)));
+                    Optional.ofNullable(propertiesReader.getString("elasticsearch.metrics.reports.index", null)),
+                    Optional.ofNullable(propertiesReader.getLong("elasticsearch.metrics.reports.period", null)));
             }
         } catch (FileNotFoundException e) {
             LOGGER.info("Can not locate " + ElasticSearchMailboxModule.ES_CONFIG_FILE);
@@ -81,11 +79,6 @@ public class ESMetricReporterModule extends AbstractModule {
     private PropertiesConfiguration getPropertiesConfiguration(FileSystem fileSystem) throws ConfigurationException, FileNotFoundException {
         return new PropertiesConfiguration(
                     fileSystem.getFile(ElasticSearchMailboxModule.ES_CONFIG_FILE));
-    }
-
-    @Provides
-    public ESMetricReporter provideReporter(DropWizardMetricFactory metricFactory, ESReporterConfiguration configuration) throws ConfigurationException, ExecutionException, InterruptedException {
-        return metricFactory.provideEsReporter(configuration);
     }
 
     @Singleton

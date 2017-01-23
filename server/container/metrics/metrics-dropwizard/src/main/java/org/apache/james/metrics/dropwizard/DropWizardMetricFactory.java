@@ -20,6 +20,7 @@
 package org.apache.james.metrics.dropwizard;
 
 import javax.annotation.PreDestroy;
+import javax.inject.Inject;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.metrics.api.Metric;
@@ -33,14 +34,11 @@ public class DropWizardMetricFactory implements MetricFactory {
     private final MetricRegistry metricRegistry;
     private final JmxReporter jmxReporter;
 
-    public DropWizardMetricFactory() {
-        this.metricRegistry = new MetricRegistry();
+    @Inject
+    public DropWizardMetricFactory(MetricRegistry metricRegistry) {
+        this.metricRegistry = metricRegistry;
         this.jmxReporter = JmxReporter.forRegistry(metricRegistry)
             .build();
-    }
-
-    public ESMetricReporter provideEsReporter(ESReporterConfiguration esReporterConfiguration) {
-        return new ESMetricReporter(esReporterConfiguration, metricRegistry);
     }
 
     @Override

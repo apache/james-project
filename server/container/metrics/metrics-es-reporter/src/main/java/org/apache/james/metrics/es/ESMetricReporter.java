@@ -17,17 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.metrics.dropwizard;
+package org.apache.james.metrics.es;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PreDestroy;
+import javax.inject.Inject;
 
 import org.elasticsearch.metrics.ElasticsearchReporter;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
+import com.codahale.metrics.ScheduledReporter;
 import com.google.common.base.Throwables;
 
 public class ESMetricReporter {
@@ -35,6 +37,7 @@ public class ESMetricReporter {
     private final Optional<ElasticsearchReporter> reporter;
     private final ESReporterConfiguration esReporterConfiguration;
 
+    @Inject
     public ESMetricReporter(ESReporterConfiguration esReporterConfiguration, MetricRegistry registry) {
         this.reporter = getReporter(esReporterConfiguration, registry);
         this.esReporterConfiguration = esReporterConfiguration;
@@ -51,19 +54,16 @@ public class ESMetricReporter {
                 throw Throwables.propagate(e);
             }
         }   
-        return Optional.absent();
+        return Optional.empty();
     }
 
     public void start() {
-        if (reporter.isPresent()) {
-            reporter.get().start(esReporterConfiguration.getPeriodInSecond(), TimeUnit.SECONDS);
-        }
+        reporter.ifPresent(elasticsearchReporter ->
+            elasticsearchReporter.start(esReporterConfiguration.getPeriodInSecond(), TimeUnit.SECONDS));
     }
 
     @PreDestroy
     public void stop() {
-        if (reporter.isPresent()) {
-            reporter.get().stop();
-        }
+        reporter.ifPresent(ScheduledReporter::stop);
     }
 }

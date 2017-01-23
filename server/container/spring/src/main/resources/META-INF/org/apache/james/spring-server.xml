@@ -294,6 +294,10 @@
     ======================================================================
     -->
 
-    <bean id="metricFactory" class="org.apache.james.metrics.dropwizard.DropWizardMetricFactory"/>
+    <bean id="metricFactory" class="org.apache.james.metrics.dropwizard.DropWizardMetricFactory">
+        <constructor-arg index="0" ref="metricRegistry"/>
+    </bean>
+
+    <bean id="metricRegistry" class="com.codahale.metrics.MetricRegistry"/>
 
 </beans>

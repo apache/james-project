@@ -65,6 +65,7 @@
         <module>container/mailbox-adapter</module>
         <module>container/metrics/metrics-api</module>
         <module>container/metrics/metrics-dropwizard</module>
+        <module>container/metrics/metrics-es-reporter</module>
         <module>container/spring</module>
         <module>container/util</module>
         <module>container/util-java8</module>

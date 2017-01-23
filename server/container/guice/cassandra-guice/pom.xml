@@ -235,6 +235,11 @@
                     <artifactId>james-server-data-jmap-cassandra</artifactId>
                 </dependency>
                 <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>metrics-es-reporter</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-common</artifactId>
                 </dependency>

@@ -17,9 +17,10 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.metrics.dropwizard;
+package org.apache.james.metrics.es;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
+
 import com.google.common.base.Preconditions;
 
 public class ESReporterConfiguration {
@@ -31,11 +32,11 @@ public class ESReporterConfiguration {
 
     public static ESReporterConfiguration disabled() {
         return new ESReporterConfiguration(
-            Optional.<String>absent(),
-            Optional.<Integer>absent(),
+            Optional.empty(),
+            Optional.empty(),
             DISABLED,
-            Optional.<String>absent(),
-            Optional.<Long>absent());
+            Optional.empty(),
+            Optional.empty());
     }
 
     public static ESReporterConfiguration enabled(String host, int port, Optional<String> index, Optional<Long> periodInSecond) {
@@ -72,10 +73,10 @@ public class ESReporterConfiguration {
     }
 
     public String getIndex() {
-        return index.or(DEFAULT_INDEX);
+        return index.orElse(DEFAULT_INDEX);
     }
 
     public long getPeriodInSecond() {
-        return periodInSecond.or(DEFAULT_PERIOD_IN_SECOND);
+        return periodInSecond.orElse(DEFAULT_PERIOD_IN_SECOND);
     }
 }
