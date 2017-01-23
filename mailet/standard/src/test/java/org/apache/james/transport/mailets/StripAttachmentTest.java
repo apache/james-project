@@ -55,6 +55,8 @@ import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 
 public class StripAttachmentTest {
 
@@ -217,7 +219,7 @@ public class StripAttachmentTest {
                 MimeMessageBuilder.bodyPartBuilder()
                     .data("simple text")
                     .build(),
-                createAttachmentBodyPart(expectedAttachmentContent, "temp.tmp", TEXT_HEADERS),
+                createAttachmentBodyPart(expectedAttachmentContent, "temp_filname.tmp", TEXT_HEADERS),
                 createAttachmentBodyPart("\u0014\u00A3\u00E1\u00E2\u00E4", "winmail.dat", TEXT_HEADERS))
             .build();
 
@@ -230,11 +232,24 @@ public class StripAttachmentTest {
         @SuppressWarnings("unchecked")
         Collection<String> savedAttachments = (Collection<String>) mail.getAttribute(StripAttachment.SAVED_ATTACHMENTS_ATTRIBUTE_KEY);
         assertThat(savedAttachments).isNotNull();
-        assertThat(savedAttachments).hasSize(1);
+        assertThat(savedAttachments).hasSize(2);
 
-        String attachmentFilename = savedAttachments.iterator().next();
-
+        String attachmentFilename = retrieveFilenameStartingWith(savedAttachments, "temp_filname");
+        assertThat(attachmentFilename).isNotNull();
         assertThat(new File(folderPath + attachmentFilename)).hasContent(expectedAttachmentContent);
+    }
+
+    private String retrieveFilenameStartingWith(Collection<String> savedAttachments, final String filename) {
+        return FluentIterable.from(savedAttachments)
+                .filter(new Predicate<String>() {
+
+                    @Override
+                    public boolean apply(String attachmentFilename) {
+                        return attachmentFilename.startsWith(filename);
+                    }
+                })
+                .first()
+                .get();
     }
 
     @Test
@@ -757,6 +772,35 @@ public class StripAttachmentTest {
         mailet.processMultipartPartMessage(mimeMessage, mail);
         //Then
         assertThat(mimeMultipart.getCount()).isZero();
+    }
+
+    @Test
+    public void processMultipartPartMessageShouldSetFilenameToMatchingAttachmentsWhenAttachmentWithoutFilename() throws Exception {
+        //Given
+        StripAttachment mailet = new StripAttachment();
+
+        FakeMailetConfig mci = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("remove", "matched")
+                .setProperty("directory", folderPath)
+                .setProperty("pattern", ".*")
+                .build();
+        mailet.init(mci);
+
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .build())
+            .build();
+
+        Mail mail = FakeMail.builder().build();
+        //When
+        boolean actual = mailet.processMultipartPartMessage(mimeMessage, mail);
+        //Then
+        assertThat(actual).isTrue();
+        @SuppressWarnings("unchecked")
+        List<String> values = (List<String>)mail.getAttribute(StripAttachment.SAVED_ATTACHMENTS_ATTRIBUTE_KEY);
+        assertThat(values).hasSize(1);
     }
 
     @Test

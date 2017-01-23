@@ -98,7 +98,7 @@ public class AmqpForwardAttachmentTest {
                             .match("All")
                             .clazz("StripAttachment")
                             .addProperty("attribute", MAIL_ATTRIBUTE)
-                            .addProperty("pattern", ".*")
+                            .addProperty("pattern", ".*\\.txt")
                             .build())
                     .addMailet(MailetConfiguration.builder()
                             .match("All")

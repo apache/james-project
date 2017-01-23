@@ -31,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import javax.mail.BodyPart;
@@ -310,9 +311,6 @@ public class StripAttachment extends GenericMailet {
 
     private boolean shouldBeRemoved(BodyPart bodyPart, Mail mail) throws MessagingException, Exception {
         String fileName = getFilename(bodyPart);
-        if (fileName == null) {
-            return false;
-        }
 
         boolean shouldRemove = removeAttachments.equals(REMOVE_ALL);
         String decodedName = DecoderUtil.decodeEncodedWords(fileName, DecodeMonitor.SILENT);
@@ -379,7 +377,7 @@ public class StripAttachment extends GenericMailet {
         if (fileName != null) {
             return renameWithConfigurationPattern(decodeFilename(fileName));
         }
-        return fileName;
+        return UUID.randomUUID().toString();
     }
 
     private String renameWithConfigurationPattern(String fileName) {
