@@ -99,6 +99,20 @@ public class IMAPMessageReader implements Closeable {
             && parts.contains("* " + uid + " RECENT");
     }
 
+    public boolean userGetNotifiedForDeletion(int uid) throws IOException {
+        imapClient.noop();
+
+        String replyString = imapClient.getReplyString();
+        List<String> parts = Splitter.on('\n')
+            .trimResults()
+            .omitEmptyStrings()
+            .splitToList(replyString);
+
+        return parts.size() == 2
+            && parts.get(1).contains("OK NOOP completed.")
+            && parts.contains("* " + uid + " EXPUNGE");
+    }
+
     @Override
     public void close() throws IOException {
         imapClient.close();
