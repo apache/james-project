@@ -21,14 +21,12 @@ package org.apache.james.mailbox.store.mail.model.concurrency;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import com.google.common.collect.Lists;
 
 public class ConcurrentTestRunnerTest {
 
@@ -120,18 +118,18 @@ public class ConcurrentTestRunnerTest {
     public void runShouldPerformAllOperations() throws Exception {
         int operationCount = 2;
         int threadCount = 2;
-        final List<String> list = Lists.newArrayList();
+        final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<String>();
 
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
             new ConcurrentTestRunner.BiConsumer() {
                 @Override
                 public void consume(int threadNumber, int step) throws Exception {
-                    list.add(threadNumber + ":" + step);
+                    queue.add(threadNumber + ":" + step);
                 }
             })
             .run();
 
         assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(list).containsOnly("0:0", "0:1", "1:0", "1:1");
+        assertThat(queue).containsOnly("0:0", "0:1", "1:0", "1:1");
     }
 }
