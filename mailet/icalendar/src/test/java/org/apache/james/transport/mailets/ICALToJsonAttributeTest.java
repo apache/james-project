@@ -35,6 +35,7 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -426,6 +427,114 @@ public class ICALToJsonAttributeTest {
             "\"method\": \"REQUEST\"," +
             "\"recurrence-id\": null" +
             "}");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void serviceShouldUseFromWhenSpecified() throws Exception {
+        testee.init(FakeMailetConfig.builder().build());
+
+        byte[] ics = ByteStreams.toByteArray(ClassLoader.getSystemResourceAsStream("ics/meeting.ics"));
+        Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
+        ImmutableMap<String, Calendar> icals = ImmutableMap.of("key", calendar);
+        ImmutableMap<String, byte[]> rawIcals = ImmutableMap.of("key", ics);
+        MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;
+        String from = MailAddressFixture.OTHER_AT_JAMES.asString();
+        Mail mail = FakeMail.builder()
+            .sender(SENDER)
+            .recipient(recipient)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setFrom(from)
+                .build())
+            .attribute(ICALToJsonAttribute.DEFAULT_SOURCE_ATTRIBUTE_NAME, icals)
+            .attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE_ATTRIBUTE_NAME, rawIcals)
+            .build();
+        testee.service(mail);
+
+        Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
+        assertThat(jsons).hasSize(1);
+        assertThatJson(new String(jsons.values().iterator().next(), Charsets.UTF_8))
+            .isEqualTo("{" +
+                "\"ical\": \"" + toJsonValue(ics) +"\"," +
+                "\"sender\": \"" + from + "\"," +
+                "\"recipient\": \"" + recipient.asString() + "\"," +
+                "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                "\"sequence\": \"0\"," +
+                "\"dtstamp\": \"20170106T115036Z\"," +
+                "\"method\": \"REQUEST\"," +
+                "\"recurrence-id\": null" +
+                "}");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void serviceShouldSupportMimeMessagesWithoutFromFields() throws Exception {
+        testee.init(FakeMailetConfig.builder().build());
+
+        byte[] ics = ByteStreams.toByteArray(ClassLoader.getSystemResourceAsStream("ics/meeting.ics"));
+        Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
+        ImmutableMap<String, Calendar> icals = ImmutableMap.of("key", calendar);
+        ImmutableMap<String, byte[]> rawIcals = ImmutableMap.of("key", ics);
+        MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;
+        Mail mail = FakeMail.builder()
+            .sender(SENDER)
+            .recipient(recipient)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .build())
+            .attribute(ICALToJsonAttribute.DEFAULT_SOURCE_ATTRIBUTE_NAME, icals)
+            .attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE_ATTRIBUTE_NAME, rawIcals)
+            .build();
+        testee.service(mail);
+
+        Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
+        assertThat(jsons).hasSize(1);
+        assertThatJson(new String(jsons.values().iterator().next(), Charsets.UTF_8))
+            .isEqualTo("{" +
+                "\"ical\": \"" + toJsonValue(ics) +"\"," +
+                "\"sender\": \"" + SENDER.asString() + "\"," +
+                "\"recipient\": \"" + recipient.asString() + "\"," +
+                "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                "\"sequence\": \"0\"," +
+                "\"dtstamp\": \"20170106T115036Z\"," +
+                "\"method\": \"REQUEST\"," +
+                "\"recurrence-id\": null" +
+                "}");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void serviceShouldUseFromWhenSpecifiedAndNoSender() throws Exception {
+        testee.init(FakeMailetConfig.builder().build());
+
+        byte[] ics = ByteStreams.toByteArray(ClassLoader.getSystemResourceAsStream("ics/meeting.ics"));
+        Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
+        ImmutableMap<String, Calendar> icals = ImmutableMap.of("key", calendar);
+        ImmutableMap<String, byte[]> rawIcals = ImmutableMap.of("key", ics);
+        MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;
+        String from = MailAddressFixture.OTHER_AT_JAMES.asString();
+        Mail mail = FakeMail.builder()
+            .recipient(recipient)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setFrom(from)
+                .build())
+            .attribute(ICALToJsonAttribute.DEFAULT_SOURCE_ATTRIBUTE_NAME, icals)
+            .attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE_ATTRIBUTE_NAME, rawIcals)
+            .build();
+        testee.service(mail);
+
+        Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
+        assertThat(jsons).hasSize(1);
+        assertThatJson(new String(jsons.values().iterator().next(), Charsets.UTF_8))
+            .isEqualTo("{" +
+                "\"ical\": \"" + toJsonValue(ics) +"\"," +
+                "\"sender\": \"" + from + "\"," +
+                "\"recipient\": \"" + recipient.asString() + "\"," +
+                "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                "\"sequence\": \"0\"," +
+                "\"dtstamp\": \"20170106T115036Z\"," +
+                "\"method\": \"REQUEST\"," +
+                "\"recurrence-id\": null" +
+                "}");
     }
 
     private List<String> toSortedValueList(Map<String, byte[]> jsons) {

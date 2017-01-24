@@ -61,8 +61,8 @@ public class ICAL {
             return Optional.ofNullable(property).map(Property::getValue);
         }
 
-        public Builder sender(MailAddress sender) {
-            this.sender = sender.asString();
+        public Builder sender(String sender) {
+            this.sender = sender;
             return this;
         }
 

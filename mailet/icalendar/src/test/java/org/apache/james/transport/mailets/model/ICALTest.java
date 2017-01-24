@@ -46,7 +46,7 @@ public class ICALTest {
 
         ICAL.builder()
             .recipient(MailAddressFixture.ANY_AT_JAMES)
-            .sender(MailAddressFixture.OTHER_AT_JAMES)
+            .sender(MailAddressFixture.OTHER_AT_JAMES.asString())
             .build();
     }
 
@@ -71,7 +71,7 @@ public class ICALTest {
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
 
         ICAL.builder()
-            .sender(MailAddressFixture.OTHER_AT_JAMES)
+            .sender(MailAddressFixture.OTHER_AT_JAMES.asString())
             .from(calendar, ics)
             .build();
     }
@@ -86,7 +86,7 @@ public class ICALTest {
         MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
         ICAL ical = ICAL.builder()
             .recipient(recipient)
-            .sender(sender)
+            .sender(sender.asString())
             .from(calendar, ics)
             .build();
 
@@ -118,7 +118,7 @@ public class ICALTest {
         MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
         ICAL.builder()
             .recipient(recipient)
-            .sender(sender)
+            .sender(sender.asString())
             .from(calendar, ics)
             .build();
     }
@@ -134,7 +134,7 @@ public class ICALTest {
         MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
         ICAL.builder()
             .recipient(recipient)
-            .sender(sender)
+            .sender(sender.asString())
             .from(calendar, ics)
             .build();
     }
@@ -150,7 +150,7 @@ public class ICALTest {
         MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
         ICAL.builder()
             .recipient(recipient)
-            .sender(sender)
+            .sender(sender.asString())
             .from(calendar, ics)
             .build();
     }
@@ -164,7 +164,7 @@ public class ICALTest {
         MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
         ICAL ical = ICAL.builder()
             .recipient(recipient)
-            .sender(sender)
+            .sender(sender.asString())
             .from(calendar, ics)
             .build();
 

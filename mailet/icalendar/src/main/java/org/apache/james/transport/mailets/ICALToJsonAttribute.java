@@ -20,11 +20,16 @@
 package org.apache.james.transport.mailets;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.transport.mailets.model.ICAL;
@@ -35,6 +40,7 @@ import org.apache.mailet.base.GenericMailet;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
@@ -132,8 +138,9 @@ public class ICALToJsonAttribute extends GenericMailet {
         if (mail.getAttribute(rawSourceAttributeName) == null) {
             return;
         }
-        if (mail.getSender() == null) {
-            log("Skipping " + mail.getName() + " because no sender");
+        Optional<String> sender = retrieveSender(mail);
+        if (!sender.isPresent()) {
+            log("Skipping " + mail.getName() + " because no sender and no from");
             return;
         }
         try {
@@ -141,7 +148,7 @@ public class ICALToJsonAttribute extends GenericMailet {
             Map<String, byte[]> rawCalendars = getRawCalendarMap(mail);
             Map<String, byte[]> jsonsInByteForm = calendars.entrySet()
                 .stream()
-                .flatMap(calendar -> toJson(calendar, rawCalendars, mail))
+                .flatMap(calendar -> toJson(calendar, rawCalendars, mail, sender.get()))
                 .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
             mail.setAttribute(destinationAttributeName, (Serializable) jsonsInByteForm);
         } catch (ClassCastException e) {
@@ -159,10 +166,10 @@ public class ICALToJsonAttribute extends GenericMailet {
         return (Map<String, byte[]>) mail.getAttribute(rawSourceAttributeName);
     }
 
-    private Stream<Pair<String, byte[]>> toJson(Map.Entry<String, Calendar> entry, Map<String, byte[]> rawCalendars, Mail mail) {
+    private Stream<Pair<String, byte[]>> toJson(Map.Entry<String, Calendar> entry, Map<String, byte[]> rawCalendars, Mail mail, String sender) {
         return mail.getRecipients()
             .stream()
-            .flatMap(recipient -> toICAL(entry, rawCalendars, recipient, mail.getSender()))
+            .flatMap(recipient -> toICAL(entry, rawCalendars, recipient, sender))
             .flatMap(ical -> toJson(ical, mail.getName()))
             .map(json -> Pair.of(UUID.randomUUID().toString(), json.getBytes(Charsets.UTF_8)));
     }
@@ -179,7 +186,7 @@ public class ICALToJsonAttribute extends GenericMailet {
         }
     }
 
-    private Stream<ICAL> toICAL(Map.Entry<String, Calendar> entry, Map<String, byte[]> rawCalendars, MailAddress recipient, MailAddress sender) {
+    private Stream<ICAL> toICAL(Map.Entry<String, Calendar> entry, Map<String, byte[]> rawCalendars, MailAddress recipient, String sender) {
         Calendar calendar = entry.getValue();
         byte[] rawICal = rawCalendars.get(entry.getKey());
         if (rawICal == null) {
@@ -196,5 +203,20 @@ public class ICALToJsonAttribute extends GenericMailet {
             log("Exception while converting calendar to ICAL", e);
             return Stream.of();
         }
+    }
+
+    private Optional<String> retrieveSender(Mail mail) throws MessagingException {
+        Optional<String> from = Optional.ofNullable(mail.getMessage())
+            .map(Throwing.function(MimeMessage::getFrom).orReturn(new Address[]{}))
+            .map(Arrays::stream)
+            .orElse(Stream.of())
+            .map(address -> (InternetAddress) address)
+            .map(InternetAddress::getAddress)
+            .findFirst();
+        if (from.isPresent()) {
+            return from;
+        }
+        return Optional.ofNullable(mail.getSender())
+            .map(MailAddress::asString);
     }
 }

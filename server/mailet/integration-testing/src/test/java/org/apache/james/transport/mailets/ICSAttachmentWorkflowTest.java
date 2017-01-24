@@ -33,7 +33,6 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.utils.IMAPMessageReader;
 import org.apache.james.mailets.utils.SMTPMessageSender;
-import org.apache.james.queue.activemq.MimeMessageBlobMessageSource;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.apache.mailet.Mail;
@@ -551,7 +550,7 @@ public class ICSAttachmentWorkflowTest {
             .setSubject("test")
             .build();
 
-        yahooInvitationMessage = new MimeMessage(null, ClassLoader.getSystemResourceAsStream("yahooInvitation.eml"));
+        yahooInvitationMessage = MimeMessageBuilder.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/yahooInvitation.eml"));
 
         messageWithThreeICSAttached = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
@@ -749,7 +748,7 @@ public class ICSAttachmentWorkflowTest {
         Optional<String> content = amqpRule.readContent();
         assertThat(content).isPresent();
         DocumentContext jsonPath = toJsonPath(content.get());
-        assertThat(jsonPath.<String> read("sender")).isEqualTo(FROM);
+        assertThat(jsonPath.<String> read("sender")).isEqualTo("obmlinagora@yahoo.fr");
         assertThat(jsonPath.<String> read("recipient")).isEqualTo(RECIPIENT);
         assertThat(jsonPath.<String> read("uid")).isEqualTo("5014513f-1026-4b58-82cf-80d4fc060bbe");
         assertThat(jsonPath.<String> read("sequence")).isEqualTo("0");
