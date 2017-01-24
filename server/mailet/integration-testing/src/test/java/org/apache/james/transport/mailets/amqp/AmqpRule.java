@@ -102,9 +102,7 @@ public class AmqpRule extends ExternalResource {
     private boolean isReady(ConnectionFactory factory) {
         try (Connection connection = factory.newConnection()) {
             return true;
-        } catch (IOException e) {
-            return false;
-        } catch (TimeoutException e) {
+        } catch (IOException | TimeoutException e) {
             return false;
         }
     }
