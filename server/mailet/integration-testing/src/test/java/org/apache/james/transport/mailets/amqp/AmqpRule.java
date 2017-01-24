@@ -20,7 +20,6 @@
 package org.apache.james.transport.mailets.amqp;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -30,7 +29,6 @@ import org.junit.rules.ExternalResource;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
-import com.google.common.net.InetAddresses;
 import com.jayway.awaitility.Awaitility;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
@@ -56,9 +54,7 @@ public class AmqpRule extends ExternalResource {
 
     @Override
     protected void before() throws Throwable {
-        @SuppressWarnings("deprecation")
-        InetAddress containerIp = InetAddresses.forString(rabbitMqContainer.getContainerInfo().getNetworkSettings().getIpAddress());
-        amqpUri = "amqp://" + containerIp.getHostAddress();
+        amqpUri = "amqp://" + rabbitMqContainer.getIp();
         ConnectionFactory factory = new ConnectionFactory();
         factory.setUri(amqpUri);
         waitingForRabbitToBeReady(factory);

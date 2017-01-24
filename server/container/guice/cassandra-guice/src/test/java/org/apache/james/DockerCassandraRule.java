@@ -25,7 +25,6 @@ import org.apache.james.modules.mailbox.CassandraSessionConfiguration;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.shaded.com.github.dockerjava.api.model.ExposedPort;
 import org.testcontainers.shaded.com.github.dockerjava.api.model.Ports;
 import org.testcontainers.shaded.com.github.dockerjava.api.model.Ports.Binding;
@@ -54,7 +53,7 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
         return configuration;
     }
 
-    private GenericContainer<SwarmGenericContainer> cassandraContainer = new SwarmGenericContainer("cassandra:2.2");
+    private SwarmGenericContainer cassandraContainer = new SwarmGenericContainer("cassandra:2.2");
 
     @Override
     public Statement apply(Statement base, Description description) {
@@ -70,9 +69,8 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
         return (binder) -> binder.bind(CassandraSessionConfiguration.class).toInstance(this::getCassandraConfigurationForDocker);
     }
 
-    @SuppressWarnings("deprecation")
     public String getIp() {
-        return cassandraContainer.getContainerInfo().getNetworkSettings().getIpAddress();
+        return cassandraContainer.getIp();
     }
 
     public int getBindingPort() {

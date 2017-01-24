@@ -47,4 +47,9 @@ public class SwarmGenericContainer extends GenericContainer<SwarmGenericContaine
         setEnv(envVariables);
         return self();
     }
+
+    @SuppressWarnings("deprecation")
+    public String getIp() {
+        return getContainerInfo().getNetworkSettings().getIpAddress();
+    }
 }
