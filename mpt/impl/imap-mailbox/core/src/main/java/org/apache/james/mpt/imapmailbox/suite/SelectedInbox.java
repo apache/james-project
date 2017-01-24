@@ -130,7 +130,7 @@ public class SelectedInbox extends BaseSelectedInbox {
     public void testCreateITALY() throws Exception {
         scriptTest("Create", Locale.ITALY);
     }
-    
+
     @Test
     public void testExamineEmptyITALY() throws Exception {
         scriptTest("ExamineEmpty", Locale.ITALY);

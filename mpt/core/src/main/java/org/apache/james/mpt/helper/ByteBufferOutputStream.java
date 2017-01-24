@@ -29,7 +29,7 @@ import java.nio.charset.Charset;
 
 public class ByteBufferOutputStream extends OutputStream {
 
-    private final ByteBuffer buffer = ByteBuffer.allocate(65536);
+    private final ByteBuffer buffer = ByteBuffer.allocate(160384);
     private final Charset ascii = Charset.forName("ASCII");
     private final Continuation continuation;
     private boolean matchPlus = false;
