@@ -60,7 +60,7 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
             no(command, tag, responder, HumanReadableText.MAILBOX_EXISTS);
         } catch (TooLongMailboxNameException e) {
             if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("The mailbox name is over limit: " + mailboxPath.getName(), e);
+                session.getLog().debug("The mailbox name length is over limit: " + mailboxPath.getName(), e);
             }
             taggedBad(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
         } catch (MailboxException e) {

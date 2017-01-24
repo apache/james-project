@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.CassandraId;
@@ -44,6 +45,7 @@ import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.MailboxBase;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -54,6 +56,7 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.exceptions.InvalidQueryException;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.base.Preconditions;
 
@@ -63,6 +66,9 @@ import com.google.common.base.Preconditions;
 public class CassandraMailboxMapper implements MailboxMapper {
 
     public static final String WILDCARD = "%";
+
+    public static final String VALUES_MAY_NOT_BE_LARGER_THAN_64_K = "Index expression values may not be larger than 64K";
+
     private final Session session;
     private final int maxRetry;
     private final CassandraTypesProvider typesProvider;
@@ -84,11 +90,18 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     @Override
     public Mailbox findMailboxByPath(MailboxPath path) throws MailboxException {
-        ResultSet resultSet = session.execute(select(FIELDS).from(TABLE_NAME).where(eq(PATH, path.toString())));
-        if (resultSet.isExhausted()) {
-            throw new MailboxNotFoundException(path);
-        } else {
-            return mailbox(resultSet.one());
+        try {
+            ResultSet resultSet = session.execute(select(FIELDS).from(TABLE_NAME).where(eq(PATH, path.toString())));
+            if (resultSet.isExhausted()) {
+                throw new MailboxNotFoundException(path);
+            } else {
+                return mailbox(resultSet.one());
+            }
+        } catch (InvalidQueryException e) {
+            if (StringUtils.containsIgnoreCase(e.getMessage(), VALUES_MAY_NOT_BE_LARGER_THAN_64_K)) {
+                throw new TooLongMailboxNameException("too long mailbox name");
+            }
+            throw new MailboxException("It has error with cassandra storage", e);
         }
     }
 
