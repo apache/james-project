@@ -22,6 +22,7 @@ package org.apache.james.jmap.memory;
 import org.apache.james.JmapJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.methods.integration.SetMailboxesMethodTest;
+import org.junit.Ignore;
 import org.junit.Rule;
 
 public class MemorySetMailboxesMethodTest extends SetMailboxesMethodTest {
@@ -36,5 +37,15 @@ public class MemorySetMailboxesMethodTest extends SetMailboxesMethodTest {
     
     @Override
     protected void await() {
+    }
+
+    @Ignore
+    @Override
+    public void setMailboxesShouldNotCreateWhenOverLimitName() {
+    }
+
+    @Ignore
+    @Override
+    public void setMailboxesShouldNotUpdateMailboxWhenOverLimitName() {
     }
 }
