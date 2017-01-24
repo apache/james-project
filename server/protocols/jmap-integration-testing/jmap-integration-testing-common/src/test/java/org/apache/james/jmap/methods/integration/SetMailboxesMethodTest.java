@@ -59,6 +59,7 @@ public abstract class SetMailboxesMethodTest {
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
     private static final String USERS_DOMAIN = "domain.tld";
+    private static int MAILBOX_NAME_LENGTH_64K = 65536;
 
     protected abstract JmapJamesServer createJmapServer();
 
@@ -95,6 +96,132 @@ public abstract class SetMailboxesMethodTest {
     @After
     public void teardown() {
         jmapServer.stop();
+    }
+
+    @Test
+    public void setMailboxesShouldNotCreateWhenOverLimitName() {
+        String overLimitName = StringUtils.repeat("a", MAILBOX_NAME_LENGTH_64K);
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"create\": {" +
+                "        \"create-id01\" : {" +
+                "          \"name\" : \"" + overLimitName + "\"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+            .when()
+            .post("/jmap")
+            .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
+            .body(ARGUMENTS + ".notCreated", hasEntry(equalTo("create-id01"), Matchers.allOf(
+                    hasEntry(equalTo("type"), equalTo("invalidArguments")),
+                    hasEntry(equalTo("description"), equalTo("The mailbox name length is too long")))
+            ));
+    }
+
+    @Test
+    public void setMailboxesShouldNotUpdateMailboxWhenOverLimitName() {
+        String overLimitName = StringUtils.repeat("a", MAILBOX_NAME_LENGTH_64K);
+        jmapServer.serverProbe().createMailbox("#private", username, "myBox");
+        Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, "myBox");
+        String mailboxId = mailbox.getMailboxId().serialize();
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + mailboxId + "\" : {" +
+                "          \"name\" : \"" + overLimitName + "\"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+        given()
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+            .when()
+            .post("/jmap")
+            .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".notUpdated", aMapWithSize(1))
+            .body(ARGUMENTS + ".notUpdated", hasEntry(equalTo(mailboxId), Matchers.allOf(
+                    hasEntry(equalTo("type"), equalTo("invalidArguments")),
+                    hasEntry(equalTo("description"), equalTo("The mailbox name length is too long")))
+            ));
+    }
+
+    @Test
+    public void setMailboxesShouldCreateWhenOverLimitName() throws Exception {
+        String overLimitName = StringUtils.repeat("a", MAILBOX_NAME_LENGTH_64K);
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"create\": {" +
+                "        \"create-id01\" : {" +
+                "          \"name\" : \"" + overLimitName + "\"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+            .when()
+            .post("/jmap")
+            .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".created", hasKey("create-id01"));
+    }
+
+    @Test
+    public void setMailboxesShouldUpdateMailboxWhenOverLimitName() throws Exception {
+        String overLimitName = StringUtils.repeat("a", MAILBOX_NAME_LENGTH_64K);
+        jmapServer.serverProbe().createMailbox("#private", username, "myBox");
+        Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, "myBox");
+        String mailboxId = mailbox.getMailboxId().serialize();
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + mailboxId + "\" : {" +
+                "          \"name\" : \"" + overLimitName + "\"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+        given()
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+            .when()
+            .post("/jmap")
+            .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".updated", contains(mailboxId));
+
+        assertThat(jmapServer.serverProbe().listSubscriptions(username)).containsOnly(overLimitName);
     }
 
     @Test
@@ -315,72 +442,6 @@ public abstract class SetMailboxesMethodTest {
             .statusCode(200);
 
         assertThat(jmapServer.serverProbe().listSubscriptions(username)).isEmpty();
-    }
-
-    @Test
-    public void setMailboxesShouldNotCreateWhenOverLimitName() {
-        String overLimitName = StringUtils.repeat("a", MailboxConstants.DEFAULT_LIMIT_MAILBOX_NAME_LENGTH);
-        String requestBody =
-            "[" +
-                "  [ \"setMailboxes\"," +
-                "    {" +
-                "      \"create\": {" +
-                "        \"create-id01\" : {" +
-                "          \"name\" : \"" + overLimitName + "\"" +
-                "        }" +
-                "      }" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
-
-        given()
-            .header("Authorization", this.accessToken.serialize())
-            .body(requestBody)
-        .when()
-            .post("/jmap")
-        .then()
-            .statusCode(200)
-            .body(NAME, equalTo("mailboxesSet"))
-            .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
-            .body(ARGUMENTS + ".notCreated", hasEntry(equalTo("create-id01"), Matchers.allOf(
-                    hasEntry(equalTo("type"), equalTo("invalidArguments")),
-                    hasEntry(equalTo("description"), equalTo("The mailbox name length '" + overLimitName + "' is over limitation: " + MailboxConstants.DEFAULT_LIMIT_MAILBOX_NAME_LENGTH)))
-            ));
-    }
-
-    @Test
-    public void setMailboxesShouldNotUpdateMailboxWhenOverLimitName() {
-        String overLimitName = StringUtils.repeat("a", MailboxConstants.DEFAULT_LIMIT_MAILBOX_NAME_LENGTH);
-        jmapServer.serverProbe().createMailbox("#private", username, "myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, "myBox");
-        String mailboxId = mailbox.getMailboxId().serialize();
-        String requestBody =
-            "[" +
-                "  [ \"setMailboxes\"," +
-                "    {" +
-                "      \"update\": {" +
-                "        \"" + mailboxId + "\" : {" +
-                "          \"name\" : \"" + overLimitName + "\"" +
-                "        }" +
-                "      }" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]";
-        given()
-            .header("Authorization", this.accessToken.serialize())
-            .body(requestBody)
-        .when()
-            .post("/jmap")
-        .then()
-            .statusCode(200)
-            .body(NAME, equalTo("mailboxesSet"))
-            .body(ARGUMENTS + ".notUpdated", aMapWithSize(1))
-            .body(ARGUMENTS + ".notUpdated", hasEntry(equalTo(mailboxId), Matchers.allOf(
-                    hasEntry(equalTo("type"), equalTo("invalidArguments")),
-                    hasEntry(equalTo("description"), equalTo("The mailbox name length '" + overLimitName + "' is over limitation: " + MailboxConstants.DEFAULT_LIMIT_MAILBOX_NAME_LENGTH)))
-            ));
     }
 
     @Test

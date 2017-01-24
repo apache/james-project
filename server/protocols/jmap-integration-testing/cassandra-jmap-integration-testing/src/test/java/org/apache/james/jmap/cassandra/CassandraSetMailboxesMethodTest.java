@@ -22,6 +22,7 @@ package org.apache.james.jmap.cassandra;
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.JmapJamesServer;
 import org.apache.james.jmap.methods.integration.SetMailboxesMethodTest;
+import org.junit.Ignore;
 import org.junit.Rule;
 
 public class CassandraSetMailboxesMethodTest extends SetMailboxesMethodTest {
@@ -37,5 +38,15 @@ public class CassandraSetMailboxesMethodTest extends SetMailboxesMethodTest {
     @Override
     protected void await() {
         rule.await();
+    }
+
+    @Ignore
+    @Override
+    public void setMailboxesShouldCreateWhenOverLimitName() throws Exception {
+    }
+
+    @Ignore
+    @Override
+    public void setMailboxesShouldUpdateMailboxWhenOverLimitName() throws Exception {
     }
 }
