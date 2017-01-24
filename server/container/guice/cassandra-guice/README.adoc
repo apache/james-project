@@ -5,15 +5,21 @@
 === Requirements
 
  * Java 8 SDK
- * Docker
- * Maven
+ * Docker ∕ ElasticSearch 2.2.1 and Cassandra 2.2.3
+ * Maven 3
 
 === Building the artifacts
 
-An usual compilation using maven will produce two artifacts into target directory :
+An usual compilation using maven will produce two artifacts into target directory:
 
- * james-server-cassandra-guice-${version}.jar
- * james-server-cassandra-guice-${version}.lib
+ * james-server-cassandra-guice.jar
+ * james-server-cassandra-guice.lib
+
+You can for example run in the base of this git repository:
+
+```
+mvn clean install
+```
 
 == Running
 
@@ -26,20 +32,25 @@ An usual compilation using maven will produce two artifacts into target director
 
 To run james, you have to create a directory containing required configuration files.
 
-A sample directory (appropriately named sample-directory) is provided with some
-default value you may need to replace.
+James requires the configuration to be in a subfolder of working directory that is called **conf**. You can get a sample
+directory for configuration from dockerfiles/run/guice/cassandra/destination/conf. You might need to adapt it to your needs.
 
-You also need to generate a keystore with the following command :
+You also need to generate a keystore in your conf folder with the following command:
 [source]
 ----
 $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 ----
 
-You need to have a Cassandra and an ElasticSearch instance running.
+You need to have a Cassandra and an ElasticSearch instance running. You can either install the servers or launch them via docker:
 
-Once everything is set up, you just have to run the jar with :
+```bash
+$ docker run -d --port 9042:9042 --name=cassandra cassandra:2.2.3
+$ docker run -d --port 9200:9200 --port 9300:9300 --name=elasticsearch elasticsearch:2.2.1
+```
+
+Once everything is set up, you just have to run the jar with:
 
 [source]
 ----
-$ java -Dworking.directory=sample-configuration -jar target/james-server-cassandra-guice-${version}.jar
+$ java -Dworking.directory=. -jar target/james-server-cassandra-guice.jar
 ----
