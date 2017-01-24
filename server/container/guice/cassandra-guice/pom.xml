@@ -195,6 +195,7 @@
                     <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-backends-cassandra</artifactId>
                     <type>test-jar</type>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -230,7 +231,7 @@
                     <artifactId>james-server-data-cassandra</artifactId>
                 </dependency>
                 <dependency>
-                    <groupId>org.apache.james</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-data-jmap-cassandra</artifactId>
                 </dependency>
                 <dependency>
