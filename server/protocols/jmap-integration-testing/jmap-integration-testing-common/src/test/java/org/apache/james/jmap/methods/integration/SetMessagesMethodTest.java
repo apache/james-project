@@ -1716,6 +1716,52 @@ public abstract class SetMessagesMethodTest {
             .body(firstMessage + ".mailboxIds", contains(heartFolderId));
     }
 
+
+    @Test
+    public void mailboxIdsShouldBeInDestinationWhenUsingForMoveWithoutTrashFolder() throws Exception {
+        jmapServer.serverProbe().deleteMailbox("#private", USERNAME, "trash");
+        String newMailboxName = "heartFolder";
+        jmapServer.serverProbe().createMailbox("#private", USERNAME, newMailboxName);
+        Mailbox heartFolder = jmapServer.serverProbe().getMailbox("#private", USERNAME, newMailboxName);
+        String heartFolderId = heartFolder.getMailboxId().serialize();
+
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(USERNAME, new MailboxPath("#private", USERNAME, "inbox"),
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+
+        String messageToMoveId = message.getMessageId().serialize();
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + messageToMoveId + "\" : {" +
+            "        \"mailboxIds\": [\"" + heartFolderId + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap");
+
+        String firstMessage = ARGUMENTS + ".list[0]";
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(firstMessage + ".mailboxIds", contains(heartFolderId));
+    }
+
     @Test
     public void mailboxIdsShouldNotBeAnymoreInSourceWhenUsingForMove() throws Exception {
         String newMailboxName = "heartFolder";
