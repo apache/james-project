@@ -281,6 +281,7 @@
                                 <exclude>**/target/**</exclude>
                                 <exclude>**/*.iml</exclude>
                                 <exclude>**/*.ics</exclude>
+                                <exclude>**/*.mime</exclude>
                                 <exclude>src/site/**</exclude>
                             </excludes>
                         </configuration>
