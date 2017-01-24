@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMessagesRequest;
@@ -141,9 +142,14 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     private boolean isMoveToTrash(MailboxSession mailboxSession, List<MailboxId> mailboxIds) throws MailboxException {
-        return mailboxIds.size() == 1
-            && mailboxIds.get(0)
-                .equals(systemMailboxesProvider.findMailbox(Role.TRASH, mailboxSession).getId());
+        try {
+            return mailboxIds.size() == 1
+                && mailboxIds.get(0)
+                    .equals(systemMailboxesProvider.findMailbox(Role.TRASH, mailboxSession).getId());
+        } catch (MailboxRoleNotFoundException e) {
+            LOGGER.debug("Unable to find Trash mailbox for user: " + mailboxSession.getUser().getUserName(), e);
+            return false;
+        }
     }
 
     private void addMessageIdNotFoundToResponse(MessageId messageId, SetMessagesResponse.Builder builder) {
