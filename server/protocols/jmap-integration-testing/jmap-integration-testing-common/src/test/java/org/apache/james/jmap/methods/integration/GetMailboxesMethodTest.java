@@ -259,8 +259,8 @@ public abstract class GetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(ARGUMENTS + ".list", hasSize(3))
-            .body(ARGUMENTS + ".list.name", hasItems("INBOX", "Outbox", "Sent"));
+            .body(ARGUMENTS + ".list", hasSize(4))
+            .body(ARGUMENTS + ".list.name", hasItems("INBOX", "Outbox", "Sent", "Trash"));
     }
 
     @Test
