@@ -185,9 +185,8 @@
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
-                    <artifactId>james-server-mailets-integration-testing</artifactId>
+                    <artifactId>james-server-testing</artifactId>
                     <scope>test</scope>
-                    <type>test-jar</type>
                 </dependency>
                 <dependency>
                     <groupId>com.jayway.restassured</groupId>

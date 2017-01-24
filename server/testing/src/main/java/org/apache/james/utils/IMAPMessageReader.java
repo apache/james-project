@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailets.utils;
+package org.apache.james.utils;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -85,7 +85,7 @@ public class IMAPMessageReader implements Closeable {
         return imapClient.getReplyString();
     }
 
-    public boolean userGetNotifiedForNewMessages(int uid) throws IOException {
+    public boolean userGetNotifiedForNewMessages(int numberOfMessages) throws IOException {
         imapClient.noop();
 
         String replyString = imapClient.getReplyString();
@@ -95,11 +95,11 @@ public class IMAPMessageReader implements Closeable {
             .splitToList(replyString);
         return parts.size() == 3
             && parts.get(2).contains("OK NOOP completed.")
-            && parts.contains("* " + uid + " EXISTS")
-            && parts.contains("* " + uid + " RECENT");
+            && parts.contains("* " + numberOfMessages + " EXISTS")
+            && parts.contains("* " + numberOfMessages + " RECENT");
     }
 
-    public boolean userGetNotifiedForDeletion(int uid) throws IOException {
+    public boolean userGetNotifiedForDeletion(int msn) throws IOException {
         imapClient.noop();
 
         String replyString = imapClient.getReplyString();
@@ -110,7 +110,7 @@ public class IMAPMessageReader implements Closeable {
 
         return parts.size() == 2
             && parts.get(1).contains("OK NOOP completed.")
-            && parts.contains("* " + uid + " EXPUNGE");
+            && parts.contains("* " + msn + " EXPUNGE");
     }
 
     @Override

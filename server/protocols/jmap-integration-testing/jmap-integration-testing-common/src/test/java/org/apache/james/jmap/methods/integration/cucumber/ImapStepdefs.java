@@ -25,7 +25,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailets.utils.IMAPMessageReader;
+import org.apache.james.utils.IMAPMessageReader;
 
 import com.google.common.collect.Maps;
 
