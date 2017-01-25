@@ -17,25 +17,49 @@
   specific language governing permissions and limitations      
   under the License.                                           
  -->
+ 
+<!--
+   This template file can be used as example for James Server configuration
+   DO NOT USE IT AS SUCH AND ADAPT IT TO YOUR NEEDS
+-->
+ 
+<!-- See http://james.apache.org/server/3/config.html for usage -->
 
-<lmtpservers>
+<managesieveservers>
 
-    <lmtpserver enabled="false">
-        <jmxName>lmtpserver</jmxName>
-        <!-- LMTP should not be reachable from outside your network so bind it to loopback-->
-        <bind>127.0.0.1:1024</bind>
-        <connectionBacklog>200</connectionBacklog>
-        <connectiontimeout>1200</connectiontimeout>
+   <managesieveserver enabled="false">
+
+     <jmxName>managesieveserver</jmxName>
+
+     <bind>0.0.0.0:4190</bind>
+
+     <connectionBacklog>200</connectionBacklog>
+
+     <tls socketTLS="false" startTLS="false">
+       <!-- To create a new keystore execute:
+        keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
+         -->
+       <keystore>file://conf/keystore</keystore>
+       <secret>james72laBalle</secret>
+       <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+       <!-- The algorithm is optional and only needs to be specified when using something other
+        than the Sun JCE provider - You could use IbmX509 with IBM Java runtime. -->
+       <algorithm>SunX509</algorithm>
+     </tls>
+         
+        <!-- connection timeout in secconds -->
+        <connectiontimeout>360</connectiontimeout>
+
         <!-- Set the maximum simultaneous incoming connections for this service -->
         <connectionLimit>0</connectionLimit>
+         
         <!-- Set the maximum simultaneous incoming connections per IP for this service -->
         <connectionLimitPerIP>0</connectionLimitPerIP>
-        <!--  This sets the maximum allowed message size (in kilobytes) for this -->
-        <!--  LMTP service. If unspecified, the value defaults to 0, which means no limit. -->
         <maxmessagesize>0</maxmessagesize>
-        <handlerchain>
-            <handler class="org.apache.james.lmtpserver.CoreCmdHandlerLoader"/>
-        </handlerchain>
-    </lmtpserver>
+        <addressBracketsEnforcement>true</addressBracketsEnforcement>
+  
+   </managesieveserver>
 
-</lmtpservers>
+</managesieveservers>
+
+
