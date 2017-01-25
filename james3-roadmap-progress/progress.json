@@ -13,12 +13,12 @@
    },
    {
      "name" : "Assign a unique Id to message entity (and handle move and move to trash)",
-     "completion" : 80,
+     "completion" : 95,
      "complexity" : 50
    },
    {
      "name" : "Deploy James @ Linagora",
-     "completion" : 70,
+     "completion" : 80,
      "complexity" : 10
    },
    {
