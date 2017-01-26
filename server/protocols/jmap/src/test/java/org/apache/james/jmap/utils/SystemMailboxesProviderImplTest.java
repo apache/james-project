@@ -66,7 +66,6 @@ public class SystemMailboxesProviderImplTest {
     private MailboxManager mailboxManager;
 
     private MessageManager inboxMessageManager;
-    private MessageManager outboxMessageManager;
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -75,7 +74,6 @@ public class SystemMailboxesProviderImplTest {
     public void setUp() throws Exception {
         mailboxManager = mock(MailboxManager.class);
         inboxMessageManager = mock(MessageManager.class);
-        outboxMessageManager = mock(MessageManager.class);
 
         systemMailboxProvider = new SystemMailboxesProviderImpl(mailboxManager);
     }
@@ -98,6 +96,7 @@ public class SystemMailboxesProviderImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void findMailboxesShouldThrowWhenMailboxManagerHasErrorWhenSearching() throws Exception {
         expectedException.expect(MailboxException.class);
 
@@ -107,6 +106,7 @@ public class SystemMailboxesProviderImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void findMailboxesShouldBeEmptyWhenMailboxManagerCanNotGetMailbox() throws Exception {
         expectedException.expect(MailboxException.class);
 
@@ -117,6 +117,7 @@ public class SystemMailboxesProviderImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void findMailboxesShouldReturnWhenMailboxManagerCanNotGetMailboxOfNonFilterMailbox() throws Exception {
         when(mailboxManager.search(any(MailboxQuery.class), eq(mailboxSession))).thenReturn(ImmutableList.of(inboxMetadata, outboxMetadata));
 

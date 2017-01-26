@@ -19,11 +19,10 @@
 
 package org.apache.james.jmap.methods;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.SetMessagesRequest;
@@ -42,7 +41,7 @@ public class SetMessagesUpdateProcessorTest {
 
     @Test
     public void processShouldReturnEmptyUpdatedWhenRequestHasEmptyUpdate() {
-        SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(null, null, null, null, null);
+        SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(null, null, null, null);
         SetMessagesRequest requestWithEmptyUpdate = SetMessagesRequest.builder().build();
 
         SetMessagesResponse result = sut.process(requestWithEmptyUpdate, null);
@@ -66,7 +65,7 @@ public class SetMessagesUpdateProcessorTest {
         when(mockConverter.fromJsonNode(any(ObjectNode.class)))
                 .thenReturn(mockInvalidPatch);
 
-        SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(mockConverter, null, null, null, null);
+        SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(mockConverter, null, null, null);
         MessageId requestMessageId = TestMessageId.of(1);
         SetMessagesRequest requestWithInvalidUpdate = SetMessagesRequest.builder()
                 .update(ImmutableMap.of(requestMessageId, JsonNodeFactory.instance.objectNode()))
