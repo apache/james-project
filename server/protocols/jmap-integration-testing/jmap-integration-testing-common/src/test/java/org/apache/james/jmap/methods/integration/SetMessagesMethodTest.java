@@ -2047,7 +2047,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void moveToTrashIsNotYetSupported() throws Exception {
+    public void setMessagesShouldWorkForMoveToTrash() throws Exception {
         String trashId = jmapServer.serverProbe().getMailbox("#private", USERNAME, "trash").getMailboxId().serialize();
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
@@ -2073,10 +2073,11 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap")
         .then()
-            .log().ifValidationFails()
             .statusCode(200)
-            .body(NAME, equalTo("error"))
-            .body(ARGUMENTS + ".type", equalTo("Not yet implemented"));
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".updated[0]", equalTo(messageToMoveId))
+            .body(ARGUMENTS + ".updated", hasSize(1));
     }
 
     @Test

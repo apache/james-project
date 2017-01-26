@@ -28,14 +28,11 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
 import org.apache.james.jmap.model.UpdateMessagePatch;
-import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -76,6 +73,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         this.systemMailboxesProvider = systemMailboxesProvider;
     }
 
+    @Override
     public SetMessagesResponse process(SetMessagesRequest request,  MailboxSession mailboxSession) {
         SetMessagesResponse.Builder responseBuilder = SetMessagesResponse.builder();
         request.buildUpdatePatches(updatePatchConverter).forEach( (id, patch) -> {
@@ -108,7 +106,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         } catch (MailboxException e) {
             handleMessageUpdateException(messageId, builder, e);
         }
-        
+
     }
 
     private Stream<MailboxException> updateFlags(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession, MessageResult messageResult) {
@@ -129,22 +127,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                 .map(mailboxId -> mailboxIdFactory.fromString(mailboxId))
                 .collect(Guavate.toImmutableList());
 
-            if (isMoveToTrash(mailboxSession, mailboxIds)) {
-                throw new NotImplementedException("Do not support move to trash");
-            }
-
             messageIdManager.setInMailboxes(messageId, mailboxIds, mailboxSession);
-        }
-    }
-
-    private boolean isMoveToTrash(MailboxSession mailboxSession, List<MailboxId> mailboxIds) throws MailboxException {
-        try {
-            return mailboxIds.size() == 1
-                && mailboxIds.get(0)
-                    .equals(systemMailboxesProvider.findMailbox(Role.TRASH, mailboxSession).getId());
-        } catch (MailboxRoleNotFoundException e) {
-            LOGGER.debug("Unable to find Trash mailbox for user: " + mailboxSession.getUser().getUserName(), e);
-            return false;
         }
     }
 
