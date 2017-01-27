@@ -34,8 +34,8 @@ public class MemoryJmapTestRule implements TestRule {
     
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    public JmapJamesServer jmapServer() {
-        return new JmapJamesServer()
+    public GuiceJamesServer jmapServer() {
+        return new GuiceJamesServer()
                 .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                 .overrideWith(new TestFilesystemModule(temporaryFolder),
                         new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))

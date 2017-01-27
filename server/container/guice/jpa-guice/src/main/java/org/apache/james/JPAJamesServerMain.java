@@ -58,7 +58,7 @@ public class JPAJamesServerMain {
         new RawPostDequeueDecoratorModule());
 
     public static void main(String[] args) throws Exception {
-        GuiceJamesServerImpl server = new GuiceJamesServerImpl()
+        GuiceJamesServer server = new GuiceJamesServer()
                     .combineWith(jpaServerModule, protocols, 
                             new JMXServerModule(), 
                             new LuceneSearchMailboxModule());

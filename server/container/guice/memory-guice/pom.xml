@@ -213,7 +213,14 @@
                     <artifactId>james-server-guice-common</artifactId>
                     <type>test-jar</type>
                     <scope>test</scope>
-                </dependency><dependency>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>james-server-guice-jmap</artifactId>
+                    <type>test-jar</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>apache-mailet-base</artifactId>
                     <type>test-jar</type>

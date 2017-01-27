@@ -52,7 +52,7 @@ import javax.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -67,6 +67,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.util.ZeroedInputStream;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -101,14 +102,14 @@ public abstract class SetMessagesMethodTest {
 
     private ConditionFactory calmlyAwait;
 
-    protected abstract JmapJamesServer createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer();
 
     protected abstract MessageId randomMessageId();
     
     protected abstract void await();
 
     private AccessToken accessToken;
-    private JmapJamesServer jmapServer;
+    private GuiceJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {
@@ -118,8 +119,7 @@ public abstract class SetMessagesMethodTest {
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
                 .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-                .setPort(jmapServer.getJmapProbe()
-                    .getJmapPort())
+                .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
                 .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
 
@@ -143,7 +143,7 @@ public abstract class SetMessagesMethodTest {
         return new URIBuilder()
             .setScheme("http")
             .setHost("localhost")
-            .setPort(jmapServer.getJmapProbe()
+            .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
                 .getJmapPort())
             .setCharset(Charsets.UTF_8);
     }
@@ -878,7 +878,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         List<MailboxListener.Event> events = Lists.newArrayList();
-        jmapServer.getJmapProbe().addMailboxListener(new MailboxListener() {
+        jmapServer.getProbe(JmapGuiceProbe.class).addMailboxListener(new MailboxListener() {
             @Override
             public ListenerType getType() {
                 return ListenerType.ONCE;

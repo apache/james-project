@@ -48,7 +48,7 @@ public class CassandraNodeConfTest {
     public CassandraJmapTestRule cassandraJmapTestRule = new CassandraJmapTestRule(dockerCassandraRule,
             new EmbeddedElasticSearchRule());
 
-    private GuiceJamesServerImpl jamesServer;
+    private GuiceJamesServer jamesServer;
     private SocketChannel socketChannel;
 
     @Before

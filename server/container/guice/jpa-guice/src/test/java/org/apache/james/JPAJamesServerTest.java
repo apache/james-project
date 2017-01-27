@@ -29,8 +29,8 @@ public class JPAJamesServerTest extends AbstractJamesServerTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Override
-    protected GuiceJamesServerImpl createJamesServer() {
-        return new GuiceJamesServerImpl()
+    protected GuiceJamesServer createJamesServer() {
+        return new GuiceJamesServer()
             .combineWith(JPAJamesServerMain.jpaServerModule)
             .overrideWith(new TestFilesystemModule(temporaryFolder),
                     new TestJPAConfigurationModule());

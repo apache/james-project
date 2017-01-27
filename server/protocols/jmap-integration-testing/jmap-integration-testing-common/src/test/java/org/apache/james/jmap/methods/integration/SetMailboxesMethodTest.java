@@ -39,13 +39,14 @@ import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -63,13 +64,13 @@ public abstract class SetMailboxesMethodTest {
     private static final String USERS_DOMAIN = "domain.tld";
     private static int MAILBOX_NAME_LENGTH_64K = 65536;
 
-    protected abstract JmapJamesServer createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer();
 
     protected abstract void await();
 
     private AccessToken accessToken;
     private String username;
-    private JmapJamesServer jmapServer;
+    private GuiceJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {
@@ -80,8 +81,7 @@ public abstract class SetMailboxesMethodTest {
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
                 .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-                .setPort(jmapServer.getJmapProbe()
-                    .getJmapPort())
+                .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
                 .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
 
@@ -99,7 +99,7 @@ public abstract class SetMailboxesMethodTest {
         return new URIBuilder()
             .setScheme("http")
             .setHost("localhost")
-            .setPort(jmapServer.getJmapProbe()
+            .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
                 .getJmapPort())
             .setCharset(Charsets.UTF_8);
     }

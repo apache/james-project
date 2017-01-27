@@ -23,7 +23,7 @@ import javax.inject.Inject;
 
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.jmap.servers.MemoryJmapServerModule;
@@ -51,7 +51,7 @@ public class MemoryStepdefs {
     public void init() throws Exception {
         temporaryFolder.create();
         mainStepdefs.messageIdFactory = new InMemoryMessageId.Factory();
-        mainStepdefs.jmapServer = new JmapJamesServer()
+        mainStepdefs.jmapServer = new GuiceJamesServer()
                 .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                 .overrideWith(new MemoryJmapServerModule(temporaryFolder),
                 		(binder) -> binder.bind(MessageId.Factory.class).toInstance(mainStepdefs.messageIdFactory))

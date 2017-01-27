@@ -30,6 +30,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
+import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,7 +50,7 @@ public abstract class AbstractJmapJamesServerTest {
     protected static final String JAMES_SERVER_HOST = "127.0.0.1";
     protected static final int IMAP_PORT = 1143; // You need to be root (superuser) to bind to ports under 1024.
 
-    private JmapJamesServer server;
+    private GuiceJamesServer server;
     private SocketChannel socketChannel;
 
     @Before
@@ -62,12 +63,11 @@ public abstract class AbstractJmapJamesServerTest {
         		.setContentType(ContentType.JSON)
         		.setAccept(ContentType.JSON)
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(server.getJmapProbe()
-                    .getJmapPort())
+        		.setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort())
         		.build();
     }
 
-    protected abstract JmapJamesServer createJamesServer();
+    protected abstract GuiceJamesServer createJamesServer();
 
     protected abstract void clean();
 

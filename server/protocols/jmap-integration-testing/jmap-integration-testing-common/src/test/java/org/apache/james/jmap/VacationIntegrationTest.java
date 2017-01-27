@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.VacationPatch;
@@ -64,10 +64,10 @@ public abstract class VacationIntegrationTest {
     public static final String ORIGINAL_MESSAGE_TEXT_BODY = "Hello someone, and thank you for joining example.com!";
 
     private ConditionFactory calmlyAwait;
-    private JmapJamesServer guiceJamesServer;
+    private GuiceJamesServer guiceJamesServer;
     private JmapGuiceProbe jmapGuiceProbe;
 
-    protected abstract JmapJamesServer createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer();
 
     protected abstract void await();
 
@@ -86,7 +86,7 @@ public abstract class VacationIntegrationTest {
         guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, DefaultMailboxes.INBOX);
         await();
 
-        jmapGuiceProbe = guiceJamesServer.getJmapProbe();
+        jmapGuiceProbe = guiceJamesServer.getProbe(JmapGuiceProbe.class);
         RestAssured.requestSpecification = new RequestSpecBuilder()
         		.setContentType(ContentType.JSON)
         		.setAccept(ContentType.JSON)
@@ -103,7 +103,7 @@ public abstract class VacationIntegrationTest {
         return new URIBuilder()
             .setScheme("http")
             .setHost("localhost")
-            .setPort(guiceJamesServer.getJmapProbe()
+            .setPort(guiceJamesServer.getProbe(JmapGuiceProbe.class)
                 .getJmapPort())
             .setCharset(Charsets.UTF_8);
     }

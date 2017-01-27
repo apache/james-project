@@ -45,6 +45,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.javatuples.Pair;
 
 import com.github.fge.lambdas.Throwing;
@@ -102,7 +103,7 @@ public class GetMessagesMethodStepdefs {
         MailboxId mailboxId1 = mainStepdefs.jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox1).getMailboxId();
         MailboxId mailboxId2 = mainStepdefs.jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox2).getMailboxId();
 
-        mainStepdefs.jmapServer.getJmapProbe().setInMailboxes(id, userStepdefs.lastConnectedUser, mailboxId1, mailboxId2);
+        mainStepdefs.jmapServer.getProbe(JmapGuiceProbe.class).setInMailboxes(id, userStepdefs.lastConnectedUser, mailboxId1, mailboxId2);
         messageIdsByName.put(messageName, id);
     }
 

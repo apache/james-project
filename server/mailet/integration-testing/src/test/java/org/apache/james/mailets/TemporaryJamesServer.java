@@ -30,7 +30,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.io.IOUtils;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -46,13 +46,13 @@ public class TemporaryJamesServer {
 
     private static final int LIMIT_TO_3_MESSAGES = 3;
 
-    private final JmapJamesServer jamesServer;
+    private final GuiceJamesServer jamesServer;
 
 
     public TemporaryJamesServer(TemporaryFolder temporaryFolder, MailetContainer mailetContainer, Module... additionalModules) throws Exception {
         appendMailetConfigurations(temporaryFolder, mailetContainer);
 
-        jamesServer = new JmapJamesServer()
+        jamesServer = new GuiceJamesServer()
             .combineWith(MemoryJamesServerMain.inMemoryServerModule)
             .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(ImmutableList.<Module>builder().addAll(Arrays.asList(additionalModules))

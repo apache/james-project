@@ -27,7 +27,7 @@ public class MemoryJamesServerTest extends AbstractJmapJamesServerTest {
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
     @Override
-    protected JmapJamesServer createJamesServer() {
+    protected GuiceJamesServer createJamesServer() {
         return memoryJmap.jmapServer();
     }
 

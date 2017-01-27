@@ -38,7 +38,7 @@ import java.util.Date;
 import javax.mail.Flags;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.FlagsBuilder;
@@ -47,6 +47,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,14 +62,14 @@ public abstract class GetMessageListMethodTest {
     private static final String ARGUMENTS = "[0][1]";
     private static final ZoneId ZONE_ID = ZoneId.of("Europe/Paris");
 
-    protected abstract JmapJamesServer createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer();
 
     protected abstract void await();
 
     private AccessToken accessToken;
     private String username;
     private String domain;
-    private JmapJamesServer jmapServer;
+    private GuiceJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {
@@ -78,8 +79,7 @@ public abstract class GetMessageListMethodTest {
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
                 .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-                .setPort(jmapServer.getJmapProbe()
-                    .getJmapPort())
+                .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
                 .build();
 
         this.domain = "domain.tld";
@@ -94,7 +94,7 @@ public abstract class GetMessageListMethodTest {
         return new URIBuilder()
             .setScheme("http")
             .setHost("localhost")
-            .setPort(jmapServer.getJmapProbe()
+            .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
                 .getJmapPort())
             .setCharset(Charsets.UTF_8);
     }
@@ -116,7 +116,7 @@ public abstract class GetMessageListMethodTest {
 
         await();
 
-        jmapServer.getJmapProbe().setInMailboxes(message.getMessageId(), username, mailbox.getMailboxId(), mailbox2.getMailboxId());
+        jmapServer.getProbe(JmapGuiceProbe.class).setInMailboxes(message.getMessageId(), username, mailbox.getMailboxId(), mailbox2.getMailboxId());
 
         given()
             .header("Authorization", accessToken.serialize())

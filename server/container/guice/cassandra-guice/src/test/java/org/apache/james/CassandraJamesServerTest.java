@@ -27,7 +27,7 @@ public class CassandraJamesServerTest extends AbstractJmapJamesServerTest {
     public CassandraJmapTestRule cassandraJmap = CassandraJmapTestRule.defaultTestRule();
 
     @Override
-    protected JmapJamesServer createJamesServer() {
+    protected GuiceJamesServer createJamesServer() {
         return cassandraJmap.jmapServer();
     }
 

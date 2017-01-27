@@ -20,8 +20,9 @@
 package org.apache.james.jmap.methods.integration.cucumber;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.utils.JmapGuiceProbe;
 
 import com.google.common.base.Charsets;
 
@@ -30,7 +31,7 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 @ScenarioScoped
 public class MainStepdefs {
 
-    public JmapJamesServer jmapServer;
+    public GuiceJamesServer jmapServer;
     public Runnable awaitMethod = () -> {};
     public MessageId.Factory messageIdFactory;
     
@@ -43,8 +44,7 @@ public class MainStepdefs {
         return new URIBuilder()
                 .setScheme("http")
                 .setHost("localhost")
-                .setPort(jmapServer.getJmapProbe()
-                    .getJmapPort())
+                .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
                 .setCharset(Charsets.UTF_8);
     }
     

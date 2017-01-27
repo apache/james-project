@@ -19,7 +19,7 @@
 package org.apache.james.jmap.cassandra;
 
 import org.apache.james.CassandraJmapTestRule;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.JMAPAuthenticationTest;
 import org.apache.james.util.date.ZonedDateTimeProvider;
@@ -31,7 +31,7 @@ public class CassandraJmapAuthenticationTest extends JMAPAuthenticationTest {
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
     
     @Override
-    protected JmapJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) {
+    protected GuiceJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) {
         return rule.jmapServer()
                 .overrideWith(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
     }

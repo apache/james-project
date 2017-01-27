@@ -45,8 +45,8 @@ public class CassandraJmapTestRule implements TestRule {
                     .aggregate(new TempFilesystemTestRule());
     }
 
-    public JmapJamesServer jmapServer(Module... additionals) {
-        return new JmapJamesServer()
+    public GuiceJamesServer jmapServer(Module... additionals) {
+        return new GuiceJamesServer()
             .combineWith(CassandraJamesServerMain.cassandraServerModule, CassandraJamesServerMain.protocols)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
             .overrideWith(new TestESMetricReporterModule())

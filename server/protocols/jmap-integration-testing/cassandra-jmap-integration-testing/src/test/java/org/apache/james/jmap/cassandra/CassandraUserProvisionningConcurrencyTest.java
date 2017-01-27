@@ -20,7 +20,7 @@
 package org.apache.james.jmap.cassandra;
 
 import org.apache.james.CassandraJmapTestRule;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.UserProvisionningConcurrencyTest;
 import org.junit.Rule;
 
@@ -29,7 +29,7 @@ public class CassandraUserProvisionningConcurrencyTest extends UserProvisionning
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
 
     @Override
-    protected JmapJamesServer createJmapServer() {
+    protected GuiceJamesServer createJmapServer() {
         return rule.jmapServer();
     }
 

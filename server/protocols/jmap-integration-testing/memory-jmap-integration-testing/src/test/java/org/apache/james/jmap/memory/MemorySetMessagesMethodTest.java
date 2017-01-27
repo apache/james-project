@@ -21,7 +21,7 @@ package org.apache.james.jmap.memory;
 
 import java.util.Random;
 
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.methods.integration.SetMessagesMethodTest;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -36,7 +36,7 @@ public class MemorySetMessagesMethodTest extends SetMessagesMethodTest {
     private Random random = new Random();
     
     @Override
-    protected JmapJamesServer createJmapServer() {
+    protected GuiceJamesServer createJmapServer() {
         return memoryJmap.jmapServer();
     }
     

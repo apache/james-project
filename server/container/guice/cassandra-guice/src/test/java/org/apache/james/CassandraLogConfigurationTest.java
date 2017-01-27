@@ -18,7 +18,14 @@
  ****************************************************************/
 package org.apache.james;
 
-import com.google.inject.ProvisionException;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
+
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.modules.mailbox.CassandraSessionConfiguration;
 import org.junit.After;
@@ -27,13 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.google.inject.ProvisionException;
 
 public class CassandraLogConfigurationTest {
 
@@ -48,7 +49,7 @@ public class CassandraLogConfigurationTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    private GuiceJamesServerImpl jamesServer;
+    private GuiceJamesServer jamesServer;
     private SocketChannel socketChannel;
 
     @Before

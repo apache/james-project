@@ -31,7 +31,7 @@ public class CassandraLdapJamesServerMain {
         .with(new LdapUsersRepositoryModule());
 
     public static void main(String[] args) throws Exception {
-        GuiceJamesServerImpl server = new GuiceJamesServerImpl()
+        GuiceJamesServer server = new GuiceJamesServer()
             .combineWith(cassandraLdapServerModule, new JMXServerModule());
 
         server.start();

@@ -22,6 +22,7 @@ package org.apache.james;
 import org.apache.james.modules.data.MemoryDataJmapModule;
 import org.apache.james.modules.data.MemoryDataModule;
 import org.apache.james.modules.mailbox.MemoryMailboxModule;
+import org.apache.james.modules.protocols.IMAPServerModule;
 import org.apache.james.modules.protocols.JMAPServerModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MemoryMailQueueModule;
@@ -34,6 +35,7 @@ public class MemoryJamesServerMain {
 
     public static final Module inMemoryServerModule = Modules.combine(
         new JMAPServerModule(),
+        new IMAPServerModule(),
         new MemoryDataModule(),
         new MemoryDataJmapModule(),
         new MemoryMailboxModule(),
@@ -41,7 +43,7 @@ public class MemoryJamesServerMain {
         new MemoryMailQueueModule());
 
     public static void main(String[] args) throws Exception {
-        new JmapJamesServer()
+        new GuiceJamesServer()
             .combineWith(inMemoryServerModule, new JMXServerModule())
             .start();
     }

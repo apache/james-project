@@ -26,7 +26,7 @@ import javax.inject.Inject;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.james.CassandraJamesServerMain;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
@@ -59,7 +59,7 @@ public class CassandraStepdefs {
         temporaryFolder.create();
         embeddedElasticSearch.before();
         mainStepdefs.messageIdFactory = new CassandraMessageId.Factory();
-        mainStepdefs.jmapServer = new JmapJamesServer()
+        mainStepdefs.jmapServer = new GuiceJamesServer()
                 .combineWith(CassandraJamesServerMain.cassandraServerModule, CassandraJamesServerMain.protocols)
                 .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra))
                 .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class));

@@ -32,8 +32,9 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.model.ContinuationToken;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,11 +50,11 @@ public abstract class JMAPAuthenticationTest {
     private static final ZonedDateTime newDate = ZonedDateTime.parse("2011-12-03T10:16:30+01:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     private static final ZonedDateTime afterExpirationDate = ZonedDateTime.parse("2011-12-03T10:30:31+01:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
-    protected abstract JmapJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider);
+    protected abstract GuiceJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider);
 
     private UserCredentials userCredentials;
     private FixedDateZonedDateTimeProvider zonedDateTimeProvider;
-    private JmapJamesServer jmapServer;
+    private GuiceJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {
@@ -63,8 +64,7 @@ public abstract class JMAPAuthenticationTest {
         jmapServer.start();
         RestAssured.requestSpecification = new RequestSpecBuilder()
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(jmapServer.getJmapProbe()
-                    .getJmapPort())
+        		.setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
         		.build();
         
         userCredentials = UserCredentials.builder()

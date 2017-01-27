@@ -18,13 +18,68 @@
  ****************************************************************/
 package org.apache.james;
 
+import java.util.Arrays;
+
+import javax.annotation.PreDestroy;
+
+import org.apache.james.modules.CommonServicesModule;
+import org.apache.james.modules.MailetProcessingModule;
+import org.apache.james.onami.lifecycle.Stager;
+import org.apache.james.utils.ConfigurationsPerformer;
+import org.apache.james.utils.GuiceProbe;
+import org.apache.james.utils.GuiceProbeProvider;
 import org.apache.james.utils.GuiceServerProbe;
 
-public interface GuiceJamesServer {
+import com.google.common.collect.Iterables;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Module;
+import com.google.inject.TypeLiteral;
+import com.google.inject.util.Modules;
 
-    void start() throws Exception;
+public class GuiceJamesServer {
 
-    void stop();
+    protected final Module module;
+    private Stager<PreDestroy> preDestroy;
+    private GuiceProbeProvider guiceProbeProvider;
 
-    GuiceServerProbe serverProbe();
+    public GuiceJamesServer() {
+        this(Modules.combine(
+                        new CommonServicesModule(),
+                        new MailetProcessingModule()));
+    }
+
+    protected GuiceJamesServer(Module module) {
+        this.module = module;
+    }
+    
+    public GuiceJamesServer combineWith(Module... modules) {
+        return new GuiceJamesServer(Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
+    }
+
+    public GuiceJamesServer overrideWith(Module... overrides) {
+        return new GuiceJamesServer(Modules.override(module).with(overrides));
+    }
+
+    public void start() throws Exception {
+        Injector injector = Guice.createInjector(module);
+        preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {}));
+        injector.getInstance(ConfigurationsPerformer.class).initModules();
+        guiceProbeProvider = injector.getInstance(GuiceProbeProvider.class);
+    }
+
+    public void stop() {
+        if (preDestroy != null) {
+            preDestroy.stage();
+        }
+    }
+
+    public GuiceServerProbe serverProbe() {
+        return guiceProbeProvider.getProbe(GuiceServerProbe.class);
+    }
+
+    public <T extends GuiceProbe> T getProbe(Class<T> probe) {
+        return guiceProbeProvider.getProbe(probe);
+    }
 }

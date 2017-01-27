@@ -42,7 +42,7 @@ public class CassandraMessageIdManagerInjectionTest {
 
     @Rule
     public CassandraJmapTestRule cassandraJmap = CassandraJmapTestRule.defaultTestRule();
-    private JmapJamesServer server;
+    private GuiceJamesServer server;
 
     @Before
     public void test() throws Exception {

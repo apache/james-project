@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.memory;
 
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.JMAPAuthenticationTest;
@@ -32,7 +32,7 @@ public class MemoryJmapAuthenticationTest extends JMAPAuthenticationTest {
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
     @Override
-    protected JmapJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) {
+    protected GuiceJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) {
         return memoryJmap.jmapServer()
                 .overrideWith((binder) -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
     }

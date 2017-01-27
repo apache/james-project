@@ -246,6 +246,17 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
+                <artifactId>james-server-guice-jmap</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-guice-jmap</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
                 <artifactId>james-server-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>

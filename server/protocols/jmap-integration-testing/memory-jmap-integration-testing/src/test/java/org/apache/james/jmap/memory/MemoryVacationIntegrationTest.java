@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.memory;
 
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.VacationIntegrationTest;
 import org.junit.Rule;
@@ -30,7 +30,7 @@ public class MemoryVacationIntegrationTest extends VacationIntegrationTest {
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
     @Override
-    protected JmapJamesServer createJmapServer() {
+    protected GuiceJamesServer createJmapServer() {
         return memoryJmap.jmapServer();
     }
 

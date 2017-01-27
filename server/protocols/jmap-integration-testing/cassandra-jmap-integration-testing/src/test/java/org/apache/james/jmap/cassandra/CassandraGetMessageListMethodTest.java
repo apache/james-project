@@ -20,7 +20,7 @@
 package org.apache.james.jmap.cassandra;
 
 import org.apache.james.CassandraJmapTestRule;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.methods.integration.GetMessageListMethodTest;
 import org.junit.Rule;
 
@@ -30,7 +30,7 @@ public class CassandraGetMessageListMethodTest extends GetMessageListMethodTest 
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
     
     @Override
-    protected JmapJamesServer createJmapServer() {
+    protected GuiceJamesServer createJmapServer() {
         return rule.jmapServer();
     }
 

@@ -20,7 +20,7 @@
 package org.apache.james.jmap.cassandra;
 
 import org.apache.james.CassandraJmapTestRule;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.methods.integration.SetMessagesMethodTest;
 import org.apache.james.mailbox.cassandra.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
@@ -32,7 +32,7 @@ public class CassandraSetMessagesMethodTest extends SetMessagesMethodTest {
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
 
     @Override
-    protected JmapJamesServer createJmapServer() {
+    protected GuiceJamesServer createJmapServer() {
         return rule.jmapServer();
     }
 

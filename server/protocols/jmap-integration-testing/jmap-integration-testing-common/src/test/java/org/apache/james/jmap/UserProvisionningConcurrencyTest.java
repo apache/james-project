@@ -31,8 +31,9 @@ import static org.hamcrest.Matchers.hasSize;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,9 +48,9 @@ public abstract class UserProvisionningConcurrencyTest {
     private static final String DOMAIN = "mydomain.tld";
     private static final String USER = "myuser@" + DOMAIN;
     private static final String PASSWORD = "secret";
-    protected abstract JmapJamesServer createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer();
 
-    private JmapJamesServer jmapServer;
+    private GuiceJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {
@@ -57,8 +58,7 @@ public abstract class UserProvisionningConcurrencyTest {
         jmapServer.start();
         RestAssured.requestSpecification = new RequestSpecBuilder()
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-            .setPort(jmapServer.getJmapProbe()
-                .getJmapPort())
+            .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
             .build();
 
         jmapServer.serverProbe().addDomain(DOMAIN);
@@ -101,8 +101,7 @@ public abstract class UserProvisionningConcurrencyTest {
         return new URIBuilder()
             .setScheme("http")
             .setHost("localhost")
-            .setPort(jmapServer.getJmapProbe()
-                .getJmapPort())
+            .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
             .setCharset(Charsets.UTF_8);
     }
 }

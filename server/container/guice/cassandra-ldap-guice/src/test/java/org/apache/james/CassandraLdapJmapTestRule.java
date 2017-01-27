@@ -51,8 +51,8 @@ public class CassandraLdapJmapTestRule implements TestRule {
                 .aggregate(new TempFilesystemTestRule());
     }
 
-    public JmapJamesServer jmapServer(String ldapIp, Module... additionals) {
-        return new JmapJamesServer()
+    public GuiceJamesServer jmapServer(String ldapIp, Module... additionals) {
+        return new GuiceJamesServer()
             .combineWith(CassandraLdapJamesServerMain.cassandraLdapServerModule,
                 binder -> binder.bind(String.class).annotatedWith(Names.named("ldapIp")).toInstance(ldapIp))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))

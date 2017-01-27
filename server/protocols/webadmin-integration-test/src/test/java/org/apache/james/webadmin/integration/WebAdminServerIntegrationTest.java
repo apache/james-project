@@ -28,7 +28,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 
 import org.apache.james.CassandraJmapTestRule;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.routes.DomainRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
@@ -54,7 +55,7 @@ public class WebAdminServerIntegrationTest {
     @Rule
     public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
 
-    private JmapJamesServer guiceJamesServer;
+    private GuiceJamesServer guiceJamesServer;
 
     @Before
     public void setUp() throws Exception {
@@ -66,7 +67,7 @@ public class WebAdminServerIntegrationTest {
         		.setContentType(ContentType.JSON)
         		.setAccept(ContentType.JSON)
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(guiceJamesServer.getWebAdminProbe().getWebAdminPort())
+        		.setPort(guiceJamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort())
         		.build();
     }
 

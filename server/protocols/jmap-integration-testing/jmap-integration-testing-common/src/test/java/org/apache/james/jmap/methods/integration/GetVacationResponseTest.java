@@ -29,7 +29,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 import java.time.ZonedDateTime;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.JmapJamesServer;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -59,12 +59,12 @@ public abstract class GetVacationResponseTest {
     public static final ZonedDateTime DATE_2016 = ZonedDateTime.parse("2016-04-15T11:56:32.224+07:00[Asia/Vientiane]");
     private JmapGuiceProbe jmapGuiceProbe;
 
-    protected abstract JmapJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider);
+    protected abstract GuiceJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider);
 
     protected abstract void await();
 
     private AccessToken accessToken;
-    private JmapJamesServer jmapServer;
+    private GuiceJamesServer jmapServer;
     private FixedDateZonedDateTimeProvider fixedDateZonedDateTimeProvider;
 
     @Before
@@ -75,7 +75,7 @@ public abstract class GetVacationResponseTest {
         jmapServer = createJmapServer(fixedDateZonedDateTimeProvider);
         jmapServer.start();
 
-        jmapGuiceProbe = jmapServer.getJmapProbe();
+        jmapGuiceProbe = jmapServer.getProbe(JmapGuiceProbe.class);
         RestAssured.requestSpecification = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
@@ -95,7 +95,7 @@ public abstract class GetVacationResponseTest {
         return new URIBuilder()
             .setScheme("http")
             .setHost("localhost")
-            .setPort(jmapServer.getJmapProbe()
+            .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
                 .getJmapPort())
             .setCharset(Charsets.UTF_8);
     }

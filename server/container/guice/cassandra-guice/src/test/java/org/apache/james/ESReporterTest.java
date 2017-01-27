@@ -36,6 +36,7 @@ import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.modules.TestESMetricReporterModule;
 import org.apache.james.utils.GuiceServerProbe;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.After;
@@ -67,14 +68,14 @@ public class ESReporterTest {
     @Rule
     public CassandraJmapTestRule cassandraJmap = new CassandraJmapTestRule(embeddedElasticSearchRule, new EmbeddedCassandraRule());
 
-    private JmapJamesServer server;
+    private GuiceJamesServer server;
     private AccessToken accessToken;
 
     @Before
     public void setup() throws Exception {
         server = cassandraJmap.jmapServer();
         server.start();
-        GuiceServerProbe serverProbe = server.getGuiceProbeProvider().getProbe(GuiceServerProbe.class);
+        GuiceServerProbe serverProbe = server.getProbe(GuiceServerProbe.class);
         serverProbe.addDomain(DOMAIN);
         serverProbe.addUser(USERNAME, PASSWORD);
 
@@ -82,7 +83,7 @@ public class ESReporterTest {
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
                 .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-                .setPort(server.getJmapProbe().getJmapPort())
+                .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort())
                 .build();
         accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USERNAME, PASSWORD);
 
@@ -93,7 +94,7 @@ public class ESReporterTest {
         return new URIBuilder()
             .setScheme("http")
             .setHost("localhost")
-            .setPort(server.getJmapProbe().getJmapPort())
+            .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort())
             .setCharset(Charsets.UTF_8);
     }
 
