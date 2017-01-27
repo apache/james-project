@@ -38,6 +38,9 @@ import com.github.fge.lambdas.functions.ThrowingFunction;
 public class MessageContentExtractor {
 
     public static final String CONTENT_ID = "Content-ID";
+    public static final String MULTIPART_ALTERNATIVE = "multipart/alternative";
+    public static final String TEXT_HTML = "text/html";
+    public static final String TEXT_PLAIN = "text/plain";
 
     public MessageContent extract(org.apache.james.mime4j.dom.Message message) throws IOException {
         Body body = message.getBody();
@@ -52,7 +55,7 @@ public class MessageContentExtractor {
 
     private MessageContent parseTextBody(Entity entity, TextBody textBody) throws IOException {
         String bodyContent = asString(textBody);
-        if ("text/html".equals(entity.getMimeType())) {
+        if (TEXT_HTML.equals(entity.getMimeType())) {
             return MessageContent.ofHtmlOnly(bodyContent);
         }
         return MessageContent.ofTextOnly(bodyContent);
@@ -68,7 +71,7 @@ public class MessageContentExtractor {
 
     private MessageContent parseMultipartContent(Entity entity, Multipart multipart) throws IOException {
         switch(entity.getMimeType()) {
-        case "multipart/alternative":
+        case MULTIPART_ALTERNATIVE:
             return retrieveHtmlAndPlainTextContent(multipart);
         default:
             return retrieveFirstReadablePart(multipart);
@@ -90,8 +93,8 @@ public class MessageContentExtractor {
     }
 
     private MessageContent retrieveHtmlAndPlainTextContent(Multipart multipart) throws IOException {
-        Optional<String> textBody = getFirstMatchingTextBody(multipart, "text/plain");
-        Optional<String> htmlBody = getFirstMatchingTextBody(multipart, "text/html");
+        Optional<String> textBody = getFirstMatchingTextBody(multipart, TEXT_PLAIN);
+        Optional<String> htmlBody = getFirstMatchingTextBody(multipart, TEXT_HTML);
         MessageContent directChildTextBodies = new MessageContent(textBody, htmlBody);
         if (!directChildTextBodies.isComplete()) {
             MessageContent fromInnerMultipart = parseFirstFoundMultipart(multipart);
@@ -111,10 +114,10 @@ public class MessageContentExtractor {
     }
 
     private MessageContent returnIfReadable(Entity entity) throws IOException {
-        if (entity.getMimeType().equals("text/html") && entity.getBody() instanceof TextBody) {
+        if (TEXT_HTML.equals(entity.getMimeType()) && entity.getBody() instanceof TextBody) {
             return MessageContent.ofHtmlOnly(asString((TextBody)entity.getBody()));
         }
-        if (entity.getMimeType().equals("text/plain") && entity.getBody() instanceof TextBody) {
+        if (TEXT_PLAIN.equals(entity.getMimeType()) && entity.getBody() instanceof TextBody) {
             return MessageContent.ofTextOnly(asString((TextBody)entity.getBody()));
         }
         if (entity.isMultipart() && entity.getBody() instanceof Multipart) {
