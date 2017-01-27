@@ -92,7 +92,12 @@ public class MessageContentExtractor {
     private MessageContent retrieveHtmlAndPlainTextContent(Multipart multipart) throws IOException {
         Optional<String> textBody = getFirstMatchingTextBody(multipart, "text/plain");
         Optional<String> htmlBody = getFirstMatchingTextBody(multipart, "text/html");
-        return new MessageContent(textBody, htmlBody);
+        MessageContent directChildTextBodies = new MessageContent(textBody, htmlBody);
+        if (!directChildTextBodies.isComplete()) {
+            MessageContent fromInnerMultipart = parseFirstFoundMultipart(multipart);
+            return directChildTextBodies.merge(fromInnerMultipart);
+        }
+        return directChildTextBodies;
     }
 
     private MessageContent retrieveFirstReadablePart(Multipart multipart) throws IOException {
@@ -178,6 +183,16 @@ public class MessageContentExtractor {
         
         public boolean isEmpty() {
             return equals(empty());
+        }
+
+        public boolean isComplete() {
+            return textBody.isPresent() && htmlBody.isPresent();
+        }
+
+        public MessageContent merge(MessageContent fromInnerMultipart) {
+            return new MessageContent(
+                    textBody.map(Optional::of).orElse(fromInnerMultipart.getTextBody()),
+                    htmlBody.map(Optional::of).orElse(fromInnerMultipart.getHtmlBody()));
         }
 
         @Override
