@@ -191,6 +191,11 @@ public class GetMessagesMethodStepdefs {
         appendMessage(messageName, "eml/embeddedMultipartWithInlineTextAttachment.eml");
     }
 
+    @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with text in main multipart and html in inner multipart$")
+    public void appendMessageWithTextInMainMultipartAndHtmlInInnerMultipart(String messageName, String mailbox) throws Throwable {
+        appendMessage(messageName, "eml/textInMainMultipartHtmlInInnerMultipart.eml");
+    }
+
     private void appendMessage(String messageName, String emlFileName) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         MessageId id = mainStepdefs.jmapServer.serverProbe().appendMessage(userStepdefs.lastConnectedUser,

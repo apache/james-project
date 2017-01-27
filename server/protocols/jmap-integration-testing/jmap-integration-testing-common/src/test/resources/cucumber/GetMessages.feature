@@ -231,3 +231,11 @@ Feature: GetMessages method
     And the list should contain 1 message
     And the textBody of the message is "/blabla/\n*bloblo*\n"
     And the htmlBody of the message is "<i>blabla</i>\n<b>bloblo</b>\n"
+
+  Scenario: Retrieving message should find html body when text in main multipart and html in inner multipart
+    Given the user has a message "m1" in "inbox" mailbox with text in main multipart and html in inner multipart
+    When the user ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the textBody of the message is "/blabla/\r\n*bloblo*\r\n"
+    And the htmlBody of the message is "<i>blabla</i>\r\n<b>bloblo</b>\r\n"
