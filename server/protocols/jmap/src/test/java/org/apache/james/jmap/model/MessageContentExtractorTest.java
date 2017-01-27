@@ -69,6 +69,7 @@ public class MessageContentExtractorTest {
     private BodyPart htmlPart;
     private BodyPart textPart;
     private BodyPart textAttachment;
+    private BodyPart inlineText;
 
     @Before
     public void setup() throws IOException {
@@ -78,6 +79,10 @@ public class MessageContentExtractorTest {
         textAttachment = BodyPartBuilder.create()
                 .setBody(ATTACHMENT_CONTENT, "plain", Charsets.UTF_8)
                 .setContentDisposition("attachment")
+                .build();
+        inlineText = BodyPartBuilder.create()
+                .setBody(ATTACHMENT_CONTENT, "plain", Charsets.UTF_8)
+                .setContentDisposition("inline")
                 .build();
     }
 
@@ -339,5 +344,28 @@ public class MessageContentExtractorTest {
 
         //Then
         assertThat(actual.getTextBody()).isEmpty();
+    }
+
+    @Test
+    public void extractShouldRetrieveTextAndHtmlBodyWhenOneInlinedTextAttachmentAndMainContentInMultipart() throws IOException {
+        BodyPart multipartAlternative = BodyPartBuilder.create()
+                .setBody(MultipartBuilder.create("alternative")
+                        .addBodyPart(textPart)
+                        .addBodyPart(htmlPart)
+                        .build())
+                .build();
+
+        Multipart multipartMixed = MultipartBuilder.create("mixed")
+                .addBodyPart(multipartAlternative)
+                .addBodyPart(inlineText)
+                .build();
+
+        Message message = MessageBuilder.create()
+                .setBody(multipartMixed)
+                .build();
+
+        MessageContent actual = testee.extract(message);
+        assertThat(actual.getTextBody()).contains(TEXT_CONTENT);
+        assertThat(actual.getHtmlBody()).contains(HTML_CONTENT);
     }
 }
