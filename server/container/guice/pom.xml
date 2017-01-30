@@ -90,6 +90,11 @@
                 <artifactId>james-server-guice-webadmin</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-jpa-common-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -101,7 +106,9 @@
         <module>mailbox</module>
         <module>mailet</module>
         <module>memory-guice</module>
+        <module>jpa-common-guice</module>
         <module>jpa-guice</module>
+        <module>jpa-smtp</module>
         <module>onami</module>
         <module>protocols/imap</module>
         <module>protocols/jmap</module>

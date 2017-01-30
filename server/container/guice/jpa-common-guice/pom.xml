@@ -29,11 +29,10 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-jpa-guice</artifactId>
+    <artifactId>james-server-jpa-common-guice</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: JPA - guice injection</name>
-    <description>An advanced email server - JPA backend with guice injection</description>
+    <name>Apache James :: Server :: JPA - guice common</name>
 
     <properties>
         <jpa.includes>empty</jpa.includes>
@@ -224,10 +223,6 @@
                     <artifactId>james-server-guice-common</artifactId>
                     <type>test-jar</type>
                     <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>james-server-jpa-common-guice</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>ch.qos.logback</groupId>

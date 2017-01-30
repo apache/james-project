@@ -29,11 +29,11 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-jpa-guice</artifactId>
+    <artifactId>james-server-jpa-smtp-guice</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: JPA - guice injection</name>
-    <description>An advanced email server - JPA backend with guice injection</description>
+    <name>Apache James :: Server :: JPA + SMTP - guice injection</name>
+    <description>An advanced email server - JPA backend for SMTP with guice injection</description>
 
     <properties>
         <jpa.includes>empty</jpa.includes>
@@ -192,24 +192,12 @@
                 </plugins>
             </build>
             <dependencies>
-                 <dependency>
-                    <groupId>org.apache.derby</groupId>
-                    <artifactId>derby</artifactId>
-                     <scope>test</scope>
-                </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-jpa</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-jpa</artifactId>
-                    <scope>test</scope>
+                    <artifactId>apache-james-backends-jpa</artifactId>
+                    <version>${project.version}</version>
                     <type>test-jar</type>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-lucene</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -234,6 +222,11 @@
                     <artifactId>logback-classic</artifactId>
                     <version>1.1.7</version>
                 </dependency>
+                 <dependency>
+                    <groupId>com.h2database</groupId>
+                    <artifactId>h2</artifactId>
+                    <scope>test</scope>
+                </dependency>
                 <dependency>
                     <groupId>com.jayway.awaitility</groupId>
                     <artifactId>awaitility</artifactId>
@@ -246,6 +239,11 @@
                  <dependency>
                     <groupId>com.nurkiewicz.asyncretry</groupId>
                     <artifactId>asyncretry</artifactId>
+                </dependency>
+                 <dependency>
+                    <groupId>org.apache.derby</groupId>
+                    <artifactId>derby</artifactId>
+                     <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.assertj</groupId>
