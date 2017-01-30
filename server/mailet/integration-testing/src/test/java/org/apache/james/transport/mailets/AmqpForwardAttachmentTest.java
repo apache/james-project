@@ -30,9 +30,12 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.utils.SMTPMessageSender;
+import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.DataProbeImpl;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
@@ -133,10 +136,11 @@ public class AmqpForwardAttachmentTest {
             .pollDelay(slowPacedPollInterval)
             .await();
 
-        jamesServer.getServerProbe().addDomain(JAMES_APACHE_ORG);
-        jamesServer.getServerProbe().addUser(FROM, PASSWORD);
-        jamesServer.getServerProbe().addUser(RECIPIENT, PASSWORD);
-        jamesServer.getServerProbe().createMailbox(MailboxConstants.USER_NAMESPACE, RECIPIENT, "INBOX");
+        DataProbe dataprobe = jamesServer.getProbe(DataProbeImpl.class);
+        dataprobe.addDomain(JAMES_APACHE_ORG);
+        dataprobe.addUser(FROM, PASSWORD);
+        dataprobe.addUser(RECIPIENT, PASSWORD);
+        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, RECIPIENT, "INBOX");
     }
 
     @After

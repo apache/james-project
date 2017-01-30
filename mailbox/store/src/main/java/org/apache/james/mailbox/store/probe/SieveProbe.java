@@ -17,28 +17,22 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.mailbox.store.probe;
 
-import org.apache.james.modules.TestFilesystemModule;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+public interface SieveProbe {
 
-public class JPAJamesServerTest extends AbstractJamesServerTest {
+    long getSieveQuota() throws Exception;
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    void setSieveQuota(long quota) throws Exception;
 
-    @Override
-    protected GuiceJamesServer createJamesServer() {
-        return new GuiceJamesServer()
-            .combineWith(JPAJamesServerMain.jpaServerModule, JPAJamesServerMain.protocols)
-            .overrideWith(new TestFilesystemModule(temporaryFolder),
-                    new TestJPAConfigurationModule());
-    }
+    void removeSieveQuota() throws Exception;
 
-    @Override
-    protected void clean() {
-    }
-    
+    long getSieveQuota(String user) throws Exception;
+
+    void setSieveQuota(String user, long quota) throws Exception;
+
+    void removeSieveQuota(String user) throws Exception;
+
+    void addActiveSieveScript(String user, String name, String script) throws Exception;
 
 }

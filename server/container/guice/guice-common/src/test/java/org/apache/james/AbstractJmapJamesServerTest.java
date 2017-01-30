@@ -30,6 +30,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
+import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
@@ -83,7 +84,7 @@ public abstract class AbstractJmapJamesServerTest {
     public void hostnameShouldBeUsedAsDefaultDomain() throws Exception {
         String expectedDefaultDomain = InetAddress.getLocalHost().getHostName();
 
-        assertThat(server.serverProbe().getDefaultDomain()).isEqualTo(expectedDefaultDomain);
+        assertThat(server.getProbe(DataProbeImpl.class).getDefaultDomain()).isEqualTo(expectedDefaultDomain);
     }
 
     @Test
@@ -92,7 +93,7 @@ public abstract class AbstractJmapJamesServerTest {
         server.start();
         String expectedDefaultDomain = InetAddress.getLocalHost().getHostName();
 
-        assertThat(server.serverProbe().getDefaultDomain()).isEqualTo(expectedDefaultDomain);
+        assertThat(server.getProbe(DataProbeImpl.class).getDefaultDomain()).isEqualTo(expectedDefaultDomain);
     }
 
     @Test

@@ -16,29 +16,18 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.modules;
 
-package org.apache.james;
+import org.apache.james.utils.GuiceProbe;
 
-import org.apache.james.modules.TestFilesystemModule;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
-public class JPAJamesServerTest extends AbstractJamesServerTest {
-
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+public class MailboxModule extends AbstractModule {
 
     @Override
-    protected GuiceJamesServer createJamesServer() {
-        return new GuiceJamesServer()
-            .combineWith(JPAJamesServerMain.jpaServerModule, JPAJamesServerMain.protocols)
-            .overrideWith(new TestFilesystemModule(temporaryFolder),
-                    new TestJPAConfigurationModule());
+    protected void configure() {
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MailboxProbeImpl.class);
     }
-
-    @Override
-    protected void clean() {
-    }
-    
 
 }

@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraJmapModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
@@ -66,7 +67,8 @@ public class CassandraJamesServerMain {
         new ElasticSearchMailboxModule(),
         new QuotaModule(),
         new ActiveMQQueueModule(),
-        new ESMetricReporterModule());
+        new ESMetricReporterModule(),
+        new MailboxModule());
 
 
     public static void main(String[] args) throws Exception {

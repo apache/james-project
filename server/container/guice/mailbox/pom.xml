@@ -131,7 +131,26 @@
                 </plugins>
             </build>
             <dependencies>
-
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>apache-james-mailbox-api</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>apache-james-mailbox-store</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>james-server-guice-configuration</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.google.inject</groupId>
+                    <artifactId>guice</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.google.inject.extensions</groupId>
+                    <artifactId>guice-multibindings</artifactId>
+                </dependency>
             </dependencies>
         </profile>
         <profile>

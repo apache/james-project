@@ -30,14 +30,17 @@ import java.util.HashMap;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
-import org.apache.james.adapter.mailbox.SerializableQuota;
 import org.apache.james.cli.exceptions.InvalidArgumentNumberException;
 import org.apache.james.cli.exceptions.InvalidPortException;
 import org.apache.james.cli.exceptions.MissingCommandException;
 import org.apache.james.cli.exceptions.UnrecognizedCommandException;
-import org.apache.james.cli.probe.ServerProbe;
 import org.apache.james.cli.type.CmdType;
 import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.store.mail.model.SerializableQuota;
+import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.mailbox.store.probe.QuotaProbe;
+import org.apache.james.mailbox.store.probe.SieveProbe;
+import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.easymock.IMocksControl;
@@ -51,15 +54,22 @@ public class ServerCmdTest {
     public static final String ADDITIONAL_ARGUMENT = "additionalArgument";
     private IMocksControl control;
 
-    private ServerProbe serverProbe;
+
+    private DataProbe dataProbe;
+    private MailboxProbe mailboxProbe;
+    private QuotaProbe quotaProbe;
+    private SieveProbe sieveProbe;
 
     private ServerCmd testee;
 
     @Before
     public void setup() {
         control = createControl();
-        serverProbe = control.createMock(ServerProbe.class);
-        testee = new ServerCmd(serverProbe);
+        dataProbe = control.createMock(DataProbe.class);
+        mailboxProbe = control.createMock(MailboxProbe.class);
+        quotaProbe = control.createMock(QuotaProbe.class);
+        sieveProbe = control.createMock(SieveProbe.class);
+        testee = new ServerCmd(dataProbe, mailboxProbe, quotaProbe, sieveProbe);
     }
 
     @Test
@@ -68,7 +78,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDDOMAIN.getCommand(), domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.addDomain(domain);
+        dataProbe.addDomain(domain);
         expectLastCall();
 
         control.replay();
@@ -82,7 +92,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEDOMAIN.getCommand(), domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.removeDomain(domain);
+        dataProbe.removeDomain(domain);
         expectLastCall();
 
         control.replay();
@@ -96,7 +106,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.CONTAINSDOMAIN.getCommand(), domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.containsDomain(domain)).andReturn(true);
+        expect(dataProbe.containsDomain(domain)).andReturn(true);
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -108,7 +118,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTDOMAINS.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.listDomains()).andReturn(ImmutableList.<String> of());
+        expect(dataProbe.listDomains()).andReturn(ImmutableList.<String> of());
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -122,7 +132,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDUSER.getCommand(), user, password};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.addUser(user, password);
+        dataProbe.addUser(user, password);
         expectLastCall();
 
         control.replay();
@@ -136,7 +146,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEUSER.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.removeUser(user);
+        dataProbe.removeUser(user);
         expectLastCall();
 
         control.replay();
@@ -150,7 +160,7 @@ public class ServerCmdTest {
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         String[] res = {};
-        expect(serverProbe.listUsers()).andReturn(res);
+        expect(dataProbe.listUsers()).andReturn(res);
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -162,7 +172,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTMAPPINGS.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.listMappings()).andReturn(new HashMap<String, Mappings>());
+        expect(dataProbe.listMappings()).andReturn(new HashMap<String, Mappings>());
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -176,7 +186,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERDOMAINMAPPINGS.getCommand(), user, domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.listUserDomainMappings(user, domain)).andReturn(MappingsImpl.empty());
+        expect(dataProbe.listUserDomainMappings(user, domain)).andReturn(MappingsImpl.empty());
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -191,7 +201,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDADDRESSMAPPING.getCommand(), user, domain, address};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.addAddressMapping(user, domain, address);
+        dataProbe.addAddressMapping(user, domain, address);
         expectLastCall();
 
         control.replay();
@@ -207,7 +217,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEADDRESSMAPPING.getCommand(), user, domain, address};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.removeAddressMapping(user, domain, address);
+        dataProbe.removeAddressMapping(user, domain, address);
         expectLastCall();
 
         control.replay();
@@ -223,7 +233,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDREGEXMAPPING.getCommand(), user, domain, regex};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.addRegexMapping(user, domain, regex);
+        dataProbe.addRegexMapping(user, domain, regex);
         expectLastCall();
 
         control.replay();
@@ -239,7 +249,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEREGEXMAPPING.getCommand(), user, domain, regex};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.removeRegexMapping(user, domain, regex);
+        dataProbe.removeRegexMapping(user, domain, regex);
         expectLastCall();
 
         control.replay();
@@ -254,7 +264,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETPASSWORD.getCommand(), user, password};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.setPassword(user, password);
+        dataProbe.setPassword(user, password);
         expectLastCall();
 
         control.replay();
@@ -269,7 +279,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.COPYMAILBOX.getCommand(), srcBean, dstBean};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.copyMailbox(srcBean, dstBean);
+        mailboxProbe.copyMailbox(srcBean, dstBean);
         expectLastCall();
 
         control.replay();
@@ -283,7 +293,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.DELETEUSERMAILBOXES.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.deleteUserMailboxesNames(user);
+        mailboxProbe.deleteUserMailboxesNames(user);
         expectLastCall();
 
         control.replay();
@@ -299,7 +309,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.CREATEMAILBOX.getCommand(), namespace, user, name};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.createMailbox(namespace, user, name);
+        mailboxProbe.createMailbox(namespace, user, name);
         expectLastCall();
 
         control.replay();
@@ -315,7 +325,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.DELETEMAILBOX.getCommand(), namespace, user, name};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.deleteMailbox(namespace, user, name);
+        mailboxProbe.deleteMailbox(namespace, user, name);
         expectLastCall();
 
         control.replay();
@@ -329,7 +339,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERMAILBOXES.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.listUserMailboxes(user)).andReturn(new ArrayList<String>());
+        expect(mailboxProbe.listUserMailboxes(user)).andReturn(new ArrayList<String>());
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -344,7 +354,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETQUOTAROOT.getCommand(), namespace, user, name};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.getQuotaRoot(namespace, user, name)).andReturn(namespace + "&" + user);
+        expect(quotaProbe.getQuotaRoot(namespace, user, name)).andReturn(namespace + "&" + user);
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -356,7 +366,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETDEFAULTMAXMESSAGECOUNTQUOTA.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.getDefaultMaxMessageCount()).andReturn(1024L * 1024L);
+        expect(quotaProbe.getDefaultMaxMessageCount()).andReturn(1024L * 1024L);
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -368,7 +378,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETDEFAULTMAXSTORAGEQUOTA.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.getDefaultMaxStorage()).andReturn(1024L * 1024L * 1024L);
+        expect(quotaProbe.getDefaultMaxStorage()).andReturn(1024L * 1024L * 1024L);
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -380,7 +390,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETDEFAULTMAXMESSAGECOUNTQUOTA.getCommand(), "1054"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-       serverProbe.setDefaultMaxMessageCount(1054);
+        quotaProbe.setDefaultMaxMessageCount(1054);
         expectLastCall();
 
         control.replay();
@@ -393,7 +403,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETDEFAULTMAXSTORAGEQUOTA.getCommand(), "1G"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.setDefaultMaxStorage(1024 * 1024 * 1024);
+        quotaProbe.setDefaultMaxStorage(1024 * 1024 * 1024);
         expectLastCall();
 
         control.replay();
@@ -407,7 +417,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETMAXMESSAGECOUNTQUOTA.getCommand(), quotaroot, "1000"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.setMaxMessageCount(quotaroot, 1000);
+        quotaProbe.setMaxMessageCount(quotaroot, 1000);
         expectLastCall();
 
         control.replay();
@@ -421,7 +431,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETMAXSTORAGEQUOTA.getCommand(), quotaroot, "5M"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.setMaxStorage(quotaroot, 5 * 1024 * 1024);
+        quotaProbe.setMaxStorage(quotaroot, 5 * 1024 * 1024);
         expectLastCall();
 
         control.replay();
@@ -435,7 +445,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETMAXMESSAGECOUNTQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.getMaxMessageCount(quotaroot)).andReturn(Quota.UNLIMITED);
+        expect(quotaProbe.getMaxMessageCount(quotaroot)).andReturn(Quota.UNLIMITED);
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -448,7 +458,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETMAXSTORAGEQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.getMaxStorage(quotaroot)).andReturn(Quota.UNLIMITED);
+        expect(quotaProbe.getMaxStorage(quotaroot)).andReturn(Quota.UNLIMITED);
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -461,7 +471,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSTORAGEQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.getStorageQuota(quotaroot)).andReturn(new SerializableQuota(Quota.UNLIMITED, Quota.UNKNOWN));
+        expect(quotaProbe.getStorageQuota(quotaroot)).andReturn(new SerializableQuota(Quota.UNLIMITED, Quota.UNKNOWN));
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -474,7 +484,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETMESSAGECOUNTQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.getMessageCountQuota(quotaroot)).andReturn(new SerializableQuota(Quota.UNLIMITED, Quota.UNKNOWN));
+        expect(quotaProbe.getMessageCountQuota(quotaroot)).andReturn(new SerializableQuota(Quota.UNLIMITED, Quota.UNKNOWN));
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -486,7 +496,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REINDEXALL.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.reIndexAll();
+        mailboxProbe.reIndexAll();
         expectLastCall();
 
         control.replay();
@@ -502,7 +512,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REINDEXMAILBOX.getCommand(), namespace, user, name};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.reIndexMailbox(namespace, user, name);
+        mailboxProbe.reIndexMailbox(namespace, user, name);
         expectLastCall();
 
         control.replay();
@@ -515,7 +525,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEQUOTA.getCommand(), "2K"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.setSieveQuota(2048);
+        sieveProbe.setSieveQuota(2048);
         expectLastCall();
 
         control.replay();
@@ -529,7 +539,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEUSERQUOTA.getCommand(), user, "1K"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.setSieveQuota(user, 1024);
+        sieveProbe.setSieveQuota(user, 1024);
         expectLastCall();
 
         control.replay();
@@ -542,7 +552,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSIEVEQUOTA.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.getSieveQuota()).andReturn(18L);
+        expect(sieveProbe.getSieveQuota()).andReturn(18L);
         expectLastCall();
 
         control.replay();
@@ -556,7 +566,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSIEVEUSERQUOTA.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.getSieveQuota(user)).andReturn(18L);
+        expect(sieveProbe.getSieveQuota(user)).andReturn(18L);
         expectLastCall();
 
         control.replay();
@@ -569,7 +579,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVESIEVEQUOTA.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.removeSieveQuota();
+        sieveProbe.removeSieveQuota();
         expectLastCall();
 
         control.replay();
@@ -583,7 +593,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVESIEVEUSERQUOTA.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        serverProbe.removeSieveQuota(user);
+        sieveProbe.removeSieveQuota(user);
         expectLastCall();
 
         control.replay();

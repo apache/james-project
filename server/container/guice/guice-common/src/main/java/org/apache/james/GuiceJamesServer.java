@@ -28,7 +28,6 @@ import org.apache.james.onami.lifecycle.Stager;
 import org.apache.james.utils.ConfigurationsPerformer;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.GuiceProbeProvider;
-import org.apache.james.utils.GuiceServerProbe;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.Guice;
@@ -73,10 +72,6 @@ public class GuiceJamesServer {
         if (preDestroy != null) {
             preDestroy.stage();
         }
-    }
-
-    public GuiceServerProbe serverProbe() {
-        return guiceProbeProvider.getProbe(GuiceServerProbe.class);
     }
 
     public <T extends GuiceProbe> T getProbe(Class<T> probe) {

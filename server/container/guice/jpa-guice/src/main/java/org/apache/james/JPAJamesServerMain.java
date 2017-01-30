@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.data.JPADataModule;
 import org.apache.james.modules.data.SieveFileRepositoryModule;
 import org.apache.james.modules.mailbox.JPAMailboxModule;
@@ -40,7 +41,7 @@ import com.google.inject.util.Modules;
 
 public class JPAJamesServerMain {
 
-    private static final Module protocols = Modules.combine(
+    public static final Module protocols = Modules.combine(
             new IMAPServerModule(),
             new ProtocolHandlerModule(),
             new POP3ServerModule(),
@@ -55,7 +56,8 @@ public class JPAJamesServerMain {
         new SieveFileRepositoryModule(),
         new QuotaModule(),
         new ActiveMQQueueModule(),
-        new RawPostDequeueDecoratorModule());
+        new RawPostDequeueDecoratorModule(),
+        new MailboxModule());
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()

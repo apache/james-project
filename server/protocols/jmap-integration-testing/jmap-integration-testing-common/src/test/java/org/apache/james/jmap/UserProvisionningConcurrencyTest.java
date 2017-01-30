@@ -34,6 +34,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.james.utils.JmapGuiceProbe;
+import org.apache.james.utils.DataProbeImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,8 +62,9 @@ public abstract class UserProvisionningConcurrencyTest {
             .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
             .build();
 
-        jmapServer.serverProbe().addDomain(DOMAIN);
-        jmapServer.serverProbe().addUser(USER, PASSWORD);
+        DataProbeImpl serverProbe = jmapServer.getProbe(DataProbeImpl.class);
+        serverProbe.addDomain(DOMAIN);
+        serverProbe.addUser(USER, PASSWORD);
     }
 
     @After

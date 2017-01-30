@@ -42,6 +42,7 @@ import org.apache.james.jmap.model.AttachmentAccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mime4j.codec.DecoderUtil;
+import org.apache.james.modules.MailboxProbeImpl;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
@@ -87,7 +88,7 @@ public class DownloadStepdefs {
     public void appendMessageWithAttachmentToMailbox(String user, String mailbox, String messageId, String attachmentId) throws Throwable {
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, mailbox);
 
-        mainStepdefs.jmapServer.serverProbe().appendMessage(user, mailboxPath,
+        mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(user, mailboxPath,
                 ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml"), new Date(), false, new Flags());
         
         attachmentsByMessageId.put(messageId, attachmentId);
@@ -98,7 +99,7 @@ public class DownloadStepdefs {
     public void appendMessageWithInlinedAttachmentToMailbox(String user, String mailbox, String messageId, String attachmentId) throws Throwable {
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, mailbox);
 
-        mainStepdefs.jmapServer.serverProbe().appendMessage(user, mailboxPath,
+        mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(user, mailboxPath,
                 ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, new Flags());
         
         attachmentsByMessageId.put(messageId, attachmentId);

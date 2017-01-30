@@ -17,85 +17,84 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.adapter.mailbox;
+package org.apache.james.cli.probe.impl;
 
+import java.io.IOException;
+
+import javax.management.MalformedObjectNameException;
+
+import org.apache.james.adapter.mailbox.QuotaManagementMBean;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.mailbox.quota.QuotaManager;
-import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.mail.model.SerializableQuota;
+import org.apache.james.mailbox.store.probe.QuotaProbe;
 
-public class QuotaManagement implements QuotaManagementMBean {
+public class JmxQuotaProbe implements QuotaProbe, JmxProbe {
+    private final static String QUOTAMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=quotamanagerbean";
 
-    private QuotaManager quotaManager;
-    private MaxQuotaManager maxQuotaManager;
-    private QuotaRootResolver quotaRootResolver;
+    private QuotaManagementMBean quotaManagement;
 
-    public void setQuotaManager(QuotaManager quotaManager) {
-        this.quotaManager = quotaManager;
-    }
-
-    public void setMaxQuotaManager(MaxQuotaManager maxQuotaManager) {
-        this.maxQuotaManager = maxQuotaManager;
-    }
-
-    public void setQuotaRootResolver(QuotaRootResolver quotaRootResolver) {
-        this.quotaRootResolver = quotaRootResolver;
+    public JmxQuotaProbe connect(JmxConnection jmxc) throws IOException {
+        try {
+            quotaManagement = jmxc.retrieveBean(QuotaManagementMBean.class, QUOTAMANAGER_OBJECT_NAME);
+        } catch (MalformedObjectNameException e) {
+            throw new RuntimeException("Invalid ObjectName? Please report this as a bug.", e);
+        }
+        return this;
     }
 
     @Override
     public String getQuotaRoot(String namespace, String user, String name) throws MailboxException {
-        return quotaRootResolver.getQuotaRoot(new MailboxPath(namespace, user, name)).getValue();
-    }
-
-    @Override
-    public long getMaxMessageCount(String quotaRoot) throws MailboxException {
-        return maxQuotaManager.getMaxMessage(quotaRootResolver.createQuotaRoot(quotaRoot));
-    }
-
-    @Override
-    public long getMaxStorage(String quotaRoot) throws MailboxException {
-        return maxQuotaManager.getMaxStorage(quotaRootResolver.createQuotaRoot(quotaRoot));
-    }
-
-    @Override
-    public long getDefaultMaxMessageCount() throws MailboxException {
-        return maxQuotaManager.getDefaultMaxMessage();
-    }
-
-    @Override
-    public long getDefaultMaxStorage() throws MailboxException {
-        return maxQuotaManager.getDefaultMaxStorage();
-    }
-
-    @Override
-    public void setMaxMessageCount(String quotaRoot, long maxMessageCount) throws MailboxException {
-        maxQuotaManager.setMaxMessage(quotaRootResolver.createQuotaRoot(quotaRoot), maxMessageCount);
-    }
-
-    @Override
-    public void setMaxStorage(String quotaRoot, long maxSize) throws MailboxException {
-        maxQuotaManager.setMaxStorage(quotaRootResolver.createQuotaRoot(quotaRoot), maxSize);
-    }
-
-    @Override
-    public void setDefaultMaxMessageCount(long maxDefaultMessageCount) throws MailboxException {
-        maxQuotaManager.setDefaultMaxMessage(maxDefaultMessageCount);
-    }
-
-    @Override
-    public void setDefaultMaxStorage(long maxDefaultSize) throws MailboxException {
-        maxQuotaManager.setDefaultMaxStorage(maxDefaultSize);
+        return quotaManagement.getQuotaRoot(namespace, user, name);
     }
 
     @Override
     public SerializableQuota getMessageCountQuota(String quotaRoot) throws MailboxException {
-        return new SerializableQuota(quotaManager.getMessageQuota(quotaRootResolver.createQuotaRoot(quotaRoot)));
+        return quotaManagement.getMessageCountQuota(quotaRoot);
     }
 
     @Override
     public SerializableQuota getStorageQuota(String quotaRoot) throws MailboxException {
-        return new SerializableQuota(quotaManager.getStorageQuota(quotaRootResolver.createQuotaRoot(quotaRoot)));
+        return quotaManagement.getStorageQuota(quotaRoot);
     }
+
+    @Override
+    public long getMaxMessageCount(String quotaRoot) throws MailboxException {
+        return quotaManagement.getMaxMessageCount(quotaRoot);
+    }
+
+    @Override
+    public long getMaxStorage(String quotaRoot) throws MailboxException {
+        return quotaManagement.getMaxStorage(quotaRoot);
+    }
+
+    @Override
+    public long getDefaultMaxMessageCount() throws MailboxException {
+        return quotaManagement.getDefaultMaxMessageCount();
+    }
+
+    @Override
+    public long getDefaultMaxStorage() throws MailboxException {
+        return quotaManagement.getDefaultMaxStorage();
+    }
+
+    @Override
+    public void setMaxMessageCount(String quotaRoot, long maxMessageCount) throws MailboxException {
+        quotaManagement.setMaxMessageCount(quotaRoot, maxMessageCount);
+    }
+
+    @Override
+    public void setMaxStorage(String quotaRoot, long maxSize) throws MailboxException {
+        quotaManagement.setMaxStorage(quotaRoot, maxSize);
+    }
+
+    @Override
+    public void setDefaultMaxMessageCount(long maxDefaultMessageCount) throws MailboxException {
+        quotaManagement.setDefaultMaxMessageCount(maxDefaultMessageCount);
+    }
+
+    @Override
+    public void setDefaultMaxStorage(long maxDefaultSize) throws MailboxException {
+        quotaManagement.setDefaultMaxStorage(maxDefaultSize);
+    }
+
 }

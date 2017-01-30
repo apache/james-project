@@ -25,6 +25,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.modules.MailboxProbeImpl;
 
 import cucumber.api.java.en.When;
 import cucumber.runtime.java.guice.ScenarioScoped;
@@ -48,7 +49,7 @@ public class SetMessagesMethodStepdefs {
         String username = userStepdefs.lastConnectedUser;
         MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
         MailboxId mailboxId = mainStepdefs.jmapServer
-            .serverProbe()
+            .getProbe(MailboxProbeImpl.class)
             .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox)
             .getMailboxId();
 
@@ -75,11 +76,11 @@ public class SetMessagesMethodStepdefs {
         String username = userStepdefs.lastConnectedUser;
         MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
         MailboxId sourceMailboxId = mainStepdefs.jmapServer
-            .serverProbe()
+            .getProbe(MailboxProbeImpl.class)
             .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, sourceMailbox)
             .getMailboxId();
         MailboxId destinationMailboxId = mainStepdefs.jmapServer
-            .serverProbe()
+            .getProbe(MailboxProbeImpl.class)
             .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, destinationMailbox)
             .getMailboxId();
 

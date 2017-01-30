@@ -20,6 +20,7 @@
 package org.apache.james.adapter.mailbox;
 
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.store.mail.model.SerializableQuota;
 
 public interface QuotaManagementMBean {
     String getQuotaRoot(String namespace, String user, String name) throws MailboxException;

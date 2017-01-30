@@ -30,8 +30,11 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.utils.SMTPMessageSender;
+import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.probe.DataProbe;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.DataProbeImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -136,10 +139,11 @@ public class SMIMESignIntegrationTest {
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
 
-        jamesServer.getServerProbe().addDomain(DEFAULT_DOMAIN);
-        jamesServer.getServerProbe().addUser(FROM, PASSWORD);
-        jamesServer.getServerProbe().addUser(RECIPIENT, PASSWORD);
-        jamesServer.getServerProbe().createMailbox(MailboxConstants.USER_NAMESPACE, RECIPIENT, "INBOX");
+        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
+        dataProbe.addUser(FROM, PASSWORD);
+        dataProbe.addUser(RECIPIENT, PASSWORD);
+        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, RECIPIENT, "INBOX");
     }
 
     @After

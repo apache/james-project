@@ -133,6 +133,10 @@
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
+                    <artifactId>apache-james-mailbox-store</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-configuration</artifactId>
                 </dependency>
                 <dependency>

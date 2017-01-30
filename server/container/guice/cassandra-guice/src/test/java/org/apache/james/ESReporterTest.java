@@ -35,8 +35,8 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.modules.TestESMetricReporterModule;
-import org.apache.james.utils.GuiceServerProbe;
 import org.apache.james.utils.JmapGuiceProbe;
+import org.apache.james.utils.DataProbeImpl;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.After;
@@ -75,7 +75,7 @@ public class ESReporterTest {
     public void setup() throws Exception {
         server = cassandraJmap.jmapServer();
         server.start();
-        GuiceServerProbe serverProbe = server.getProbe(GuiceServerProbe.class);
+        DataProbeImpl serverProbe = server.getProbe(DataProbeImpl.class);
         serverProbe.addDomain(DOMAIN);
         serverProbe.addUser(USERNAME, PASSWORD);
 

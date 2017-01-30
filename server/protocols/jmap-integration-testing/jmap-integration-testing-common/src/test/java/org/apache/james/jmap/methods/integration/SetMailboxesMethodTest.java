@@ -46,7 +46,11 @@ import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.JmapGuiceProbe;
+import org.apache.james.utils.DataProbeImpl;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -71,12 +75,16 @@ public abstract class SetMailboxesMethodTest {
     private AccessToken accessToken;
     private String username;
     private GuiceJamesServer jmapServer;
-
+    private MailboxProbe mailboxProbe;
+    private DataProbe dataProbe;
+    
     @Before
     public void setup() throws Throwable {
         jmapServer = createJmapServer();
         jmapServer.start();
-
+        mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
+        dataProbe = jmapServer.getProbe(DataProbeImpl.class);
+        
         RestAssured.requestSpecification = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
@@ -87,9 +95,9 @@ public abstract class SetMailboxesMethodTest {
 
         username = "username@" + USERS_DOMAIN;
         String password = "password";
-        jmapServer.serverProbe().addDomain(USERS_DOMAIN);
-        jmapServer.serverProbe().addUser(username, password);
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX);
+        dataProbe.addDomain(USERS_DOMAIN);
+        dataProbe.addUser(username, password);
+        mailboxProbe.createMailbox("#private", username, DefaultMailboxes.INBOX);
         accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), username, password);
 
         await();
@@ -144,8 +152,8 @@ public abstract class SetMailboxesMethodTest {
     @Test
     public void setMailboxesShouldNotUpdateMailboxWhenOverLimitName() {
         String overLimitName = StringUtils.repeat("a", MAILBOX_NAME_LENGTH_64K);
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
             "[" +
@@ -206,8 +214,8 @@ public abstract class SetMailboxesMethodTest {
     @Test
     public void setMailboxesShouldUpdateMailboxWhenOverLimitName() throws Exception {
         String overLimitName = StringUtils.repeat("a", MAILBOX_NAME_LENGTH_64K);
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
             "[" +
@@ -232,7 +240,7 @@ public abstract class SetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxesSet"))
             .body(ARGUMENTS + ".updated", contains(mailboxId));
 
-        assertThat(jmapServer.serverProbe().listSubscriptions(username)).containsOnly(overLimitName);
+        assertThat(jmapServer.getProbe(MailboxProbeImpl.class).listSubscriptions(username)).containsOnly(overLimitName);
     }
 
     @Test
@@ -261,12 +269,12 @@ public abstract class SetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxesSet"))
             .body(ARGUMENTS + ".created", hasKey("create-id01"));
 
-        assertThat(jmapServer.serverProbe().listSubscriptions(username)).containsOnly("foo");
+        assertThat(jmapServer.getProbe(MailboxProbeImpl.class).listSubscriptions(username)).containsOnly("foo");
     }
 
     @Test
     public void userShouldBeSubscribedOnCreatedMailboxWhenCreateChildOfInboxMailbox() throws Exception {
-        MailboxId inboxId = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX).getMailboxId();
+        MailboxId inboxId = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX).getMailboxId();
 
         String requestBody =
             "[" +
@@ -289,15 +297,15 @@ public abstract class SetMailboxesMethodTest {
         .when()
             .post("/jmap");
 
-        assertThat(jmapServer.serverProbe().listSubscriptions(username)).containsOnly(DefaultMailboxes.INBOX + ".foo");
+        assertThat(jmapServer.getProbe(MailboxProbeImpl.class).listSubscriptions(username)).containsOnly(DefaultMailboxes.INBOX + ".foo");
     }
 
     @Test
     public void subscriptionUserShouldBeChangedWhenUpdateMailbox() throws Exception {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "root");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "root");
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
 
         String requestBody =
@@ -318,7 +326,7 @@ public abstract class SetMailboxesMethodTest {
             .body(requestBody)
             .post("/jmap");
 
-        assertThat(jmapServer.serverProbe().listSubscriptions(username)).containsOnly("mySecondBox");
+        assertThat(jmapServer.getProbe(MailboxProbeImpl.class).listSubscriptions(username)).containsOnly("mySecondBox");
     }
 
     @Test
@@ -347,7 +355,7 @@ public abstract class SetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxesSet"))
             .body(ARGUMENTS + ".created", hasKey("create-id01"));
 
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "foo");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "foo");
         String mailboxId = mailbox.getMailboxId().serialize();
 
         requestBody =
@@ -369,13 +377,13 @@ public abstract class SetMailboxesMethodTest {
             .body(requestBody)
             .post("/jmap");
 
-        assertThat(jmapServer.serverProbe().listSubscriptions(username)).containsOnly("mySecondBox");
+        assertThat(jmapServer.getProbe(MailboxProbeImpl.class).listSubscriptions(username)).containsOnly("mySecondBox");
     }
 
     @Test
     public void subscriptionUserShouldBeDeletedWhenDestroyMailbox() throws Exception {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String requestBody =
             "[" +
                 "  [ \"setMailboxes\"," +
@@ -394,7 +402,7 @@ public abstract class SetMailboxesMethodTest {
         .then()
             .statusCode(200);
 
-        assertThat(jmapServer.serverProbe().listSubscriptions(username)).isEmpty();
+        assertThat(jmapServer.getProbe(MailboxProbeImpl.class).listSubscriptions(username)).isEmpty();
     }
 
     @Test
@@ -423,7 +431,7 @@ public abstract class SetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxesSet"))
             .body(ARGUMENTS + ".created", hasKey("create-id01"));
 
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "foo");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "foo");
 
         requestBody =
             "[" +
@@ -443,7 +451,7 @@ public abstract class SetMailboxesMethodTest {
         .then()
             .statusCode(200);
 
-        assertThat(jmapServer.serverProbe().listSubscriptions(username)).isEmpty();
+        assertThat(jmapServer.getProbe(MailboxProbeImpl.class).listSubscriptions(username)).isEmpty();
     }
 
     @Test
@@ -606,7 +614,7 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldCreateMailboxWhenChildOfInboxMailbox() {
-        MailboxId inboxId = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX).getMailboxId();
+        MailboxId inboxId = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX).getMailboxId();
 
         String requestBody =
             "[" +
@@ -747,7 +755,7 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnNotCreatedWhenMailboxAlreadyExists() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String requestBody =
             "[" +
                 "  [ \"setMailboxes\"," +
@@ -849,8 +857,8 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnDestroyedMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
             "[" +
@@ -875,8 +883,8 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldDestroyMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String requestBody =
             "[" +
                 "  [ \"setMailboxes\"," +
@@ -935,9 +943,9 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnNotDestroyedWhenMailboxHasChild() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox.child");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox.child");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
             "[" +
@@ -965,7 +973,7 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnNotDestroyedWhenSystemMailbox() {
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX);
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX);
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
             "[" +
@@ -993,11 +1001,11 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnDestroyedWhenParentThenChildMailboxes() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "parent");
-        Mailbox parentMailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "parent");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "parent");
+        Mailbox parentMailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "parent");
         String parentMailboxId = parentMailbox.getMailboxId().serialize();
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "parent.child");
-        Mailbox childMailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "parent.child");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "parent.child");
+        Mailbox childMailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "parent.child");
         String childMailboxId = childMailbox.getMailboxId().serialize();
         String requestBody =
             "[" +
@@ -1022,11 +1030,11 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnDestroyedWhenChildThenParentMailboxes() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "parent");
-        Mailbox parentMailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "parent");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "parent");
+        Mailbox parentMailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "parent");
         String parentMailboxId = parentMailbox.getMailboxId().serialize();
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "parent.child");
-        Mailbox childMailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "parent.child");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "parent.child");
+        Mailbox childMailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "parent.child");
         String childMailboxId = childMailbox.getMailboxId().serialize();
         String requestBody =
             "[" +
@@ -1050,9 +1058,9 @@ public abstract class SetMailboxesMethodTest {
     }
 
     private MailboxId getRemovedMailboxId() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "quicklyRemoved");
-        MailboxId removedId = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "quicklyRemoved").getMailboxId();
-        jmapServer.serverProbe().deleteMailbox(MailboxConstants.USER_NAMESPACE, username, "quicklyRemoved");
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "quicklyRemoved");
+        MailboxId removedId = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, "quicklyRemoved").getMailboxId();
+        mailboxProbe.deleteMailbox(MailboxConstants.USER_NAMESPACE, username, "quicklyRemoved");
         return removedId;
     }
 
@@ -1088,8 +1096,8 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnUpdatedMailboxIdWhenNoUpdateAskedOnExistingMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
                 "[" +
@@ -1117,8 +1125,8 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnUpdatedWhenNameUpdateAskedOnExistingMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
                 "[" +
@@ -1147,8 +1155,8 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldUpdateMailboxNameWhenNameUpdateAskedOnExistingMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
                 "[" +
@@ -1183,12 +1191,12 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnMailboxIdWhenMovingToAnotherParentMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myChosenParentBox");
-        Mailbox chosenMailboxParent = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myChosenParentBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myChosenParentBox");
+        Mailbox chosenMailboxParent = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myChosenParentBox");
         String chosenMailboxParentId = chosenMailboxParent.getMailboxId().serialize();
         
         String requestBody =
@@ -1218,12 +1226,12 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldUpdateMailboxParentIdWhenMovingToAnotherParentMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
         
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
-        Mailbox newParentMailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
+        Mailbox newParentMailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
         String newParentMailboxId = newParentMailbox.getMailboxId().serialize();
 
         String requestBody =
@@ -1259,14 +1267,14 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnMailboxIdWhenParentIdUpdateAskedOnExistingMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox");
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
         
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
-        Mailbox newParentMailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
+        Mailbox newParentMailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
         String newParentMailboxId = newParentMailbox.getMailboxId().serialize();
 
         String requestBody =
@@ -1296,14 +1304,14 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldUpdateMailboxParentIdWhenParentIdUpdateAskedOnExistingMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox");
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
         
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
-        Mailbox newParentMailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
+        Mailbox newParentMailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
         String newParentMailboxId = newParentMailbox.getMailboxId().serialize();
 
         String requestBody =
@@ -1339,10 +1347,10 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnMailboxIdWhenParentIdUpdateAskedAsOrphanForExistingMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox");
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
 
         String requestBody =
@@ -1372,10 +1380,10 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldUpdateParentIdWhenAskedAsOrphanForExistingMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox");
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
 
         String requestBody =
@@ -1411,14 +1419,14 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnMailboxIdWhenNameAndParentIdUpdateForExistingMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox");
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
-        Mailbox newParentMailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
+        Mailbox newParentMailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
         String newParentMailboxId = newParentMailbox.getMailboxId().serialize();
 
         String requestBody =
@@ -1449,14 +1457,14 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShoulUpdateMailboxIAndParentIddWhenBothUpdatedForExistingMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox");
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myPreviousParentBox.myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
-        Mailbox newParentMailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
+        Mailbox newParentMailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
         String newParentMailboxId = newParentMailbox.getMailboxId().serialize();
 
         String requestBody =
@@ -1494,8 +1502,8 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnNotUpdatedWhenNameContainsPathDelimiter() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
                 "[" +
@@ -1526,8 +1534,8 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnNotUpdatedWhenNewParentDoesntExist() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
         String badParentId = getRemovedMailboxId().serialize();
         String requestBody =
@@ -1559,16 +1567,16 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnNotUpdatedWhenUpdatingParentIdOfAParentMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "root");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "root");
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox.child");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox.child");
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
-        Mailbox newParentMailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
+        Mailbox newParentMailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myNewParentBox");
         String newParentMailboxId = newParentMailbox.getMailboxId().serialize();
 
 
@@ -1601,11 +1609,11 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnNotUpdatedWhenRenamingAMailboxToAnAlreadyExistingMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mySecondBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "mySecondBox");
 
         String requestBody =
                 "[" +
@@ -1636,10 +1644,10 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnUpdatedWhenRenamingAChildMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "root");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "root");
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
 
         String requestBody =
@@ -1669,10 +1677,10 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldUpdateMailboxNameWhenRenamingAChildMailbox() {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "root");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "root");
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "root.myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
 
         String requestBody =
@@ -1709,7 +1717,7 @@ public abstract class SetMailboxesMethodTest {
     @Test
     public void setMailboxesShouldReturnNotUpdatedWhenRenamingSystemMailbox() {
 
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX);
+        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX);
         String mailboxId = mailbox.getMailboxId().serialize();
 
         String requestBody =
@@ -1742,8 +1750,8 @@ public abstract class SetMailboxesMethodTest {
     @Test
     public void setMailboxesShouldReturnNotUpdatedWhenRenameToSystemMailboxName() {
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailboxMyBox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
+        Mailbox mailboxMyBox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String mailboxIdMyBox = mailboxMyBox.getMailboxId().serialize();
 
         String requestBody =
@@ -1776,15 +1784,15 @@ public abstract class SetMailboxesMethodTest {
     @Test
     public void setMailboxesShouldReturnNotUpdatedErrorWhenMovingMailboxTriggersNameConflict() {
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "A");
-        Mailbox mailboxRootA = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "A");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "A");
+        Mailbox mailboxRootA = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "A");
         String mailboxRootAId = mailboxRootA.getMailboxId().serialize();
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "A.B");
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "A.C");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "A.B");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "A.C");
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "A.B.C");
-        Mailbox mailboxChildToMoveC = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "A.B.C");
+        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "A.B.C");
+        Mailbox mailboxChildToMoveC = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "A.B.C");
         String mailboxChildToMoveCId = mailboxChildToMoveC.getMailboxId().serialize();
 
         String requestBody =

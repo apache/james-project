@@ -34,6 +34,7 @@ import org.apache.james.mpt.monitor.SystemLoggingMonitor;
 import org.apache.james.mpt.session.ExternalSessionFactory;
 import org.apache.james.mpt.smtp.SmtpHostSystem;
 import org.apache.james.mpt.smtp.dns.InMemoryDNSService;
+import org.apache.james.utils.DataProbeImpl;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Preconditions;
@@ -61,19 +62,19 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
         String domain = split.next();
 
         createDomainIfNeeded(domain);
-        jamesServer.serverProbe().addUser(userAtDomain, password);
+        jamesServer.getProbe(DataProbeImpl.class).addUser(userAtDomain, password);
         return true;
     }
 
     private void createDomainIfNeeded(String domain) throws Exception {
-        if (!jamesServer.serverProbe().containsDomain(domain)) {
-            jamesServer.serverProbe().addDomain(domain);
+        if (!jamesServer.getProbe(DataProbeImpl.class).containsDomain(domain)) {
+            jamesServer.getProbe(DataProbeImpl.class).addDomain(domain);
         }
     }
 
     @Override
     public void addAddressMapping(String user, String domain, String address) throws Exception {
-        jamesServer.serverProbe().addAddressMapping(user, domain, address);
+        jamesServer.getProbe(DataProbeImpl.class).addAddressMapping(user, domain, address);
     }
 
     @Override

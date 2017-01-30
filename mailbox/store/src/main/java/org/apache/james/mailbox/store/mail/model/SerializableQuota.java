@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.adapter.mailbox;
+package org.apache.james.mailbox.store.mail.model;
 
 import org.apache.james.mailbox.model.Quota;
 

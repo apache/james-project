@@ -37,7 +37,11 @@ import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.JmapGuiceProbe;
+import org.apache.james.utils.DataProbeImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -76,14 +80,16 @@ public abstract class VacationIntegrationTest {
         guiceJamesServer = createJmapServer();
         guiceJamesServer.start();
 
-        guiceJamesServer.serverProbe().addDomain(DOMAIN);
-        guiceJamesServer.serverProbe().addUser(USER_1, PASSWORD);
-        guiceJamesServer.serverProbe().addUser(USER_2, PASSWORD);
-        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, DefaultMailboxes.OUTBOX);
-        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_1, DefaultMailboxes.SENT);
-        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, DefaultMailboxes.SENT);
-        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_1, DefaultMailboxes.INBOX);
-        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, DefaultMailboxes.INBOX);
+        DataProbe dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DOMAIN);
+        dataProbe.addUser(USER_1, PASSWORD);
+        dataProbe.addUser(USER_2, PASSWORD);
+        MailboxProbe mailboxProbe = guiceJamesServer.getProbe(MailboxProbeImpl.class);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, DefaultMailboxes.OUTBOX);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_1, DefaultMailboxes.SENT);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, DefaultMailboxes.SENT);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_1, DefaultMailboxes.INBOX);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, DefaultMailboxes.INBOX);
         await();
 
         jmapGuiceProbe = guiceJamesServer.getProbe(JmapGuiceProbe.class);

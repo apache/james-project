@@ -20,10 +20,15 @@
 package org.apache.james.mailets;
 
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.utils.SMTPMessageSender;
+import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.modules.protocols.SieveProbeImpl;
+import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.DataProbeImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -79,12 +84,14 @@ public class SieveDelivery {
         String recipient = "user2@" + DEFAULT_DOMAIN;
         String targetedMailbox = "INBOX.any";
 
-        jamesServer.getServerProbe().addDomain(DEFAULT_DOMAIN);
-        jamesServer.getServerProbe().addUser(from, PASSWORD);
-        jamesServer.getServerProbe().addUser(recipient, PASSWORD);
-        jamesServer.getServerProbe().createMailbox(MailboxConstants.USER_NAMESPACE, recipient, "INBOX");
-        jamesServer.getServerProbe().createMailbox(MailboxConstants.USER_NAMESPACE, recipient, targetedMailbox);
-        jamesServer.getServerProbe().addActiveSieveScript(recipient, "myscript.sieve", "require \"fileinto\";\n" +
+        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
+        dataProbe.addUser(from, PASSWORD);
+        dataProbe.addUser(recipient, PASSWORD);
+        MailboxProbe mailboxProbe = jamesServer.getProbe(MailboxProbeImpl.class);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipient, "INBOX");
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipient, targetedMailbox);
+        jamesServer.getProbe(SieveProbeImpl.class).addActiveSieveScript(recipient, "myscript.sieve", "require \"fileinto\";\n" +
             "\n" +
             "fileinto \"" + targetedMailbox + "\";");
 

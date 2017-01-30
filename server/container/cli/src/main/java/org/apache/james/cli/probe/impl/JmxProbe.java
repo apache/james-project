@@ -17,28 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.cli.probe.impl;
 
-import org.apache.james.modules.TestFilesystemModule;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import java.io.IOException;
 
-public class JPAJamesServerTest extends AbstractJamesServerTest {
+public interface JmxProbe {
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-    @Override
-    protected GuiceJamesServer createJamesServer() {
-        return new GuiceJamesServer()
-            .combineWith(JPAJamesServerMain.jpaServerModule, JPAJamesServerMain.protocols)
-            .overrideWith(new TestFilesystemModule(temporaryFolder),
-                    new TestJPAConfigurationModule());
-    }
-
-    @Override
-    protected void clean() {
-    }
-    
+    public JmxProbe connect(JmxConnection jmxc) throws IOException;
 
 }

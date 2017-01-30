@@ -26,6 +26,7 @@ import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieveserver.netty.ManageSieveServerFactory;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
+import org.apache.james.utils.GuiceProbe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +45,7 @@ public class ManageSieveServerModule extends AbstractModule {
     protected void configure() {
         bind(CoreCommands.class).to(CoreProcessor.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(ManageSieveModuleConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SieveProbeImpl.class);
     }
 
     @Singleton
