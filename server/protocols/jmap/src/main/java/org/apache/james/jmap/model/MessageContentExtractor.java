@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import javax.mail.internet.MimeMessage;
 
@@ -107,23 +108,27 @@ public class MessageContentExtractor {
         return multipart.getBodyParts()
             .stream()
             .filter(this::isNotAttachment)
-            .map(Throwing.function(this::returnIfReadable).sneakyThrow())
-            .filter(((Predicate<MessageContent>)MessageContent::isEmpty).negate())
+            .flatMap(Throwing.function(this::extractContentIfReadable).sneakyThrow())
             .findFirst()
             .orElse(MessageContent.empty());
     }
 
-    private MessageContent returnIfReadable(Entity entity) throws IOException {
+    private Stream<MessageContent> extractContentIfReadable(Entity entity) throws IOException {
         if (TEXT_HTML.equals(entity.getMimeType()) && entity.getBody() instanceof TextBody) {
-            return MessageContent.ofHtmlOnly(asString((TextBody)entity.getBody()));
+            return Stream.of(
+                    MessageContent.ofHtmlOnly(asString((TextBody)entity.getBody())));
         }
         if (TEXT_PLAIN.equals(entity.getMimeType()) && entity.getBody() instanceof TextBody) {
-            return MessageContent.ofTextOnly(asString((TextBody)entity.getBody()));
+            return Stream.of(
+                    MessageContent.ofTextOnly(asString((TextBody)entity.getBody())));
         }
         if (entity.isMultipart() && entity.getBody() instanceof Multipart) {
-            return parseMultipart(entity, (Multipart)entity.getBody());
+            MessageContent innerMultipartContent = parseMultipart(entity, (Multipart)entity.getBody());
+            if (!innerMultipartContent.isEmpty()) {
+                return Stream.of(innerMultipartContent);
+            }
         }
-        return MessageContent.empty();
+        return Stream.empty();
     }
 
     private Optional<String> getFirstMatchingTextBody(Multipart multipart, String mimeType) throws IOException {
