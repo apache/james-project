@@ -26,11 +26,10 @@ import org.apache.james.protocols.lib.handler.HandlersPackage;
 import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.BasicChannelUpstreamHandler;
+import org.apache.james.protocols.netty.ChannelHandlerFactory;
+import org.apache.james.protocols.netty.LineDelimiterBasedChannelHandlerFactory;
 import org.apache.james.protocols.pop3.POP3Protocol;
-import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
-import org.jboss.netty.handler.codec.frame.Delimiters;
 
 /**
  * NIO POP3 Server which use Netty
@@ -105,8 +104,8 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
     }
 
     @Override
-    protected ChannelHandler createFrameHandler() {
-        return new DelimiterBasedFrameDecoder(AbstractChannelPipelineFactory.MAX_LINE_LENGTH, false, Delimiters.lineDelimiter());
+    protected ChannelHandlerFactory createFrameHandlerFactory() {
+        return new LineDelimiterBasedChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
     }
 
 }

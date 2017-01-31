@@ -26,6 +26,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -53,9 +54,12 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.junit.Test;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
+
 public abstract class AbstractSMTPServerTest {
     
-    protected final static String MSG1 = "Subject: Testmessage\r\n\r\nThis is a message";
+    protected final static String MSG1 = "Subject: Testmessage\r\n\r\nThis is a message\r\n";
     protected final static String SENDER = "me@sender";
     protected final static String RCPT1 ="rpct1@domain";
     protected final static String RCPT2 ="rpct2@domain";
@@ -69,29 +73,9 @@ public abstract class AbstractSMTPServerTest {
             server = createServer(createProtocol(hook));
             server.bind();
             
-            SMTPClient client = createClient();
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
-            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-            assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
-            
-            client.helo("localhost");
-            assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
 
-            client.setSender(SENDER);
-            assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
-
-            client.addRecipient(RCPT1);
-            assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
-
-            client.addRecipient(RCPT2);
-            assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
-
-            assertTrue(client.sendShortMessageData(MSG1));
-            assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
-            
-            client.quit();
-            assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
-            client.disconnect();
+            send(server, bindedAddress, MSG1);
 
             Iterator<MailEnvelope> queued = hook.getQueued().iterator();
             assertTrue(queued.hasNext());
@@ -106,6 +90,102 @@ public abstract class AbstractSMTPServerTest {
             }
         }
         
+    }
+    
+    @Test
+    public void testDeliveryWith4SimultaneousThreads() throws Exception {
+        TestMessageHook hook = new TestMessageHook();
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(hook));
+            server.bind();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+
+            String mailContent = CharStreams.toString(new InputStreamReader(ClassLoader.getSystemResourceAsStream("a50.eml"), Charsets.US_ASCII));
+            Thread thread1 = new SendThread(server, bindedAddress, mailContent);
+            Thread thread2 = new SendThread(server, bindedAddress, mailContent);
+            Thread thread3 = new SendThread(server, bindedAddress, mailContent);
+            Thread thread4 = new SendThread(server, bindedAddress, mailContent);
+            thread1.start();
+            thread2.start();
+            thread3.start();
+            thread4.start();
+            thread1.join(1000);
+            thread2.join(1000);
+            thread3.join(1000);
+            thread4.join(1000);
+
+            Iterator<MailEnvelope> queued = hook.getQueued().iterator();
+            assertTrue(queued.hasNext());
+
+            MailEnvelope env = queued.next();
+            checkEnvelope(env, SENDER, Arrays.asList(RCPT1, RCPT2), mailContent);
+            assertTrue(queued.hasNext());
+            MailEnvelope env2 = queued.next();
+            checkEnvelope(env2, SENDER, Arrays.asList(RCPT1, RCPT2), mailContent);
+            assertTrue(queued.hasNext());
+            MailEnvelope env3 = queued.next();
+            checkEnvelope(env3, SENDER, Arrays.asList(RCPT1, RCPT2), mailContent);
+            assertTrue(queued.hasNext());
+            MailEnvelope env4 = queued.next();
+            checkEnvelope(env4, SENDER, Arrays.asList(RCPT1, RCPT2), mailContent);
+            assertFalse(queued.hasNext());
+
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+    
+    public class SendThread extends Thread {
+        private ProtocolServer server;
+        private InetSocketAddress bindedAddress;
+        private String msg;
+
+        public SendThread(ProtocolServer server, InetSocketAddress bindedAddress, String msg) {
+            this.server = server;
+            this.bindedAddress = bindedAddress;
+            this.msg = msg;
+        }
+        
+        @Override
+        public void run() {
+            try {
+                send(server, bindedAddress, msg);
+            } catch (SocketException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void send(ProtocolServer server, InetSocketAddress bindedAddress, String msg) throws SocketException, IOException {
+        SMTPClient client = createClient();
+        client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
+        
+        client.helo("localhost");
+        assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
+
+        client.setSender(SENDER);
+        assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+
+        client.addRecipient(RCPT1);
+        assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+
+        client.addRecipient(RCPT2);
+        assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+
+        assertTrue(client.sendShortMessageData(msg));
+        assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+        
+        client.quit();
+        assertTrue("Reply="+ client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+        client.disconnect();
     }
     
     @Test
@@ -1081,7 +1161,7 @@ public abstract class AbstractSMTPServerTest {
                     sb.append("\r\n");
                 }
             }
-            String msgQueued = sb.subSequence(0, sb.length() - 2).toString();
+            String msgQueued = sb.subSequence(0, sb.length()).toString();
 
             assertEquals(msg.length(), msgQueued.length());
             for (int i = 0; i < msg.length(); i++) {

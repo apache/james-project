@@ -28,12 +28,11 @@ import org.apache.james.protocols.lib.handler.HandlersPackage;
 import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.lmtp.LMTPConfiguration;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
+import org.apache.james.protocols.netty.ChannelHandlerFactory;
+import org.apache.james.protocols.netty.LineDelimiterBasedChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.smtpserver.netty.SMTPChannelUpstreamHandler;
-import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
-import org.jboss.netty.handler.codec.frame.Delimiters;
 
 public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServerMBean {
 
@@ -160,8 +159,8 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
     }
 
     @Override
-    protected ChannelHandler createFrameHandler() {
-        return new DelimiterBasedFrameDecoder(AbstractChannelPipelineFactory.MAX_LINE_LENGTH, false, Delimiters.lineDelimiter());
+    protected ChannelHandlerFactory createFrameHandlerFactory() {
+        return new LineDelimiterBasedChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
     }
 
 }

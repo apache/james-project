@@ -25,7 +25,6 @@ import javax.net.ssl.SSLContext;
 
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
-import org.jboss.netty.channel.ChannelHandler;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -61,11 +60,11 @@ public class NettyServerTest {
     public void buildShouldWorkWhenEverythingIsGiven() throws Exception {
         Protocol protocol = mock(Protocol.class);
         Encryption encryption = Encryption.createStartTls(SSLContext.getDefault());
-        ChannelHandler channelHandler = mock(ChannelHandler.class);
+        ChannelHandlerFactory channelHandlerFactory = mock(ChannelHandlerFactory.class);
         NettyServer.builder()
             .protocol(protocol)
             .secure(encryption)
-            .frameHandler(channelHandler)
+            .frameHandlerFactory(channelHandlerFactory)
             .build();
     }
 }

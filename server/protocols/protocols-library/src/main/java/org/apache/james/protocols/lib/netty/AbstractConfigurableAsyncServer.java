@@ -45,9 +45,9 @@ import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.jmx.ServerMBean;
 import org.apache.james.protocols.netty.AbstractAsyncServer;
+import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutor;
 import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.group.ChannelGroup;
@@ -111,7 +111,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     private final ConnectionCountHandler countHandler = new ConnectionCountHandler();
 
     private ExecutionHandler executionHandler = null;
-    private ChannelHandler frameHandler;
+    private ChannelHandlerFactory frameHandlerFactory;
 
     private int maxExecutorThreads;
 
@@ -271,7 +271,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             buildSSLContext();
             preInit();
             executionHandler = createExecutionHander();
-            frameHandler = createFrameHandler();
+            frameHandlerFactory = createFrameHandlerFactory();
             bind();
 
             mbeanServer = ManagementFactory.getPlatformMBeanServer();
@@ -568,7 +568,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return new ExecutionHandler(new JMXEnabledOrderedMemoryAwareThreadPoolExecutor(maxExecutorThreads, 0, 0, getThreadPoolJMXPath(), getDefaultJMXName() + "-executor"));
     }
 
-    protected abstract ChannelHandler createFrameHandler();
+    protected abstract ChannelHandlerFactory createFrameHandlerFactory();
 
     /**
      * Return the {@link ExecutionHandler} or null if non should be used. Be sure you call {@link #createExecutionHander()} before
@@ -579,15 +579,15 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return executionHandler;
     }
     
-    protected ChannelHandler getFrameHandler() {
-        return frameHandler;
+    protected ChannelHandlerFactory getFrameHandlerFactory() {
+        return frameHandlerFactory;
     }
 
     protected abstract ChannelUpstreamHandler createCoreHandler();
     
     @Override
     protected ChannelPipelineFactory createPipelineFactory(ChannelGroup group) {
-        return new AbstractExecutorAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP, group, enabledCipherSuites, getExecutionHandler(), getFrameHandler()) {
+        return new AbstractExecutorAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP, group, enabledCipherSuites, getExecutionHandler(), getFrameHandlerFactory()) {
             @Override
             protected SSLContext getSSLContext() {
                 if (encryption == null) {

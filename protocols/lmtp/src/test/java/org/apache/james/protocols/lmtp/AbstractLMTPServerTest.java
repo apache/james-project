@@ -50,6 +50,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
@@ -70,23 +71,27 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
         return new SMTPProtocol(chain, new LMTPConfigurationImpl(), new MockLogger());
     }
     
-    
+
+    @Ignore("LMTP can't handle the queue")
+    @Override
+    public void testDeliveryWith4SimultaneousThreads() {
+    }
+
+    @Ignore("Disable")
     @Override
     public void testInvalidNoBracketsEnformance() throws Exception {
-        // Disable
     }
 
 
+    @Ignore("Disable")
     @Override
     public void testHeloEnforcement() throws Exception {
-        // Disable
     }
 
 
+    @Ignore("Disable")
     @Override
     public void testHeloEnforcementDisabled() throws Exception {
-        // Disable
-
     }
 
 

@@ -44,13 +44,12 @@ import org.apache.james.protocols.api.utils.MockLogger;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.NettyServer;
-import org.apache.james.protocols.smtp.AllButStartTlsDelimiterChannelHandler;
+import org.apache.james.protocols.smtp.AllButStartTlsLineDelimiterChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPConfigurationImpl;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPProtocolHandlerChain;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.assertj.core.api.AssertDelegateTarget;
-import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.junit.After;
 import org.junit.Test;
 
@@ -75,7 +74,7 @@ public class NettyStartTlsSMTPServerTest {
         NettyServer server = NettyServer.builder()
                 .protocol(protocol)
                 .secure(enc)
-                .frameHandler(new AllButStartTlsDelimiterChannelHandler(AbstractChannelPipelineFactory.MAX_LINE_LENGTH, false, Delimiters.lineDelimiter()))
+                .frameHandlerFactory(new AllButStartTlsLineDelimiterChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH))
                 .build();
         server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
         return server;
