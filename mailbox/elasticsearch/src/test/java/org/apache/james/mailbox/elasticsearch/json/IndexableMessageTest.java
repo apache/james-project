@@ -38,6 +38,7 @@ import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -279,4 +280,27 @@ public class IndexableMessageTest {
         assertThat(indexableMessage.getText()).contains("first attachment content");
         assertThat(indexableMessage.getText()).contains("third attachment content");
     }
+
+    @Test
+    public void messageShouldBeIndexedEvenIfTikaParserThrowsAnError() throws Exception {
+        //Given
+        MailboxMessage mailboxMessage = mock(MailboxMessage.class);
+        TestId mailboxId = TestId.of(1);
+        when(mailboxMessage.getMailboxId())
+            .thenReturn(mailboxId);
+        when(mailboxMessage.getFullContent())
+            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"))));
+        when(mailboxMessage.createFlags())
+            .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
+
+        // When
+        IndexableMessage indexableMessage = IndexableMessage.from(mailboxMessage, ImmutableList.of(new MockMailboxSession("username").getUser()),
+                new TikaTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+
+        // Then
+        assertThat(indexableMessage.getText()).contains("subject should be parsed");
+    }
+
 }
