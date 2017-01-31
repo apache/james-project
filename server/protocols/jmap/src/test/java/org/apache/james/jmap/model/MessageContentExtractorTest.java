@@ -21,6 +21,7 @@ package org.apache.james.jmap.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.mail.internet.MimeMessage;
 
@@ -45,6 +46,8 @@ public class MessageContentExtractorTest {
     private static final String BINARY_CONTENT = "binary";
     private static final String TEXT_CONTENT = "text content";
     private static final String HTML_CONTENT = "<b>html</b> content";
+    private static final String TEXT_CONTENT2 = "other text content";
+    private static final String HTML_CONTENT2 = "other <b>html</b> content";
     private static final String ATTACHMENT_CONTENT = "attachment content";
     private static final String ANY_VALUE = "anyValue";
     private static final Field CONTENT_ID_FIELD = new Field() {
@@ -69,6 +72,8 @@ public class MessageContentExtractorTest {
     private BodyPart htmlPart;
     private BodyPart textPart;
     private BodyPart textAttachment;
+    private BodyPart inlineText;
+    private BodyPart inlineImage;
 
     @Before
     public void setup() throws IOException {
@@ -78,6 +83,14 @@ public class MessageContentExtractorTest {
         textAttachment = BodyPartBuilder.create()
                 .setBody(ATTACHMENT_CONTENT, "plain", Charsets.UTF_8)
                 .setContentDisposition("attachment")
+                .build();
+        inlineText = BodyPartBuilder.create()
+                .setBody(ATTACHMENT_CONTENT, "plain", Charsets.UTF_8)
+                .setContentDisposition("inline")
+                .build();
+        inlineImage = BodyPartBuilder.create()
+                .setBody(new byte[0], "image/png")
+                .setContentDisposition("inline")
                 .build();
     }
 
@@ -339,5 +352,117 @@ public class MessageContentExtractorTest {
 
         //Then
         assertThat(actual.getTextBody()).isEmpty();
+    }
+
+    @Test
+    public void extractShouldRetrieveTextAndHtmlBodyWhenOneInlinedTextAttachmentAndMainContentInMultipart() throws IOException {
+        BodyPart multipartAlternative = BodyPartBuilder.create()
+                .setBody(MultipartBuilder.create("alternative")
+                        .addBodyPart(textPart)
+                        .addBodyPart(htmlPart)
+                        .build())
+                .build();
+
+        Multipart multipartMixed = MultipartBuilder.create("mixed")
+                .addBodyPart(multipartAlternative)
+                .addBodyPart(inlineText)
+                .build();
+
+        Message message = MessageBuilder.create()
+                .setBody(multipartMixed)
+                .build();
+
+        MessageContent actual = testee.extract(message);
+        assertThat(actual.getTextBody()).contains(TEXT_CONTENT);
+        assertThat(actual.getHtmlBody()).contains(HTML_CONTENT);
+    }
+
+    @Test
+    public void extractShouldRetrieveTextBodyAndHtmlBodyWhenTextBodyInMainMultipartAndHtmlBodyInInnerMultipart() throws IOException {
+        BodyPart multipartRelated = BodyPartBuilder.create()
+                .setBody(MultipartBuilder.create("related")
+                        .addBodyPart(htmlPart)
+                        .addBodyPart(inlineImage)
+                        .build())
+                .build();
+
+        Multipart multipartAlternative = MultipartBuilder.create("alternative")
+                .addBodyPart(textPart)
+                .addBodyPart(multipartRelated)
+                .build();
+
+        Message message = MessageBuilder.create()
+                .setBody(multipartAlternative)
+                .build();
+
+        MessageContent actual = testee.extract(message);
+        assertThat(actual.getTextBody()).contains(TEXT_CONTENT);
+        assertThat(actual.getHtmlBody()).contains(HTML_CONTENT);
+    }
+
+    @Test
+    public void mergeMessageContentShouldReturnEmptyWhenAllEmpty() {
+        MessageContent messageContent1 = MessageContent.empty();
+        MessageContent messageContent2 = MessageContent.empty();
+        MessageContent expected = MessageContent.empty();
+
+        MessageContent actual = messageContent1.merge(messageContent2);
+
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void mergeMessageContentShouldReturnFirstWhenSecondEmpty() {
+        MessageContent messageContent1 = new MessageContent(Optional.of(TEXT_CONTENT), Optional.of(HTML_CONTENT));
+        MessageContent messageContent2 = MessageContent.empty();
+        MessageContent expected = messageContent1;
+
+        MessageContent actual = messageContent1.merge(messageContent2);
+
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void mergeMessageContentShouldReturnSecondWhenFirstEmpty() {
+        MessageContent messageContent1 = MessageContent.empty();
+        MessageContent messageContent2 = new MessageContent(Optional.of(TEXT_CONTENT), Optional.of(HTML_CONTENT));
+        MessageContent expected = messageContent2;
+
+        MessageContent actual = messageContent1.merge(messageContent2);
+
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void mergeMessageContentShouldReturnMixWhenFirstTextOnlyAndSecondHtmlOnly() {
+        MessageContent messageContent1 = MessageContent.ofTextOnly(TEXT_CONTENT);
+        MessageContent messageContent2 = MessageContent.ofHtmlOnly(HTML_CONTENT);
+        MessageContent expected = new MessageContent(Optional.of(TEXT_CONTENT), Optional.of(HTML_CONTENT));
+
+        MessageContent actual = messageContent1.merge(messageContent2);
+
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void mergeMessageContentShouldReturnMixWhenFirstHtmlOnlyAndSecondTextOnly() {
+        MessageContent messageContent1 = MessageContent.ofHtmlOnly(HTML_CONTENT);
+        MessageContent messageContent2 = MessageContent.ofTextOnly(TEXT_CONTENT);
+        MessageContent expected = new MessageContent(Optional.of(TEXT_CONTENT), Optional.of(HTML_CONTENT));
+
+        MessageContent actual = messageContent1.merge(messageContent2);
+
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void mergeMessageContentShouldReturnFirstWhenTwiceAreComplete() {
+        MessageContent messageContent1 = new MessageContent(Optional.of(TEXT_CONTENT), Optional.of(HTML_CONTENT));
+        MessageContent messageContent2 = new MessageContent(Optional.of(TEXT_CONTENT2), Optional.of(HTML_CONTENT2));
+        MessageContent expected = messageContent1;
+
+        MessageContent actual = messageContent1.merge(messageContent2);
+
+        assertThat(actual).isEqualTo(expected);
     }
 }

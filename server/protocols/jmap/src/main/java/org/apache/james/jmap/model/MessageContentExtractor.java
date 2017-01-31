@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import javax.mail.internet.MimeMessage;
 
@@ -38,6 +39,9 @@ import com.github.fge.lambdas.functions.ThrowingFunction;
 public class MessageContentExtractor {
 
     public static final String CONTENT_ID = "Content-ID";
+    public static final String MULTIPART_ALTERNATIVE = "multipart/alternative";
+    public static final String TEXT_HTML = "text/html";
+    public static final String TEXT_PLAIN = "text/plain";
 
     public MessageContent extract(org.apache.james.mime4j.dom.Message message) throws IOException {
         Body body = message.getBody();
@@ -52,7 +56,7 @@ public class MessageContentExtractor {
 
     private MessageContent parseTextBody(Entity entity, TextBody textBody) throws IOException {
         String bodyContent = asString(textBody);
-        if ("text/html".equals(entity.getMimeType())) {
+        if (TEXT_HTML.equals(entity.getMimeType())) {
             return MessageContent.ofHtmlOnly(bodyContent);
         }
         return MessageContent.ofTextOnly(bodyContent);
@@ -68,10 +72,10 @@ public class MessageContentExtractor {
 
     private MessageContent parseMultipartContent(Entity entity, Multipart multipart) throws IOException {
         switch(entity.getMimeType()) {
-        case "multipart/alternative":
+        case MULTIPART_ALTERNATIVE:
             return retrieveHtmlAndPlainTextContent(multipart);
         default:
-            return retrieveFirstHtmlOrPlainTextContent(multipart);
+            return retrieveFirstReadablePart(multipart);
         }
     }
 
@@ -90,18 +94,41 @@ public class MessageContentExtractor {
     }
 
     private MessageContent retrieveHtmlAndPlainTextContent(Multipart multipart) throws IOException {
-        Optional<String> textBody = getFirstMatchingTextBody(multipart, "text/plain");
-        Optional<String> htmlBody = getFirstMatchingTextBody(multipart, "text/html");
-        return new MessageContent(textBody, htmlBody);
+        Optional<String> textBody = getFirstMatchingTextBody(multipart, TEXT_PLAIN);
+        Optional<String> htmlBody = getFirstMatchingTextBody(multipart, TEXT_HTML);
+        MessageContent directChildTextBodies = new MessageContent(textBody, htmlBody);
+        if (!directChildTextBodies.isComplete()) {
+            MessageContent fromInnerMultipart = parseFirstFoundMultipart(multipart);
+            return directChildTextBodies.merge(fromInnerMultipart);
+        }
+        return directChildTextBodies;
     }
 
-    private MessageContent retrieveFirstHtmlOrPlainTextContent(Multipart multipart) throws IOException {
-        Optional<String> textBody = Optional.empty();
-        Optional<String> htmlBody = getFirstMatchingTextBody(multipart, "text/html");
-        if (! htmlBody.isPresent()) {
-            textBody = getFirstMatchingTextBody(multipart, "text/plain");
+    private MessageContent retrieveFirstReadablePart(Multipart multipart) throws IOException {
+        return multipart.getBodyParts()
+            .stream()
+            .filter(this::isNotAttachment)
+            .flatMap(Throwing.function(this::extractContentIfReadable).sneakyThrow())
+            .findFirst()
+            .orElse(MessageContent.empty());
+    }
+
+    private Stream<MessageContent> extractContentIfReadable(Entity entity) throws IOException {
+        if (TEXT_HTML.equals(entity.getMimeType()) && entity.getBody() instanceof TextBody) {
+            return Stream.of(
+                    MessageContent.ofHtmlOnly(asString((TextBody)entity.getBody())));
         }
-        return new MessageContent(textBody, htmlBody);
+        if (TEXT_PLAIN.equals(entity.getMimeType()) && entity.getBody() instanceof TextBody) {
+            return Stream.of(
+                    MessageContent.ofTextOnly(asString((TextBody)entity.getBody())));
+        }
+        if (entity.isMultipart() && entity.getBody() instanceof Multipart) {
+            MessageContent innerMultipartContent = parseMultipart(entity, (Multipart)entity.getBody());
+            if (!innerMultipartContent.isEmpty()) {
+                return Stream.of(innerMultipartContent);
+            }
+        }
+        return Stream.empty();
     }
 
     private Optional<String> getFirstMatchingTextBody(Multipart multipart, String mimeType) throws IOException {
@@ -164,6 +191,16 @@ public class MessageContentExtractor {
         
         public boolean isEmpty() {
             return equals(empty());
+        }
+
+        public boolean isComplete() {
+            return textBody.isPresent() && htmlBody.isPresent();
+        }
+
+        public MessageContent merge(MessageContent fromInnerMultipart) {
+            return new MessageContent(
+                    textBody.map(Optional::of).orElse(fromInnerMultipart.getTextBody()),
+                    htmlBody.map(Optional::of).orElse(fromInnerMultipart.getHtmlBody()));
         }
 
         @Override
