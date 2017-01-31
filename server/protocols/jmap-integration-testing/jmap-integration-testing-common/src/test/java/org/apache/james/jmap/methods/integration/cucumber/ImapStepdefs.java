@@ -31,6 +31,7 @@ import com.google.common.collect.Maps;
 
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
+import cucumber.api.java.en.When;
 import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
@@ -97,6 +98,18 @@ public class ImapStepdefs {
         IMAPMessageReader imapMessageReader = imapConnections.get(mailbox);
         assertThat(imapMessageReader).isNotNull();
         assertThat(imapMessageReader.userGetNotifiedForNewMessages(numberOfMessages)).isTrue();
+    }
+
+    @When("^the user copy by IMAP first message of \"([^\"]*)\" to mailbox \"([^\"]*)\"$")
+    public void copyAMessageByIMAP(String srcMailbox, String destMailbox) throws Throwable {
+        IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST, IMAP_PORT);
+
+        String login = userStepdefs.lastConnectedUser;
+        String password = userStepdefs.passwordByUser.get(login);
+
+        imapMessageReader.connectAndSelect(login, password, srcMailbox);
+        assertThat(imapMessageReader).isNotNull();
+        imapMessageReader.copyFirstMessage(destMailbox);
     }
 
     @Then("^the user has IMAP EXPUNGE and a notification for (\\d+) message sequence number on connection for mailbox \"([^\"]*)\"$")

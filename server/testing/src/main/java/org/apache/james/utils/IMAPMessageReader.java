@@ -117,4 +117,8 @@ public class IMAPMessageReader implements Closeable {
     public void close() throws IOException {
         imapClient.close();
     }
+
+    public void copyFirstMessage(String destMailbox) throws IOException {
+        imapClient.copy("1", destMailbox);
+    }
 }
