@@ -107,6 +107,8 @@
         <module>queue/queue-activemq</module>
         <module>protocols/webadmin</module>
         <module>protocols/webadmin-integration-test</module>
+
+        <module>testing</module>
     </modules>
 
     <distributionManagement>
@@ -327,6 +329,11 @@
                 <artifactId>james-server-protocols-library</artifactId>
                 <type>test-jar</type>
                 <scope>test</scope>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-testing</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -1058,7 +1065,6 @@
                 <groupId>commons-net</groupId>
                 <artifactId>commons-net</artifactId>
                 <version>${commons-net.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>

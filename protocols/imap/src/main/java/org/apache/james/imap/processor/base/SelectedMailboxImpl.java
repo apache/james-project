@@ -407,8 +407,12 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
                 if (messageEvent instanceof Added) {
                     sizeChanged = true;
                     final List<MessageUid> uids = ((Added) event).getUids();
+                    SelectedMailbox sm = session.getSelected();
                     for (MessageUid uid : uids) {
                         add(uid);
+                        if (sm != null) {
+                            sm.addRecent(uid);
+                        }
                     }
                 } else if (messageEvent instanceof FlagsUpdated) {
                     FlagsUpdated updated = (FlagsUpdated) messageEvent;

@@ -81,7 +81,7 @@ S: 1b OK STATUS completed.
 SESSION: 2
 C: 2b NOOP
 S: \* 1 EXISTS
-S: \* 0 RECENT
+S: \* 1 RECENT
 S: 2b OK NOOP completed.
 
 C: 2c CLOSE
@@ -91,7 +91,7 @@ S: 2c OK CLOSE completed.
 SESSION: 3
 C: 3b STORE 1 +FLAGS.SILENT (\Flagged)
 S: \* 1 EXISTS
-S: \* 0 RECENT
+S: \* 1 RECENT
 S: 3b OK STORE completed.
 
 C: 3c CLOSE
@@ -101,8 +101,8 @@ S: 3c OK CLOSE completed.
 SESSION: 4
 C: 4b CREATE another
 S: \* 1 EXISTS
-S: \* 0 RECENT
-S: \* 1 FETCH \(FLAGS \(\\Flagged\)\)
+S: \* 1 RECENT
+S: \* 1 FETCH \(FLAGS \(\\Flagged \\Recent\)\)
 S: 4b OK CREATE completed.
 
 C: 4c DELETE another

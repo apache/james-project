@@ -20,6 +20,7 @@ package org.apache.james.mpt.imapmailbox;
 
 import org.apache.james.mpt.imapmailbox.suite.AuthenticatedState;
 import org.apache.james.mpt.imapmailbox.suite.ConcurrentSessions;
+import org.apache.james.mpt.imapmailbox.suite.Copy;
 import org.apache.james.mpt.imapmailbox.suite.Events;
 import org.apache.james.mpt.imapmailbox.suite.Expunge;
 import org.apache.james.mpt.imapmailbox.suite.Fetch;
@@ -48,6 +49,7 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses({ 
     AuthenticatedState.class,
     ConcurrentSessions.class,
+    Copy.class,
     Events.class,
     Expunge.class,
     Fetch.class,

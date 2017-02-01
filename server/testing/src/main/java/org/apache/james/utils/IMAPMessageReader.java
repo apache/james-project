@@ -17,12 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailets.utils;
+package org.apache.james.utils;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.commons.net.imap.IMAPClient;
+
+import com.google.common.base.Splitter;
 
 public class IMAPMessageReader implements Closeable {
 
@@ -33,27 +36,41 @@ public class IMAPMessageReader implements Closeable {
         imapClient.connect(host, port);
     }
 
+    public void connectAndSelect(String user, String password, String mailbox) throws IOException{
+        imapClient.login(user, password);
+        imapClient.select(mailbox);
+    }
+
     public boolean userReceivedMessage(String user, String password) throws IOException {
         return userReceivedMessageInMailbox(user, password, "INBOX");
     }
 
     public boolean userReceivedMessageInMailbox(String user, String password, String mailbox) throws IOException {
-        imapClient.login(user, password);
-        imapClient.select(mailbox);
+        connectAndSelect(user, password, mailbox);
         imapClient.fetch("1:1", "ALL");
         return imapClient.getReplyString()
             .contains("OK FETCH completed");
     }
 
+    public boolean userGetNotifiedForNewMessagesWhenSelectingMailbox(String user, String password, int numOfNewMessage, String mailboxName) throws IOException {
+        connectAndSelect(user, password, mailboxName);
+
+        return imapClient.getReplyString().contains("OK [UNSEEN " + numOfNewMessage +"]");
+    }
+
     public boolean userDoesNotReceiveMessage(String user, String password) throws IOException {
-        imapClient.login(user, password);
-        imapClient.select("INBOX");
+        return userDoesNotReceiveMessageInMailbox(user, password, "INBOX");
+    }
+
+    public boolean userDoesNotReceiveMessageInMailbox(String user, String password, String mailboxName) throws IOException {
+        connectAndSelect(user, password, mailboxName);
         imapClient.fetch("1:1", "ALL");
         return imapClient.getReplyString()
              .contains("BAD FETCH failed. Invalid messageset");
     }
 
     public String readFirstMessageInInbox(String user, String password) throws IOException {
+
         return readFirstMessageInInbox(user, password, "(BODY[])");
     }
 
@@ -68,8 +85,40 @@ public class IMAPMessageReader implements Closeable {
         return imapClient.getReplyString();
     }
 
+    public boolean userGetNotifiedForNewMessages(int numberOfMessages) throws IOException {
+        imapClient.noop();
+
+        String replyString = imapClient.getReplyString();
+        List<String> parts = Splitter.on('\n')
+            .trimResults()
+            .omitEmptyStrings()
+            .splitToList(replyString);
+        return parts.size() == 3
+            && parts.get(2).contains("OK NOOP completed.")
+            && parts.contains("* " + numberOfMessages + " EXISTS")
+            && parts.contains("* " + numberOfMessages + " RECENT");
+    }
+
+    public boolean userGetNotifiedForDeletion(int msn) throws IOException {
+        imapClient.noop();
+
+        String replyString = imapClient.getReplyString();
+        List<String> parts = Splitter.on('\n')
+            .trimResults()
+            .omitEmptyStrings()
+            .splitToList(replyString);
+
+        return parts.size() == 2
+            && parts.get(1).contains("OK NOOP completed.")
+            && parts.contains("* " + msn + " EXPUNGE");
+    }
+
     @Override
     public void close() throws IOException {
         imapClient.close();
+    }
+
+    public void copyFirstMessage(String destMailbox) throws IOException {
+        imapClient.copy("1", destMailbox);
     }
 }

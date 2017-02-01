@@ -38,6 +38,8 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.github.fge.lambdas.Throwing;
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
@@ -134,17 +136,22 @@ public class SetMailboxesMethodStepdefs {
 
     @Then("^mailbox \"([^\"]*)\" contains (\\d+) messages$")
     public void mailboxContainsMessages(String mailboxName, int messageCount) throws Throwable {
+        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         String username = userStepdefs.lastConnectedUser;
         Mailbox mailbox = mainStepdefs.jmapServer.serverProbe().getMailbox("#private", username, mailboxName);
         String mailboxId = mailbox.getMailboxId().serialize();
-        HttpResponse response = Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
-            .bodyString("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]", ContentType.APPLICATION_JSON)
-            .execute().returnResponse();
 
-        assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
-        DocumentContext jsonPath = JsonPath.parse(response.getEntity().getContent());
-        assertThat(jsonPath.<String>read(NAME)).isEqualTo("messageList");
-        assertThat(jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).hasSize(messageCount);
+        Awaitility.await().atMost(Duration.FIVE_SECONDS).pollDelay(slowPacedPollInterval).pollInterval(slowPacedPollInterval).until(() -> {
+            HttpResponse response = Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
+                    .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
+                    .bodyString("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]", ContentType.APPLICATION_JSON)
+                    .execute().returnResponse();
+
+            assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
+            DocumentContext jsonPath = JsonPath.parse(response.getEntity().getContent());
+            assertThat(jsonPath.<String>read(NAME)).isEqualTo("messageList");
+
+            return jsonPath.<List<String>>read(ARGUMENTS + ".messageIds").size() == messageCount;
+        });
     }
 }
