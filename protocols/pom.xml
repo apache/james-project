@@ -47,7 +47,7 @@
     <properties>
         <target.jdk>1.6</target.jdk>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <netty.version>3.10.5.Final</netty.version>
+        <netty.version>3.10.6.Final</netty.version>
         <apache-mime4j.version>0.8.0</apache-mime4j.version>
         <commons-net.version>3.2</commons-net.version>
         <commons-lang.version>2.6</commons-lang.version>
