@@ -65,7 +65,12 @@
     </properties>
 
     <dependencyManagement>
-        <dependencies>
+            <dependencies>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-util</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.apache.james.protocols</groupId>
                 <artifactId>protocols-pop3</artifactId>

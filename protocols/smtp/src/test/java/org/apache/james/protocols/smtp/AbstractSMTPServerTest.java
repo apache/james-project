@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -30,6 +31,7 @@ import java.net.SocketException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.configuration.Configuration;
@@ -52,6 +54,7 @@ import org.apache.james.protocols.smtp.hook.MailHook;
 import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -99,21 +102,20 @@ public abstract class AbstractSMTPServerTest {
         try {
             server = createServer(createProtocol(hook));
             server.bind();
-            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
 
-            String mailContent = CharStreams.toString(new InputStreamReader(ClassLoader.getSystemResourceAsStream("a50.eml"), Charsets.US_ASCII));
-            Thread thread1 = new SendThread(server, bindedAddress, mailContent);
-            Thread thread2 = new SendThread(server, bindedAddress, mailContent);
-            Thread thread3 = new SendThread(server, bindedAddress, mailContent);
-            Thread thread4 = new SendThread(server, bindedAddress, mailContent);
-            thread1.start();
-            thread2.start();
-            thread3.start();
-            thread4.start();
-            thread1.join(1000);
-            thread2.join(1000);
-            thread3.join(1000);
-            thread4.join(1000);
+            final ProtocolServer finalServer = server;
+            final InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            final String mailContent = CharStreams.toString(new InputStreamReader(ClassLoader.getSystemResourceAsStream("a50.eml"), Charsets.US_ASCII));
+            int threadCount = 4;
+            int updateCount = 1;
+            assertThat(new ConcurrentTestRunner(threadCount, updateCount, new ConcurrentTestRunner.BiConsumer() {
+                @Override
+                public void consume(int threadNumber, int step) throws Exception {
+                    send(finalServer, bindedAddress, mailContent);
+                }
+            }).run()
+                .awaitTermination(1, TimeUnit.MINUTES))
+                .isTrue();
 
             Iterator<MailEnvelope> queued = hook.getQueued().iterator();
             assertTrue(queued.hasNext());
@@ -134,31 +136,6 @@ public abstract class AbstractSMTPServerTest {
         } finally {
             if (server != null) {
                 server.unbind();
-            }
-        }
-    }
-    
-    public class SendThread extends Thread {
-        private ProtocolServer server;
-        private InetSocketAddress bindedAddress;
-        private String msg;
-
-        public SendThread(ProtocolServer server, InetSocketAddress bindedAddress, String msg) {
-            this.server = server;
-            this.bindedAddress = bindedAddress;
-            this.msg = msg;
-        }
-        
-        @Override
-        public void run() {
-            try {
-                send(server, bindedAddress, msg);
-            } catch (SocketException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
             }
         }
     }
