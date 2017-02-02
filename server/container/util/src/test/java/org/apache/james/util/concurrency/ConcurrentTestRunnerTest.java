@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail.model.concurrency;
+package org.apache.james.util.concurrency;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
