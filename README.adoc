@@ -1,14 +1,14 @@
 Apache James Project
 ====================
 
-This is the parent module for all Apache James artifacts. It contains useful values to be inherited by other Maven projects. 
+This is the parent module for all Apache James artifacts. It contains useful values to be inherited by other Maven projects.
 
 * the list of Apache James contributors, committers and PMC Members
-* Maven plugins managemnt section with common plugins used in the project
+* Maven plugins management section with common plugins used in the project
 * URL's and mailing-lists definitions for the project
 
-How to try James
-================
+=== How to try James
+
 Requirements: docker & docker-compose installed.
 
 When try James by this way, you will use the last state of James.
@@ -16,26 +16,26 @@ It will be configured to run with Cassandra & ElasticSearch.
 All those three components will be started with a single command.
 
 You can retrieve the docker-compose file :
-$ wget https://raw.githubusercontent.com/apache/james-project/master/dockerfiles/run/docker-compose.yml
+
+    $ wget https://raw.githubusercontent.com/apache/james-project/master/dockerfiles/run/docker-compose.yml
 
 Then, you just have to start the services:
-$ docker-compose up
+
+    $ docker-compose up
 
 Wait a few seconds in order to have all those services up, you will see a such log when James is available:
 james           | Started : true
 
 Then, a default domain has been created: james.local
-$ docker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 listdomains
-james.local
+
+    $ docker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 listdomains james.local
 
 James will respond to IMAP port 143 and SMTP port 25.
 You have to create users before playing, you may also create other domains...
 Follow the 'Useful commands' section for more information about James CLI.
 
 
-
-How to build and publish the website
-====================================
+=== How to build and publish the website
 
  1. Install Apache Maven 3.0.2+ and make its binary 'mvn' available on your PATH.
     See http://maven.apache.org/download.html#Installation.
@@ -52,11 +52,10 @@ http://maven.apache.org/plugins/maven-deploy-plugin/examples/deploy-ssh-external
 
 You can alternatively use a docker container to build the website :
 
-    $ docker build -t james/site dockerfiles/site                                                       
-    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/site:/destination james/site master                                     
+    $ docker build -t james/site dockerfiles/site
+    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/site:/destination james/site master
 
-Howto release via maven release plugin
-======================================
+=== How to release via maven release plugin
 
 See details on http://www.apache.org/dev/publishing-maven-artifacts.html
 
@@ -75,105 +74,109 @@ Don't forget to add your key to http://www.apache.org/dist/james/KEYS
     $ cd /www/www.apache.org/dist/james
 
 
-Howto check the compilation
-===========================
+=== How to check the compilation
 
 In order to have a standard compilation environment, we introduce Dockerfiles.
 We need to check the compilation in both Java 6 & Java 8:
+
 - Java 6 is the historical Java release used in James.
 - Java 8 is used to compile the Cassandra backend.
 
-* Java 6
+==== Java 6
+
 First step, you have to build the Docker image
-$ docker build -t james/project dockerfiles/compilation/java-6
+
+    $ docker build -t james/project dockerfiles/compilation/java-6
 
 In order to run the build, you have to launch the following command:
-$ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project -s SHA1
+
+    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project -s SHA1
 
 Where:
 
-- $PWD/.m2:/root/.m2: is the first volume used to share the maven repository, 
+- $PWD/.m2:/root/.m2: is the first volume used to share the maven repository,
 as we don't want to download all dependencies on each build
-- $PWD/dockerfiles/run/spring/destination:/destination: is the third volume used to get the compiled elements, 
+- $PWD/dockerfiles/run/spring/destination:/destination: is the third volume used to get the compiled elements,
 as it is needed by the container that will run James.
 - SHA1 (optional): is the given git SHA1 of the james-project repository to build or master if none.
 - -s option: given tests will not be played while building. Not specifying means play tests.
 
-* Java 8
+==== Java 8
+
 First step, you have to build the Docker image
-$ docker build -t james/project dockerfiles/compilation/java-8
+
+    $ docker build -t james/project dockerfiles/compilation/java-8
 
 In order to run the build, you have to launch the following command:
-$ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project -s SHA1
+
+    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project -s SHA1
 
 Where:
 
-- $PWD/.m2:/root/.m2: is the first volume used to share the maven repository, 
+- $PWD/.m2:/root/.m2: is the first volume used to share the maven repository,
 as we don't want to download all dependencies on each build
-- $PWD/dockerfiles/run/spring/destination:/destination: is the third volume used to get the compiled elements, 
+- $PWD/dockerfiles/run/spring/destination:/destination: is the third volume used to get the compiled elements,
 as it is needed by the container that will run James.
 - SHA1 (optional): is the given git SHA1 of the james-project repository to build or master if none.
 - -s option: given tests will not be played while building. Not specifying means play tests.
 
 Some tests needs a DOCKER_HOST environment variable in order to be played, they will be ignored if you don't provide this variable.
 If you wish to play them, you may use a command like the following (depending on your docker configuration):
-$ docker run --env DOCKER_HOST=tcp://172.17.0.1:2376 -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project SHA1
+
+    $ docker run --env DOCKER_HOST=tcp://172.17.0.1:2376 -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project SHA1
 
 If you are using a a fresh installation of Docker, your DOCKER_HOST should be unix:///var/run/docker.sock and you should mount this socket as a volume:
-$ docker run --env DOCKER_HOST=unix:///var/run/docker.sock -v /var/run/docker.sock:/var/run/docker.sock -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project SHA1
+
+    $ docker run --env DOCKER_HOST=unix:///var/run/docker.sock -v /var/run/docker.sock:/var/run/docker.sock -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project SHA1
 
 
-Howto run James in Docker
-=========================
+=== How to run James in Docker
 
-This feature available for two configurations :
+This feature is available for three configurations :
 
  * Java 8 + Guice + Cassandra + ElasticSearch
+ * Java 8 + Guice + JPA + Lucene
  * Java 6 + Spring + JPA
 
 
-Run James with Java 8 + Guice + Cassandra + ElasticSearch
-=========================================================
+==== Run James with Java 8 + Guice + Cassandra + ElasticSearch
 
-## Requirements
+
+===== Requirements
 Built artifacts should be in ./dockerfiles/run/guice/cassandra/destination folder for cassandra.
 If you haven't already:
-```bash
-$ docker build -t james/project dockerfiles/compilation/java-8
-$ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
+
+    $ docker build -t james/project dockerfiles/compilation/java-8
+    $ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
   -v $PWD/dockerfiles/run/guice/cassandra/destination:/cassandra/destination \
   -t james/project -s HEAD
-```
 
-## Howto ?
-You need a running **cassandra** in docker. To achieve this run :
-```bash
-$ docker run -d --name=cassandra cassandra:2.2.3
-```
 
-You need a running **ElasticSearch** in docker. To achieve this run :
-```bash
-$ docker run -d --name=elasticsearch elasticsearch:2.2.1
-```
+===== How to ?
+You need a running *cassandra* in docker. To achieve this run :
+
+    $ docker run -d --name=cassandra cassandra:2.2.3
+
+You need a running *ElasticSearch* in docker. To achieve this run :
+
+    $ docker run -d --name=elasticsearch elasticsearch:2.2.1
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
 Copy your TLS keys to `run/guice/cassandra/destination/conf/keystore` or generate it using the following command. The password must be `james72laBalle` to match default configuration.
-```bash
-$ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/guice/cassandra/destination/conf/keystore
-```
+
+    $ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/guice/cassandra/destination/conf/keystore
 
 Then we need to build james container :
-```bash
-$ docker build -t james_run dockerfiles/run/guice/cassandra
-```
+
+    $ docker build -t james_run dockerfiles/run/guice/cassandra
 
 To run this container :
-```bash
-$ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --name james_run -t james_run
-```
+
+    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --name james_run -t james_run
 
 Where :
+
 - HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
 
 You can add an optional port binding to port 8000, to expose the webadmin server. Please note that users are not authenticated on webadmin server, thus you should avoid exposing it in production.
@@ -181,123 +184,127 @@ You can add an optional port binding to port 8000, to expose the webadmin server
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
 
-Run James with Java 8 + Guice + JPA + Lucene
-=========================================================
+==== Run James with Java 8 + Guice + JPA + Lucene
 
-## Requirements
+===== Requirements
 Built artifacts should be in ./dockerfiles/run/guice/jpa/destination folder for jpa.
 If you haven't already:
-```bash
-$ docker build -t james/project dockerfiles/compilation/java-8
-$ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
+
+    $ docker build -t james/project dockerfiles/compilation/java-8
+    $ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
   -v $PWD/dockerfiles/run/guice/jpa/destination:/jpa/destination \
   -t james/project -s HEAD
-```
 
-## Howto ?
+
+===== How to ?
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
 Copy your TLS keys to `run/guice/jpa/destination/conf/keystore` or generate it using the following command. The password must be `james72laBalle` to match default configuration.
-```bash
-$ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/guice/jpa/destination/conf/keystore
-```
+
+    $ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/guice/jpa/destination/conf/keystore
+
 
 Then we need to build james container :
-```bash
-$ docker build -t james_run dockerfiles/run/guice/jpa
-```
+
+    $ docker build -t james_run dockerfiles/run/guice/jpa
 
 To run this container :
-```bash
-$ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --name james_run -t james_run
-```
 
-Where :
-- HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
+    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --name james_run -t james_run
+
+HOSTNAME is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
 
 You can add an optional port binding to port 8000, to expose the webadmin server. Please note that users are not authenticated on webadmin server, thus you should avoid exposing it in production.
 
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
-Run James with Java 6 + Spring + JPA
-====================================
 
-* Requirements
+==== Run James with Java 6 + Spring + JPA
+
+===== Requirements
+
 Built artifacts should be in ./dockerfiles/run/spring/destination folder.
 
-* Howto ?
+===== Howto ?
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
 Copy your TSL keys to destination/run/spring/conf/keystore or generate it using the following command. The password must be james72laBalle to match default configuration.
-$ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/spring/destination/conf/keystore
+
+    $ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/spring/destination/conf/keystore
 
 Then we need to build james container :
-$ docker build -t james_run dockerfiles/run/spring/
+
+    $ docker build -t james_run dockerfiles/run/spring/
 
 The provisioned james images bases on pre-build james server which is "linagora/james-project-spring-jpa". If we need to build james container with the default initial data (initial domain: james.local and initial users: user01, user02, user03):
-$ docker build -t james_run dockerfiles/run/spring/provisioned/
+
+    $ docker build -t james_run dockerfiles/run/spring/provisioned/
 
 To run this container :
-$ docker run --hostname HOSTNAME -p "25:25" -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --name james_run -t james_run
 
-Where :
-- HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
+    $ docker run --hostname HOSTNAME -p "25:25" -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --name james_run -t james_run
+
+Where HOSTNAME is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
 
 
-Useful commands
-===============
+=== Other Useful commands
 
 The base command is different whether you choose guice flavor or spring :
 
   * guice use : `docker exec james_run java -jar /root/james-cli.jar`
   * spring use : `docker exec james_run /root/james-server-app-3.0.0-beta6-SNAPSHOT/bin/james-cli.sh`
 
-** How to add a domain ?
-# Add DOMAIN to 127.0.0.1 in your host /etc/hosts
-$ <your-command-here> -h 127.0.0.1 -p 9999 adddomain DOMAIN
+==== How to add a domain ?
+
+    # Add DOMAIN to 127.0.0.1 in your host /etc/hosts
+    $ <your-command-here> -h 127.0.0.1 -p 9999 adddomain DOMAIN
+
+DOMAIN: is the domain you want to add.
+
+==== How to add a user ?
+
+    $ <your-command-here> -h 127.0.0.1 -p 9999 adduser USER_MAIL_ADDRESS PASSWORD
 
 Where :
-- DOMAIN: is the domain you want to add.
 
-** How to add a user ?
-$ <your-command-here> -h 127.0.0.1 -p 9999 adduser USER_MAIL_ADDRESS PASSWORD
-
-Where :
-- USER_MAIL_ADDRESS: is the mail address that will be used by this user.
-- PASSWORD: is the password that will be used by this user.
+* USER_MAIL_ADDRESS: is the mail address that will be used by this user.
+* PASSWORD: is the password that will be used by this user.
 
 You can then just add DOMAIN to your /etc/hosts and you can connect to your james account with for instance Thunderbird.
 
-** How to manage SIEVE scripts ?
+==== How to manage SIEVE scripts ?
+
 Each user can manage his SIEVE scripts threw the manage SIEVE mailet.
 
 To use the manage SIEVE mailet :
 
- - You need to create the user sievemanager@DOMAIN ( if you don't, the SMTP server will check the domain, recognize it, and look for an absent local user, and will generate an error ).
- - You can send Manage Sieve commands by mail to sievemanager@DOMAIN. Your subject must contain the command. Scripts needs to be added as attachments and need the ".sieve" extension.
+ * You need to create the user sievemanager@DOMAIN ( if you don't, the SMTP server will check the domain, recognize it, and look for an absent local user, and will generate an error ).
+ * You can send Manage Sieve commands by mail to sievemanager@DOMAIN. Your subject must contain the command. Scripts needs to be added as attachments and need the ".sieve" extension.
 
 To activate a script for a user, you need the following combinaison :
 
- - PUTSCRIPT scriptname
- - SETACTIVE scriptname
+ * PUTSCRIPT scriptname
+ * SETACTIVE scriptname
 
-** I want to retrieve users and password from my previous container
-Some james data ( those non related to mailbox, eg : mail queue, domains, users, rrt, SIEVE scripts, mail repositories ) are not yet supported by our Cassandra implementation.
+==== How to retrieve users and password from my previous container
+
+Some james data (those non related to mailbox, eg : mail queue, domains, users, rrt, SIEVE scripts, mail repositories ) are not yet supported by our Cassandra implementation.
 
 To keep these data when you run a new container, you can mount the following volume :
+
  -v /root/james-server-app-3.0.0-beta6-SNAPSHOT/var:WORKDIR/destination/var
 
 Where :
-- WORKDIR: is the absolute path to your james-parent workdir.
+
+* WORKDIR: is the absolute path to your james-parent workdir.
 
 Beware : you will have concurrency issues if multiple containers are running on this single volume.
 
-Running deployement Tests
-=========================
+==== How to run deployment Tests
 
-We wrote some MPT (James' Mail Protocols Tests subproject) deployement tests to validate a James
-deployement.
+We wrote some MPT (James' Mail Protocols Tests subproject) deployment tests to validate a James
+deployment.
 
 It uses the External-James module, that uses environment variables to locate a remote
 IMAP server and run integration tests against it.
@@ -308,23 +315,26 @@ with password password. Read above documentation to see how you can do this.
 You have to run MPT tests inside docker. As you need to use maven, the simplest option is to
 use james/parent image, and override the entry point ( as git and maven are already configured
 there ) :
-$ docker run -t --entrypoint="/root/integration_tests.sh" -v $PWD/.m2:/root/.m2 -v $PWD:/origin james/project JAMES_IP JAMES_PORT SHA1
+
+    $ docker run -t --entrypoint="/root/integration_tests.sh" -v $PWD/.m2:/root/.m2 -v $PWD:/origin james/project JAMES_IP JAMES_PORT SHA1
 
 Where :
- - JAMES_IP: IP address or DNS entry for your James server
- - JAMES_PORT: Port allocated to James' IMAP port (should be 143).
- - SHA1(optional): Branch to use in order to build integration tests or master if none.
 
+* JAMES_IP: IP address or DNS entry for your James server
+* JAMES_PORT: Port allocated to James' IMAP port (should be 143).
+* SHA1(optional): Branch to use in order to build integration tests or master if none.
 
-Howto check the merge of a commit
-=================================
+==== How to check the merge of a commit
 
 First step, you have to build the Docker image
-$ docker build -t james/merge dockerfiles/merge
+
+    $ docker build -t james/merge dockerfiles/merge
 
 In order to run the build, you have to launch the following command:
-$ docker run -v $PWD:/origin -t james/merge SHA1 RESULTING_BRANCH
+
+    $ docker run -v $PWD:/origin -t james/merge SHA1 RESULTING_BRANCH
 
 Where :
+
 - SHA1: is the given git SHA1 of the james-project repository to merge.
 - RESULTING_BRANCH: is the branch created when merging.
