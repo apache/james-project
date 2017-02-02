@@ -159,6 +159,12 @@
                     <scope>test</scope>
                 </dependency>
                 <dependency>
+                    <groupId>org.assertj</groupId>
+                    <artifactId>assertj-core</artifactId>
+                    <version>${assertj-3.version}</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
                     <groupId>org.elasticsearch</groupId>
                     <artifactId>metrics-elasticsearch-reporter</artifactId>
                 </dependency>

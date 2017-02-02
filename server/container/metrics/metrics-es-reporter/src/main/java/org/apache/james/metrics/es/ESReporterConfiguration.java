@@ -25,28 +25,55 @@ import com.google.common.base.Preconditions;
 
 public class ESReporterConfiguration {
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private Optional<String> host = Optional.empty();
+        private Optional<Integer> port = Optional.empty();
+        private Optional<Boolean> enabled = Optional.empty();
+        private Optional<String> index = Optional.empty();
+        private Optional<Long> periodInSecond = Optional.empty();
+
+        public Builder enabled() {
+            this.enabled = Optional.of(ENABLED);
+            return this;
+        }
+
+        public Builder disabled() {
+            this.enabled = Optional.of(DISABLED);
+            return this;
+        }
+
+        public Builder onHost(String host, int port) {
+            this.host = Optional.of(host);
+            this.port = Optional.of(port);
+            return this;
+        }
+
+        public Builder onIndex(String index) {
+            this.index = Optional.ofNullable(index);
+            return this;
+        }
+
+        public Builder periodInSecond(Long periodInSecond) {
+            this.periodInSecond = Optional.ofNullable(periodInSecond);
+            return this;
+        }
+
+        public ESReporterConfiguration build() {
+            Preconditions.checkState(enabled.isPresent(), "You must specify either enabled or disabled");
+            Preconditions.checkState(!enabled.get() || host.isPresent(), "You must specify host when enabled");
+            Preconditions.checkState(!enabled.get() || port.isPresent(), "You must specify port when enabled");
+            return new ESReporterConfiguration(host, port, enabled.get(), index, periodInSecond);
+        }
+    }
+
     public static final boolean ENABLED = true;
     public static final boolean DISABLED = !ENABLED;
     public static final String DEFAULT_INDEX = "james-metrics";
     public static final long DEFAULT_PERIOD_IN_SECOND = 60L;
-
-    public static ESReporterConfiguration disabled() {
-        return new ESReporterConfiguration(
-            Optional.empty(),
-            Optional.empty(),
-            DISABLED,
-            Optional.empty(),
-            Optional.empty());
-    }
-
-    public static ESReporterConfiguration enabled(String host, int port, Optional<String> index, Optional<Long> periodInSecond) {
-        return new ESReporterConfiguration(
-            Optional.of(host),
-            Optional.of(port),
-            ENABLED,
-            index,
-            periodInSecond);
-    }
 
     private final Optional<String> host;
     private final Optional<Integer> port;

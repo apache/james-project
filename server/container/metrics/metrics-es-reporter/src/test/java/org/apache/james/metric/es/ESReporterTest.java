@@ -21,7 +21,6 @@ package org.apache.james.metric.es;
 
 import static com.jayway.awaitility.Awaitility.await;
 
-import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -44,8 +43,8 @@ import com.jayway.awaitility.Duration;
 
 public class ESReporterTest {
 
-    public static final Optional<String> INDEX = Optional.of("index_name");
-    public static final Optional<Long> PERIOD_IN_SECOND = Optional.of(1L);
+    public static final String INDEX = "index_name";
+    public static final long PERIOD_IN_SECOND = 1L;
     public static final int DELAY_IN_MS = 100;
     public static final int PERIOD_IN_MS = 100;
     public static final int ES_APPLICATIVE_PORT = 9300;
@@ -69,7 +68,12 @@ public class ESReporterTest {
         registry = new MetricRegistry();
         timer = new Timer();
         esMetricReporter = new ESMetricReporter(
-            ESReporterConfiguration.enabled(getContainerIp(), ES_HTTP_PORT, INDEX, PERIOD_IN_SECOND),
+            ESReporterConfiguration.builder()
+                .enabled()
+                .onHost(getContainerIp(), ES_HTTP_PORT)
+                .onIndex(INDEX)
+                .periodInSecond(PERIOD_IN_SECOND)
+                .build(),
             registry);
     }
 
