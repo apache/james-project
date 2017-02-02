@@ -19,10 +19,10 @@
 
 package org.apache.james.jmap.methods;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -89,29 +89,30 @@ public class GetMailboxesMethod implements Method {
     private GetMailboxesResponse getMailboxesResponse(GetMailboxesRequest mailboxesRequest, MailboxSession mailboxSession) {
         GetMailboxesResponse.Builder builder = GetMailboxesResponse.builder();
         try {
-            retrieveUserMailboxes(mailboxSession)
-                .stream()
-                .map(MailboxMetaData::getPath)
-                .map(mailboxPath -> mailboxFactory.fromMailboxPath(mailboxPath, mailboxSession))
+            Optional<ImmutableList<MailboxId>> mailboxIds = mailboxesRequest.getIds();
+            retrieveMailboxIds(mailboxIds, mailboxSession)
+                .map(mailboxId -> mailboxFactory.fromMailboxId(mailboxId, mailboxSession))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .filter(filterMailboxesById(mailboxesRequest.getIds()))
-                .sorted((m1, m2) -> m1.getSortOrder().compareTo(m2.getSortOrder()))
-                .forEach(mailbox -> builder.add(mailbox));
+                .sorted(Comparator.comparing(Mailbox::getSortOrder))
+                .forEach(builder::add);
             return builder.build();
         } catch (MailboxException e) {
             throw Throwables.propagate(e);
         }
     }
 
-    private Predicate<? super Mailbox> filterMailboxesById(Optional<ImmutableList<MailboxId>> ids) {
-        return (mailbox -> ids.map(list -> list.contains(mailbox.getId())).orElse(true));
+    private Stream<MailboxId> retrieveMailboxIds(Optional<ImmutableList<MailboxId>> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
+        if (mailboxIds.isPresent()) {
+            return mailboxIds.get()
+                .stream();
+        } else {
+            List<MailboxMetaData> userMailboxes = mailboxManager.search(
+                MailboxQuery.builder(mailboxSession).privateUserMailboxes().build(),
+                mailboxSession);
+            return userMailboxes
+                .stream()
+                .map(MailboxMetaData::getId);
+        }
     }
-
-    private List<MailboxMetaData> retrieveUserMailboxes(MailboxSession session) throws MailboxException {
-        return mailboxManager.search(
-                MailboxQuery.builder(session).privateUserMailboxes().build(),
-                session);
-    }
-
 }
