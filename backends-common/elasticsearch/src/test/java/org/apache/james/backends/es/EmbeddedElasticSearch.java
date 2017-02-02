@@ -45,7 +45,7 @@ public class EmbeddedElasticSearch extends ExternalResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmbeddedElasticSearch.class);
 
     private final Supplier<Path> folder;
-    private final String indexName;
+    private final IndexName indexName;
     private Node node;
 
     private static Path createTempDir(TemporaryFolder temporaryFolder) {
@@ -56,15 +56,15 @@ public class EmbeddedElasticSearch extends ExternalResource {
         }
     }
 
-    public EmbeddedElasticSearch(TemporaryFolder temporaryFolder, String indexName) {
+    public EmbeddedElasticSearch(TemporaryFolder temporaryFolder, IndexName indexName) {
         this(() -> EmbeddedElasticSearch.createTempDir(temporaryFolder), indexName);
     }
 
-    public EmbeddedElasticSearch(Path folder, String indexName) {
+    public EmbeddedElasticSearch(Path folder, IndexName indexName) {
         this(() -> folder, indexName);
     }
 
-    private EmbeddedElasticSearch(Supplier<Path> folder, String indexName) {
+    private EmbeddedElasticSearch(Supplier<Path> folder, IndexName indexName) {
         this.folder = folder;
         this.indexName = indexName;
     }
@@ -86,7 +86,7 @@ public class EmbeddedElasticSearch extends ExternalResource {
         try (Client client = node.client()) {
             client.admin()
                 .indices()
-                .delete(new DeleteIndexRequest(indexName))
+                .delete(new DeleteIndexRequest(indexName.getValue()))
                 .actionGet();
         } catch (Exception e) {
             LOGGER.warn("Error while closing ES connection", e);

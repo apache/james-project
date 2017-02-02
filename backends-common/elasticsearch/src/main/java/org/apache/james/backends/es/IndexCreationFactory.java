@@ -36,7 +36,7 @@ public class IndexCreationFactory {
     private static final int DEFAULT_NB_REPLICA = 0;
     public static final String CASE_INSENSITIVE = "case_insensitive";
 
-    public static Client createIndex(Client client, String name, int nbShards, int nbReplica) {
+    public static Client createIndex(Client client, IndexName name, int nbShards, int nbReplica) {
         try {
             return createIndex(client, name, generateSetting(nbShards, nbReplica));
         } catch (IOException e) {
@@ -45,15 +45,15 @@ public class IndexCreationFactory {
         }
     }
 
-    public static Client createIndex(Client client, String name) {
+    public static Client createIndex(Client client, IndexName name) {
         return createIndex(client, name, DEFAULT_NB_SHARDS, DEFAULT_NB_REPLICA);
     }
 
-    private static Client createIndex(Client client, String name, XContentBuilder settings) {
+    private static Client createIndex(Client client, IndexName name, XContentBuilder settings) {
         try {
                 client.admin()
                     .indices()
-                    .prepareCreate(name)
+                    .prepareCreate(name.getValue())
                     .setSettings(settings)
                     .execute()
                     .actionGet();

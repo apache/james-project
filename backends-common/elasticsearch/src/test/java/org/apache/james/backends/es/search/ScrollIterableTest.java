@@ -31,7 +31,9 @@ import java.util.stream.Collectors;
 import org.apache.james.backends.es.ClientProvider;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.IndexCreationFactory;
+import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.NodeMappingFactory;
+import org.apache.james.backends.es.TypeName;
 import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -49,8 +51,8 @@ public class ScrollIterableTest {
     public static final TimeValue TIMEOUT = new TimeValue(6000);
     public static final int SIZE = 2;
     public static final String MESSAGE = "message";
-    public static final String INDEX_NAME = "index";
-    public static final String MESSAGES = "messages";
+    public static final IndexName INDEX_NAME = new IndexName("index");
+    public static final TypeName TYPE_NAME = new TypeName("messages");
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder, INDEX_NAME);
@@ -65,13 +67,13 @@ public class ScrollIterableTest {
         clientProvider = new TestingClientProvider(embeddedElasticSearch.getNode());
         IndexCreationFactory.createIndex(clientProvider.get(), INDEX_NAME);
         embeddedElasticSearch.awaitForElasticSearch();
-        NodeMappingFactory.applyMapping(clientProvider.get(), INDEX_NAME, MESSAGES, getMappingsSources());
+        NodeMappingFactory.applyMapping(clientProvider.get(), INDEX_NAME, TYPE_NAME, getMappingsSources());
     }
 
     private XContentBuilder getMappingsSources() throws IOException {
         return jsonBuilder()
             .startObject()
-                .startObject(MESSAGES)
+                .startObject(TYPE_NAME.getValue())
                     .startObject(NodeMappingFactory.PROPERTIES)
                         .startObject(MESSAGE)
                             .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
@@ -84,8 +86,8 @@ public class ScrollIterableTest {
     @Test
     public void scrollIterableShouldWorkWhenEmpty() {
         try (Client client = clientProvider.get()) {
-            SearchRequestBuilder searchRequestBuilder = client.prepareSearch(INDEX_NAME)
-                .setTypes(MESSAGES)
+            SearchRequestBuilder searchRequestBuilder = client.prepareSearch(INDEX_NAME.getValue())
+                .setTypes(TYPE_NAME.getValue())
                 .setScroll(TIMEOUT)
                 .setQuery(matchAllQuery())
                 .setSize(SIZE);
@@ -97,14 +99,14 @@ public class ScrollIterableTest {
     public void scrollIterableShouldWorkWhenOneElement() {
         try (Client client = clientProvider.get()) {
             String id = "1";
-            client.prepareIndex(INDEX_NAME, MESSAGES, id)
+            client.prepareIndex(INDEX_NAME.getValue(), TYPE_NAME.getValue(), id)
                 .setSource(MESSAGE, "Sample message")
                 .execute();
 
             embeddedElasticSearch.awaitForElasticSearch();
 
-            SearchRequestBuilder searchRequestBuilder = client.prepareSearch(INDEX_NAME)
-                .setTypes(MESSAGES)
+            SearchRequestBuilder searchRequestBuilder = client.prepareSearch(INDEX_NAME.getValue())
+                .setTypes(TYPE_NAME.getValue())
                 .setScroll(TIMEOUT)
                 .setQuery(matchAllQuery())
                 .setSize(SIZE);
@@ -116,19 +118,19 @@ public class ScrollIterableTest {
     public void scrollIterableShouldWorkWhenSizeElement() {
         try (Client client = clientProvider.get()) {
             String id1 = "1";
-            client.prepareIndex(INDEX_NAME, MESSAGES, id1)
+            client.prepareIndex(INDEX_NAME.getValue(), TYPE_NAME.getValue(), id1)
                 .setSource(MESSAGE, "Sample message")
                 .execute();
 
             String id2 = "2";
-            client.prepareIndex(INDEX_NAME, MESSAGES, id2)
+            client.prepareIndex(INDEX_NAME.getValue(), TYPE_NAME.getValue(), id2)
                 .setSource(MESSAGE, "Sample message")
                 .execute();
 
             embeddedElasticSearch.awaitForElasticSearch();
 
-            SearchRequestBuilder searchRequestBuilder = client.prepareSearch(INDEX_NAME)
-                .setTypes(MESSAGES)
+            SearchRequestBuilder searchRequestBuilder = client.prepareSearch(INDEX_NAME.getValue())
+                .setTypes(TYPE_NAME.getValue())
                 .setScroll(TIMEOUT)
                 .setQuery(matchAllQuery())
                 .setSize(SIZE);
@@ -140,24 +142,24 @@ public class ScrollIterableTest {
     public void scrollIterableShouldWorkWhenMoreThanSizeElement() {
         try (Client client = clientProvider.get()) {
             String id1 = "1";
-            client.prepareIndex(INDEX_NAME, MESSAGES, id1)
+            client.prepareIndex(INDEX_NAME.getValue(), TYPE_NAME.getValue(), id1)
                 .setSource(MESSAGE, "Sample message")
                 .execute();
 
             String id2 = "2";
-            client.prepareIndex(INDEX_NAME, MESSAGES, id2)
+            client.prepareIndex(INDEX_NAME.getValue(), TYPE_NAME.getValue(), id2)
                 .setSource(MESSAGE, "Sample message")
                 .execute();
 
             String id3 = "3";
-            client.prepareIndex(INDEX_NAME, MESSAGES, id3)
+            client.prepareIndex(INDEX_NAME.getValue(), TYPE_NAME.getValue(), id3)
                 .setSource(MESSAGE, "Sample message")
                 .execute();
 
             embeddedElasticSearch.awaitForElasticSearch();
 
-            SearchRequestBuilder searchRequestBuilder = client.prepareSearch(INDEX_NAME)
-                .setTypes(MESSAGES)
+            SearchRequestBuilder searchRequestBuilder = client.prepareSearch(INDEX_NAME.getValue())
+                .setTypes(TYPE_NAME.getValue())
                 .setScroll(TIMEOUT)
                 .setQuery(matchAllQuery())
                 .setSize(SIZE);

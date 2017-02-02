@@ -43,8 +43,8 @@ public class ElasticSearchIndexerTest {
 
     private static final int MINIMUM_BATCH_SIZE = 1;
     private static final String CONTENT = "content";
-    private static final String INDEX_NAME = "index_name";
-    private static final String TYPE_NAME = "type_name";
+    private static final IndexName INDEX_NAME = new IndexName("index_name");
+    private static final TypeName TYPE_NAME = new TypeName("type_name");
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder, INDEX_NAME);
 
@@ -80,8 +80,8 @@ public class ElasticSearchIndexerTest {
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {
-            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME)
-                    .setTypes(TYPE_NAME)
+            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
+                    .setTypes(TYPE_NAME.getValue())
                     .setQuery(QueryBuilders.matchQuery("message", "trying"))
                     .get();
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
@@ -105,16 +105,16 @@ public class ElasticSearchIndexerTest {
         embeddedElasticSearch.awaitForElasticSearch();
 
         try (Client client = node.client()) {
-            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME)
-                .setTypes(TYPE_NAME)
+            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
+                .setTypes(TYPE_NAME.getValue())
                 .setQuery(QueryBuilders.matchQuery("message", "mastering"))
                 .get();
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
         }
 
         try (Client client = node.client()) {
-            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME)
-                .setTypes(TYPE_NAME)
+            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
+                .setTypes(TYPE_NAME.getValue())
                 .setQuery(QueryBuilders.matchQuery("field", "unchanged"))
                 .get();
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
@@ -153,8 +153,8 @@ public class ElasticSearchIndexerTest {
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {
-            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME)
-                    .setTypes(TYPE_NAME)
+            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
+                    .setTypes(TYPE_NAME.getValue())
                     .setQuery(QueryBuilders.matchAllQuery())
                     .get();
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(0);
@@ -183,8 +183,8 @@ public class ElasticSearchIndexerTest {
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {
-            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME)
-                    .setTypes(TYPE_NAME)
+            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
+                    .setTypes(TYPE_NAME.getValue())
                     .setQuery(QueryBuilders.matchAllQuery())
                     .get();
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
@@ -203,8 +203,8 @@ public class ElasticSearchIndexerTest {
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {
-            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME)
-                    .setTypes(TYPE_NAME)
+            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
+                    .setTypes(TYPE_NAME.getValue())
                     .setQuery(QueryBuilders.matchAllQuery())
                     .get();
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(0);
@@ -233,8 +233,8 @@ public class ElasticSearchIndexerTest {
         embeddedElasticSearch.awaitForElasticSearch();
 
         try (Client client = node.client()) {
-            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME)
-                .setTypes(TYPE_NAME)
+            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
+                .setTypes(TYPE_NAME.getValue())
                 .setQuery(QueryBuilders.matchAllQuery())
                 .get();
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);

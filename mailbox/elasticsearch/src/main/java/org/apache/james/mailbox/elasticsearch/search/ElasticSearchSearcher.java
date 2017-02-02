@@ -83,8 +83,8 @@ public class ElasticSearchSearcher {
         return query.getSearchQuery().getSorts()
             .stream()
             .reduce(
-                client.prepareSearch(MailboxElasticsearchConstants.MAILBOX_INDEX)
-                    .setTypes(MailboxElasticsearchConstants.MESSAGE_TYPE)
+                client.prepareSearch(MailboxElasticsearchConstants.MAILBOX_INDEX.getValue())
+                    .setTypes(MailboxElasticsearchConstants.MESSAGE_TYPE.getValue())
                     .setScroll(TIMEOUT)
                     .addFields(JsonMessageConstants.UID, JsonMessageConstants.MAILBOX_ID, JsonMessageConstants.MESSAGE_ID)
                     .setQuery(queryConverter.from(users, query))

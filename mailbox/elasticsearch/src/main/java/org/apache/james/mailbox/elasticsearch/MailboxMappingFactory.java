@@ -38,7 +38,7 @@ public class MailboxMappingFactory {
             return jsonBuilder()
                 .startObject()
 
-                    .startObject(MailboxElasticsearchConstants.MESSAGE_TYPE)
+                    .startObject(MailboxElasticsearchConstants.MESSAGE_TYPE.getValue())
                         .startObject(NodeMappingFactory.PROPERTIES)
                             .startObject(JsonMessageConstants.MESSAGE_ID)
                                 .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)

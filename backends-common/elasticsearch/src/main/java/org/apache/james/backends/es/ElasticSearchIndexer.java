@@ -59,11 +59,11 @@ public class ElasticSearchIndexer {
     
     private final Client client;
     private final DeleteByQueryPerformer deleteByQueryPerformer;
-    private final String indexName;
-    private final String typeName;
+    private final IndexName indexName;
+    private final TypeName typeName;
 
     @Inject
-    public ElasticSearchIndexer(Client client, DeleteByQueryPerformer deleteByQueryPerformer, String indexName, String typeName) {
+    public ElasticSearchIndexer(Client client, DeleteByQueryPerformer deleteByQueryPerformer, IndexName indexName, TypeName typeName) {
         this.client = client;
         this.deleteByQueryPerformer = deleteByQueryPerformer;
         this.indexName = indexName;
@@ -73,7 +73,7 @@ public class ElasticSearchIndexer {
     public IndexResponse indexMessage(String id, String content) {
         checkArgument(content);
         LOGGER.debug(String.format("Indexing %s: %s", id, content));
-        return client.prepareIndex(indexName, typeName, id)
+        return client.prepareIndex(indexName.getValue(), typeName.getValue(), id)
             .setSource(content)
             .get();
     }
@@ -81,14 +81,22 @@ public class ElasticSearchIndexer {
     public BulkResponse updateMessages(List<UpdatedRepresentation> updatedDocumentParts) {
         Preconditions.checkNotNull(updatedDocumentParts);
         BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-        updatedDocumentParts.forEach(updatedDocumentPart -> bulkRequestBuilder.add(client.prepareUpdate(indexName, typeName, updatedDocumentPart.getId())
+        updatedDocumentParts.forEach(updatedDocumentPart -> bulkRequestBuilder.add(
+            client.prepareUpdate(
+                indexName.getValue(),
+                typeName.getValue(),
+                updatedDocumentPart.getId())
             .setDoc(updatedDocumentPart.getUpdatedDocumentPart())));
         return bulkRequestBuilder.get();
     }
 
     public BulkResponse deleteMessages(List<String> ids) {
         BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-        ids.forEach(id -> bulkRequestBuilder.add(client.prepareDelete(indexName, typeName, id)));
+        ids.forEach(id -> bulkRequestBuilder.add(
+            client.prepareDelete(
+                indexName.getValue(),
+                typeName.getValue(),
+                id)));
         return bulkRequestBuilder.get();
     }
     

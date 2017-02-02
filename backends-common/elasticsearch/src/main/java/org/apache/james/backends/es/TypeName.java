@@ -17,12 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.elasticsearch;
+package org.apache.james.backends.es;
 
-import org.apache.james.backends.es.IndexName;
-import org.apache.james.backends.es.TypeName;
+public class TypeName {
+    private final String value;
 
-public interface MailboxElasticsearchConstants {
-    IndexName MAILBOX_INDEX = new IndexName("mailbox");
-    TypeName MESSAGE_TYPE = new TypeName("message");
+    public TypeName(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }

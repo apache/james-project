@@ -29,7 +29,9 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.es.ClientProvider;
 import org.apache.james.backends.es.ClientProviderImpl;
 import org.apache.james.backends.es.IndexCreationFactory;
+import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.NodeMappingFactory;
+import org.apache.james.backends.es.TypeName;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
@@ -58,6 +60,8 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(IndexName.class).toInstance(MailboxElasticsearchConstants.MAILBOX_INDEX);
+        bind(TypeName.class).toInstance(MailboxElasticsearchConstants.MESSAGE_TYPE);
         bind(ElasticSearchListeningMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
         bind(ListeningMessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);

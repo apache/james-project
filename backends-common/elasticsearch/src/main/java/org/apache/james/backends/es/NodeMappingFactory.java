@@ -41,11 +41,11 @@ public class NodeMappingFactory {
     public static final String IGNORE_ABOVE = "ignore_above";
     public static final int LUCENE_LIMIT = 32766;
 
-    public static Client applyMapping(Client client, String indexName, String typeName, XContentBuilder mappingsSources) {
+    public static Client applyMapping(Client client, IndexName indexName, TypeName typeName, XContentBuilder mappingsSources) {
         client.admin()
             .indices()
-            .preparePutMapping(indexName)
-            .setType(typeName)
+            .preparePutMapping(indexName.getValue())
+            .setType(typeName.getValue())
             .setSource(mappingsSources)
             .execute()
             .actionGet();

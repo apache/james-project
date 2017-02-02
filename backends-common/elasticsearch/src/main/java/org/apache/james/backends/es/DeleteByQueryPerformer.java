@@ -43,16 +43,16 @@ public class DeleteByQueryPerformer {
     private final Client client;
     private final ExecutorService executor;
     private final int batchSize;
-    private final String indexName;
-    private final String typeName;
+    private final IndexName indexName;
+    private final TypeName typeName;
 
     @Inject
-    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, String indexName, String typeName) {
+    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, IndexName indexName, TypeName typeName) {
         this(client, executor, DEFAULT_BATCH_SIZE, indexName, typeName);
     }
 
     @VisibleForTesting
-    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, int batchSize, String indexName, String typeName) {
+    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, int batchSize, IndexName indexName, TypeName typeName) {
         this.client = client;
         this.executor = executor;
         this.batchSize = batchSize;
@@ -66,8 +66,8 @@ public class DeleteByQueryPerformer {
 
     protected void doDeleteByQuery(QueryBuilder queryBuilder) {
         new ScrollIterable(client,
-            client.prepareSearch(indexName)
-                .setTypes(typeName)
+            client.prepareSearch(indexName.getValue())
+                .setTypes(typeName.getValue())
                 .setScroll(TIMEOUT)
                 .setNoFields()
                 .setQuery(queryBuilder)
@@ -80,8 +80,8 @@ public class DeleteByQueryPerformer {
         BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
         for (SearchHit hit : searchResponse.getHits()) {
             bulkRequestBuilder.add(client.prepareDelete()
-                .setIndex(indexName)
-                .setType(typeName)
+                .setIndex(indexName.getValue())
+                .setType(typeName.getValue())
                 .setId(hit.getId()));
         }
         return bulkRequestBuilder.execute();
