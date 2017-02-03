@@ -173,7 +173,11 @@ public class MailboxEventAnalyserTest {
         public MessageManager getMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
             return new MessageManager() {
 
-                
+                @Override
+                public long getUnseenMessageCount(MailboxSession mailboxSession) throws MailboxException {
+                    return 0;
+                }
+
                 public long getMessageCount(MailboxSession mailboxSession) throws MailboxException {
                     return 1;
                 }

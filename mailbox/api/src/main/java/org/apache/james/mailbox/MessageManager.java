@@ -53,16 +53,22 @@ public interface MessageManager {
     }
 
     /**
-     * Return the count
+     * Return the count of messages in the mailbox
      * 
      * @param mailboxSession
      * @return count
      * @throws MailboxException
-     * @deprecated use
-     *             {@link #getMetaData(boolean, MailboxSession, org.apache.james.mailbox.MessageManager.MetaData.FetchGroup)}
      */
-    @Deprecated
     long getMessageCount(MailboxSession mailboxSession) throws MailboxException;
+
+    /**
+     * Return the count of unseen messages in the mailbox
+     *
+     * @param mailboxSession
+     * @return count
+     * @throws MailboxException
+     */
+    long getUnseenMessageCount(MailboxSession mailboxSession) throws MailboxException;
 
     /**
      * Return if the Mailbox is writable

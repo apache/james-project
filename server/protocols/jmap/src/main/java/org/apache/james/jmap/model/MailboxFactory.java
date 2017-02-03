@@ -39,7 +39,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 
 public class MailboxFactory {
-    private static final boolean DONT_RESET_RECENT = false;
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxFactory.class);
 
     private final MailboxManager mailboxManager;
@@ -71,20 +70,15 @@ public class MailboxFactory {
     private Optional<Mailbox> fromMessageManager(MessageManager messageManager, MailboxSession mailboxSession) throws MailboxException {
         MailboxPath mailboxPath = messageManager.getMailboxPath();
         Optional<Role> role = Role.from(mailboxPath.getName());
-        MessageManager.MetaData mailboxMetaData = getMailboxMetaData(messageManager, mailboxSession);
         return Optional.ofNullable(Mailbox.builder()
                 .id(messageManager.getId())
                 .name(getName(mailboxPath, mailboxSession))
                 .parentId(getParentIdFromMailboxPath(mailboxPath, mailboxSession).orElse(null))
                 .role(role)
-                .unreadMessages(mailboxMetaData.getUnseenCount())
-                .totalMessages(mailboxMetaData.getMessageCount())
+                .unreadMessages(messageManager.getUnseenMessageCount(mailboxSession))
+                .totalMessages(messageManager.getMessageCount(mailboxSession))
                 .sortOrder(SortOrder.getSortOrder(role))
                 .build());
-    }
-
-    private MessageManager.MetaData getMailboxMetaData(MessageManager messageManager, MailboxSession mailboxSession) throws MailboxException {
-        return messageManager.getMetaData(DONT_RESET_RECENT, mailboxSession, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT);
     }
 
     @VisibleForTesting String getName(MailboxPath mailboxPath, MailboxSession mailboxSession) {

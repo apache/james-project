@@ -230,6 +230,12 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         return new Flags(MINIMAL_PERMANET_FLAGS);
     }
 
+    @Override
+    public long getUnseenMessageCount(MailboxSession mailboxSession) throws MailboxException {
+        return mapperFactory.createMessageMapper(mailboxSession)
+            .countUnseenMessagesInMailbox(mailbox);
+    }
+
     /**
      * Returns the flags which are shared for the current mailbox, i.e. the
      * flags set up so that changes to those flags are visible to another user.
