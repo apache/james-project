@@ -19,18 +19,19 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import static com.datastax.driver.core.DataType.counter;
+import static com.datastax.driver.core.DataType.timeuuid;
+
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable;
 
-import java.util.Collections;
-import java.util.List;
-
-import static com.datastax.driver.core.DataType.counter;
-import static com.datastax.driver.core.DataType.timeuuid;
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public class CassandraMailboxCounterModule implements CassandraModule {
 
