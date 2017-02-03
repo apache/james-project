@@ -304,6 +304,47 @@ public class MessageMapperTest<T extends MapperProvider> {
     }
 
     @ContractTest
+    public void deleteShouldUpdateRecentWhenNeeded() throws MailboxException {
+        saveMessages();
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message2.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
+        messageMapper.updateFlags(benwaWorkMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message6.getUid()));
+
+        messageMapper.delete(benwaInboxMailbox, message2);
+
+        assertThat(messageMapper.findRecentMessageUidsInMailbox(benwaInboxMailbox)).containsOnly(message4.getUid());
+    }
+
+    @ContractTest
+    public void deleteShouldNotUpdateRecentWhenNotNeeded() throws MailboxException {
+        saveMessages();
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message2.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
+        messageMapper.updateFlags(benwaWorkMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message6.getUid()));
+
+        messageMapper.delete(benwaInboxMailbox, message1);
+
+        assertThat(messageMapper.findRecentMessageUidsInMailbox(benwaInboxMailbox)).containsOnly(message2.getUid(), message4.getUid());
+    }
+
+    @ContractTest
+    public void addShouldUpdateRecentWhenNeeded() throws MailboxException {
+        message1.setFlags(new Flags(Flags.Flag.RECENT));
+        messageMapper.add(benwaInboxMailbox, message1);
+        message1.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
+
+        assertThat(messageMapper.findRecentMessageUidsInMailbox(benwaInboxMailbox)).containsOnly(message1.getUid());
+    }
+
+    @ContractTest
+    public void addShouldNotUpdateRecentWhenNotNeeded() throws MailboxException {
+        messageMapper.add(benwaInboxMailbox, message1);
+        message1.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
+
+        assertThat(messageMapper.findRecentMessageUidsInMailbox(benwaInboxMailbox)).isEmpty();
+    }
+
+    @ContractTest
     public void findFirstUnseenMessageUidShouldReturnNullWhenNoUnseenMessagesCanBeFound() throws MailboxException {
         assertThat(messageMapper.findFirstUnseenMessageUid(benwaInboxMailbox)).isNull();
     }
