@@ -38,8 +38,9 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.JmapJamesServer;
-import org.apache.james.jmap.JmapAuthentication;
+import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
@@ -88,9 +89,18 @@ public abstract class SetMailboxesMethodTest {
         jmapServer.serverProbe().addDomain(USERS_DOMAIN);
         jmapServer.serverProbe().addUser(username, password);
         jmapServer.serverProbe().createMailbox("#private", username, "inbox");
-        accessToken = JmapAuthentication.authenticateJamesUser(username, password);
+        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), username, password);
 
         await();
+    }
+
+    private URIBuilder baseUri() {
+        return new URIBuilder()
+            .setScheme("http")
+            .setHost("localhost")
+            .setPort(jmapServer.getJmapProbe()
+                .getJmapPort())
+            .setCharset(Charsets.UTF_8);
     }
 
     @After
