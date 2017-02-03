@@ -28,9 +28,10 @@ import static org.hamcrest.core.IsNull.nullValue;
 
 import java.time.ZonedDateTime;
 
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.JmapJamesServer;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
-import org.apache.james.jmap.JmapAuthentication;
+import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.VacationPatch;
@@ -85,9 +86,18 @@ public abstract class GetVacationResponseTest {
 
         jmapServer.serverProbe().addDomain(USERS_DOMAIN);
         jmapServer.serverProbe().addUser(USER, PASSWORD);
-        accessToken = JmapAuthentication.authenticateJamesUser(USER, PASSWORD);
+        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER, PASSWORD);
 
         await();
+    }
+
+    private URIBuilder baseUri() {
+        return new URIBuilder()
+            .setScheme("http")
+            .setHost("localhost")
+            .setPort(jmapServer.getJmapProbe()
+                .getJmapPort())
+            .setCharset(Charsets.UTF_8);
     }
 
     @After

@@ -22,15 +22,15 @@ package org.apache.james.jmap.methods.integration;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
-import static org.hamcrest.Matchers.equalTo;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.JmapJamesServer;
-import org.apache.james.jmap.JmapAuthentication;
+import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
@@ -78,9 +78,18 @@ public abstract class SetVacationResponseTest {
 
         jmapServer.serverProbe().addDomain(USERS_DOMAIN);
         jmapServer.serverProbe().addUser(USER, PASSWORD);
-        accessToken = JmapAuthentication.authenticateJamesUser(USER, PASSWORD);
+        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER, PASSWORD);
 
         await();
+    }
+
+    private URIBuilder baseUri() {
+        return new URIBuilder()
+            .setScheme("http")
+            .setHost("localhost")
+            .setPort(jmapServer.getJmapProbe()
+                .getJmapPort())
+            .setCharset(Charsets.UTF_8);
     }
 
     @After

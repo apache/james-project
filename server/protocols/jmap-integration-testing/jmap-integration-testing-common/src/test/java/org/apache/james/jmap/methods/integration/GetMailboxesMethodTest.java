@@ -35,8 +35,9 @@ import java.util.Date;
 
 import javax.mail.Flags;
 
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.JmapJamesServer;
-import org.apache.james.jmap.JmapAuthentication;
+import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -78,7 +79,16 @@ public abstract class GetMailboxesMethodTest {
         String password = "password";
         jmapServer.serverProbe().addDomain(domain);
         jmapServer.serverProbe().addUser(username, password);
-        accessToken = JmapAuthentication.authenticateJamesUser(username, password);
+        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), username, password);
+    }
+
+    private URIBuilder baseUri() {
+        return new URIBuilder()
+            .setScheme("http")
+            .setHost("localhost")
+            .setPort(jmapServer.getJmapProbe()
+                .getJmapPort())
+            .setCharset(Charsets.UTF_8);
     }
 
     @After
