@@ -25,6 +25,7 @@ import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.mail.CassandraAnnotationMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMapper;
+import org.apache.james.mailbox.cassandra.mail.CassandraIndexTableHandler;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
@@ -62,8 +63,8 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
     private final CassandraMailboxCounterDAO mailboxCounterDAO;
     private final CassandraMailboxRecentsDAO mailboxRecentsDAO;
+    private final CassandraIndexTableHandler indexTableHandler;
     private int maxRetry;
-
 
     @Inject
     public CassandraMailboxSessionMapperFactory(UidProvider uidProvider, ModSeqProvider modSeqProvider, 
@@ -78,6 +79,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
         this.imapUidDAO = imapUidDAO;
         this.mailboxCounterDAO = mailboxCounterDAO;
         this.mailboxRecentsDAO = mailboxRecentsDAO;
+        this.indexTableHandler = new CassandraIndexTableHandler(mailboxRecentsDAO, mailboxCounterDAO);
         this.maxRetry = DEFAULT_MAX_RETRY;
         this.typesProvider = typesProvider;
     }
@@ -89,13 +91,13 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     @Override
     public CassandraMessageMapper createMessageMapper(MailboxSession mailboxSession) {
         return new CassandraMessageMapper(uidProvider, modSeqProvider, null, maxRetry, createAttachmentMapper(mailboxSession),
-                messageDAO, messageIdDAO, imapUidDAO, mailboxCounterDAO, mailboxRecentsDAO);
+                messageDAO, messageIdDAO, imapUidDAO, mailboxCounterDAO, mailboxRecentsDAO, indexTableHandler);
     }
 
     @Override
     public MessageIdMapper createMessageIdMapper(MailboxSession mailboxSession) throws MailboxException {
         return new CassandraMessageIdMapper(getMailboxMapper(mailboxSession), getAttachmentMapper(mailboxSession),
-                imapUidDAO, messageIdDAO, messageDAO, mailboxCounterDAO, mailboxRecentsDAO, modSeqProvider, mailboxSession);
+                imapUidDAO, messageIdDAO, messageDAO, indexTableHandler, modSeqProvider, mailboxSession);
     }
 
     @Override
