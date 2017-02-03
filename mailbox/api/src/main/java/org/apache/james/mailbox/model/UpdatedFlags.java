@@ -28,6 +28,8 @@ import org.apache.james.mailbox.MessageUid;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 /**
  * Represent a Flag update for a message
@@ -35,6 +37,48 @@ import com.google.common.base.Objects;
  *
  */
 public class UpdatedFlags {
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private MessageUid uid;
+        private Flags oldFlags;
+        private Flags newFlags;
+        private Optional<Long> modSeq = Optional.absent();
+
+        private Builder() {
+        }
+
+        public Builder uid(MessageUid uid) {
+            this.uid = uid;
+            return this;
+        }
+
+        public Builder oldFlags(Flags oldFlags) {
+            this.oldFlags = oldFlags;
+            return this;
+        }
+
+        public Builder newFlags(Flags newFlags) {
+            this.newFlags = newFlags;
+            return this;
+        }
+
+        public Builder modSeq(long modSeq) {
+            this.modSeq = Optional.of(modSeq);
+            return this;
+        }
+
+        public UpdatedFlags build() {
+            Preconditions.checkState(uid != null);
+            Preconditions.checkState(newFlags != null);
+            Preconditions.checkState(oldFlags != null);
+            Preconditions.checkState(modSeq.isPresent());
+            return new UpdatedFlags(uid, modSeq.get(), oldFlags, newFlags);
+        }
+    }
 
     private final MessageUid uid;
     private final Flags oldFlags;
@@ -104,7 +148,19 @@ public class UpdatedFlags {
     public Flags getOldFlags() {
         return oldFlags;
     }
-    
+
+    public boolean isModifiedToSet(Flags.Flag flag) {
+        return newFlags.contains(flag) && !oldFlags.contains(flag);
+    }
+
+    public boolean isModifiedToUnset(Flags.Flag flag) {
+        return !newFlags.contains(flag) && oldFlags.contains(flag);
+    }
+
+    public boolean isUnchanged(Flags.Flag flag) {
+        return !isModifiedToSet(flag) && !isModifiedToUnset(flag);
+    }
+
     /**
      * Return the new {@link Flags} for the message
      * 
