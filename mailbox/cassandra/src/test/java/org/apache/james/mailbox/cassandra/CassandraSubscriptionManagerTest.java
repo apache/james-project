@@ -23,6 +23,8 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
@@ -45,6 +47,8 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
         CassandraMessageIdToImapUidDAO imapUidDAO = null;
         CassandraMessageDAO messageDAO = null;
         CassandraMessageIdDAO messageIdDAO = null;
+        CassandraMailboxCounterDAO mailboxCounterDAO = null;
+        CassandraMailboxRecentsDAO mailboxRecentsDAO = null;
         return new CassandraSubscriptionManager(
             new CassandraMailboxSessionMapperFactory(
                 new CassandraUidProvider(cassandra.getConf()),
@@ -53,7 +57,9 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
                 cassandra.getTypesProvider(),
                 messageDAO,
                 messageIdDAO,
-                imapUidDAO
+                imapUidDAO,
+                mailboxCounterDAO,
+                mailboxRecentsDAO
             )
         );
     }

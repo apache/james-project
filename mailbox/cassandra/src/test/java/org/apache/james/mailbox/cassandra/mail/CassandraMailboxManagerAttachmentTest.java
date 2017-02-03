@@ -32,6 +32,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
@@ -47,6 +48,7 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
             new CassandraMailboxModule(),
             new CassandraMessageModule(),
             new CassandraMailboxCounterModule(),
+            new CassandraMailboxRecentsModule(),
             new CassandraModSeqModule(),
             new CassandraUidModule(),
             new CassandraAttachmentModule()));
@@ -64,7 +66,9 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
                 cassandra.getTypesProvider(),
                 new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), messageIdFactory),
                 new CassandraMessageIdDAO(cassandra.getConf(), messageIdFactory),
-                new CassandraMessageIdToImapUidDAO(cassandra.getConf(), messageIdFactory));
+                new CassandraMessageIdToImapUidDAO(cassandra.getConf(), messageIdFactory),
+                new CassandraMailboxCounterDAO(cassandra.getConf()),
+                new CassandraMailboxRecentsDAO(cassandra.getConf()));
         Authenticator noAuthenticator = null;
         mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, noAuthenticator, new NoMailboxPathLocker(), new MessageParser(), messageIdFactory); 
         mailboxManager.init();

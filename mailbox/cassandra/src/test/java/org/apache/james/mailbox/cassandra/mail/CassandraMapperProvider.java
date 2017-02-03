@@ -33,6 +33,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
@@ -59,6 +60,7 @@ public class CassandraMapperProvider implements MapperProvider {
         new CassandraMailboxModule(),
         new CassandraMessageModule(),
         new CassandraMailboxCounterModule(),
+        new CassandraMailboxRecentsModule(),
         new CassandraModSeqModule(),
         new CassandraUidModule(),
         new CassandraAttachmentModule(),
@@ -100,7 +102,9 @@ public class CassandraMapperProvider implements MapperProvider {
             cassandra.getTypesProvider(),
             new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), MESSAGE_ID_FACTORY),
             new CassandraMessageIdDAO(cassandra.getConf(), MESSAGE_ID_FACTORY),
-            new CassandraMessageIdToImapUidDAO(cassandra.getConf(), MESSAGE_ID_FACTORY));
+            new CassandraMessageIdToImapUidDAO(cassandra.getConf(), MESSAGE_ID_FACTORY),
+            new CassandraMailboxCounterDAO(cassandra.getConf()),
+            new CassandraMailboxRecentsDAO(cassandra.getConf()));
     }
 
     @Override

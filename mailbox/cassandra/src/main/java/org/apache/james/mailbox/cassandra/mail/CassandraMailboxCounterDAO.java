@@ -29,6 +29,8 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import javax.inject.Inject;
+
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable;
@@ -49,6 +51,7 @@ public class CassandraMailboxCounterDAO {
     private final PreparedStatement decrementUnseenCountStatement;
     private final PreparedStatement decrementMessageCountStatement;
 
+    @Inject
     public CassandraMailboxCounterDAO(Session session) {
         cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         readStatement = createReadStatement(session);
