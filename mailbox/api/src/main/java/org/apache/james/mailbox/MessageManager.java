@@ -54,28 +54,16 @@ public interface MessageManager {
 
     /**
      * Return the count of messages in the mailbox
-     * 
-     * @param mailboxSession
-     * @return count
-     * @throws MailboxException
      */
     long getMessageCount(MailboxSession mailboxSession) throws MailboxException;
 
     /**
      * Return the count of unseen messages in the mailbox
-     *
-     * @param mailboxSession
-     * @return count
-     * @throws MailboxException
      */
     long getUnseenMessageCount(MailboxSession mailboxSession) throws MailboxException;
 
     /**
      * Return if the Mailbox is writable
-     * 
-     * @param session
-     * @return writable
-     * @throws MailboxException
      * @deprecated use
      *             {@link #getMetaData(boolean, MailboxSession, org.apache.james.mailbox.MessageManager.MetaData.FetchGroup)}
      */
@@ -85,9 +73,7 @@ public interface MessageManager {
     /**
      * Return true if {@link MessageResult#getModSeq()} is stored in a permanent
      * way.
-     * 
-     * @param session
-     * @return modSeqPermanent
+     *
      * @deprecated use
      *             {@link #getMetaData(boolean, MailboxSession, org.apache.james.mailbox.MessageManager.MetaData.FetchGroup)}
      */
