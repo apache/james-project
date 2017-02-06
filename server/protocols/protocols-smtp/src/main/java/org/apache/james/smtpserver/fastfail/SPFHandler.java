@@ -68,7 +68,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
 
     private boolean blockPermError = true;
 
-    private SPF spf = new DefaultSPF(new SPFLogger());
+    private SPF spf = new DefaultSPF(new SPFLogger(serviceLog));
 
     /**
      * block the email on a softfail
@@ -98,7 +98,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
      */
     @Inject
     public void setDNSService(DNSService dnsService) {
-        spf = new SPF(dnsService, new SPFLogger());
+        spf = new SPF(dnsService, new SPFLogger(serviceLog));
     }
 
     /**
@@ -169,7 +169,13 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
     /**
      * Adapts service log.
      */
-    private final class SPFLogger implements org.apache.james.jspf.core.Logger {
+    public static class SPFLogger implements org.apache.james.jspf.core.Logger {
+
+        private final Logger serviceLog;
+
+        public SPFLogger(Logger serviceLog) {
+            this.serviceLog = serviceLog;
+        }
 
         /**
          * @see org.apache.james.jspf.core.Logger#debug(String)
