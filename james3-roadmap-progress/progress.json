@@ -13,7 +13,7 @@
    },
    {
      "name" : "Assign a unique Id to message entity (and handle move and move to trash)",
-     "completion" : 95,
+     "completion" : 100,
      "complexity" : 50
    },
    {
