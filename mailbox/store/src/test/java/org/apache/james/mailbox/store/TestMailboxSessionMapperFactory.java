@@ -345,7 +345,12 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
             public Map.Entry<MailboxId, UpdatedFlags> apply(MailboxMessage input) {
                 Preconditions.checkState(updateMode.equals(MessageManager.FlagsUpdateMode.ADD));
                 return new AbstractMap.SimpleEntry<MailboxId, UpdatedFlags>(input.getMailboxId(),
-                    new UpdatedFlags(input.getUid(), input.getModSeq(), input.createFlags(), newState));
+                    UpdatedFlags.builder()
+                        .uid(input.getUid())
+                        .modSeq(input.getModSeq())
+                        .newFlags(newState)
+                        .oldFlags(input.createFlags())
+                        .build());
             }
         };
     }

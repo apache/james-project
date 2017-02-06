@@ -85,11 +85,13 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
                 member.setModSeq(modSeq);
                 save(mailbox, member);
             }
-
             
-            UpdatedFlags uFlags = new UpdatedFlags(member.getUid(), member.getModSeq(), originalFlags, newFlags);
-            
-            updatedFlags.add(uFlags);
+            updatedFlags.add(UpdatedFlags.builder()
+                .uid(member.getUid())
+                .modSeq(member.getModSeq())
+                .newFlags(newFlags)
+                .oldFlags(originalFlags)
+                .build());
             
         }
 

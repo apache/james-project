@@ -280,7 +280,12 @@ public class CassandraMessageMapper implements MessageMapper {
             message.setFlags(newFlags);
             message.setModSeq(modSeqProvider.nextModSeq(mailboxSession, mailbox));
             if (updateFlags(message, oldModSeq)) {
-                return Optional.of(new UpdatedFlags(message.getUid(), message.getModSeq(), oldFlags, newFlags));
+                return Optional.of(UpdatedFlags.builder()
+                    .uid(message.getUid())
+                    .modSeq(message.getModSeq())
+                    .oldFlags(oldFlags)
+                    .newFlags(newFlags)
+                    .build());
             } else {
                 return Optional.empty();
             }

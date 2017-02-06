@@ -192,7 +192,12 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
                     }
                     member.setModSeq(modSeq);
 
-                    updatedFlags.add(new UpdatedFlags(member.getUid(), modSeq, originalFlags, newFlags));
+                    updatedFlags.add(UpdatedFlags.builder()
+                        .uid(member.getUid())
+                        .modSeq(member.getModSeq())
+                        .newFlags(newFlags)
+                        .oldFlags(originalFlags)
+                        .build());
 
                     MessageUid uid = member.getUid();
                     folder.update(mailboxSession, uid, newMessageName);

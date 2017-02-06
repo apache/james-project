@@ -551,8 +551,12 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
                     messages.flushCommits();
                 }
 
-                UpdatedFlags uFlags = new UpdatedFlags(member.getUid(), member.getModSeq(), originalFlags, newFlags);
-                updatedFlags.add(uFlags);
+                updatedFlags.add(UpdatedFlags.builder()
+                    .uid(member.getUid())
+                    .modSeq(member.getModSeq())
+                    .newFlags(newFlags)
+                    .oldFlags(originalFlags)
+                    .build());
             }
         } catch (IOException e) {
             throw new MailboxException("Error setting flags for messages in " + mailbox, e);

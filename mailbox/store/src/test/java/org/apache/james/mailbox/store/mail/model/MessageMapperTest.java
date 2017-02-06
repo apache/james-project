@@ -593,7 +593,12 @@ public class MessageMapperTest<T extends MapperProvider> {
         Iterator<UpdatedFlags> updatedFlags = messageMapper.updateFlags(benwaInboxMailbox, 
                 new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
         assertThat(Lists.newArrayList(updatedFlags))
-            .containsOnly(new UpdatedFlags(message1.getUid(), modSeq + 1, new Flags(), new Flags(Flags.Flag.FLAGGED)));
+            .containsOnly(UpdatedFlags.builder()
+                .uid(message1.getUid())
+                .modSeq(modSeq + 1)
+                .oldFlags(new Flags())
+                .newFlags(new Flags(Flags.Flag.FLAGGED))
+                .build());
     }
 
     @ContractTest
@@ -602,7 +607,12 @@ public class MessageMapperTest<T extends MapperProvider> {
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
         long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD), MessageRange.one(message1.getUid())))
-            .containsOnly(new UpdatedFlags(message1.getUid(), modSeq + 1, new Flags(Flags.Flag.FLAGGED), new FlagsBuilder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build()));
+            .containsOnly(UpdatedFlags.builder()
+                    .uid(message1.getUid())
+                    .modSeq(modSeq + 1)
+                    .oldFlags(new Flags(Flags.Flag.FLAGGED))
+                    .newFlags(new FlagsBuilder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build())
+                    .build());
     }
 
     @ContractTest
@@ -619,7 +629,13 @@ public class MessageMapperTest<T extends MapperProvider> {
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new FlagsBuilder().add(Flags.Flag.FLAGGED, Flags.Flag.SEEN).build(), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
         long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REMOVE), MessageRange.one(message1.getUid())))
-            .containsOnly(new UpdatedFlags(message1.getUid(), modSeq + 1, new FlagsBuilder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build(), new Flags(Flags.Flag.FLAGGED)));
+            .containsOnly(
+                UpdatedFlags.builder()
+                    .uid(message1.getUid())
+                    .modSeq(modSeq + 1)
+                    .oldFlags(new FlagsBuilder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build())
+                    .newFlags(new Flags(Flags.Flag.FLAGGED))
+                    .build());
     }
 
     @ContractTest
@@ -734,7 +750,13 @@ public class MessageMapperTest<T extends MapperProvider> {
         saveMessages();
         long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(USER_FLAG), FlagsUpdateMode.ADD), MessageRange.one(message1.getUid())))
-            .containsOnly(new UpdatedFlags(message1.getUid(), modSeq + 1, new Flags(), new Flags(USER_FLAG)));
+            .containsOnly(
+                UpdatedFlags.builder()
+                    .uid(message1.getUid())
+                    .modSeq(modSeq + 1)
+                    .oldFlags(new Flags())
+                    .newFlags(new Flags(USER_FLAG))
+                    .build());
     }
 
     @ContractTest

@@ -329,7 +329,12 @@ public class MessageIdMapperTest<T extends MapperProvider> {
         Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), newFlags, FlagsUpdateMode.ADD);
 
         long modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
-        UpdatedFlags expectedUpdatedFlags = new UpdatedFlags(message1.getUid(), modSeq, new Flags(), newFlags);
+        UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
+            .uid(message1.getUid())
+            .modSeq(modSeq)
+            .oldFlags(new Flags())
+            .newFlags(newFlags)
+            .build();
         assertThat(flags).containsOnly(MapEntry.entry(benwaInboxMailbox.getMailboxId(), expectedUpdatedFlags));
     }
 
@@ -351,7 +356,12 @@ public class MessageIdMapperTest<T extends MapperProvider> {
         Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), newFlags, FlagsUpdateMode.REPLACE);
 
         long modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
-        UpdatedFlags expectedUpdatedFlags = new UpdatedFlags(message1.getUid(), modSeq, messageFlags, newFlags);
+        UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
+            .uid(message1.getUid())
+            .modSeq(modSeq)
+            .oldFlags(messageFlags)
+            .newFlags(newFlags)
+            .build();
 
         assertThat(flags).contains(MapEntry.entry(benwaInboxMailbox.getMailboxId(), expectedUpdatedFlags));
     }
@@ -374,7 +384,12 @@ public class MessageIdMapperTest<T extends MapperProvider> {
         Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), newFlags, FlagsUpdateMode.REMOVE);
 
         long modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
-        UpdatedFlags expectedUpdatedFlags = new UpdatedFlags(message1.getUid(), modSeq, messageFlags, new Flags(Flags.Flag.RECENT));
+        UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
+            .uid(message1.getUid())
+            .modSeq(modSeq)
+            .oldFlags(messageFlags)
+            .newFlags(new Flags(Flags.Flag.RECENT))
+            .build();
 
         assertThat(flags).contains(MapEntry.entry(benwaInboxMailbox.getMailboxId(), expectedUpdatedFlags));
     }
@@ -440,7 +455,12 @@ public class MessageIdMapperTest<T extends MapperProvider> {
             .add(Flag.ANSWERED)
             .build();
         long modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
-        UpdatedFlags expectedUpdatedFlags = new UpdatedFlags(message1.getUid(), modSeq, initialFlags, newFlags);
+        UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
+            .uid(message1.getUid())
+            .modSeq(modSeq)
+            .oldFlags(initialFlags)
+            .newFlags(newFlags)
+            .build();
         assertThat(flags).containsOnly(MapEntry.entry(benwaInboxMailbox.getMailboxId(), expectedUpdatedFlags));
     }
 
@@ -461,8 +481,18 @@ public class MessageIdMapperTest<T extends MapperProvider> {
 
         long modSeqBenwaInboxMailbox = mapperProvider.highestModSeq(benwaInboxMailbox);
         long modSeqBenwaWorkMailbox = mapperProvider.highestModSeq(benwaWorkMailbox);
-        UpdatedFlags expectedUpdatedFlags = new UpdatedFlags(message1.getUid(), modSeqBenwaInboxMailbox, new Flags(), newFlags);
-        UpdatedFlags expectedUpdatedFlags2 = new UpdatedFlags(message1InOtherMailbox.getUid(), modSeqBenwaWorkMailbox, new Flags(), newFlags);
+        UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
+            .uid(message1.getUid())
+            .modSeq(modSeqBenwaInboxMailbox)
+            .oldFlags(new Flags())
+            .newFlags(newFlags)
+            .build();
+        UpdatedFlags expectedUpdatedFlags2 = UpdatedFlags.builder()
+            .uid(message1.getUid())
+            .modSeq(modSeqBenwaWorkMailbox)
+            .oldFlags(new Flags())
+            .newFlags(newFlags)
+            .build();
         assertThat(flags).containsOnly(MapEntry.entry(benwaInboxMailbox.getMailboxId(), expectedUpdatedFlags),
                 MapEntry.entry(benwaWorkMailbox.getMailboxId(), expectedUpdatedFlags2));
     }

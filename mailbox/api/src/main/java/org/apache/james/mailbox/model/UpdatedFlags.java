@@ -86,7 +86,7 @@ public class UpdatedFlags {
     private final Flags modifiedFlags;
     private final long modSeq;
 
-    public UpdatedFlags(MessageUid uid, long modSeq, Flags oldFlags, Flags newFlags) {
+    private UpdatedFlags(MessageUid uid, long modSeq, Flags oldFlags, Flags newFlags) {
        this.uid = uid;
        this.modSeq = modSeq;
        this.oldFlags = oldFlags;

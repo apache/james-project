@@ -48,12 +48,18 @@ public abstract class EventSerializerTest {
 
     public static final MessageUid UID = MessageUid.of(42);
     public static final long MOD_SEQ = 24L;
-    public static final UpdatedFlags UPDATED_FLAGS = new UpdatedFlags(UID, MOD_SEQ, new Flags(), new Flags(Flags.Flag.SEEN));
     public static final Flags FLAGS = new Flags();
+    public static final UpdatedFlags UPDATED_FLAGS = UpdatedFlags.builder()
+        .uid(UID)
+        .modSeq(MOD_SEQ)
+        .oldFlags(FLAGS)
+        .newFlags(new Flags(Flags.Flag.SEEN))
+        .build();
     public static final long SIZE = 45L;
     private static final MessageId MESSAGE_ID = new TestMessageId.Factory().generate();
     public static final SimpleMessageMetaData MESSAGE_META_DATA = new SimpleMessageMetaData(UID, MOD_SEQ, FLAGS, SIZE, null, MESSAGE_ID);
     public static final MailboxPath FROM = new MailboxPath("namespace", "user", "name");
+
     private EventSerializer serializer;
     private EventFactory eventFactory;
     private MailboxSession mailboxSession;

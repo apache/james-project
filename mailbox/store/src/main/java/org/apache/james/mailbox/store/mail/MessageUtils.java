@@ -88,10 +88,12 @@ public class MessageUtils {
                 changedFlags.add(member);
             }
 
-            UpdatedFlags uFlags = new UpdatedFlags(member.getUid(), member.getModSeq(), originalFlags, newFlags);
-
-            updatedFlags.add(uFlags);
-
+            updatedFlags.add(UpdatedFlags.builder()
+                .uid(member.getUid())
+                .modSeq(member.getModSeq())
+                .newFlags(newFlags)
+                .oldFlags(originalFlags)
+                .build());
         }
 
         return new MessageChangedFlags(updatedFlags.build().iterator(), changedFlags.build());

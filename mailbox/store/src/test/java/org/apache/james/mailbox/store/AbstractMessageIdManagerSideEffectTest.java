@@ -288,7 +288,12 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         MessageResult messageResult = messages.get(0);
         MessageUid messageUid = messageResult.getUid();
         long modSeq = messageResult.getModSeq();
-        UpdatedFlags updatedFlags = new UpdatedFlags(messageUid, modSeq, FLAGS, newFlags);
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .modSeq(modSeq)
+            .oldFlags(FLAGS)
+            .newFlags(newFlags)
+            .build();
 
         verify(dispatcher, times(1)).flagsUpdated(session, messageUid, mailbox2, updatedFlags);
         verifyNoMoreInteractions(dispatcher);

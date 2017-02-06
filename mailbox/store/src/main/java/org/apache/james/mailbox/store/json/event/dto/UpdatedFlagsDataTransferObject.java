@@ -45,7 +45,12 @@ public class UpdatedFlagsDataTransferObject {
     }
 
     public UpdatedFlags retrieveUpdatedFlags() {
-        return new UpdatedFlags(MessageUid.of(uid), modseq, oldFlags.getFlags(), newFlags.getFlags());
+        return UpdatedFlags.builder()
+            .uid(MessageUid.of(uid))
+            .modSeq(modseq)
+            .oldFlags(oldFlags.getFlags())
+            .newFlags(newFlags.getFlags())
+            .build();
     }
 
 }

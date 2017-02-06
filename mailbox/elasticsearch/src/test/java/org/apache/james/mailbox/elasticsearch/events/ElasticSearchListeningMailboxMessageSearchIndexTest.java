@@ -195,7 +195,12 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
 
         Flags flags = new Flags();
         MessageUid messageUid = MessageUid.of(1);
-        UpdatedFlags updatedFlags = new UpdatedFlags(messageUid, MODSEQ, flags, flags);
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .modSeq(MODSEQ)
+            .oldFlags(flags)
+            .newFlags(flags)
+            .build();
         TestId mailboxId = TestId.of(12);
 
         expectLastCall();
@@ -218,7 +223,12 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
         Mailbox mailbox = control.createMock(Mailbox.class);
         Flags flags = new Flags();
         MessageUid messageUid = MessageUid.of(1);
-        UpdatedFlags updatedFlags = new UpdatedFlags(messageUid, MODSEQ, flags, flags);
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .modSeq(MODSEQ)
+            .oldFlags(flags)
+            .newFlags(flags)
+            .build();
         TestId mailboxId = TestId.of(12);
 
         expectLastCall();

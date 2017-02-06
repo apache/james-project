@@ -91,7 +91,12 @@ public class MailboxRegistrationTest {
         MailboxListener.Event event = eventFactory.flagsUpdated(SESSION,
             Lists.newArrayList(UID),
             MAILBOX,
-            Lists.newArrayList(new UpdatedFlags(UID, MOD_SEQ, new Flags(), NEW_FLAGS)));
+            Lists.newArrayList(UpdatedFlags.builder()
+                .uid(UID)
+                .modSeq(MOD_SEQ)
+                .oldFlags(new Flags())
+                .newFlags(NEW_FLAGS)
+                .build()));
         mailboxRegistration.event(event);
         assertThat(mailboxRegistration.getImpactingEvents(UID)).containsExactly(new FlagsMessageEvent(INBOX, UID, NEW_FLAGS));
     }

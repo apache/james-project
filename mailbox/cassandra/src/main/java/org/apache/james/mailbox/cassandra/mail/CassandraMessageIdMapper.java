@@ -210,10 +210,12 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             ComposedMessageIdWithMetaData composedMessageIdWithMetaData = pair.getRight();
             Flags oldFlags = pair.getLeft();
             return Stream.of(Pair.of(composedMessageIdWithMetaData.getComposedMessageId().getMailboxId(),
-                    new UpdatedFlags(composedMessageIdWithMetaData.getComposedMessageId().getUid(),
-                        composedMessageIdWithMetaData.getModSeq(),
-                        oldFlags,
-                        composedMessageIdWithMetaData.getFlags())));
+                    UpdatedFlags.builder()
+                        .uid(composedMessageIdWithMetaData.getComposedMessageId().getUid())
+                        .modSeq(composedMessageIdWithMetaData.getModSeq())
+                        .oldFlags(oldFlags)
+                        .newFlags(composedMessageIdWithMetaData.getFlags())
+                        .build()));
         } catch (LightweightTransactionException e) {
             throw Throwables.propagate(e);
         } catch (MailboxDeleteDuringUpdateException e) {
