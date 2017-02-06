@@ -16,31 +16,28 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules;
 
-import org.apache.james.modules.protocols.IMAPServerModule;
-import org.apache.james.modules.protocols.JSPFModule;
-import org.apache.james.modules.protocols.LMTPServerModule;
-import org.apache.james.modules.protocols.ManageSieveServerModule;
-import org.apache.james.modules.protocols.POP3ServerModule;
-import org.apache.james.modules.protocols.ProtocolHandlerModule;
-import org.apache.james.modules.protocols.SMTPServerModule;
-import org.apache.james.modules.server.WebAdminServerModule;
+package org.apache.james.modules.protocols;
+
+import org.apache.james.jspf.impl.DNSServiceXBillImpl;
+import org.apache.james.smtpserver.fastfail.SPFHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 
-public class ProtocolsModule extends AbstractModule {
+public class JSPFModule extends AbstractModule {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JSPFModule.class);
 
     @Override
     protected void configure() {
-        install(new JSPFModule());
-        install(new IMAPServerModule());
-        install(new ProtocolHandlerModule());
-        install(new POP3ServerModule());
-        install(new SMTPServerModule());
-        install(new LMTPServerModule());
-        install(new ManageSieveServerModule());
-        install(new WebAdminServerModule());
+
     }
-    
+
+    @Provides
+    public DNSServiceXBillImpl provideJSPFDNSService() {
+        return new DNSServiceXBillImpl(new SPFHandler.SPFLogger(LOGGER));
+    }
 }

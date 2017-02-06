@@ -177,6 +177,10 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
             this.serviceLog = serviceLog;
         }
 
+        public SPFLogger() {
+            this.serviceLog = FALLBACK_LOG;
+        }
+
         /**
          * @see org.apache.james.jspf.core.Logger#debug(String)
          */

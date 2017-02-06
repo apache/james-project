@@ -300,4 +300,16 @@
 
     <bean id="metricRegistry" class="com.codahale.metrics.MetricRegistry"/>
 
+    <!--
+    ======================================================================
+    JSPF
+    ======================================================================
+    -->
+
+    <bean id="jspfDnsService" class="org.apache.james.jspf.impl.DNSServiceXBillImpl">
+        <constructor-arg index="0" ref="jspfLogger"/>
+    </bean>
+
+    <bean id="jspfLogger" class="org.apache.james.smtpserver.fastfail.SPFHandler.SPFLogger"/>
+
 </beans>

@@ -21,11 +21,8 @@ package org.apache.james.modules.protocols;
 
 import java.util.List;
 
-import org.apache.james.jspf.core.DNSService;
-import org.apache.james.jspf.impl.DNSServiceXBillImpl;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.smtpserver.SendMailHandler;
-import org.apache.james.smtpserver.fastfail.SPFHandler;
 import org.apache.james.smtpserver.netty.SMTPServerFactory;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
@@ -36,8 +33,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
@@ -47,14 +42,7 @@ public class SMTPServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(DNSServiceXBillImpl.class).in(Scopes.SINGLETON);
-
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(SMTPModuleConfigurationPerformer.class);
-    }
-    
-    @Provides
-    public DNSServiceXBillImpl provideJSPFDNSService() {
-        return new DNSServiceXBillImpl(new SPFHandler.SPFLogger(LOGGER));
     }
 
     @Singleton
