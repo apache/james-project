@@ -40,7 +40,7 @@ public class JMAPServer implements Configurable {
     @Inject
     private JMAPServer(JMAPConfiguration jmapConfiguration,
                        AuthenticationServlet authenticationServlet, JMAPServlet jmapServlet, DownloadServlet downloadServlet, UploadServlet uploadServlet,
-                       AuthenticationFilter authenticationFilter, UserProvisioningFilter userProvisioningFilter) {
+                       AuthenticationFilter authenticationFilter, UserProvisioningFilter userProvisioningFilter, DefaultMailboxesProvisioningFilter defaultMailboxesProvisioningFilter) {
 
         server = JettyHttpServer.create(
                 configurationBuilderFor(jmapConfiguration)
@@ -54,6 +54,7 @@ public class JMAPServer implements Configurable {
                         .filter(JMAPUrls.JMAP)
                             .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("OPTIONS").only()))
                             .and(userProvisioningFilter)
+                            .and(defaultMailboxesProvisioningFilter)
                             .only()
                         .serveAsOneLevelTemplate(JMAPUrls.DOWNLOAD)
                             .with(downloadServlet)

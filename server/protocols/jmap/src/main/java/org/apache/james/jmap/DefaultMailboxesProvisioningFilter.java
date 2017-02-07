@@ -20,7 +20,7 @@ package org.apache.james.jmap;
 
 import java.io.IOException;
 import java.util.Optional;
-import java.util.UUID;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 import javax.servlet.Filter;
@@ -30,24 +30,25 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.User;
-import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
-import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 
-public class UserProvisioningFilter implements Filter {
+public class DefaultMailboxesProvisioningFilter implements Filter {
 
-    private final UsersRepository usersRepository;
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMailboxesProvisioningFilter.class);
+    private final MailboxManager mailboxManager;
 
     @Inject
-    @VisibleForTesting UserProvisioningFilter(UsersRepository usersRepository) {
-        this.usersRepository = usersRepository;
+    @VisibleForTesting DefaultMailboxesProvisioningFilter(MailboxManager mailboxManager) {
+        this.mailboxManager = mailboxManager;
     }
     
     @Override
@@ -57,38 +58,46 @@ public class UserProvisioningFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         Optional<MailboxSession> session = Optional.ofNullable((MailboxSession)request.getAttribute(AuthenticationFilter.MAILBOX_SESSION));
-        session.ifPresent(this::createAccountIfNeeded);
+        session.ifPresent(this::createMailboxesIfNeeded);
         chain.doFilter(request, response);
     }
     
     @VisibleForTesting
-    void createAccountIfNeeded(MailboxSession session) {
+    void createMailboxesIfNeeded(MailboxSession session) {
         try {
             User user = session.getUser();
-            if (needsAccountCreation(user)) {
-                createAccount(user);
-            }
-        } catch (AlreadyExistInUsersRepositoryException e) {
-            // Ignore
-        } catch (UsersRepositoryException|MailboxException e) {
+            createDefaultMailboxes(user);
+        } catch (MailboxException e) {
             throw Throwables.propagate(e);
         }
     }
 
-    private boolean needsAccountCreation(User user) throws UsersRepositoryException {
-        return !usersRepository.contains(user.getUserName());
+    private void createDefaultMailboxes(User user) throws MailboxException {
+        MailboxSession session = mailboxManager.createSystemSession(user.getUserName(), LOGGER);
+        DefaultMailboxes.DEFAULT_MAILBOXES.stream()
+            .map(toMailboxPath(session))
+            .filter(mailboxPath -> mailboxDoesntExist(mailboxPath, session))
+            .forEach(mailboxPath -> createMailbox(mailboxPath, session));
     }
 
-    private void createAccount(User user) throws UsersRepositoryException, BadCredentialsException, MailboxException {
-        createUser(user);
+    private boolean mailboxDoesntExist(MailboxPath mailboxPath, MailboxSession session) {
+        try {
+            return !mailboxManager.mailboxExists(mailboxPath, session);
+        } catch (MailboxException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
-    private void createUser(User user) throws UsersRepositoryException {
-        usersRepository.addUser(user.getUserName(), generatePassword());
+    private Function<String, MailboxPath> toMailboxPath(MailboxSession session) {
+        return mailbox -> new MailboxPath(session.getPersonalSpace(), session.getUser().getUserName(), mailbox);
     }
     
-    private String generatePassword() {
-        return UUID.randomUUID().toString();
+    private void createMailbox(MailboxPath mailboxPath, MailboxSession session) {
+        try {
+            mailboxManager.createMailbox(mailboxPath, session);
+        } catch (MailboxException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override

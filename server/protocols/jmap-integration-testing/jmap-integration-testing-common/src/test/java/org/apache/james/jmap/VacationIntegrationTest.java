@@ -79,11 +79,11 @@ public abstract class VacationIntegrationTest {
         guiceJamesServer.serverProbe().addDomain(DOMAIN);
         guiceJamesServer.serverProbe().addUser(USER_1, PASSWORD);
         guiceJamesServer.serverProbe().addUser(USER_2, PASSWORD);
-        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, "outbox");
-        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_1, "sent");
-        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, "sent");
-        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_1, "INBOX");
-        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, "INBOX");
+        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, DefaultMailboxes.OUTBOX);
+        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_1, DefaultMailboxes.SENT);
+        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, DefaultMailboxes.SENT);
+        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_1, DefaultMailboxes.INBOX);
+        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, DefaultMailboxes.INBOX);
         await();
 
         jmapGuiceProbe = guiceJamesServer.getJmapProbe();
@@ -436,16 +436,16 @@ public abstract class VacationIntegrationTest {
     }
 
     private String getOutboxId(AccessToken accessToken) {
-        return getMailboxIdByRole(accessToken, "outbox");
+        return getMailboxIdByRole(accessToken, DefaultMailboxes.OUTBOX);
     }
 
     private String getInboxId(AccessToken accessToken) {
-        return getMailboxIdByRole(accessToken, "inbox");
+        return getMailboxIdByRole(accessToken, DefaultMailboxes.INBOX);
     }
 
     private String getMailboxIdByRole(AccessToken accessToken, String role) {
         return getAllMailboxesIds(accessToken).stream()
-            .filter(x -> x.get("role").equals(role))
+            .filter(x -> x.get("role").equalsIgnoreCase(role))
             .map(x -> x.get("id"))
             .findFirst()
             .get();
