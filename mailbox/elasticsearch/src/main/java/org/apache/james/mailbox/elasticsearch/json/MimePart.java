@@ -147,7 +147,7 @@ public class MimePart {
                         bodyContent.get(),
                         computeContentType().orElse(null),
                         fileName.orElse(null)));
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     LOGGER.warn("Failed parsing attachment", e);
                 }
             }

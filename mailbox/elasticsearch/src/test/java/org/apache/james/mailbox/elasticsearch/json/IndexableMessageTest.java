@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.elasticsearch.json;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -31,13 +32,17 @@ import javax.mail.Flags;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
+import org.apache.james.mailbox.extractor.ParsedContent;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class IndexableMessageTest {
 
@@ -246,4 +251,56 @@ public class IndexableMessageTest {
         // Then
         assertThat(indexableMessage.getAttachments()).isNotEmpty();
     }
+
+    @Test
+    public void otherAttachmentsShouldBeenIndexedWhenOneOfThemCannotBeParsed() throws Exception {
+        //Given
+        MailboxMessage mailboxMessage = mock(MailboxMessage.class);
+        TestId mailboxId = TestId.of(1);
+        when(mailboxMessage.getMailboxId())
+            .thenReturn(mailboxId);
+        when(mailboxMessage.getFullContent())
+            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/emailWith3Attachments.eml"))));
+        when(mailboxMessage.createFlags())
+            .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
+
+        TextExtractor textExtractor = mock(TextExtractor.class);
+        when(textExtractor.extractContent(any(), any(), any()))
+            .thenReturn(new ParsedContent("first attachment content", ImmutableMap.of()))
+            .thenThrow(new RuntimeException("second cannot be parsed"))
+            .thenReturn(new ParsedContent("third attachment content", ImmutableMap.of()));
+
+        // When
+        IndexableMessage indexableMessage = IndexableMessage.from(mailboxMessage, ImmutableList.of(new MockMailboxSession("username").getUser()),
+                textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+
+        // Then
+        assertThat(indexableMessage.getText()).contains("first attachment content");
+        assertThat(indexableMessage.getText()).contains("third attachment content");
+    }
+
+    @Test
+    public void messageShouldBeIndexedEvenIfTikaParserThrowsAnError() throws Exception {
+        //Given
+        MailboxMessage mailboxMessage = mock(MailboxMessage.class);
+        TestId mailboxId = TestId.of(1);
+        when(mailboxMessage.getMailboxId())
+            .thenReturn(mailboxId);
+        when(mailboxMessage.getFullContent())
+            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"))));
+        when(mailboxMessage.createFlags())
+            .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
+
+        // When
+        IndexableMessage indexableMessage = IndexableMessage.from(mailboxMessage, ImmutableList.of(new MockMailboxSession("username").getUser()),
+                new TikaTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+
+        // Then
+        assertThat(indexableMessage.getText()).contains("subject should be parsed");
+    }
+
 }

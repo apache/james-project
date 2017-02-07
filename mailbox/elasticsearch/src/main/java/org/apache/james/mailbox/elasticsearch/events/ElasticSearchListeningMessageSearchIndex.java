@@ -98,6 +98,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
             throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         return searcher.search(ImmutableList.of(session.getUser()), searchQuery, Optional.of(limit))
+            .peek(this::logIfNoMessageId)
             .map(SearchResult::getMessageId)
             .map(com.google.common.base.Optional::get)
             .collect(Guavate.toImmutableList());
@@ -108,10 +109,15 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         try {
             indexer.indexMessage(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJson(message, ImmutableList.of(session.getUser())));
         } catch (Exception e) {
-            LOGGER.error("Error when indexing message " + message.getUid(), e);
+            try {
+                LOGGER.warn("indexing message {} without attachments ", message.getUid());
+                indexer.indexMessage(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(session.getUser())));
+            } catch (JsonProcessingException e1) {
+                LOGGER.error("Error when indexing message " + message.getUid() + " without its attachment", e1);
+            }
         }
     }
-
+    
     @Override
     public void delete(MailboxSession session, Mailbox mailbox, List<MessageUid> expungedUids) throws MailboxException {
         try {
@@ -160,6 +166,12 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
 
     private String indexIdFor(Mailbox mailbox, MessageUid uid) {
         return String.join(ID_SEPARATOR, mailbox.getMailboxId().serialize(), String.valueOf(uid.asLong()));
+    }
+
+    private void logIfNoMessageId(SearchResult searchResult) {
+        if (!searchResult.getMessageId().isPresent()) {
+            LOGGER.error("No messageUid for {} in mailbox {}", searchResult.getMessageUid(), searchResult.getMailboxId());
+        }
     }
 
 }
