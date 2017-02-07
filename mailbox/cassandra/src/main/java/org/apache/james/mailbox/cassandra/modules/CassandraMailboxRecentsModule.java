@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra.modules;
 
 import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.list;
 import static com.datastax.driver.core.DataType.timeuuid;
 
 import java.util.Collections;

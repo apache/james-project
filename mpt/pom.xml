@@ -170,8 +170,12 @@
             <dependency>
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-backends-es</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-backends-es</artifactId>
                 <type>test-jar</type>
-                <scope>test</scope>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
