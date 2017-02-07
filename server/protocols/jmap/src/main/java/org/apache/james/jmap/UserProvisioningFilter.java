@@ -47,15 +47,15 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
-public class FirstUserConnectionFilter implements Filter {
+public class UserProvisioningFilter implements Filter {
 
     private static final ImmutableList<String> DEFAULT_MAILBOXES = ImmutableList.of("INBOX", "Outbox", "Sent", "Trash");
-    private static final Logger LOGGER = LoggerFactory.getLogger(FirstUserConnectionFilter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserProvisioningFilter.class);
     private final UsersRepository usersRepository;
     private final MailboxManager mailboxManager;
 
     @Inject
-    @VisibleForTesting FirstUserConnectionFilter(UsersRepository usersRepository, MailboxManager mailboxManager) {
+    @VisibleForTesting UserProvisioningFilter(UsersRepository usersRepository, MailboxManager mailboxManager) {
         this.usersRepository = usersRepository;
         this.mailboxManager = mailboxManager;
     }
