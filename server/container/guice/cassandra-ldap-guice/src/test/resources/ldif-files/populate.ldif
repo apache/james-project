@@ -1,0 +1,11 @@
+dn: ou=people, dc=james,dc=org
+ou: people
+objectClass: organizationalUnit
+
+dn: uid=james-user, ou=people, dc=james,dc=org
+objectClass: inetOrgPerson
+uid: james-user
+cn: james-user
+sn: james-user
+userPassword: secret
+description: James user
