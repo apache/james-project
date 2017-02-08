@@ -57,12 +57,14 @@ import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.model.mailbox.Role;
+import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.util.ZeroedInputStream;
 import org.hamcrest.Matcher;
@@ -74,6 +76,7 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
@@ -856,6 +859,7 @@ public abstract class SetMessagesMethodTest {
         String fromAddress = USERNAME;
         String messageSubject = "Thank you for joining example.com!";
         String outboxId = getOutboxId(accessToken);
+
         String requestBody = "[" +
             "  [" +
             "    \"setMessages\","+
@@ -872,6 +876,24 @@ public abstract class SetMessagesMethodTest {
             "  ]" +
             "]";
 
+        List<MailboxListener.Event> events = Lists.newArrayList();
+        jmapServer.getJmapProbe().addMailboxListener(new MailboxListener() {
+            @Override
+            public ListenerType getType() {
+                return ListenerType.ONCE;
+            }
+
+            @Override
+            public ExecutionMode getExecutionMode() {
+                return ExecutionMode.SYNCHRONOUS;
+            }
+
+            @Override
+            public void event(Event event) {
+                events.add(event);
+            }
+        });
+
         String messageId = with()
             .header("Authorization", accessToken.serialize())
             .body(requestBody)
@@ -882,19 +904,20 @@ public abstract class SetMessagesMethodTest {
             .body()
             .<String>path(ARGUMENTS + ".created."+ messageCreationId +".id");
 
-        // Then
-        given()
-            .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
-        .when()
-            .post("/jmap")
-        .then()
-            .log().ifValidationFails()
-            .body(NAME, equalTo("messages"))
-            .body(ARGUMENTS + ".list", hasSize(1))
-            .body(ARGUMENTS + ".list[0].subject", equalTo(messageSubject))
-            .body(ARGUMENTS + ".list[0].mailboxIds", contains(outboxId))
-            ;
+
+
+        calmlyAwait.atMost(5, TimeUnit.SECONDS).until(() -> events.stream()
+            .anyMatch(event -> isAddedToOutboxEvent(messageId, event)));
+    }
+
+    private boolean isAddedToOutboxEvent(String messageId, MailboxListener.Event event) {
+        if (!(event instanceof EventFactory.AddedImpl)) {
+            return false;
+        }
+        EventFactory.AddedImpl added = (EventFactory.AddedImpl) event;
+        return added.getMailboxPath().equals(new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.OUTBOX))
+            && added.getUids().size() == 1
+            && added.getMetaData(added.getUids().get(0)).getMessageId().serialize().equals(messageId);
     }
 
     @Test
