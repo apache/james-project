@@ -103,6 +103,7 @@ public class UserMailboxesRoutesTest {
             MessageId.Factory messageIdFactory = new DefaultMessageId.Factory();
             InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(new InMemoryMailboxSessionMapperFactory(),
                 (userid, passwd) -> true,
+                (adminUserid, userid) -> false,
                 new JVMMailboxPathLocker(),
                 new UnionMailboxACLResolver(),
                 new SimpleGroupMembershipResolver(),

@@ -49,6 +49,7 @@ import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.FakeAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -124,7 +125,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
             MessageParser messageParser = new MessageParser();
 
-            mailboxManager = new OpenJPAMailboxManager(factory, userManager, locker, false, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
+            mailboxManager = new OpenJPAMailboxManager(factory, userManager, new FakeAuthorizator(), locker, false, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
 
             LuceneMessageSearchIndex searchIndex = new LuceneMessageSearchIndex(factory, mailboxIdFactory, fsDirectory, messageIdFactory, mailboxManager);
             searchIndex.setEnableSuffixMatch(true);

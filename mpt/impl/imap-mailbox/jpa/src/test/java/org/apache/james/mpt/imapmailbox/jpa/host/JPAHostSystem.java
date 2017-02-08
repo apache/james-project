@@ -43,6 +43,7 @@ import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.FakeAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -82,7 +83,7 @@ public class JPAHostSystem extends JamesImapHostSystem {
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
 
-        mailboxManager = new OpenJPAMailboxManager(mf, userManager, locker, false, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
+        mailboxManager = new OpenJPAMailboxManager(mf, userManager, new FakeAuthorizator(), locker, false, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
         mailboxManager.init();
 
         SubscriptionManager subscriptionManager = new JPASubscriptionManager(mf);

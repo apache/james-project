@@ -104,6 +104,8 @@ public class StoreMailboxManager implements MailboxManager {
 
     private final Authenticator authenticator;
 
+    private Authorizator authorizator;
+
     private final MailboxACLResolver aclResolver;
 
     private final GroupMembershipResolver groupMembershipResolver;
@@ -136,39 +138,40 @@ public class StoreMailboxManager implements MailboxManager {
     private final int limitAnnotationSize;
 
     @Inject
-    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, 
+    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator, 
             MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, 
             MessageParser messageParser, MessageId.Factory messageIdFactory, MailboxEventDispatcher mailboxEventDispatcher,
             DelegatingMailboxListener delegatingListener) {
-        this(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
+        this(mailboxSessionMapperFactory, authenticator, authorizator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
                 MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE, mailboxEventDispatcher, delegatingListener);
     }
 
-    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator,
+    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
                                MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
                                MessageParser messageParser, MessageId.Factory messageIdFactory) {
-        this(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
+        this(mailboxSessionMapperFactory, authenticator, authorizator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
             MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
     }
 
-    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, 
+    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
             MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser,
             MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize) {
-        this(mailboxSessionMapperFactory, authenticator, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
+        this(mailboxSessionMapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
                 limitOfAnnotations, limitAnnotationSize);
     }
 
-    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, 
+    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
             MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser,
             MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize) {
-        this(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
+        this(mailboxSessionMapperFactory, authenticator, authorizator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory,
             limitOfAnnotations, limitAnnotationSize, null, null);
     }
 
-    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator,
+    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
                                MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser,
                                MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize, MailboxEventDispatcher mailboxEventDispatcher, DelegatingMailboxListener delegatingListener) {
         this.authenticator = authenticator;
+        this.authorizator = authorizator;
         this.locker = locker;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.aclResolver = aclResolver;
@@ -412,6 +415,15 @@ public class StoreMailboxManager implements MailboxManager {
     public MailboxSession login(String userid, String passwd, Logger log) throws BadCredentialsException, MailboxException {
         if (login(userid, passwd)) {
             return createSession(userid, passwd, log, SessionType.User);
+        } else {
+            throw new BadCredentialsException();
+        }
+    }
+
+    @Override
+    public MailboxSession loginAsOtherUser(String adminUserid, String passwd, String otherUserId, Logger log) throws BadCredentialsException, MailboxException {
+        if (login(adminUserid, passwd) && authorizator.canLoginAsOtherUser(adminUserid, otherUserId)) {
+            return createSystemSession(otherUserId, log);
         } else {
             throw new BadCredentialsException();
         }

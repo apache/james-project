@@ -47,6 +47,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.Content;
@@ -409,6 +410,11 @@ public class MailboxEventAnalyserTest {
         @Override
         public boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
             return false;
+        }
+
+        @Override
+        public MailboxSession loginAsOtherUser(String adminUserId, String passwd, String realUserId, Logger log) throws BadCredentialsException, MailboxException {
+            throw new UnsupportedOperationException("Not implemented");
         }
     };
     

@@ -18,21 +18,13 @@
  ****************************************************************/
 package org.apache.james.mailbox.spring;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.apache.james.mailbox.store.Authorizator;
 
-public class SpringMailbox {
-    
-    private final ApplicationContext applicationContext;
-    
-    public SpringMailbox() {
-        applicationContext = new ClassPathXmlApplicationContext("META-INF/spring/spring-mailbox.xml",
-            "META-INF/spring/mailbox-authenticator-anonymous.xml", "META-INF/spring/mailbox-no-authorizator.xml", "META-INF/spring/quota.xml",
-            "META-INF/spring/quota-alias.xml", "META-INF/spring/event-system.xml", "META-INF/spring/event-alias.xml");
-    }
-    
-    public Object getBean(String beanName) {
-        return applicationContext.getBean(beanName);
+public class NoAuthorizator implements Authorizator {
+
+    @Override
+    public boolean canLoginAsOtherUser(String userId, String otherUserId) {
+        return false;
     }
 
 }

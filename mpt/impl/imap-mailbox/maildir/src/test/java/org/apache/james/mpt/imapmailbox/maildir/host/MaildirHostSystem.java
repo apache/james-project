@@ -34,6 +34,7 @@ import org.apache.james.mailbox.maildir.MaildirMailboxSessionMapperFactory;
 import org.apache.james.mailbox.maildir.MaildirStore;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.FakeAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
@@ -71,7 +72,7 @@ public class MaildirHostSystem extends JamesImapHostSystem {
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
 
-        mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, userManager, locker, aclResolver, 
+        mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, userManager, new FakeAuthorizator(), locker, aclResolver, 
                 groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
         mailboxManager.init();
 

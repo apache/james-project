@@ -29,6 +29,7 @@ import org.apache.james.mailbox.jcr.mail.model.JCRMailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
+import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
@@ -45,16 +46,16 @@ public class JCRMailboxManager extends StoreMailboxManager implements JCRImapCon
 
     private final Logger logger = LoggerFactory.getLogger(JCRMailboxManager.class);
     
-    public JCRMailboxManager(JCRMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, 
+    public JCRMailboxManager(JCRMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, Authorizator authorizator,
             MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, 
             MessageParser messageParser, MessageId.Factory messageIdFactory) {
-	    this(mapperFactory, authenticator, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
+	    this(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
     }
 
-    public JCRMailboxManager(JCRMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, 
+    public JCRMailboxManager(JCRMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, Authorizator authorizator,
             MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, 
             MessageParser messageParser, MessageId.Factory messageIdFactory) {
-        super(mapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
+        super(mapperFactory, authenticator, authorizator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
     }
 
     @Override

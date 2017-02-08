@@ -71,6 +71,7 @@ public class StoreMailboxManagerAnnotationTest {
 
     @Mock private MailboxSessionMapperFactory mailboxSessionMapperFactory;
     @Mock private Authenticator authenticator;
+    @Mock private Authorizator authorizator;
     @Mock private MailboxACLResolver aclResolver;
     @Mock private GroupMembershipResolver groupMembershipResolver;
     @Mock private MailboxMapper mailboxMapper;
@@ -101,7 +102,7 @@ public class StoreMailboxManagerAnnotationTest {
             }
         });
 
-        storeMailboxManager = spy(new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, aclResolver, groupMembershipResolver, 
+        storeMailboxManager = spy(new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, authorizator, aclResolver, groupMembershipResolver, 
                 messageParser, messageIdFactory, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE));
         storeMailboxManager.init();
     }

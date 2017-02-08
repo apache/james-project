@@ -263,6 +263,11 @@ public class DefaultMailboxesProvisioningFilterThreadTest {
         public boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
             return false;
         }
+
+        @Override
+        public MailboxSession loginAsOtherUser(String adminUserId, String passwd, String realUserId, Logger log) throws BadCredentialsException, MailboxException {
+            return null;
+        }
     }
 }
 

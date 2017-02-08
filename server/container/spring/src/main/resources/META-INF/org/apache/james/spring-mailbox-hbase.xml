@@ -38,9 +38,10 @@
     <bean id="hbase-mailboxmanager" class="org.apache.james.mailbox.hbase.HBaseMailboxManager" init-method="init">
         <constructor-arg index="0" ref="hbase-sessionMapperFactory"/>
         <constructor-arg index="1" ref="authenticator"/>
-        <constructor-arg index="2" ref="hbase-locker"/>
-        <constructor-arg index="3" ref="aclResolver"/>
-        <constructor-arg index="4" ref="groupMembershipResolver"/>
+        <constructor-arg index="2" ref="authorizator"/>
+        <constructor-arg index="3" ref="hbase-locker"/>
+        <constructor-arg index="4" ref="aclResolver"/>
+        <constructor-arg index="5" ref="groupMembershipResolver"/>
     </bean>
     
     <bean id="hbase-sessionMapperFactory" class="org.apache.james.mailbox.hbase.HBaseMailboxSessionMapperFactory">

@@ -38,6 +38,7 @@ import org.apache.james.mailbox.mock.MockMailboxManager;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.Authenticator;
+import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -164,6 +165,12 @@ public class MailboxCopierTest {
             new Authenticator() {
                 public boolean isAuthentic(String userid, CharSequence passwd) {
                     return true;
+                }
+            },
+            new Authorizator() {
+                @Override
+                public boolean canLoginAsOtherUser(String userId, String otherUserId) {
+                    return false;
                 }
             },
             aclResolver,

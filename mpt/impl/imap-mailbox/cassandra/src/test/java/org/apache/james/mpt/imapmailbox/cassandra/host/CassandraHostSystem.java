@@ -52,6 +52,7 @@ import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.FakeAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -73,6 +74,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
     
     private final CassandraMailboxManager mailboxManager;
     private final FakeAuthenticator userManager;
+    private final FakeAuthorizator authorizator;
     private final CassandraCluster cassandraClusterSingleton;
 
     public CassandraHostSystem() throws Exception {
@@ -90,6 +92,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
             new CassandraAnnotationModule());
         cassandraClusterSingleton = CassandraCluster.create(mailboxModule);
         userManager = new FakeAuthenticator();
+        authorizator = new FakeAuthorizator();
         com.datastax.driver.core.Session session = cassandraClusterSingleton.getConf();
         CassandraModSeqProvider modSeqProvider = new CassandraModSeqProvider(session);
         CassandraUidProvider uidProvider = new CassandraUidProvider(session);
@@ -104,7 +107,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         CassandraMailboxSessionMapperFactory mapperFactory = new CassandraMailboxSessionMapperFactory(uidProvider, modSeqProvider, 
                 session, typesProvider, messageDAO, messageIdDAO, imapUidDAO, mailboxCounterDAO, mailboxRecentsDAO);
         
-        mailboxManager = new CassandraMailboxManager(mapperFactory, userManager, new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory); 
+        mailboxManager = new CassandraMailboxManager(mapperFactory, userManager, authorizator, new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory); 
         QuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(mapperFactory);
 
         CassandraPerUserMaxQuotaManager perUserMaxQuotaManager = new CassandraPerUserMaxQuotaManager(session);

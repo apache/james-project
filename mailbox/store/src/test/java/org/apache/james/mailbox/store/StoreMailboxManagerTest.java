@@ -19,35 +19,41 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.MessageId.Factory;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StoreMailboxManagerTest {
 
     private static final String CURRENT_USER = "user";
+    private static final String CURRENT_USER_PASSWORD = "secret";
+    private static final String ADMIN = "admin";
+    private static final String ADMIN_PASSWORD = "adminsecret";
     private static final MailboxId MAILBOX_ID = TestId.of(123);
-    public static final int UID_VALIDITY = 42;
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoreMailboxManagerTest.class); 
+    private static final int UID_VALIDITY = 42;
     private StoreMailboxManager storeMailboxManager;
     private MailboxMapper mockedMailboxMapper;
     private MailboxSession mockedMailboxSession;
@@ -60,9 +66,13 @@ public class StoreMailboxManagerTest {
         when(mockedMapperFactory.getMailboxMapper(mockedMailboxSession))
             .thenReturn(mockedMailboxMapper);
         Factory messageIdFactory = mock(MessageId.Factory.class);
-        storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, new FakeAuthenticator(), 
+        FakeAuthenticator authenticator = new FakeAuthenticator();
+        authenticator.addUser(CURRENT_USER, CURRENT_USER_PASSWORD);
+        authenticator.addUser(ADMIN, ADMIN_PASSWORD);
+        storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, authenticator, new FakeAuthorizator(ADMIN),
                 new JVMMailboxPathLocker(), new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), 
                 new MessageParser(), messageIdFactory);
+        storeMailboxManager.init();
     }
 
     @Test
@@ -165,6 +175,35 @@ public class StoreMailboxManagerTest {
         MessageManager expected = storeMailboxManager.getMailbox(MAILBOX_ID, mockedMailboxSession);
 
         assertThat(expected.getId()).isEqualTo(MAILBOX_ID);
+    }
+
+    @Test
+    public void loginShouldCreateSessionWhenGoodPassword() throws Exception {
+        MailboxSession expected = storeMailboxManager.login(CURRENT_USER, CURRENT_USER_PASSWORD, LOGGER);
+
+        assertThat(expected.getUser().getUserName()).isEqualTo(CURRENT_USER);
+    }
+
+    @Test(expected = BadCredentialsException.class)
+    public void loginShouldThrowWhenBadPassword() throws Exception {
+        storeMailboxManager.login(CURRENT_USER, "badpassword", LOGGER);
+    }
+
+    @Test(expected = BadCredentialsException.class)
+    public void loginAsOtherUserShouldNotCreateUserSessionWhenAdminWithBadPassword() throws Exception {
+        storeMailboxManager.loginAsOtherUser(ADMIN, "badpassword", CURRENT_USER, LOGGER);
+    }
+
+    @Test(expected = BadCredentialsException.class)
+    public void loginAsOtherUserShouldNotCreateUserSessionWhenNotAdmin() throws Exception {
+        storeMailboxManager.loginAsOtherUser(CURRENT_USER, CURRENT_USER_PASSWORD, "otheruser", LOGGER);
+    }
+
+    @Test
+    public void loginAsOtherUserShouldCreateUserSessionWhenAdminWithGoodPassword() throws Exception {
+        MailboxSession expected = storeMailboxManager.loginAsOtherUser(ADMIN, ADMIN_PASSWORD, CURRENT_USER, LOGGER);
+
+        assertThat(expected.getUser().getUserName()).isEqualTo(CURRENT_USER);
     }
 }
 

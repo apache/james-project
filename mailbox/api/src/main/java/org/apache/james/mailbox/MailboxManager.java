@@ -273,7 +273,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
 
     /**
      * Autenticates the given user against the given password.<br>
-     * When authentic and authorized, a session will be supplied
+     * When authenticated and authorized, a session will be supplied
      * 
      * @param userid
      *            user name
@@ -281,14 +281,36 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      *            password supplied
      * @param log
      *            context sensitive log
-     * @return a <code>MailboxSession</code> when the user is authentic and
+     * @return a <code>MailboxSession</code> when the user is authenticated and
      *         authorized to access
      * @throws BadCredentialsException
-     *             when system access is denighed for the given user
+     *             when system access is denied for the given user
      * @throws MailboxException
      *             when the creation fails for other reasons
      */
     MailboxSession login(String userid, String passwd, Logger log) throws BadCredentialsException, MailboxException;
+
+    /**
+     * Autenticates the given administrator against the given password,
+     * then switch to an other user<br>
+     * When authenticated and authorized, a session for the other user will be supplied
+     * 
+     * @param adminUserId
+     *            user name of the admin user, matching the credentials
+     * @param passwd
+     *            password supplied for the admin user
+     * @param otherUserId
+     *            user name of the real user
+     * @param log
+     *            context sensitive log
+     * @return a <code>MailboxSession</code> for the real user
+     *         when the admin is authenticated and authorized to access
+     * @throws BadCredentialsException
+     *             when system access is denied for the given user
+     * @throws MailboxException
+     *             when the creation fails for other reasons
+     */
+    MailboxSession loginAsOtherUser(String adminUserId, String passwd, String otherUserId, Logger log) throws BadCredentialsException, MailboxException;
 
     /**
      * <p>

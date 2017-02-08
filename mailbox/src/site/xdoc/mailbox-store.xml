@@ -45,7 +45,7 @@ Image is no more in line with trunk
     <subsection name="Store Mailbox Manager">
       <p>All public and protected methods that can be used by a Mailbox Manager implementations.</p>
       <p>You need to instantiate the StoreMailboxManager with a mailboxSessionMapperFactory,
-         an authenticator, a uidProvider and a mailboxPathlocker.</p>
+         an authenticator, an authorizator, a uidProvider and a mailboxPathlocker.</p>
 <!-- 
 Image is no more in line with trunk
       <p><img src="images/uml/org-apache-james-mailbox-store-mailboxmanager.png"/></p>

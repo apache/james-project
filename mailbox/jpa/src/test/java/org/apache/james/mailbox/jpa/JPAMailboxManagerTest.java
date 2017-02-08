@@ -30,6 +30,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
+import org.apache.james.mailbox.store.Authenticator;
+import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -67,7 +69,9 @@ public class JPAMailboxManagerTest {
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
             MessageParser messageParser = new MessageParser();
 
-            openJPAMailboxManager = new OpenJPAMailboxManager(mf, null, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
+            Authenticator noAuthenticator = null;
+            Authorizator noAuthorizator = null;
+            openJPAMailboxManager = new OpenJPAMailboxManager(mf, noAuthenticator, noAuthorizator, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
 
             try {
                 openJPAMailboxManager.init();

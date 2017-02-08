@@ -41,6 +41,7 @@ import org.apache.james.mailbox.jcr.mail.JCRModSeqProvider;
 import org.apache.james.mailbox.jcr.mail.JCRUidProvider;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.FakeAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -94,7 +95,7 @@ public class JCRHostSystem extends JamesImapHostSystem{
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
             MessageParser messageParser = new MessageParser();
 
-            mailboxManager = new JCRMailboxManager(mf, userManager, locker, aclResolver, groupMembershipResolver, messageParser,
+            mailboxManager = new JCRMailboxManager(mf, userManager, new FakeAuthorizator(), aclResolver, groupMembershipResolver, messageParser,
                     new DefaultMessageId.Factory());
             mailboxManager.init();
 
