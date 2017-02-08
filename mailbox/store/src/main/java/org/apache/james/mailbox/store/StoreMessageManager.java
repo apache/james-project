@@ -94,6 +94,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -398,6 +400,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             final int size = (int) file.length();
 
             final List<MessageAttachment> attachments = extractAttachments(contentIn);
+            propertyBuilder.setHasAttachment(hasNonInlinedAttachment(attachments));
+
             final MailboxMessage message = createMessage(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, attachments);
 
             new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
@@ -437,6 +441,15 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             }
         }
 
+    }
+
+    private boolean hasNonInlinedAttachment(List<MessageAttachment> attachments) {
+        return FluentIterable.from(attachments).anyMatch(new Predicate<MessageAttachment>() {
+            @Override
+            public boolean apply(MessageAttachment input) {
+                return !input.isInline();
+            }
+        });
     }
 
     private List<MessageAttachment> extractAttachments(SharedFileInputStream contentIn) {
