@@ -34,6 +34,8 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Optional;
+
 
 public abstract class AbstractUsersRepositoryTest {
 
@@ -52,6 +54,7 @@ public abstract class AbstractUsersRepositoryTest {
     private String user1;
     private String user2;
     private String user3;
+    private String admin;
     
     @Before 
     public void setUp() throws Exception { 
@@ -62,6 +65,7 @@ public abstract class AbstractUsersRepositoryTest {
         user1 = login("username");
         user2 = login("username2");
         user3 = login("username3");
+        admin = login("admin");
     }
 
     @After
@@ -323,5 +327,26 @@ public abstract class AbstractUsersRepositoryTest {
 
     protected void disposeUsersRepository() throws UsersRepositoryException {
         LifecycleUtil.dispose(this.usersRepository);
+    }
+
+    @Test
+    public void isAdministratorShouldReturnFalseWhenNotConfigured() throws Exception {
+        usersRepository.setAdministratorId(Optional.<String>absent());
+
+        assertThat(usersRepository.isAdministrator(admin)).isFalse();
+    }
+
+    @Test
+    public void isAdministratorShouldReturnTrueWhenConfiguredAndUserIsAdmin() throws Exception {
+        usersRepository.setAdministratorId(Optional.of(admin));
+
+        assertThat(usersRepository.isAdministrator(admin)).isTrue();
+    }
+
+    @Test
+    public void isAdministratorShouldReturnFalseWhenConfiguredAndUserIsNotAdmin() throws Exception {
+        usersRepository.setAdministratorId(Optional.of(admin));
+
+        assertThat(usersRepository.isAdministrator(user1)).isFalse();
     }
 }

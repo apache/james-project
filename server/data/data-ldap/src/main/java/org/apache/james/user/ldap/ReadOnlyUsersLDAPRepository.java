@@ -54,6 +54,8 @@ import org.apache.james.util.retry.naming.ldap.RetryingLdapContext;
 import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
 
+import com.google.common.base.Optional;
+
 /**
  * <p>
  * This repository implementation serves as a bridge between Apache James and
@@ -91,6 +93,7 @@ import org.slf4j.Logger;
  *      retryStartInterval=&quot;0&quot;
  *      retryMaxInterval=&quot;30&quot;
  *      retryIntervalScale=&quot;1000&quot;
+ *      administratorId=&quot;ldapAdmin&quot;
  *  &lt;/users-store&gt;
  * </pre>
  *
@@ -213,6 +216,9 @@ import org.slf4j.Logger;
  * <b>readTimeout:</b> (optional) Sets property
  * <code>com.sun.jndi.ldap.read.timeout</code> to the specified integer value.
  * Applicable to Java 6 and above.
+ * <li>
+ * <b>administratorId:</b> (optional) User identifier of the administrator user.
+ * The administrator user is allowed to authenticate as other users.
  * </ul>
  *
  * @see ReadOnlyLDAPUser
@@ -295,6 +301,12 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      */
     private LdapContext ldapContext;
     private boolean supportsVirtualHosting;
+    
+    /**
+     * UserId of the administrator
+     * The administrator is allowed to log in as other users
+     */
+    private Optional<String> administratorId;
 
     // Use a connection pool. Default is true.
     private boolean useConnectionPool = true;
@@ -366,6 +378,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         //see if there is a filter argument
         filter = configuration.getString("[@filter]");
 
+        administratorId = Optional.fromNullable(configuration.getString("[@administratorId]"));
     }
 
     /**
@@ -769,5 +782,13 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     @Override
     public String getUser(MailAddress mailAddress) throws UsersRepositoryException {
         return mailAddress.getLocalPart();
+    }
+
+    @Override
+    public boolean isAdministrator(String username) throws UsersRepositoryException {
+        if (administratorId.isPresent()) {
+            return administratorId.get().equals(username);
+        }
+        return false;
     }
 }

@@ -136,5 +136,10 @@ public interface UsersRepository {
      * @throws UsersRepositoryException
      */
     String getUser(MailAddress mailAddress) throws UsersRepositoryException;
+    
+    /**
+     * Return true if the user is an admin for this repository
+     */
+    boolean isAdministrator(String username) throws UsersRepositoryException;
 
 }

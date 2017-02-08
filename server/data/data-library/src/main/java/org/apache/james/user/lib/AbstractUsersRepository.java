@@ -33,11 +33,15 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+
 public abstract class AbstractUsersRepository implements UsersRepository, LogEnabled, Configurable {
 
     private DomainList domainList;
     private boolean virtualHosting;
     private Logger logger;
+    private Optional<String> administratorId;
 
     protected Logger getLogger() {
         return logger;
@@ -57,6 +61,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, LogEna
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
 
         virtualHosting = configuration.getBoolean("enableVirtualHosting", getDefaultVirtualHostingValue());
+        administratorId = Optional.fromNullable(configuration.getString("administratorId"));
 
         doConfigure(configuration);
     }
@@ -141,5 +146,17 @@ public abstract class AbstractUsersRepository implements UsersRepository, LogEna
         } else {
             return mailAddress.getLocalPart();
         }
+    }
+
+    @VisibleForTesting void setAdministratorId(Optional<String> username) {
+        this.administratorId = username;
+    }
+
+    @Override
+    public boolean isAdministrator(String username) throws UsersRepositoryException {
+        if (administratorId.isPresent()) {
+            return administratorId.get().equals(username);
+        }
+        return false;
     }
 }
