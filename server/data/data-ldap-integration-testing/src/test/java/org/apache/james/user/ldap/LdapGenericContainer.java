@@ -19,12 +19,13 @@
 package org.apache.james.user.ldap;
 
 import org.apache.james.util.streams.SwarmGenericContainer;
+import org.junit.rules.ExternalResource;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-public class LdapGenericContainer {
+public class LdapGenericContainer extends ExternalResource {
 
     public static final int DEFAULT_LDAP_PORT = 389;
 
@@ -85,7 +86,7 @@ public class LdapGenericContainer {
     public String getLdapHost() {
         return "ldap://" +
                 container.getContainerIpAddress() +
-                ":" + 
+                ":" +
                 container.getMappedPort(LdapGenericContainer.DEFAULT_LDAP_PORT);
     }
 }
