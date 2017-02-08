@@ -27,7 +27,6 @@ import java.util.Date;
 
 import javax.mail.Flags.Flag;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.model.Filter;
 import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.FilterOperator;
@@ -92,6 +91,30 @@ public class FilterToSearchQueryTest {
         SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
                 .cc(cc)
                 .build());
+
+        assertThat(searchQuery).isEqualTo(expectedSearchQuery);
+    }
+
+    @Test
+    public void filterConditionShouldMapWhenHasAttachment() {
+        SearchQuery expectedSearchQuery = new SearchQuery();
+        expectedSearchQuery.andCriteria(SearchQuery.hasAttachment());
+
+        SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
+            .hasAttachment(true)
+            .build());
+
+        assertThat(searchQuery).isEqualTo(expectedSearchQuery);
+    }
+
+    @Test
+    public void filterConditionShouldMapWhenHasNoAttachment() {
+        SearchQuery expectedSearchQuery = new SearchQuery();
+        expectedSearchQuery.andCriteria(SearchQuery.hasNoAttachment());
+
+        SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
+            .hasAttachment(false)
+            .build());
 
         assertThat(searchQuery).isEqualTo(expectedSearchQuery);
     }
@@ -178,14 +201,6 @@ public class FilterToSearchQueryTest {
                 .build());
 
         assertThat(searchQuery).isEqualTo(expectedSearchQuery);
-    }
-
-    @Test
-    public void filterConditionShouldThrowWhenHasAttachment() {
-        assertThatThrownBy(() -> new FilterToSearchQuery().convert(FilterCondition.builder()
-                .hasAttachment(true)
-                .build()))
-            .isInstanceOf(NotImplementedException.class);
     }
 
     @Test

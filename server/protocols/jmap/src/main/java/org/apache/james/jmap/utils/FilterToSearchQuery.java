@@ -23,7 +23,6 @@ import java.util.Date;
 
 import javax.mail.Flags.Flag;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.model.Filter;
 import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.FilterOperator;
@@ -32,7 +31,6 @@ import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 
-import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
@@ -52,17 +50,15 @@ public class FilterToSearchQuery {
 
     private SearchQuery convertCondition(FilterCondition filter) {
         SearchQuery searchQuery = new SearchQuery();
-        filter.getText().ifPresent(text -> {
-            searchQuery.andCriteria(
-                    SearchQuery.or(ImmutableList.of(
-                            SearchQuery.address(AddressType.From, text),
-                            SearchQuery.address(AddressType.To, text),
-                            SearchQuery.address(AddressType.Cc, text),
-                            SearchQuery.address(AddressType.Bcc, text),
-                            SearchQuery.headerContains("Subject", text),
-                            SearchQuery.bodyContains(text)))
-                    );
-        });
+        filter.getText().ifPresent(text -> searchQuery.andCriteria(
+                SearchQuery.or(ImmutableList.of(
+                        SearchQuery.address(AddressType.From, text),
+                        SearchQuery.address(AddressType.To, text),
+                        SearchQuery.address(AddressType.Cc, text),
+                        SearchQuery.address(AddressType.Bcc, text),
+                        SearchQuery.headerContains("Subject", text),
+                        SearchQuery.bodyContains(text)))
+                ));
         filter.getFrom().ifPresent(from -> searchQuery.andCriteria(SearchQuery.address(AddressType.From, from)));
         filter.getTo().ifPresent(to -> searchQuery.andCriteria(SearchQuery.address(AddressType.To, to)));
         filter.getCc().ifPresent(cc -> searchQuery.andCriteria(SearchQuery.address(AddressType.Cc, cc)));
@@ -71,7 +67,6 @@ public class FilterToSearchQuery {
         filter.getBody().ifPresent(body ->  searchQuery.andCriteria(SearchQuery.bodyContains(body)));
         filter.getAfter().ifPresent(after -> searchQuery.andCriteria(SearchQuery.internalDateAfter(Date.from(after.toInstant()), DateResolution.Second)));
         filter.getBefore().ifPresent(before -> searchQuery.andCriteria(SearchQuery.internalDateBefore(Date.from(before.toInstant()), DateResolution.Second)));
-        filter.getHasAttachment().ifPresent(Throwing.consumer(hasAttachment -> { throw new NotImplementedException(); } ));
         filter.getHeader().ifPresent(header -> searchQuery.andCriteria(SearchQuery.headerContains(header.getName(), header.getValue().orElse(null))));
         filter.getIsAnswered().ifPresent(isAnswered -> searchQuery.andCriteria(SearchQuery.flagIsSet(Flag.ANSWERED)));
         filter.getIsDraft().ifPresent(isDraft -> searchQuery.andCriteria(SearchQuery.flagIsSet(Flag.DRAFT)));
@@ -79,6 +74,7 @@ public class FilterToSearchQuery {
         filter.getIsUnread().ifPresent(isUnread -> searchQuery.andCriteria(SearchQuery.flagIsUnSet(Flag.SEEN)));
         filter.getMaxSize().ifPresent(maxSize -> searchQuery.andCriteria(SearchQuery.sizeLessThan(maxSize)));
         filter.getMinSize().ifPresent(minSize -> searchQuery.andCriteria(SearchQuery.sizeGreaterThan(minSize)));
+        filter.getHasAttachment().ifPresent(hasAttachment -> searchQuery.andCriteria(SearchQuery.hasAttachment(hasAttachment)));
         return searchQuery;
     }
 

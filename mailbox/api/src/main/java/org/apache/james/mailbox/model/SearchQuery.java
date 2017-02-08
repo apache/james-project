@@ -593,12 +593,20 @@ public class SearchQuery implements Serializable {
         return result;
     }
 
+    public static Criterion hasAttachment(boolean value) {
+        if (value) {
+            return new AttachmentCriterion(BooleanOperator.set());
+        } else {
+            return new AttachmentCriterion(BooleanOperator.unset());
+        }
+    }
+
     public static Criterion hasAttachment() {
-        return new AttachmentCriterion(BooleanOperator.set());
+        return hasAttachment(true);
     }
 
     public static Criterion hasNoAttachment() {
-        return new AttachmentCriterion(BooleanOperator.unset());
+        return hasAttachment(false);
     }
 
     /**
