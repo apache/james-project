@@ -159,7 +159,7 @@
   "isAnswered":false,
   "isFlagged":false,
   "isRecent":false,
-  "hasAttachment":true,
+  "hasAttachment":false,
   "isUnread":false,
   "users": [
     "username"

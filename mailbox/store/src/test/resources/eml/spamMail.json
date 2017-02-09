@@ -198,7 +198,7 @@
   "isDraft": false,
   "isFlagged": false,
   "isRecent": false,
-  "hasAttachment": true,
+  "hasAttachment": false,
   "isUnread": true,
   "users": [
     "username"

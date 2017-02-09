@@ -43,7 +43,7 @@ public class IndexableMessageWithMessageId extends IndexableMessage {
             indexableMessage.isDeleted(), indexableMessage.isDraft(), indexableMessage.isAnswered(), indexableMessage.getUserFlags(),
             indexableMessage.getHeaders(), indexableMessage.getFrom(), indexableMessage.getTo(), indexableMessage.getCc(), indexableMessage.getBcc(),
             indexableMessage.getReplyTo(), indexableMessage.getSubjects(), indexableMessage.getSentDate(), indexableMessage.getProperties(),
-            indexableMessage.getAttachments(), indexableMessage.getBodyText(), indexableMessage.getBodyHtml(), indexableMessage.getText(),
+            indexableMessage.getAttachments(), indexableMessage.getHasAttachment(), indexableMessage.getBodyText(), indexableMessage.getBodyHtml(), indexableMessage.getText(),
             message.getMessageId().serialize());
     }
 
@@ -53,10 +53,10 @@ public class IndexableMessageWithMessageId extends IndexableMessage {
                                          String mediaType, String subType, boolean isUnRead, boolean isRecent, boolean isFlagged,
                                          boolean isDeleted, boolean isDraft, boolean isAnswered, String[] userFlags, Multimap<String, String> headers,
                                          EMailers from, EMailers to, EMailers cc, EMailers bcc, EMailers replyTo, Subjects subjects,
-                                         String sentDate, List<Property> properties, List<MimePart> attachments, Optional<String> bodyText,
+                                         String sentDate, List<Property> properties, List<MimePart> attachments, boolean hasAttachments, Optional<String> bodyText,
                                          Optional<String> bodyHtml, String text, String messageId) {
         super(uid, mailboxId, users, modSeq, size, date, mediaType, subType, isUnRead, isRecent, isFlagged, isDeleted,
-            isDraft, isAnswered, userFlags, headers, from, to, cc, bcc, replyTo, subjects, sentDate, properties, attachments,
+            isDraft, isAnswered, userFlags, headers, from, to, cc, bcc, replyTo, subjects, sentDate, properties, attachments, hasAttachments,
             bodyText, bodyHtml, text);
         this.messageId = messageId;
     }

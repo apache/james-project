@@ -212,6 +212,10 @@ public class MailboxMappingFactory {
                                 .endObject()
                             .endObject()
 
+                            .startObject(JsonMessageConstants.HAS_ATTACHMENT)
+                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.BOOLEAN)
+                            .endObject()
+
                             .startObject(JsonMessageConstants.TEXT)
                                 .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
                                 .field(NodeMappingFactory.ANALYZER, NodeMappingFactory.SNOWBALL)

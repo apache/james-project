@@ -34,6 +34,8 @@ import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
+import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.mime4j.MimeException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -46,6 +48,8 @@ import com.google.common.collect.Multimap;
 
 public class IndexableMessage {
 
+    public static final SimpleProperty HAS_ATTACHMENT_PROPERTY = new SimpleProperty(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "true");
+
     public static IndexableMessage from(MailboxMessage message, List<User> users, TextExtractor textExtractor,
                                         ZoneId zoneId, IndexAttachments indexAttachments) {
 
@@ -57,6 +61,9 @@ public class IndexableMessage {
             indexableMessage.users = users.stream().map(User::getUserName).collect(Guavate.toImmutableList());
             indexableMessage.bodyText = parsingResult.locateFirstTextBody();
             indexableMessage.bodyHtml = parsingResult.locateFirstHtmlBody();
+            indexableMessage.hasAttachment = message.getProperties()
+                .stream()
+                .anyMatch(property -> property.equals(HAS_ATTACHMENT_PROPERTY));
             indexableMessage.setFlattenedAttachments(parsingResult, indexAttachments);
             indexableMessage.copyHeaderFields(parsingResult.getHeaderCollection(), getSanitizedInternalDate(message, zoneId));
             indexableMessage.generateText();
@@ -68,11 +75,13 @@ public class IndexableMessage {
     }
 
     private void setFlattenedAttachments(MimePart parsingResult, IndexAttachments indexAttachments) {
-        if (indexAttachments.equals(IndexAttachments.YES)) {
-            attachments = parsingResult.getAttachmentsStream()
-                    .collect(Collectors.toList());
+        List<MimePart> mimeparts = parsingResult.getAttachmentsStream()
+                    .collect(Guavate.toImmutableList());
+
+        if (IndexAttachments.YES.equals(indexAttachments)) {
+            this.attachments = mimeparts;
         } else {
-            attachments = ImmutableList.of();
+            this.attachments = ImmutableList.of();
         }
     }
 
@@ -134,6 +143,7 @@ public class IndexableMessage {
     private String date;
     private String mediaType;
     private String subType;
+    private boolean hasAttachment;
     private boolean isUnRead;
     private boolean isRecent;
     private boolean isFlagged;
@@ -155,11 +165,12 @@ public class IndexableMessage {
     private Optional<String> bodyHtml;
     private String text;
 
+
     public IndexableMessage(long uid, String mailboxId, List<String> users, long modSeq, long size, String date, String mediaType,
                             String subType, boolean isUnRead, boolean isRecent, boolean isFlagged, boolean isDeleted, boolean isDraft,
                             boolean isAnswered, String[] userFlags, Multimap<String, String> headers, EMailers from, EMailers to,
                             EMailers cc, EMailers bcc, EMailers replyTo, Subjects subjects, String sentDate, List<Property> properties,
-                            List<MimePart> attachments, Optional<String> bodyText, Optional<String> bodyHtml, String text) {
+                            List<MimePart> attachments, boolean hasAttachment, Optional<String> bodyText, Optional<String> bodyHtml, String text) {
         this.uid = uid;
         this.mailboxId = mailboxId;
         this.users = users;
@@ -185,6 +196,7 @@ public class IndexableMessage {
         this.sentDate = sentDate;
         this.properties = properties;
         this.attachments = attachments;
+        this.hasAttachment = hasAttachment;
         this.bodyText = bodyText;
         this.bodyHtml = bodyHtml;
         this.text = text;
@@ -330,7 +342,7 @@ public class IndexableMessage {
 
     @JsonProperty(JsonMessageConstants.HAS_ATTACHMENT)
     public boolean getHasAttachment() {
-        return attachments.size() > 0;
+        return hasAttachment;
     }
 
     @JsonProperty(JsonMessageConstants.TEXT)
