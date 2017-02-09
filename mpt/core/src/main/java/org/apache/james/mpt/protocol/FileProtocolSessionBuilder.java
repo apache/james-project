@@ -138,6 +138,9 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
                         throw new Exception("Unrecognized log level for " + next);
                     }
                 }
+                else if (next.startsWith(REINIT)) {
+                    session.REINIT(sessionNumber);
+                }
                 else if (next.startsWith(OPEN_UNORDERED_BLOCK_TAG)) {
                     List<String> unorderedLines = new ArrayList<String>(5);
                     next = reader.readLine();

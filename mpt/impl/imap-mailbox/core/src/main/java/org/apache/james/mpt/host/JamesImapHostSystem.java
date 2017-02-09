@@ -105,6 +105,10 @@ public abstract class JamesImapHostSystem implements ImapHostSystem {
             out.write("* OK IMAP4rev1 Server ready\r\n");
         }
 
+        public void restart() throws Exception {
+            session = new ImapSessionImpl(LoggerFactory.getLogger("sessionLog"));
+        }
+
         public void stop() throws Exception {
             session.deselect();
         }

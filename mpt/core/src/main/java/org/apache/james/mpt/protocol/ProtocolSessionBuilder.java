@@ -57,6 +57,8 @@ public class ProtocolSessionBuilder {
 
     public static final String SESSION_TAG = "SESSION:";
 
+    public static final String REINIT = "REINIT";
+
     private final Properties variables;
     
     public ProtocolSessionBuilder() {

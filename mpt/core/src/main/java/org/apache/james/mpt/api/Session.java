@@ -47,6 +47,13 @@ public interface Session {
     void start() throws Exception;
 
     /**
+     * Reopens the session to reinitialize the server state
+     * 
+     * @throws Exception
+     */
+    void restart() throws Exception;
+
+    /**
      * Closes the session.
      * 
      * @throws Exception

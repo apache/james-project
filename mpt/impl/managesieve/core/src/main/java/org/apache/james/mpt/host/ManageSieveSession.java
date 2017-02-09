@@ -81,6 +81,10 @@ public class ManageSieveSession implements Session {
     }
 
     @Override
+    public void restart() throws Exception {
+    }
+
+    @Override
     public void writeLine(String line) throws Exception {
         isReadLast = false;
         in.nextLine(line);
