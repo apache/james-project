@@ -42,7 +42,6 @@ import com.google.common.collect.Lists;
 public class ElasticSearchIndexerTest {
 
     private static final int MINIMUM_BATCH_SIZE = 1;
-    private static final String CONTENT = "content";
     private static final IndexName INDEX_NAME = new IndexName("index_name");
     private static final TypeName TYPE_NAME = new TypeName("type_name");
     private TemporaryFolder temporaryFolder = new TemporaryFolder();

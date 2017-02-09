@@ -42,7 +42,6 @@ import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
-import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -52,29 +51,27 @@ import com.google.testing.threadtester.ThreadedBefore;
 import com.google.testing.threadtester.ThreadedMain;
 import com.google.testing.threadtester.ThreadedSecondary;
 
-public class FirstUserConnectionFilterThreadTest {
+public class DefaultMailboxesProvisioningFilterThreadTest {
 
-    private FirstUserConnectionFilter sut;
-    private InMemoryUsersRepository usersRepository;
+    private DefaultMailboxesProvisioningFilter sut;
     private MailboxSession session;
     private MailboxManager mailboxManager;
 
     @ThreadedBefore
     public void before() {
-        usersRepository = new InMemoryUsersRepository();
         session = new MockMailboxSession("username");
         mailboxManager = new FakeMailboxManager(session) ;
-        sut = new FirstUserConnectionFilter(usersRepository, mailboxManager);
+        sut = new DefaultMailboxesProvisioningFilter(mailboxManager);
     }
     
     @ThreadedMain
     public void mainThread() {
-        sut.createAccountIfNeeded(session);
+        sut.createMailboxesIfNeeded(session);
     }
     
     @ThreadedSecondary
     public void secondThread() {
-        sut.createAccountIfNeeded(session);
+        sut.createMailboxesIfNeeded(session);
     }
     
     @ThreadedAfter
@@ -85,7 +82,7 @@ public class FirstUserConnectionFilterThreadTest {
     @Test
     public void testConcurrentAccessToFilterShouldNotThrow() {
         AnnotatedTestRunner runner = new AnnotatedTestRunner();
-        runner.runTests(this.getClass(), FirstUserConnectionFilter.class);
+        runner.runTests(this.getClass(), DefaultMailboxesProvisioningFilter.class);
     }
     
     private static class FakeMailboxManager implements MailboxManager {

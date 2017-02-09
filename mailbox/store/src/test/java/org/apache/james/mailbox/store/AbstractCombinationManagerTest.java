@@ -92,7 +92,6 @@ public abstract class AbstractCombinationManagerTest {
     }
 
     @Test
-    @SuppressWarnings("deprecation")
     public void getMessageCountFromMessageManagerShouldReturnDataSetInMailboxesFromMessageIdManager() throws Exception {
         MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, FLAGS).getMessageId();
 

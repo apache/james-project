@@ -33,7 +33,6 @@ import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
 import org.apache.james.jmap.model.UpdateMessagePatch;
-import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
@@ -59,18 +58,15 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     private final UpdateMessagePatchConverter updatePatchConverter;
     private final MessageIdManager messageIdManager;
     private final Factory mailboxIdFactory;
-    private final SystemMailboxesProvider systemMailboxesProvider;
 
     @Inject
     @VisibleForTesting SetMessagesUpdateProcessor(
             UpdateMessagePatchConverter updatePatchConverter,
             MessageIdManager messageIdManager,
-            Factory mailboxIdFactory,
-            SystemMailboxesProvider systemMailboxesProvider) {
+            Factory mailboxIdFactory) {
         this.updatePatchConverter = updatePatchConverter;
         this.messageIdManager = messageIdManager;
         this.mailboxIdFactory = mailboxIdFactory;
-        this.systemMailboxesProvider = systemMailboxesProvider;
     }
 
     @Override

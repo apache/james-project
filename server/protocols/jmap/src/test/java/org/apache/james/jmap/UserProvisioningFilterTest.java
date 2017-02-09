@@ -29,22 +29,20 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import org.junit.Before;
 import org.junit.Test;
 
-public class FirstUserConnectionFilterTest {
+public class UserProvisioningFilterTest {
 
-    private FirstUserConnectionFilter sut;
+    private UserProvisioningFilter sut;
     private InMemoryUsersRepository usersRepository;
 
     @Before
     public void setup() {
         usersRepository = new InMemoryUsersRepository();
-        MailboxManager mailboxManager = mock(MailboxManager.class);
-        sut = new FirstUserConnectionFilter(usersRepository, mailboxManager);
+        sut = new UserProvisioningFilter(usersRepository);
     }
     
     @Test
