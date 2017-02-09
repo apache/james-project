@@ -169,8 +169,8 @@ public class MailboxCopierTest {
             },
             new Authorizator() {
                 @Override
-                public boolean canLoginAsOtherUser(String userId, String otherUserId) {
-                    return false;
+                public AuthorizationState canLoginAsOtherUser(String userId, String otherUserId) {
+                    return AuthorizationState.NOT_ADMIN;
                 }
             },
             aclResolver,

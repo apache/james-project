@@ -92,7 +92,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
             new CassandraAnnotationModule());
         cassandraClusterSingleton = CassandraCluster.create(mailboxModule);
         userManager = new FakeAuthenticator();
-        authorizator = new FakeAuthorizator();
+        authorizator = FakeAuthorizator.defaultReject();
         com.datastax.driver.core.Session session = cassandraClusterSingleton.getConf();
         CassandraModSeqProvider modSeqProvider = new CassandraModSeqProvider(session);
         CassandraUidProvider uidProvider = new CassandraUidProvider(session);

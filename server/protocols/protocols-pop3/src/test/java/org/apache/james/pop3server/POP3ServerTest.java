@@ -740,10 +740,9 @@ public class POP3ServerTest {
                 }
             }
         }, new Authorizator() {
-
             @Override
-            public boolean canLoginAsOtherUser(String userId, String otherUserId) {
-                return false;
+            public AuthorizationState canLoginAsOtherUser(String userId, String otherUserId) {
+                return AuthorizationState.NOT_ADMIN;
             }
         }, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory(), MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
         mailboxManager.init();

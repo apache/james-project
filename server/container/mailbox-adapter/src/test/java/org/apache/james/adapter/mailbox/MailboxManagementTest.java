@@ -56,7 +56,7 @@ public class MailboxManagementTest {
         StoreMailboxManager mailboxManager = new StoreMailboxManager(
             inMemoryMapperFactory,
             new FakeAuthenticator(),
-            new FakeAuthorizator(),
+            FakeAuthorizator.defaultReject(),
             new JVMMailboxPathLocker(),
             new UnionMailboxACLResolver(),
             new SimpleGroupMembershipResolver(),

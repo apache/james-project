@@ -59,7 +59,7 @@ public class InMemoryIntegrationResources implements IntegrationResources {
         final StoreMailboxManager manager = new InMemoryMailboxManager(
             mailboxSessionMapperFactory,
             fakeAuthenticator,
-            new FakeAuthorizator(),
+            FakeAuthorizator.defaultReject(),
             new NoMailboxPathLocker(),
             new UnionMailboxACLResolver(),
             groupMembershipResolver,

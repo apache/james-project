@@ -17,21 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.mailbox.exception;
 
-import org.apache.james.mailbox.exception.MailboxException;
+public class UserDoesNotExistException extends MailboxException {
 
-/**
- * Authenticates user credentials.
- */
-public interface Authorizator {
+    private final String name;
 
-    enum AuthorizationState {
-        ALLOWED,
-        NOT_ADMIN,
-        UNKNOWN_USER
+    public UserDoesNotExistException(String name) {
+        super("User " + name + "does not exist");
+        this.name = name;
     }
 
-    AuthorizationState canLoginAsOtherUser(String userId, String otherUserId) throws MailboxException;
+    public String getName() {
+        return name;
+    }
 }
-

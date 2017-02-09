@@ -18,22 +18,38 @@
  ****************************************************************/
 package org.apache.james.mailbox.store;
 
-import java.util.List;
-
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Optional;
 
 public class FakeAuthorizator implements Authorizator {
 
-    private List<String> adminIds;
+    public static FakeAuthorizator defaultReject() {
+        return new FakeAuthorizator(Optional.<String>absent(), Optional.<String>absent());
+    }
 
-    public FakeAuthorizator(String... adminIds) {
-        this.adminIds = ImmutableList.copyOf(adminIds);
+    public static FakeAuthorizator forUserAndAdmin(String admin, String user) {
+        return new FakeAuthorizator(Optional.of(admin), Optional.of(user));
+    }
 
+    private final Optional<String> adminId;
+    private final Optional<String> delegatedUserId;
+
+    private FakeAuthorizator(Optional<String> adminId, Optional<String> userId) {
+        this.adminId = adminId;
+        this.delegatedUserId = userId;
     }
 
     @Override
-    public boolean canLoginAsOtherUser(String userId, String otherUserId) {
-        return adminIds.contains(userId);
+    public AuthorizationState canLoginAsOtherUser(String userId, String otherUserId) {
+        if (!adminId.isPresent() || !this.delegatedUserId.isPresent()) {
+            return AuthorizationState.NOT_ADMIN;
+        }
+        if (!adminId.get().equals(userId)) {
+            return AuthorizationState.NOT_ADMIN;
+        }
+        if (!otherUserId.equals(this.delegatedUserId.get())) {
+            return AuthorizationState.UNKNOWN_USER;
+        }
+        return AuthorizationState.ALLOWED;
     }
 }
 

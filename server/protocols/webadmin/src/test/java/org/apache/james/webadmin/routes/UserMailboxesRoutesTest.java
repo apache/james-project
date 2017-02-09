@@ -45,6 +45,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.SimpleMailboxMetaData;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -103,7 +104,7 @@ public class UserMailboxesRoutesTest {
             MessageId.Factory messageIdFactory = new DefaultMessageId.Factory();
             InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(new InMemoryMailboxSessionMapperFactory(),
                 (userid, passwd) -> true,
-                (adminUserid, userid) -> false,
+                FakeAuthorizator.defaultReject(),
                 new JVMMailboxPathLocker(),
                 new UnionMailboxACLResolver(),
                 new SimpleGroupMembershipResolver(),

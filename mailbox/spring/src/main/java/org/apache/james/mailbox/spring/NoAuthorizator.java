@@ -23,8 +23,8 @@ import org.apache.james.mailbox.store.Authorizator;
 public class NoAuthorizator implements Authorizator {
 
     @Override
-    public boolean canLoginAsOtherUser(String userId, String otherUserId) {
-        return false;
+    public AuthorizationState canLoginAsOtherUser(String userId, String otherUserId) {
+        return AuthorizationState.NOT_ADMIN;
     }
 
 }

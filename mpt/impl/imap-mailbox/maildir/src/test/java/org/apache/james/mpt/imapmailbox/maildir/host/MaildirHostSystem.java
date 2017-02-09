@@ -72,7 +72,7 @@ public class MaildirHostSystem extends JamesImapHostSystem {
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
 
-        mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, userManager, new FakeAuthorizator(), locker, aclResolver, 
+        mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, userManager, FakeAuthorizator.defaultReject(), locker, aclResolver,
                 groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
         mailboxManager.init();
 

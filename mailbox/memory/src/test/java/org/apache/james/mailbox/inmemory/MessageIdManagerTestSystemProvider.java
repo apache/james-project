@@ -57,7 +57,7 @@ public class MessageIdManagerTestSystemProvider {
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         MessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         FakeAuthenticator authenticator = new FakeAuthenticator();
-        FakeAuthorizator authorizator = new FakeAuthorizator();
+        FakeAuthorizator authorizator = FakeAuthorizator.defaultReject();
         authenticator.addUser(MailboxManagerFixture.USER, PASSWORD);
         authenticator.addUser(MailboxManagerFixture.OTHER_USER, PASSWORD);
         InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, authenticator, authorizator,

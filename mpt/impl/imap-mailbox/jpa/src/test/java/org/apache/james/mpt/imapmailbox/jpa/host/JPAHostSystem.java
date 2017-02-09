@@ -83,7 +83,7 @@ public class JPAHostSystem extends JamesImapHostSystem {
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
 
-        mailboxManager = new OpenJPAMailboxManager(mf, userManager, new FakeAuthorizator(), locker, false, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
+        mailboxManager = new OpenJPAMailboxManager(mf, userManager, FakeAuthorizator.defaultReject(), locker, false, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
         mailboxManager.init();
 
         SubscriptionManager subscriptionManager = new JPASubscriptionManager(mf);

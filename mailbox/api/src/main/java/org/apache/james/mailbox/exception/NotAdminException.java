@@ -17,21 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.mailbox.exception;
 
-import org.apache.james.mailbox.exception.MailboxException;
-
-/**
- * Authenticates user credentials.
- */
-public interface Authorizator {
-
-    enum AuthorizationState {
-        ALLOWED,
-        NOT_ADMIN,
-        UNKNOWN_USER
-    }
-
-    AuthorizationState canLoginAsOtherUser(String userId, String otherUserId) throws MailboxException;
+public class NotAdminException extends MailboxException {
 }
-

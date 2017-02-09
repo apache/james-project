@@ -47,6 +47,8 @@ import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.NotAdminException;
+import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -421,11 +423,20 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public MailboxSession loginAsOtherUser(String adminUserid, String passwd, String otherUserId, Logger log) throws BadCredentialsException, MailboxException {
-        if (login(adminUserid, passwd) && authorizator.canLoginAsOtherUser(adminUserid, otherUserId)) {
-            return createSystemSession(otherUserId, log);
-        } else {
+    public MailboxSession loginAsOtherUser(String adminUserid, String passwd, String otherUserId, Logger log) throws MailboxException {
+        if (! login(adminUserid, passwd)) {
             throw new BadCredentialsException();
+        }
+        Authorizator.AuthorizationState authorizationState = authorizator.canLoginAsOtherUser(adminUserid, otherUserId);
+        switch (authorizationState) {
+            case ALLOWED:
+                return createSystemSession(otherUserId, log);
+            case NOT_ADMIN:
+                throw new NotAdminException();
+            case UNKNOWN_USER:
+                throw new UserDoesNotExistException(otherUserId);
+            default:
+                throw new RuntimeException("Unknown AuthorizationState " + authorizationState);
         }
     }
 

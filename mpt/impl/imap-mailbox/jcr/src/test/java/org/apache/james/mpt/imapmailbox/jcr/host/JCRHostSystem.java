@@ -95,7 +95,7 @@ public class JCRHostSystem extends JamesImapHostSystem{
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
             MessageParser messageParser = new MessageParser();
 
-            mailboxManager = new JCRMailboxManager(mf, userManager, new FakeAuthorizator(), aclResolver, groupMembershipResolver, messageParser,
+            mailboxManager = new JCRMailboxManager(mf, userManager, FakeAuthorizator.defaultReject(), aclResolver, groupMembershipResolver, messageParser,
                     new DefaultMessageId.Factory());
             mailboxManager.init();
 

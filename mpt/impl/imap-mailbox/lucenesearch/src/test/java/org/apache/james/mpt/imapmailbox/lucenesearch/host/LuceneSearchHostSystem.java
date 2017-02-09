@@ -125,7 +125,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
             MessageParser messageParser = new MessageParser();
 
-            mailboxManager = new OpenJPAMailboxManager(factory, userManager, new FakeAuthorizator(), locker, false, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
+            mailboxManager = new OpenJPAMailboxManager(factory, userManager, FakeAuthorizator.defaultReject(), locker, false, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
 
             LuceneMessageSearchIndex searchIndex = new LuceneMessageSearchIndex(factory, mailboxIdFactory, fsDirectory, messageIdFactory, mailboxManager);
             searchIndex.setEnableSuffixMatch(true);

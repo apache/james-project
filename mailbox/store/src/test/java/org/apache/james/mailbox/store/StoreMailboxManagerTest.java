@@ -30,6 +30,8 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.NotAdminException;
+import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -54,6 +56,8 @@ public class StoreMailboxManagerTest {
     private static final MailboxId MAILBOX_ID = TestId.of(123);
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreMailboxManagerTest.class); 
     private static final int UID_VALIDITY = 42;
+    public static final String UNKNOWN_USER = "otheruser";
+    public static final String BAD_PASSWORD = "badpassword";
     private StoreMailboxManager storeMailboxManager;
     private MailboxMapper mockedMailboxMapper;
     private MailboxSession mockedMailboxSession;
@@ -69,7 +73,7 @@ public class StoreMailboxManagerTest {
         FakeAuthenticator authenticator = new FakeAuthenticator();
         authenticator.addUser(CURRENT_USER, CURRENT_USER_PASSWORD);
         authenticator.addUser(ADMIN, ADMIN_PASSWORD);
-        storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, authenticator, new FakeAuthorizator(ADMIN),
+        storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, authenticator, FakeAuthorizator.forUserAndAdmin(ADMIN, CURRENT_USER),
                 new JVMMailboxPathLocker(), new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), 
                 new MessageParser(), messageIdFactory);
         storeMailboxManager.init();
@@ -186,17 +190,37 @@ public class StoreMailboxManagerTest {
 
     @Test(expected = BadCredentialsException.class)
     public void loginShouldThrowWhenBadPassword() throws Exception {
-        storeMailboxManager.login(CURRENT_USER, "badpassword", LOGGER);
+        storeMailboxManager.login(CURRENT_USER, BAD_PASSWORD, LOGGER);
     }
 
     @Test(expected = BadCredentialsException.class)
     public void loginAsOtherUserShouldNotCreateUserSessionWhenAdminWithBadPassword() throws Exception {
-        storeMailboxManager.loginAsOtherUser(ADMIN, "badpassword", CURRENT_USER, LOGGER);
+        storeMailboxManager.loginAsOtherUser(ADMIN, BAD_PASSWORD, CURRENT_USER, LOGGER);
+    }
+
+    @Test(expected = NotAdminException.class)
+    public void loginAsOtherUserShouldNotCreateUserSessionWhenNotAdmin() throws Exception {
+        storeMailboxManager.loginAsOtherUser(CURRENT_USER, CURRENT_USER_PASSWORD, UNKNOWN_USER, LOGGER);
     }
 
     @Test(expected = BadCredentialsException.class)
-    public void loginAsOtherUserShouldNotCreateUserSessionWhenNotAdmin() throws Exception {
-        storeMailboxManager.loginAsOtherUser(CURRENT_USER, CURRENT_USER_PASSWORD, "otheruser", LOGGER);
+    public void loginAsOtherUserShouldThrowBadCredentialWhenBadPasswordAndNotAdminUser() throws Exception {
+        storeMailboxManager.loginAsOtherUser(CURRENT_USER, BAD_PASSWORD, CURRENT_USER, LOGGER);
+    }
+
+    @Test(expected = BadCredentialsException.class)
+    public void loginAsOtherUserShouldThrowBadCredentialWhenBadPasswordNotAdminUserAndUnknownUser() throws Exception {
+        storeMailboxManager.loginAsOtherUser(CURRENT_USER, BAD_PASSWORD, UNKNOWN_USER, LOGGER);
+    }
+
+    @Test(expected = BadCredentialsException.class)
+    public void loginAsOtherUserShouldThrowBadCredentialsWhenBadPasswordAndUserDoesNotExists() throws Exception {
+        storeMailboxManager.loginAsOtherUser(ADMIN, BAD_PASSWORD, UNKNOWN_USER, LOGGER);
+    }
+
+    @Test(expected = UserDoesNotExistException.class)
+    public void loginAsOtherUserShouldNotCreateUserSessionWhenDelegatedUserDoesNotExist() throws Exception {
+        storeMailboxManager.loginAsOtherUser(ADMIN, ADMIN_PASSWORD, UNKNOWN_USER, LOGGER);
     }
 
     @Test

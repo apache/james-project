@@ -48,7 +48,7 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,
             new FakeAuthenticator(),
-            new FakeAuthorizator(),
+            FakeAuthorizator.defaultReject(),
             new JVMMailboxPathLocker(),
             new UnionMailboxACLResolver(),
             new SimpleGroupMembershipResolver(),

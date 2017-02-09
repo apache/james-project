@@ -125,7 +125,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
 
-        mailboxManager = new StoreMailboxManager(factory, userManager, new FakeAuthorizator(), aclResolver, groupMembershipResolver, messageParser,
+        mailboxManager = new StoreMailboxManager(factory, userManager, FakeAuthorizator.defaultReject(), aclResolver, groupMembershipResolver, messageParser,
             messageIdFactory, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
         mailboxManager.setMessageSearchIndex(searchIndex);
 

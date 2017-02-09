@@ -85,7 +85,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
         MessageParser messageParser = new MessageParser();
 
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, userManager, new FakeAuthorizator(),
+        mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, userManager, FakeAuthorizator.defaultReject(),
                 new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser, new InMemoryMessageId.Factory());
         QuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(mailboxManager.getMapperFactory());
 

@@ -92,7 +92,7 @@ public class HBaseHostSystem extends JamesImapHostSystem {
         }
 
         userManager = new FakeAuthenticator();
-        FakeAuthorizator authorizator = new FakeAuthorizator();
+        FakeAuthorizator authorizator = FakeAuthorizator.defaultReject();
 
         final HBaseModSeqProvider modSeqProvider = new HBaseModSeqProvider(conf);
         final HBaseUidProvider uidProvider = new HBaseUidProvider(conf);
