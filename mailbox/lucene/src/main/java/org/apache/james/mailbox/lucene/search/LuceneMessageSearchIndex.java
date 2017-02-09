@@ -52,6 +52,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AllCriterion;
+import org.apache.james.mailbox.model.SearchQuery.AttachmentCriterion;
 import org.apache.james.mailbox.model.SearchQuery.ContainsOperator;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.CustomFlagCriterion;
@@ -67,6 +68,7 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SearchUtil;
@@ -161,6 +163,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      */
     public final static String UID_FIELD = "uid";
     
+    /**
+     * {@link Field} boolean field that say if the message as an attachment or not
+     */
+    public final static String HAS_ATTACHMENT_FIELD = "hasAttachment";
+
     /**
      * {@link Field} which will contain the {@link Flags} of the {@link MailboxMessage}
      */
@@ -553,7 +560,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         // TODO: Better handling
         doc.add(new Field(MAILBOX_ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.ENGLISH), Store.YES, Index.NOT_ANALYZED));
         doc.add(new NumericField(UID_FIELD,Store.YES, true).setLongValue(membership.getUid().asLong()));
-
+        doc.add(new Field(HAS_ATTACHMENT_FIELD, Boolean.toString(hasAttachment(membership)), Store.YES, Index.NOT_ANALYZED));
         if (shouldIndexMessageId == IndexMessageId.Required) {
             doc.add(new Field(MESSAGE_ID_FIELD, membership.getMessageId().serialize(), Store.YES, Index.NOT_ANALYZED));
         }
@@ -575,6 +582,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         SimpleContentHandler handler = new SimpleContentHandler() {
             
 
+            @Override
             public void headers(Header header) {
                 
                 Date sentDate = null;
@@ -754,6 +762,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
        
 
         return doc;
+    }
+
+    private static boolean hasAttachment(MailboxMessage membership) {
+       return FluentIterable.from(membership.getProperties())
+            .anyMatch(PropertyBuilder.isHasAttachmentProperty());
     }
 
     private String toSentDateField(DateResolution res) {
@@ -972,6 +985,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         }
     }
     
+    private Query createAttachmentQuery(boolean isSet, Query inMailboxes) throws MailboxException, UnsupportedSearchException {
+        return new TermQuery(new Term(HAS_ATTACHMENT_FIELD, Boolean.toString(isSet)));
+    }
+
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.FlagCriterion}. This is kind of a hack
      * as it will do a search for the flags in this method and 
@@ -1261,6 +1278,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         } else if (criterion instanceof SearchQuery.FlagCriterion) {
             FlagCriterion crit = (FlagCriterion) criterion;
             return createFlagQuery(toString(crit.getFlag()), crit.getOperator().isSet(), inMailboxes, recentUids);
+        } else if (criterion instanceof SearchQuery.AttachmentCriterion) {
+            AttachmentCriterion crit = (AttachmentCriterion) criterion;
+            return createAttachmentQuery(crit.getOperator().isSet(), inMailboxes);
         } else if (criterion instanceof SearchQuery.CustomFlagCriterion) {
             CustomFlagCriterion crit = (CustomFlagCriterion) criterion;
             return createFlagQuery(crit.getFlag(), crit.getOperator().isSet(), inMailboxes, recentUids);
@@ -1284,6 +1304,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * @see org.apache.james.mailbox.store.search.ListeningMessageSearchIndex#add(org.apache.james.mailbox.MailboxSession, org.apache.james.mailbox.store.mail.model.Mailbox, MailboxMessage)
      */
+    @Override
     public void add(MailboxSession session, Mailbox mailbox, MailboxMessage membership) throws MailboxException {
         Document doc = createMessageDocument(session, membership);
         Document flagsDoc = createFlagsDocument(membership);
@@ -1424,8 +1445,4 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             throw new MailboxException("Unable to delete message from index", e);
         }
     }
-
-    
-
-
 }
