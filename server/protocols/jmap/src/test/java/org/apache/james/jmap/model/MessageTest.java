@@ -255,4 +255,124 @@ public class MessageTest {
                     .build()))
             .build();
     }
+
+    @Test
+    public void hasAttachmentShouldReturnFalseWhenNoAttachment() throws Exception {
+        Message message = Message.builder()
+            .id(TestMessageId.of(1))
+            .blobId(BlobId.of("blobId"))
+            .threadId("threadId")
+            .mailboxId(InMemoryId.of(456))
+            .headers(ImmutableMap.of("key", "value"))
+            .subject("subject")
+            .size(1)
+            .date(ZonedDateTime.now())
+            .preview("preview")
+            .attachments(ImmutableList.of())
+            .build();
+
+        assertThat(message.isHasAttachment()).isFalse();
+    }
+
+    @Test
+    public void hasAttachmentShouldReturnFalseWhenAllAttachmentsAreInline() throws Exception {
+        Message message = Message.builder()
+            .id(TestMessageId.of(1))
+            .blobId(BlobId.of("blobId"))
+            .threadId("threadId")
+            .mailboxId(InMemoryId.of(456))
+            .headers(ImmutableMap.of("key", "value"))
+            .subject("subject")
+            .size(1)
+            .date(ZonedDateTime.now())
+            .preview("preview")
+            .attachments(ImmutableList.of(
+                    Attachment.builder()
+                        .blobId(BlobId.of("key"))
+                        .size(1)
+                        .type("type")
+                        .isInline(true)
+                        .build(),
+                    Attachment.builder()
+                        .blobId(BlobId.of("key2"))
+                        .size(2)
+                        .type("type2")
+                        .isInline(true)
+                        .build()))
+            .build();
+
+        assertThat(message.isHasAttachment()).isFalse();
+    }
+
+    @Test
+    public void hasAttachmentShouldReturnTrueWhenOneAttachmentIsNotInline() throws Exception {
+        Message message = Message.builder()
+            .id(TestMessageId.of(1))
+            .blobId(BlobId.of("blobId"))
+            .threadId("threadId")
+            .mailboxId(InMemoryId.of(456))
+            .headers(ImmutableMap.of("key", "value"))
+            .subject("subject")
+            .size(1)
+            .date(ZonedDateTime.now())
+            .preview("preview")
+            .attachments(ImmutableList.of(
+                    Attachment.builder()
+                        .blobId(BlobId.of("key"))
+                        .size(1)
+                        .type("type")
+                        .isInline(true)
+                        .build(),
+                    Attachment.builder()
+                        .blobId(BlobId.of("key2"))
+                        .size(2)
+                        .type("type2")
+                        .isInline(false)
+                        .build(),
+                    Attachment.builder()
+                        .blobId(BlobId.of("key3"))
+                        .size(3)
+                        .type("type3")
+                        .isInline(true)
+                        .build()))
+            .build();
+
+        assertThat(message.isHasAttachment()).isTrue();
+    }
+
+    @Test
+    public void hasAttachmentShouldReturnTrueWhenAllAttachmentsAreNotInline() throws Exception {
+        Message message = Message.builder()
+            .id(TestMessageId.of(1))
+            .blobId(BlobId.of("blobId"))
+            .threadId("threadId")
+            .mailboxId(InMemoryId.of(456))
+            .headers(ImmutableMap.of("key", "value"))
+            .subject("subject")
+            .size(1)
+            .date(ZonedDateTime.now())
+            .preview("preview")
+            .attachments(ImmutableList.of(
+                    Attachment.builder()
+                        .blobId(BlobId.of("key"))
+                        .size(1)
+                        .type("type")
+                        .isInline(false)
+                        .build(),
+                    Attachment.builder()
+                        .blobId(BlobId.of("key2"))
+                        .size(2)
+                        .type("type2")
+                        .isInline(false)
+                        .build(),
+                    Attachment.builder()
+                        .blobId(BlobId.of("key3"))
+                        .size(3)
+                        .type("type3")
+                        .isInline(false)
+                        .build()))
+            .build();
+
+        assertThat(message.isHasAttachment()).isTrue();
+    }
 }

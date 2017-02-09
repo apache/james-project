@@ -222,7 +222,7 @@ public class Message {
             ImmutableList<Attachment> attachments = this.attachments.build();
             ImmutableMap<BlobId, SubMessage> attachedMessages = this.attachedMessages.build();
             Preconditions.checkState(areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachements'");
-            boolean hasAttachment = !attachments.isEmpty();
+            boolean hasAttachment = hasAttachment(attachments);
 
             return new Message(id, blobId, threadId, mailboxIds, Optional.ofNullable(inReplyToMessageId), isUnread, isFlagged, isAnswered, isDraft, hasAttachment, headers, Optional.ofNullable(from),
                     to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, size, preview, Optional.ofNullable(textBody), Optional.ofNullable(htmlBody), attachments, attachedMessages);
@@ -240,6 +240,13 @@ public class Message {
                 .map(Attachment::getBlobId)
                 .anyMatch(blobId -> blobId.equals(key));
         };
+    }
+
+    private static boolean hasAttachment(List<Attachment> attachments) {
+        return attachments.stream()
+                .filter(attachment -> !attachment.isIsInline())
+                .findAny()
+                .isPresent();
     }
 
     private final MessageId id;

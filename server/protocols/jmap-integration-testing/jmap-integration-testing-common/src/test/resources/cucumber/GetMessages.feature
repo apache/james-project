@@ -229,6 +229,7 @@ Feature: GetMessages method
     When the user ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
+    And the hasAttachment of the message is "false"
     And the textBody of the message is "/blabla/\n*bloblo*\n"
     And the htmlBody of the message is "<i>blabla</i>\n<b>bloblo</b>\n"
 
