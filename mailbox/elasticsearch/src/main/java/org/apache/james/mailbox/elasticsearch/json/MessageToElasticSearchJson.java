@@ -73,9 +73,21 @@ public class MessageToElasticSearchJson {
         Preconditions.checkNotNull(message);
         switch (indexMessageId) {
             case Required:
-                return mapper.writeValueAsString(IndexableMessageWithMessageId.from(message, users, textExtractor, zoneId, indexAttachments));
+                return mapper.writeValueAsString(IndexableMessage.builder()
+                        .message(message)
+                        .users(users)
+                        .extractor(textExtractor)
+                        .zoneId(zoneId)
+                        .indexAttachments(indexAttachments)
+                        .build());
             case Optional:
-                return mapper.writeValueAsString(IndexableMessage.from(message, users, textExtractor, zoneId, indexAttachments));
+                return mapper.writeValueAsString(IndexableMessage.builder()
+                        .message(message)
+                        .users(users)
+                        .extractor(textExtractor)
+                        .zoneId(zoneId)
+                        .indexAttachments(indexAttachments)
+                        .build());
             default:
                 throw new NotImplementedException();
         }
@@ -85,9 +97,21 @@ public class MessageToElasticSearchJson {
         Preconditions.checkNotNull(message);
         switch (indexMessageId) {
             case Required:
-                return mapper.writeValueAsString(IndexableMessageWithMessageId.from(message, users, textExtractor, zoneId, IndexAttachments.NO));
+                return mapper.writeValueAsString(IndexableMessage.builder()
+                        .message(message)
+                        .users(users)
+                        .extractor(textExtractor)
+                        .zoneId(zoneId)
+                        .indexAttachments(IndexAttachments.NO)
+                        .build());
             case Optional:
-                return mapper.writeValueAsString(IndexableMessage.from(message, users, textExtractor, zoneId, IndexAttachments.NO));
+                return mapper.writeValueAsString(IndexableMessage.builder()
+                        .message(message)
+                        .users(users)
+                        .extractor(textExtractor)
+                        .zoneId(zoneId)
+                        .indexAttachments(IndexAttachments.NO)
+                        .build());
             default:
                 throw new NotImplementedException();
         }

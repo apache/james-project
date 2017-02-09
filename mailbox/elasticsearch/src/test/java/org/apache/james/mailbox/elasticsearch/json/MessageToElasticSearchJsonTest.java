@@ -95,7 +95,7 @@ public class MessageToElasticSearchJsonTest {
         ImmutableList<User> users = ImmutableList.of();
 
         assertThatThrownBy(() -> messageToElasticSearchJson.convertToJson(spamMail, users))
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -372,7 +372,7 @@ public class MessageToElasticSearchJsonTest {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
                 new DefaultTextExtractor(),
                 ZoneId.of("Europe/Paris"),
-                IndexAttachments.YES,
+                IndexAttachments.NO,
                 MessageSearchIndex.IndexMessageId.Required);
         String convertToJsonWithoutAttachment = messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(new MockMailboxSession("username").getUser()));
 

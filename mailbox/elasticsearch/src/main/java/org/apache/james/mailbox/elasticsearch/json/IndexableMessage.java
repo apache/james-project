@@ -48,256 +48,283 @@ import com.google.common.collect.Multimap;
 
 public class IndexableMessage {
 
-    public static final SimpleProperty HAS_ATTACHMENT_PROPERTY = new SimpleProperty(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "true");
-
-    public static IndexableMessage from(MailboxMessage message, List<User> users, TextExtractor textExtractor,
-                                        ZoneId zoneId, IndexAttachments indexAttachments) {
-
-        Preconditions.checkNotNull(message.getMailboxId());
-        Preconditions.checkArgument(!users.isEmpty());
-        IndexableMessage indexableMessage = new IndexableMessage();
-        try {
-            MimePart parsingResult = new MimePartParser(message, textExtractor).parse();
-            indexableMessage.users = users.stream().map(User::getUserName).collect(Guavate.toImmutableList());
-            indexableMessage.bodyText = parsingResult.locateFirstTextBody();
-            indexableMessage.bodyHtml = parsingResult.locateFirstHtmlBody();
-            indexableMessage.hasAttachment = message.getProperties()
-                .stream()
-                .anyMatch(property -> property.equals(HAS_ATTACHMENT_PROPERTY));
-            indexableMessage.setFlattenedAttachments(parsingResult, indexAttachments);
-            indexableMessage.copyHeaderFields(parsingResult.getHeaderCollection(), getSanitizedInternalDate(message, zoneId));
-            indexableMessage.generateText();
-        } catch (IOException | MimeException e) {
-            throw Throwables.propagate(e);
+    public static class Builder {
+        private static ZonedDateTime getSanitizedInternalDate(MailboxMessage message, ZoneId zoneId) {
+            if (message.getInternalDate() == null) {
+                return ZonedDateTime.now();
+            }
+            return ZonedDateTime.ofInstant(
+                    Instant.ofEpochMilli(message.getInternalDate().getTime()),
+                    zoneId);
         }
-        indexableMessage.copyMessageFields(message, zoneId);
-        return indexableMessage;
-    }
+        private IndexAttachments indexAttachments;
+        private MailboxMessage message;
+        private TextExtractor textExtractor;
+        private List<User> users;
 
-    private void setFlattenedAttachments(MimePart parsingResult, IndexAttachments indexAttachments) {
-        List<MimePart> mimeparts = parsingResult.getAttachmentsStream()
+        private ZoneId zoneId;
+
+        private Builder() {
+        }
+
+        public IndexableMessage build() {
+            Preconditions.checkNotNull(message.getMailboxId());
+            Preconditions.checkNotNull(message.getMessageId());
+            Preconditions.checkNotNull(users);
+            Preconditions.checkNotNull(textExtractor);
+            Preconditions.checkNotNull(indexAttachments);
+            Preconditions.checkNotNull(zoneId);
+            Preconditions.checkState(!users.isEmpty());
+
+            try {
+                return instanciateIndexedMessage();
+            } catch (IOException | MimeException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+
+        public Builder extractor(TextExtractor textExtractor) {
+            this.textExtractor = textExtractor;
+            return this;
+        }
+
+        public Builder indexAttachments(IndexAttachments indexAttachments) {
+            this.indexAttachments = indexAttachments;
+            return this;
+        }
+
+        public Builder message(MailboxMessage message) {
+            this.message = message;
+            return this;
+        }
+
+        public Builder users(List<User> users) {
+            this.users = users;
+            return this;
+        }
+
+        public Builder zoneId(ZoneId zoneId) {
+            this.zoneId = zoneId;
+            return this;
+        }
+
+        private boolean computeHasAttachment(MailboxMessage message) {
+            return message.getProperties()
+                    .stream()
+                    .anyMatch(property -> property.equals(HAS_ATTACHMENT_PROPERTY));
+        }
+
+        private IndexableMessage instanciateIndexedMessage() throws IOException, MimeException {
+            String messageId = message.getMessageId().serialize();
+            MimePart parsingResult = new MimePartParser(message, textExtractor).parse();
+
+            List<String> stringifiedUsers = users.stream()
+                    .map(User::getUserName)
                     .collect(Guavate.toImmutableList());
 
-        if (IndexAttachments.YES.equals(indexAttachments)) {
-            this.attachments = mimeparts;
-        } else {
-            this.attachments = ImmutableList.of();
+            Optional<String> bodyText = parsingResult.locateFirstTextBody();
+            Optional<String> bodyHtml = parsingResult.locateFirstHtmlBody();
+
+            boolean hasAttachment = computeHasAttachment(message);
+            List<MimePart> attachments = setFlattenedAttachments(parsingResult, indexAttachments);
+
+            HeaderCollection headerCollection = parsingResult.getHeaderCollection();
+            ZonedDateTime internalDate = getSanitizedInternalDate(message, zoneId);
+
+            Multimap<String, String> headers = headerCollection.getHeaders();
+            Subjects subjects = Subjects.from(headerCollection.getSubjectSet());
+            EMailers from = EMailers.from(headerCollection.getFromAddressSet());
+            EMailers to = EMailers.from(headerCollection.getToAddressSet());
+            EMailers replyTo = EMailers.from(headerCollection.getReplyToAddressSet());
+            EMailers cc = EMailers.from(headerCollection.getCcAddressSet());
+            EMailers bcc = EMailers.from(headerCollection.getBccAddressSet());
+            String sentDate = DateResolutionFormater.DATE_TIME_FOMATTER.format(headerCollection.getSentDate().orElse(internalDate));
+
+            String text = Stream.of(from.serialize(),
+                        to.serialize(),
+                        cc.serialize(),
+                        bcc.serialize(),
+                        subjects.serialize(),
+                        bodyText.orElse(null),
+                        bodyHtml.orElse(null))
+                    .filter(str -> !Strings.isNullOrEmpty(str))
+                    .collect(Collectors.joining(" "));
+
+            long uid = message.getUid().asLong();
+            String mailboxId = message.getMailboxId().serialize();
+            long modSeq = message.getModSeq();
+            long size = message.getFullContentOctets();
+            String date = DateResolutionFormater.DATE_TIME_FOMATTER.format(getSanitizedInternalDate(message, zoneId));
+            String mediaType = message.getMediaType();
+            String subType = message.getSubType();
+            boolean isAnswered = message.isAnswered();
+            boolean isDeleted = message.isDeleted();
+            boolean isDraft = message.isDraft();
+            boolean isFlagged = message.isFlagged();
+            boolean isRecent = message.isRecent();
+            boolean isUnRead = !message.isSeen();
+            String[] userFlags = message.createFlags().getUserFlags();
+            List<Property> properties = message.getProperties();
+
+            return new IndexableMessage(
+                    attachments,
+                    bcc,
+                    bodyHtml,
+                    bodyText,
+                    cc,
+                    date,
+                    from,
+                    hasAttachment,
+                    headers,
+                    isAnswered,
+                    isDeleted,
+                    isDraft,
+                    isFlagged,
+                    isRecent,
+                    isUnRead,
+                    mailboxId,
+                    mediaType,
+                    messageId,
+                    modSeq,
+                    properties,
+                    replyTo,
+                    sentDate,
+                    size,
+                    subjects,
+                    subType,
+                    text,
+                    to,
+                    uid,
+                    userFlags,
+                    stringifiedUsers);
+        }
+
+        private List<MimePart> setFlattenedAttachments(MimePart parsingResult, IndexAttachments indexAttachments) {
+            if (IndexAttachments.YES.equals(indexAttachments)) {
+                return parsingResult.getAttachmentsStream()
+                    .collect(Guavate.toImmutableList());
+            } else {
+                return ImmutableList.of();
+            }
         }
     }
 
-    private void copyHeaderFields(HeaderCollection headerCollection, ZonedDateTime internalDate) {
-        this.headers = headerCollection.getHeaders();
-        this.subjects = Subjects.from(headerCollection.getSubjectSet());
-        this.from = EMailers.from(headerCollection.getFromAddressSet());
-        this.to = EMailers.from(headerCollection.getToAddressSet());
-        this.replyTo = EMailers.from(headerCollection.getReplyToAddressSet());
-        this.cc = EMailers.from(headerCollection.getCcAddressSet());
-        this.bcc = EMailers.from(headerCollection.getBccAddressSet());
-        this.sentDate = DateResolutionFormater.DATE_TIME_FOMATTER.format(headerCollection.getSentDate().orElse(internalDate));
+    public static final SimpleProperty HAS_ATTACHMENT_PROPERTY = new SimpleProperty(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "true");
+
+    public static Builder builder() {
+        return new Builder();
     }
 
-    private void copyMessageFields(MailboxMessage message, ZoneId zoneId) {
-        this.uid = message.getUid().asLong();
-        this.mailboxId = message.getMailboxId().serialize();
-        this.modSeq = message.getModSeq();
-        this.size = message.getFullContentOctets();
-        this.date = DateResolutionFormater.DATE_TIME_FOMATTER.format(getSanitizedInternalDate(message, zoneId));
-        this.mediaType = message.getMediaType();
-        this.subType = message.getSubType();
-        this.isAnswered = message.isAnswered();
-        this.isDeleted = message.isDeleted();
-        this.isDraft = message.isDraft();
-        this.isFlagged = message.isFlagged();
-        this.isRecent = message.isRecent();
-        this.isUnRead = ! message.isSeen();
-        this.userFlags = message.createFlags().getUserFlags();
-        this.properties = message.getProperties();
-    }
+    private final List<MimePart> attachments;
+    private final EMailers bcc;
+    private final Optional<String> bodyHtml;
+    private final Optional<String> bodyText;
+    private final EMailers cc;
+    private final String date;
+    private final EMailers from;
+    private final boolean hasAttachment;
+    private final Multimap<String, String> headers;
+    private final boolean isAnswered;
+    private final boolean isDeleted;
+    private final boolean isDraft;
+    private final boolean isFlagged;
+    private final boolean isRecent;
+    private final boolean isUnRead;
+    private final String mailboxId;
+    private final String mediaType;
+    private final String messageId;
+    private final long modSeq;
+    private final List<Property> properties;
+    private final EMailers replyTo;
+    private final String sentDate;
+    private final long size;
+    private final Subjects subjects;
+    private final String subType;
+    private final String text;
+    private final EMailers to;
+    private final long uid;
+    private final String[] userFlags;
+    private final List<String> users;
 
-    private static ZonedDateTime getSanitizedInternalDate(MailboxMessage message, ZoneId zoneId) {
-        if (message.getInternalDate() == null) {
-            return ZonedDateTime.now();
-        }
-        return ZonedDateTime.ofInstant(
-            Instant.ofEpochMilli(message.getInternalDate().getTime()),
-            zoneId);
-    }
-
-    private void generateText() {
-        this.text = Stream.of(from.serialize(),
-                to.serialize(),
-                cc.serialize(),
-                bcc.serialize(),
-                subjects.serialize(),
-                bodyText.orElse(null),
-                bodyHtml.orElse(null))
-            .filter(str -> !Strings.isNullOrEmpty(str))
-            .collect(Collectors.joining(" "));
-    }
-
-    private long uid;
-    private String mailboxId;
-    private List<String> users;
-    private long modSeq;
-    private long size;
-    private String date;
-    private String mediaType;
-    private String subType;
-    private boolean hasAttachment;
-    private boolean isUnRead;
-    private boolean isRecent;
-    private boolean isFlagged;
-    private boolean isDeleted;
-    private boolean isDraft;
-    private boolean isAnswered;
-    private String[] userFlags;
-    private Multimap<String, String> headers;
-    private EMailers from;
-    private EMailers to;
-    private EMailers cc;
-    private EMailers bcc;
-    private EMailers replyTo;
-    private Subjects subjects;
-    private String sentDate;
-    private List<Property> properties;
-    private List<MimePart> attachments;
-    private Optional<String> bodyText;
-    private Optional<String> bodyHtml;
-    private String text;
-
-
-    public IndexableMessage(long uid, String mailboxId, List<String> users, long modSeq, long size, String date, String mediaType,
-                            String subType, boolean isUnRead, boolean isRecent, boolean isFlagged, boolean isDeleted, boolean isDraft,
-                            boolean isAnswered, String[] userFlags, Multimap<String, String> headers, EMailers from, EMailers to,
-                            EMailers cc, EMailers bcc, EMailers replyTo, Subjects subjects, String sentDate, List<Property> properties,
-                            List<MimePart> attachments, boolean hasAttachment, Optional<String> bodyText, Optional<String> bodyHtml, String text) {
-        this.uid = uid;
-        this.mailboxId = mailboxId;
-        this.users = users;
-        this.modSeq = modSeq;
-        this.size = size;
+    private IndexableMessage(
+            List<MimePart> attachments,
+            EMailers bcc,
+            Optional<String> bodyHtml,
+            Optional<String> bodyText,
+            EMailers cc,
+            String date,
+            EMailers from,
+            boolean hasAttachment,
+            Multimap<String, String> headers,
+            boolean isAnswered,
+            boolean isDeleted,
+            boolean isDraft,
+            boolean isFlagged,
+            boolean isRecent,
+            boolean isUnRead,
+            String mailboxId,
+            String mediaType,
+            String messageId,
+            long modSeq,
+            List<Property> properties,
+            EMailers replyTo,
+            String sentDate,
+            long size,
+            Subjects subjects,
+            String subType,
+            String text,
+            EMailers to,
+            long uid,
+            String[] userFlags,
+            List<String> users) {
+        this.attachments = attachments;
+        this.bcc = bcc;
+        this.bodyHtml = bodyHtml;
+        this.bodyText = bodyText;
+        this.cc = cc;
         this.date = date;
-        this.mediaType = mediaType;
-        this.subType = subType;
-        this.isUnRead = isUnRead;
-        this.isRecent = isRecent;
-        this.isFlagged = isFlagged;
+        this.from = from;
+        this.hasAttachment = hasAttachment;
+        this.headers = headers;
+        this.isAnswered = isAnswered;
         this.isDeleted = isDeleted;
         this.isDraft = isDraft;
-        this.isAnswered = isAnswered;
-        this.userFlags = userFlags;
-        this.headers = headers;
-        this.from = from;
-        this.to = to;
-        this.cc = cc;
-        this.bcc = bcc;
-        this.replyTo = replyTo;
-        this.subjects = subjects;
-        this.sentDate = sentDate;
+        this.isFlagged = isFlagged;
+        this.isRecent = isRecent;
+        this.isUnRead = isUnRead;
+        this.mailboxId = mailboxId;
+        this.mediaType = mediaType;
+        this.messageId = messageId;
+        this.modSeq = modSeq;
         this.properties = properties;
-        this.attachments = attachments;
-        this.hasAttachment = hasAttachment;
-        this.bodyText = bodyText;
-        this.bodyHtml = bodyHtml;
+        this.replyTo = replyTo;
+        this.sentDate = sentDate;
+        this.size = size;
+        this.subjects = subjects;
+        this.subType = subType;
         this.text = text;
+        this.to = to;
+        this.uid = uid;
+        this.userFlags = userFlags;
+        this.users = users;
     }
 
-    public IndexableMessage() {
+    @JsonProperty(JsonMessageConstants.ATTACHMENTS)
+    public List<MimePart> getAttachments() {
+        return attachments;
+    }
+    @JsonProperty(JsonMessageConstants.BCC)
+    public EMailers getBcc() {
+        return bcc;
+    }
+    @JsonProperty(JsonMessageConstants.HTML_BODY)
+    public Optional<String> getBodyHtml() {
+        return bodyHtml;
     }
 
-    @JsonProperty(JsonMessageConstants.UID)
-    public Long getUid() {
-        return uid;
-    }
-
-    @JsonProperty(JsonMessageConstants.MAILBOX_ID)
-    public String getMailboxId() {
-        return mailboxId;
-    }
-
-    @JsonProperty(JsonMessageConstants.USERS)
-    public List<String> getUsers() {
-        return users;
-    }
-
-    @JsonProperty(JsonMessageConstants.MODSEQ)
-    public long getModSeq() {
-        return modSeq;
-    }
-
-    @JsonProperty(JsonMessageConstants.SIZE)
-    public long getSize() {
-        return size;
-    }
-
-    @JsonProperty(JsonMessageConstants.DATE)
-    public String getDate() {
-        return date;
-    }
-
-    @JsonProperty(JsonMessageConstants.MEDIA_TYPE)
-    public String getMediaType() {
-        return mediaType;
-    }
-
-    @JsonProperty(JsonMessageConstants.SUBTYPE)
-    public String getSubType() {
-        return subType;
-    }
-
-    @JsonProperty(JsonMessageConstants.IS_UNREAD)
-    public boolean isUnRead() {
-        return isUnRead;
-    }
-
-    @JsonProperty(JsonMessageConstants.IS_RECENT)
-    public boolean isRecent() {
-        return isRecent;
-    }
-
-    @JsonProperty(JsonMessageConstants.IS_FLAGGED)
-    public boolean isFlagged() {
-        return isFlagged;
-    }
-
-    @JsonProperty(JsonMessageConstants.IS_DELETED)
-    public boolean isDeleted() {
-        return isDeleted;
-    }
-
-    @JsonProperty(JsonMessageConstants.IS_DRAFT)
-    public boolean isDraft() {
-        return isDraft;
-    }
-
-    @JsonProperty(JsonMessageConstants.IS_ANSWERED)
-    public boolean isAnswered() {
-        return isAnswered;
-    }
-
-    @JsonProperty(JsonMessageConstants.USER_FLAGS)
-    public String[] getUserFlags() {
-        return userFlags;
-    }
-
-    @JsonProperty(JsonMessageConstants.HEADERS)
-    public Multimap<String, String> getHeaders() {
-        return headers;
-    }
-
-    @JsonProperty(JsonMessageConstants.SUBJECT)
-    public Subjects getSubjects() {
-        return subjects;
-    }
-
-    @JsonProperty(JsonMessageConstants.FROM)
-    public EMailers getFrom() {
-        return from;
-    }
-
-    @JsonProperty(JsonMessageConstants.TO)
-    public EMailers getTo() {
-        return to;
+    @JsonProperty(JsonMessageConstants.TEXT_BODY)
+    public Optional<String> getBodyText() {
+        return bodyText;
     }
 
     @JsonProperty(JsonMessageConstants.CC)
@@ -305,9 +332,49 @@ public class IndexableMessage {
         return cc;
     }
 
-    @JsonProperty(JsonMessageConstants.BCC)
-    public EMailers getBcc() {
-        return bcc;
+    @JsonProperty(JsonMessageConstants.DATE)
+    public String getDate() {
+        return date;
+    }
+
+    @JsonProperty(JsonMessageConstants.FROM)
+    public EMailers getFrom() {
+        return from;
+    }
+
+    @JsonProperty(JsonMessageConstants.HAS_ATTACHMENT)
+    public boolean getHasAttachment() {
+        return hasAttachment;
+    }
+
+    @JsonProperty(JsonMessageConstants.HEADERS)
+    public Multimap<String, String> getHeaders() {
+        return headers;
+    }
+
+    @JsonProperty(JsonMessageConstants.MAILBOX_ID)
+    public String getMailboxId() {
+        return mailboxId;
+    }
+
+    @JsonProperty(JsonMessageConstants.MEDIA_TYPE)
+    public String getMediaType() {
+        return mediaType;
+    }
+
+    @JsonProperty(JsonMessageConstants.MESSAGE_ID)
+    public String getMessageId() {
+        return messageId;
+    }
+
+    @JsonProperty(JsonMessageConstants.MODSEQ)
+    public long getModSeq() {
+        return modSeq;
+    }
+
+    @JsonProperty(JsonMessageConstants.PROPERTIES)
+    public List<Property> getProperties() {
+        return properties;
     }
 
     @JsonProperty(JsonMessageConstants.REPLY_TO)
@@ -320,33 +387,73 @@ public class IndexableMessage {
         return sentDate;
     }
 
-    @JsonProperty(JsonMessageConstants.PROPERTIES)
-    public List<Property> getProperties() {
-        return properties;
+    @JsonProperty(JsonMessageConstants.SIZE)
+    public long getSize() {
+        return size;
     }
 
-    @JsonProperty(JsonMessageConstants.ATTACHMENTS)
-    public List<MimePart> getAttachments() {
-        return attachments;
+    @JsonProperty(JsonMessageConstants.SUBJECT)
+    public Subjects getSubjects() {
+        return subjects;
     }
 
-    @JsonProperty(JsonMessageConstants.TEXT_BODY)
-    public Optional<String> getBodyText() {
-        return bodyText;
-    }
-
-    @JsonProperty(JsonMessageConstants.HTML_BODY)
-    public Optional<String> getBodyHtml() {
-        return bodyHtml;
-    }
-
-    @JsonProperty(JsonMessageConstants.HAS_ATTACHMENT)
-    public boolean getHasAttachment() {
-        return hasAttachment;
+    @JsonProperty(JsonMessageConstants.SUBTYPE)
+    public String getSubType() {
+        return subType;
     }
 
     @JsonProperty(JsonMessageConstants.TEXT)
     public String getText() {
         return text;
+    }
+
+    @JsonProperty(JsonMessageConstants.TO)
+    public EMailers getTo() {
+        return to;
+    }
+
+    @JsonProperty(JsonMessageConstants.UID)
+    public Long getUid() {
+        return uid;
+    }
+
+    @JsonProperty(JsonMessageConstants.USER_FLAGS)
+    public String[] getUserFlags() {
+        return userFlags;
+    }
+
+    @JsonProperty(JsonMessageConstants.USERS)
+    public List<String> getUsers() {
+        return users;
+    }
+
+    @JsonProperty(JsonMessageConstants.IS_ANSWERED)
+    public boolean isAnswered() {
+        return isAnswered;
+    }
+
+    @JsonProperty(JsonMessageConstants.IS_DELETED)
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    @JsonProperty(JsonMessageConstants.IS_DRAFT)
+    public boolean isDraft() {
+        return isDraft;
+    }
+
+    @JsonProperty(JsonMessageConstants.IS_FLAGGED)
+    public boolean isFlagged() {
+        return isFlagged;
+    }
+
+    @JsonProperty(JsonMessageConstants.IS_RECENT)
+    public boolean isRecent() {
+        return isRecent;
+    }
+
+    @JsonProperty(JsonMessageConstants.IS_UNREAD)
+    public boolean isUnRead() {
+        return isUnRead;
     }
 }
