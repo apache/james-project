@@ -32,6 +32,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.SearchQuery.Sort;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -592,6 +593,14 @@ public class SearchQuery implements Serializable {
             result = flagIsUnSet(flag);
         }
         return result;
+    }
+
+    public static Criterion hasAttachment() {
+        return new AttachmentCriterion(BooleanOperator.set());
+    }
+
+    public static Criterion hasNoAttachment() {
+        return new AttachmentCriterion(BooleanOperator.unset());
     }
 
     /**
@@ -1307,6 +1316,50 @@ public class SearchQuery implements Serializable {
                 .toString();
         }
     }
+
+    /***
+     * Filter on attachment presence
+     */
+    public static class AttachmentCriterion extends Criterion {
+        private final BooleanOperator operator;
+
+        private AttachmentCriterion(BooleanOperator operator) {
+            this.operator = operator;
+        }
+
+        /**
+         * Gets the test to be preformed.
+         *
+         * @return the <code>BooleanOperator</code>, not null
+         */
+        public BooleanOperator getOperator() {
+            return operator;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(operator);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof AttachmentCriterion) {
+                AttachmentCriterion that = (AttachmentCriterion) obj;
+
+                return Objects.equal(this.operator, that.operator);
+            }
+
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("operator", operator)
+                .toString();
+        }
+    }
+
 
     /**
      * Filters on a standard flag.
