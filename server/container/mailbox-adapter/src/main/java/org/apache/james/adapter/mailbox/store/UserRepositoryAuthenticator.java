@@ -21,42 +21,30 @@ package org.apache.james.adapter.mailbox.store;
 
 import javax.inject.Inject;
 
-import org.apache.james.lifecycle.api.LogEnabled;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.slf4j.Logger;
 
 /**
  * Authenticator which use an UsersRepository to check if the user and password
  * match
  */
-public class UserRepositoryAuthenticator implements Authenticator, LogEnabled {
+public class UserRepositoryAuthenticator implements Authenticator {
 
-    private UsersRepository repos;
-    private Logger log;
+    private final UsersRepository repos;
 
     @Inject
-    public void setUsersRepository(UsersRepository repos) {
+    public UserRepositoryAuthenticator(UsersRepository repos) {
         this.repos = repos;
     }
 
-    /**
-     * @see
-     * org.apache.james.mailbox.store.Authenticator#isAuthentic(java.lang.String
-     * , java.lang.CharSequence)
-     */
-    public boolean isAuthentic(String userid, CharSequence passwd) {
+    public boolean isAuthentic(String userid, CharSequence passwd) throws MailboxException {
         try {
             return repos.test(userid, passwd.toString());
         } catch (UsersRepositoryException e) {
-            log.info("Unable to access UsersRepository", e);
+            throw new MailboxException("Unable to access UsersRepository", e);
         }
-        return false;
-    }
-
-    public void setLog(Logger log) {
-        this.log = log;
     }
 
 }

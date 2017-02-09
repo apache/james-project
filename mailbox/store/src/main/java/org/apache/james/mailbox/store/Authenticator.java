@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store;
 
+import org.apache.james.mailbox.exception.MailboxException;
+
 /**
  * Authenticates user credentials.
  */
@@ -32,5 +34,5 @@ public interface Authenticator {
      * @return true when the user is authentic,
      * false otherwise
      */
-    boolean isAuthentic(String userid, CharSequence passwd);
+    boolean isAuthentic(String userid, CharSequence passwd) throws MailboxException;
 }
