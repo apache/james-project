@@ -21,6 +21,7 @@ package org.apache.james.mpt.imapmailbox.cassandra;
 
 import org.apache.james.mpt.imapmailbox.AbstractMailboxTest;
 import org.apache.james.mpt.imapmailbox.suite.MailboxWithLongNameError;
+import org.apache.james.mpt.imapmailbox.suite.AuthenticatePlain;
 import org.apache.james.mpt.imapmailbox.suite.AuthenticatedState;
 import org.apache.james.mpt.imapmailbox.suite.ConcurrentSessions;
 import org.apache.james.mpt.imapmailbox.suite.Events;
@@ -49,6 +50,7 @@ import org.junit.runners.Suite.SuiteClasses;
 @GuiceModules({ CassandraMailboxTestModule.class })
 @SuiteClasses({
     AuthenticatedState.class,
+    AuthenticatePlain.class,
     ConcurrentSessions.class,
     Events.class,
     Expunge.class,
