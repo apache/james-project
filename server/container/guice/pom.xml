@@ -35,6 +35,7 @@
     <modules>
         <module>guice-common</module>
         <module>cassandra-guice</module>
+        <module>cassandra-ldap-guice</module>
         <module>memory-guice</module>
         <module>jpa-guice</module>
         <module>onami</module>
