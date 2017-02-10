@@ -113,6 +113,10 @@ public class HumanReadableText {
 
     public static final HumanReadableText COMSUME_UID_FAILED = new HumanReadableText("org.apache.james.imap.COMSUME_UID_FAILED", "failed. Failed to acquire UID.");
 
+    public static final HumanReadableText USER_DOES_NOT_EXIST = new HumanReadableText("org.apache.james.imap.GENERIC_FAILURE_DURING_PROCESSING", "User does not exist");
+
+    public static final HumanReadableText NOT_AN_ADMIN = new HumanReadableText("org.apache.james.imap.GENERIC_FAILURE_DURING_PROCESSING", "Not an admin");
+
     public static final HumanReadableText GENERIC_FAILURE_DURING_PROCESSING = new HumanReadableText("org.apache.james.imap.GENERIC_FAILURE_DURING_PROCESSING", "processing failed.");
 
     public static final HumanReadableText FAILURE_MAILBOX_EXISTS = new HumanReadableText("org.apache.james.imap.FAILURE_NO_SUCH_MAILBOX", "failed. Mailbox already exists.");

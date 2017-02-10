@@ -37,8 +37,6 @@ import org.apache.james.imap.message.request.IRAuthenticateRequest;
 import org.apache.james.imap.message.response.AuthenticateResponse;
 import org.apache.james.mailbox.MailboxManager;
 
-import com.google.common.base.Optional;
-
 /**
  * Processor which handles the AUTHENTICATE command. Only authtype of PLAIN is supported ATM.
  * 
@@ -103,12 +101,15 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
      * @param responder
      */
     protected void doPlainAuth(String initialClientResponse, ImapSession session, String tag, ImapCommand command, Responder responder) {
-        AuthPlainAttempt authPlainAttempt = parseDelegationAttempt(initialClientResponse);
-        // Authenticate user
-        doAuth(authPlainAttempt.getAuthenticationId(), authPlainAttempt.getPassword(), session, tag, command, responder, HumanReadableText.AUTHENTICATION_FAILED);
+        AuthenticationAttempt authenticationAttempt = parseDelegationAttempt(initialClientResponse);
+        if (authenticationAttempt.isDelegation()) {
+            doAuthWithDelegation(authenticationAttempt, session, tag, command, responder, HumanReadableText.AUTHENTICATION_FAILED);
+        } else {
+            doAuth(authenticationAttempt, session, tag, command, responder, HumanReadableText.AUTHENTICATION_FAILED);
+        }
     }
 
-    private AuthPlainAttempt parseDelegationAttempt(String initialClientResponse) {
+    private AuthenticationAttempt parseDelegationAttempt(String initialClientResponse) {
         String token2;
         try {
 
@@ -159,42 +160,6 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         // Support for SASL-IR. See RFC4959
         caps.add("SASL-IR");
         return Collections.unmodifiableList(caps);
-    }
-
-    private static AuthPlainAttempt delegation(String authorizeId, String authenticationId, String password) {
-        return new AuthPlainAttempt(Optional.of(authorizeId), authenticationId, password);
-    }
-
-    private static AuthPlainAttempt noDelegation(String authenticationId, String password) {
-        return new AuthPlainAttempt(Optional.<String>absent(), authenticationId, password);
-    }
-
-    private static class AuthPlainAttempt {
-        private final Optional<String> authorizeId;
-        private final String authenticationId;
-        private final String password;
-
-        private AuthPlainAttempt(Optional<String> authorizeId, String authenticationId, String password) {
-            this.authorizeId = authorizeId;
-            this.authenticationId = authenticationId;
-            this.password = password;
-        }
-
-        public boolean isDelegation() {
-            return authorizeId.isPresent();
-        }
-
-        public Optional<String> getAuthorizeId() {
-            return authorizeId;
-        }
-
-        public String getAuthenticationId() {
-            return authenticationId;
-        }
-
-        public String getPassword() {
-            return password;
-        }
     }
 
 }

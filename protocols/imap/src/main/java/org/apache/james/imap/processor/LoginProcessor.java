@@ -48,13 +48,12 @@ public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implemen
      * org.apache.james.imap.api.ImapCommand, org.apache.james.imap.api.process.ImapProcessor.Responder)
      */
     protected void doProcess(LoginRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
-            final String userid = request.getUserid();
-            final String passwd = request.getPassword();
             // check if the login is allowed with LOGIN command. See IMAP-304
             if (session.isPlainAuthDisallowed() && session.isTLSActive() == false) {
                 no(command, tag, responder, HumanReadableText.DISABLED_LOGIN);
             } else {
-                doAuth(userid, passwd, session, tag, command, responder, HumanReadableText.INVALID_LOGIN);
+                doAuth(noDelegation(request.getUserid(), request.getPassword()),
+                    session, tag, command, responder, HumanReadableText.INVALID_LOGIN);
             }
     }
 
