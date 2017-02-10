@@ -245,7 +245,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     private Optional<MessageManager> getMailboxWithRole(MailboxSession mailboxSession, Role role) throws MailboxException {
-        return systemMailboxesProvider.listMailboxes(role, mailboxSession).findFirst();
+        return systemMailboxesProvider.getMailboxByRole(role, mailboxSession).findFirst();
     }
     
     private SetError buildSetErrorFromValidationResult(List<ValidationResult> validationErrors) {

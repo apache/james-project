@@ -48,19 +48,20 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
         this.mailboxManager = mailboxManager;
     }
 
-    private boolean hasRole(Role aRole, MailboxPath mailBoxPath) {
-        return Role.from(mailBoxPath.getName())
-            .map(aRole::equals)
-            .orElse(false);
-    }
-
-    public Stream<MessageManager> listMailboxes(Role aRole, MailboxSession session) throws MailboxException {
+    @Override
+    public Stream<MessageManager> getMailboxByRole(Role aRole, MailboxSession session) throws MailboxException {
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, session.getUser().getUserName(), aRole.getDefaultMailbox());
         try {
             return Stream.of(mailboxManager.getMailbox(mailboxPath, session));
         } catch (MailboxNotFoundException e) {
             return searchMessageManagerByMailboxRole(aRole, session);
         }
+    }
+
+    private boolean hasRole(Role aRole, MailboxPath mailBoxPath) {
+        return Role.from(mailBoxPath.getName())
+            .map(aRole::equals)
+            .orElse(false);
     }
 
     private Stream<MessageManager> searchMessageManagerByMailboxRole(Role aRole, MailboxSession session) throws MailboxException {
