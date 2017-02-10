@@ -299,7 +299,7 @@ public class SetMessagesCreationProcessorTest {
         }
 
         @Override
-        public Stream<MessageManager> listMailboxes(Role aRole, MailboxSession session) {
+        public Stream<MessageManager> getMailboxByRole(Role aRole, MailboxSession session) {
             if (aRole.equals(Role.OUTBOX)) {
                 return outboxSupplier.get().map(o -> Stream.of(o)).orElse(Stream.empty());
             } else if (aRole.equals(Role.DRAFTS)) {

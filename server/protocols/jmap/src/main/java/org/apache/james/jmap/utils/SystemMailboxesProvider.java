@@ -28,10 +28,10 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 
 public interface SystemMailboxesProvider {
-    Stream<MessageManager> listMailboxes(Role aRole, MailboxSession session) throws MailboxException;
+    Stream<MessageManager> getMailboxByRole(Role aRole, MailboxSession session) throws MailboxException;
 
     default MessageManager findMailbox(Role role, MailboxSession session) throws MailboxException {
-        return listMailboxes(role, session).findAny()
+        return getMailboxByRole(role, session).findAny()
             .orElseThrow(() -> new MailboxRoleNotFoundException(role));
     }
 }

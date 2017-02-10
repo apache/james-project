@@ -20,45 +20,23 @@
 package org.apache.james.jmap.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.stream.Stream;
-
-import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.manager.MailboxManagerFixture;
 import org.apache.james.mailbox.mock.MockMailboxSession;
-import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxMetaData;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MailboxQuery;
-import org.apache.james.mailbox.model.TestId;
-import org.apache.james.mailbox.store.SimpleMailboxMetaData;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.google.common.collect.ImmutableList;
-
 public class SystemMailboxesProviderImplTest {
-
-    private static final MailboxPath INBOX = MailboxManagerFixture.MAILBOX_PATH1;
-    private static final MailboxPath OUTBOX = MailboxManagerFixture.MAILBOX_PATH2;
-    private static final char DELIMITER = '.';
-
-    private static final MailboxId inboxId = TestId.of(1);
-    private static final MailboxId outboxId = TestId.of(2);
-
-    private static final MailboxMetaData inboxMetadata = new SimpleMailboxMetaData(INBOX, inboxId, DELIMITER);
-    private static final MailboxMetaData outboxMetadata = new SimpleMailboxMetaData(OUTBOX, outboxId, DELIMITER);
 
     private MailboxSession mailboxSession = new MockMailboxSession("user");
     private SystemMailboxesProviderImpl systemMailboxProvider;
@@ -79,83 +57,19 @@ public class SystemMailboxesProviderImplTest {
     }
 
     @Test
-    public void findMailboxesShouldReturnEmptyWhenEmptySearchResult() throws Exception {
-        when(mailboxManager.search(any(MailboxQuery.class), eq(mailboxSession))).thenReturn(ImmutableList.of());
-
-        assertThat(systemMailboxProvider.listMailboxes(Role.INBOX, mailboxSession)).isEmpty();
-    }
-
-    @Test
-    public void findMailboxesShouldFilterTheMailboxByItsRole() throws Exception {
-        when(mailboxManager.search(any(MailboxQuery.class), eq(mailboxSession))).thenReturn(ImmutableList.of(inboxMetadata, outboxMetadata));
-        when(mailboxManager.getMailbox(eq(INBOX), eq(mailboxSession))).thenReturn(inboxMessageManager);
-
-        Stream<MessageManager> result = systemMailboxProvider.listMailboxes(Role.INBOX, mailboxSession);
-
-        assertThat(result).hasSize(1).containsOnly(inboxMessageManager);
-    }
-
-    @Test
     @SuppressWarnings("unchecked")
-    public void findMailboxesShouldThrowWhenMailboxManagerHasErrorWhenSearching() throws Exception {
-        expectedException.expect(MailboxException.class);
+    public void getMailboxByRoleShouldReturnEmptyWhenNoMailbox() throws Exception {
+        when(mailboxManager.getMailbox(eq(MailboxManagerFixture.MAILBOX_PATH1), eq(mailboxSession))).thenThrow(MailboxNotFoundException.class);
 
-        when(mailboxManager.search(any(MailboxQuery.class), eq(mailboxSession))).thenThrow(MailboxException.class);
-
-        systemMailboxProvider.listMailboxes(Role.INBOX, mailboxSession);
+        assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession)).isEmpty();
     }
 
     @Test
-    @SuppressWarnings("unchecked")
-    public void findMailboxesShouldBeEmptyWhenMailboxManagerCanNotGetMailbox() throws Exception {
-        expectedException.expect(MailboxException.class);
+    public void getMailboxByRoleShouldReturnMailboxByRole() throws Exception {
+        when(mailboxManager.getMailbox(eq(MailboxManagerFixture.MAILBOX_PATH1), eq(mailboxSession))).thenReturn(inboxMessageManager);
 
-        when(mailboxManager.search(any(MailboxQuery.class), eq(mailboxSession))).thenReturn(ImmutableList.of(inboxMetadata, outboxMetadata));
-        when(mailboxManager.getMailbox(eq(INBOX), eq(mailboxSession))).thenThrow(MailboxException.class);
-
-        assertThat(systemMailboxProvider.listMailboxes(Role.INBOX, mailboxSession)).isEmpty();
+        assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession))
+            .hasSize(1)
+            .containsOnly(inboxMessageManager);
     }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void findMailboxesShouldReturnWhenMailboxManagerCanNotGetMailboxOfNonFilterMailbox() throws Exception {
-        when(mailboxManager.search(any(MailboxQuery.class), eq(mailboxSession))).thenReturn(ImmutableList.of(inboxMetadata, outboxMetadata));
-
-        when(mailboxManager.getMailbox(eq(INBOX), eq(mailboxSession))).thenReturn(inboxMessageManager);
-        when(mailboxManager.getMailbox(eq(OUTBOX), eq(mailboxSession))).thenThrow(MailboxException.class);
-
-        Stream<MessageManager> result = systemMailboxProvider.listMailboxes(Role.INBOX, mailboxSession);
-
-        assertThat(result).hasSize(1).containsOnly(inboxMessageManager);
-
-    }
-
-    @Test
-    public void findMailboxShouldThrowWhenEmptySearchResult() throws Exception {
-        expectedException.expect(MailboxRoleNotFoundException.class);
-
-        when(mailboxManager.search(any(MailboxQuery.class), eq(mailboxSession))).thenReturn(ImmutableList.of());
-
-        systemMailboxProvider.findMailbox(Role.INBOX, mailboxSession);
-    }
-
-    @Test
-    public void findMailboxShouldThrowWhenCanNotFindAny() throws Exception {
-        expectedException.expect(MailboxRoleNotFoundException.class);
-
-        when(mailboxManager.search(any(MailboxQuery.class), eq(mailboxSession))).thenReturn(ImmutableList.of(outboxMetadata));
-
-        systemMailboxProvider.findMailbox(Role.INBOX, mailboxSession);
-    }
-
-    @Test
-    public void findMailboxShouldReturnMailboxByRole() throws Exception {
-        when(mailboxManager.search(any(MailboxQuery.class), eq(mailboxSession))).thenReturn(ImmutableList.of(inboxMetadata, outboxMetadata));
-        when(mailboxManager.getMailbox(eq(INBOX), eq(mailboxSession))).thenReturn(inboxMessageManager);
-
-        MessageManager result = systemMailboxProvider.findMailbox(Role.INBOX, mailboxSession);
-
-        assertThat(result).isEqualTo(inboxMessageManager);
-    }
-
 }
