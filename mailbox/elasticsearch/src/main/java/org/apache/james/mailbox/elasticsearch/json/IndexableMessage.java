@@ -36,6 +36,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
+import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mime4j.MimeException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -69,7 +70,6 @@ public class IndexableMessage {
 
         public IndexableMessage build() {
             Preconditions.checkNotNull(message.getMailboxId());
-            Preconditions.checkNotNull(message.getMessageId());
             Preconditions.checkNotNull(users);
             Preconditions.checkNotNull(textExtractor);
             Preconditions.checkNotNull(indexAttachments);
@@ -115,7 +115,7 @@ public class IndexableMessage {
         }
 
         private IndexableMessage instanciateIndexedMessage() throws IOException, MimeException {
-            String messageId = message.getMessageId().serialize();
+            String messageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message);
             MimePart parsingResult = new MimePartParser(message, textExtractor).parse();
 
             List<String> stringifiedUsers = users.stream()

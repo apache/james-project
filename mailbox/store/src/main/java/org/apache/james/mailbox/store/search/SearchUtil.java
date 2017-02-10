@@ -21,6 +21,8 @@ package org.apache.james.mailbox.store.search;
 import java.nio.charset.Charset;
 import java.util.Locale;
 
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.dom.address.Address;
@@ -170,6 +172,18 @@ public class SearchUtil {
             }
         }
         return "";
+    }
+
+
+    public static String getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(MailboxMessage mailboxMessage) {
+        try {
+            MessageId messageId = mailboxMessage.getMessageId();
+            if (messageId != null) {
+                return messageId.serialize();
+            }
+        } catch(UnsupportedOperationException e) {}
+
+        return null;
     }
     
     

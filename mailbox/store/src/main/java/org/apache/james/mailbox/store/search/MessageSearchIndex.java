@@ -43,11 +43,6 @@ import com.google.common.base.Optional;
  */
 public interface MessageSearchIndex {
 
-    enum IndexMessageId {
-        Required,
-        Optional
-    }
-
     /**
      * Return all uids of the previous indexed {@link Mailbox}'s which match the {@link SearchQuery}
      */

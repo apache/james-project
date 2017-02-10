@@ -18,8 +18,13 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.search;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.junit.Test;
 
 public class SearchUtilTest {
@@ -64,5 +69,92 @@ public class SearchUtilTest {
     @Test
     public void testComplexExtraction() {
         assertEquals("Test", SearchUtil.getBaseSubject("Re: re:re: fwd:[fwd: \t  Test]  (fwd)  (fwd)(fwd) "));
+    }
+    
+    @Test
+    public void getMessageIdIfSupportedByUnderlyingStorageOrNullForNullMessageIdShouldReturnNull() {
+        //given
+        MailboxMessage message = mock(MailboxMessage.class);
+        when(message.getMessageId())
+            .thenReturn(null);
+        
+        //when
+        String serialiazedMessageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message);
+        
+        //expect
+        assertNull(serialiazedMessageId);
+    }
+
+    @Test
+    public void getSerializedMessageIdIfSupportedByUnderlyingStorageOrNullForMessageIdThatSerializeReturnNullShouldReturnNull() {
+        //given
+        MessageId invalidMessageIdThatReturnNull = mock(MessageId.class);
+        when(invalidMessageIdThatReturnNull.serialize())
+            .thenReturn(null);
+
+        MailboxMessage message = mock(MailboxMessage.class);
+        when(message.getMessageId())
+            .thenReturn(invalidMessageIdThatReturnNull);
+
+        //when
+        String serialiazedMessageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message);
+
+        //expect
+        assertNull(serialiazedMessageId);
+    }
+
+    @Test
+    public void getSerializedMessageIdIfSupportedByUnderlyingStorageOrNullForMessageIdThatSerializeReturnUnsupportedOperationExceptionShouldReturnNull() {
+        //given
+        MessageId invalidMessageIdThatThrowException = mock(MessageId.class);
+        when(invalidMessageIdThatThrowException.serialize())
+            .thenThrow(new UnsupportedOperationException());
+
+        MailboxMessage message = mock(MailboxMessage.class);
+        when(message.getMessageId())
+            .thenReturn(invalidMessageIdThatThrowException);
+
+        //when
+        String serialiazedMessageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message);
+
+        //expect
+        assertNull(serialiazedMessageId);
+    }
+
+    @Test
+    public void getSerializedMessageIdIfSupportedByUnderlyingStorageOrNullForValidMessageIdShouldReturnSerializedId() {
+        //given
+        String messageIdString = "http://www.labraxeenne.com/#/";
+        MessageId messageId = mock(MessageId.class);
+        when(messageId.serialize())
+            .thenReturn(messageIdString);
+
+        MailboxMessage message = mock(MailboxMessage.class);
+        when(message.getMessageId())
+            .thenReturn(messageId);
+
+        //when
+        String serialiazedMessageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message);
+
+        //expect
+        assertEquals(serialiazedMessageId, messageIdString);
+    }
+
+    @Test
+    public void getSerializedMessageIdIfSupportedByUnderlyingStorageOrNullForMessageIdThatReturnUssuportedOperationException() {
+        //given
+        MessageId messageId = mock(MessageId.class);
+        when(messageId.serialize())
+            .thenThrow(new UnsupportedOperationException());
+
+        MailboxMessage message = mock(MailboxMessage.class);
+        when(message.getMessageId())
+            .thenReturn(messageId);
+
+        //when
+        String serialiazedMessageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message);
+
+        //expect
+        assertEquals(serialiazedMessageId, null);
     }
 }

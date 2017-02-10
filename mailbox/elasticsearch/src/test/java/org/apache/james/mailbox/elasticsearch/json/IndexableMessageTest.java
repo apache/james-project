@@ -37,6 +37,7 @@ import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -482,5 +483,97 @@ public class IndexableMessageTest {
         // Then
         assertThat(indexableMessage.getText()).contains("subject should be parsed");
     }
+    
+    @Test
+    public void  shouldHandleCorrectlyMessageIdHavingSerializeMethodThatThrowAnException() throws Exception {
+       MessageId invalidMessageIdThatThrowException = mock(MessageId.class);
+       when(invalidMessageIdThatThrowException.serialize())
+           .thenThrow(new UnsupportedOperationException());
+       
+        // When
+        MailboxMessage mailboxMessage = mock(MailboxMessage.class);
+        TestId mailboxId = TestId.of(1);
+        when(mailboxMessage.getMailboxId())
+            .thenReturn(mailboxId);
+        when(mailboxMessage.getMessageId())
+            .thenReturn(invalidMessageIdThatThrowException);
+        when(mailboxMessage.getFullContent())
+            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"))));
+        when(mailboxMessage.createFlags())
+            .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
 
+        IndexableMessage indexableMessage = IndexableMessage.builder()
+                .message(mailboxMessage)
+                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .extractor(new TikaTextExtractor())
+                .zoneId(ZoneId.of("Europe/Paris"))
+                .indexAttachments(IndexAttachments.YES)
+                .build();
+
+        // Then
+        assertThat(indexableMessage.getMessageId()).isNull();
+    }
+
+    @Test
+    public void shouldHandleCorrectlyMessageIdHavingSerializeMethodThatReturnNull() throws Exception {
+       MessageId invalidMessageIdThatReturnNull = mock(MessageId.class);
+       when(invalidMessageIdThatReturnNull.serialize())
+           .thenReturn(null);
+       
+        // When
+        MailboxMessage mailboxMessage = mock(MailboxMessage.class);
+        TestId mailboxId = TestId.of(1);
+        when(mailboxMessage.getMailboxId())
+            .thenReturn(mailboxId);
+        when(mailboxMessage.getMessageId())
+            .thenReturn(invalidMessageIdThatReturnNull);
+        when(mailboxMessage.getFullContent())
+            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"))));
+        when(mailboxMessage.createFlags())
+            .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
+
+        IndexableMessage indexableMessage = IndexableMessage.builder()
+                .message(mailboxMessage)
+                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .extractor(new TikaTextExtractor())
+                .zoneId(ZoneId.of("Europe/Paris"))
+                .indexAttachments(IndexAttachments.YES)
+                .build();
+
+        // Then
+        assertThat(indexableMessage.getMessageId()).isNull();
+    }
+
+    @Test
+    public void shouldHandleCorrectlyNullMessageId() throws Exception {
+       
+        // When
+        MailboxMessage mailboxMessage = mock(MailboxMessage.class);
+        TestId mailboxId = TestId.of(1);
+        when(mailboxMessage.getMailboxId())
+            .thenReturn(mailboxId);
+        when(mailboxMessage.getMessageId())
+            .thenReturn(null);
+        when(mailboxMessage.getFullContent())
+            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"))));
+        when(mailboxMessage.createFlags())
+            .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
+
+        IndexableMessage indexableMessage = IndexableMessage.builder()
+                .message(mailboxMessage)
+                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .extractor(new TikaTextExtractor())
+                .zoneId(ZoneId.of("Europe/Paris"))
+                .indexAttachments(IndexAttachments.YES)
+                .build();
+
+        // Then
+        assertThat(indexableMessage.getMessageId()).isNull();
+    }
 }

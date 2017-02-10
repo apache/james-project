@@ -25,13 +25,11 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,81 +43,45 @@ public class MessageToElasticSearchJson {
     private final TextExtractor textExtractor;
     private final ZoneId zoneId;
     private final IndexAttachments indexAttachments;
-    private final MessageSearchIndex.IndexMessageId indexMessageId;
 
-    public MessageToElasticSearchJson(TextExtractor textExtractor, ZoneId zoneId, IndexAttachments indexAttachments, MessageSearchIndex.IndexMessageId indexMessageId) {
+    public MessageToElasticSearchJson(TextExtractor textExtractor, ZoneId zoneId, IndexAttachments indexAttachments) {
         this.textExtractor = textExtractor;
         this.zoneId = zoneId;
         this.indexAttachments = indexAttachments;
         this.mapper = new ObjectMapper();
         this.mapper.registerModule(new GuavaModule());
         this.mapper.registerModule(new Jdk8Module());
-        this.indexMessageId = indexMessageId;
     }
 
     @Inject
     public MessageToElasticSearchJson(TextExtractor textExtractor, IndexAttachments indexAttachments, MailboxManager mailboxManager) {
-        this(textExtractor, ZoneId.systemDefault(), indexAttachments, indexMessageId(mailboxManager));
-    }
-
-    private static MessageSearchIndex.IndexMessageId indexMessageId(MailboxManager mailboxManager) {
-        if (mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.UniqueID)) {
-            return MessageSearchIndex.IndexMessageId.Required;
-        }
-        return MessageSearchIndex.IndexMessageId.Optional;
+        this(textExtractor, ZoneId.systemDefault(), indexAttachments);
     }
 
     public String convertToJson(MailboxMessage message, List<User> users) throws JsonProcessingException {
         Preconditions.checkNotNull(message);
-        switch (indexMessageId) {
-            case Required:
-                return mapper.writeValueAsString(IndexableMessage.builder()
-                        .message(message)
-                        .users(users)
-                        .extractor(textExtractor)
-                        .zoneId(zoneId)
-                        .indexAttachments(indexAttachments)
-                        .build());
-            case Optional:
-                return mapper.writeValueAsString(IndexableMessage.builder()
-                        .message(message)
-                        .users(users)
-                        .extractor(textExtractor)
-                        .zoneId(zoneId)
-                        .indexAttachments(indexAttachments)
-                        .build());
-            default:
-                throw new NotImplementedException();
-        }
+
+        return mapper.writeValueAsString(IndexableMessage.builder()
+                .message(message)
+                .users(users)
+                .extractor(textExtractor)
+                .zoneId(zoneId)
+                .indexAttachments(indexAttachments)
+                .build());
     }
 
     public String convertToJsonWithoutAttachment(MailboxMessage message, List<User> users) throws JsonProcessingException {
-        Preconditions.checkNotNull(message);
-        switch (indexMessageId) {
-            case Required:
-                return mapper.writeValueAsString(IndexableMessage.builder()
-                        .message(message)
-                        .users(users)
-                        .extractor(textExtractor)
-                        .zoneId(zoneId)
-                        .indexAttachments(IndexAttachments.NO)
-                        .build());
-            case Optional:
-                return mapper.writeValueAsString(IndexableMessage.builder()
-                        .message(message)
-                        .users(users)
-                        .extractor(textExtractor)
-                        .zoneId(zoneId)
-                        .indexAttachments(IndexAttachments.NO)
-                        .build());
-            default:
-                throw new NotImplementedException();
-        }
+        return mapper.writeValueAsString(IndexableMessage.builder()
+                .message(message)
+                .users(users)
+                .extractor(textExtractor)
+                .zoneId(zoneId)
+                .indexAttachments(IndexAttachments.NO)
+                .build());
     }
 
     public String getUpdatedJsonMessagePart(Flags flags, long modSeq) throws JsonProcessingException {
         Preconditions.checkNotNull(flags);
         return mapper.writeValueAsString(new MessageUpdateJson(flags, modSeq));
     }
-
 }

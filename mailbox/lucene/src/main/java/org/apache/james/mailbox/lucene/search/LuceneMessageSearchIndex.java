@@ -70,7 +70,6 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
-import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.dom.Header;
@@ -358,7 +357,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private final MailboxId.Factory mailboxIdFactory;
     private final MessageId.Factory messageIdFactory;
     private final IndexWriter writer;
-    private final IndexMessageId shouldIndexMessageId;
     
     private int maxQueryResults = DEFAULT_MAX_QUERY_RESULTS;
 
@@ -366,31 +364,29 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     @Inject
     public LuceneMessageSearchIndex(MessageMapperFactory factory, MailboxId.Factory mailboxIdFactory, Directory directory, MessageId.Factory messageIdFactory, MailboxManager mailboxManager) throws CorruptIndexException, LockObtainFailedException, IOException {
-        this(factory, mailboxIdFactory, directory, false, true, messageIdFactory, indexMessageId(mailboxManager));
+        this(factory, mailboxIdFactory, directory, false, true, messageIdFactory);
     }
 
-    private static MessageSearchIndex.IndexMessageId indexMessageId(MailboxManager mailboxManager) {
-        if (mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.UniqueID)) {
-            return MessageSearchIndex.IndexMessageId.Required;
-        }
-        return MessageSearchIndex.IndexMessageId.Optional;
-    }
-    
-    public LuceneMessageSearchIndex(MessageMapperFactory factory, MailboxId.Factory mailboxIdFactory, Directory directory, boolean dropIndexOnStart, boolean lenient, MessageId.Factory messageIdFactory, IndexMessageId shouldIndexMessageId) throws CorruptIndexException, LockObtainFailedException, IOException {
+    public LuceneMessageSearchIndex(
+            MessageMapperFactory factory,
+            MailboxId.Factory mailboxIdFactory,
+            Directory directory,
+            boolean dropIndexOnStart,
+            boolean lenient,
+            MessageId.Factory messageIdFactory)
+                    throws CorruptIndexException, LockObtainFailedException, IOException {
         super(factory);
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdFactory = messageIdFactory;
         this.writer = new IndexWriter(directory,  createConfig(createAnalyzer(lenient), dropIndexOnStart));
-        this.shouldIndexMessageId = shouldIndexMessageId;
     }
     
     
-    public LuceneMessageSearchIndex(MessageMapperFactory factory, MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory, IndexWriter writer, IndexMessageId shouldIndexMessageId) {
+    public LuceneMessageSearchIndex(MessageMapperFactory factory, MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory, IndexWriter writer) {
         super(factory);
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdFactory = messageIdFactory;
         this.writer = writer;
-        this.shouldIndexMessageId = shouldIndexMessageId;
     }
 
     @Override
@@ -561,9 +557,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         doc.add(new Field(MAILBOX_ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.ENGLISH), Store.YES, Index.NOT_ANALYZED));
         doc.add(new NumericField(UID_FIELD,Store.YES, true).setLongValue(membership.getUid().asLong()));
         doc.add(new Field(HAS_ATTACHMENT_FIELD, Boolean.toString(hasAttachment(membership)), Store.YES, Index.NOT_ANALYZED));
-        if (shouldIndexMessageId == IndexMessageId.Required) {
-            doc.add(new Field(MESSAGE_ID_FIELD, membership.getMessageId().serialize(), Store.YES, Index.NOT_ANALYZED));
-        }
+        doc.add(new Field(MESSAGE_ID_FIELD, SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(membership), Store.YES, Index.NOT_ANALYZED));
 
         // create an unqiue key for the document which can be used later on updates to find the document
         doc.add(new Field(ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.ENGLISH) +"-" + Long.toString(membership.getUid().asLong()), Store.YES, Index.NOT_ANALYZED));

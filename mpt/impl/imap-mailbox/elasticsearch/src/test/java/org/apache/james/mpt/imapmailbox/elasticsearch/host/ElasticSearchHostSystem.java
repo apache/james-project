@@ -59,7 +59,6 @@ import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
-import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
@@ -111,7 +110,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
             factory,
             new ElasticSearchIndexer(client, new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor(), MailboxElasticsearchConstants.MAILBOX_INDEX, MailboxElasticsearchConstants.MESSAGE_TYPE), MailboxElasticsearchConstants.MAILBOX_INDEX, MailboxElasticsearchConstants.MESSAGE_TYPE),
             new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), new InMemoryId.Factory(), messageIdFactory),
-            new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.systemDefault(), IndexAttachments.YES, MessageSearchIndex.IndexMessageId.Required));
+            new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.systemDefault(), IndexAttachments.YES));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
