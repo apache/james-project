@@ -18,39 +18,78 @@
 ################################################################
 
 # Correct user with correct password can authenticate with delegation part missing
-C: abcd AUTHENTICATE "PLAIN" {24+}
+C: 0001 AUTHENTICATE "PLAIN" {24+}
 # imapuser\0password
 C: aW1hcHVzZXIAcGFzc3dvcmQ=
-S: abcd OK AUTHENTICATE completed.
+S: 0001 OK AUTHENTICATE completed.
+
+# Ensure we are imapuser
+C: 0002 SELECT imapuser
+SUB {
+S: \* FLAGS .*
+S: \* .* EXISTS
+S: \* .* RECENT
+S: \* OK \[UIDVALIDITY .*\] UIDs valid
+S: \* OK \[PERMANENTFLAGS .*\] Limited
+S: \* OK \[HIGHESTMODSEQ .*\] Highest
+S: \* OK \[UIDNEXT .*\] Predicted next UID
+}
+S: 0002 OK \[READ-WRITE\] SELECT completed\.
 
 REINIT
 
 # Correct user with correct password can authenticate with empty delegation part
-C: abcd AUTHENTICATE "PLAIN" {24+}
+C: 0003 AUTHENTICATE "PLAIN" {24+}
 # \0imapuser\0password
 C: AGltYXB1c2VyAHBhc3N3b3Jk
-S: abcd OK AUTHENTICATE completed.
+S: 0003 OK AUTHENTICATE completed.
+
+# Ensure we are imapuser
+C: 0004 SELECT imapuser
+SUB {
+S: \* FLAGS .*
+S: \* .* EXISTS
+S: \* .* RECENT
+S: \* OK \[UIDVALIDITY .*\] UIDs valid
+S: \* OK \[PERMANENTFLAGS .*\] Limited
+S: \* OK \[HIGHESTMODSEQ .*\] Highest
+S: \* OK \[UIDNEXT .*\] Predicted next UID
+}
+S: 0004 OK \[READ-WRITE\] SELECT completed\.
 
 REINIT
 
 # Correct user with bad password cannot authenticate
-C: abcd AUTHENTICATE "PLAIN" {28+}
+C: 0005 AUTHENTICATE "PLAIN" {28+}
 # \0imapuser\0badpassword
 C: AGltYXB1c2VyAGJhZHBhc3N3b3Jk
-S: abcd NO AUTHENTICATE failed. Authentication failed.
+S: 0005 NO AUTHENTICATE failed. Authentication failed.
 
 REINIT
 
 # Bad user cannot authenticate
-C: abcd AUTHENTICATE "PLAIN" {24+}
+C: 0006 AUTHENTICATE "PLAIN" {24+}
 # \0baduser\0password
 C: AGJhZHVzZXIAcGFzc3dvcmQ=
-S: abcd NO AUTHENTICATE failed. Authentication failed.
+S: 0006 NO AUTHENTICATE failed. Authentication failed.
 
 REINIT
 
 # Correct user with correct password can authenticate with any delegation part
-C: abcd AUTHENTICATE "PLAIN" {36+}
+C: 0007 AUTHENTICATE "PLAIN" {36+}
 # delegate\0imapuser\0password
 C: ZGVsZWdhdGUAaW1hcHVzZXIAcGFzc3dvcmQ=
-S: abcd OK AUTHENTICATE completed.
+S: 0007 OK AUTHENTICATE completed.
+
+# Ensure we are delegate
+C: 0008 SELECT delegate
+SUB {
+S: \* FLAGS .*
+S: \* .* EXISTS
+S: \* .* RECENT
+S: \* OK \[UIDVALIDITY .*\] UIDs valid
+S: \* OK \[PERMANENTFLAGS .*\] Limited
+S: \* OK \[HIGHESTMODSEQ .*\] Highest
+S: \* OK \[UIDNEXT .*\] Predicted next UID
+}
+S: 0008 OK \[READ-WRITE\] SELECT completed\.

@@ -53,8 +53,6 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
@@ -77,12 +75,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
     private EmbeddedElasticSearch embeddedElasticSearch;
     private Path tempDirectory;
     private StoreMailboxManager mailboxManager;
-    private FakeAuthenticator userManager;
 
-    public boolean addUser(String user, String password) throws Exception {
-        userManager.addUser(user, password);
-        return true;
-    }
 
     @Override
     public void beforeTest() throws Exception {
@@ -111,7 +104,6 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
             MailboxMappingFactory.getMappingContent()
         );
 
-        userManager = new FakeAuthenticator();
         InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
 
@@ -125,7 +117,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
 
-        mailboxManager = new StoreMailboxManager(factory, userManager, FakeAuthorizator.defaultReject(), aclResolver, groupMembershipResolver, messageParser,
+        mailboxManager = new StoreMailboxManager(factory, authenticator, authorizator, aclResolver, groupMembershipResolver, messageParser,
             messageIdFactory, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
         mailboxManager.setMessageSearchIndex(searchIndex);
 

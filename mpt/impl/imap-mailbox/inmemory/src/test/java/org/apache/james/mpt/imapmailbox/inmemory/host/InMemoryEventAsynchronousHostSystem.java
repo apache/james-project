@@ -35,8 +35,6 @@ import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.AsynchronousEventDelivery;
@@ -56,7 +54,6 @@ public class InMemoryEventAsynchronousHostSystem extends JamesImapHostSystem {
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
 
     private StoreMailboxManager mailboxManager;
-    private FakeAuthenticator userManager;
 
     public static JamesImapHostSystem build() throws Exception {
         return new InMemoryEventAsynchronousHostSystem();
@@ -65,11 +62,6 @@ public class InMemoryEventAsynchronousHostSystem extends JamesImapHostSystem {
     private InMemoryEventAsynchronousHostSystem() throws MailboxException {
         initFields();
     }
-    
-    public boolean addUser(String user, String password) throws Exception {
-        userManager.addUser(user, password);
-        return true;
-    }
 
     @Override
     protected void resetData() throws Exception {
@@ -77,13 +69,12 @@ public class InMemoryEventAsynchronousHostSystem extends JamesImapHostSystem {
     }
     
     private void initFields() throws MailboxException {
-        userManager = new FakeAuthenticator();
         InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
 
-        mailboxManager = new StoreMailboxManager(factory, userManager, FakeAuthorizator.defaultReject(), aclResolver, groupMembershipResolver, messageParser,
+        mailboxManager = new StoreMailboxManager(factory, authenticator, authorizator, aclResolver, groupMembershipResolver, messageParser,
                 new InMemoryMessageId.Factory(), MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
         QuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(factory);
 

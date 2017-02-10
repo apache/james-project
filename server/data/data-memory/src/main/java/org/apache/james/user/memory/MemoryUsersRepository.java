@@ -52,6 +52,10 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
         this.supportVirtualHosting = supportVirtualHosting;
     }
 
+    public void clear() {
+        userByName.clear();
+    }
+
     @Override
     public boolean supportVirtualHosting() {
         return supportVirtualHosting;

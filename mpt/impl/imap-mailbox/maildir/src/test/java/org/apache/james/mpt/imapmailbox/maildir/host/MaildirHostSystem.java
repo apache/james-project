@@ -33,8 +33,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.maildir.MaildirMailboxSessionMapperFactory;
 import org.apache.james.mailbox.maildir.MaildirStore;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
@@ -54,25 +52,22 @@ public class MaildirHostSystem extends JamesImapHostSystem {
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of();
     
     private final StoreMailboxManager mailboxManager;
-    private final FakeAuthenticator userManager;
-    private final MaildirMailboxSessionMapperFactory mailboxSessionMapperFactory;
-    
+
     public static JamesImapHostSystem build() throws Exception {
         return new MaildirHostSystem();
     }
     
     public MaildirHostSystem() throws MailboxException {
-        userManager = new FakeAuthenticator();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
         MaildirStore store = new MaildirStore(MAILDIR_HOME + "/%user", locker);
-        mailboxSessionMapperFactory = new MaildirMailboxSessionMapperFactory(store);
+        MaildirMailboxSessionMapperFactory mailboxSessionMapperFactory = new MaildirMailboxSessionMapperFactory(store);
         StoreSubscriptionManager sm = new StoreSubscriptionManager(mailboxSessionMapperFactory);
         
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
 
-        mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, userManager, FakeAuthorizator.defaultReject(), locker, aclResolver,
+        mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, authorizator, locker, aclResolver,
                 groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
         mailboxManager.init();
 
@@ -87,11 +82,7 @@ public class MaildirHostSystem extends JamesImapHostSystem {
                 defaultImapProcessorFactory);
         (new File(MAILDIR_HOME)).mkdirs();
     }
-    
-    public boolean addUser(String user, String password) throws Exception {
-        userManager.addUser(user, password);
-        return true;
-    }
+
 
     @Override
     public void resetData() throws Exception {

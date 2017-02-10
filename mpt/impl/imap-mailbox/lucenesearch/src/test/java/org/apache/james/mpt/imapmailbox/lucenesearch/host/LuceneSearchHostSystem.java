@@ -48,8 +48,6 @@ import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -73,13 +71,6 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
 
     private File tempFile;
     private OpenJPAMailboxManager mailboxManager;
-    private FakeAuthenticator userManager;
-    private EntityManagerFactory entityManagerFactory;
-
-    public boolean addUser(String user, String password) throws Exception {
-        userManager.addUser(user, password);
-        return true;
-    }
 
     @Override
     public void beforeTest() throws Exception {
@@ -109,8 +100,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
     }
 
     private void initFields() {
-        userManager = new FakeAuthenticator();
-        entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
+        EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
         JPAUidProvider uidProvider = new JPAUidProvider(locker, entityManagerFactory);
         JPAModSeqProvider modSeqProvider = new JPAModSeqProvider(locker, entityManagerFactory);
@@ -125,7 +115,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
             MessageParser messageParser = new MessageParser();
 
-            mailboxManager = new OpenJPAMailboxManager(factory, userManager, FakeAuthorizator.defaultReject(), locker, false, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
+            mailboxManager = new OpenJPAMailboxManager(factory, authenticator, authorizator, locker, false, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
 
             LuceneMessageSearchIndex searchIndex = new LuceneMessageSearchIndex(factory, mailboxIdFactory, fsDirectory, messageIdFactory, mailboxManager);
             searchIndex.setEnableSuffixMatch(true);

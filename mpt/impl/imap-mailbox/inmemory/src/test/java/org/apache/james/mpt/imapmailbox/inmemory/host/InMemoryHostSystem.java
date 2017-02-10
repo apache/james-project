@@ -35,8 +35,6 @@ import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -58,7 +56,6 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
         Feature.ANNOTATION_SUPPORT);
 
     private InMemoryMailboxManager mailboxManager;
-    private FakeAuthenticator userManager;
 
     public static JamesImapHostSystem build() throws Exception {
         return new InMemoryHostSystem();
@@ -67,11 +64,6 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
     private InMemoryHostSystem() throws MailboxException {
         initFields();
     }
-    
-    public boolean addUser(String user, String password) throws Exception {
-        userManager.addUser(user, password);
-        return true;
-    }
 
     @Override
     protected void resetData() throws Exception {
@@ -79,13 +71,12 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
     }
     
     private void initFields() throws MailboxException {
-        userManager = new FakeAuthenticator();
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
 
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, userManager, FakeAuthorizator.defaultReject(),
+        mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, authenticator, authorizator,
                 new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser, new InMemoryMessageId.Factory());
         QuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(mailboxManager.getMapperFactory());
 

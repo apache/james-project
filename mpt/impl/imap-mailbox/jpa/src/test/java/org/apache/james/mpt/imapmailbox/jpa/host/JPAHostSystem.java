@@ -42,8 +42,6 @@ import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -67,13 +65,9 @@ public class JPAHostSystem extends JamesImapHostSystem {
     }
     
     private final OpenJPAMailboxManager mailboxManager;
-    private final FakeAuthenticator userManager; 
-    private final EntityManagerFactory entityManagerFactory;
 
     public JPAHostSystem() throws Exception {
-        
-        userManager = new FakeAuthenticator();
-        entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
+        EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
         JPAUidProvider uidProvider = new JPAUidProvider(locker, entityManagerFactory);
         JPAModSeqProvider modSeqProvider = new JPAModSeqProvider(locker, entityManagerFactory);
@@ -83,7 +77,7 @@ public class JPAHostSystem extends JamesImapHostSystem {
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
 
-        mailboxManager = new OpenJPAMailboxManager(mf, userManager, FakeAuthorizator.defaultReject(), locker, false, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
+        mailboxManager = new OpenJPAMailboxManager(mf, authenticator, authorizator, locker, false, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
         mailboxManager.init();
 
         SubscriptionManager subscriptionManager = new JPASubscriptionManager(mf);
@@ -101,11 +95,6 @@ public class JPAHostSystem extends JamesImapHostSystem {
                 new DefaultImapEncoderFactory().buildImapEncoder(),
                 defaultImapProcessorFactory);
 
-    }
-
-    public boolean addUser(String user, String password) {
-        userManager.addUser(user, password);
-        return true;
     }
 
     public void resetData() throws Exception {

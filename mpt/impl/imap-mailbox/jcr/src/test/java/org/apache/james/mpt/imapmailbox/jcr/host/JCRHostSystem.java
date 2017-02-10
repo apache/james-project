@@ -40,8 +40,6 @@ import org.apache.james.mailbox.jcr.JCRUtils;
 import org.apache.james.mailbox.jcr.mail.JCRModSeqProvider;
 import org.apache.james.mailbox.jcr.mail.JCRUidProvider;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -54,14 +52,13 @@ import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
-public class JCRHostSystem extends JamesImapHostSystem{
+public class JCRHostSystem extends JamesImapHostSystem {
 
     public static JamesImapHostSystem build() throws Exception {
         return new JCRHostSystem();
     }
     
     private final JCRMailboxManager mailboxManager;
-    private final FakeAuthenticator userManager; 
 
     private static final String JACKRABBIT_HOME = "target/jackrabbit";
     public static final String META_DATA_DIRECTORY = "target/user-meta-data";
@@ -84,8 +81,7 @@ public class JCRHostSystem extends JamesImapHostSystem{
             
             // Register imap cnd file
             JCRUtils.registerCnd(repository, workspace, user, pass);
-            
-            userManager = new FakeAuthenticator();
+
             JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
             JCRUidProvider uidProvider = new JCRUidProvider(locker, sessionRepos);
             JCRModSeqProvider modSeqProvider = new JCRModSeqProvider(locker, sessionRepos);
@@ -95,7 +91,7 @@ public class JCRHostSystem extends JamesImapHostSystem{
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
             MessageParser messageParser = new MessageParser();
 
-            mailboxManager = new JCRMailboxManager(mf, userManager, FakeAuthorizator.defaultReject(), aclResolver, groupMembershipResolver, messageParser,
+            mailboxManager = new JCRMailboxManager(mf, authenticator, authorizator, aclResolver, groupMembershipResolver, messageParser,
                     new DefaultMessageId.Factory());
             mailboxManager.init();
 
@@ -116,12 +112,6 @@ public class JCRHostSystem extends JamesImapHostSystem{
             shutdownRepository();
             throw e;
         }
-    }
-
-   
-    public boolean addUser(String user, String password) {
-        userManager.addUser(user, password);
-        return true;
     }
 
     public void resetData() throws Exception {
