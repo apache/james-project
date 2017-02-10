@@ -24,6 +24,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.james.jmap.DefaultMailboxes;
+
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -34,12 +36,12 @@ public class Role {
 
     public static final String USER_DEFINED_ROLE_PREFIX = "x-";
     
-    public static final Role INBOX = new Role("inbox");
+    public static final Role INBOX = new Role("inbox", DefaultMailboxes.INBOX);
+    public static final Role DRAFTS = new Role("drafts", DefaultMailboxes.DRAFTS);
+    public static final Role OUTBOX = new Role("outbox", DefaultMailboxes.OUTBOX);
+    public static final Role SENT = new Role("sent", DefaultMailboxes.SENT);
+    public static final Role TRASH = new Role("trash", DefaultMailboxes.TRASH);
     public static final Role ARCHIVE = new Role("archive");
-    public static final Role DRAFTS = new Role("drafts");
-    public static final Role OUTBOX = new Role("outbox");
-    public static final Role SENT = new Role("sent");
-    public static final Role TRASH = new Role("trash");
     public static final Role SPAM = new Role("spam");
     public static final Role TEMPLATES = new Role("templates");
     
@@ -49,9 +51,16 @@ public class Role {
                 .collect(Collectors.toMap((Role x) -> x.name.toLowerCase(Locale.ENGLISH), Function.identity()));
     
     private final String name;
+    private final String defaultMailbox;
+
+    @VisibleForTesting Role(String name, String defaultMailbox) {
+        this.name = name;
+        this.defaultMailbox = defaultMailbox;
+    }
 
     @VisibleForTesting Role(String name) {
         this.name = name;
+        this.defaultMailbox = null;
     }
 
     public static Optional<Role> from(String name) {
@@ -79,22 +88,30 @@ public class Role {
         return name;
     }
 
+    public String getDefaultMailbox() {
+        return defaultMailbox;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hashCode(name);
+        return Objects.hashCode(name, defaultMailbox);
     }
 
     @Override
     public boolean equals(Object object) {
         if (object instanceof Role) {
             Role that = (Role) object;
-            return Objects.equal(this.name, that.name);
+            return Objects.equal(this.name, that.name)
+                && Objects.equal(this.defaultMailbox, that.defaultMailbox);
         }
         return false;
     }
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("name", name).toString();
+        return MoreObjects.toStringHelper(this)
+            .add("name", name)
+            .add("defaultMailbox", defaultMailbox)
+            .toString();
     }
 }

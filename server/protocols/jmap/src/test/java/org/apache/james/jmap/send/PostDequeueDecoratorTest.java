@@ -18,17 +18,17 @@
  ****************************************************************/
 package org.apache.james.jmap.send;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
 
 import javax.mail.Flags;
 
+import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.send.exception.MailShouldBeInOutboxException;
 import org.apache.james.jmap.utils.SystemMailboxesProviderImpl;
@@ -55,8 +55,8 @@ import org.slf4j.LoggerFactory;
 
 public class PostDequeueDecoratorTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostDequeueDecoratorTest.class);
-    private static final String OUTBOX = "OUTBOX";
-    private static final String SENT = "SENT";
+    private static final String OUTBOX = DefaultMailboxes.OUTBOX;
+    private static final String SENT = DefaultMailboxes.SENT;
     private static final String USERNAME = "username@domain.tld";
     private static final MessageUid UID = MessageUid.of(1);
     private static final MailboxPath OUTBOX_MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, OUTBOX);

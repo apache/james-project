@@ -28,6 +28,8 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
@@ -48,13 +50,26 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
 
     private boolean hasRole(Role aRole, MailboxPath mailBoxPath) {
         return Role.from(mailBoxPath.getName())
-                .map(aRole::equals)
-                .orElse(false);
+            .map(aRole::equals)
+            .orElse(false);
     }
 
     public Stream<MessageManager> listMailboxes(Role aRole, MailboxSession session) throws MailboxException {
+        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, session.getUser().getUserName(), aRole.getDefaultMailbox());
+        try {
+            return Stream.of(mailboxManager.getMailbox(mailboxPath, session));
+        } catch (MailboxNotFoundException e) {
+            return searchMessageManagerByMailboxRole(aRole, session);
+        }
+    }
+
+    private Stream<MessageManager> searchMessageManagerByMailboxRole(Role aRole, MailboxSession session) throws MailboxException {
         ThrowingFunction<MailboxPath, MessageManager> loadMailbox = path -> mailboxManager.getMailbox(path, session);
-        return mailboxManager.search(MailboxQuery.builder(session).privateUserMailboxes().build(), session)
+        MailboxQuery mailboxQuery = MailboxQuery.builder(session)
+            .privateUserMailboxes()
+            .expression(aRole.getDefaultMailbox())
+            .build();
+        return mailboxManager.search(mailboxQuery, session)
             .stream()
             .map(MailboxMetaData::getPath)
             .filter(path -> hasRole(aRole, path))
