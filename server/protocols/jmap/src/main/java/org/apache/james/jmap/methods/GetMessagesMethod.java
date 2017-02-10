@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.methods;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -38,9 +38,8 @@ import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.MessageProperties.HeaderProperty;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
-import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
@@ -50,7 +49,7 @@ import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
 public class GetMessagesMethod implements Method {
@@ -107,41 +106,41 @@ public class GetMessagesMethod implements Method {
 
     private GetMessagesResponse getMessagesResponse(MailboxSession mailboxSession, GetMessagesRequest getMessagesRequest) {
         getMessagesRequest.getAccountId().ifPresent((input) -> notImplemented());
-        
-        Function<MessageId, Stream<MetaDataWithContent>> loadMessages = loadMessage(mailboxSession);
-        Function<MetaDataWithContent, Message> convertToJmapMessage = Throwing.function(messageFactory::fromMetaDataWithContent).sneakyThrow();
-        
-        List<Message> result = getMessagesRequest.getIds().stream()
-            .flatMap(loadMessages)
-            .map(convertToJmapMessage)
-            .collect(Guavate.toImmutableList());
 
-        return GetMessagesResponse.builder().messages(result).expectedMessageIds(getMessagesRequest.getIds()).build();
+        try {
+            return GetMessagesResponse.builder()
+                .messages(
+                    messageIdManager.getMessages(getMessagesRequest.getIds(), FetchGroupImpl.FULL_CONTENT, mailboxSession)
+                        .stream()
+                        .collect(Guavate.toImmutableListMultimap(MessageResult::getMessageId))
+                        .asMap()
+                        .values()
+                        .stream()
+                        .filter(collection -> !collection.isEmpty())
+                        .map(Throwing.function(toMetaDataWithContent()).sneakyThrow())
+                        .map(Throwing.function(messageFactory::fromMetaDataWithContent).sneakyThrow())
+                        .collect(Guavate.toImmutableList()))
+                .expectedMessageIds(getMessagesRequest.getIds())
+                .build();
+        } catch (MailboxException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    private ThrowingFunction<Collection<MessageResult>, MetaDataWithContent> toMetaDataWithContent() {
+        return messageResults -> {
+            MessageResult firstMessageResult = messageResults.iterator().next();
+            return MetaDataWithContent.builderFromMessageResult(firstMessageResult)
+                .messageId(firstMessageResult.getMessageId())
+                .mailboxIds(messageResults.stream()
+                    .map(MessageResult::getMailboxId)
+                    .distinct()
+                    .collect(Guavate.toImmutableList()))
+                .build();
+        };
     }
 
     private static void notImplemented() {
         throw new NotImplementedException();
-    }
-
-    private Function<MessageId, Stream<MetaDataWithContent>> loadMessage(MailboxSession mailboxSession) {
-        ThrowingFunction<MessageId, Stream<MetaDataWithContent>> toMetaDataWithContentStream =
-            (MessageId messageId) -> {
-                ImmutableList<MessageResult> messageResults = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.FULL_CONTENT, mailboxSession)
-                    .stream()
-                    .collect(Guavate.toImmutableList());
-                List<MailboxId> mailboxIds = messageResults.stream()
-                    .map(MessageResult::getMailboxId)
-                    .distinct()
-                    .collect(Guavate.toImmutableList());
-                return messageResults.stream()
-                    .findFirst()
-                    .map(Stream::of)
-                    .orElse(Stream.of())
-                    .map(Throwing.function(MetaDataWithContent::builderFromMessageResult).sneakyThrow())
-                    .map(builder -> builder.messageId(messageId))
-                    .map(builder -> builder.mailboxIds(mailboxIds))
-                    .map(MetaDataWithContent.Builder::build);
-            };
-        return Throwing.function(toMetaDataWithContentStream).sneakyThrow();
     }
 }
