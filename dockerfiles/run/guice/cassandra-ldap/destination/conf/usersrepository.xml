@@ -24,4 +24,5 @@
     principal="uid=ldapUser,ou=system" 
     credentials="password" 
     userBase="ou=People,o=myorg.com,ou=system" 
-    userIdAttribute="uid"/>
+    userIdAttribute="uid"
+    userObjectClass="person"/>
