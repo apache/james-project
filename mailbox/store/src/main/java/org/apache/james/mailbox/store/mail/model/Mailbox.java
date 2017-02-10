@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail.model;
 
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 
@@ -88,5 +89,7 @@ public interface Mailbox {
      * @param acl
      */
     void setACL(MailboxACL acl);
+
+    boolean isChildOf(Mailbox potentialParent, MailboxSession mailboxSession);
     
 }

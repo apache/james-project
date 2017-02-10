@@ -27,12 +27,14 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxUtil;
 
 @Entity(name="Mailbox")
 @Table(name="JAMES_MAILBOX")
@@ -238,4 +240,8 @@ public class JPAMailbox implements Mailbox {
     public void setACL(MailboxACL acl) {
     }
 
+    @Override
+    public boolean isChildOf(Mailbox potentialParent, MailboxSession mailboxSession) {
+        return MailboxUtil.isMailboxChildOf(this, potentialParent, mailboxSession);
+    }
 }

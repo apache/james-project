@@ -688,5 +688,11 @@ public class LuceneMailboxMessageSearchIndexTest {
         }
 
 
+        @Override
+        public boolean isChildOf(Mailbox potentialParent, MailboxSession mailboxSession) {
+            throw new UnsupportedOperationException("Not supported");
+        }
+
+
     }
 }

@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.util.Text;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.jcr.JCRId;
 import org.apache.james.mailbox.jcr.JCRImapConstants;
 import org.apache.james.mailbox.jcr.Persistent;
@@ -31,6 +32,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxUtil;
 import org.slf4j.Logger;
 
 
@@ -323,6 +325,11 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
     @Override
     public void setACL(MailboxACL acl) {
         // TODO ACL support
+    }
+
+    @Override
+    public boolean isChildOf(Mailbox potentialParent, MailboxSession mailboxSession) {
+        return MailboxUtil.isMailboxChildOf(this, potentialParent, mailboxSession);
     }
     
 }

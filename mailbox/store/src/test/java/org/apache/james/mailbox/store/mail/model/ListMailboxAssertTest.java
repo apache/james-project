@@ -24,6 +24,8 @@ import static org.apache.james.mailbox.store.mail.model.ListMailboxAssert.assert
 
 import java.util.List;
 
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -112,6 +114,11 @@ public class ListMailboxAssertTest {
             @Override
             public MailboxACL getACL() {
                 return null;
+            }
+
+            @Override
+            public boolean isChildOf(Mailbox potentialParent, MailboxSession mailboxSession) {
+                throw new NotImplementedException();
             }
         };
     }
