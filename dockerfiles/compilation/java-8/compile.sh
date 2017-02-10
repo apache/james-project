@@ -58,6 +58,9 @@ if [ $? -eq 0 ]; then
       cp -r server/container/guice/cassandra-guice/target/james-server-cassandra-guice.lib $CASSANDRA_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $CASSANDRA_DESTINATION || true
       cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_DESTINATION || true
+
+      cp server/container/guice/cassandra-ldap-guice/target/james-server-cassandra-ldap-guice.jar $CASSANDRA_DESTINATION || true
+      cp -r server/container/guice/cassandra-ldap-guice/target/james-server-cassandra-ldap-guice.lib $CASSANDRA_DESTINATION || true
    fi
 
    if [ -d "$JPA_DESTINATION" ]; then
