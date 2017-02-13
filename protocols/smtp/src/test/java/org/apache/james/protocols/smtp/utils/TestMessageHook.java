@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.utils;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -31,7 +31,7 @@ import org.apache.james.protocols.smtp.hook.MessageHook;
 
 public class TestMessageHook implements MessageHook {
 
-    private final List<MailEnvelope> queued = new ArrayList<MailEnvelope>();
+    private final CopyOnWriteArrayList<MailEnvelope> queued = new CopyOnWriteArrayList<MailEnvelope>();
     
     public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
         queued.add(mail);
