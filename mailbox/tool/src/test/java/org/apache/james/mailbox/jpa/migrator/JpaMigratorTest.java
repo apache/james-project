@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa.migrator;
 
-import org.apache.james.mailbox.jpa.migrator.JpaMigrator;
-import org.apache.james.mailbox.jpa.migrator.exception.JpaMigrateException;
 import org.junit.Test;
 
 /**

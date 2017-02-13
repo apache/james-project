@@ -32,8 +32,6 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.model.SearchQuery.Sort;
-
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 

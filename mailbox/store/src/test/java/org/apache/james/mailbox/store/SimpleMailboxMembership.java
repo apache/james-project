@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.SequenceInputStream;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -44,7 +43,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class SimpleMailboxMembership implements MailboxMessage {

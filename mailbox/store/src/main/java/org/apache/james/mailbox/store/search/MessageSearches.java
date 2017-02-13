@@ -47,7 +47,6 @@ import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.mailbox.model.SearchQuery.UidRange;
 import org.apache.james.mailbox.store.ResultUtils;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.comparator.CombinedComparator;
 import org.apache.james.mime4j.MimeException;
@@ -71,7 +70,6 @@ import org.apache.james.mime4j.utils.search.MessageMatcher;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
