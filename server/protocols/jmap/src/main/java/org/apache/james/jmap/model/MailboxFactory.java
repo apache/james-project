@@ -53,7 +53,7 @@ public class MailboxFactory {
     public Optional<Mailbox> fromMailboxPath(MailboxPath mailboxPath, MailboxSession mailboxSession) {
         try {
             MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-            return fromMessageManager(mailbox, mailboxSession);
+            return fromMessageManager(mailbox, Optional.empty(), mailboxSession);
         } catch (MailboxException e) {
             LOGGER.warn("Cannot find mailbox for: " + mailboxPath.getName(), e);
             return Optional.empty();
@@ -63,20 +63,30 @@ public class MailboxFactory {
     public Optional<Mailbox> fromMailboxId(MailboxId mailboxId, MailboxSession mailboxSession) {
         try {
             MessageManager mailbox = mailboxManager.getMailbox(mailboxId, mailboxSession);
-            return fromMessageManager(mailbox, mailboxSession);
+            return fromMessageManager(mailbox, Optional.empty(), mailboxSession);
         } catch (MailboxException e) {
             return Optional.empty();
         }
     }
 
-    private Optional<Mailbox> fromMessageManager(MessageManager messageManager, MailboxSession mailboxSession) throws MailboxException {
+    public Optional<Mailbox> fromMailboxId(MailboxId mailboxId, List<MailboxMetaData> userMailboxesMetadata, MailboxSession mailboxSession) {
+        try {
+            MessageManager mailbox = mailboxManager.getMailbox(mailboxId, mailboxSession);
+            return fromMessageManager(mailbox, Optional.of(userMailboxesMetadata), mailboxSession);
+        } catch (MailboxException e) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Mailbox> fromMessageManager(MessageManager messageManager, Optional<List<MailboxMetaData>> userMailboxesMetadata,
+                                                 MailboxSession mailboxSession) throws MailboxException {
         MailboxPath mailboxPath = messageManager.getMailboxPath();
         Optional<Role> role = Role.from(mailboxPath.getName());
         MailboxCounters mailboxCounters = messageManager.getMailboxCounters(mailboxSession);
         return Optional.ofNullable(Mailbox.builder()
                 .id(messageManager.getId())
                 .name(getName(mailboxPath, mailboxSession))
-                .parentId(getParentIdFromMailboxPath(mailboxPath, mailboxSession).orElse(null))
+                .parentId(getParentIdFromMailboxPath(mailboxPath, userMailboxesMetadata, mailboxSession).orElse(null))
                 .role(role)
                 .unreadMessages(mailboxCounters.getUnseen())
                 .totalMessages(mailboxCounters.getCount())
@@ -93,17 +103,27 @@ public class MailboxFactory {
         return name;
     }
 
-    @VisibleForTesting Optional<MailboxId> getParentIdFromMailboxPath(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
+    @VisibleForTesting Optional<MailboxId> getParentIdFromMailboxPath(MailboxPath mailboxPath, Optional<List<MailboxMetaData>> userMailboxesMetadata,
+                                                                      MailboxSession mailboxSession) throws MailboxException {
         List<MailboxPath> levels = mailboxPath.getHierarchyLevels(mailboxSession.getPathDelimiter());
         if (levels.size() <= 1) {
             return Optional.empty();
         }
         MailboxPath parent = levels.get(levels.size() - 2);
-        return Optional.of(getMailboxId(parent, mailboxSession));
+        return userMailboxesMetadata.map(list -> retrieveParentFromMetadata(parent, list))
+            .orElse(retrieveParentFromBackend(mailboxSession, parent));
     }
 
-    private MailboxId getMailboxId(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
-        return mailboxManager.getMailbox(mailboxPath, mailboxSession)
-                .getId();
+    private Optional<MailboxId> retrieveParentFromBackend(MailboxSession mailboxSession, MailboxPath parent) throws MailboxException {
+        return Optional.of(
+            mailboxManager.getMailbox(parent, mailboxSession)
+                .getId());
+    }
+
+    private Optional<MailboxId> retrieveParentFromMetadata(MailboxPath parent, List<MailboxMetaData> list) {
+        return list.stream()
+            .filter(metadata -> metadata.getPath().equals(parent))
+            .map(MailboxMetaData::getId)
+            .findAny();
     }
 }

@@ -30,13 +30,17 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.SimpleMailboxMetaData;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+
 public class MailboxFactoryTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxUtilsTest.class);
+    public static final char DELIMITER = '.';
 
     private MailboxManager mailboxManager;
     private MailboxSession mailboxSession;
@@ -120,7 +124,7 @@ public class MailboxFactoryTest {
         MailboxPath mailboxPath = new MailboxPath("#private", user, "mailbox");
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
-        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, mailboxSession);
+        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, Optional.empty(), mailboxSession);
         assertThat(id).isEmpty();
     }
 
@@ -133,7 +137,7 @@ public class MailboxFactoryTest {
         MailboxPath mailboxPath = new MailboxPath("#private", user, "inbox.mailbox");
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
-        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, mailboxSession);
+        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, Optional.empty(), mailboxSession);
         assertThat(id).contains(parentId);
     }
 
@@ -148,7 +152,24 @@ public class MailboxFactoryTest {
 
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
-        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, mailboxSession);
+        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, Optional.empty(), mailboxSession);
+        assertThat(id).contains(parentId);
+    }
+
+    @Test
+    public void getParentIdFromMailboxPathShouldWorkWhenUserMailboxesProvided() throws Exception {
+        MailboxPath mailboxPath = new MailboxPath("#private", user, "inbox.children.mailbox");
+        mailboxManager.createMailbox(new MailboxPath("#private", user, "inbox"), mailboxSession);
+
+        MailboxPath parentMailboxPath = new MailboxPath("#private", user, "inbox.children");
+        mailboxManager.createMailbox(parentMailboxPath, mailboxSession);
+        MailboxId parentId = mailboxManager.getMailbox(parentMailboxPath, mailboxSession).getId();
+
+        mailboxManager.createMailbox(mailboxPath, mailboxSession);
+
+        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath,
+            Optional.of(ImmutableList.of(new SimpleMailboxMetaData(parentMailboxPath, parentId, DELIMITER))),
+            mailboxSession);
         assertThat(id).contains(parentId);
     }
 

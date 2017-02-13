@@ -90,8 +90,7 @@ public class GetMailboxesMethod implements Method {
         GetMailboxesResponse.Builder builder = GetMailboxesResponse.builder();
         try {
             Optional<ImmutableList<MailboxId>> mailboxIds = mailboxesRequest.getIds();
-            retrieveMailboxIds(mailboxIds, mailboxSession)
-                .map(mailboxId -> mailboxFactory.fromMailboxId(mailboxId, mailboxSession))
+            retrieveMailboxes(mailboxIds, mailboxSession)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .sorted(Comparator.comparing(Mailbox::getSortOrder))
@@ -102,17 +101,19 @@ public class GetMailboxesMethod implements Method {
         }
     }
 
-    private Stream<MailboxId> retrieveMailboxIds(Optional<ImmutableList<MailboxId>> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
+    private Stream<Optional<Mailbox>> retrieveMailboxes(Optional<ImmutableList<MailboxId>> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
         if (mailboxIds.isPresent()) {
             return mailboxIds.get()
-                .stream();
+                .stream()
+                .map(mailboxId -> mailboxFactory.fromMailboxId(mailboxId, mailboxSession));
         } else {
             List<MailboxMetaData> userMailboxes = mailboxManager.search(
                 MailboxQuery.builder(mailboxSession).privateUserMailboxes().build(),
                 mailboxSession);
             return userMailboxes
                 .stream()
-                .map(MailboxMetaData::getId);
+                .map(MailboxMetaData::getId)
+                .map(mailboxId -> mailboxFactory.fromMailboxId(mailboxId, userMailboxes, mailboxSession));
         }
     }
 }
