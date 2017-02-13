@@ -46,6 +46,7 @@ import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.util.OptionalConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,10 +105,10 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
         try {
             ensureValidMailboxName(mailboxRequest, mailboxSession);
             MailboxPath mailboxPath = getMailboxPath(mailboxRequest, creationIdsToCreatedMailboxId, mailboxSession);
-            mailboxManager.createMailbox(mailboxPath, mailboxSession);
-            subscriptionManager.subscribe(mailboxSession, mailboxPath.getName());
-            Optional<Mailbox> mailbox = mailboxFactory.fromMailboxPath(mailboxPath, mailboxSession);
+            Optional<MailboxId> mailboxId = OptionalConverter.fromGuava(mailboxManager.createMailbox(mailboxPath, mailboxSession));
+            Optional<Mailbox> mailbox = mailboxId.flatMap(id -> mailboxFactory.fromMailboxId(id, mailboxSession));
             if (mailbox.isPresent()) {
+                subscriptionManager.subscribe(mailboxSession, mailboxPath.getName());
                 builder.created(mailboxCreationId, mailbox.get());
                 creationIdsToCreatedMailboxId.put(mailboxCreationId, mailbox.get().getId());
             } else {

@@ -39,6 +39,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxQuery;
+import org.apache.james.util.OptionalConverter;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -91,8 +92,6 @@ public class GetMailboxesMethod implements Method {
         try {
             Optional<ImmutableList<MailboxId>> mailboxIds = mailboxesRequest.getIds();
             retrieveMailboxes(mailboxIds, mailboxSession)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
                 .sorted(Comparator.comparing(Mailbox::getSortOrder))
                 .forEach(builder::add);
             return builder.build();
@@ -101,11 +100,12 @@ public class GetMailboxesMethod implements Method {
         }
     }
 
-    private Stream<Optional<Mailbox>> retrieveMailboxes(Optional<ImmutableList<MailboxId>> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
+    private Stream<Mailbox> retrieveMailboxes(Optional<ImmutableList<MailboxId>> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
         if (mailboxIds.isPresent()) {
             return mailboxIds.get()
                 .stream()
-                .map(mailboxId -> mailboxFactory.fromMailboxId(mailboxId, mailboxSession));
+                .map(mailboxId -> mailboxFactory.fromMailboxId(mailboxId, mailboxSession))
+                .flatMap(OptionalConverter::toStream);
         } else {
             List<MailboxMetaData> userMailboxes = mailboxManager.search(
                 MailboxQuery.builder(mailboxSession).privateUserMailboxes().build(),
@@ -113,7 +113,8 @@ public class GetMailboxesMethod implements Method {
             return userMailboxes
                 .stream()
                 .map(MailboxMetaData::getId)
-                .map(mailboxId -> mailboxFactory.fromMailboxId(mailboxId, userMailboxes, mailboxSession));
+                .map(mailboxId -> mailboxFactory.fromMailboxId(mailboxId, userMailboxes, mailboxSession))
+                .flatMap(OptionalConverter::toStream);
         }
     }
 }

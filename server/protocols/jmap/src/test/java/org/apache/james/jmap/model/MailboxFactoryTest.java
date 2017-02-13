@@ -75,24 +75,6 @@ public class MailboxFactoryTest {
     }
 
     @Test
-    public void mailboxFromMailboxPathShouldReturnNotEmptyWhenMailboxExists() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath("#private", user, "mailbox");
-        mailboxManager.createMailbox(mailboxPath, mailboxSession);
-
-        Optional<Mailbox> optionalMailbox = sut.fromMailboxPath(mailboxPath, mailboxSession);
-        assertThat(optionalMailbox).isPresent();
-    }
-
-    @Test
-    public void mailboxFromMailboxPathShouldReturnEmptyWhenMailboxDoesntExist() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath("#private", user, "mailbox");
-
-        Optional<Mailbox> optionalMailbox = sut.fromMailboxPath(mailboxPath, mailboxSession);
-        assertThat(optionalMailbox).isEmpty();
-    }
-
-
-    @Test
     public void getNameShouldReturnMailboxNameWhenRootMailbox() throws Exception {
         String expected = "mailbox";
         MailboxPath mailboxPath = new MailboxPath("#private", user, expected);

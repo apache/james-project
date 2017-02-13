@@ -34,30 +34,16 @@ import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 
 public class MailboxFactory {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxFactory.class);
-
     private final MailboxManager mailboxManager;
 
     @Inject
     public MailboxFactory(MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
-    }
-    
-    public Optional<Mailbox> fromMailboxPath(MailboxPath mailboxPath, MailboxSession mailboxSession) {
-        try {
-            MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-            return fromMessageManager(mailbox, Optional.empty(), mailboxSession);
-        } catch (MailboxException e) {
-            LOGGER.warn("Cannot find mailbox for: " + mailboxPath.getName(), e);
-            return Optional.empty();
-        }
     }
 
     public Optional<Mailbox> fromMailboxId(MailboxId mailboxId, MailboxSession mailboxSession) {
