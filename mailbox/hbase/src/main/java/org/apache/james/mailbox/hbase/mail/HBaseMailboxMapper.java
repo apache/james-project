@@ -252,7 +252,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
     }
     
     @Override
-    public void save(Mailbox mlbx) throws MailboxException {
+    public MailboxId save(Mailbox mlbx) throws MailboxException {
         //TODO: maybe switch to checkAndPut for transactions
         HTable mailboxes = null;
         try {
@@ -262,6 +262,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
              */
             Put put = toPut((HBaseMailbox) mlbx);
             mailboxes.put(put);
+            return mlbx.getMailboxId();
         } catch (IOException ex) {
             throw new MailboxException("IOExeption", ex);
         } finally {

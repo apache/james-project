@@ -78,6 +78,7 @@ import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class MailboxEventAnalyserTest {
@@ -340,7 +341,7 @@ public class MailboxEventAnalyserTest {
             throw new UnsupportedOperationException("Not implemented");
         }
         
-        public void createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
+        public Optional<MailboxId> createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
             throw new UnsupportedOperationException("Not implemented");
         }
         

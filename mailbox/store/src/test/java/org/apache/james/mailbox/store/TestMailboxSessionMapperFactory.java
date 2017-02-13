@@ -86,7 +86,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
         mailboxMapper = new MailboxMapper() {
             @Override
-            public void save(Mailbox mailbox) throws MailboxException {
+            public MailboxId save(Mailbox mailbox) throws MailboxException {
                 throw new NotImplementedException();
             }
 

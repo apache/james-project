@@ -55,9 +55,9 @@ public class CachingMailboxMapper implements MailboxMapper {
 	}
 
 	@Override
-	public void save(Mailbox mailbox) throws MailboxException {
+	public MailboxId save(Mailbox mailbox) throws MailboxException {
 		invalidate(mailbox);
-		underlying.save(mailbox);
+		return underlying.save(mailbox);
 	}
 
 	@Override

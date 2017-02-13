@@ -74,7 +74,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     /**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#save(Mailbox)
      */
-    public void save(Mailbox mailbox) throws MailboxException {
+    public MailboxId save(Mailbox mailbox) throws MailboxException {
         try {
             this.lastMailboxName = mailbox.getName();
             JPAMailbox persistedMailbox = JPAMailbox.from(mailbox);
@@ -82,6 +82,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
             if (!(mailbox instanceof JPAMailbox)) {
                 mailbox.setMailboxId(persistedMailbox.getMailboxId());
             }
+            return mailbox.getMailboxId();
         } catch (PersistenceException e) {
             throw new MailboxException("Save of mailbox " + mailbox.getName() +" failed", e);
         } 

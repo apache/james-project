@@ -122,7 +122,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public void save(Mailbox mailbox) throws MailboxException {
+    public MailboxId save(Mailbox mailbox) throws MailboxException {
         Preconditions.checkArgument(mailbox instanceof SimpleMailbox);
         SimpleMailbox cassandraMailbox = (SimpleMailbox) mailbox;
 
@@ -164,6 +164,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
             }
             throw e;
         }
+        return cassandraId;
     }
 
     private CassandraId retrieveId(SimpleMailbox cassandraMailbox) {

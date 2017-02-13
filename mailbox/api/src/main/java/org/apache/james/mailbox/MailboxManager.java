@@ -42,6 +42,8 @@ import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.slf4j.Logger;
 
+import com.google.common.base.Optional;
+
 /**
  * <p>
  * Central MailboxManager which creates, lists, provides, renames and deletes
@@ -152,8 +154,10 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      *            the context for this call, not null
      * @throws MailboxException
      *             when creation fails
+     * @return Empty optional when the name is empty. If mailbox is created, the id of the mailboxPath specified as
+     *  parameter is returned (and not potential mailboxIds of parent mailboxes created in the process will be omitted)
      */
-    void createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException;
+    Optional<MailboxId> createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException;
 
     /**
      * Delete the mailbox with the name

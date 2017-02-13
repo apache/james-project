@@ -109,13 +109,14 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     /**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#save(org.apache.james.mailbox.store.mail.model.Mailbox)
      */
-    public void save(Mailbox mailbox) throws MailboxException {
+    public MailboxId save(Mailbox mailbox) throws MailboxException {
         InMemoryId id = (InMemoryId) mailbox.getMailboxId();
         if (id == null) {
             id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());
             ((SimpleMailbox) mailbox).setMailboxId(id);
         }
         mailboxesById.put(id, mailbox);
+        return mailbox.getMailboxId();
     }
 
     /**

@@ -84,8 +84,10 @@ import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 import org.slf4j.Logger;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Iterables;
 
 /**
  * This base class of an {@link MailboxManager} implementation provides a high-level api for writing your own
@@ -523,7 +525,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public void createMailbox(MailboxPath mailboxPath, final MailboxSession mailboxSession)
+    public Optional<MailboxId> createMailbox(MailboxPath mailboxPath, final MailboxSession mailboxSession)
             throws MailboxException {
         mailboxSession.getLog().debug("createMailbox " + mailboxPath);
         final int length = mailboxPath.getName().length();
@@ -537,6 +539,7 @@ public class StoreMailboxManager implements MailboxManager {
             // Create parents first
             // If any creation fails then the mailbox will not be created
             // TODO: transaction
+            final List<MailboxId> mailboxIds = new ArrayList<MailboxId>();
             for (final MailboxPath mailbox : mailboxPath.getHierarchyLevels(getDelimiter()))
 
                 locker.executeWithLock(mailboxSession, mailbox, new LockAwareExecution<Void>() {
@@ -548,7 +551,7 @@ public class StoreMailboxManager implements MailboxManager {
                             mapper.execute(new TransactionalMapper.VoidTransaction() {
 
                                 public void runVoid() throws MailboxException {
-                                    mapper.save(m);
+                                    mailboxIds.add(mapper.save(m));
                                 }
 
                             });
@@ -561,7 +564,9 @@ public class StoreMailboxManager implements MailboxManager {
                     }
                 }, true);
 
+            return Optional.fromNullable(Iterables.getLast(mailboxIds));
         }
+        return Optional.absent();
     }
 
     @Override

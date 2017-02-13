@@ -41,7 +41,7 @@ public interface MailboxMapper extends Mapper {
      * @param mailbox
      * @throws MailboxException
      */
-    void save(Mailbox mailbox) throws MailboxException;
+    MailboxId save(Mailbox mailbox) throws MailboxException;
     
     /**
      * Delete the given {@link Mailbox} from the underlying storage

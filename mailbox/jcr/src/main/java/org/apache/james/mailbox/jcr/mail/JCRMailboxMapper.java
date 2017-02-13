@@ -159,7 +159,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
      * org.apache.james.mailbox.store.mail.MailboxMapper#save(org.apache.james.
      * imap.store.mail.model.Mailbox)
      */
-    public void save(Mailbox mailbox) throws MailboxException {
+    public MailboxId save(Mailbox mailbox) throws MailboxException {
         
         try {
             final JCRMailbox jcrMailbox = (JCRMailbox)mailbox;
@@ -191,6 +191,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
            } else {
                jcrMailbox.merge(node);
            }
+           return jcrMailbox.getMailboxId();
             
         } catch (RepositoryException e) {
             throw new MailboxException("Unable to save mailbox " + mailbox, e);

@@ -160,7 +160,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#save(org.apache.james.mailbox.store.mail.model.Mailbox)
      */
     @Override
-    public void save(Mailbox mailbox) throws MailboxException {
+    public MailboxId save(Mailbox mailbox) throws MailboxException {
         try {
             Mailbox originalMailbox = getCachedMailbox((MaildirId) mailbox.getMailboxId());
             MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
@@ -229,7 +229,8 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             }
             folder.setACL(session, mailbox.getACL());
         }
-        
+        cacheMailbox(mailbox);
+        return mailbox.getMailboxId();
     }
 
     /**

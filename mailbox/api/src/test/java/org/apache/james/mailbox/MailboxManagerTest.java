@@ -35,6 +35,7 @@ import org.apache.james.mailbox.mock.MockMailboxManager;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
@@ -47,6 +48,7 @@ import org.xenei.junit.contract.Contract;
 import org.xenei.junit.contract.ContractTest;
 import org.xenei.junit.contract.IProducer;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -114,7 +116,20 @@ public class MailboxManagerTest<T extends MailboxManager> {
         MailboxPath inbox = MailboxPath.inbox(session);
         assertThat(mailboxManager.mailboxExists(inbox, session)).isFalse();
     }
-    
+
+    @ContractTest
+    public void createMailboxShouldReturnRightId() throws MailboxException, UnsupportedEncodingException {
+        session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));
+        mailboxManager.startProcessingRequest(session);
+
+        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USER_1, "name.subfolder");
+        Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, session);
+        MessageManager retrievedMailbox = mailboxManager.getMailbox(mailboxPath, session);
+
+        assertThat(mailboxId.isPresent()).isTrue();
+        assertThat(mailboxId.get()).isEqualTo(retrievedMailbox.getId());
+    }
+
     @ContractTest
     public void user1ShouldBeAbleToCreateInbox() throws MailboxException, UnsupportedEncodingException {
         session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));

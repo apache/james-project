@@ -50,16 +50,16 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public void save(final Mailbox mailbox) throws MailboxException {
+    public MailboxId save(final Mailbox mailbox) throws MailboxException {
         try {
-            wrapped.execute(new VoidTransaction() {
+            return wrapped.execute(new Transaction<MailboxId>() {
                 @Override
-                public void runVoid() throws MailboxException {
-                    wrapped.save(mailbox);
+                public MailboxId run() throws MailboxException {
+                    return wrapped.save(mailbox);
                 }
             });
         } catch (MailboxException e) {
-            Throwables.propagate(e);
+            throw Throwables.propagate(e);
         }
     }
 
