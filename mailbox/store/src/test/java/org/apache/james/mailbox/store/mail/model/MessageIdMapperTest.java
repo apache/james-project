@@ -488,13 +488,13 @@ public class MessageIdMapperTest<T extends MapperProvider> {
             .newFlags(newFlags)
             .build();
         UpdatedFlags expectedUpdatedFlags2 = UpdatedFlags.builder()
-            .uid(message1.getUid())
+            .uid(message1InOtherMailbox.getUid())
             .modSeq(modSeqBenwaWorkMailbox)
             .oldFlags(new Flags())
             .newFlags(newFlags)
             .build();
         assertThat(flags).containsOnly(MapEntry.entry(benwaInboxMailbox.getMailboxId(), expectedUpdatedFlags),
-                MapEntry.entry(benwaWorkMailbox.getMailboxId(), expectedUpdatedFlags2));
+                MapEntry.entry(message1InOtherMailbox.getMailboxId(), expectedUpdatedFlags2));
     }
 
     @ContractTest
