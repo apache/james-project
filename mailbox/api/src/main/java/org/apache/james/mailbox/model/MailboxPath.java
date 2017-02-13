@@ -24,6 +24,8 @@ import java.util.List;
 
 import org.apache.james.mailbox.MailboxSession;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * The path to a mailbox.
  */
@@ -116,6 +118,9 @@ public class MailboxPath {
      * @return list of hierarchy levels
      */
     public List<MailboxPath> getHierarchyLevels(char delimiter) {
+        if (name == null) {
+            return ImmutableList.of(this);
+        }
         ArrayList<MailboxPath> levels = new ArrayList<MailboxPath>();
         int index = name.indexOf(delimiter);
         while (index >= 0) {
