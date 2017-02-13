@@ -23,7 +23,6 @@ import org.junit.Test;
 /**
  * TODO this test class needs to be reviewed.
  */
-@SuppressWarnings("unused")
 public class JpaMigratorTest {
     
     @Test()
