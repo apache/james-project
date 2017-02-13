@@ -94,7 +94,12 @@ public class InMemoryMapperProvider implements MapperProvider {
 
     @Override
     public List<Capabilities> getSupportedCapabilities() {
-        return ImmutableList.copyOf(Capabilities.values());
+        return ImmutableList.of(
+            Capabilities.MESSAGE,
+            Capabilities.MAILBOX,
+            Capabilities.ATTACHMENT,
+            Capabilities.ANNOTATION,
+            Capabilities.MOVE);
     }
 
     @Override
@@ -102,7 +107,6 @@ public class InMemoryMapperProvider implements MapperProvider {
         return inMemoryMailboxSessionMapperFactory.getModSeqProvider()
                 .nextModSeq(new MockMailboxSession("user"), mailbox);
     }
-
 
     @Override
     public long highestModSeq(Mailbox mailbox) throws MailboxException {
