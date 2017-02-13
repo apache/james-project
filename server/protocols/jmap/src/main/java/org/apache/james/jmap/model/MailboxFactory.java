@@ -30,7 +30,9 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,13 +72,14 @@ public class MailboxFactory {
     private Optional<Mailbox> fromMessageManager(MessageManager messageManager, MailboxSession mailboxSession) throws MailboxException {
         MailboxPath mailboxPath = messageManager.getMailboxPath();
         Optional<Role> role = Role.from(mailboxPath.getName());
+        MailboxCounters mailboxCounters = messageManager.getMailboxCounters(mailboxSession);
         return Optional.ofNullable(Mailbox.builder()
                 .id(messageManager.getId())
                 .name(getName(mailboxPath, mailboxSession))
                 .parentId(getParentIdFromMailboxPath(mailboxPath, mailboxSession).orElse(null))
                 .role(role)
-                .unreadMessages(messageManager.getUnseenMessageCount(mailboxSession))
-                .totalMessages(messageManager.getMessageCount(mailboxSession))
+                .unreadMessages(mailboxCounters.getUnseen())
+                .totalMessages(mailboxCounters.getCount())
                 .sortOrder(SortOrder.getSortOrder(role))
                 .build());
     }

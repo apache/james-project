@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -65,6 +66,14 @@ public class CachingMessageMapper implements MessageMapper {
     public long countUnseenMessagesInMailbox(Mailbox mailbox)
             throws MailboxException {
         return cache.countUnseenMessagesInMailbox(mailbox, underlying);
+    }
+
+    @Override
+    public MailboxCounters getMailboxCounters(Mailbox mailbox) throws MailboxException {
+        return MailboxCounters.builder()
+            .count(countMessagesInMailbox(mailbox))
+            .unseen(countUnseenMessagesInMailbox(mailbox))
+            .build();
     }
 
     @Override

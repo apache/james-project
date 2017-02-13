@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -83,6 +84,7 @@ public interface MessageMapper extends Mapper {
     long countUnseenMessagesInMailbox(Mailbox mailbox)
             throws MailboxException;
 
+    MailboxCounters getMailboxCounters(Mailbox mailbox) throws MailboxException;
 
     /**
      * Delete the given {@link MailboxMessage}

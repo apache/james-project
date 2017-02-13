@@ -21,9 +21,12 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
@@ -64,6 +67,11 @@ public class CassandraMailboxCounterDAOTest {
     }
 
     @Test
+    public void retrieveMailboxCounterShouldReturnEmptyByDefault() throws Exception {
+        assertThat(testee.retrieveMailboxCounters(mailbox).join().isPresent()).isFalse();
+    }
+
+    @Test
     public void incrementCountShouldAddOneWhenAbsent() throws Exception {
         testee.incrementCount(MAILBOX_ID).join();
 
@@ -76,6 +84,46 @@ public class CassandraMailboxCounterDAOTest {
 
         assertThat(testee.countUnseenMessagesInMailbox(mailbox).join().isPresent()).isTrue();
         assertThat(testee.countUnseenMessagesInMailbox(mailbox).join().get()).isEqualTo(1);
+    }
+
+    @Test
+    public void incrementUnseenShouldAddOneWhenAbsentOnMailboxCounters() throws Exception {
+        testee.incrementUnseen(MAILBOX_ID).join();
+
+        Optional<MailboxCounters> mailboxCounters = testee.retrieveMailboxCounters(mailbox).join();
+        assertThat(mailboxCounters.isPresent()).isTrue();
+        assertThat(mailboxCounters.get())
+            .isEqualTo(MailboxCounters.builder()
+                .count(0L)
+                .unseen(1L)
+                .build());
+    }
+
+    @Test
+    public void incrementCountShouldAddOneWhenAbsentOnMailboxCounters() throws Exception {
+        testee.incrementCount(MAILBOX_ID).join();
+
+        Optional<MailboxCounters> mailboxCounters = testee.retrieveMailboxCounters(mailbox).join();
+        assertThat(mailboxCounters.isPresent()).isTrue();
+        assertThat(mailboxCounters.get())
+            .isEqualTo(MailboxCounters.builder()
+                .count(1L)
+                .unseen(0L)
+                .build());
+    }
+
+    @Test
+    public void retrieveMailboxCounterShouldWorkWhenFullRow() throws Exception {
+        testee.incrementCount(MAILBOX_ID).join();
+        testee.incrementUnseen(MAILBOX_ID).join();
+
+        Optional<MailboxCounters> mailboxCounters = testee.retrieveMailboxCounters(mailbox).join();
+        assertThat(mailboxCounters.isPresent()).isTrue();
+        assertThat(mailboxCounters.get())
+            .isEqualTo(MailboxCounters.builder()
+                .count(1L)
+                .unseen(1L)
+                .build());
     }
 
     @Test

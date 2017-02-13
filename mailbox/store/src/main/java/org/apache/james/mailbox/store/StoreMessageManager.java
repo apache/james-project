@@ -54,6 +54,7 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -232,10 +233,10 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         return new Flags(MINIMAL_PERMANET_FLAGS);
     }
 
+
     @Override
-    public long getUnseenMessageCount(MailboxSession mailboxSession) throws MailboxException {
-        return mapperFactory.createMessageMapper(mailboxSession)
-            .countUnseenMessagesInMailbox(mailbox);
+    public MailboxCounters getMailboxCounters(MailboxSession mailboxSession) throws MailboxException {
+        return mapperFactory.createMessageMapper(mailboxSession).getMailboxCounters(mailbox);
     }
 
     /**

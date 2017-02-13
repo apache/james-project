@@ -35,6 +35,7 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.datastax.driver.core.BoundStatement;
@@ -73,6 +74,16 @@ public class CassandraMailboxCounterDAO {
             update(CassandraMailboxCountersTable.TABLE_NAME)
                 .with(operation)
                 .where(eq(CassandraMailboxCountersTable.MAILBOX_ID, bindMarker(CassandraMailboxCountersTable.MAILBOX_ID))));
+    }
+
+    public CompletableFuture<Optional<MailboxCounters>> retrieveMailboxCounters(Mailbox mailbox) throws MailboxException {
+        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+
+        return cassandraAsyncExecutor.executeSingleRow(bindWithMailbox(mailboxId, readStatement))
+            .thenApply(optional -> optional.map(row ->  MailboxCounters.builder()
+                .count(row.getLong(CassandraMailboxCountersTable.COUNT))
+                .unseen(row.getLong(CassandraMailboxCountersTable.UNSEEN))
+                .build()));
     }
 
     public CompletableFuture<Optional<Long>> countMessagesInMailbox(Mailbox mailbox) throws MailboxException {

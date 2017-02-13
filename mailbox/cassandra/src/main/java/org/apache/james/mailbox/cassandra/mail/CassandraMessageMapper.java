@@ -42,6 +42,7 @@ import org.apache.james.mailbox.cassandra.mail.utils.MessageDeletedDuringFlagsUp
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
@@ -65,6 +66,10 @@ import com.google.common.collect.ImmutableList;
 
 public class CassandraMessageMapper implements MessageMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageMapper.class);
+    public static final MailboxCounters INITIAL_COUNTERS =  MailboxCounters.builder()
+        .count(0L)
+        .unseen(0L)
+        .build();
 
     private final ModSeqProvider modSeqProvider;
     private final MailboxSession mailboxSession;
@@ -107,6 +112,13 @@ public class CassandraMessageMapper implements MessageMapper {
         return mailboxCounterDAO.countUnseenMessagesInMailbox(mailbox)
             .join()
             .orElse(0L);
+    }
+
+    @Override
+    public MailboxCounters getMailboxCounters(Mailbox mailbox) throws MailboxException {
+        return mailboxCounterDAO.retrieveMailboxCounters(mailbox)
+            .join()
+            .orElse(INITIAL_COUNTERS);
     }
 
     @Override

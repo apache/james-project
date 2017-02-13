@@ -38,6 +38,7 @@ import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAEncryptedMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMailboxMessage;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
@@ -66,6 +67,14 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     public JPAMessageMapper(MailboxSession mailboxSession, UidProvider uidProvider, ModSeqProvider modSeqProvider, EntityManagerFactory entityManagerFactory) {
         super(entityManagerFactory);
         this.messageMetadataMapper = new MessageUtils(mailboxSession, uidProvider, modSeqProvider);
+    }
+
+    @Override
+    public MailboxCounters getMailboxCounters(Mailbox mailbox) throws MailboxException {
+        return MailboxCounters.builder()
+            .count(countMessagesInMailbox(mailbox))
+            .unseen(countUnseenMessagesInMailbox(mailbox))
+            .build();
     }
 
     /**

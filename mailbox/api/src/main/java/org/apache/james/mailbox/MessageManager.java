@@ -31,6 +31,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedCriteriaException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
@@ -38,6 +39,8 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.SearchQuery;
+
+import com.google.common.base.Objects;
 
 /**
  * Interface which represent a Mailbox
@@ -60,7 +63,7 @@ public interface MessageManager {
     /**
      * Return the count of unseen messages in the mailbox
      */
-    long getUnseenMessageCount(MailboxSession mailboxSession) throws MailboxException;
+    MailboxCounters getMailboxCounters(MailboxSession mailboxSession) throws MailboxException;
 
     /**
      * Return if the Mailbox is writable

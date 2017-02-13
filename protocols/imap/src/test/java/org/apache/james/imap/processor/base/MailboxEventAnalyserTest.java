@@ -58,6 +58,7 @@ import org.apache.james.mailbox.model.MailboxACL.MailboxACLRight;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -174,15 +175,15 @@ public class MailboxEventAnalyserTest {
         public MessageManager getMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
             return new MessageManager() {
 
-                @Override
-                public long getUnseenMessageCount(MailboxSession mailboxSession) throws MailboxException {
-                    return 0;
-                }
-
                 public long getMessageCount(MailboxSession mailboxSession) throws MailboxException {
                     return 1;
                 }
-                
+
+                @Override
+                public MailboxCounters getMailboxCounters(MailboxSession mailboxSession) throws MailboxException {
+                    throw new UnsupportedOperationException("Not implemented");
+                }
+
                 public boolean isWriteable(MailboxSession session) {
                     return false;
                 }

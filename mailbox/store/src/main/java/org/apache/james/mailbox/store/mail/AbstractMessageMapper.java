@@ -27,6 +27,7 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -61,6 +62,14 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
     @Override
     public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
         return uidProvider.lastUid(mailboxSession, mailbox);
+    }
+
+    @Override
+    public MailboxCounters getMailboxCounters(Mailbox mailbox) throws MailboxException {
+        return MailboxCounters.builder()
+            .count(countMessagesInMailbox(mailbox))
+            .unseen(countUnseenMessagesInMailbox(mailbox))
+            .build();
     }
     
     @Override
