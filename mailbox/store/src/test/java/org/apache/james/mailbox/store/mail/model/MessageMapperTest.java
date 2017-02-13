@@ -784,6 +784,7 @@ public class MessageMapperTest<T extends MapperProvider> {
 
     @ContractTest
     public void setFlagsShouldWorkWithConcurrencyWithRemove() throws Exception {
+        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.THREAD_SAFE_FLAGS_UPDATE));
         saveMessages();
 
         final int threadCount = 4;

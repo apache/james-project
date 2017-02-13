@@ -38,7 +38,8 @@ public interface MapperProvider {
         ATTACHMENT,
         ANNOTATION,
         MOVE,
-        UNIQUE_MESSAGE_ID
+        UNIQUE_MESSAGE_ID,
+        THREAD_SAFE_FLAGS_UPDATE
     }
 
     List<Capabilities> getSupportedCapabilities();
