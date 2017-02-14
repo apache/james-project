@@ -38,6 +38,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -641,6 +642,11 @@ public class LuceneMailboxMessageSearchIndexTest {
         }
 
         public void setMailboxId(MailboxId id) {
+        }
+
+        @Override
+        public MailboxPath generateAssociatedPath() {
+            return new MailboxPath(getNamespace(), getUser(), getName());
         }
 
         public TestId getMailboxId() {

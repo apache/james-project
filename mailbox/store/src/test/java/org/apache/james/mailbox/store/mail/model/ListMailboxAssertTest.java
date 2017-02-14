@@ -66,6 +66,12 @@ public class ListMailboxAssertTest {
     
     private Mailbox createMailbox(final String namespace, final String user, final String name, final long uid_validity) {
         return new Mailbox() {
+
+            @Override
+            public MailboxPath generateAssociatedPath() {
+                return new MailboxPath(getNamespace(), getUser(), getName());
+            }
+
             @Override
             public void setUser(String user) {
             }

@@ -156,6 +156,11 @@ public class JPAMailbox implements Mailbox {
     }
 
     @Override
+    public MailboxPath generateAssociatedPath() {
+        return new MailboxPath(getNamespace(), getUser(), getName());
+    }
+
+    @Override
     public String toString() {
         return "Mailbox ( "
             + "mailboxId = " + this.mailboxId + TAB

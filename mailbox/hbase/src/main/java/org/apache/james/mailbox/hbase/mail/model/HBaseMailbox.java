@@ -59,6 +59,11 @@ public class HBaseMailbox implements Mailbox {
         this.mailboxId = HBaseId.of(UUID.randomUUID());
     }
 
+    @Override
+    public MailboxPath generateAssociatedPath() {
+        return new MailboxPath(getNamespace(), getUser(), getName());
+    }
+
     /**
      * @see org.apache.james.mailbox.store.mail.model.Mailbox#getMailboxId()
      */

@@ -80,6 +80,10 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
         return logger;
     }
 
+    @Override
+    public MailboxPath generateAssociatedPath() {
+        return new MailboxPath(getNamespace(), getUser(), getName());
+    }
    
     /*
      * (non-Javadoc)

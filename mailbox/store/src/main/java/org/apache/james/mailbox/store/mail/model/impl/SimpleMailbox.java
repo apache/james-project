@@ -116,6 +116,11 @@ public class SimpleMailbox implements Mailbox {
         return uidValidity;
     }
 
+    @Override
+    public MailboxPath generateAssociatedPath() {
+        return new MailboxPath(getNamespace(), getUser(), getName());
+    }
+
     /**
      * @see java.lang.Object#equals(java.lang.Object)
      */
