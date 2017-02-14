@@ -121,10 +121,15 @@ public class CassandraMailboxMapper implements MailboxMapper {
     public void save(Mailbox mailbox) throws MailboxException {
         Preconditions.checkArgument(mailbox instanceof SimpleMailbox);
         SimpleMailbox cassandraMailbox = (SimpleMailbox) mailbox;
-        if (cassandraMailbox.getMailboxId() == null) {
-            cassandraMailbox.setMailboxId(CassandraId.timeBased());
-        }
-        boolean applied = mailboxPathDAO.save(mailbox.generateAssociatedPath(), (CassandraId) cassandraMailbox.getMailboxId())
+
+        CassandraId cassandraId = retrieveId(cassandraMailbox);
+        cassandraMailbox.setMailboxId(cassandraId);
+
+        boolean applied = mailboxDAO.retrieveMailbox(cassandraId)
+            .thenCompose(optional -> optional
+                .map(storedMailbox -> mailboxPathDAO.delete(storedMailbox.generateAssociatedPath()))
+                .orElse(CompletableFuture.completedFuture(null)))
+            .thenCompose(any -> mailboxPathDAO.save(mailbox.generateAssociatedPath(), cassandraId))
             .thenCompose(result -> {
                 if (result) {
                     return mailboxDAO.save(cassandraMailbox).thenApply(any -> result);
@@ -133,6 +138,14 @@ public class CassandraMailboxMapper implements MailboxMapper {
             }).join();
         if (!applied) {
             throw new MailboxExistsException(mailbox.generateAssociatedPath().asString());
+        }
+    }
+
+    private CassandraId retrieveId(SimpleMailbox cassandraMailbox) {
+        if (cassandraMailbox.getMailboxId() == null) {
+            return CassandraId.timeBased();
+        } else {
+            return (CassandraId) cassandraMailbox.getMailboxId();
         }
     }
 
