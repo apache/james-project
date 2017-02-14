@@ -7,5 +7,6 @@ objectClass: inetOrgPerson
 uid: james-user
 cn: james-user
 sn: james-user
+mail: james-user@james.org
 userPassword: secret
 description: James user

@@ -768,6 +768,10 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
 
     @Override
     public String getUser(MailAddress mailAddress) throws UsersRepositoryException {
-        return mailAddress.getLocalPart();
+        if (supportVirtualHosting()) {
+            return mailAddress.asString();
+        } else {
+            return mailAddress.getLocalPart();
+        }
     }
 }
