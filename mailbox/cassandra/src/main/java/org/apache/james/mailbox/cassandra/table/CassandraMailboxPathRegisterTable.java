@@ -19,11 +19,6 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
-/**
- * Created by benwa on 05/10/15.
- * <p>
- * Project under the Apache v 2 license
- */
 public interface CassandraMailboxPathRegisterTable {
 
     String TABLE_NAME = "mailboxPathRegister";
