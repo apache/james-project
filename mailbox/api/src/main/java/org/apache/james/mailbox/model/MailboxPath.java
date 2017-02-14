@@ -127,14 +127,13 @@ public class MailboxPath {
         return levels;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
-     */
+    public String asString() {
+        return namespace + ":" + user + ":" + name;
+    }
+
     @Override
     public String toString() {
-        return namespace + ":" + user + ":" + name;
+        return asString();
     }
 
     /*
