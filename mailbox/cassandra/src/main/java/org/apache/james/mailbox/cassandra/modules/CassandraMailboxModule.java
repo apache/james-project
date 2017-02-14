@@ -51,7 +51,6 @@ public class CassandraMailboxModule implements CassandraModule {
                     .addPartitionKey(CassandraMailboxTable.ID, timeuuid())
                     .addUDTColumn(CassandraMailboxTable.MAILBOX_BASE, SchemaBuilder.frozen(CassandraMailboxTable.MAILBOX_BASE))
                     .addColumn(CassandraMailboxTable.NAME, text())
-                    .addColumn(CassandraMailboxTable.PATH, text())
                     .addColumn(CassandraMailboxTable.UIDVALIDITY, bigint())),
             new CassandraTable(CassandraMailboxPathTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraMailboxPathTable.TABLE_NAME)
@@ -59,18 +58,8 @@ public class CassandraMailboxModule implements CassandraModule {
                     .addUDTPartitionKey(CassandraMailboxPathTable.NAMESPACE_AND_USER, SchemaBuilder.frozen(CassandraMailboxTable.MAILBOX_BASE))
                     .addClusteringColumn(CassandraMailboxPathTable.MAILBOX_NAME, text())
                     .addColumn(CassandraMailboxPathTable.MAILBOX_ID, timeuuid())));
-        index = Arrays.asList(
-            new CassandraIndex(
-                SchemaBuilder.createIndex(CassandraIndex.INDEX_PREFIX + CassandraMailboxTable.TABLE_NAME)
-                    .ifNotExists()
-                    .onTable(CassandraMailboxTable.TABLE_NAME)
-                    .andColumn(CassandraMailboxTable.PATH)),
-            new CassandraIndex(
-                SchemaBuilder.createIndex(CassandraIndex.INDEX_PREFIX + CassandraMailboxTable.MAILBOX_BASE)
-                    .ifNotExists()
-                    .onTable(CassandraMailboxTable.TABLE_NAME)
-                    .andColumn(CassandraMailboxTable.MAILBOX_BASE)));
-        types = Collections.singletonList(
+        index = ImmutableList.of();
+        types = ImmutableList.of(
             new CassandraType(CassandraMailboxTable.MAILBOX_BASE,
                 SchemaBuilder.createType(CassandraMailboxTable.MAILBOX_BASE)
                     .ifNotExists()

@@ -23,11 +23,10 @@ package org.apache.james.mailbox.cassandra.table;
 public interface CassandraMailboxTable {
     String TABLE_NAME = "mailbox";
     String ID = "id";
-    String PATH = "path";
     String MAILBOX_BASE = "mailboxbase";
     String UIDVALIDITY = "uidvalidity";
     String NAME = "name";
-    String[] FIELDS = { ID, MAILBOX_BASE, UIDVALIDITY, NAME, PATH };
+    String[] FIELDS = { ID, MAILBOX_BASE, UIDVALIDITY, NAME };
 
     interface MailboxBase {
         String USER = "user";

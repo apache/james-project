@@ -29,7 +29,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.FIE
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.MAILBOX_BASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.NAME;
-import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.PATH;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.UIDVALIDITY;
 
@@ -88,15 +87,13 @@ public class CassandraMailboxDAO {
             .value(ID, bindMarker(ID))
             .value(NAME, bindMarker(NAME))
             .value(UIDVALIDITY, bindMarker(UIDVALIDITY))
-            .value(MAILBOX_BASE, bindMarker(MAILBOX_BASE))
-            .value(PATH, bindMarker(PATH)));
+            .value(MAILBOX_BASE, bindMarker(MAILBOX_BASE)));
     }
 
     private PreparedStatement prepareUpdate(Session session) {
         return session.prepare(update(TABLE_NAME)
             .with(set(MAILBOX_BASE, bindMarker(MAILBOX_BASE)))
             .and(set(NAME, bindMarker(NAME)))
-            .and(set(PATH, bindMarker(PATH)))
             .where(eq(ID, bindMarker(ID))));
     }
 
@@ -121,14 +118,12 @@ public class CassandraMailboxDAO {
             .setUUID(ID, cassandraId.asUuid())
             .setString(NAME, mailbox.getName())
             .setLong(UIDVALIDITY, mailbox.getUidValidity())
-            .setUDTValue(MAILBOX_BASE, mailboxBaseTupleUtil.createMailboxBaseUDT(mailbox.getNamespace(), mailbox.getUser()))
-            .setString(PATH, mailbox.generateAssociatedPath().asString()));
+            .setUDTValue(MAILBOX_BASE, mailboxBaseTupleUtil.createMailboxBaseUDT(mailbox.getNamespace(), mailbox.getUser())));
     }
 
     public CompletableFuture<Void> updatePath(CassandraId mailboxId, MailboxPath mailboxPath) {
         return executor.executeVoid(updateStatement.bind()
             .setUUID(ID, mailboxId.asUuid())
-            .setString(PATH, mailboxPath.asString())
             .setString(NAME, mailboxPath.getName())
             .setUDTValue(MAILBOX_BASE, mailboxBaseTupleUtil.createMailboxBaseUDT(mailboxPath.getNamespace(), mailboxPath.getUser())));
     }
