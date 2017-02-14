@@ -104,7 +104,10 @@ public class GetMailboxesMethod implements Method {
         if (mailboxIds.isPresent()) {
             return mailboxIds.get()
                 .stream()
-                .map(mailboxId -> mailboxFactory.fromMailboxId(mailboxId, mailboxSession))
+                .map(mailboxId -> mailboxFactory.builder()
+                        .id(mailboxId)
+                        .session(mailboxSession)
+                        .build())
                 .flatMap(OptionalConverter::toStream);
         } else {
             List<MailboxMetaData> userMailboxes = mailboxManager.search(
@@ -113,7 +116,11 @@ public class GetMailboxesMethod implements Method {
             return userMailboxes
                 .stream()
                 .map(MailboxMetaData::getId)
-                .map(mailboxId -> mailboxFactory.fromMailboxId(mailboxId, userMailboxes, mailboxSession))
+                .map(mailboxId -> mailboxFactory.builder()
+                        .id(mailboxId)
+                        .session(mailboxSession)
+                        .usingPreloadedMailboxesMetadata(userMailboxes)
+                        .build())
                 .flatMap(OptionalConverter::toStream);
         }
     }

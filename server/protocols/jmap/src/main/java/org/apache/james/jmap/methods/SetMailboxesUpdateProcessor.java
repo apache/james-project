@@ -138,7 +138,10 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
     }
 
     private Mailbox getMailbox(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxNotFoundException {
-        return mailboxFactory.fromMailboxId(mailboxId, mailboxSession)
+        return mailboxFactory.builder()
+                .id(mailboxId)
+                .session(mailboxSession)
+                .build()
                 .orElseThrow(() -> new MailboxNotFoundException(mailboxId.serialize()));
     }
 

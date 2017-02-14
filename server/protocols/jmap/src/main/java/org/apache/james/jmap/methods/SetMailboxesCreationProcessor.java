@@ -106,7 +106,10 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
             ensureValidMailboxName(mailboxRequest, mailboxSession);
             MailboxPath mailboxPath = getMailboxPath(mailboxRequest, creationIdsToCreatedMailboxId, mailboxSession);
             Optional<MailboxId> mailboxId = OptionalConverter.fromGuava(mailboxManager.createMailbox(mailboxPath, mailboxSession));
-            Optional<Mailbox> mailbox = mailboxId.flatMap(id -> mailboxFactory.fromMailboxId(id, mailboxSession));
+            Optional<Mailbox> mailbox = mailboxId.flatMap(id -> mailboxFactory.builder()
+                    .id(id)
+                    .session(mailboxSession)
+                    .build());
             if (mailbox.isPresent()) {
                 subscriptionManager.subscribe(mailboxSession, mailboxPath.getName());
                 builder.created(mailboxCreationId, mailbox.get());

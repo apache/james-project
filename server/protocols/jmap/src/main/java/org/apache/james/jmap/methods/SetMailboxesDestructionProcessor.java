@@ -86,7 +86,10 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
     private ImmutableMap<MailboxId, Mailbox> mapDestroyRequests(SetMailboxesRequest request, MailboxSession mailboxSession) {
         ImmutableMap.Builder<MailboxId, Mailbox> idToMailboxBuilder = ImmutableMap.builder(); 
         request.getDestroy().stream()
-            .map(id -> mailboxFactory.fromMailboxId(id, mailboxSession))
+            .map(id -> mailboxFactory.builder()
+                    .id(id)
+                    .session(mailboxSession)
+                    .build())
             .filter(Optional::isPresent)
             .map(Optional::get)
             .forEach(mailbox -> idToMailboxBuilder.put(mailbox.getId(), mailbox));

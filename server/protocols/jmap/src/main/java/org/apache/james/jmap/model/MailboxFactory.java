@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import com.google.common.base.Preconditions;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.model.mailbox.SortOrder;
@@ -41,27 +42,51 @@ import com.google.common.base.Splitter;
 public class MailboxFactory {
     private final MailboxManager mailboxManager;
 
+    public static class MailboxBuilder {
+        private final MailboxFactory mailboxFactory;
+        private MailboxSession session;
+        private MailboxId id;
+        private List<MailboxMetaData> userMailboxesMetadata;
+
+        private MailboxBuilder(MailboxFactory mailboxFactory) {
+            this.mailboxFactory = mailboxFactory;
+        }
+
+        public MailboxBuilder id(MailboxId id) {
+            this.id = id;
+            return this;
+        }
+
+        public MailboxBuilder session(MailboxSession session) {
+            this.session = session;
+            return this;
+        }
+
+        public MailboxBuilder usingPreloadedMailboxesMetadata(List<MailboxMetaData> userMailboxesMetadata) {
+            this.userMailboxesMetadata = userMailboxesMetadata;
+            return this;
+        }
+
+        public Optional<Mailbox> build() {
+            Preconditions.checkNotNull(id);
+            Preconditions.checkNotNull(session);
+
+            try {
+                MessageManager mailbox = mailboxFactory.mailboxManager.getMailbox(id, session);
+                return mailboxFactory.fromMessageManager(mailbox, Optional.ofNullable(userMailboxesMetadata), session);
+            } catch (MailboxException e) {
+                return Optional.empty();
+            }
+        }
+    }
+
     @Inject
     public MailboxFactory(MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
     }
 
-    public Optional<Mailbox> fromMailboxId(MailboxId mailboxId, MailboxSession mailboxSession) {
-        try {
-            MessageManager mailbox = mailboxManager.getMailbox(mailboxId, mailboxSession);
-            return fromMessageManager(mailbox, Optional.empty(), mailboxSession);
-        } catch (MailboxException e) {
-            return Optional.empty();
-        }
-    }
-
-    public Optional<Mailbox> fromMailboxId(MailboxId mailboxId, List<MailboxMetaData> userMailboxesMetadata, MailboxSession mailboxSession) {
-        try {
-            MessageManager mailbox = mailboxManager.getMailbox(mailboxId, mailboxSession);
-            return fromMessageManager(mailbox, Optional.of(userMailboxesMetadata), mailboxSession);
-        } catch (MailboxException e) {
-            return Optional.empty();
-        }
+    public MailboxBuilder builder() {
+        return new MailboxBuilder(this);
     }
 
     private Optional<Mailbox> fromMessageManager(MessageManager messageManager, Optional<List<MailboxMetaData>> userMailboxesMetadata,

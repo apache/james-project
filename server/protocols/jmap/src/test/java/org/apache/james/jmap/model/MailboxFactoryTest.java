@@ -59,7 +59,11 @@ public class MailboxFactoryTest {
 
     @Test
     public void mailboxFromMailboxIdShouldReturnAbsentWhenDoesntExist() throws Exception {
-        Optional<Mailbox> mailbox = sut.fromMailboxId(InMemoryId.of(123), mailboxSession);
+        Optional<Mailbox> mailbox = sut.builder()
+                .id(InMemoryId.of(123))
+                .session(mailboxSession)
+                .build();
+
         assertThat(mailbox).isEmpty();
     }
 
@@ -69,7 +73,11 @@ public class MailboxFactoryTest {
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
         MailboxId mailboxId = mailboxManager.getMailbox(mailboxPath, mailboxSession).getId();
 
-        Optional<Mailbox> mailbox = sut.fromMailboxId(mailboxId, mailboxSession);
+        Optional<Mailbox> mailbox = sut.builder()
+                .id(mailboxId)
+                .session(mailboxSession)
+                .build();
+
         assertThat(mailbox).isPresent();
         assertThat(mailbox.get().getId()).isEqualTo(mailboxId);
     }
