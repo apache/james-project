@@ -21,6 +21,7 @@ package org.apache.james.jmap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 
@@ -29,29 +30,63 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import org.junit.Before;
 import org.junit.Test;
 
 public class UserProvisioningFilterTest {
+    private static final String USERNAME = "username";
+    private static final String MAIL = USERNAME + "@james.org";
 
     private UserProvisioningFilter sut;
     private InMemoryUsersRepository usersRepository;
+    private HttpServletRequest request;
+    private HttpServletResponse response;
+    private FilterChain chain;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         usersRepository = new InMemoryUsersRepository();
         sut = new UserProvisioningFilter(usersRepository);
+        request = mock(HttpServletRequest.class);
+        response = mock(HttpServletResponse.class);
+        chain = mock(FilterChain.class);
     }
-    
+
     @Test
     public void filterShouldDoNothingOnNullSession() throws IOException, ServletException, UsersRepositoryException {
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        HttpServletResponse response = mock(HttpServletResponse.class);
-        FilterChain chain = mock(FilterChain.class);
         sut.doFilter(request, response, chain);
+
         verify(chain).doFilter(request, response);
         assertThat(usersRepository.list()).isEmpty();
+    }
+
+    @Test
+    public void filterShouldAddUsernameWhenNoVirtualHostingAndMailboxSessionContainsUsername() throws Exception {
+        usersRepository.setEnableVirtualHosting(false);
+        MailboxSession mailboxSession = new MockMailboxSession(USERNAME);
+        when(request.getAttribute(AuthenticationFilter.MAILBOX_SESSION))
+            .thenReturn(mailboxSession);
+
+        sut.doFilter(request, response, chain);
+
+        verify(chain).doFilter(request, response);
+        assertThat(usersRepository.list()).contains(USERNAME);
+    }
+
+    @Test
+    public void filterShouldAddUsernameWhenNoVirtualHostingAndMailboxSessionContainsMail() throws Exception {
+        usersRepository.setEnableVirtualHosting(false);
+        MailboxSession mailboxSession = new MockMailboxSession(MAIL);
+        when(request.getAttribute(AuthenticationFilter.MAILBOX_SESSION))
+            .thenReturn(mailboxSession);
+
+        sut.doFilter(request, response, chain);
+
+        verify(chain).doFilter(request, response);
+        assertThat(usersRepository.list()).contains(USERNAME);
     }
 }

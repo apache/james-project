@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import javax.inject.Inject;
+import javax.mail.internet.AddressException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -37,6 +38,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.mailet.MailAddress;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
@@ -76,7 +78,15 @@ public class UserProvisioningFilter implements Filter {
     }
 
     private boolean needsAccountCreation(User user) throws UsersRepositoryException {
-        return !usersRepository.contains(user.getUserName());
+        return !usersRepository.contains(getUsername(user));
+    }
+
+    private String getUsername(User user) throws UsersRepositoryException {
+        try {
+            return usersRepository.getUser(new MailAddress(user.getUserName()));
+        } catch (AddressException e) {
+            return user.getUserName();
+        }
     }
 
     private void createAccount(User user) throws UsersRepositoryException, BadCredentialsException, MailboxException {
@@ -84,7 +94,7 @@ public class UserProvisioningFilter implements Filter {
     }
 
     private void createUser(User user) throws UsersRepositoryException {
-        usersRepository.addUser(user.getUserName(), generatePassword());
+        usersRepository.addUser(getUsername(user), generatePassword());
     }
     
     private String generatePassword() {
