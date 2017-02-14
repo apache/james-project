@@ -228,6 +228,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     private static final String PROPERTY_NAME_CONNECTION_POOL = "com.sun.jndi.ldap.connect.pool";
     private static final String PROPERTY_NAME_CONNECT_TIMEOUT = "com.sun.jndi.ldap.connect.timeout";
     private static final String PROPERTY_NAME_READ_TIMEOUT = "com.sun.jndi.ldap.read.timeout";
+    public static final String SUPPORTS_VIRTUAL_HOSTING = "supportsVirtualHosting";
 
     /**
      * The URL of the LDAP server against which users are to be authenticated.
@@ -293,6 +294,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      * &quot;principal&quot; and &quot;credentials&quot;.
      */
     private LdapContext ldapContext;
+    private boolean supportsVirtualHosting;
 
     // Use a connection pool. Default is true.
     private boolean useConnectionPool = true;
@@ -345,6 +347,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         // Default maximum retries is 1, which allows an alternate connection to
         // be found in a multi-homed environment
         maxRetries = configuration.getInt("[@maxRetries]", 1);
+        supportsVirtualHosting = configuration.getBoolean(SUPPORTS_VIRTUAL_HOSTING, false);
         // Default retry start interval is 0 second
         long retryStartInterval = configuration.getLong("[@retryStartInterval]", 0);
         // Default maximum retry interval is 60 seconds
@@ -759,7 +762,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      * VirtualHosting not supported
      */
     public boolean supportVirtualHosting() {
-        return false;
+        return supportsVirtualHosting;
     }
 
 
