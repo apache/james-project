@@ -19,6 +19,7 @@
 package org.apache.james.util;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class OptionalConverter {
 
@@ -28,5 +29,10 @@ public class OptionalConverter {
 
     public static <T> com.google.common.base.Optional<T> toGuava(Optional<T> java) {
         return com.google.common.base.Optional.fromNullable(java.orElse(null));
+    }
+
+    public static <T> Stream<T> toStream(Optional<T> optional) {
+        return optional.map(Stream::of)
+            .orElse(Stream.of());
     }
 }

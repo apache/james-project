@@ -21,15 +21,35 @@ package org.apache.james.util;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import com.github.steveash.guavate.Guavate;
+
 public class OptionalConverterTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
+
+    @Test
+    public void toStreamShouldConvertEmptyOptionalToEmptyStream() {
+        assertThat(
+            OptionalConverter.toStream(Optional.empty())
+                .collect(Guavate.toImmutableList()))
+            .isEmpty();
+    }
+
+    @Test
+    public void toStreamShouldConvertFullOptionalToStream() {
+        long value = 18L;
+        assertThat(
+            OptionalConverter.toStream(Optional.of(value))
+                .collect(Guavate.toImmutableList()))
+            .containsExactly(value);
+    }
 
     @Test
     public void fromGuavaShouldThrowWhenGuavaIsNull() {
