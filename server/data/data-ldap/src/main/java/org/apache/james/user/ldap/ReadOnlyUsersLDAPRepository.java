@@ -220,6 +220,15 @@ import com.google.common.base.Optional;
  * <b>administratorId:</b> (optional) User identifier of the administrator user.
  * The administrator user is allowed to authenticate as other users.
  * </ul>
+ * </p>
+ *
+ * <p>
+ * The <b>supportsVirtualHosting</b> tag allows you to define this repository as supporing
+ * virtual hosting. For this LDAP repository, it means users will be looked for by their email
+ * address instead of their unique identifier.
+ * Generally to make it work, you need to configure <b>userIdAttribute</b> attribute to map
+ * to a mail attribute such as <code>mail</code> instead of an unique id identifier.
+ * </p>
  *
  * @see ReadOnlyLDAPUser
  * @see ReadOnlyLDAPGroupRestriction
