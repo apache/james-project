@@ -24,6 +24,8 @@ import static org.mockito.Mockito.mock;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
@@ -60,6 +62,7 @@ public class CassandraTestSystemFixture {
         new CassandraAttachmentModule(),
         new CassandraAnnotationModule()));
     public static final int MOD_SEQ = 452;
+    public static final int MAX_ACL_RETRY = 10;
 
     public static CassandraMailboxSessionMapperFactory createMapperFactory() {
         CASSANDRA.ensureAllTables();
@@ -71,6 +74,9 @@ public class CassandraTestSystemFixture {
         CassandraMessageDAO messageDAO = new CassandraMessageDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider(), messageIdFactory);
         CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(CASSANDRA.getConf());
         CassandraMailboxRecentsDAO mailboxRecentsDAO = new CassandraMailboxRecentsDAO(CASSANDRA.getConf());
+
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider(), MAX_ACL_RETRY);
+        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider());
         return new CassandraMailboxSessionMapperFactory(uidProvider,
             modSeqProvider,
             CASSANDRA.getConf(),
@@ -79,7 +85,7 @@ public class CassandraTestSystemFixture {
             messageIdDAO,
             imapUidDAO,
             mailboxCounterDAO,
-            mailboxRecentsDAO);
+            mailboxRecentsDAO, mailboxDAO, mailboxPathDAO);
     }
 
     public static CassandraMailboxManager createMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory) throws Exception{

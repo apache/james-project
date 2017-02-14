@@ -32,6 +32,7 @@ import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.CassandraSubscriptionManager;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
@@ -66,6 +67,10 @@ public class CassandraMailboxModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new DefaultEventModule());
+
+        bind(Integer.class)
+            .annotatedWith(com.google.inject.name.Names.named(CassandraMailboxDAO.MAX_ACL_RETRY))
+            .toInstance(CassandraMailboxSessionMapperFactory.DEFAULT_MAX_RETRY);
 
         bind(CassandraMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxManager.class).in(Scopes.SINGLETON);

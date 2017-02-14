@@ -53,6 +53,7 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
             new CassandraModSeqModule(),
             new CassandraUidModule(),
             new CassandraAttachmentModule()));
+    public static final int MAX_ACL_RETRY = 10;
 
     private CassandraMailboxSessionMapperFactory mailboxSessionMapperFactory;
     private CassandraMailboxManager mailboxManager;
@@ -60,6 +61,9 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
 
     public CassandraMailboxManagerAttachmentTest() throws Exception {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
+
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), MAX_ACL_RETRY);
+        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
         mailboxSessionMapperFactory = new CassandraMailboxSessionMapperFactory(
                 new CassandraUidProvider(cassandra.getConf()),
                 new CassandraModSeqProvider(cassandra.getConf()),
@@ -69,7 +73,7 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
                 new CassandraMessageIdDAO(cassandra.getConf(), messageIdFactory),
                 new CassandraMessageIdToImapUidDAO(cassandra.getConf(), messageIdFactory),
                 new CassandraMailboxCounterDAO(cassandra.getConf()),
-                new CassandraMailboxRecentsDAO(cassandra.getConf()));
+                new CassandraMailboxRecentsDAO(cassandra.getConf()), mailboxDAO, mailboxPathDAO);
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
         mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, noAuthenticator, noAuthorizator, new NoMailboxPathLocker(), new MessageParser(), messageIdFactory); 

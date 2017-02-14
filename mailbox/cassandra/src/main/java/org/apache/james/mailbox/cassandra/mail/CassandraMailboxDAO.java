@@ -37,6 +37,9 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
@@ -56,6 +59,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 public class CassandraMailboxDAO {
 
+    public static final String MAX_ACL_RETRY = "maxAclRetry";
     private final CassandraAsyncExecutor executor;
     private final MailboxBaseTupleUtil mailboxBaseTupleUtil;
     private final Session session;
@@ -66,7 +70,8 @@ public class CassandraMailboxDAO {
     private final PreparedStatement insertStatement;
     private final PreparedStatement updateStatement;
 
-    public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider, int maxAclRetry) {
+    @Inject
+    public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider, @Named(MAX_ACL_RETRY) Integer maxAclRetry) {
         this.executor = new CassandraAsyncExecutor(session);
         this.mailboxBaseTupleUtil = new MailboxBaseTupleUtil(typesProvider);
         this.session = session;

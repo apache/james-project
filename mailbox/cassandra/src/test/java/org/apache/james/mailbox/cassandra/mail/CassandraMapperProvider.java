@@ -65,6 +65,7 @@ public class CassandraMapperProvider implements MapperProvider {
         new CassandraUidModule(),
         new CassandraAttachmentModule(),
         new CassandraAnnotationModule()));
+    public static final int MAX_ACL_RETRY = 10;
 
     private final MessageUidProvider messageUidProvider;
     private final CassandraModSeqProvider cassandraModSeqProvider;
@@ -95,6 +96,8 @@ public class CassandraMapperProvider implements MapperProvider {
     }
 
     private CassandraMailboxSessionMapperFactory createMapperFactory() {
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), MAX_ACL_RETRY);
+        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
         return new CassandraMailboxSessionMapperFactory(
             new CassandraUidProvider(cassandra.getConf()),
             cassandraModSeqProvider,
@@ -104,7 +107,9 @@ public class CassandraMapperProvider implements MapperProvider {
             new CassandraMessageIdDAO(cassandra.getConf(), MESSAGE_ID_FACTORY),
             new CassandraMessageIdToImapUidDAO(cassandra.getConf(), MESSAGE_ID_FACTORY),
             new CassandraMailboxCounterDAO(cassandra.getConf()),
-            new CassandraMailboxRecentsDAO(cassandra.getConf()));
+            new CassandraMailboxRecentsDAO(cassandra.getConf()),
+            mailboxDAO,
+            mailboxPathDAO);
     }
 
     @Override

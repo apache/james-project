@@ -55,7 +55,9 @@ public class CassandraUidProviderTest {
     public void setUpClass() throws Exception {
         CASSANDRA.ensureAllTables();
         uidProvider = new CassandraUidProvider(CASSANDRA.getConf());
-        mapper = new CassandraMailboxMapper(CASSANDRA.getConf(), CASSANDRA.getTypesProvider(), MAX_RETRY);
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider(), MAX_RETRY);
+        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider());
+        mapper = new CassandraMailboxMapper(CASSANDRA.getConf(), mailboxDAO, mailboxPathDAO, MAX_RETRY);
         MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
         mailbox = new SimpleMailbox(path, 1234);
         mapper.save(mailbox);
