@@ -140,7 +140,7 @@ public class CassandraMailboxDAO {
     }
 
     private CompletableFuture<Optional<SimpleMailbox>> mailbox(CassandraId cassandraId, CompletableFuture<Optional<Row>> rowFuture) {
-        CompletableFuture<MailboxACL> aclCompletableFuture = new CassandraACLMapper(cassandraId, session, maxAclRetry).getACL();
+        CompletableFuture<MailboxACL> aclCompletableFuture = new CassandraACLMapper(cassandraId, session, executor, maxAclRetry).getACL();
         return rowFuture.thenApply(rowOptional -> rowOptional.map(this::mailboxFromRow))
             .thenApply(mailboxOptional -> {
                 mailboxOptional.ifPresent(mailbox -> mailbox.setMailboxId(cassandraId));
@@ -176,7 +176,7 @@ public class CassandraMailboxDAO {
 
     private CompletableFuture<SimpleMailbox> toMailboxWithAclFuture(SimpleMailbox mailbox) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        return new CassandraACLMapper(cassandraId, session, maxAclRetry).getACL()
+        return new CassandraACLMapper(cassandraId, session, executor, maxAclRetry).getACL()
             .thenApply(acl -> {
                 mailbox.setACL(acl);
                 return mailbox;

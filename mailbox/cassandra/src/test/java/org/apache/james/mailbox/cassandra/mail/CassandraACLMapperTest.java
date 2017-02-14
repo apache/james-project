@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
@@ -49,13 +50,15 @@ public class CassandraACLMapperTest {
     public static final int MAX_RETRY = 100;
     private CassandraACLMapper cassandraACLMapper;
     private CassandraCluster cassandra;
+    private CassandraAsyncExecutor cassandraAsyncExecutor;
     private ExecutorService executor;
 
     @Before
     public void setUp() {
         cassandra = CassandraCluster.create(new CassandraAclModule());
         cassandra.ensureAllTables();
-        cassandraACLMapper = new CassandraACLMapper(MAILBOX_ID, cassandra.getConf(), MAX_RETRY);
+        cassandraAsyncExecutor = new CassandraAsyncExecutor(cassandra.getConf());
+        cassandraACLMapper = new CassandraACLMapper(MAILBOX_ID, cassandra.getConf(), cassandraAsyncExecutor, MAX_RETRY);
         executor = Executors.newFixedThreadPool(2);
     }
 
@@ -67,12 +70,14 @@ public class CassandraACLMapperTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void creatingACLMapperWithNegativeMaxRetryShouldFail() {
-        new CassandraACLMapper(MAILBOX_ID, cassandra.getConf(), -1);
+        int maxRetry = -1;
+        new CassandraACLMapper(MAILBOX_ID, cassandra.getConf(), cassandraAsyncExecutor, maxRetry);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void creatingACLMapperWithNullMaxRetryShouldFail() {
-        new CassandraACLMapper(MAILBOX_ID, cassandra.getConf(), 0);
+        int maxRetry = 0;
+        new CassandraACLMapper(MAILBOX_ID, cassandra.getConf(), cassandraAsyncExecutor, maxRetry);
     }
 
     @Test
@@ -194,13 +199,17 @@ public class CassandraACLMapperTest {
     private void awaitAll(Future<?>... futures) 
             throws InterruptedException, ExecutionException, TimeoutException {
         for (Future<?> future : futures) {
-            future.get(10l, TimeUnit.SECONDS);
+            future.get(10L, TimeUnit.SECONDS);
         }
     }
 
     private Future<Boolean> performACLUpdateInExecutor(ExecutorService executor, SimpleMailboxACL.SimpleMailboxACLEntryKey key, SimpleMailboxACL.Rfc4314Rights rights, CassandraACLMapper.CodeInjector runnable) {
         return executor.submit(() -> {
-            CassandraACLMapper aclMapper = new CassandraACLMapper(MAILBOX_ID, cassandra.getConf(), MAX_RETRY, runnable);
+            CassandraACLMapper aclMapper = new CassandraACLMapper(MAILBOX_ID,
+                cassandra.getConf(),
+                new CassandraAsyncExecutor(cassandra.getConf()),
+                MAX_RETRY,
+                runnable);
             try {
                 aclMapper.updateACL(new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.ADD, rights));
             } catch (MailboxException exception) {

@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
+import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
@@ -72,11 +73,13 @@ public class CassandraMailboxMapper implements MailboxMapper {
     private final Session session;
     private final int maxRetry;
     private final CassandraTypesProvider typesProvider;
+    private final CassandraAsyncExecutor cassandraAsyncExecutor;
 
     public CassandraMailboxMapper(Session session, CassandraTypesProvider typesProvider, int maxRetry) {
         this.session = session;
         this.maxRetry = maxRetry;
         this.typesProvider = typesProvider;
+        this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
     }
 
     @Override
@@ -159,7 +162,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        new CassandraACLMapper(cassandraId, session, maxRetry).updateACL(mailboxACLCommand);
+        new CassandraACLMapper(cassandraId, session, cassandraAsyncExecutor, maxRetry).updateACL(mailboxACLCommand);
     }
 
     @Override
@@ -176,7 +179,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
             row.getLong(UIDVALIDITY));
         CassandraId mailboxId = CassandraId.of(row.getUUID(ID));
         mailbox.setMailboxId(mailboxId);
-        mailbox.setACL(new CassandraACLMapper(mailboxId, session, maxRetry).getACL().join());
+        mailbox.setACL(new CassandraACLMapper(mailboxId, session, cassandraAsyncExecutor, maxRetry).getACL().join());
         return mailbox;
     }
 

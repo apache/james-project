@@ -66,16 +66,16 @@ public class CassandraACLMapper {
 
     private static final Logger LOG = LoggerFactory.getLogger(CassandraACLMapper.class);
 
-    public CassandraACLMapper(CassandraId cassandraId, Session session, int maxRetry) {
-        this(cassandraId, session, maxRetry, () -> {});
+    public CassandraACLMapper(CassandraId cassandraId, Session session, CassandraAsyncExecutor cassandraAsyncExecutor, int maxRetry) {
+        this(cassandraId, session, cassandraAsyncExecutor, maxRetry, () -> {});
     }
 
-    public CassandraACLMapper(CassandraId cassandraId, Session session, int maxRetry, CodeInjector codeInjector) {
+    public CassandraACLMapper(CassandraId cassandraId, Session session, CassandraAsyncExecutor cassandraAsyncExecutor, int maxRetry, CodeInjector codeInjector) {
         Preconditions.checkArgument(maxRetry > 0);
         Preconditions.checkArgument(cassandraId != null);
         this.cassandraId = cassandraId;
         this.session = session;
-        this.executor = new CassandraAsyncExecutor(session);
+        this.executor = cassandraAsyncExecutor;
         this.maxRetry = maxRetry;
         this.codeInjector = codeInjector;
     }
