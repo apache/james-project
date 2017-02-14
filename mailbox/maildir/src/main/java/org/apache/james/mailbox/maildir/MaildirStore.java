@@ -85,7 +85,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
      * @return The MaildirFolder
      */
     public MaildirFolder createMaildirFolder(Mailbox mailbox) {
-        MaildirFolder mf = new MaildirFolder(getFolderName(mailbox), new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName()), locker);
+        MaildirFolder mf = new MaildirFolder(getFolderName(mailbox), mailbox.generateAssociatedPath(), locker);
         mf.setMessageNameStrictParse(isMessageNameStrictParse());
         return mf;
     }

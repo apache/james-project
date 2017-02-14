@@ -37,7 +37,7 @@ public class StoreMailboxPath extends MailboxPath {
     }
     
     public StoreMailboxPath(Mailbox mailbox) {
-        super(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName());
+        super(mailbox.generateAssociatedPath());
     }
 
 }

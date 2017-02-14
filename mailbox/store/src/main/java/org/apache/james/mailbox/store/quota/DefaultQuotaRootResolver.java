@@ -71,7 +71,7 @@ public class DefaultQuotaRootResolver implements QuotaRootResolver {
             new Function<Mailbox, MailboxPath>() {
                 @Override
                 public MailboxPath apply(Mailbox idMailbox) {
-                    return new MailboxPath(idMailbox.getNamespace(), idMailbox.getUser(), idMailbox.getName());
+                    return idMailbox.generateAssociatedPath();
                 }
             });
     }

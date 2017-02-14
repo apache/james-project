@@ -30,10 +30,14 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.util.EventCollector;
 import org.assertj.core.api.Condition;
 import org.junit.Before;
@@ -50,6 +54,8 @@ public class MailboxEventDispatcherTest {
             return event instanceof MailboxListener.FlagsUpdated;
         }
     };
+    public static final TestId MAILBOX_ID = TestId.of(147L);
+    public static final int UID_VALIDITY = 145;
 
     private MailboxEventDispatcher dispatcher;
     private EventCollector collector;
@@ -69,12 +75,9 @@ public class MailboxEventDispatcherTest {
 
         dispatcher = MailboxEventDispatcher.ofListener(collector);
         result = mock(MessageResult.class);
-        mailbox = mock(Mailbox.class);
+        mailbox = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "name"), UID_VALIDITY, MAILBOX_ID);
 
         when(result.getUid()).thenReturn(MessageUid.of(23));
-        when(mailbox.getNamespace()).thenReturn("namespace");
-        when(mailbox.getUser()).thenReturn("user");
-        when(mailbox.getName()).thenReturn("name");
     }
 
 

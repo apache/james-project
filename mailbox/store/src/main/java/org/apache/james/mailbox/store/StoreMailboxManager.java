@@ -791,7 +791,7 @@ public class StoreMailboxManager implements MailboxManager {
         List<MailboxPath> mList = new ArrayList<MailboxPath>();
         List<Mailbox> mailboxes = mailboxSessionMapperFactory.getMailboxMapper(session).list();
         for (Mailbox m : mailboxes) {
-            mList.add(new MailboxPath(m.getNamespace(), m.getUser(), m.getName()));
+            mList.add(m.generateAssociatedPath());
         }
         return Collections.unmodifiableList(mList);
 

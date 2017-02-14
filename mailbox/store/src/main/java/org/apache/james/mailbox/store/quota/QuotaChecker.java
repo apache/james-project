@@ -35,7 +35,7 @@ public class QuotaChecker {
     private final QuotaRoot quotaRoot;
 
     public QuotaChecker(QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, Mailbox mailbox) throws MailboxException {
-        this.quotaRoot = quotaRootResolver.getQuotaRoot(new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName()));
+        this.quotaRoot = quotaRootResolver.getQuotaRoot(mailbox.generateAssociatedPath());
         this.messageQuota = quotaManager.getMessageQuota(quotaRoot);
         this.sizeQuota = quotaManager.getStorageQuota(quotaRoot);
     }

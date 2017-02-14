@@ -32,8 +32,6 @@ public class MailboxPath {
     private String namespace;
     private String user;
     private String name;
-
-
     
     public MailboxPath(String namespace, String user, String name) {
         if (namespace == null || namespace.equals("")) {

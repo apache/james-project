@@ -31,11 +31,14 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -54,12 +57,14 @@ public class MailboxAnnotationListenerTest {
     private static final MailboxAnnotation SHARED_ANNOTATION =  MailboxAnnotation.newInstance(SHARED_KEY, "My shared comment");
 
     private static final List<MailboxAnnotation> ANNOTATIONS = ImmutableList.of(PRIVATE_ANNOTATION, SHARED_ANNOTATION);
+    public static final int UID_VALIDITY = 145;
+    public static final TestId MAILBOX_ID = TestId.of(45);
 
     @Mock private MailboxSessionMapperFactory mailboxSessionMapperFactory;
     @Mock private AnnotationMapper annotationMapper;
-    @Mock private Mailbox mailbox;
     @Mock private MailboxId mailboxId;
 
+    private Mailbox mailbox;
     private EventFactory eventFactory;
     private MailboxAnnotationListener listener;
     private MailboxListener.Event deleteEvent;
@@ -69,9 +74,10 @@ public class MailboxAnnotationListenerTest {
         MockitoAnnotations.initMocks(this);
         listener = new MailboxAnnotationListener(mailboxSessionMapperFactory);
         eventFactory = new EventFactory();
+        mailbox = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "name"), UID_VALIDITY, mailboxId);
+
         deleteEvent = eventFactory.mailboxDeleted(mailboxSession, mailbox);
 
-        when(mailbox.getMailboxId()).thenReturn(mailboxId);
         when(mailboxSessionMapperFactory.getAnnotationMapper(eq(deleteEvent.getSession()))).thenReturn(annotationMapper);
     }
 

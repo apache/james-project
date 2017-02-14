@@ -215,7 +215,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     private QuotaRoot retrieveQuotaRoot(MailboxMapper mailboxMapper, MailboxId mailboxId) throws MailboxException {
         Mailbox mailbox = mailboxMapper.findMailboxById(mailboxId);
-        return quotaRootResolver.getQuotaRoot(new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName()));
+        return quotaRootResolver.getQuotaRoot(mailbox.generateAssociatedPath());
     }
 
     private void addMessageToMailboxes(MessageIdMapper messageIdMapper, MailboxMessage mailboxMessage, SetView<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException {

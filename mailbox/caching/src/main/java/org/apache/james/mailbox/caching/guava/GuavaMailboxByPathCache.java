@@ -48,7 +48,7 @@ public class GuavaMailboxByPathCache extends AbstractGuavaCache implements Mailb
 
 	@Override
 	public void invalidate(Mailbox mailbox) {
-		invalidate(new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName()));
+		invalidate(mailbox.generateAssociatedPath());
 	}
 	
 	@Override
