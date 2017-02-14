@@ -158,7 +158,8 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     @Override
     public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
-        new CassandraACLMapper(mailbox, session, maxRetry).updateACL(mailboxACLCommand);
+        CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
+        new CassandraACLMapper(cassandraId, session, maxRetry).updateACL(mailboxACLCommand);
     }
 
     @Override
@@ -173,8 +174,9 @@ public class CassandraMailboxMapper implements MailboxMapper {
                 row.getUDTValue(MAILBOX_BASE).getString(MailboxBase.USER),
                 row.getString(NAME)),
             row.getLong(UIDVALIDITY));
-        mailbox.setMailboxId(CassandraId.of(row.getUUID(ID)));
-        mailbox.setACL(new CassandraACLMapper(mailbox, session, maxRetry).getACL());
+        CassandraId mailboxId = CassandraId.of(row.getUUID(ID));
+        mailbox.setMailboxId(mailboxId);
+        mailbox.setACL(new CassandraACLMapper(mailboxId, session, maxRetry).getACL().join());
         return mailbox;
     }
 
