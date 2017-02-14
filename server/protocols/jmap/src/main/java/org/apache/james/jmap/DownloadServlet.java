@@ -118,6 +118,7 @@ public class DownloadServlet extends HttpServlet {
             Attachment attachment = attachmentManager.getAttachment(AttachmentId.from(blobId), mailboxSession);
             IOUtils.copy(attachment.getStream(), resp.getOutputStream());
 
+            resp.setHeader("Content-Length", String.valueOf(attachment.getSize()));
             resp.setStatus(SC_OK);
         } catch (AttachmentNotFoundException e) {
             LOGGER.info(String.format("Attachment '%s' not found", blobId), e);

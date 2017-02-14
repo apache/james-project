@@ -340,6 +340,11 @@ public class DownloadStepdefs {
         }
     }
 
+    @Then("^the attachment size is (\\d+)$")
+    public void assertContentLength(int size) throws IOException {
+        assertThat(response.getFirstHeader("Content-Length").getValue()).isEqualTo(String.valueOf(size));
+    }
+
     private void assertEncodedFilenameMatches(String name) {
         String contentDispositionHeader = response.getHeaders("Content-Disposition")[0].toString();
         assertThat(contentDispositionHeader).startsWith(UTF8_CONTENT_DIPOSITION_START);
