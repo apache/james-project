@@ -29,4 +29,6 @@ public interface CassandraMailboxPathTable {
 
     String MAILBOX_ID = "mailboxId";
 
+    String[] FIELDS = { NAMESPACE_AND_USER, MAILBOX_NAME, MAILBOX_ID};
+
 }
