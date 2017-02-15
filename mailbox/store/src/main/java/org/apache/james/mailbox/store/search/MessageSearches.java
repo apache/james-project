@@ -101,7 +101,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         while (messages.hasNext()) {
             MailboxMessage m = messages.next();
             try {
-                if (isMatch(query, m)) {
+                if (isMatch(m)) {
                     builder.add(m);
                 }
             } catch (MailboxException e) {
@@ -136,7 +136,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
      *         <code>false</code> otherwise
      * @throws MailboxException
      */
-    private boolean isMatch(SearchQuery query, MailboxMessage message) throws MailboxException {
+    private boolean isMatch(MailboxMessage message) throws MailboxException {
         final List<SearchQuery.Criterion> criteria = query.getCriterias();
         final Collection<MessageUid> recentMessageUids = query.getRecentMessageUids();
         boolean result = true;
