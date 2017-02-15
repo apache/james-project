@@ -133,10 +133,17 @@ public class CassandraMailboxMapper implements MailboxMapper {
                     .thenCompose(result -> {
                                 if (result) {
                                     return mailboxDAO.retrieveMailbox(cassandraId)
-                                            .thenCompose(optional -> optional
-                                                    .map(storedMailbox -> mailboxPathDAO.delete(storedMailbox.generateAssociatedPath()))
-                                                    .orElse(CompletableFuture.completedFuture(null)))
-                                            .thenCompose(any -> mailboxDAO.save(cassandraMailbox).thenApply(_any -> result));
+                                            .thenCompose(optional -> {
+                                                CompletableFuture<Void> delete = optional
+                                                        .map(storedMailbox -> mailboxPathDAO
+                                                                .delete(storedMailbox.generateAssociatedPath())
+                                                        )
+                                                        .orElse(CompletableFuture.completedFuture(null));
+
+                                                CompletableFuture<Void> save = mailboxDAO.save(cassandraMailbox);
+
+                                                return CompletableFuture.allOf(delete, save).thenApply(any -> result);
+                                            });
                                 }
 
                                 return CompletableFuture.completedFuture(result);
