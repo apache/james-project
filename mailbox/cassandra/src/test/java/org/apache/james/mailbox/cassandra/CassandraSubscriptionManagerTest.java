@@ -58,7 +58,6 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
                 new CassandraUidProvider(cassandra.getConf()),
                 new CassandraModSeqProvider(cassandra.getConf()),
                 cassandra.getConf(),
-                cassandra.getTypesProvider(),
                 messageDAO,
                 messageIdDAO,
                 imapUidDAO,

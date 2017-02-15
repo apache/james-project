@@ -20,7 +20,6 @@
 package org.apache.james.mpt.imapmailbox.cassandra;
 
 import org.apache.james.mpt.imapmailbox.AbstractMailboxTest;
-import org.apache.james.mpt.imapmailbox.suite.MailboxWithLongNameError;
 import org.apache.james.mpt.imapmailbox.suite.AuthenticatePlain;
 import org.apache.james.mpt.imapmailbox.suite.AuthenticatedState;
 import org.apache.james.mpt.imapmailbox.suite.ConcurrentSessions;
@@ -32,6 +31,7 @@ import org.apache.james.mpt.imapmailbox.suite.FetchBodyStructure;
 import org.apache.james.mpt.imapmailbox.suite.FetchHeaders;
 import org.apache.james.mpt.imapmailbox.suite.Listing;
 import org.apache.james.mpt.imapmailbox.suite.MailboxAnnotation;
+import org.apache.james.mpt.imapmailbox.suite.MailboxWithLongNameError;
 import org.apache.james.mpt.imapmailbox.suite.Move;
 import org.apache.james.mpt.imapmailbox.suite.NonAuthenticatedState;
 import org.apache.james.mpt.imapmailbox.suite.PartialFetch;

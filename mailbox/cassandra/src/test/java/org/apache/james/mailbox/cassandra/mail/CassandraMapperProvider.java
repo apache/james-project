@@ -102,7 +102,6 @@ public class CassandraMapperProvider implements MapperProvider {
             new CassandraUidProvider(cassandra.getConf()),
             cassandraModSeqProvider,
             cassandra.getConf(),
-            cassandra.getTypesProvider(),
             new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), MESSAGE_ID_FACTORY),
             new CassandraMessageIdDAO(cassandra.getConf(), MESSAGE_ID_FACTORY),
             new CassandraMessageIdToImapUidDAO(cassandra.getConf(), MESSAGE_ID_FACTORY),

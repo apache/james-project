@@ -80,7 +80,6 @@ public class CassandraTestSystemFixture {
         return new CassandraMailboxSessionMapperFactory(uidProvider,
             modSeqProvider,
             CASSANDRA.getConf(),
-            CASSANDRA.getTypesProvider(),
             messageDAO,
             messageIdDAO,
             imapUidDAO,

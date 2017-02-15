@@ -94,7 +94,6 @@ public class CassandraMailboxManagerTest {
             CassandraMailboxSessionMapperFactory mapperFactory = new CassandraMailboxSessionMapperFactory(uidProvider,
                 modSeqProvider,
                 CASSANDRA.getConf(),
-                CASSANDRA.getTypesProvider(),
                 messageDAO,
                 messageIdDAO,
                 imapUidDAO,

@@ -26,7 +26,7 @@ public class CompletableFutureUtil {
 
     public static <T> CompletableFuture<Stream<T>> allOf(Stream<CompletableFuture<T>> futureStream) {
         return futureStream
-            .map(future -> future.thenApply(Stream::of))
+            .map((CompletableFuture<T> future) -> future.thenApply(Stream::of))
             .reduce((future1, future2) ->
             future1.thenCompose(
                 stream1 -> future2.thenCompose(

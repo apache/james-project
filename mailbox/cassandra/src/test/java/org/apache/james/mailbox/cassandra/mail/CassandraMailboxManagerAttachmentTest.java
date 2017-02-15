@@ -68,7 +68,6 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
                 new CassandraUidProvider(cassandra.getConf()),
                 new CassandraModSeqProvider(cassandra.getConf()),
                 cassandra.getConf(),
-                cassandra.getTypesProvider(),
                 new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), messageIdFactory),
                 new CassandraMessageIdDAO(cassandra.getConf(), messageIdFactory),
                 new CassandraMessageIdToImapUidDAO(cassandra.getConf(), messageIdFactory),

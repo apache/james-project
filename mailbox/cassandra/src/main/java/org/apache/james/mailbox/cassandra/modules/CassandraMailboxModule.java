@@ -19,8 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
+import static com.datastax.driver.core.DataType.bigint;
+import static com.datastax.driver.core.DataType.text;
+import static com.datastax.driver.core.DataType.timeuuid;
+
+import java.util.List;
 
 import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -29,13 +32,8 @@ import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.text;
-import static com.datastax.driver.core.DataType.timeuuid;
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.google.common.collect.ImmutableList;
 
 public class CassandraMailboxModule implements CassandraModule {
 

@@ -21,7 +21,6 @@ package org.apache.james.mailbox.store.quota;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
