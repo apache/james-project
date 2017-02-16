@@ -22,11 +22,13 @@ package org.apache.james.jmap.methods.integration;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
@@ -44,6 +46,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -102,6 +105,31 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
+    public void getMessageListShouldNotDuplicateMessagesInSeveralMailboxes() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
+        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        Mailbox mailbox2 = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
+
+        ComposedMessageId message = jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+
+        await();
+
+        jmapServer.getJmapProbe().setInMailboxes(message.getMessageId(), username, mailbox.getMailboxId(), mailbox2.getMailboxId());
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessageList\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", hasSize(1));
+    }
+    
+    @Test
     public void getMessageListSetFlaggedFilterShouldWork() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
@@ -120,7 +148,9 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", contains(messageFlagged.getMessageId().serialize()));
+            .body(ARGUMENTS + ".messageIds", allOf(
+                    containsInAnyOrder(messageFlagged.getMessageId().serialize()), 
+                    not(containsInAnyOrder(messageNotFlagged.getMessageId().serialize()))));
     }
 
     @Test
@@ -142,7 +172,9 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", contains(messageNotFlagged.getMessageId().serialize()));
+            .body(ARGUMENTS + ".messageIds", allOf(
+                    containsInAnyOrder(messageNotFlagged.getMessageId().serialize()), 
+                    not(containsInAnyOrder(messageFlagged.getMessageId().serialize()))));
     }
 
     @Test
@@ -164,7 +196,9 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", contains(messageRead.getMessageId().serialize()));
+            .body(ARGUMENTS + ".messageIds", allOf(
+                    containsInAnyOrder(messageRead.getMessageId().serialize()), 
+                    not(containsInAnyOrder(messageNotRead.getMessageId().serialize()))));
     }
 
     @Test
@@ -186,7 +220,9 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", contains(messageNotRead.getMessageId().serialize()));
+            .body(ARGUMENTS + ".messageIds", allOf(
+                    containsInAnyOrder(messageNotRead.getMessageId().serialize()), 
+                    not(containsInAnyOrder(messageRead.getMessageId().serialize()))));
     }
 
     @Test
@@ -208,7 +244,9 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", contains(messageDraft.getMessageId().serialize()));
+            .body(ARGUMENTS + ".messageIds", allOf(
+                    containsInAnyOrder(messageDraft.getMessageId().serialize()), 
+                    not(containsInAnyOrder(messageNotDraft.getMessageId().serialize()))));
     }
 
     @Test
@@ -230,8 +268,12 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", contains(messageNotDraft.getMessageId().serialize()));
-    } @Test
+            .body(ARGUMENTS + ".messageIds", allOf(
+                    containsInAnyOrder(messageNotDraft.getMessageId().serialize()), 
+                    not(containsInAnyOrder(messageDraft.getMessageId().serialize()))));
+    }
+
+    @Test
     public void getMessageListSetAnsweredFilterShouldWork() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
@@ -250,7 +292,9 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", contains(messageAnswered.getMessageId().serialize()));
+            .body(ARGUMENTS + ".messageIds", allOf(
+                    containsInAnyOrder(messageAnswered.getMessageId().serialize()), 
+                    not(containsInAnyOrder(messageNotAnswered.getMessageId().serialize()))));
     }
 
     @Test
@@ -272,7 +316,9 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", contains(messageNotAnswered.getMessageId().serialize()));
+            .body(ARGUMENTS + ".messageIds", allOf(
+                    containsInAnyOrder(messageNotAnswered.getMessageId().serialize()), 
+                    not(containsInAnyOrder(messageAnswered.getMessageId().serialize()))));
     }
     
     @Test
@@ -298,7 +344,11 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", contains(messageNotSeenFlagged.getMessageId().serialize()));
+            .body(ARGUMENTS + ".messageIds", allOf(
+                    containsInAnyOrder(messageNotSeenFlagged.getMessageId().serialize()), 
+                    not(containsInAnyOrder(messageNotSeenNotFlagged.getMessageId().serialize(),
+                            messageSeenNotFlagged.getMessageId().serialize(),
+                            messageSeenFlagged.getMessageId().serialize()))));
     }
 
     @Test
@@ -324,9 +374,11 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", containsInAnyOrder(messageNotSeenFlagged.getMessageId().serialize(),
-                messageSeenFlagged.getMessageId().serialize(),
-                messageNotSeenNotFlagged.getMessageId().serialize()));
+            .body(ARGUMENTS + ".messageIds", allOf(
+                    containsInAnyOrder(messageNotSeenFlagged.getMessageId().serialize(),
+                            messageSeenFlagged.getMessageId().serialize(),
+                            messageNotSeenNotFlagged.getMessageId().serialize()), 
+                    not(containsInAnyOrder(messageSeenNotFlagged.getMessageId().serialize()))));
     }
 
     @Test
@@ -352,7 +404,11 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", containsInAnyOrder(messageSeenNotFlagged.getMessageId().serialize()));
+            .body(ARGUMENTS + ".messageIds", allOf(
+                    containsInAnyOrder(messageSeenNotFlagged.getMessageId().serialize()), 
+                    not(containsInAnyOrder(messageNotSeenFlagged.getMessageId().serialize(),
+                            messageSeenFlagged.getMessageId().serialize(),
+                            messageNotSeenNotFlagged.getMessageId().serialize()))));
     }
 
     @Test
@@ -381,8 +437,11 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", containsInAnyOrder(messageSeenFlagged.getMessageId().serialize(),
-                messageNotSeenFlagged.getMessageId().serialize()));
+            .body(ARGUMENTS + ".messageIds", allOf(
+                    containsInAnyOrder(messageSeenFlagged.getMessageId().serialize(),
+                            messageNotSeenFlagged.getMessageId().serialize()), 
+                    not(containsInAnyOrder(messageNotSeenNotFlagged.getMessageId().serialize(),
+                            messageSeenNotFlagged.getMessageId().serialize()))));
     }
 
     @Test
