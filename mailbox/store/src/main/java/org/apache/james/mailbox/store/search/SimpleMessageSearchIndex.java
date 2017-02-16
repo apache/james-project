@@ -20,8 +20,10 @@ package org.apache.james.mailbox.store.search;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -31,6 +33,7 @@ import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
@@ -153,12 +156,8 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     public List<MessageId> search(MailboxSession session, final MultimailboxesSearchQuery searchQuery, long limit) throws MailboxException {
         List<Mailbox> allUserMailboxes = mailboxMapperFactory.getMailboxMapper(session)
                 .findMailboxWithPathLike(new MailboxPath(session.getPersonalSpace(), session.getUser().getUserName(), WILDCARD));
-        FluentIterable<Mailbox> filteredMailboxes = FluentIterable.from(allUserMailboxes).filter(new Predicate<Mailbox>() {
-            @Override
-            public boolean apply(Mailbox input) {
-                return !searchQuery.getNotInMailboxes().contains(input.getMailboxId());
-            }
-        });
+        FluentIterable<Mailbox> filteredMailboxes = FluentIterable.from(allUserMailboxes)
+            .filter(notInMailboxes(searchQuery.getNotInMailboxes()));
         if (searchQuery.getInMailboxes().isEmpty()) {
             return getAsMessageIds(searchResults(session, filteredMailboxes, searchQuery.getSearchQuery()), limit);
         }
@@ -171,9 +170,19 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         return getAsMessageIds(searchResults(session, queriedMailboxes, searchQuery.getSearchQuery()), limit);
     }
 
+    private Predicate<Mailbox> notInMailboxes(final Set<MailboxId> mailboxIds) {
+        return new Predicate<Mailbox>() {
+        @Override
+        public boolean apply(Mailbox input) {
+            return !mailboxIds.contains(input.getMailboxId());
+        }
+    };
+    }
+
     private List<MessageId> getAsMessageIds(List<SearchResult> temp, long limit) {
         return FluentIterable.from(temp)
             .transform(toMessageId())
+            .filter(SearchUtil.distinct())
             .limit(Long.valueOf(limit).intValue())
             .toList();
     }

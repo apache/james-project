@@ -478,6 +478,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                     return input.getMessageId().get();
                 }
             })
+            .filter(SearchUtil.distinct())
             .limit(Long.valueOf(limit).intValue())
             .toList();
     }

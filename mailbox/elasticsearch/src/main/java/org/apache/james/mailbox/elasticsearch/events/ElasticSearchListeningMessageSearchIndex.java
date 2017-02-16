@@ -97,10 +97,12 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     public List<MessageId> search(MailboxSession session, MultimailboxesSearchQuery searchQuery, long limit)
             throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
-        return searcher.search(ImmutableList.of(session.getUser()), searchQuery, Optional.of(limit))
+        return searcher.search(ImmutableList.of(session.getUser()), searchQuery, Optional.empty())
             .peek(this::logIfNoMessageId)
             .map(SearchResult::getMessageId)
             .map(com.google.common.base.Optional::get)
+            .distinct()
+            .limit(limit)
             .collect(Guavate.toImmutableList());
     }
 

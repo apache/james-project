@@ -28,6 +28,7 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -54,6 +55,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
     protected MessageSearchIndex messageSearchIndex;
     protected StoreMailboxManager storeMailboxManager;
+    protected MessageIdManager messageIdManager;
     private Mailbox mailbox;
     private Mailbox mailbox2;
     private MailboxSession session;
@@ -67,9 +69,11 @@ public abstract class AbstractMessageSearchIndexTest {
     private ComposedMessageId m7;
     private ComposedMessageId m8;
     private ComposedMessageId m9;
+    private ComposedMessageId mOther;
     private ComposedMessageId mailWithAttachment;
     private ComposedMessageId mailWithInlinedAttachment;
-    private ComposedMessageId mOther;
+    private StoreMessageManager myFolderMessageManager;
+
 
     @Before
     public void setUp() throws Exception {
@@ -82,7 +86,7 @@ public abstract class AbstractMessageSearchIndexTest {
         StoreMessageManager inboxMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(inboxPath, session);
         MailboxPath myFolderPath = new MailboxPath("#private", "benwa", "MyFolder");
         storeMailboxManager.createMailbox(myFolderPath, session);
-        StoreMessageManager myFolderMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(myFolderPath, session);
+        myFolderMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(myFolderPath, session);
         mailbox = inboxMessageManager.getMailboxEntity();
         mailbox2 = myFolderMessageManager.getMailboxEntity();
 
@@ -182,6 +186,111 @@ public abstract class AbstractMessageSearchIndexTest {
 
     protected abstract void await();
     protected abstract void initializeMailboxManager() throws Exception;
+
+    @Test
+    public void searchingMessageInMultipleMailboxShouldNotReturnTwiceTheSameMessage() throws MailboxException {
+        Assume.assumeTrue(messageIdManager != null);
+
+        messageIdManager.setInMailboxes(m4.getMessageId(),
+            ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
+            session);
+
+        await();
+
+        SearchQuery searchQuery = new SearchQuery();
+
+        assertThat(messageSearchIndex.search(session,
+            MultimailboxesSearchQuery.from(searchQuery)
+                .inMailboxes(mailbox.getMailboxId(), mailbox2.getMailboxId())
+                .build(), 20))
+            .hasSize(12)
+            .containsOnly(m1.getMessageId(),
+                m2.getMessageId(),
+                m3.getMessageId(),
+                m4.getMessageId(),
+                m5.getMessageId(),
+                m6.getMessageId(),
+                m7.getMessageId(),
+                m8.getMessageId(),
+                m9.getMessageId(),
+                mOther.getMessageId(),
+                mailWithAttachment.getMessageId(),
+                mailWithInlinedAttachment.getMessageId());
+    }
+
+    @Test
+    public void searchingMessageInMultipleMailboxShouldUnionOfTheTwoMailbox() throws MailboxException {
+        Assume.assumeTrue(messageIdManager != null);
+        messageIdManager.setInMailboxes(m4.getMessageId(),
+            ImmutableList.of(mailbox2.getMailboxId()),
+            session);
+
+        await();
+
+        SearchQuery searchQuery = new SearchQuery();
+
+        assertThat(messageSearchIndex.search(session,
+            MultimailboxesSearchQuery.from(searchQuery)
+                .inMailboxes(mailbox.getMailboxId(), mailbox2.getMailboxId())
+                .build(), 20))
+            .containsOnly(m1.getMessageId(),
+                m2.getMessageId(),
+                m3.getMessageId(),
+                m4.getMessageId(),
+                m5.getMessageId(),
+                m6.getMessageId(),
+                m7.getMessageId(),
+                m8.getMessageId(),
+                m9.getMessageId(),
+                mOther.getMessageId(),
+                mailWithAttachment.getMessageId(),
+                mailWithInlinedAttachment.getMessageId());
+    }
+
+    @Test
+    public void searchingMessageInMultipleMailboxShouldNotReturnLessMessageThanLimitArgument() throws MailboxException {
+        Assume.assumeTrue(messageIdManager != null);
+        messageIdManager.setInMailboxes(m1.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
+        messageIdManager.setInMailboxes(m2.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
+        messageIdManager.setInMailboxes(m3.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
+        messageIdManager.setInMailboxes(m4.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
+        messageIdManager.setInMailboxes(m5.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
+        messageIdManager.setInMailboxes(m6.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
+        messageIdManager.setInMailboxes(m7.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
+
+        await();
+
+        SearchQuery searchQuery = new SearchQuery();
+
+        assertThat(messageSearchIndex.search(session,
+            MultimailboxesSearchQuery.from(searchQuery)
+                .inMailboxes(mailbox2.getMailboxId(), mailbox.getMailboxId())
+                .build(), 10))
+            .hasSize(10);
+    }
+
+    @Test
+    public void searchingMessageInMultipleMailboxShouldNotReturnLessMessageThanLimitArgumentEvenIfDuplicatedMessageAreBeforeLegitimeMessage() throws MailboxException {
+        Assume.assumeTrue(messageIdManager != null);
+        messageIdManager.setInMailboxes(m1.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
+
+        SearchQuery searchQuery = new SearchQuery();
+
+        ComposedMessageId addedAfterDuplicatedMessage = myFolderMessageManager.appendMessage(
+                ClassLoader.getSystemResourceAsStream("eml/mail.eml"),
+                new Date(1406930400000L),
+                session,
+                true,
+                new Flags(Flags.Flag.SEEN));
+
+        await();
+
+        assertThat(messageSearchIndex.search(session,
+                MultimailboxesSearchQuery.from(searchQuery)
+                        .inMailboxes(mailbox2.getMailboxId(), mailbox.getMailboxId())
+                        .build(), 13))
+                .hasSize(13);
+    }
 
     @Test(expected = IllegalArgumentException.class)
     public void searchShouldThrowWhenSessionIsNull() throws MailboxException {
