@@ -251,6 +251,55 @@ public class FilterToSearchQueryTest {
         assertThat(searchQuery).isEqualTo(expectedSearchQuery);
     }
 
+
+    @Test
+    public void filterConditionShouldMapWhenIsNotAnswered() {
+        SearchQuery expectedSearchQuery = new SearchQuery();
+        expectedSearchQuery.andCriteria(SearchQuery.flagIsUnSet(Flag.ANSWERED));
+
+        SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
+            .isAnswered(false)
+            .build());
+
+        assertThat(searchQuery).isEqualTo(expectedSearchQuery);
+    }
+
+    @Test
+    public void filterConditionShouldMapWhenIsNotDraft() {
+        SearchQuery expectedSearchQuery = new SearchQuery();
+        expectedSearchQuery.andCriteria(SearchQuery.flagIsUnSet(Flag.DRAFT));
+
+        SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
+            .isDraft(false)
+            .build());
+
+        assertThat(searchQuery).isEqualTo(expectedSearchQuery);
+    }
+
+    @Test
+    public void filterConditionShouldMapWhenIsNotFlagged() {
+        SearchQuery expectedSearchQuery = new SearchQuery();
+        expectedSearchQuery.andCriteria(SearchQuery.flagIsUnSet(Flag.FLAGGED));
+
+        SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
+            .isFlagged(false)
+            .build());
+
+        assertThat(searchQuery).isEqualTo(expectedSearchQuery);
+    }
+
+    @Test
+    public void filterConditionShouldMapWhenIsRead() {
+        SearchQuery expectedSearchQuery = new SearchQuery();
+        expectedSearchQuery.andCriteria(SearchQuery.flagIsSet(Flag.SEEN));
+
+        SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
+            .isUnread(false)
+            .build());
+
+        assertThat(searchQuery).isEqualTo(expectedSearchQuery);
+    }
+
     @Test
     public void filterConditionShouldMapWhenMaxSize() {
         int maxSize = 123;

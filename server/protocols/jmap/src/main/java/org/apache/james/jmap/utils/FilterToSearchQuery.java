@@ -68,10 +68,10 @@ public class FilterToSearchQuery {
         filter.getAfter().ifPresent(after -> searchQuery.andCriteria(SearchQuery.internalDateAfter(Date.from(after.toInstant()), DateResolution.Second)));
         filter.getBefore().ifPresent(before -> searchQuery.andCriteria(SearchQuery.internalDateBefore(Date.from(before.toInstant()), DateResolution.Second)));
         filter.getHeader().ifPresent(header -> searchQuery.andCriteria(SearchQuery.headerContains(header.getName(), header.getValue().orElse(null))));
-        filter.getIsAnswered().ifPresent(isAnswered -> searchQuery.andCriteria(SearchQuery.flagIsSet(Flag.ANSWERED)));
-        filter.getIsDraft().ifPresent(isDraft -> searchQuery.andCriteria(SearchQuery.flagIsSet(Flag.DRAFT)));
-        filter.getIsFlagged().ifPresent(isFlagged -> searchQuery.andCriteria(SearchQuery.flagIsSet(Flag.FLAGGED)));
-        filter.getIsUnread().ifPresent(isUnread -> searchQuery.andCriteria(SearchQuery.flagIsUnSet(Flag.SEEN)));
+        filter.getIsAnswered().ifPresent(isAnswered -> searchQuery.andCriteria(SearchQuery.flag(Flag.ANSWERED, isAnswered)));
+        filter.getIsDraft().ifPresent(isDraft -> searchQuery.andCriteria(SearchQuery.flag(Flag.DRAFT, isDraft)));
+        filter.getIsFlagged().ifPresent(isFlagged -> searchQuery.andCriteria(SearchQuery.flag(Flag.FLAGGED, isFlagged)));
+        filter.getIsUnread().ifPresent(isUnread -> searchQuery.andCriteria(SearchQuery.flag(Flag.SEEN, !isUnread)));
         filter.getMaxSize().ifPresent(maxSize -> searchQuery.andCriteria(SearchQuery.sizeLessThan(maxSize)));
         filter.getMinSize().ifPresent(minSize -> searchQuery.andCriteria(SearchQuery.sizeGreaterThan(minSize)));
         filter.getHasAttachment().ifPresent(hasAttachment -> searchQuery.andCriteria(SearchQuery.hasAttachment(hasAttachment)));

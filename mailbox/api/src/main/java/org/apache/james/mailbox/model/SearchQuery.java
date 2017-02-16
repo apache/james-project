@@ -633,6 +633,10 @@ public class SearchQuery implements Serializable {
         return new FlagCriterion(flag, BooleanOperator.unset());
     }
 
+    public static Criterion flag(Flag flag, boolean isSet) {
+        return new FlagCriterion(flag, new BooleanOperator(isSet));
+    }
+
     /**
      * Creates a filter on the given flag.
      * 
