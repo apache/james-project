@@ -109,7 +109,7 @@
     </bean>
 
     <bean id="cassandra-cluster"
-          class="org.apache.james.backends.cassandra.init.ClusterFactory"
+          class="org.apache.james.backends.cassandra.init.ClusterBuilder"
           factory-method="createClusterForSingleServerWithoutPassWord"
           lazy-init="true">
         <constructor-arg index="0" value="${cassandra.ip}"/>

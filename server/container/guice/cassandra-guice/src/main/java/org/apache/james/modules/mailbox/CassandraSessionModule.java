@@ -30,7 +30,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
-import org.apache.james.backends.cassandra.init.ClusterFactory;
+import org.apache.james.backends.cassandra.init.ClusterBuilder;
 import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.filesystem.api.FileSystem;
@@ -88,7 +88,9 @@ public class CassandraSessionModule extends AbstractModule {
         return getRetryer(executor, configuration)
                 .getWithRetry(ctx -> ClusterWithKeyspaceCreatedFactory
                         .config(
-                            ClusterFactory.createClusterForClusterWithoutPassWord(servers),
+                            ClusterBuilder.builder()
+                                .servers(servers)
+                                .build(),
                             configuration.getString("cassandra.keyspace"))
                         .replicationFactor(configuration.getInt("cassandra.replication.factor"))
                         .clusterWithInitializedKeyspace())
@@ -99,7 +101,7 @@ public class CassandraSessionModule extends AbstractModule {
         String[] ipAndPorts = configuration.getStringArray("cassandra.nodes");
 
         return Arrays.stream(ipAndPorts)
-                .map(string -> Host.parseConfString(string, ClusterFactory.DEFAULT_CASSANDRA_PORT))
+                .map(string -> Host.parseConfString(string, ClusterBuilder.DEFAULT_CASSANDRA_PORT))
                 .collect(Guavate.toImmutableList());
     }
 

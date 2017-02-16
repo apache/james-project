@@ -26,7 +26,7 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraTableManager;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
-import org.apache.james.backends.cassandra.init.ClusterFactory;
+import org.apache.james.backends.cassandra.init.ClusterBuilder;
 import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
@@ -92,7 +92,10 @@ public final class CassandraCluster {
     }
 
     public Cluster getCluster() {
-        return ClusterFactory.createTestingCluster(CLUSTER_IP, CLUSTER_PORT_TEST);
+        return ClusterBuilder.builder()
+                .host(CLUSTER_IP)
+                .port(CLUSTER_PORT_TEST)
+                .build();
     }
 
     private void sleep(long sleepMs) {
