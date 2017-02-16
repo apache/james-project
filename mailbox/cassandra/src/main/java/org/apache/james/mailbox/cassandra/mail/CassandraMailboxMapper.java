@@ -129,42 +129,42 @@ public class CassandraMailboxMapper implements MailboxMapper {
         CassandraId cassandraId = retrieveId(cassandraMailbox);
         cassandraMailbox.setMailboxId(cassandraId);
         try {
-            boolean applied = mailboxPathDAO.save(mailbox.generateAssociatedPath(), cassandraId)
-                    .thenCompose(result -> {
-                                if (result) {
-                                    return mailboxDAO.retrieveMailbox(cassandraId)
-                                            .thenCompose(optional -> {
-                                                CompletableFuture<Void> delete = optional
-                                                        .map(storedMailbox -> mailboxPathDAO
-                                                                .delete(storedMailbox.generateAssociatedPath())
-                                                        )
-                                                        .orElse(CompletableFuture.completedFuture(null));
-
-                                                CompletableFuture<Void> save = mailboxDAO.save(cassandraMailbox);
-
-                                                return CompletableFuture.allOf(delete, save).thenApply(any -> result);
-                                            });
-                                }
-
-                                return CompletableFuture.completedFuture(result);
-                            }
-                    ).join();
-
+            boolean applied = trySave(cassandraMailbox, cassandraId).join();
             if (!applied) {
                 throw new MailboxExistsException(mailbox.generateAssociatedPath().asString());
             }
         } catch (CompletionException e) {
-            if (e.getCause() instanceof InvalidQueryException) {
-                String errorMessage = e.getCause().getMessage();
-                if (StringUtils.containsIgnoreCase(errorMessage, VALUES_MAY_NOT_BE_LARGER_THAN_64_K) ||
-                        StringUtils.containsIgnoreCase(errorMessage, CLUSTERING_COLUMNS_IS_TOO_LONG)) {
-                    throw new TooLongMailboxNameException("too long mailbox name");
-                }
-                throw new MailboxException("It has error with cassandra storage", e.getCause());
-            }
-            throw e;
+            manageException(e);
         }
         return cassandraId;
+    }
+
+    private CompletableFuture<Boolean> trySave(SimpleMailbox cassandraMailbox, CassandraId cassandraId) {
+        return mailboxPathDAO.save(cassandraMailbox.generateAssociatedPath(), cassandraId)
+            .thenCompose(result -> {
+                if (result) {
+                    return mailboxDAO.retrieveMailbox(cassandraId)
+                        .thenCompose(optional -> CompletableFuture
+                            .allOf(optional
+                                    .map(storedMailbox -> mailboxPathDAO.delete(storedMailbox.generateAssociatedPath()))
+                                    .orElse(CompletableFuture.completedFuture(null)),
+                                mailboxDAO.save(cassandraMailbox))
+                            .thenApply(any -> result));
+                }
+                return CompletableFuture.completedFuture(result);
+            });
+    }
+
+    private void manageException(CompletionException e) throws MailboxException {
+        if (e.getCause() instanceof InvalidQueryException) {
+            String errorMessage = e.getCause().getMessage();
+            if (StringUtils.containsIgnoreCase(errorMessage, VALUES_MAY_NOT_BE_LARGER_THAN_64_K) ||
+                    StringUtils.containsIgnoreCase(errorMessage, CLUSTERING_COLUMNS_IS_TOO_LONG)) {
+                throw new TooLongMailboxNameException("too long mailbox name");
+            }
+            throw new MailboxException("It has error with cassandra storage", e.getCause());
+        }
+        throw e;
     }
 
     private CassandraId retrieveId(SimpleMailbox cassandraMailbox) {
