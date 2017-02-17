@@ -140,4 +140,14 @@ public class ConcurrentSessions extends BaseAuthenticatedState {
     public void testConcurrentRenameSelectedITALY() throws Exception {
         scriptTest("ConcurrentRenameSelected", Locale.ITALY);
     }
+
+    @Test
+    public void expungeShouldNotBreakUIDToMSNMapping() throws Exception {
+        scriptTest("ConcurrentExpungeUIDToMSNMapping", Locale.US);
+    }
+
+    @Test
+    public void appendShouldNotBreakUIDToMSNMapping() throws Exception {
+        scriptTest("ConcurrentAppendUIDToMSNMapping", Locale.US);
+    }
 }
