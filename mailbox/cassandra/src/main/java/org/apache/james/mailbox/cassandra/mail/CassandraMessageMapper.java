@@ -162,14 +162,20 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     private Stream<SimpleMailboxMessage> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
-        return messageDAO.retrieveMessages(messageIds, fetchType, limit).join()
-            .map(pair -> Pair.of(pair.getLeft(), new AttachmentLoader(attachmentMapper)
-                .getAttachments(pair.getRight()
-                    .collect(Guavate.toImmutableList()))))
-            .map(Throwing.function(pair -> pair.getLeft()
-                .toMailboxMessage(pair.getRight()
-                    .stream()
-                    .collect(Guavate.toImmutableList()))));
+        Stream<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<CassandraMessageDAO.MessageAttachmentRepresentation>>>
+            messageRepresentions = messageDAO.retrieveMessages(messageIds, fetchType, limit).join();
+        if (fetchType == FetchType.Body || fetchType == FetchType.Full) {
+            return messageRepresentions
+                .map(pair -> Pair.of(pair.getLeft(), new AttachmentLoader(attachmentMapper)
+                    .getAttachments(pair.getRight()
+                        .collect(Guavate.toImmutableList()))))
+                .map(Throwing.function(pair -> pair.getLeft()
+                    .toMailboxMessage(pair.getRight()
+                        .stream()
+                        .collect(Guavate.toImmutableList()))));
+        } else {
+            return messageRepresentions.map(pair -> pair.getLeft().toMailboxMessage(ImmutableList.of()));
+        }
     }
 
     @Override
