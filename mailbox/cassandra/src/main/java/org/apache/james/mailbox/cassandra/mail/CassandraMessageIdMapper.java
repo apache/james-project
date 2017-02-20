@@ -51,6 +51,7 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.CompletableFutureUtil;
+import org.apache.james.util.OptionalConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +66,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageIdMapper.class);
 
     private final MailboxMapper mailboxMapper;
+    private final CassandraMailboxDAO mailboxDAO;
     private final AttachmentMapper attachmentMapper;
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
     private final CassandraMessageIdDAO messageIdDAO;
@@ -73,10 +75,11 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private final ModSeqProvider modSeqProvider;
     private final MailboxSession mailboxSession;
 
-    public CassandraMessageIdMapper(MailboxMapper mailboxMapper, AttachmentMapper attachmentMapper,
+    public CassandraMessageIdMapper(MailboxMapper mailboxMapper, CassandraMailboxDAO mailboxDAO, AttachmentMapper attachmentMapper,
                                     CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
                                     CassandraIndexTableHandler indexTableHandler, ModSeqProvider modSeqProvider, MailboxSession mailboxSession) {
         this.mailboxMapper = mailboxMapper;
+        this.mailboxDAO = mailboxDAO;
         this.attachmentMapper = attachmentMapper;
         this.imapUidDAO = imapUidDAO;
         this.messageIdDAO = messageIdDAO;
@@ -98,21 +101,29 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
                 .map(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty())))
             .thenApply(stream -> stream.flatMap(Function.identity()))
             .thenApply(stream -> stream.collect(Guavate.toImmutableList()))
-            .thenCompose(composedMessageIds -> messageDAO.retrieveMessages(composedMessageIds, fetchType, Optional.empty())).join()
-            .filter(pair -> mailboxExists(pair.getLeft()))
+            .thenCompose(composedMessageIds -> messageDAO.retrieveMessages(composedMessageIds, fetchType, Optional.empty()))
+            .thenCompose(stream -> CompletableFutureUtil.allOf(
+                stream.map(pair -> mailboxExists(pair.getLeft())
+                    .thenApply(b -> Optional.of(pair).filter(any -> b)))))
+            .join()
+            .flatMap(OptionalConverter::toStream)
             .map(loadAttachments(fetchType))
             .map(toMailboxMessages())
             .sorted(Comparator.comparing(MailboxMessage::getUid));
     }
 
-    private boolean mailboxExists(CassandraMessageDAO.MessageWithoutAttachment messageWithoutAttachment) {
-        try {
-            mailboxMapper.findMailboxById(messageWithoutAttachment.getMailboxId());
-            return true;
-        } catch (MailboxException e) {
-            LOGGER.info("Mailbox {} have been deleted but message {} is still attached to it.", messageWithoutAttachment.getMailboxId(), messageWithoutAttachment.getMessageId());
-            return false;
-        }
+    private CompletableFuture<Boolean> mailboxExists(CassandraMessageDAO.MessageWithoutAttachment messageWithoutAttachment) {
+        CassandraId cassandraId = (CassandraId) messageWithoutAttachment.getMailboxId();
+        return mailboxDAO.retrieveMailbox(cassandraId)
+            .thenApply(optional -> {
+                if (!optional.isPresent()) {
+                    LOGGER.info("Mailbox {} have been deleted but message {} is still attached to it.",
+                        cassandraId,
+                        messageWithoutAttachment.getMessageId());
+                    return false;
+                }
+                return true;
+            });
     }
 
     private Function<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<CassandraMessageDAO.MessageAttachmentRepresentation>>, Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<MessageAttachment>>> loadAttachments(FetchType fetchType) {
