@@ -50,6 +50,7 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.util.CompletableFutureUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,11 +93,12 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     private Stream<SimpleMailboxMessage> findAsStream(List<MessageId> messageIds, FetchType fetchType) {
-        List<ComposedMessageIdWithMetaData> composedMessageIds = messageIds.stream()
-            .map(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty()))
-            .flatMap(CompletableFuture::join)
-            .collect(Guavate.toImmutableList());
-        return messageDAO.retrieveMessages(composedMessageIds, fetchType, Optional.empty()).join()
+        return CompletableFutureUtil.allOf(
+            messageIds.stream()
+                .map(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty())))
+            .thenApply(stream -> stream.flatMap(Function.identity()))
+            .thenApply(stream -> stream.collect(Guavate.toImmutableList()))
+            .thenCompose(composedMessageIds -> messageDAO.retrieveMessages(composedMessageIds, fetchType, Optional.empty())).join()
             .filter(pair -> mailboxExists(pair.getLeft()))
             .map(loadAttachments(fetchType))
             .map(toMailboxMessages())
