@@ -98,7 +98,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .collect(Guavate.toImmutableList());
         return messageDAO.retrieveMessages(composedMessageIds, fetchType, Optional.empty()).join()
             .filter(pair -> mailboxExists(pair.getLeft()))
-            .map(loadAttachments())
+            .map(loadAttachments(fetchType))
             .map(toMailboxMessages())
             .sorted(Comparator.comparing(MailboxMessage::getUid));
     }
@@ -113,11 +113,15 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         }
     }
 
-    private Function<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<CassandraMessageDAO.MessageAttachmentRepresentation>>, Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<MessageAttachment>>> loadAttachments() {
-        return pair -> Pair.of(pair.getLeft(),
-            new AttachmentLoader(attachmentMapper)
-                .getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
-                .stream());
+    private Function<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<CassandraMessageDAO.MessageAttachmentRepresentation>>, Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<MessageAttachment>>> loadAttachments(FetchType fetchType) {
+        if (fetchType == FetchType.Full || fetchType == FetchType.Body) {
+            return pair -> Pair.of(pair.getLeft(),
+                new AttachmentLoader(attachmentMapper)
+                    .getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
+                    .stream());
+        } else {
+            return pair -> Pair.of(pair.getLeft(), Stream.of());
+        }
     }
 
     private FunctionChainer<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<MessageAttachment>>, SimpleMailboxMessage> toMailboxMessages() {
