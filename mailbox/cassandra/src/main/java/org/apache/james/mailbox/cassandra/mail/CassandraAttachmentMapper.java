@@ -94,6 +94,9 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public List<Attachment> getAttachments(Collection<AttachmentId> attachmentIds) {
         Preconditions.checkArgument(attachmentIds != null);
+        if (attachmentIds.isEmpty()) {
+            return ImmutableList.of();
+        }
         List<String> ids = attachmentIds.stream()
                 .map(AttachmentId::getId)
                 .collect(Guavate.toImmutableList());
