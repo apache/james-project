@@ -34,7 +34,9 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 
 /**
  * Test Cassandra subscription against some general purpose written code.
@@ -43,7 +45,10 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
 
     private static final CassandraCluster cassandra = CassandraCluster.create(
         new CassandraModuleComposite(
-            new CassandraSubscriptionModule(), new CassandraMailboxCounterModule()));
+            new CassandraSubscriptionModule(),
+            new CassandraMailboxCounterModule(),
+            new CassandraUidModule(),
+            new CassandraModSeqModule()));
     
     @Override
     public SubscriptionManager createSubscriptionManager() {
