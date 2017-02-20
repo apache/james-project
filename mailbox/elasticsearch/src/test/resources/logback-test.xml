@@ -21,5 +21,6 @@
                 <appender-ref ref="CONSOLE" />
         </logger>
 
+        <logger name="com.datastax.driver.core.QueryLogger.SLOW" level="DEBUG" />
 
 </configuration>

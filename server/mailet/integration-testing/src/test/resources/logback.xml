@@ -18,4 +18,6 @@
 
         <logger name="org.apache.james.mailetcontainer.impl.JamesMailetContext" level="DEBUG"/>
 
+        <logger name="com.datastax.driver.core.QueryLogger.SLOW" level="DEBUG" />
+
 </configuration>

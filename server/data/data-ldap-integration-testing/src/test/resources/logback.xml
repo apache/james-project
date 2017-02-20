@@ -19,4 +19,6 @@
         <logger name="org.testcontainers" level="INFO"/>
         <logger name="org.apache.james" level="DEBUG"/>
 
+        <logger name="com.datastax.driver.core.QueryLogger.SLOW" level="DEBUG" />
+
 </configuration>
