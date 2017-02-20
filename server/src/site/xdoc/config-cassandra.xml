@@ -32,11 +32,36 @@
       <dl>
         <dt><strong>cassandra.nodes</strong></dt>
         <dd>List of some nodes of the cassandra's cluster in following format host:port or host, if the port is not specified we use 9042</dd>
+
         <dt><strong>cassandra.keyspace</strong></dt>
         <dd>Is the name of the keyspace used by James.</dd>
+
         <dt><strong>cassandra.replication.factor</strong></dt>
         <dd>Is the replication factor. (should be 1, as cluster is not yet supported)</dd>
+
+        <dt><strong>cassandra.query.logger.constant.threshold</strong></dt>
+        <dd>Optional.
+        If specified all queries that take more than the given integer in millisecond will be considered slow and logged.
+          If not specified by default a DynamicThresholdQueryLogger will be used (see above)</dd>
+
+        <dt><strong>cassandra.query.slow.query.latency.threshold.percentile</strong></dt>
+        <dd>Default is com.datastax.driver.core.QueryLogger.DEFAULT_SLOW_QUERY_THRESHOLD_PERCENTILE.
+        The latency percentile beyond which queries are considered 'slow' and will be logged.
+          If you specify cassandra.query.logger.constant.threshold, you should not specify this property</dd>
+
+        <dt><strong>cassandra.query.logger.max.query.string.length</strong></dt>
+        <dd>Default is com.datastax.driver.core.QueryLogger.DEFAULT_MAX_QUERY_STRING.LENGTH.
+          The maximum length of a CQL query string that can be logged verbatim by the cassandra driver</dd>
+
+        <dt><strong>cassandra.query.logger.max.logged.parameters</strong></dt>
+        <dd>Default is com.datastax.driver.core.QueryLogger.DEFAULT_MAX_LOGGED_PARAMETERS.
+          The maximum number of query parameters that can be logged by the cassandra driver</dd>
+
+        <dt><strong>cassandra.query.logger.max.parameter.value.length</strong></dt>
+        <dd>Default is com.datastax.driver.core.QueryLogger.DEFAULT_MAX_PARAMETER_VALUE_LENGTH.
+          The maximum length of query parameter value that can be logged by the cassandra driver</dd>
       </dl>
+
 
 <p>If you want more explanation about Cassandra configuration, you should visit the dedicated <a href="http://docs.datastax.com/en/cassandra/2.1/cassandra/gettingStartedCassandraIntro.html">documentation</a>.</p>
 

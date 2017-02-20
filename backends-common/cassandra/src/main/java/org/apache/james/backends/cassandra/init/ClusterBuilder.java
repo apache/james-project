@@ -38,7 +38,6 @@ public class ClusterBuilder {
         return new ClusterBuilder();
     }
 
-
     private Optional<String> username;
     private Optional<String> password;
 
@@ -48,6 +47,8 @@ public class ClusterBuilder {
 
     private Optional<Integer> refreshSchemaIntervalMillis;
     private boolean forTest;
+
+    private Optional<QueryLoggerConfiguration> queryLogger;
 
     private ClusterBuilder() {
         username = Optional.empty();
@@ -59,6 +60,8 @@ public class ClusterBuilder {
 
         refreshSchemaIntervalMillis = Optional.empty();
         forTest = false;
+
+        queryLogger = Optional.empty();
     }
 
     public ClusterBuilder username(String username) {
@@ -109,6 +112,12 @@ public class ClusterBuilder {
         return this;
     }
 
+    public ClusterBuilder queryLoggerConfiguration(QueryLoggerConfiguration queryLogger) {
+        this.queryLogger = Optional.of(queryLogger);
+
+        return this;
+    }
+
     public Cluster build() {
         Preconditions.checkState(!(servers.isPresent() && host.isPresent()), "You can't specify a list of servers and a host at the same time");
         Preconditions.checkState(!(servers.isPresent() && port.isPresent()), "You can't specify a list of servers and a port at the same time");
@@ -122,18 +131,17 @@ public class ClusterBuilder {
 
         username.map(username ->
             password.map(password ->
-                clusterBuilder.withCredentials(username, password)
-            )
-        );
+                clusterBuilder.withCredentials(username, password)));
 
         getRefreshSchemaIntervalMillis().map(refreshSchemaIntervalMillis ->
             clusterBuilder.withQueryOptions(
                 new QueryOptions()
-                    .setRefreshSchemaIntervalMillis(refreshSchemaIntervalMillis)
-            )
-        );
+                    .setRefreshSchemaIntervalMillis(refreshSchemaIntervalMillis)));
 
         Cluster cluster = clusterBuilder.build();
+
+        queryLogger.map(queryLoggerConfiguration ->
+            cluster.register(queryLoggerConfiguration.getQueryLogger(cluster)));
 
         return cluster;
     }

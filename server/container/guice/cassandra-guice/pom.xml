@@ -192,6 +192,11 @@
             </build>
             <dependencies>
                 <dependency>
+                    <groupId>org.hdrhistogram</groupId>
+                    <artifactId>HdrHistogram</artifactId>
+                    <version>2.1.4</version>
+                </dependency>
+                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-backends-cassandra</artifactId>
                     <type>test-jar</type>
