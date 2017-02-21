@@ -82,11 +82,13 @@ public class CassandraMessageMapper implements MessageMapper {
     private final CassandraMailboxCounterDAO mailboxCounterDAO;
     private final CassandraMailboxRecentsDAO mailboxRecentDAO;
     private final CassandraIndexTableHandler indexTableHandler;
+    private final CassandraFirstUnseenDAO firstUnseenDAO;
 
     public CassandraMessageMapper(UidProvider uidProvider, ModSeqProvider modSeqProvider,
                                   MailboxSession mailboxSession, int maxRetries, AttachmentMapper attachmentMapper,
                                   CassandraMessageDAO messageDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageIdToImapUidDAO imapUidDAO,
-                                  CassandraMailboxCounterDAO mailboxCounterDAO, CassandraMailboxRecentsDAO mailboxRecentDAO, CassandraIndexTableHandler indexTableHandler) {
+                                  CassandraMailboxCounterDAO mailboxCounterDAO, CassandraMailboxRecentsDAO mailboxRecentDAO,
+                                  CassandraIndexTableHandler indexTableHandler, CassandraFirstUnseenDAO firstUnseenDAO) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
         this.mailboxSession = mailboxSession;
@@ -98,6 +100,7 @@ public class CassandraMessageMapper implements MessageMapper {
         this.mailboxCounterDAO = mailboxCounterDAO;
         this.mailboxRecentDAO = mailboxRecentDAO;
         this.indexTableHandler = indexTableHandler;
+        this.firstUnseenDAO = firstUnseenDAO;
     }
 
     @Override
@@ -188,14 +191,9 @@ public class CassandraMessageMapper implements MessageMapper {
     @Override
     public MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        return retrieveMessages(retrieveMessageIds(mailboxId, MessageRange.all()), FetchType.Metadata, Optional.empty())
-                .filter(message -> !message.isSeen())
-                .flatMap(message -> imapUidDAO.retrieve((CassandraMessageId) message.getMessageId(), Optional.ofNullable(mailboxId)).join())
-                .map(ComposedMessageIdWithMetaData::getComposedMessageId)
-                .map(ComposedMessageId::getUid)
-                .sorted()
-                .findFirst()
-                .orElse(null);
+        return firstUnseenDAO.retrieveFirstUnread(mailboxId)
+            .join()
+            .orElse(null);
     }
 
     @Override
@@ -237,8 +235,6 @@ public class CassandraMessageMapper implements MessageMapper {
             .join();
         return new SimpleMessageMetaData(message);
     }
-
-
 
     @Override
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, MessageRange set) throws MailboxException {
