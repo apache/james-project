@@ -24,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -33,16 +34,20 @@ public class CassandraIndexTableHandler {
 
     private final CassandraMailboxRecentsDAO mailboxRecentDAO;
     private final CassandraMailboxCounterDAO mailboxCounterDAO;
+    private final CassandraFirstUnseenDAO firstUnseenDAO;
 
     @Inject
     public CassandraIndexTableHandler(CassandraMailboxRecentsDAO mailboxRecentDAO,
-                                      CassandraMailboxCounterDAO mailboxCounterDAO) {
+                                      CassandraMailboxCounterDAO mailboxCounterDAO,
+                                      CassandraFirstUnseenDAO firstUnseenDAO) {
         this.mailboxRecentDAO = mailboxRecentDAO;
         this.mailboxCounterDAO = mailboxCounterDAO;
+        this.firstUnseenDAO = firstUnseenDAO;
     }
 
     public CompletableFuture<Void> updateIndexOnDelete(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, CassandraId mailboxId) {
         return CompletableFuture.allOf(
+            updateFirstUnseenOnDelete(mailboxId, composedMessageIdWithMetaData.getFlags(), composedMessageIdWithMetaData.getComposedMessageId().getUid()),
             mailboxRecentDAO.removeFromRecent(mailboxId, composedMessageIdWithMetaData.getComposedMessageId().getUid()),
             mailboxCounterDAO.decrementCount(mailboxId),
             decrementUnseenOnDelete(mailboxId, composedMessageIdWithMetaData.getFlags()));
@@ -50,6 +55,7 @@ public class CassandraIndexTableHandler {
 
     public CompletableFuture<Void> updateIndexOnAdd(MailboxMessage message, CassandraId mailboxId) {
         return CompletableFuture.allOf(
+            updateFirstUnseenOnAdd(mailboxId, message.createFlags(), message.getUid()),
             addRecentOnSave(mailboxId, message),
             incrementUnseenOnSave(mailboxId, message.createFlags()),
             mailboxCounterDAO.incrementCount(mailboxId));
@@ -57,7 +63,8 @@ public class CassandraIndexTableHandler {
 
     public CompletableFuture<Void> updateIndexOnFlagsUpdate(CassandraId mailboxId, UpdatedFlags updatedFlags) {
         return CompletableFuture.allOf(manageUnseenMessageCountsOnFlagsUpdate(mailboxId, updatedFlags),
-            manageRecentOnFlagsUpdate(mailboxId, updatedFlags));
+            manageRecentOnFlagsUpdate(mailboxId, updatedFlags),
+            updateFirstUnseenOnFlagsUpdate(mailboxId, updatedFlags));
     }
 
     private CompletableFuture<Void> decrementUnseenOnDelete(CassandraId mailboxId, Flags flags) {
@@ -97,6 +104,30 @@ public class CassandraIndexTableHandler {
         }
         if (updatedFlags.isModifiedToSet(Flags.Flag.RECENT)) {
             return mailboxRecentDAO.addToRecent(mailboxId, updatedFlags.getUid());
+        }
+        return CompletableFuture.completedFuture(null);
+    }
+
+    private CompletableFuture<Void> updateFirstUnseenOnAdd(CassandraId mailboxId, Flags flags, MessageUid uid) {
+        if (flags.contains(Flags.Flag.SEEN)) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return firstUnseenDAO.addUnread(mailboxId, uid);
+    }
+
+    private CompletableFuture<Void> updateFirstUnseenOnDelete(CassandraId mailboxId, Flags flags, MessageUid uid) {
+        if (flags.contains(Flags.Flag.SEEN)) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return firstUnseenDAO.removeUnread(mailboxId, uid);
+    }
+
+    private CompletableFuture<Void> updateFirstUnseenOnFlagsUpdate(CassandraId mailboxId, UpdatedFlags updatedFlags) {
+        if (updatedFlags.isModifiedToUnset(Flags.Flag.SEEN)) {
+            return firstUnseenDAO.addUnread(mailboxId, updatedFlags.getUid());
+        }
+        if (updatedFlags.isModifiedToSet(Flags.Flag.SEEN)) {
+            return firstUnseenDAO.removeUnread(mailboxId, updatedFlags.getUid());
         }
         return CompletableFuture.completedFuture(null);
     }

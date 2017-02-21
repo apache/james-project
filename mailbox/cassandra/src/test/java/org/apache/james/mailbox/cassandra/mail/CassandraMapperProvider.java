@@ -31,6 +31,7 @@ import org.apache.james.mailbox.cassandra.CassandraMessageId.Factory;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
@@ -64,7 +65,8 @@ public class CassandraMapperProvider implements MapperProvider {
         new CassandraModSeqModule(),
         new CassandraUidModule(),
         new CassandraAttachmentModule(),
-        new CassandraAnnotationModule()));
+        new CassandraAnnotationModule(),
+        new CassandraFirstUnseenModule()));
     public static final int MAX_ACL_RETRY = 10;
 
     private final MessageUidProvider messageUidProvider;
@@ -98,6 +100,7 @@ public class CassandraMapperProvider implements MapperProvider {
     private CassandraMailboxSessionMapperFactory createMapperFactory() {
         CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), MAX_ACL_RETRY);
         CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(cassandra.getConf());
         return new CassandraMailboxSessionMapperFactory(
             new CassandraUidProvider(cassandra.getConf()),
             cassandraModSeqProvider,
@@ -108,7 +111,8 @@ public class CassandraMapperProvider implements MapperProvider {
             new CassandraMailboxCounterDAO(cassandra.getConf()),
             new CassandraMailboxRecentsDAO(cassandra.getConf()),
             mailboxDAO,
-            mailboxPathDAO);
+            mailboxPathDAO,
+            firstUnseenDAO);
     }
 
     @Override

@@ -25,6 +25,7 @@ import javax.inject.Named;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.mail.CassandraAnnotationMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMapper;
+import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraIndexTableHandler;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
@@ -67,13 +68,14 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     private final CassandraIndexTableHandler indexTableHandler;
     private final CassandraMailboxDAO mailboxDAO;
     private final CassandraMailboxPathDAO mailboxPathDAO;
+    private final CassandraFirstUnseenDAO firstUnseenDAO;
     private int maxRetry;
 
     @Inject
     public CassandraMailboxSessionMapperFactory(UidProvider uidProvider, ModSeqProvider modSeqProvider, Session session,
                                                 CassandraMessageDAO messageDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageIdToImapUidDAO imapUidDAO,
                                                 CassandraMailboxCounterDAO mailboxCounterDAO, CassandraMailboxRecentsDAO mailboxRecentsDAO, CassandraMailboxDAO mailboxDAO,
-                                                CassandraMailboxPathDAO mailboxPathDAO, @Named(CassandraMailboxDAO.MAX_ACL_RETRY) Integer maxRetry) {
+                                                CassandraMailboxPathDAO mailboxPathDAO, CassandraFirstUnseenDAO firstUnseenDAO, @Named(CassandraMailboxDAO.MAX_ACL_RETRY) Integer maxRetry) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
         this.session = session;
@@ -84,16 +86,17 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
         this.mailboxRecentsDAO = mailboxRecentsDAO;
         this.mailboxDAO = mailboxDAO;
         this.mailboxPathDAO = mailboxPathDAO;
-        this.indexTableHandler = new CassandraIndexTableHandler(mailboxRecentsDAO, mailboxCounterDAO);
+        this.firstUnseenDAO = firstUnseenDAO;
+        this.indexTableHandler = new CassandraIndexTableHandler(mailboxRecentsDAO, mailboxCounterDAO, this.firstUnseenDAO);
         this.maxRetry = maxRetry;
     }
 
     public CassandraMailboxSessionMapperFactory(UidProvider uidProvider, ModSeqProvider modSeqProvider, Session session,
                                                 CassandraMessageDAO messageDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageIdToImapUidDAO imapUidDAO,
                                                 CassandraMailboxCounterDAO mailboxCounterDAO, CassandraMailboxRecentsDAO mailboxRecentsDAO, CassandraMailboxDAO mailboxDAO,
-                                                CassandraMailboxPathDAO mailboxPathDAO) {
+                                                CassandraMailboxPathDAO mailboxPathDAO, CassandraFirstUnseenDAO firstUnseenDAO) {
         this(uidProvider, modSeqProvider, session, messageDAO, messageIdDAO, imapUidDAO, mailboxCounterDAO,
-            mailboxRecentsDAO, mailboxDAO, mailboxPathDAO, DEFAULT_MAX_RETRY);
+            mailboxRecentsDAO, mailboxDAO, mailboxPathDAO, firstUnseenDAO, DEFAULT_MAX_RETRY);
     }
 
     @Override
