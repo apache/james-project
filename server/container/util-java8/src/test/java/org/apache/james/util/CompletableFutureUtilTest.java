@@ -22,6 +22,7 @@ package org.apache.james.util;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -53,5 +54,14 @@ public class CompletableFutureUtilTest {
                 .join()
                 .collect(Guavate.toImmutableList()))
             .containsOnly(value1, value2, value3);
+    }
+
+    @Test
+    public void allOfShouldWorkOnVeryLargeStream() {
+        CompletableFutureUtil.allOf(
+            IntStream.range(0, 100000)
+                .boxed()
+                .map(CompletableFuture::completedFuture))
+            .join();
     }
 }
