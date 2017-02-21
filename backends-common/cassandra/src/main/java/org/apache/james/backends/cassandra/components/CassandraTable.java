@@ -19,19 +19,19 @@
 
 package org.apache.james.backends.cassandra.components;
 
-import com.datastax.driver.core.schemabuilder.Create;
+import com.datastax.driver.core.Statement;
 
 public class CassandraTable {
 
-    private final Create createStatement;
+    private final Statement createStatement;
     private final String name;
 
-    public CassandraTable(String name, Create createStatement) {
+    public CassandraTable(String name, Statement createStatement) {
         this.createStatement = createStatement;
         this.name = name;
     }
 
-    public Create getCreateStatement() {
+    public Statement getCreateStatement() {
         return createStatement;
     }
 
