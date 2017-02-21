@@ -41,7 +41,7 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
         return bindingIp == null || bindingIp.equals("0.0.0.0");
     }
 
-    private PropertiesConfiguration getCassandraConfigurationForDocker() {
+    public PropertiesConfiguration getCassandraConfigurationForDocker() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
 
         configuration.addProperty("cassandra.nodes", getIp() + ":" + CASSANDRA_PORT);

@@ -34,7 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.testcontainers.DockerClientFactory;
 
-public class CassandraConfTest {
+public class CassandraNodeConfTest {
 
     private static final int IMAP_PORT = 1143;
 
@@ -91,7 +91,7 @@ public class CassandraConfTest {
         assertThatServerStartCorrectly();
     }
 
-    private void assertThatServerStartCorrectly() throws Exception, IOException {
+    private void assertThatServerStartCorrectly() throws Exception {
         jamesServer.start();
         socketChannel.connect(new InetSocketAddress("127.0.0.1", IMAP_PORT));
         assertThat(getServerConnectionResponse(socketChannel)).startsWith("* OK JAMES IMAP4rev1 Server");
