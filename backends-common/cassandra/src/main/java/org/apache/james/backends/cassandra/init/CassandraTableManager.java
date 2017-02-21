@@ -34,15 +34,15 @@ public class CassandraTableManager {
     }
 
     public CassandraTableManager ensureAllTables() {
-        module.moduleTables().stream()
+        module.moduleTables()
             .forEach(table -> session.execute(table.getCreateStatement()));
-        module.moduleIndex().stream()
+        module.moduleIndex()
             .forEach(index -> session.execute(index.getCreateIndexStatement()));
         return this;
     }
 
     public void clearAllTables() {
-        module.moduleTables().stream()
+        module.moduleTables()
             .forEach(table -> clearTable(table.getName()));
     }
 
