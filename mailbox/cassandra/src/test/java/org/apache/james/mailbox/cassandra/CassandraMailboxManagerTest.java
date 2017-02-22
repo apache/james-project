@@ -25,6 +25,7 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO;
@@ -94,6 +95,7 @@ public class CassandraMailboxManagerTest {
             CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider(), MAX_ACL_RETRY);
             CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider());
             CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(CASSANDRA.getConf());
+            CassandraApplicableFlagDAO applicableFlagDAO = new CassandraApplicableFlagDAO(CASSANDRA.getConf());
 
             CassandraMailboxSessionMapperFactory mapperFactory = new CassandraMailboxSessionMapperFactory(uidProvider,
                 modSeqProvider,
@@ -105,7 +107,8 @@ public class CassandraMailboxManagerTest {
                 mailboxRecentsDAO,
                 mailboxDAO,
                 mailboxPathDAO,
-                firstUnseenDAO);
+                firstUnseenDAO,
+                applicableFlagDAO);
 
             MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();

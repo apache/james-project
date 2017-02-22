@@ -30,6 +30,7 @@ import org.apache.james.mailbox.cassandra.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.CassandraMessageId.Factory;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
@@ -66,7 +67,8 @@ public class CassandraMapperProvider implements MapperProvider {
         new CassandraUidModule(),
         new CassandraAttachmentModule(),
         new CassandraAnnotationModule(),
-        new CassandraFirstUnseenModule()));
+        new CassandraFirstUnseenModule(),
+        new CassandraApplicableFlagsModule()));
     public static final int MAX_ACL_RETRY = 10;
 
     private final MessageUidProvider messageUidProvider;
@@ -112,7 +114,8 @@ public class CassandraMapperProvider implements MapperProvider {
             new CassandraMailboxRecentsDAO(cassandra.getConf()),
             mailboxDAO,
             mailboxPathDAO,
-            firstUnseenDAO);
+            firstUnseenDAO,
+            new CassandraApplicableFlagDAO(cassandra.getConf()));
     }
 
     @Override

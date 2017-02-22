@@ -26,12 +26,15 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 
 import javax.mail.Flags;
+import javax.mail.Flags.Flag;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
@@ -57,6 +60,7 @@ public class CassandraIndexTableHandlerTest {
     private CassandraCluster cassandra;
     private CassandraMailboxCounterDAO mailboxCounterDAO;
     private CassandraMailboxRecentsDAO mailboxRecentsDAO;
+    private CassandraApplicableFlagDAO applicableFlagDAO;
     private CassandraFirstUnseenDAO firstUnseenDAO;
     private CassandraIndexTableHandler testee;
     private Mailbox mailbox;
@@ -67,14 +71,16 @@ public class CassandraIndexTableHandlerTest {
             new CassandraModuleComposite(
                 new CassandraMailboxCounterModule(),
                 new CassandraMailboxRecentsModule(),
-                new CassandraFirstUnseenModule()));
+                new CassandraFirstUnseenModule(),
+                new CassandraApplicableFlagsModule()));
         cassandra.ensureAllTables();
 
         mailboxCounterDAO = new CassandraMailboxCounterDAO(cassandra.getConf());
         mailboxRecentsDAO = new CassandraMailboxRecentsDAO(cassandra.getConf());
         firstUnseenDAO = new CassandraFirstUnseenDAO(cassandra.getConf());
+        applicableFlagDAO = new CassandraApplicableFlagDAO(cassandra.getConf());
 
-        testee = new CassandraIndexTableHandler(mailboxRecentsDAO, mailboxCounterDAO, firstUnseenDAO);
+        testee = new CassandraIndexTableHandler(mailboxRecentsDAO, mailboxCounterDAO, firstUnseenDAO, applicableFlagDAO);
 
         mailbox = new SimpleMailbox(new MailboxPath("#private", "user", "name"),
             UID_VALIDITY,
@@ -211,7 +217,7 @@ public class CassandraIndexTableHandlerTest {
         testee.updateIndexOnAdd(message, MAILBOX_ID).join();
 
         testee.updateIndexOnDelete(new ComposedMessageIdWithMetaData(
-            new ComposedMessageId(MAILBOX_ID, CASSANDRA_MESSAGE_ID, MESSAGE_UID),
+                new ComposedMessageId(MAILBOX_ID, CASSANDRA_MESSAGE_ID, MESSAGE_UID),
                 new Flags(Flags.Flag.RECENT),
                 MODSEQ),
             MAILBOX_ID).join();
@@ -482,5 +488,61 @@ public class CassandraIndexTableHandlerTest {
 
         Optional<MessageUid> actual = firstUnseenDAO.retrieveFirstUnread(MAILBOX_ID).join();
         assertThat(actual.isPresent()).isFalse();
+    }
+
+    @Test
+    public void updateIndexOnAddShouldUpdateApplicableFlag() throws Exception {
+        Flags answeredFlag = new Flags(Flag.ANSWERED);
+        MailboxMessage message = mock(MailboxMessage.class);
+        when(message.createFlags()).thenReturn(answeredFlag);
+        when(message.getUid()).thenReturn(MESSAGE_UID);
+        testee.updateIndexOnAdd(message, MAILBOX_ID).join();
+
+        Flags applicableFlag = applicableFlagDAO.retrieveApplicableFlag(MAILBOX_ID).join().get();
+
+        assertThat(applicableFlag).isEqualTo(answeredFlag);
+    }
+
+    @Test
+    public void updateIndexOnFlagsUpdateShouldUnionApplicableFlag() throws Exception {
+        Flags answeredFlag = new Flags(Flag.ANSWERED);
+        MailboxMessage message = mock(MailboxMessage.class);
+        when(message.createFlags()).thenReturn(answeredFlag);
+        when(message.getUid()).thenReturn(MESSAGE_UID);
+        testee.updateIndexOnAdd(message, MAILBOX_ID).join();
+
+        testee.updateIndexOnFlagsUpdate(MAILBOX_ID, UpdatedFlags.builder()
+            .uid(MESSAGE_UID)
+            .newFlags(new Flags(Flag.DELETED))
+            .oldFlags(answeredFlag)
+            .modSeq(MODSEQ)
+            .build()).join();
+
+        Flags applicableFlag = applicableFlagDAO.retrieveApplicableFlag(MAILBOX_ID).join().get();
+
+        assertThat(applicableFlag).isEqualTo(new FlagsBuilder().add(Flag.ANSWERED, Flag.DELETED).build());
+    }
+
+    @Test
+    public void applicableFlagShouldKeepAllFlagsEvenTheMessageRemovesFlag() throws Exception {
+        Flags messageFlags = new Flags(Flag.ANSWERED);
+        messageFlags.add(Flag.DELETED);
+        messageFlags.add(Flag.DRAFT);
+
+        MailboxMessage message = mock(MailboxMessage.class);
+        when(message.createFlags()).thenReturn(messageFlags);
+        when(message.getUid()).thenReturn(MESSAGE_UID);
+
+        testee.updateIndexOnAdd(message, MAILBOX_ID).join();
+
+        testee.updateIndexOnFlagsUpdate(MAILBOX_ID, UpdatedFlags.builder()
+            .uid(MESSAGE_UID)
+            .newFlags(new Flags())
+            .oldFlags(messageFlags)
+            .modSeq(MODSEQ)
+            .build()).join();
+
+        Flags applicableFlag = applicableFlagDAO.retrieveApplicableFlag(MAILBOX_ID).join().get();
+        assertThat(applicableFlag).isEqualTo(new FlagsBuilder().add(Flag.ANSWERED, Flag.DRAFT, Flag.DELETED).build());
     }
 }

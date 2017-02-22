@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO;
@@ -35,6 +36,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
@@ -63,7 +65,8 @@ public class CassandraTestSystemFixture {
         new CassandraUidModule(),
         new CassandraModSeqModule(),
         new CassandraAttachmentModule(),
-        new CassandraAnnotationModule()));
+        new CassandraAnnotationModule(),
+        new CassandraApplicableFlagsModule()));
     public static final int MOD_SEQ = 452;
     public static final int MAX_ACL_RETRY = 10;
 
@@ -77,6 +80,7 @@ public class CassandraTestSystemFixture {
         CassandraMessageDAO messageDAO = new CassandraMessageDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider(), messageIdFactory);
         CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(CASSANDRA.getConf());
         CassandraMailboxRecentsDAO mailboxRecentsDAO = new CassandraMailboxRecentsDAO(CASSANDRA.getConf());
+        CassandraApplicableFlagDAO applicableFlagDAO = new CassandraApplicableFlagDAO(CASSANDRA.getConf());
 
         CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider(), MAX_ACL_RETRY);
         CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider());
@@ -91,7 +95,8 @@ public class CassandraTestSystemFixture {
             mailboxRecentsDAO,
             mailboxDAO,
             mailboxPathDAO,
-            firstUnseenDAO);
+            firstUnseenDAO,
+            applicableFlagDAO);
     }
 
     public static CassandraMailboxManager createMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory) throws Exception{

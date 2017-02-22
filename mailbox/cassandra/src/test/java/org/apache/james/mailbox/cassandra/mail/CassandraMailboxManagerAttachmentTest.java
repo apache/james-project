@@ -29,6 +29,7 @@ import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
@@ -54,7 +55,8 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
             new CassandraFirstUnseenModule(),
             new CassandraModSeqModule(),
             new CassandraUidModule(),
-            new CassandraAttachmentModule()));
+            new CassandraAttachmentModule(),
+            new CassandraApplicableFlagsModule()));
     public static final int MAX_ACL_RETRY = 10;
 
     private CassandraMailboxSessionMapperFactory mailboxSessionMapperFactory;
@@ -78,7 +80,8 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
                 new CassandraMailboxRecentsDAO(cassandra.getConf()),
                 mailboxDAO,
                 mailboxPathDAO,
-                firstUnseenDAO);
+                firstUnseenDAO,
+                new CassandraApplicableFlagDAO(cassandra.getConf()));
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
         mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, noAuthenticator, noAuthorizator, new NoMailboxPathLocker(), new MessageParser(), messageIdFactory); 
