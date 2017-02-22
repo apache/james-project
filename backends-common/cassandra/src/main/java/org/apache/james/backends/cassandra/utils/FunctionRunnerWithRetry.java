@@ -19,13 +19,17 @@
 
 package org.apache.james.backends.cassandra.utils;
 
-import com.google.common.base.Preconditions;
-
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
+import com.google.common.base.Preconditions;
+
 public class FunctionRunnerWithRetry {
+
+    public static class RelayingException extends RuntimeException {}
 
     @FunctionalInterface
     public interface OptionalSupplier<T> {
@@ -53,5 +57,22 @@ public class FunctionRunnerWithRetry {
             .findFirst()
             .orElseThrow(() -> new LightweightTransactionException(maxRetry))
             .get();
+    }
+
+    public <T> CompletableFuture<Optional<T>> executeAsyncAndRetrieveObject(Supplier<CompletableFuture<Optional<T>>> futureSupplier) {
+        return executeAsyncAndRetrieveObject(futureSupplier, 0);
+    }
+
+    public <T> CompletableFuture<Optional<T>> executeAsyncAndRetrieveObject(Supplier<CompletableFuture<Optional<T>>> futureSupplier, int tries) {
+        if (tries >= maxRetry) {
+            return CompletableFuture.completedFuture(Optional.empty());
+        }
+        return futureSupplier.get()
+            .thenCompose(optional -> {
+                if (optional.isPresent()) {
+                    return CompletableFuture.completedFuture(optional);
+                }
+                return executeAsyncAndRetrieveObject(futureSupplier, tries + 1);
+            });
     }
 }

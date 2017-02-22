@@ -21,6 +21,10 @@ package org.apache.james.backends.cassandra.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.commons.lang.mutable.MutableInt;
 import org.junit.Test;
 
@@ -79,6 +83,91 @@ public class FunctionRunnerWithRetryTest {
                 }
         );
         assertThat(value.getValue()).isEqualTo(MAX_RETRY);
+    }
+
+    @Test
+    public void asyncFunctionRunnerShouldWorkIfSucceedFirstTry() throws Exception {
+        int value = 18;
+
+        Optional<Integer> result = new FunctionRunnerWithRetry(MAX_RETRY)
+            .executeAsyncAndRetrieveObject(
+                () -> CompletableFuture.completedFuture(Optional.of(value)))
+            .join();
+
+        assertThat(result).contains(value);
+    }
+
+    @Test
+    public void asyncFunctionRunnerShouldTryOnlyOnceIfSuccess() throws Exception {
+        int value = 18;
+        AtomicInteger times = new AtomicInteger(0);
+
+        new FunctionRunnerWithRetry(MAX_RETRY)
+            .executeAsyncAndRetrieveObject(
+                () -> {
+                    times.incrementAndGet();
+                    return CompletableFuture.completedFuture(Optional.of(value));
+                })
+            .join();
+
+        assertThat(times.get()).isEqualTo(1);
+    }
+
+    @Test
+    public void asyncFunctionRunnerShouldRetrieveValueOnRetry() throws Exception {
+        int value = 18;
+        AtomicInteger times = new AtomicInteger(0);
+
+        Optional<Integer> result = new FunctionRunnerWithRetry(MAX_RETRY)
+            .executeAsyncAndRetrieveObject(
+                () -> {
+                    int attemptCount = times.incrementAndGet();
+                    if (attemptCount == MAX_RETRY) {
+                        return CompletableFuture.completedFuture(Optional.of(value));
+                    } else {
+                        return CompletableFuture.completedFuture(Optional.empty());
+                    }
+                })
+            .join();
+
+        assertThat(result).contains(value);
+    }
+
+    @Test
+    public void asyncFunctionRunnerShouldMakeMaxRetryAttempts() throws Exception {
+        int value = 18;
+        AtomicInteger times = new AtomicInteger(0);
+
+        new FunctionRunnerWithRetry(MAX_RETRY)
+            .executeAsyncAndRetrieveObject(
+                () -> {
+                    int attemptCount = times.incrementAndGet();
+                    if (attemptCount == MAX_RETRY) {
+                        return CompletableFuture.completedFuture(Optional.of(value));
+                    } else {
+                        return CompletableFuture.completedFuture(Optional.empty());
+                    }
+                })
+            .join();
+
+        assertThat(times.get()).isEqualTo(MAX_RETRY);
+    }
+
+
+    @Test
+    public void asyncFunctionRunnerShouldReturnEmptyIfAllFailed() throws Exception {
+        AtomicInteger times = new AtomicInteger(0);
+
+        Optional<Integer> result = new FunctionRunnerWithRetry(MAX_RETRY)
+            .executeAsyncAndRetrieveObject(
+                () -> {
+                    times.incrementAndGet();
+                    return CompletableFuture.completedFuture(Optional.<Integer>empty());
+                })
+            .join();
+
+        assertThat(result).isEmpty();
+        assertThat(times.get()).isEqualTo(MAX_RETRY);
     }
     
 }
