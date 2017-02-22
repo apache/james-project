@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -16,45 +16,13 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.cassandra.mail;
 
-import javax.mail.Flags;
+package org.apache.james.mailbox.cassandra.table;
 
-import org.apache.james.mailbox.cassandra.table.Flag;
+public interface CassandraApplicableFlagTable {
 
-import com.datastax.driver.core.Row;
+    String TABLE_NAME = "applicableFlag";
+    String MAILBOX_ID = "mailboxId";
 
-public class FlagsExtractor {
-
-    private final Row row;
-
-    public FlagsExtractor(Row row) {
-        this.row = row;
-    }
-
-    public Flags getFlags() {
-        Flags flags = new Flags();
-        for (String flag : Flag.ALL) {
-            if (row.getBool(flag)) {
-                flags.add(Flag.JAVAX_MAIL_FLAG.get(flag));
-            }
-        }
-        row.getSet(Flag.USER_FLAGS, String.class)
-            .stream()
-            .forEach(flags::add);
-        return flags;
-    }
-
-    public Flags getApplicableFlags() {
-        Flags flags = new Flags();
-        for (String flag : Flag.ALL_APPLICABLE_FLAG) {
-            if (row.getBool(flag)) {
-                flags.add(Flag.JAVAX_MAIL_FLAG.get(flag));
-            }
-        }
-        row.getSet(Flag.USER_FLAGS, String.class)
-            .stream()
-            .forEach(flags::add);
-        return flags;
-    }
+    String[] FIELDS = { MAILBOX_ID, Flag.ANSWERED, Flag.DELETED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN, Flag.USER_FLAGS };
 }

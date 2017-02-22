@@ -33,6 +33,7 @@ public interface Flag {
     String USER = "flagUser";
     String USER_FLAGS = "userFlags";
     String[] ALL = { ANSWERED, DELETED, DRAFT, RECENT, SEEN, FLAGGED, USER };
+    String[] ALL_APPLICABLE_FLAG = { ANSWERED, DELETED, DRAFT, SEEN, FLAGGED };
 
     ImmutableMap<String, Flags.Flag> JAVAX_MAIL_FLAG = ImmutableMap.<String, Flags.Flag>builder()
         .put(ANSWERED, Flags.Flag.ANSWERED)
@@ -42,5 +43,15 @@ public interface Flag {
         .put(SEEN, Flags.Flag.SEEN)
         .put(FLAGGED, Flags.Flag.FLAGGED)
         .put(USER, Flags.Flag.USER)
+        .build();
+
+    ImmutableMap<Flags.Flag, String> FLAG_TO_STRING_MAP = ImmutableMap.<Flags.Flag, String>builder()
+        .put(Flags.Flag.ANSWERED, ANSWERED)
+        .put(Flags.Flag.DELETED, DELETED)
+        .put(Flags.Flag.DRAFT, DRAFT)
+        .put(Flags.Flag.RECENT, RECENT)
+        .put(Flags.Flag.SEEN, SEEN)
+        .put(Flags.Flag.FLAGGED, FLAGGED)
+        .put(Flags.Flag.USER, USER)
         .build();
 }
