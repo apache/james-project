@@ -49,10 +49,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.ModSeqProvider;
-import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -72,9 +69,9 @@ public class CassandraMessageMapper implements MessageMapper {
         .unseen(0L)
         .build();
 
-    private final ModSeqProvider modSeqProvider;
+    private final CassandraModSeqProvider modSeqProvider;
     private final MailboxSession mailboxSession;
-    private final UidProvider uidProvider;
+    private final CassandraUidProvider uidProvider;
     private final int maxRetries;
     private final CassandraMessageDAO messageDAO;
     private final CassandraMessageIdDAO messageIdDAO;
@@ -85,7 +82,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private final CassandraFirstUnseenDAO firstUnseenDAO;
     private final AttachmentLoader attachmentLoader;
 
-    public CassandraMessageMapper(UidProvider uidProvider, ModSeqProvider modSeqProvider,
+    public CassandraMessageMapper(CassandraUidProvider uidProvider, CassandraModSeqProvider modSeqProvider,
                                   MailboxSession mailboxSession, int maxRetries, CassandraAttachmentMapper attachmentMapper,
                                   CassandraMessageDAO messageDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageIdToImapUidDAO imapUidDAO,
                                   CassandraMailboxCounterDAO mailboxCounterDAO, CassandraMailboxRecentsDAO mailboxRecentDAO,
@@ -228,9 +225,17 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public MessageMetaData add(Mailbox mailbox, MailboxMessage message) throws MailboxException {
-        message.setUid(uidProvider.nextUid(mailboxSession, mailbox));
-        message.setModSeq(modSeqProvider.nextModSeq(mailboxSession, mailbox));
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+
+        CompletableFuture<Optional<MessageUid>> uidFuture = uidProvider.nextUid(mailboxId);
+        CompletableFuture<Optional<Long>> modseqFuture = modSeqProvider.nextModSeq(mailboxId);
+        CompletableFuture.allOf(uidFuture, modseqFuture).join();
+
+        message.setUid(uidFuture.join()
+            .orElseThrow(() -> new MailboxException("Can not find a UID to save " + message.getMessageId() + " in " + mailboxId)));
+        message.setModSeq(modseqFuture.join()
+            .orElseThrow(() -> new MailboxException("Can not find a MODSEQ to save " + message.getMessageId() + " in " + mailboxId)));
+
         save(mailbox, message)
             .thenCompose(voidValue -> indexTableHandler.updateIndexOnAdd(message, mailboxId))
             .join();
