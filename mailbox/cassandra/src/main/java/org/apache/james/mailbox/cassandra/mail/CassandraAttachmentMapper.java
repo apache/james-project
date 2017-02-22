@@ -93,9 +93,13 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     @Override
     public List<Attachment> getAttachments(Collection<AttachmentId> attachmentIds) {
+        return getAttachmentsAsFuture(attachmentIds).join();
+    }
+
+    public CompletableFuture<List<Attachment>> getAttachmentsAsFuture(Collection<AttachmentId> attachmentIds) {
         Preconditions.checkArgument(attachmentIds != null);
         if (attachmentIds.isEmpty()) {
-            return ImmutableList.of();
+            return CompletableFuture.completedFuture(ImmutableList.of());
         }
         List<String> ids = attachmentIds.stream()
                 .map(AttachmentId::getId)
@@ -104,8 +108,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
             select(FIELDS)
                 .from(TABLE_NAME)
                 .where(in(ID, ids)))
-            .thenApply(this::attachments)
-            .join();
+            .thenApply(this::attachments);
     }
 
     private List<Attachment> attachments(ResultSet resultSet) {

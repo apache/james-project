@@ -56,6 +56,7 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.util.CompletableFutureUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +76,6 @@ public class CassandraMessageMapper implements MessageMapper {
     private final MailboxSession mailboxSession;
     private final UidProvider uidProvider;
     private final int maxRetries;
-    private final AttachmentMapper attachmentMapper;
     private final CassandraMessageDAO messageDAO;
     private final CassandraMessageIdDAO messageIdDAO;
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
@@ -83,9 +83,10 @@ public class CassandraMessageMapper implements MessageMapper {
     private final CassandraMailboxRecentsDAO mailboxRecentDAO;
     private final CassandraIndexTableHandler indexTableHandler;
     private final CassandraFirstUnseenDAO firstUnseenDAO;
+    private final AttachmentLoader attachmentLoader;
 
     public CassandraMessageMapper(UidProvider uidProvider, ModSeqProvider modSeqProvider,
-                                  MailboxSession mailboxSession, int maxRetries, AttachmentMapper attachmentMapper,
+                                  MailboxSession mailboxSession, int maxRetries, CassandraAttachmentMapper attachmentMapper,
                                   CassandraMessageDAO messageDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageIdToImapUidDAO imapUidDAO,
                                   CassandraMailboxCounterDAO mailboxCounterDAO, CassandraMailboxRecentsDAO mailboxRecentDAO,
                                   CassandraIndexTableHandler indexTableHandler, CassandraFirstUnseenDAO firstUnseenDAO) {
@@ -93,7 +94,6 @@ public class CassandraMessageMapper implements MessageMapper {
         this.modSeqProvider = modSeqProvider;
         this.mailboxSession = mailboxSession;
         this.maxRetries = maxRetries;
-        this.attachmentMapper = attachmentMapper;
         this.messageDAO = messageDAO;
         this.messageIdDAO = messageIdDAO;
         this.imapUidDAO = imapUidDAO;
@@ -101,6 +101,7 @@ public class CassandraMessageMapper implements MessageMapper {
         this.mailboxRecentDAO = mailboxRecentDAO;
         this.indexTableHandler = indexTableHandler;
         this.firstUnseenDAO = firstUnseenDAO;
+        this.attachmentLoader = new AttachmentLoader(attachmentMapper);
     }
 
     @Override
@@ -168,10 +169,10 @@ public class CassandraMessageMapper implements MessageMapper {
         Stream<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<CassandraMessageDAO.MessageAttachmentRepresentation>>>
             messageRepresentions = messageDAO.retrieveMessages(messageIds, fetchType, limit).join();
         if (fetchType == FetchType.Body || fetchType == FetchType.Full) {
-            return messageRepresentions
-                .map(pair -> Pair.of(pair.getLeft(), new AttachmentLoader(attachmentMapper)
-                    .getAttachments(pair.getRight()
-                        .collect(Guavate.toImmutableList()))))
+            return CompletableFutureUtil.allOf(messageRepresentions
+                .map(pair -> attachmentLoader.getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
+                    .thenApply(attachments -> Pair.of(pair.getLeft(), attachments))))
+                .join()
                 .map(Throwing.function(pair -> pair.getLeft()
                     .toMailboxMessage(pair.getRight()
                         .stream()

@@ -101,13 +101,15 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
 
     @Override
     public CassandraMessageMapper createMessageMapper(MailboxSession mailboxSession) {
-        return new CassandraMessageMapper(uidProvider, modSeqProvider, null, maxRetry, createAttachmentMapper(mailboxSession),
+        return new CassandraMessageMapper(uidProvider, modSeqProvider, null, maxRetry,
+                (CassandraAttachmentMapper) createAttachmentMapper(mailboxSession),
                 messageDAO, messageIdDAO, imapUidDAO, mailboxCounterDAO, mailboxRecentsDAO, indexTableHandler, firstUnseenDAO);
     }
 
     @Override
     public MessageIdMapper createMessageIdMapper(MailboxSession mailboxSession) throws MailboxException {
-        return new CassandraMessageIdMapper(getMailboxMapper(mailboxSession), mailboxDAO, getAttachmentMapper(mailboxSession),
+        return new CassandraMessageIdMapper(getMailboxMapper(mailboxSession), mailboxDAO,
+                (CassandraAttachmentMapper) getAttachmentMapper(mailboxSession),
                 imapUidDAO, messageIdDAO, messageDAO, indexTableHandler, modSeqProvider, mailboxSession);
     }
 

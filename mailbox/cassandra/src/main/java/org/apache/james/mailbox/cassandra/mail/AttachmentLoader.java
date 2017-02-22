@@ -22,33 +22,36 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.OptionalConverter;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 
 public class AttachmentLoader {
 
-    private final AttachmentMapper attachmentMapper;
+    private final CassandraAttachmentMapper attachmentMapper;
 
-    public AttachmentLoader(AttachmentMapper attachmentMapper) {
+    public AttachmentLoader(CassandraAttachmentMapper attachmentMapper) {
         this.attachmentMapper = attachmentMapper;
     }
 
-    public Collection<MessageAttachment> getAttachments(List<CassandraMessageDAO.MessageAttachmentRepresentation> attachmentRepresentations) {
-        Map<AttachmentId, Attachment> attachmentsById = attachmentsById(attachmentRepresentations.stream()
-            .map(CassandraMessageDAO.MessageAttachmentRepresentation::getAttachmentId)
-            .collect(Guavate.toImmutableSet()));
+    public CompletableFuture<Collection<MessageAttachment>> getAttachments(List<CassandraMessageDAO.MessageAttachmentRepresentation> attachmentRepresentations) {
+        CompletableFuture<Map<AttachmentId, Attachment>> attachmentsByIdFuture =
+            attachmentsById(attachmentRepresentations.stream()
+                .map(CassandraMessageDAO.MessageAttachmentRepresentation::getAttachmentId)
+                .collect(Guavate.toImmutableSet()));
 
-        return attachmentRepresentations.stream()
-            .map(representation -> constructMessageAttachment(attachmentsById.get(representation.getAttachmentId()), representation))
-            .collect(Guavate.toImmutableList());
+        return attachmentsByIdFuture.thenApply(attachmentsById ->
+            attachmentRepresentations.stream()
+                .map(representation -> constructMessageAttachment(attachmentsById.get(representation.getAttachmentId()), representation))
+                .collect(Guavate.toImmutableList()));
     }
 
     private MessageAttachment constructMessageAttachment(Attachment attachment, CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation) {
@@ -60,9 +63,15 @@ public class AttachmentLoader {
                 .build();
     }
 
-    @VisibleForTesting Map<AttachmentId, Attachment> attachmentsById(Set<AttachmentId> attachmentIds) {
-        return attachmentMapper.getAttachments(attachmentIds).stream()
-            .collect(Guavate.toImmutableMap(Attachment::getAttachmentId, Function.identity()));
+    @VisibleForTesting
+    CompletableFuture<Map<AttachmentId, Attachment>> attachmentsById(Set<AttachmentId> attachmentIds) {
+        if (attachmentIds.isEmpty()) {
+            return CompletableFuture.completedFuture(ImmutableMap.of());
+        }
+        return attachmentMapper.getAttachmentsAsFuture(attachmentIds)
+            .thenApply(attachments -> attachments
+                .stream()
+                .collect(Guavate.toImmutableMap(Attachment::getAttachmentId, Function.identity())));
     }
 
 }

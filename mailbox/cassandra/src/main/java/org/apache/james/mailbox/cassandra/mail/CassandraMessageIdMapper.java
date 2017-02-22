@@ -43,7 +43,6 @@ import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
@@ -67,26 +66,26 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     private final MailboxMapper mailboxMapper;
     private final CassandraMailboxDAO mailboxDAO;
-    private final AttachmentMapper attachmentMapper;
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
     private final CassandraMessageIdDAO messageIdDAO;
     private final CassandraMessageDAO messageDAO;
     private final CassandraIndexTableHandler indexTableHandler;
     private final ModSeqProvider modSeqProvider;
     private final MailboxSession mailboxSession;
+    private final AttachmentLoader attachmentLoader;
 
-    public CassandraMessageIdMapper(MailboxMapper mailboxMapper, CassandraMailboxDAO mailboxDAO, AttachmentMapper attachmentMapper,
+    public CassandraMessageIdMapper(MailboxMapper mailboxMapper, CassandraMailboxDAO mailboxDAO, CassandraAttachmentMapper attachmentMapper,
                                     CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
                                     CassandraIndexTableHandler indexTableHandler, ModSeqProvider modSeqProvider, MailboxSession mailboxSession) {
         this.mailboxMapper = mailboxMapper;
         this.mailboxDAO = mailboxDAO;
-        this.attachmentMapper = attachmentMapper;
         this.imapUidDAO = imapUidDAO;
         this.messageIdDAO = messageIdDAO;
         this.messageDAO = messageDAO;
         this.indexTableHandler = indexTableHandler;
         this.modSeqProvider = modSeqProvider;
         this.mailboxSession = mailboxSession;
+        this.attachmentLoader = new AttachmentLoader(attachmentMapper);
     }
 
     @Override
@@ -105,9 +104,10 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .thenCompose(stream -> CompletableFutureUtil.allOf(
                 stream.map(pair -> mailboxExists(pair.getLeft())
                     .thenApply(b -> Optional.of(pair).filter(any -> b)))))
+            .thenApply(stream -> stream.flatMap(OptionalConverter::toStream))
+            .thenApply(stream -> stream.map(loadAttachments(fetchType)))
+            .thenCompose(CompletableFutureUtil::allOf)
             .join()
-            .flatMap(OptionalConverter::toStream)
-            .map(loadAttachments(fetchType))
             .map(toMailboxMessages())
             .sorted(Comparator.comparing(MailboxMessage::getUid));
     }
@@ -126,14 +126,15 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             });
     }
 
-    private Function<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<CassandraMessageDAO.MessageAttachmentRepresentation>>, Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<MessageAttachment>>> loadAttachments(FetchType fetchType) {
+    private Function<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<CassandraMessageDAO.MessageAttachmentRepresentation>>,
+                     CompletableFuture<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<MessageAttachment>>>>
+                     loadAttachments(FetchType fetchType) {
         if (fetchType == FetchType.Full || fetchType == FetchType.Body) {
-            return pair -> Pair.of(pair.getLeft(),
-                new AttachmentLoader(attachmentMapper)
-                    .getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
-                    .stream());
+            return pair -> attachmentLoader
+                .getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
+                .thenApply(attachments -> Pair.of(pair.getLeft(), attachments.stream()));
         } else {
-            return pair -> Pair.of(pair.getLeft(), Stream.of());
+            return pair -> CompletableFuture.completedFuture(Pair.of(pair.getLeft(), Stream.of()));
         }
     }
 

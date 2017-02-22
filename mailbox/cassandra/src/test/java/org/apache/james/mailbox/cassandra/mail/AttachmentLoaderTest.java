@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
@@ -42,12 +43,12 @@ import com.google.common.collect.ImmutableSet;
 
 public class AttachmentLoaderTest {
 
-    private AttachmentMapper attachmentMapper;
+    private CassandraAttachmentMapper attachmentMapper;
     private AttachmentLoader testee;
 
     @Before
     public void setup() {
-        attachmentMapper = mock(AttachmentMapper.class);
+        attachmentMapper = mock(CassandraAttachmentMapper.class);
         testee = new AttachmentLoader(attachmentMapper);
     }
 
@@ -61,15 +62,16 @@ public class AttachmentLoaderTest {
             .bytes("attachment".getBytes())
             .type("type")
             .build();
-        when(attachmentMapper.getAttachments(attachmentIds))
-            .thenReturn(ImmutableList.of(attachment));
+        when(attachmentMapper.getAttachmentsAsFuture(attachmentIds))
+            .thenReturn(CompletableFuture.completedFuture(ImmutableList.of(attachment)));
 
         Optional<String> name = Optional.of("name1");
         Optional<Cid> cid = Optional.empty();
         boolean isInlined = false;
         CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, name, cid, isInlined);
 
-        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation, attachmentRepresentation));
+        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation, attachmentRepresentation))
+            .join();
 
         MessageAttachment expectedAttachment = new MessageAttachment(attachment, OptionalConverter.toGuava(name), OptionalConverter.toGuava(cid), isInlined);
         assertThat(attachments).hasSize(2)
@@ -86,8 +88,8 @@ public class AttachmentLoaderTest {
             .bytes("attachment".getBytes())
             .type("type")
             .build();
-        when(attachmentMapper.getAttachments(attachmentIds))
-            .thenReturn(ImmutableList.of(attachment));
+        when(attachmentMapper.getAttachmentsAsFuture(attachmentIds))
+            .thenReturn(CompletableFuture.completedFuture(ImmutableList.of(attachment)));
 
         Optional<String> name1 = Optional.of("name1");
         Optional<String> name2 = Optional.of("name2");
@@ -96,7 +98,8 @@ public class AttachmentLoaderTest {
         CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation1 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, name1, cid, isInlined);
         CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation2 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, name2, cid, isInlined);
 
-        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2));
+        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2))
+            .join();
 
         assertThat(attachments).hasSize(2)
             .containsOnly(new MessageAttachment(attachment, OptionalConverter.toGuava(name1), OptionalConverter.toGuava(cid), isInlined),
@@ -119,8 +122,8 @@ public class AttachmentLoaderTest {
             .bytes("attachment2".getBytes())
             .type("type")
             .build();
-        when(attachmentMapper.getAttachments(attachmentIds))
-            .thenReturn(ImmutableList.of(attachment1, attachment2));
+        when(attachmentMapper.getAttachmentsAsFuture(attachmentIds))
+            .thenReturn(CompletableFuture.completedFuture(ImmutableList.of(attachment1, attachment2)));
 
         Optional<String> name1 = Optional.of("name1");
         Optional<String> name2 = Optional.of("name2");
@@ -129,7 +132,8 @@ public class AttachmentLoaderTest {
         CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation1 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId1, name1, cid, isInlined);
         CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation2 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId2, name2, cid, isInlined);
 
-        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2));
+        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2))
+            .join();
 
         assertThat(attachments).hasSize(2)
             .containsOnly(new MessageAttachment(attachment1, OptionalConverter.toGuava(name1), OptionalConverter.toGuava(cid), isInlined),
@@ -146,10 +150,11 @@ public class AttachmentLoaderTest {
             .bytes("attachment".getBytes())
             .type("type")
             .build();
-        when(attachmentMapper.getAttachments(attachmentIds))
-            .thenReturn(ImmutableList.of(attachment));
+        when(attachmentMapper.getAttachmentsAsFuture(attachmentIds))
+            .thenReturn(CompletableFuture.completedFuture(ImmutableList.of(attachment)));
 
-        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of());
+        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of())
+            .join();
 
         assertThat(attachments).isEmpty();
     }
@@ -170,10 +175,11 @@ public class AttachmentLoaderTest {
                 .bytes("attachment2".getBytes())
                 .type("type")
                 .build();
-        when(attachmentMapper.getAttachments(attachmentIds))
-            .thenReturn(ImmutableList.of(attachment, attachment2));
+        when(attachmentMapper.getAttachmentsAsFuture(attachmentIds))
+            .thenReturn(CompletableFuture.completedFuture(ImmutableList.of(attachment, attachment2)));
 
-        Map<AttachmentId, Attachment> attachmentsById = testee.attachmentsById(attachmentIds);
+        Map<AttachmentId, Attachment> attachmentsById = testee.attachmentsById(attachmentIds)
+            .join();
 
         assertThat(attachmentsById).hasSize(2)
                 .containsOnly(MapEntry.entry(attachmentId, attachment), MapEntry.entry(attachmentId2, attachment2));
@@ -185,10 +191,11 @@ public class AttachmentLoaderTest {
         AttachmentId attachmentId2 = AttachmentId.from("2");
         Set<AttachmentId> attachmentIds = ImmutableSet.of(attachmentId, attachmentId2);
 
-        when(attachmentMapper.getAttachments(attachmentIds))
-                .thenReturn(ImmutableList.of());
+        when(attachmentMapper.getAttachmentsAsFuture(attachmentIds))
+                .thenReturn(CompletableFuture.completedFuture(ImmutableList.of()));
 
-        Map<AttachmentId, Attachment> attachmentsById = testee.attachmentsById(attachmentIds);
+        Map<AttachmentId, Attachment> attachmentsById = testee.attachmentsById(attachmentIds)
+            .join();
 
         assertThat(attachmentsById).hasSize(0);
     }
