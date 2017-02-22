@@ -28,6 +28,7 @@ import java.util.List;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
+import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -58,6 +59,9 @@ public abstract class AbstractCombinationManagerTest {
     private static final Flags FLAGS = new Flags();
     private static final byte[] MAIL_CONTENT = "Subject: test\r\n\r\ntestmail".getBytes();
     private static final int DEFAULT_MAXIMUM_LIMIT = 256;
+
+    private static final String USER_FLAGS_VALUE = "User Flags";
+    private static final String ANOTHER_USER_FLAGS_VALUE = "Another User Flags";
 
     private MailboxManager mailboxManager;
     private MessageIdManager messageIdManager;
@@ -358,6 +362,74 @@ public abstract class AbstractCombinationManagerTest {
         assertThat(messageManager2.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session))
             .hasSize(1)
             .extractingResultOf("getMessageId").containsOnly(messageId);
+    }
+
+    @Test
+    public void appendMessageFromMessageManagerAndSetInMailboxFromMessageIdManagerShouldUpdateApplicableFlag() throws Exception {
+        Flags messageFlag = new FlagsBuilder()
+            .add(Flag.ANSWERED)
+            .add(USER_FLAGS_VALUE)
+            .build();
+
+        MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, messageFlag).getMessageId();
+
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
+
+        assertThat(messageManager1.getApplicableFlag(session))
+            .isEqualTo(messageFlag);
+        assertThat(messageManager2.getApplicableFlag(session))
+            .isEqualTo(messageFlag);
+    }
+
+    @Test
+    public void appendMessageFromMessageManagerAndSetFlagsFromMessageIdManagerShouldUnionApplicableFlag() throws Exception {
+        Flags messageFlag = new FlagsBuilder()
+            .add(Flag.ANSWERED)
+            .add(USER_FLAGS_VALUE)
+            .build();
+
+        Flags deleted = new FlagsBuilder()
+            .add(Flag.DELETED)
+            .add(USER_FLAGS_VALUE, ANOTHER_USER_FLAGS_VALUE)
+            .build();
+
+        MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, messageFlag).getMessageId();
+
+        messageIdManager.setFlags(deleted, FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
+
+        assertThat(messageManager1.getApplicableFlag(session))
+            .isEqualTo(new FlagsBuilder()
+                .add(Flag.ANSWERED, Flag.DELETED)
+                .add(USER_FLAGS_VALUE, ANOTHER_USER_FLAGS_VALUE)
+                .build());
+    }
+
+    @Test
+    public void setFlagsFromMessageManagerAndSetFlagsFromMessageIdManagerShouldUpdateSameApplicableFlag() throws Exception {
+        Flags messageFlag = new Flags(Flag.ANSWERED);
+        Flags deleted = new Flags(Flag.DELETED);
+        MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, messageFlag).getMessageId();
+
+        messageIdManager.setFlags(deleted, FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
+        messageManager1.setFlags(deleted, FlagsUpdateMode.ADD, MessageRange.all(), session);
+
+        Flags applicableFlags = messageManager1.getApplicableFlag(session);
+
+        assertThat(applicableFlags)
+            .isEqualTo(new FlagsBuilder().add(Flag.ANSWERED, Flag.DELETED).build());
+    }
+
+    @Test
+    public void setInMailboxFromMessageIdManagerAndSetFlagsFromMessageManagerShouldUnionApplicableFlag() throws Exception {
+        Flags messageFlag = new Flags(Flag.ANSWERED);
+        Flags deleted = new Flags(Flag.DELETED);
+        MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, messageFlag).getMessageId();
+
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
+        messageManager2.setFlags(deleted, FlagsUpdateMode.ADD, MessageRange.all(), session);
+
+        assertThat(messageManager2.getApplicableFlag(session))
+            .isEqualTo(new FlagsBuilder().add(Flag.ANSWERED, Flag.DELETED).build());
     }
 
     private Predicate<MessageResult> messageInMailbox2() {

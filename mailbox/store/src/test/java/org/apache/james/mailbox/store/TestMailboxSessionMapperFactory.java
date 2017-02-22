@@ -210,6 +210,11 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
                 }
                 return builder.build();
             }
+
+            @Override
+            public Flags getApplicableFlag(MailboxId mailboxId) throws MailboxException {
+                return null;
+            }
         };
     }
 
