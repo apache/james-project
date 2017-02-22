@@ -47,6 +47,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -76,6 +77,8 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
+import org.apache.james.util.CompletableFutureUtil;
+import org.apache.james.util.streams.JamesCollectors;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
@@ -98,6 +101,7 @@ import com.google.common.primitives.Bytes;
 
 public class CassandraMessageDAO {
 
+    public static final int CHUNK_SIZE_ON_READ = 5000;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraTypesProvider typesProvider;
     private final Factory messageIdFactory;
@@ -182,8 +186,14 @@ public class CassandraMessageDAO {
     }
 
     public CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
-        return retrieveRows(messageIds, fetchType, limit)
-                .thenApply(resultSet -> toMessagesWithAttachmentRepresentation(messageIds, fetchType, resultSet));
+        return CompletableFutureUtil.allOf(
+            messageIds.stream()
+                .collect(JamesCollectors.chunker(CHUNK_SIZE_ON_READ))
+                .values()
+                .stream()
+                .map(ids -> retrieveRows(ids, fetchType, limit)
+                    .thenApply(resultSet -> toMessagesWithAttachmentRepresentation(messageIds, fetchType, resultSet))))
+            .thenApply(stream -> stream.flatMap(Function.identity()));
     }
 
     private Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> toMessagesWithAttachmentRepresentation(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, ResultSet resultSet) {
