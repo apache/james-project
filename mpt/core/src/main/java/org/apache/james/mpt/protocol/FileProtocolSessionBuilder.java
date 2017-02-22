@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.mpt.protocol.ProtocolSession.TimerCommand;
 
 /**
  * A builder which generates a ProtocolSession from a test file.
@@ -40,6 +41,9 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
     public static final String INFO = "INFO";
     public static final String WARN = "WARN";
     public static final String ERR = "ERR";
+
+    private static final int TIMER_COMMAND_START = TIMER.length() + 1;
+    private static final int TIMER_COMMAND_END = TIMER_COMMAND_START + 5;
 
     /**
      * Builds a ProtocolSession by reading lines from the test file with the
@@ -176,6 +180,11 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
                         throw new Exception("No session number specified");
                     }
                     sessionNumber = Integer.parseInt(number);
+                }
+                else if (next.startsWith(TIMER)) {
+                    TimerCommand timerCommand = TimerCommand.from(next.substring(TIMER_COMMAND_START, TIMER_COMMAND_END));
+                    String timerName = next.substring(TIMER_COMMAND_END + 1);
+                    session.TIMER(timerCommand, timerName);
                 }
                 else {
                     String prefix = next;

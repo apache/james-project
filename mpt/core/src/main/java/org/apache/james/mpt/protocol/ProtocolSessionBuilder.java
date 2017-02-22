@@ -59,6 +59,8 @@ public class ProtocolSessionBuilder {
 
     public static final String REINIT = "REINIT";
 
+    public static final String TIMER = "TIMER";
+
     private final Properties variables;
     
     public ProtocolSessionBuilder() {

@@ -17,6 +17,8 @@
 # under the License.                                           #
 ################################################################
 
+TIMER start append
+
 C: A007 APPEND selected {596+}
 C: Date: Mon, 10 Feb 1994 21:52:25 -0800 (PST)
 C: From: mooch@owatagu.siam.edu
@@ -37,10 +39,19 @@ S: \* 5 EXISTS
 S: \* 5 RECENT
 S: A007 OK (\[.+\] )?APPEND completed.
 
+TIMER print append
+
+TIMER start fetch
+
 C: f1 FETCH 1 (ENVELOPE)
 S: \* 1 FETCH \(ENVELOPE \(\"Mon, 7 Feb 1994 21:52:25 -0800 \(PST\)\" \"Test 01\" \(\(\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop.COM\"\)\) \(\(\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop.COM\"\)\) \(\(\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop.COM\"\)\) \(\(NIL NIL \"mooch\" \"owatagu.siam.edu\"\)\) NIL NIL NIL \"<B27397-0100000@Blurdybloop.COM>\"\)\)
 S: f1 OK FETCH completed.
 
+TIMER print fetch
+TIMER reset fetch
+
 C: f2 FETCH 5 (ENVELOPE)
 S: \* 5 FETCH \(ENVELOPE \(\"Mon, 10 Feb 1994 21:52:25 -0800 \(PST\)\" \"Re: Test 05\" \(\(NIL NIL \"mooch\" \"owatagu.siam.edu\"\)\) \(\(NIL NIL \"mooch\" \"owatagu.siam.edu\"\)\(\"Boss\" NIL \"boss\" \"owatagu.siam.edu\"\)\) \(\(\"Bin\" NIL \"dev.null\" \"owatagu.siam.edu\"\)\(\"Thin Air\" NIL \"air\" \"owatagu.siam.edu\"\)\) \(\(\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop.COM\"\)\(\"Sue\" NIL \"sue.foo\" \"Blurdybloop.COM\"\)\) \(\(\"Moo\" NIL \"moo\" \"example.COM\"\)\(\"Hugh\" NIL \"hugh\" \"example.COM\"\)\) \(\(\"Secret\" NIL \"spy\" \"owatagu.siam.ed\"\)\(\"Audit\" NIL \"audit\" \"owatagu.siam.ed\"\)\) \"<B27397-0100000@Blurdybloop.COM>\" \"<12345677890-mooch@owatagu.siam.edu>\"\)\)
 S: f2 OK FETCH completed.
+
+TIMER print fetch
