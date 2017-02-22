@@ -167,8 +167,9 @@ public class CassandraMessageMapper implements MessageMapper {
             messageRepresentions = messageDAO.retrieveMessages(messageIds, fetchType, limit).join();
         if (fetchType == FetchType.Body || fetchType == FetchType.Full) {
             return CompletableFutureUtil.allOf(messageRepresentions
-                .map(pair -> attachmentLoader.getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
-                    .thenApply(attachments -> Pair.of(pair.getLeft(), attachments))))
+                .map((Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<CassandraMessageDAO.MessageAttachmentRepresentation>> pair) -> 
+                    attachmentLoader.getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
+                        .thenApply(attachments -> Pair.of(pair.getLeft(), attachments))))
                 .join()
                 .map(Throwing.function(pair -> pair.getLeft()
                     .toMailboxMessage(pair.getRight()

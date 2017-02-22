@@ -32,7 +32,6 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.OptionalConverter;
 import org.assertj.core.data.MapEntry;
 import org.junit.Before;

@@ -40,8 +40,6 @@ import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.SearchQuery;
 
-import com.google.common.base.Objects;
-
 /**
  * Interface which represent a Mailbox
  * 

@@ -276,7 +276,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
         SearchQuery searchQuery = new SearchQuery();
 
-        ComposedMessageId addedAfterDuplicatedMessage = myFolderMessageManager.appendMessage(
+        myFolderMessageManager.appendMessage(
                 ClassLoader.getSystemResourceAsStream("eml/mail.eml"),
                 new Date(1406930400000L),
                 session,
