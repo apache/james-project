@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.metrics.api;
 
-public interface MetricFactory {
+public interface TimeMetric {
 
-    Metric generate(String name);
+    String name();
 
-    TimeMetric timer(String name);
+    long stopAndPublish();
+
 }
