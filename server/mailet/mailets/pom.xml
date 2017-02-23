@@ -72,7 +72,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
-            <artifactId>james-server-metrics-api</artifactId>
+            <artifactId>metrics-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.james.protocols</groupId>

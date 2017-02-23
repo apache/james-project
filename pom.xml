@@ -564,6 +564,7 @@
         <module>backends-common</module>
         <module>mailbox</module>
         <module>mailet</module>
+        <module>metrics</module>
         <module>mpt</module>
         <module>protocols</module>
         <module>server</module>

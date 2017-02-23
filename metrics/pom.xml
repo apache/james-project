@@ -17,19 +17,24 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>james-server</artifactId>
-        <groupId>org.apache.james</groupId>
-        <version>3.0.0-beta6-SNAPSHOT</version>
-        <relativePath>../../../pom.xml</relativePath>
-    </parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>james-server-metrics-api</artifactId>
+    <parent>
+        <artifactId>james-project</artifactId>
+        <groupId>org.apache.james</groupId>
+        <version>3.0.0-beta6-SNAPSHOT</version>
+    </parent>
 
-    <name>Apache James :: Server :: Metrics :: API</name>
+    <artifactId>metrics</artifactId>
+    <packaging>pom</packaging>
+
+    <name>Apache James :: Metrics</name>
+    <description>Apache James Metrics</description>
+
+    <modules>
+        <module>metrics-api</module>
+    </modules>
 
 </project>
+
