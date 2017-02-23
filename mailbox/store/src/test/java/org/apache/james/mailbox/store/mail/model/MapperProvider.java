@@ -39,7 +39,8 @@ public interface MapperProvider {
         ANNOTATION,
         MOVE,
         UNIQUE_MESSAGE_ID,
-        THREAD_SAFE_FLAGS_UPDATE
+        THREAD_SAFE_FLAGS_UPDATE,
+        INCREMENTAL_APPLICABLE_FLAGS
     }
 
     List<Capabilities> getSupportedCapabilities();
