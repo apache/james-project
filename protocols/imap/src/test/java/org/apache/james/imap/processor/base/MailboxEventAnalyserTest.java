@@ -322,6 +322,11 @@ public class MailboxEventAnalyserTest {
                 public MailboxPath getMailboxPath() {
                     return null;
                 }
+
+                @Override
+                public Flags getApplicableFlag(MailboxSession session) throws MailboxException {
+                    throw new NotImplementedException();
+                }
             };
         }
 

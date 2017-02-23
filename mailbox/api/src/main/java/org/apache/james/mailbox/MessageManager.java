@@ -169,7 +169,9 @@ public interface MessageManager {
      * Gets the path of the referenced mailbox
      */
     MailboxPath getMailboxPath() throws MailboxException;
-    
+
+    Flags getApplicableFlag(MailboxSession session) throws MailboxException;
+
     /**
      * Gets current meta data for the mailbox.<br>
      * Consolidates common calls together to allow improved performance.<br>

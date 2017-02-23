@@ -289,7 +289,8 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
-        return new ApplicableFlagCalculator(findMessagesInMailbox((JPAId) mailbox.getMailboxId(), -1))
+        int maxBatchSize = -1;
+        return new ApplicableFlagCalculator(findMessagesInMailbox((JPAId) mailbox.getMailboxId(), maxBatchSize))
             .computeApplicableFlags();
     }
 

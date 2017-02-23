@@ -857,4 +857,10 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     public MailboxPath getMailboxPath() throws MailboxException {
         return new StoreMailboxPath(getMailboxEntity());
     }
+
+    @Override
+    public Flags getApplicableFlag(MailboxSession session) throws MailboxException {
+        return mapperFactory.getMessageMapper(session)
+            .getApplicableFlag(mailbox);
+    }
 }
