@@ -35,6 +35,7 @@ import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
+import javax.mail.Flags;
 
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.util.ISO9075;
@@ -54,6 +55,7 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 
 /**
  * JCR implementation of a {@link MessageMapper}. The implementation store each
@@ -522,6 +524,17 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
             throw new MailboxException("Unable to save message " + message + " in mailbox " + mailbox, e);
         } catch (IOException e) {
             throw new MailboxException("Unable to save message " + message + " in mailbox " + mailbox, e);
+        }
+    }
+
+    @Override
+    public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
+        int maxBatchSize = -1;
+        try {
+            return new ApplicableFlagCalculator(findMessagesInMailbox(mailbox, maxBatchSize))
+                .computeApplicableFlags();
+        } catch (RepositoryException e) {
+            throw new MailboxException("Unable to get message from in mailbox " + mailbox, e);
         }
     }
 

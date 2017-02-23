@@ -52,6 +52,7 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 import org.apache.openjpa.persistence.ArgumentException;
 
 import com.google.common.base.Optional;
@@ -284,6 +285,12 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     @Override
     public long getHighestModSeq(Mailbox mailbox) throws MailboxException {
         return messageMetadataMapper.getHighestModSeq(mailbox);
+    }
+
+    @Override
+    public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
+        return new ApplicableFlagCalculator(findMessagesInMailbox((JPAId) mailbox.getMailboxId(), -1))
+            .computeApplicableFlags();
     }
 
     private MessageMetaData copy(Mailbox mailbox, MessageUid uid, long modSeq, MailboxMessage original)

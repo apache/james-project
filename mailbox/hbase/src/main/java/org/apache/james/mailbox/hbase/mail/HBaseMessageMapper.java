@@ -82,6 +82,7 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 
 import com.google.common.base.Optional;
@@ -612,10 +613,22 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
         return modSeqProvider.highestModSeq(mailboxSession, mailbox);
     }
 
+    @Override
+    public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
+        int maxBatchSize = -1;
+        boolean flaggedForDelete = true;
+        try {
+            return new ApplicableFlagCalculator(findMessagesInMailbox((HBaseId) mailbox.getMailboxId(), maxBatchSize, flaggedForDelete))
+                .computeApplicableFlags();
+        } catch (IOException e) {
+            throw new MailboxException("Search of all message failed in mailbox " + mailbox.getName(), e);
+        }
+    }
+
     /**
      * Save the {@link MailboxMessage} for the given {@link Mailbox} and return the {@link MessageMetaData}
      *
-     * @param mailbox
+     * @param mailboxId
      * @param message
      * @return metaData
      * @throws MailboxException

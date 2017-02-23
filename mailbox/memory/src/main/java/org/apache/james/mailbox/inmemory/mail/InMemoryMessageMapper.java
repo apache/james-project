@@ -43,9 +43,9 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 
 public class InMemoryMessageMapper extends AbstractMessageMapper {
-
     private final Map<InMemoryId, Map<MessageUid, MailboxMessage>> mailboxByUid;
     private static final int INITIAL_SIZE = 256;
 
@@ -156,6 +156,12 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
             }
         }
         return filteredResult;
+    }
+
+    @Override
+    public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
+        return new ApplicableFlagCalculator(getMembershipByUidForId((InMemoryId) mailbox.getMailboxId()).values())
+            .computeApplicableFlags();
     }
 
     public void deleteAll() {

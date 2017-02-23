@@ -22,9 +22,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.mail.Flags;
+
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxCounters;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -167,7 +170,9 @@ public interface MessageMapper extends Mapper {
      * Return the higest mod-sequence which were used for storing a MailboxMessage in the {@link Mailbox}
      */
     long getHighestModSeq(Mailbox mailbox) throws MailboxException;
-    
+
+    Flags getApplicableFlag(Mailbox mailbox) throws MailboxException;
+
     /**
      * Specify what data needs to get filled in a {@link MailboxMessage} before returning it
      * 

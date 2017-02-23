@@ -32,14 +32,15 @@ import java.util.Set;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -179,6 +180,11 @@ public class StoreMailboxMessageResultIteratorTest {
         public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
             throw new UnsupportedOperationException();
 
+        }
+
+        @Override
+        public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
+            throw new NotImplementedException();
         }
     }
 

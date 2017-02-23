@@ -71,7 +71,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
             .unseen(countUnseenMessagesInMailbox(mailbox))
             .build();
     }
-    
+
     @Override
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) throws MailboxException {
         final List<UpdatedFlags> updatedFlags = new ArrayList<UpdatedFlags>();

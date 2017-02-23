@@ -78,6 +78,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
     private final CassandraMailboxCounterDAO mailboxCounterDAO;
     private final CassandraMailboxRecentsDAO mailboxRecentDAO;
+    private final CassandraApplicableFlagDAO applicableFlagDAO;
     private final CassandraIndexTableHandler indexTableHandler;
     private final CassandraFirstUnseenDAO firstUnseenDAO;
     private final AttachmentLoader attachmentLoader;
@@ -85,7 +86,7 @@ public class CassandraMessageMapper implements MessageMapper {
     public CassandraMessageMapper(CassandraUidProvider uidProvider, CassandraModSeqProvider modSeqProvider,
                                   MailboxSession mailboxSession, int maxRetries, CassandraAttachmentMapper attachmentMapper,
                                   CassandraMessageDAO messageDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageIdToImapUidDAO imapUidDAO,
-                                  CassandraMailboxCounterDAO mailboxCounterDAO, CassandraMailboxRecentsDAO mailboxRecentDAO,
+                                  CassandraMailboxCounterDAO mailboxCounterDAO, CassandraMailboxRecentsDAO mailboxRecentDAO, CassandraApplicableFlagDAO applicableFlagDAO,
                                   CassandraIndexTableHandler indexTableHandler, CassandraFirstUnseenDAO firstUnseenDAO) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
@@ -99,6 +100,7 @@ public class CassandraMessageMapper implements MessageMapper {
         this.indexTableHandler = indexTableHandler;
         this.firstUnseenDAO = firstUnseenDAO;
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
+        this.applicableFlagDAO = applicableFlagDAO;
     }
 
     @Override
@@ -269,6 +271,13 @@ public class CassandraMessageMapper implements MessageMapper {
     @Override
     public com.google.common.base.Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
         return uidProvider.lastUid(mailboxSession, mailbox);
+    }
+
+    @Override
+    public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
+        return applicableFlagDAO.retrieveApplicableFlag((CassandraId) mailbox.getMailboxId())
+            .join()
+            .orElse(new Flags());
     }
 
     private CompletableFuture<Void> save(Mailbox mailbox, MailboxMessage message) throws MailboxException {

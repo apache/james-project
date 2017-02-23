@@ -1,7 +1,10 @@
 package org.apache.james.mailbox.caching;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -141,4 +144,8 @@ public class CachingMessageMapper implements MessageMapper {
         throw new UnsupportedOperationException("Move is not yet supported");
     }
 
+    @Override
+    public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
+        return underlying.getApplicableFlag(mailbox);
+    }
 }

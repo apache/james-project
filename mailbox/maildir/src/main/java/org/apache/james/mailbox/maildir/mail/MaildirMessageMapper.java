@@ -52,6 +52,7 @@ import org.apache.james.mailbox.store.mail.AbstractMessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 
 public class MaildirMessageMapper extends AbstractMessageMapper {
 
@@ -346,6 +347,13 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
             throw new MailboxException("Failure while save MailboxMessage " + message + " in Mailbox " + mailbox, e);
         }
 
+    }
+
+    @Override
+    public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
+        int maxValue = -1;
+        return new ApplicableFlagCalculator(findMessagesInMailboxBetweenUIDs(mailbox, null, MessageUid.MIN_VALUE, null, maxValue))
+            .computeApplicableFlags();
     }
 
     /**
