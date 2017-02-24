@@ -20,6 +20,8 @@
 package org.apache.james.util;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class CompletableFutureUtil {
@@ -38,4 +40,28 @@ public class CompletableFutureUtil {
             .orElse(CompletableFuture.completedFuture(Stream.of()));
     }
 
+    public static <T> CompletableFuture<Stream<T>> performOnAll(CompletableFuture<Stream<T>> futurStream, Function<T, CompletableFuture<Void>> action) {
+        return thenComposeOnAll(futurStream, value ->
+            keepValue(() ->
+                action.apply(value),
+                value));
+    }
+
+    public static <T, U> CompletableFuture<Stream<U>> thenComposeOnAll(CompletableFuture<Stream<T>> futurStream, Function<T, CompletableFuture<U>> action) {
+        return futurStream
+            .thenCompose(stream ->
+                CompletableFutureUtil.allOf(
+                    stream.map(action::apply)));
+    }
+
+    public static <T, U> CompletableFuture<Stream<U>> map(CompletableFuture<Stream<T>> futurStream, Function<T, U> action) {
+        return futurStream
+            .thenApply(stream ->
+                stream.map(value ->
+                    action.apply(value)));
+    }
+
+    public static <T> CompletableFuture<T> keepValue(Supplier<CompletableFuture<Void>> supplier, T value) {
+        return supplier.get().thenApply(any -> value);
+    }
 }
