@@ -20,6 +20,7 @@
 package org.apache.james.modules.mailbox;
 
 import java.io.FileNotFoundException;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import javax.inject.Singleton;
@@ -44,6 +45,8 @@ import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -52,6 +55,7 @@ import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 public class ElasticSearchMailboxModule extends AbstractModule {
 
     public static final String ES_CONFIG_FILE = FileSystem.FILE_PROTOCOL_AND_CONF + "elasticsearch.properties";
+    public static final String ELASTICSEARCH_HOSTS = "elasticsearch.hosts";
     public static final String ELASTICSEARCH_MASTER_HOST = "elasticsearch.masterHost";
     public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
     private static final int DEFAULT_CONNECTION_MAX_RETRIES = 7;
@@ -75,8 +79,8 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     protected Client provideClientProvider(FileSystem fileSystem, AsyncRetryExecutor executor) throws ConfigurationException, FileNotFoundException, ExecutionException, InterruptedException {
         PropertiesConfiguration propertiesReader = new PropertiesConfiguration(fileSystem.getFile(ES_CONFIG_FILE));
 
-        ClientProvider clientProvider = new ClientProviderImpl(propertiesReader.getString(ELASTICSEARCH_MASTER_HOST),
-                propertiesReader.getInt(ELASTICSEARCH_PORT));
+        ClientProvider clientProvider = connectToCluster(propertiesReader);
+
         Client client = getRetryer(executor, propertiesReader)
                 .getWithRetry(ctx -> clientProvider.get()).get();
         IndexCreationFactory.createIndex(client,
@@ -88,6 +92,35 @@ public class ElasticSearchMailboxModule extends AbstractModule {
             MailboxElasticsearchConstants.MESSAGE_TYPE,
             MailboxMappingFactory.getMappingContent());
         return client;
+    }
+
+    private static ClientProvider connectToCluster(PropertiesConfiguration propertiesReader) throws ConfigurationException {
+        Optional<String> monoHostAddress = Optional.ofNullable(propertiesReader.getString(ELASTICSEARCH_MASTER_HOST, null));
+        Optional<Integer> monoHostPort = Optional.ofNullable(propertiesReader.getInteger(ELASTICSEARCH_PORT, null));
+        Optional<String> multiHosts = Optional.ofNullable(propertiesReader.getString(ELASTICSEARCH_HOSTS, null));
+
+        validateHostsConfigurationOptions(monoHostAddress, monoHostPort, multiHosts);
+
+        if (monoHostAddress.isPresent()) {
+            return ClientProviderImpl.forHost(monoHostAddress.get(), monoHostPort.get());
+        } else {
+            return ClientProviderImpl.fromHostsString(multiHosts.get());
+        }
+    }
+
+    @VisibleForTesting
+    static void validateHostsConfigurationOptions(Optional<String> monoHostAddress,
+                                                          Optional<Integer> monoHostPort,
+                                                          Optional<String> multiHosts) throws ConfigurationException {
+        if (monoHostAddress.isPresent() != monoHostPort.isPresent()) {
+            throw new ConfigurationException(ELASTICSEARCH_MASTER_HOST + " and " + ELASTICSEARCH_PORT + " should be specified together");
+        }
+        if (multiHosts.isPresent() && monoHostAddress.isPresent()) {
+            throw new ConfigurationException("You should choose between mono host set up and " + ELASTICSEARCH_HOSTS);
+        }
+        if (!multiHosts.isPresent() && !monoHostAddress.isPresent()) {
+            throw new ConfigurationException("You should specify either (" + ELASTICSEARCH_MASTER_HOST + " and " + ELASTICSEARCH_PORT + ") or " + ELASTICSEARCH_HOSTS);
+        }
     }
 
     private static AsyncRetryExecutor getRetryer(AsyncRetryExecutor executor, PropertiesConfiguration configuration) {

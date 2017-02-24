@@ -61,7 +61,7 @@ public class ESReporterTest {
 
     @Before
     public void setUp() {
-        clientProvider = new ClientProviderImpl(getContainerIp(), ES_APPLICATIVE_PORT);
+        clientProvider = ClientProviderImpl.forHost(getContainerIp(), ES_APPLICATIVE_PORT);
         await().atMost(Duration.ONE_MINUTE)
             .until(() -> elasticSearchStarted(clientProvider));
 
