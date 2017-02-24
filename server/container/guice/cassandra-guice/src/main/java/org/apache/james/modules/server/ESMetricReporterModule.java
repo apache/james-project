@@ -61,7 +61,7 @@ public class ESMetricReporterModule extends AbstractModule {
             if (isMetricEnable(propertiesReader)) {
                 return ESReporterConfiguration.builder()
                     .enabled()
-                    .onHost(propertiesReader.getString(ElasticSearchMailboxModule.ELASTICSEARCH_MASTER_HOST),
+                    .onHost(locateHost(propertiesReader),
                         propertiesReader.getInt("elasticsearch.http.port", DEFAULT_ES_HTTP_PORT))
                     .onIndex(propertiesReader.getString("elasticsearch.metrics.reports.index", null))
                     .periodInSecond(propertiesReader.getLong("elasticsearch.metrics.reports.period", null))
@@ -73,6 +73,11 @@ public class ESMetricReporterModule extends AbstractModule {
         return ESReporterConfiguration.builder()
             .disabled()
             .build();
+    }
+
+    private String locateHost(PropertiesConfiguration propertiesReader) {
+        return propertiesReader.getString("elasticsearch.http.host",
+            propertiesReader.getString(ElasticSearchMailboxModule.ELASTICSEARCH_MASTER_HOST));
     }
 
     private boolean isMetricEnable(PropertiesConfiguration propertiesReader) {
