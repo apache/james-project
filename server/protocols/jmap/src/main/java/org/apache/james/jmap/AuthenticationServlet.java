@@ -38,6 +38,8 @@ import org.apache.james.jmap.model.AccessTokenResponse;
 import org.apache.james.jmap.model.ContinuationTokenRequest;
 import org.apache.james.jmap.model.ContinuationTokenResponse;
 import org.apache.james.jmap.model.EndPointsResponse;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.slf4j.Logger;
@@ -58,13 +60,15 @@ public class AuthenticationServlet extends HttpServlet {
     private final SimpleTokenManager simpleTokenManager;
     private final AccessTokenManager accessTokenManager;
     private final SimpleTokenFactory simpleTokenFactory;
+    private final MetricFactory metricFactory;
     
     @Inject
-    @VisibleForTesting AuthenticationServlet(UsersRepository usersRepository, SimpleTokenManager simpleTokenManager, SimpleTokenFactory simpleTokenFactory, AccessTokenManager accessTokenManager) {
+    @VisibleForTesting AuthenticationServlet(UsersRepository usersRepository, SimpleTokenManager simpleTokenManager, SimpleTokenFactory simpleTokenFactory, AccessTokenManager accessTokenManager, MetricFactory metricFactory) {
         this.usersRepository = usersRepository;
         this.simpleTokenManager = simpleTokenManager;
         this.simpleTokenFactory = simpleTokenFactory;
         this.accessTokenManager = accessTokenManager;
+        this.metricFactory = metricFactory;
         this.mapper = new MultipleObjectMapperBuilder()
             .registerClass(ContinuationTokenRequest.UNIQUE_JSON_PATH, ContinuationTokenRequest.class)
             .registerClass(AccessTokenRequest.UNIQUE_JSON_PATH, AccessTokenRequest.class)
@@ -73,6 +77,7 @@ public class AuthenticationServlet extends HttpServlet {
     
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        TimeMetric timeMetric = metricFactory.timer("JMAP-authentication-post");
         try {
             assertJsonContentType(req);
             assertAcceptJsonOnly(req);
@@ -90,6 +95,8 @@ public class AuthenticationServlet extends HttpServlet {
         } catch (InternalErrorException e) {
             LOG.error("Internal error", e);
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } finally {
+            timeMetric.stopAndPublish();
         }
     }
     

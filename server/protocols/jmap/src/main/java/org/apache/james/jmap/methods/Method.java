@@ -32,6 +32,8 @@ import com.google.common.base.Preconditions;
 
 public interface Method {
 
+    String JMAP_PREFIX = "JMAP-";
+
     interface Request {
 
         static Name name(String name) {

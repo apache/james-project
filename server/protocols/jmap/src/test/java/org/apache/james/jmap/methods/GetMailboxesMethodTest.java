@@ -47,6 +47,7 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.assertj.core.groups.Tuple;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,7 +75,7 @@ public class GetMailboxesMethodTest {
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(groupMembershipResolver);
         mailboxFactory = new MailboxFactory(mailboxManager);
 
-        getMailboxesMethod = new GetMailboxesMethod(mailboxManager, mailboxFactory);
+        getMailboxesMethod = new GetMailboxesMethod(mailboxManager, mailboxFactory, new DefaultMetricFactory());
     }
 
     @Test
@@ -102,7 +103,7 @@ public class GetMailboxesMethodTest {
             .thenReturn(ImmutableList.of(new MailboxPath("namespace", "user", "name")));
         when(mockedMailboxManager.getMailbox(any(MailboxPath.class), any()))
             .thenThrow(new MailboxException());
-        GetMailboxesMethod testee = new GetMailboxesMethod(mockedMailboxManager, mailboxFactory);
+        GetMailboxesMethod testee = new GetMailboxesMethod(mockedMailboxManager, mailboxFactory, new DefaultMetricFactory());
         
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();

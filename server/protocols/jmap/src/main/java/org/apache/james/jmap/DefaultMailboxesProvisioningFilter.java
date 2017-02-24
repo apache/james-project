@@ -35,6 +35,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,10 +47,12 @@ public class DefaultMailboxesProvisioningFilter implements Filter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMailboxesProvisioningFilter.class);
     private final MailboxManager mailboxManager;
+    private final MetricFactory metricFactory;
 
     @Inject
-    @VisibleForTesting DefaultMailboxesProvisioningFilter(MailboxManager mailboxManager) {
+    @VisibleForTesting DefaultMailboxesProvisioningFilter(MailboxManager mailboxManager, MetricFactory metricFactory) {
         this.mailboxManager = mailboxManager;
+        this.metricFactory = metricFactory;
     }
     
     @Override
@@ -64,11 +68,14 @@ public class DefaultMailboxesProvisioningFilter implements Filter {
     
     @VisibleForTesting
     void createMailboxesIfNeeded(MailboxSession session) {
+        TimeMetric timeMetric = metricFactory.timer("JMAP-mailboxes-provisioning");
         try {
             User user = session.getUser();
             createDefaultMailboxes(user);
         } catch (MailboxException e) {
             throw Throwables.propagate(e);
+        } finally {
+            timeMetric.stopAndPublish();
         }
     }
 

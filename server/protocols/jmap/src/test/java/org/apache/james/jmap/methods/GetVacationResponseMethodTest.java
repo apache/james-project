@@ -38,6 +38,7 @@ import org.apache.james.jmap.model.GetVacationResponse;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,7 +62,7 @@ public class GetVacationResponseMethodTest {
         vacationRepository = mock(VacationRepository.class);
         mailboxSession = mock(MailboxSession.class);
         user = mock(MailboxSession.User.class);
-        testee = new GetVacationResponseMethod(vacationRepository, zonedDateTimeProvider);
+        testee = new GetVacationResponseMethod(vacationRepository, zonedDateTimeProvider, new DefaultMetricFactory());
 
         when(zonedDateTimeProvider.get()).thenReturn(DATE_2014);
     }

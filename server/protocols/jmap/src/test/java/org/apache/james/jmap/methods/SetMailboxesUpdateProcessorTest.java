@@ -25,6 +25,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.mockito.Mockito;
 
 import java.util.Optional;
@@ -61,7 +63,8 @@ public class SetMailboxesUpdateProcessorTest {
         mockedMailboxUtils = mock(MailboxUtils.class);
         mockedMailboxFactory = mock(MailboxFactory.class);
         mockedMailboxSession = mock(MailboxSession.class);
-        sut = new SetMailboxesUpdateProcessor(mockedMailboxUtils, mockedMailboxManager, mockSubscriptionManager, mockedMailboxFactory);
+        MetricFactory metricFactory = new NoopMetricFactory();
+        sut = new SetMailboxesUpdateProcessor(mockedMailboxUtils, mockedMailboxManager, mockSubscriptionManager, mockedMailboxFactory, metricFactory);
     }
 
     @Test

@@ -45,6 +45,7 @@ import org.apache.james.jmap.model.SetVacationRequest;
 import org.apache.james.jmap.model.SetVacationResponse;
 import org.apache.james.jmap.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -90,7 +91,7 @@ public class SetVacationResponseMethodTest {
         mailboxSession = mock(MailboxSession.class);
         vacationRepository = mock(VacationRepository.class);
         notificationRegistry = mock(NotificationRegistry.class);
-        testee = new SetVacationResponseMethod(vacationRepository, notificationRegistry);
+        testee = new SetVacationResponseMethod(vacationRepository, notificationRegistry, new DefaultMetricFactory());
     }
 
     @Test(expected = NullPointerException.class)

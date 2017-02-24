@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods;
 
+import static org.apache.james.jmap.methods.Method.JMAP_PREFIX;
+
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -43,6 +45,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,12 +62,14 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
     private final SortingHierarchicalCollections<Map.Entry<MailboxId, Mailbox>, MailboxId> sortingHierarchicalCollections;
     private final MailboxUtils mailboxUtils;
     private final MailboxFactory mailboxFactory;
+    private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting
-    SetMailboxesDestructionProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, MailboxUtils mailboxUtils, MailboxFactory mailboxFactory) {
+    SetMailboxesDestructionProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, MailboxUtils mailboxUtils, MailboxFactory mailboxFactory, MetricFactory metricFactory) {
         this.mailboxManager = mailboxManager;
         this.subscriptionManager = subscriptionManager;
+        this.metricFactory = metricFactory;
         this.sortingHierarchicalCollections =
             new SortingHierarchicalCollections<>(
                     Entry::getKey,
@@ -73,6 +79,7 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
     }
 
     public SetMailboxesResponse process(SetMailboxesRequest request, MailboxSession mailboxSession) {
+        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + "SetMailboxesDestructionProcessor");
         ImmutableMap<MailboxId, Mailbox> idToMailbox = mapDestroyRequests(request, mailboxSession);
 
         SetMailboxesResponse.Builder builder = SetMailboxesResponse.builder();
@@ -80,6 +87,7 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
             .forEach(entry -> destroyMailbox(entry, mailboxSession, builder));
 
         notDestroyedRequests(request, idToMailbox, builder);
+        timeMetric.stopAndPublish();
         return builder.build();
     }
 

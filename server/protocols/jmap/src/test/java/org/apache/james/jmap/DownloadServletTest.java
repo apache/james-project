@@ -32,6 +32,7 @@ import org.apache.james.jmap.utils.DownloadPath;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Test;
 
 public class DownloadServletTest {
@@ -44,7 +45,7 @@ public class DownloadServletTest {
             .thenThrow(new MailboxException());
         SimpleTokenFactory nullSimpleTokenFactory = null;
 
-        DownloadServlet testee = new DownloadServlet(mockedAttachmentManager, nullSimpleTokenFactory);
+        DownloadServlet testee = new DownloadServlet(mockedAttachmentManager, nullSimpleTokenFactory, new NoopMetricFactory());
 
         HttpServletResponse resp = mock(HttpServletResponse.class);
         testee.download(mailboxSession, DownloadPath.from("/blobId"), resp);

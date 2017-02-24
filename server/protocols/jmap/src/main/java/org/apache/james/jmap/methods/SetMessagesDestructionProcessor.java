@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods;
 
+import static org.apache.james.jmap.methods.Method.JMAP_PREFIX;
+
 import java.util.List;
 import java.util.function.Function;
 
@@ -35,6 +37,8 @@ import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,19 +51,26 @@ public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMessagesCreationProcessor.class);
 
     private final MessageIdManager messageIdManager;
+    private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting
-    SetMessagesDestructionProcessor(MessageIdManager messageIdManager) {
+    SetMessagesDestructionProcessor(MessageIdManager messageIdManager, MetricFactory metricFactory) {
         this.messageIdManager = messageIdManager;
+        this.metricFactory = metricFactory;
     }
 
     @Override
     public SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession) {
-        return request.getDestroy().stream()
-                .map(delete(mailboxSession))
-                .reduce(SetMessagesResponse.builder(),  SetMessagesResponse.Builder::accumulator, SetMessagesResponse.Builder::combiner)
-                .build();
+        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + "SetMessageDestructionProcessor");
+
+        SetMessagesResponse result = request.getDestroy().stream()
+            .map(delete(mailboxSession))
+            .reduce(SetMessagesResponse.builder(), SetMessagesResponse.Builder::accumulator, SetMessagesResponse.Builder::combiner)
+            .build();
+
+        timeMetric.stopAndPublish();
+        return result;
     }
 
     private Function<? super MessageId, SetMessagesResponse> delete(MailboxSession mailboxSession) {

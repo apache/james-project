@@ -31,6 +31,8 @@ import org.apache.james.jmap.model.GetVacationRequest;
 import org.apache.james.jmap.model.GetVacationResponse;
 import org.apache.james.jmap.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 
 import com.google.common.base.Preconditions;
@@ -42,11 +44,13 @@ public class GetVacationResponseMethod implements Method {
 
     private final VacationRepository vacationRepository;
     private final ZonedDateTimeProvider zonedDateTimeProvider;
+    private final MetricFactory metricFactory;
 
     @Inject
-    public GetVacationResponseMethod(VacationRepository vacationRepository, ZonedDateTimeProvider zonedDateTimeProvider) {
+    public GetVacationResponseMethod(VacationRepository vacationRepository, ZonedDateTimeProvider zonedDateTimeProvider, MetricFactory metricFactory) {
         this.vacationRepository = vacationRepository;
         this.zonedDateTimeProvider = zonedDateTimeProvider;
+        this.metricFactory = metricFactory;
     }
 
     @Override
@@ -66,11 +70,16 @@ public class GetVacationResponseMethod implements Method {
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof GetVacationRequest);
 
-        return Stream.of(JmapResponse.builder()
-            .clientId(clientId)
-            .responseName(RESPONSE_NAME)
-            .response(process(mailboxSession))
-            .build());
+        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + METHOD_NAME.getName());
+        try {
+            return Stream.of(JmapResponse.builder()
+                .clientId(clientId)
+                .responseName(RESPONSE_NAME)
+                .response(process(mailboxSession))
+                .build());
+        } finally {
+            timeMetric.stopAndPublish();
+        }
     }
 
     private GetVacationResponse process(MailboxSession mailboxSession) {

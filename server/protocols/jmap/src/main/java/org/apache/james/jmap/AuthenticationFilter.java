@@ -36,6 +36,8 @@ import org.apache.james.jmap.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.exceptions.NoValidAuthHeaderException;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,11 +52,13 @@ public class AuthenticationFilter implements Filter {
     public static final String MAILBOX_SESSION = "mailboxSession";
 
     private final List<AuthenticationStrategy> authMethods;
+    private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting
-    AuthenticationFilter(List<AuthenticationStrategy> authMethods) {
+    AuthenticationFilter(List<AuthenticationStrategy> authMethods, MetricFactory metricFactory) {
         this.authMethods = authMethods;
+        this.metricFactory = metricFactory;
     }
 
     @Override
@@ -67,18 +71,24 @@ public class AuthenticationFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         try {
-            HttpServletRequest requestWithSession = authMethods.stream()
-                    .flatMap(auth -> createSession(auth, httpRequest))
-                    .findFirst()
-                    .map(mailboxSession -> addSessionToRequest(httpRequest, mailboxSession))
-                    .orElseThrow(UnauthorizedException::new);
-            chain.doFilter(requestWithSession, response);
-
+            chain.doFilter(authenticate(httpRequest), response);
         } catch (UnauthorizedException | NoValidAuthHeaderException | MailboxSessionCreationException | JwtException e) {
             LOGGER.error("Exception occurred during authentication process", e);
             httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         }
+    }
 
+    private HttpServletRequest authenticate(HttpServletRequest httpRequest) {
+        TimeMetric timeMetric = metricFactory.timer("JMAP-authentication-filter");
+        try {
+            return  authMethods.stream()
+                    .flatMap(auth -> createSession(auth, httpRequest))
+                    .findFirst()
+                    .map(mailboxSession -> addSessionToRequest(httpRequest, mailboxSession))
+                    .orElseThrow(UnauthorizedException::new);
+        } finally {
+            timeMetric.stopAndPublish();
+        }
     }
 
     private HttpServletRequest addSessionToRequest(HttpServletRequest httpRequest, MailboxSession mailboxSession) {

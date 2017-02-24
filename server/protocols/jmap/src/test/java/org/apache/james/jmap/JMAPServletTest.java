@@ -35,6 +35,7 @@ import org.apache.james.jmap.methods.Method;
 import org.apache.james.jmap.methods.RequestHandler;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.ProtocolResponse;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +56,7 @@ public class JMAPServletTest {
     @Before
     public void setup() throws Exception {
         requestHandler = mock(RequestHandler.class);
-        JMAPServlet jmapServlet = new JMAPServlet(requestHandler);
+        JMAPServlet jmapServlet = new JMAPServlet(requestHandler, new NoopMetricFactory());
 
         server = JettyHttpServer.create(
                 Configuration.builder()

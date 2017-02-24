@@ -39,6 +39,8 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
@@ -57,13 +59,16 @@ public class GetMessagesMethod implements Method {
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messages");
     private final MessageFactory messageFactory;
     private final MessageIdManager messageIdManager;
+    private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting GetMessagesMethod(
             MessageFactory messageFactory,
-            MessageIdManager messageIdManager) {
+            MessageIdManager messageIdManager,
+            MetricFactory metricFactory) {
         this.messageFactory = messageFactory;
         this.messageIdManager = messageIdManager;
+        this.metricFactory = metricFactory;
     }
     
     @Override
@@ -81,14 +86,20 @@ public class GetMessagesMethod implements Method {
         Preconditions.checkNotNull(request);
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof GetMessagesRequest);
+
         GetMessagesRequest getMessagesRequest = (GetMessagesRequest) request;
         MessageProperties outputProperties = getMessagesRequest.getProperties().toOutputProperties();
-        return Stream.of(JmapResponse.builder().clientId(clientId)
+        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + METHOD_NAME.getName());
+        try {
+            return Stream.of(JmapResponse.builder().clientId(clientId)
                             .response(getMessagesResponse(mailboxSession, getMessagesRequest))
                             .responseName(RESPONSE_NAME)
                             .properties(outputProperties.getOptionalMessageProperties())
                             .filterProvider(buildOptionalHeadersFilteringFilterProvider(outputProperties))
                             .build());
+        } finally {
+            timeMetric.stopAndPublish();
+        }
     }
 
     private Optional<SimpleFilterProvider> buildOptionalHeadersFilteringFilterProvider(MessageProperties properties) {

@@ -29,6 +29,8 @@ import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -39,10 +41,12 @@ public class SetMessagesMethod implements Method {
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messagesSet");
 
     private final Set<SetMessagesProcessor> messagesProcessors;
+    private final MetricFactory metricFactory;
 
     @Inject
-    @VisibleForTesting SetMessagesMethod(Set<SetMessagesProcessor> messagesProcessors) {
+    @VisibleForTesting SetMessagesMethod(Set<SetMessagesProcessor> messagesProcessors, MetricFactory metricFactory) {
         this.messagesProcessors = messagesProcessors;
+        this.metricFactory = metricFactory;
     }
 
     @Override
@@ -57,18 +61,22 @@ public class SetMessagesMethod implements Method {
 
     public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof SetMessagesRequest);
+        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + METHOD_NAME.getName());
         try {
-            return Stream.of(
+            Stream<JmapResponse> responses = Stream.of(
                     JmapResponse.builder().clientId(clientId)
                     .response(setMessagesResponse((SetMessagesRequest) request, mailboxSession))
                     .responseName(RESPONSE_NAME)
                     .build());
+            return responses;
         } catch (MailboxException e) {
             return Stream.of(
                     JmapResponse.builder().clientId(clientId)
                     .error()
                     .responseName(RESPONSE_NAME)
                     .build());
+        } finally {
+            timeMetric.stopAndPublish();
         }
     }
 

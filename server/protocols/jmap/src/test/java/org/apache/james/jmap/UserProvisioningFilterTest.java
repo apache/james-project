@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import org.junit.Before;
@@ -50,7 +51,7 @@ public class UserProvisioningFilterTest {
     @Before
     public void setup() throws Exception {
         usersRepository = new InMemoryUsersRepository();
-        sut = new UserProvisioningFilter(usersRepository);
+        sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);
         chain = mock(FilterChain.class);

@@ -20,6 +20,7 @@ package org.apache.james.jmap;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import org.junit.Test;
 
@@ -39,7 +40,7 @@ public class UserProvisioningFilterThreadTest {
     public void before() {
         usersRepository = new InMemoryUsersRepository();
         session = new MockMailboxSession("username");
-        sut = new UserProvisioningFilter(usersRepository);
+        sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
     }
     
     @ThreadedMain

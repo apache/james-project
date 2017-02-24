@@ -39,6 +39,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxQuery;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.OptionalConverter;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -55,11 +57,13 @@ public class GetMailboxesMethod implements Method {
 
     private final MailboxManager mailboxManager; 
     private final MailboxFactory mailboxFactory;
+    private final MetricFactory metricFactory;
 
     @Inject
-    @VisibleForTesting public GetMailboxesMethod(MailboxManager mailboxManager, MailboxFactory mailboxFactory) {
+    @VisibleForTesting public GetMailboxesMethod(MailboxManager mailboxManager, MailboxFactory mailboxFactory, MetricFactory metricFactory) {
         this.mailboxManager = mailboxManager;
         this.mailboxFactory = mailboxFactory;
+        this.metricFactory = metricFactory;
     }
 
     @Override
@@ -75,12 +79,17 @@ public class GetMailboxesMethod implements Method {
     public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMailboxesRequest);
         GetMailboxesRequest mailboxesRequest = (GetMailboxesRequest) request;
-        return Stream.of(
-                JmapResponse.builder().clientId(clientId)
-                .response(getMailboxesResponse(mailboxesRequest, mailboxSession))
-                .properties(mailboxesRequest.getProperties().map(this::ensureContainsId))
-                .responseName(RESPONSE_NAME)
-                .build());
+        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + METHOD_NAME.getName());
+        try {
+            return Stream.of(
+                    JmapResponse.builder().clientId(clientId)
+                    .response(getMailboxesResponse(mailboxesRequest, mailboxSession))
+                    .properties(mailboxesRequest.getProperties().map(this::ensureContainsId))
+                    .responseName(RESPONSE_NAME)
+                    .build());
+        } finally {
+            timeMetric.stopAndPublish();
+        }
     }
 
     private Set<MailboxProperty> ensureContainsId(Set<MailboxProperty> input) {

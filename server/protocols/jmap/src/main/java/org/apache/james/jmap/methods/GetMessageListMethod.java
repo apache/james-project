@@ -43,6 +43,8 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
@@ -61,15 +63,18 @@ public class GetMessageListMethod implements Method {
     private final int maximumLimit;
     private final GetMessagesMethod getMessagesMethod;
     private final Factory mailboxIdFactory;
+    private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager,
-            @Named(MAXIMUM_LIMIT) int maximumLimit, GetMessagesMethod getMessagesMethod, MailboxId.Factory mailboxIdFactory) {
+            @Named(MAXIMUM_LIMIT) int maximumLimit, GetMessagesMethod getMessagesMethod, MailboxId.Factory mailboxIdFactory,
+            MetricFactory metricFactory) {
 
         this.mailboxManager = mailboxManager;
         this.maximumLimit = maximumLimit;
         this.getMessagesMethod = getMessagesMethod;
         this.mailboxIdFactory = mailboxIdFactory;
+        this.metricFactory = metricFactory;
     }
 
     @Override
@@ -88,12 +93,17 @@ public class GetMessageListMethod implements Method {
         GetMessageListRequest messageListRequest = (GetMessageListRequest) request;
         GetMessageListResponse messageListResponse = getMessageListResponse(messageListRequest, mailboxSession);
  
-        Stream<JmapResponse> jmapResponse = Stream.of(JmapResponse.builder().clientId(clientId)
-                .response(messageListResponse)
-                .responseName(RESPONSE_NAME)
-                .build());
-        return Stream.concat(jmapResponse,
-                processGetMessages(messageListRequest, messageListResponse, clientId, mailboxSession));
+        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + METHOD_NAME.getName());
+        try {
+            Stream<JmapResponse> jmapResponse = Stream.of(JmapResponse.builder().clientId(clientId)
+                    .response(messageListResponse)
+                    .responseName(RESPONSE_NAME)
+                    .build());
+            return Stream.concat(jmapResponse,
+                    processGetMessages(messageListRequest, messageListResponse, clientId, mailboxSession));
+        } finally {
+            timeMetric.stopAndPublish();
+        }
     }
 
     private GetMessageListResponse getMessageListResponse(GetMessageListRequest messageListRequest, MailboxSession mailboxSession) {

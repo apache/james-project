@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods;
 
+import static org.apache.james.jmap.methods.Method.JMAP_PREFIX;
+
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
@@ -64,6 +66,8 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +90,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private final MessageFactory messageFactory;
     private final SystemMailboxesProvider systemMailboxesProvider;
     private final AttachmentManager attachmentManager;
-
+    private final MetricFactory metricFactory;
     
     @VisibleForTesting @Inject
     SetMessagesCreationProcessor(MIMEMessageConverter mimeMessageConverter,
@@ -94,21 +98,25 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                                  MailFactory mailFactory,
                                  MessageFactory messageFactory,
                                  SystemMailboxesProvider systemMailboxesProvider,
-                                 AttachmentManager attachmentManager) {
+                                 AttachmentManager attachmentManager, MetricFactory metricFactory) {
         this.mimeMessageConverter = mimeMessageConverter;
         this.mailSpool = mailSpool;
         this.mailFactory = mailFactory;
         this.messageFactory = messageFactory;
         this.systemMailboxesProvider = systemMailboxesProvider;
         this.attachmentManager = attachmentManager;
+        this.metricFactory = metricFactory;
     }
 
     @Override
     public SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession) {
+        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + "SetMessageCreationProcessor");
+
         Builder responseBuilder = SetMessagesResponse.builder();
         request.getCreate()
-            .stream()
             .forEach(create -> handleCreate(create, responseBuilder, mailboxSession));
+
+        timeMetric.stopAndPublish();
         return responseBuilder.build();
     }
 

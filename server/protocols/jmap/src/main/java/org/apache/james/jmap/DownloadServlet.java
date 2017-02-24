@@ -41,6 +41,8 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.mime4j.codec.EncoderUtil;
 import org.apache.james.mime4j.codec.EncoderUtil.Usage;
 import org.slf4j.Logger;
@@ -56,25 +58,31 @@ public class DownloadServlet extends HttpServlet {
 
     private final AttachmentManager attachmentManager;
     private final SimpleTokenFactory simpleTokenFactory;
+    private final MetricFactory metricFactory;
 
     @Inject
-    @VisibleForTesting DownloadServlet(AttachmentManager attachmentManager, SimpleTokenFactory simpleTokenFactory) {
+    @VisibleForTesting DownloadServlet(AttachmentManager attachmentManager, SimpleTokenFactory simpleTokenFactory, MetricFactory metricFactory) {
         this.attachmentManager = attachmentManager;
         this.simpleTokenFactory = simpleTokenFactory;
+        this.metricFactory = metricFactory;
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
+        TimeMetric timeMetric = metricFactory.timer("JMAP-download-post");
         String pathInfo = req.getPathInfo();
         try {
             respondAttachmentAccessToken(getMailboxSession(req), DownloadPath.from(pathInfo), resp);
         } catch (IllegalArgumentException e) {
             LOGGER.error(String.format("Error while generating attachment access token '%s'", pathInfo), e);
             resp.setStatus(SC_BAD_REQUEST);
+        } finally {
+            timeMetric.stopAndPublish();
         }
     }
 
     private void respondAttachmentAccessToken(MailboxSession mailboxSession, DownloadPath downloadPath, HttpServletResponse resp) {
+        TimeMetric timeMetric = metricFactory.timer("JMAP-download-get");
         String blobId = downloadPath.getBlobId();
         try {
             if (! attachmentExists(mailboxSession, blobId)) {
@@ -87,6 +95,8 @@ public class DownloadServlet extends HttpServlet {
         } catch (MailboxException | IOException e) {
             LOGGER.error("Error while asking attachment access token", e);
             resp.setStatus(SC_INTERNAL_SERVER_ERROR);
+        } finally {
+            timeMetric.stopAndPublish();
         }
     }
 

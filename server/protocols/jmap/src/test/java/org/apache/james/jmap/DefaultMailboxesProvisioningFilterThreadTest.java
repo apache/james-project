@@ -43,6 +43,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -63,7 +64,7 @@ public class DefaultMailboxesProvisioningFilterThreadTest {
     public void before() {
         session = new MockMailboxSession("username");
         mailboxManager = new FakeMailboxManager(session) ;
-        sut = new DefaultMailboxesProvisioningFilter(mailboxManager);
+        sut = new DefaultMailboxesProvisioningFilter(mailboxManager, new NoopMetricFactory());
     }
     
     @ThreadedMain

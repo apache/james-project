@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods;
 
+import static org.apache.james.jmap.methods.Method.JMAP_PREFIX;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -46,6 +48,8 @@ import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.OptionalConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,14 +67,16 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
     private final MailboxFactory mailboxFactory;
     private final Factory mailboxIdFactory;
     private final SubscriptionManager subscriptionManager;
+    private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting
-    SetMailboxesCreationProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, MailboxFactory mailboxFactory, MailboxId.Factory mailboxIdFactory) {
+    SetMailboxesCreationProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, MailboxFactory mailboxFactory, Factory mailboxIdFactory, MetricFactory metricFactory) {
         this.mailboxManager = mailboxManager;
         this.subscriptionManager = subscriptionManager;
+        this.metricFactory = metricFactory;
         this.sortingHierarchicalCollections =
-            new SortingHierarchicalCollections<Map.Entry<MailboxCreationId, MailboxCreateRequest>, MailboxCreationId>(
+            new SortingHierarchicalCollections<>(
                 x -> x.getKey(),
                 x -> x.getValue().getParentId());
         this.mailboxFactory = mailboxFactory;
@@ -78,6 +84,8 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
     }
 
     public SetMailboxesResponse process(SetMailboxesRequest request, MailboxSession mailboxSession) {
+        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + "SetMailboxesCreationProcessor");
+
         SetMailboxesResponse.Builder builder = SetMailboxesResponse.builder();
         try {
             Map<MailboxCreationId, MailboxId> creationIdsToCreatedMailboxId = new HashMap<>();
@@ -87,6 +95,8 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
         } catch (CycleDetectedException e) {
             markRequestsAsNotCreatedDueToCycle(request, builder);
         }
+
+        timeMetric.stopAndPublish();
         return builder.build();
     }
 
