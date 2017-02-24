@@ -30,11 +30,13 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.SubscriptionException;
+import org.apache.james.metrics.api.MetricFactory;
 
 public class SubscribeProcessor extends AbstractSubscriptionProcessor<SubscribeRequest> {
 
-    public SubscribeProcessor(ImapProcessor next, MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory) {
-        super(SubscribeRequest.class, next, mailboxManager, subscriptionManager, factory);
+    public SubscribeProcessor(ImapProcessor next, MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(SubscribeRequest.class, next, mailboxManager, subscriptionManager, factory, metricFactory);
     }
 
     /**

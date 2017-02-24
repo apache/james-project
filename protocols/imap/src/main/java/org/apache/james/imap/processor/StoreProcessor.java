@@ -50,11 +50,12 @@ import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
+import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
-import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
+import org.apache.james.metrics.api.MetricFactory;
 
 public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
 
@@ -63,8 +64,9 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
      */
     private final static ImapCommand CONDSTORE_COMMAND = ImapCommand.selectedStateCommand("Conditional STORE");
     
-    public StoreProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(StoreRequest.class, next, mailboxManager, factory);
+    public StoreProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(StoreRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     /**

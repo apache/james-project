@@ -45,12 +45,14 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 
 public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
 
-    public AppendProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory) {
-        super(AppendRequest.class, next, mailboxManager, statusResponseFactory);
+    public AppendProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory,
+            MetricFactory metricFactory) {
+        super(AppendRequest.class, next, mailboxManager, statusResponseFactory, metricFactory);
     }
 
     /**

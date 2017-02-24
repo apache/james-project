@@ -74,7 +74,7 @@ public class GetQuotaRootProcessorTest {
         mockedResponder = mockery.mock(ImapProcessor.Responder.class);
         mockedMailboxManager = mockery.mock(MailboxManager.class);
         testee = new GetQuotaRootProcessor(mockery.mock(ImapProcessor.class), mockedMailboxManager,
-            statusResponseFactory, mockedQuotaRootResolver, mockedQuotaManager);
+            statusResponseFactory, mockedQuotaRootResolver, mockedQuotaManager, new NoopMetricFactory());
     }
 
     @Test

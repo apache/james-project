@@ -460,6 +460,11 @@
                 <artifactId>metrics-dropwizard</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>metrics-logger</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.apache.james.protocols</groupId>

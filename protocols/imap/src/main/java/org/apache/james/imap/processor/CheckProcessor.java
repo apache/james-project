@@ -25,11 +25,13 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.CheckRequest;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.metrics.api.MetricFactory;
 
 public class CheckProcessor extends AbstractMailboxProcessor<CheckRequest> {
 
-    public CheckProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(CheckRequest.class, next, mailboxManager, factory);
+    public CheckProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(CheckRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     protected void doProcess(CheckRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {

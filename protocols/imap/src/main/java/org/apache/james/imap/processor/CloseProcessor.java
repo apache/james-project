@@ -32,11 +32,13 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.metrics.api.MetricFactory;
 
 public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
 
-    public CloseProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(CloseRequest.class, next, mailboxManager, factory);
+    public CloseProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(CloseRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     protected void doProcess(CloseRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {

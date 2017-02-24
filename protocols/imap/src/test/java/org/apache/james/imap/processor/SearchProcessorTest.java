@@ -141,7 +141,7 @@ public class SearchProcessorTest {
         mailboxSession = mockery.mock(MailboxSession.class);
         selectedMailbox = mockery.mock(SelectedMailbox.class);
         
-        processor = new SearchProcessor(next,  mailboxManager, serverResponseFactory);
+        processor = new SearchProcessor(next,  mailboxManager, serverResponseFactory, new NoopMetricFactory());
         expectOk();
     }
 

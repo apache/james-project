@@ -19,12 +19,12 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.api.ImapConstants.SUPPORTS_CONDSTORE;
+import static org.apache.james.imap.api.ImapConstants.SUPPORTS_I18NLEVEL_1;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_LITERAL_PLUS;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_RFC3348;
-import static org.apache.james.imap.api.ImapConstants.VERSION;
 import static org.apache.james.imap.api.ImapConstants.UTF8;
-import static org.apache.james.imap.api.ImapConstants.SUPPORTS_I18NLEVEL_1;
-import static org.apache.james.imap.api.ImapConstants.SUPPORTS_CONDSTORE;
+import static org.apache.james.imap.api.ImapConstants.VERSION;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,6 +40,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.CapabilityRequest;
 import org.apache.james.imap.message.response.CapabilityResponse;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.metrics.api.MetricFactory;
 
 public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequest> implements CapabilityImplementingProcessor {
 
@@ -62,14 +63,16 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
     private static final List<CapabilityImplementingProcessor> capabilities = new ArrayList<CapabilityImplementingProcessor>();
     private static final Set<String> disabledCaps = new HashSet<String>();
     
-    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, List<CapabilityImplementingProcessor> capabilities, Set<String> disabledCaps) {
-        this(next, mailboxManager, factory, disabledCaps);
+    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, List<CapabilityImplementingProcessor> capabilities, Set<String> disabledCaps,
+            MetricFactory metricFactory) {
+        this(next, mailboxManager, factory, disabledCaps, metricFactory);
         CapabilityProcessor.capabilities.addAll(capabilities);
 
     }
 
-    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, Set<String> disabledCaps) {
-        super(CapabilityRequest.class, next, mailboxManager, factory);
+    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, Set<String> disabledCaps,
+            MetricFactory metricFactory) {
+        super(CapabilityRequest.class, next, mailboxManager, factory, metricFactory);
         CapabilityProcessor.disabledCaps.addAll(disabledCaps);
         capabilities.add(this); 
         

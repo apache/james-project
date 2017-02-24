@@ -63,6 +63,7 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
+import org.apache.james.metrics.api.MetricFactory;
 
 import com.google.common.base.Optional;
 
@@ -71,8 +72,9 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     protected final static String SEARCH_MODSEQ = "SEARCH_MODSEQ";
     private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList("WITHIN", "ESEARCH", "SEARCHRES"));
     
-    public SearchProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(SearchRequest.class, next, mailboxManager, factory);
+    public SearchProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(SearchRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     protected void doProcess(SearchRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {

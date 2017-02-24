@@ -51,9 +51,9 @@ import org.apache.james.imap.processor.base.AbstractChainedProcessor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MessageManager.MetaData;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
@@ -63,18 +63,24 @@ import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 
 import com.google.common.base.Optional;
 
 abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends AbstractChainedProcessor<M> {
 
+    public static final String IMAP_PREFIX = "IMAP-";
     private final MailboxManager mailboxManager;
     private final StatusResponseFactory factory;
+    private final MetricFactory metricFactory;
 
-    public AbstractMailboxProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
+    public AbstractMailboxProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
         super(acceptableClass, next);
         this.mailboxManager = mailboxManager;
         this.factory = factory;
+        this.metricFactory = metricFactory;
     }
 
     @Override
@@ -83,9 +89,12 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     }
 
     protected final void process(M message, Responder responder, ImapSession session) {
-        final ImapCommand command = message.getCommand();
-        final String tag = message.getTag();
+        ImapCommand command = message.getCommand();
+        String tag = message.getTag();
+
+        TimeMetric timeMetric = metricFactory.timer(IMAP_PREFIX + command.getName());
         doProcess(message, command, tag, responder, session);
+        timeMetric.stopAndPublish();
     }
 
     final void doProcess(M message, ImapCommand command, String tag, Responder responder, ImapSession session) {

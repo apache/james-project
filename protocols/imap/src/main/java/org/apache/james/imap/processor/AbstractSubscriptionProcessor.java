@@ -27,6 +27,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.metrics.api.MetricFactory;
 
 /**
  * Abstract base class which should be used by implementations which need to
@@ -36,8 +37,9 @@ public abstract class AbstractSubscriptionProcessor<M extends ImapRequest> exten
 
     private final SubscriptionManager subscriptionManager;
 
-    public AbstractSubscriptionProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory) {
-        super(acceptableClass, next, mailboxManager, factory);
+    public AbstractSubscriptionProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(acceptableClass, next, mailboxManager, factory, metricFactory);
         this.subscriptionManager = subscriptionManager;
     }
 

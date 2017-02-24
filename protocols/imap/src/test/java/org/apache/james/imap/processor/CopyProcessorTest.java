@@ -76,7 +76,7 @@ public class CopyProcessorTest {
         mockImapSession = mock(ImapSession.class);
         mockMailboxSession = mock(MailboxSession.class);
 
-        testee = new CopyProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory);
+        testee = new CopyProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory, new NoopMetricFactory());
     }
 
     @Test

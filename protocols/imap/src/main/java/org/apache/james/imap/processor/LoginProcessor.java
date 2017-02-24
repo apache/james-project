@@ -30,6 +30,7 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.LoginRequest;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.metrics.api.MetricFactory;
 
 /**
  * Processes a <code>LOGIN</code> command.
@@ -37,8 +38,9 @@ import org.apache.james.mailbox.MailboxManager;
 public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implements CapabilityImplementingProcessor{
 
     private final static List<String> LOGINDISABLED_CAPS = Collections.unmodifiableList(Arrays.asList("LOGINDISABLED"));
-    public LoginProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(LoginRequest.class, next, mailboxManager, factory);
+    public LoginProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(LoginRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     /**

@@ -39,6 +39,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;
+import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 
 /**
@@ -50,8 +51,9 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
 
     private static final List<String> CAPABILITIES = Collections.singletonList(ImapConstants.SUPPORTS_ACL);
 
-    public MyRightsProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(MyRightsRequest.class, next, mailboxManager, factory);
+    public MyRightsProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(MyRightsRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     @Override

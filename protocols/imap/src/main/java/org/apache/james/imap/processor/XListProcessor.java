@@ -18,14 +18,15 @@
  ****************************************************************/
 package org.apache.james.imap.processor;
 
-import java.util.List;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_XLIST;
+
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
-
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -35,6 +36,7 @@ import org.apache.james.imap.message.request.ListRequest;
 import org.apache.james.imap.message.request.XListRequest;
 import org.apache.james.imap.message.response.XListResponse;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.metrics.api.MetricFactory;
 
 /**
  * Processes XLIST command
@@ -45,8 +47,9 @@ public class XListProcessor extends ListProcessor implements CapabilityImplement
     private final MailboxTyper mailboxTyper;
 
     // some interface
-    public XListProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, MailboxTyper mailboxTyper) {
-        super(next, mailboxManager, factory);
+    public XListProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, MailboxTyper mailboxTyper,
+            MetricFactory metricFactory) {
+        super(next, mailboxManager, factory, metricFactory);
         this.mailboxTyper = mailboxTyper;
     }
 

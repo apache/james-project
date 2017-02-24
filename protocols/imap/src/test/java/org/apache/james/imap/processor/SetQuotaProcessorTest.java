@@ -57,7 +57,7 @@ public class SetQuotaProcessorTest {
         mockedResponder = mockery.mock(ImapProcessor.Responder.class);
         mockedMailboxManager = mockery.mock(MailboxManager.class);
         testee = new SetQuotaProcessor(mockery.mock(ImapProcessor.class), mockedMailboxManager,
-            statusResponseFactory);
+            statusResponseFactory, new NoopMetricFactory());
     }
 
     @Test

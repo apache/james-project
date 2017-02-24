@@ -29,6 +29,7 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.UnselectRequest;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.metrics.api.MetricFactory;
 
 /**
  * Processor which implements the UNSELECT extension.
@@ -39,8 +40,9 @@ public class UnselectProcessor extends AbstractMailboxProcessor<UnselectRequest>
 
     private final static List<String> UNSELECT = Collections.unmodifiableList(Arrays.asList("UNSELECT"));
 
-    public UnselectProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(UnselectRequest.class, next, mailboxManager, factory);
+    public UnselectProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(UnselectRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     /**

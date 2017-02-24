@@ -108,7 +108,7 @@ public class LSubProcessorTest {
         responderImpl = responder;
         manager = mockery. mock(SubscriptionManager.class);
         mailboxSession = mockery.mock(MailboxSession.class);
-        processor = new LSubProcessor(next, mockery.mock(MailboxManager.class), manager, serverResponseFactory);
+        processor = new LSubProcessor(next, mockery.mock(MailboxManager.class), manager, serverResponseFactory, new NoopMetricFactory());
     }
 
     @Test

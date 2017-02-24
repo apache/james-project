@@ -42,6 +42,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.SimpleMailboxACL.SimpleMailboxACLEntryKey;
+import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 
 /**
@@ -53,8 +54,9 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
 
     private static final List<String> CAPABILITIES = Collections.singletonList(ImapConstants.SUPPORTS_ACL);
 
-    public DeleteACLProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(DeleteACLRequest.class, next, mailboxManager, factory);
+    public DeleteACLProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(DeleteACLRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     @Override

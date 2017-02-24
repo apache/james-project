@@ -46,6 +46,7 @@
                 <value>MOVE</value>
             </set>
         </constructor-arg>
+        <constructor-arg index="7" ref="timeMetricFactory"/>
     </bean>
 
     <bean id="imapDecoderFactory" class="org.apache.james.imap.main.DefaultImapDecoderFactory"/>
@@ -53,5 +54,7 @@
 
     <bean id="imapEncoderFactory" class="org.apache.james.imap.encode.main.DefaultImapEncoderFactory"/>
     <bean id="imapEncoder" factory-bean="imapEncoderFactory" factory-method="buildImapEncoder"/>
+
+    <bean id="timeMetricFactory" class="org.apache.james.metrics.logger.DefaultMetricFactory"/>
 
 </beans>

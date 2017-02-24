@@ -103,7 +103,7 @@ public class GetACLProcessorTest {
         path = new MailboxPath("#private", USER_1, MAILBOX_NAME);
         statusResponseFactory = new UnpooledStatusResponseFactory();
         mailboxManagerStub = mockery.mock(MailboxManager.class);
-        subject = new GetACLProcessor(mockery.mock(ImapProcessor.class), mailboxManagerStub, statusResponseFactory);
+        subject = new GetACLProcessor(mockery.mock(ImapProcessor.class), mailboxManagerStub, statusResponseFactory, new NoopMetricFactory());
         imapSessionStub = mockery.mock(ImapSession.class);
         mailboxSessionStub = mockery.mock(MailboxSession.class);
         user1Stub = mockery.mock(User.class);

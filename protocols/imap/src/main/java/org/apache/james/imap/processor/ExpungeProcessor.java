@@ -44,13 +44,15 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.metrics.api.MetricFactory;
 
 public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> implements CapabilityImplementingProcessor {
 
     private final static List<String> UIDPLUS = Collections.unmodifiableList(Arrays.asList("UIDPLUS"));
 
-    public ExpungeProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(ExpungeRequest.class, next, mailboxManager, factory);
+    public ExpungeProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(ExpungeRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     protected void doProcess(ExpungeRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {

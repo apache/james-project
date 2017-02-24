@@ -35,6 +35,7 @@ import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.metrics.api.MetricFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -46,8 +47,9 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
     // TODO: this should be configurable
     private static final int MAX_FAILURES = 3;
     
-    public AbstractAuthProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(acceptableClass, next, mailboxManager, factory);
+    public AbstractAuthProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(acceptableClass, next, mailboxManager, factory, metricFactory);
     }
 
     protected void doAuth(AuthenticationAttempt authenticationAttempt, ImapSession session, String tag, ImapCommand command, Responder responder, HumanReadableText failed) {

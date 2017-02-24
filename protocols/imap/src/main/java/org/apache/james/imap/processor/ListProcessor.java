@@ -45,11 +45,13 @@ import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxMetaData.Children;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
+import org.apache.james.metrics.api.MetricFactory;
 
 public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
 
-    public ListProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(ListRequest.class, next, mailboxManager, factory);
+    public ListProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(ListRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     /**

@@ -35,6 +35,7 @@ import org.apache.james.imap.message.request.NamespaceRequest;
 import org.apache.james.imap.message.response.NamespaceResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.metrics.api.MetricFactory;
 
 /**
  * Processes a NAMESPACE command into a suitable set of responses.
@@ -43,8 +44,9 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
     private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_NAMESPACES));
     
     
-    public NamespaceProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(NamespaceRequest.class, next, mailboxManager, factory);
+    public NamespaceProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(NamespaceRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     @Override

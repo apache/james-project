@@ -80,7 +80,7 @@ public class MoveProcessorTest {
         mockMailboxSession = mock(MailboxSession.class);
 
         when(mockMailboxManager.hasCapability(eq(MailboxCapabilities.Move))).thenReturn(true);
-        testee = new MoveProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory);
+        testee = new MoveProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory, new NoopMetricFactory());
         verify(mockMailboxManager).hasCapability(MailboxCapabilities.Move);
     }
 
@@ -92,7 +92,8 @@ public class MoveProcessorTest {
     @Test
     public void getImplementedCapabilitiesShouldNotContainMoveWhenUnSupportedByMailboxManager() {
         when(mockMailboxManager.hasCapability(eq(MailboxCapabilities.Move))).thenReturn(false);
-        assertThat(new MoveProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory).getImplementedCapabilities(null)).isEmpty();
+        assertThat(new MoveProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory, new NoopMetricFactory())
+                .getImplementedCapabilities(null)).isEmpty();
     }
 
     @Test

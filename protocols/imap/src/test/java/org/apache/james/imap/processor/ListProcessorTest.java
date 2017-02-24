@@ -74,7 +74,7 @@ public class ListProcessorTest  {
 
     ListProcessor createProcessor(ImapProcessor next,
             MailboxManager manager, StatusResponseFactory factory) {
-        return new ListProcessor(next, manager, factory);
+        return new ListProcessor(next, manager, factory, new NoopMetricFactory());
     }
 
     ListResponse createResponse(boolean noinferior, boolean noselect,

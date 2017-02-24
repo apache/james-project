@@ -32,11 +32,13 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.metrics.api.MetricFactory;
 
 public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
 
-    public CreateProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(CreateRequest.class, next, mailboxManager, factory);
+    public CreateProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(CreateRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     /**

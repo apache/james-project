@@ -25,11 +25,13 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.NoopRequest;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.metrics.api.MetricFactory;
 
 public class NoopProcessor extends AbstractMailboxProcessor<NoopRequest> {
 
-    public NoopProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(NoopRequest.class, next, mailboxManager, factory);
+    public NoopProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(NoopRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     protected void doProcess(NoopRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {

@@ -107,7 +107,7 @@ public class SetAnnotationProcessorTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         initAndMockData();
-        processor = new SetAnnotationProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory);
+        processor = new SetAnnotationProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory, new NoopMetricFactory());
     }
     @After
     public void tearDown() {

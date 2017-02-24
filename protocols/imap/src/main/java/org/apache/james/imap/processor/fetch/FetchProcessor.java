@@ -49,11 +49,13 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MessageResult.MimePath;
 import org.apache.james.mailbox.model.MessageResultIterator;
+import org.apache.james.metrics.api.MetricFactory;
 
 public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
 
-    public FetchProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(FetchRequest.class, next, mailboxManager, factory);
+    public FetchProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(FetchRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     /**

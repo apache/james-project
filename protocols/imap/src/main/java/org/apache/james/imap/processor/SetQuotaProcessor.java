@@ -19,6 +19,9 @@
 
 package org.apache.james.imap.processor;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -27,8 +30,7 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.SetQuotaRequest;
 import org.apache.james.mailbox.MailboxManager;
-import java.util.Collections;
-import java.util.List;
+import org.apache.james.metrics.api.MetricFactory;
 
 /**
  * SETQUOTA processor
@@ -40,8 +42,9 @@ public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest>
         return CAPABILITIES;
     }
 
-    public SetQuotaProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(SetQuotaRequest.class, next, mailboxManager, factory);
+    public SetQuotaProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(SetQuotaRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     @Override

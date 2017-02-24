@@ -47,6 +47,7 @@ import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
@@ -87,7 +88,8 @@ public class JPAHostSystem extends JamesImapHostSystem {
                         mailboxManager, 
                         subscriptionManager, 
                         new NoQuotaManager(), 
-                        new DefaultQuotaRootResolver(mf));
+                        new DefaultQuotaRootResolver(mf),
+                        new DefaultMetricFactory());
         
         resetUserMetaData();
         

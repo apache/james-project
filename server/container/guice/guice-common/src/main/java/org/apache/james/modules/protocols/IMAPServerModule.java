@@ -32,6 +32,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.modules.Names;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
@@ -63,7 +64,8 @@ public class IMAPServerModule extends AbstractModule {
             @Named(Names.MAILBOXMANAGER_NAME)MailboxManager mailboxManager,
             SubscriptionManager subscriptionManager,
             QuotaManager quotaManager,
-            QuotaRootResolver quotaRootResolver) {
+            QuotaRootResolver quotaRootResolver,
+            MetricFactory metricFactory) {
         return DefaultImapProcessorFactory.createXListSupportingProcessor(
                 mailboxManager,
                 subscriptionManager,
@@ -71,7 +73,8 @@ public class IMAPServerModule extends AbstractModule {
                 quotaManager,
                 quotaRootResolver,
                 120,
-                ImmutableSet.of("ACL", "MOVE"));
+                ImmutableSet.of("ACL", "MOVE"),
+                metricFactory);
     }
 
     @Provides

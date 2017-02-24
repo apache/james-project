@@ -24,7 +24,6 @@ import java.util.Optional;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import com.google.inject.multibindings.Multibinder;
 import org.apache.commons.cli.MissingArgumentException;
 import org.apache.james.core.JamesServerResourceLoader;
 import org.apache.james.core.filesystem.FileSystemImpl;
@@ -35,12 +34,13 @@ import org.apache.james.modules.server.ConfigurationProviderModule;
 import org.apache.james.modules.server.DNSServiceModule;
 import org.apache.james.modules.server.DropWizardMetricsModule;
 import org.apache.james.onami.lifecycle.PreDestroyModule;
+import org.apache.james.utils.GuiceProbe;
+import org.apache.james.utils.GuiceServerProbe;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
-import org.apache.james.utils.GuiceProbe;
-import org.apache.james.utils.GuiceServerProbe;
+import com.google.inject.multibindings.Multibinder;
 
 public class CommonServicesModule extends AbstractModule {
     

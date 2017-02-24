@@ -30,11 +30,13 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.metrics.api.MetricFactory;
 
 public class CopyProcessor extends AbstractMessageRangeProcessor<CopyRequest> {
 
-    public CopyProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(CopyRequest.class, next, mailboxManager, factory);
+    public CopyProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(CopyRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     @Override

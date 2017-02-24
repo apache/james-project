@@ -37,13 +37,15 @@ import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.metrics.api.MetricFactory;
 
 import com.google.common.collect.ImmutableList;
 
 public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotationRequest> implements CapabilityImplementingProcessor {
 
-    public SetAnnotationProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
-        super(SetAnnotationRequest.class, next, mailboxManager, factory);
+    public SetAnnotationProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+            MetricFactory metricFactory) {
+        super(SetAnnotationRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
     public List<String> getImplementedCapabilities(ImapSession session) {
