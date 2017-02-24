@@ -27,15 +27,60 @@
 
   <section name="ElasticSearch Configuration">
 
-    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/elasticsearch-template.properties">elasticsearch-template.properties</a> to get some examples and hints.</p>
+      This configuration applies only to Guice packaging.
+
+    <p>Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/elasticsearch.properties">elasticsearch-template.properties</a> to get some examples and hints.</p>
+
+      Connection to a cluster :
 
       <dl>
-        <dt><strong>elasticsearch.clusterName</strong></dt>
-        <dd>Is the name of the cluster used by James.</dd>
-        <dt><strong>elasticsearch.masterHost</strong></dt>
-        <dd>Is the IP (or host) of the ElasticSearch master</dd>
-        <dt><strong>elasticsearch.indexAttachments</strong></dt>
-        <dd>Indicates if you wish to index attachments or not (default: true).</dd>
+          <dt><strong>elasticsearch.masterHost</strong></dt>
+          <dd>Is the IP (or host) of the ElasticSearch master</dd>
+          <dt><strong>elasticsearch.port</strong></dt>
+          <dd>Is the IP (or host) of the port of ElasticSearch master</dd>
+      </dl>
+
+      Or you can connect a cluster by :
+
+      <dl>
+          <dt><strong>elasticsearch.hosts</strong></dt>
+          <dd>List of comma separated hosts. An host is composed of an address and a port separated by a ':'. Example : elasticsearch.hosts=host1:9300,host2:9300</dd>
+      </dl>
+
+      Other options includes :
+
+      <dl>
+          <dt><strong>elasticsearch.clusterName</strong></dt>
+          <dd>Is the name of the cluster used by James.</dd>
+          <dt><strong>elasticsearch.nb.shards</strong></dt>
+          <dd>Number of shards for index provisionned by James</dd>
+          <dt><strong>elasticsearch.nb.replica</strong></dt>
+          <dd>Number of replica for index provisionned by James</dd>
+          <dt><strong>elasticsearch.retryConnection.maxRetries</strong></dt>
+          <dd>Number of retries when connecting the cluster</dd>
+          <dt><strong>elasticsearch.retryConnection.minDelay</strong></dt>
+          <dd>Minimum delay between connection attempts</dd>
+          <dt><strong>elasticsearch.indexAttachments</strong></dt>
+          <dd>Indicates if you wish to index attachments or not (default: true).</dd>
+      </dl>
+
+      For configuring the metric reporting on ElasticSearch :
+
+      <dl>
+          <dt><strong>elasticsearch.http.host</strong></dt>
+          <dd>Host to report metrics on. Defaults to master host.</dd>
+
+          <dt><strong>elasticsearch.http.port</strong></dt>
+          <dd>Http port to use for publishing metrics</dd>
+
+          <dt><strong>elasticsearch.metrics.reports.enabled</strong></dt>
+          <dd>Boolean value. Enables metrics reporting.</dd>
+
+          <dt><strong>elasticsearch.metrics.reports.period</strong></dt>
+          <dd>Seconds between metric reports</dd>
+
+          <dt><strong>elasticsearch.metrics.reports.index</strong></dt>
+          <dd>Index to publish metrics on</dd>
       </dl>
 
 <p>If you want more explanation about ElasticSearch configuration, you should visit the dedicated <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">documentation</a>.</p>
