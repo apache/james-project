@@ -29,6 +29,7 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
@@ -44,6 +45,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -88,6 +90,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
             new CassandraMailboxCounterModule(),
             new CassandraMailboxRecentsModule(),
             new CassandraFirstUnseenModule(),
+            new CassandraDeletedMessageModule(),
             new CassandraUidModule(),
             new CassandraModSeqModule(),
             new CassandraSubscriptionModule(),
@@ -110,10 +113,22 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(session, typesProvider);
         CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(session);
         CassandraApplicableFlagDAO applicableFlagDAO = new CassandraApplicableFlagDAO(session);
+        CassandraDeletedMessageDAO deletedMessageDAO = new CassandraDeletedMessageDAO(session);
 
-        CassandraMailboxSessionMapperFactory mapperFactory = new CassandraMailboxSessionMapperFactory(uidProvider, modSeqProvider, 
-                session, messageDAO, messageIdDAO, imapUidDAO, mailboxCounterDAO, mailboxRecentsDAO, mailboxDAO, mailboxPathDAO,
-                firstUnseenDAO, applicableFlagDAO);
+        CassandraMailboxSessionMapperFactory mapperFactory = new CassandraMailboxSessionMapperFactory(
+            uidProvider,
+            modSeqProvider,
+            session,
+            messageDAO,
+            messageIdDAO,
+            imapUidDAO,
+            mailboxCounterDAO,
+            mailboxRecentsDAO,
+            mailboxDAO,
+            mailboxPathDAO,
+            firstUnseenDAO,
+            applicableFlagDAO,
+            deletedMessageDAO);
 
         mailboxManager = new CassandraMailboxManager(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory);
         QuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(mapperFactory);

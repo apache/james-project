@@ -31,6 +31,7 @@ import org.apache.james.mailbox.cassandra.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -53,6 +54,7 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
             new CassandraMailboxCounterModule(),
             new CassandraMailboxRecentsModule(),
             new CassandraFirstUnseenModule(),
+            new CassandraDeletedMessageModule(),
             new CassandraModSeqModule(),
             new CassandraUidModule(),
             new CassandraAttachmentModule(),
@@ -69,6 +71,7 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
         CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), MAX_ACL_RETRY);
         CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
         CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(cassandra.getConf());
+        CassandraDeletedMessageDAO deletedMessageDAO = new CassandraDeletedMessageDAO(cassandra.getConf());
         mailboxSessionMapperFactory = new CassandraMailboxSessionMapperFactory(
                 new CassandraUidProvider(cassandra.getConf()),
                 new CassandraModSeqProvider(cassandra.getConf()),
@@ -81,7 +84,8 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
                 mailboxDAO,
                 mailboxPathDAO,
                 firstUnseenDAO,
-                new CassandraApplicableFlagDAO(cassandra.getConf()));
+                new CassandraApplicableFlagDAO(cassandra.getConf()),
+                deletedMessageDAO);
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
         mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, noAuthenticator, noAuthorizator, new NoMailboxPathLocker(), new MessageParser(), messageIdFactory); 

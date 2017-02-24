@@ -24,6 +24,7 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
@@ -38,6 +39,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -77,6 +79,7 @@ public class CassandraMailboxManagerTest {
         new CassandraModSeqModule(),
         new CassandraSubscriptionModule(),
         new CassandraAttachmentModule(),
+        new CassandraDeletedMessageModule(),
         new CassandraAnnotationModule()));
 
     private IProducer<CassandraMailboxManager> producer = new IProducer<CassandraMailboxManager>() {
@@ -96,6 +99,7 @@ public class CassandraMailboxManagerTest {
             CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider());
             CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(CASSANDRA.getConf());
             CassandraApplicableFlagDAO applicableFlagDAO = new CassandraApplicableFlagDAO(CASSANDRA.getConf());
+            CassandraDeletedMessageDAO deletedMessageDAO = new CassandraDeletedMessageDAO(CASSANDRA.getConf());
 
             CassandraMailboxSessionMapperFactory mapperFactory = new CassandraMailboxSessionMapperFactory(uidProvider,
                 modSeqProvider,
@@ -108,7 +112,8 @@ public class CassandraMailboxManagerTest {
                 mailboxDAO,
                 mailboxPathDAO,
                 firstUnseenDAO,
-                applicableFlagDAO);
+                applicableFlagDAO,
+                deletedMessageDAO);
 
             MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();

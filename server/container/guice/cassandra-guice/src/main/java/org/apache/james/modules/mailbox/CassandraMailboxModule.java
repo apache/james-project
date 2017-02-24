@@ -116,7 +116,11 @@ public class CassandraMailboxModule extends AbstractModule {
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule.class);
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule.class);
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule.class);
+
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule.class);
+
+        cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule.class);
+
 
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(CassandraMailboxManagerDefinition.class);
     }
