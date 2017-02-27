@@ -40,6 +40,14 @@ import org.apache.james.mime4j.stream.RecursionMode;
 
 public class PartContentBuilder {
 
+    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
+        .setMaxContentLen(-1)
+        .setMaxHeaderCount(-1)
+        .setMaxHeaderLen(-1)
+        .setMaxHeaderCount(-1)
+        .setMaxLineLen(-1)
+        .build();
+
     private static final byte[] EMPTY = {};
 
     private final MimeTokenStream parser;
@@ -49,9 +57,7 @@ public class PartContentBuilder {
     private boolean topLevel = true;
 
     public PartContentBuilder() {
-        MimeConfig config = MimeConfig.custom().setMaxLineLen(-1).setMaxHeaderLen(-1).build();
-
-        parser = new MimeTokenStream(config);
+        parser = new MimeTokenStream(MIME_ENTITY_CONFIG);
     }
 
     public void markEmpty() {
