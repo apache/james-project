@@ -66,6 +66,7 @@ import org.apache.james.mime4j.field.datetime.parser.ParseException;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.message.HeaderImpl;
+import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.utils.search.MessageMatcher;
 
 import com.google.common.base.Function;
@@ -78,6 +79,14 @@ import com.google.common.collect.Lists;
  * Utility methods to help perform search operations.
  */
 public class MessageSearches implements Iterable<SimpleMessageSearchIndex.SearchResult> {
+
+    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
+        .setMaxContentLen(-1)
+        .setMaxHeaderCount(-1)
+        .setMaxHeaderLen(-1)
+        .setMaxHeaderCount(-1)
+        .setMaxLineLen(-1)
+        .build();
 
     private Iterator<MailboxMessage> messages;
     private SearchQuery query;
@@ -254,7 +263,9 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     }
 
     private HeaderImpl buildTextHeaders(MailboxMessage message) throws IOException, MimeIOException {
-        Message headersMessage = new DefaultMessageBuilder()
+        DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
+        defaultMessageBuilder.setMimeEntityConfig(MIME_ENTITY_CONFIG);
+        Message headersMessage = defaultMessageBuilder
             .parseMessage(message.getHeaderContent());
         HeaderImpl headerImpl = new HeaderImpl();
         addFrom(headerImpl, headersMessage.getFrom());
