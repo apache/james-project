@@ -104,6 +104,20 @@ public class MessageParserTest {
     }
 
     @Test
+    public void retrieveAttachmentsShouldNotFailOnMessagesWithManyHeaders() throws Exception {
+        List<MessageAttachment> messageAttachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/mailWithManyHeaders.eml"));
+
+        assertThat(messageAttachments).hasSize(1);
+    }
+
+    @Test
+    public void retrieveAttachmentsShouldNotFailOnMessagesWithLongHeaders() throws Exception {
+        List<MessageAttachment> messageAttachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/mailWithLongHeaders.eml"));
+
+        assertThat(messageAttachments).hasSize(1);
+    }
+
+    @Test
     public void getAttachmentsShouldRetrieveTheAttachmentContentTypeWhenOneAttachmentWithSimpleContentType() throws Exception {
         List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithSimpleContentType.eml"));
 
