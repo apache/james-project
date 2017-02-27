@@ -29,12 +29,12 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
-import org.apache.james.backends.cassandra.init.CassandraNodeIpAndPort;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.init.ClusterFactory;
 import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.util.Host;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
@@ -83,7 +83,7 @@ public class CassandraSessionModule extends AbstractModule {
     @Singleton
     Cluster provideCluster(CassandraSessionConfiguration cassandraSessionConfiguration, AsyncRetryExecutor executor) throws FileNotFoundException, ConfigurationException, ExecutionException, InterruptedException {
         PropertiesConfiguration configuration = cassandraSessionConfiguration.getConfiguration();
-        List<CassandraNodeIpAndPort> servers = listCassandraServers(configuration);
+        List<Host> servers = listCassandraServers(configuration);
 
         return getRetryer(executor, configuration)
                 .getWithRetry(ctx -> ClusterWithKeyspaceCreatedFactory
@@ -95,11 +95,11 @@ public class CassandraSessionModule extends AbstractModule {
                 .get();
     }
 
-    private List<CassandraNodeIpAndPort> listCassandraServers(PropertiesConfiguration configuration) {
+    private List<Host> listCassandraServers(PropertiesConfiguration configuration) {
         String[] ipAndPorts = configuration.getStringArray("cassandra.nodes");
 
         return Arrays.stream(ipAndPorts)
-                .map(CassandraNodeIpAndPort::parseConfString)
+                .map(string -> Host.parseConfString(string, ClusterFactory.DEFAULT_CASSANDRA_PORT))
                 .collect(Guavate.toImmutableList());
     }
 

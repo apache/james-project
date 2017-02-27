@@ -21,6 +21,7 @@ package org.apache.james.backends.es;
 import java.net.InetAddress;
 import java.util.Objects;
 
+import org.apache.james.util.Host;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -35,64 +36,14 @@ import com.google.common.collect.ImmutableList;
 
 public class ClientProviderImpl implements ClientProvider {
 
-    public static class Host {
-        private final String host;
-        private final int port;
-
-        public Host(String host, int port) {
-            Preconditions.checkNotNull(host, "Host address can not be null");
-            Preconditions.checkArgument(!host.isEmpty(), "Host address can not be empty");
-            Preconditions.checkArgument(isValidPort(port), "Port should be between ]0, 65535]");
-            this.host = host;
-            this.port = port;
-        }
-
-        public String getHost() {
-            return host;
-        }
-
-        public int getPort() {
-            return port;
-        }
-
-        @Override
-        public final boolean equals(Object o) {
-            if (o instanceof Host) {
-                Host that = (Host) o;
-
-                return Objects.equals(this.host, that.host)
-                    && Objects.equals(this.port, that.port);
-            }
-            return false;
-        }
-
-        @Override
-        public final int hashCode() {
-            return Objects.hash(host, port);
-        }
-    }
-
     public static ClientProviderImpl forHost(String address, Integer port) {
         isValidPort(port);
-        return new ClientProviderImpl(ImmutableList.of(new Host(address, port)));
+        return new ClientProviderImpl(ImmutableList.of(Host.from(address, port)));
     }
 
     public static ClientProviderImpl fromHostsString(String hostsString) {
         Preconditions.checkNotNull(hostsString, "HostString should not be null");
-        return new ClientProviderImpl(parseHosts(hostsString));
-    }
-
-    @VisibleForTesting
-    static ImmutableList<Host> parseHosts(String hostsString) {
-        return Splitter.on(',').splitToList(hostsString)
-                .stream()
-                .map(hostSting -> Splitter.on(':').splitToList(hostSting))
-                .map(hostParts -> {
-                    Preconditions.checkArgument(hostParts.size() == 2, "A host should be defined as a : separated pair of address and port");
-                    return new Host(hostParts.get(0), Integer.valueOf(hostParts.get(1)));
-                })
-                .distinct()
-                .collect(Guavate.toImmutableList());
+        return new ClientProviderImpl(Host.parseHosts(hostsString));
     }
 
     private static boolean isValidPort(Integer port) {
@@ -112,7 +63,7 @@ public class ClientProviderImpl implements ClientProvider {
         ConsumerChainer<Host> consumer = Throwing.consumer(host -> transportClient
             .addTransportAddress(
                 new InetSocketTransportAddress(
-                    InetAddress.getByName(host.getHost()),
+                    InetAddress.getByName(host.getHostName()),
                     host.getPort())));
         hosts.forEach(consumer.sneakyThrow());
         return transportClient;

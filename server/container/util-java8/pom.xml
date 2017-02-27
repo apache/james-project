@@ -154,6 +154,12 @@
                     <artifactId>testcontainers</artifactId>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <groupId>nl.jqno.equalsverifier</groupId>
+                    <artifactId>equalsverifier</artifactId>
+                    <scope>test</scope>
+                    <version>1.7.6</version>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>

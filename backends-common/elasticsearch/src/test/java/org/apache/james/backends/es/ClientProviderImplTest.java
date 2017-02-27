@@ -19,14 +19,9 @@
 
 package org.apache.james.backends.es;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import org.apache.james.backends.es.ClientProviderImpl.Host;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class ClientProviderImplTest {
 
@@ -143,50 +138,5 @@ public class ClientProviderImplTest {
         expectedException.expect(IllegalArgumentException.class);
 
         ClientProviderImpl.fromHostsString("localhost:9200,localhost");
-    }
-
-    @Test
-    public void parseHostsShouldParseMonoHost() {
-        assertThat(ClientProviderImpl.parseHosts("localhost:9200"))
-            .containsOnly(new Host("localhost", 9200));
-    }
-
-    @Test
-    public void parseHostsShouldParseMultiHosts() {
-        assertThat(ClientProviderImpl.parseHosts("localhost:9200,server:9155"))
-            .containsOnly(
-                new Host("localhost", 9200),
-                new Host("server", 9155));
-    }
-
-    @Test
-    public void parseHostsShouldSwallowDuplicates() {
-        assertThat(ClientProviderImpl.parseHosts("localhost:9200,localhost:9200"))
-            .containsOnly(
-                new Host("localhost", 9200));
-    }
-
-    @Test
-    public void parseHostsShouldNotSwallowSameAddressDifferentPort() {
-        assertThat(ClientProviderImpl.parseHosts("localhost:9200,localhost:9155"))
-            .containsOnly(
-                new Host("localhost", 9200),
-                new Host("localhost", 9155));
-    }
-
-
-
-    @Test
-    public void parseHostsShouldNotSwallowSamePortDifferentAddress() {
-        assertThat(ClientProviderImpl.parseHosts("localhost:9200,abcd:9200"))
-            .containsOnly(
-                new Host("localhost", 9200),
-                new Host("abcd", 9200));
-    }
-
-
-    @Test
-    public void hostShouldRespectBeanContract() {
-        EqualsVerifier.forClass(ClientProviderImpl.Host.class).verify();
     }
 }
