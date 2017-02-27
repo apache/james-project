@@ -33,11 +33,19 @@ import com.google.common.collect.ImmutableList;
 public class Host {
 
     public static ImmutableList<Host> parseHosts(String hostsString) {
+        return parseHosts(hostsString, Optional.empty());
+    }
+
+    public static ImmutableList<Host> parseHosts(String hostsString, int defaultPort) {
+        return parseHosts(hostsString, Optional.of(defaultPort));
+    }
+
+    private static ImmutableList<Host> parseHosts(String hostsString, Optional<Integer> defaultPort) {
         return Splitter.on(',')
             .omitEmptyStrings()
             .splitToList(hostsString)
             .stream()
-            .map(Host::parseConfString)
+            .map(string -> Host.parse(string, defaultPort))
             .distinct()
             .collect(Guavate.toImmutableList());
     }

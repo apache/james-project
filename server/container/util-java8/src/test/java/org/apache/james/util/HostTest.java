@@ -196,6 +196,23 @@ public class HostTest {
     }
 
     @Test
+    public void parseHostsShouldHandleDefaultPort() {
+        int defaultPort = 155;
+
+        assertThat(Host.parseHosts("localhost:9200,abcd", defaultPort))
+            .containsOnly(
+                new Host("localhost", 9200),
+                new Host("abcd", 155));
+    }
+
+    @Test
+    public void parseHostsShouldThrowOnAbsentPortWhenNoDefaultPort() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        Host.parseHosts("localhost:9200,abcd");
+    }
+
+    @Test
     public void hostShouldRespectBeanContract() {
         EqualsVerifier.forClass(Host.class).verify();
     }
