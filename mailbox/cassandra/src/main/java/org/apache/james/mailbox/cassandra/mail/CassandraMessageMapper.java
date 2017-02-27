@@ -54,11 +54,11 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.CompletableFutureUtil;
+import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.OptionalConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -177,19 +177,24 @@ public class CassandraMessageMapper implements MessageMapper {
         CompletableFuture<Stream<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<CassandraMessageDAO.MessageAttachmentRepresentation>>>>
             messageRepresentations = messageDAO.retrieveMessages(messageIds, fetchType, limit);
         if (fetchType == FetchType.Body || fetchType == FetchType.Full) {
-            return messageRepresentations
-                .thenCompose(stream -> CompletableFutureUtil.allOf(
-                    stream.map(pair -> attachmentLoader.getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
-                        .thenApply(attachments -> Pair.of(pair.getLeft(), attachments)))
-                ))
-                .thenApply(stream -> stream.map(Throwing.function(pair -> pair.getLeft()
-                    .toMailboxMessage(pair.getRight()
-                        .stream()
-                        .collect(Guavate.toImmutableList())))));
+            return FluentFutureStream.of(messageRepresentations)
+                .thenComposeOnAll(pair ->
+                    attachmentLoader.getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
+                        .thenApply(attachments -> Pair.of(pair.getLeft(), attachments))
+                )
+                .map(pair ->
+                    pair.getLeft()
+                        .toMailboxMessage(pair.getRight()
+                            .stream()
+                            .collect(Guavate.toImmutableList())))
+                .completableFuture();
         } else {
-            return messageRepresentations.thenApply(
-                stream -> stream.map(pair ->
-                pair.getLeft().toMailboxMessage(ImmutableList.of())));
+            return FluentFutureStream.of(messageRepresentations)
+                .map(pair ->
+                    pair
+                        .getLeft()
+                        .toMailboxMessage(ImmutableList.of()))
+                .completableFuture();
         }
     }
 
@@ -208,27 +213,25 @@ public class CassandraMessageMapper implements MessageMapper {
             .orElse(null);
     }
 
-    @Override
     public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
-        CompletableFuture<Stream<SimpleMailboxMessage>> messagesToDelete =
-            CompletableFutureUtil.flatMapOnAll(
-                deletedMessageDAO.retrieveDeletedMessage(mailboxId, messageRange),
+        return FluentFutureStream.of(deletedMessageDAO.retrieveDeletedMessage(mailboxId, messageRange))
+            .thenComposeOnAll(
                 messageId ->
                     messageIdDAO.retrieve(mailboxId, messageId))
-
-            .thenApply(ids -> ids
-                .flatMap(OptionalConverter::toStream)
-                .collect(Guavate.toImmutableList()))
-
-            .thenCompose(ids -> retrieveMessages(ids, FetchType.Metadata, Optional.empty()));
-
-        return CompletableFutureUtil.performOnAll(messagesToDelete, message ->
-                deleteAsFuture(message, mailboxId))
+            .flatMap(OptionalConverter::toStream)
+            .thenCompose(ids ->
+                retrieveMessages(
+                    ids.collect(Guavate.toImmutableList()),
+                    FetchType.Metadata,
+                    Optional.empty())
+            )
+            .performOnAll(message -> deleteAsFuture(message, mailboxId))
             .join()
             .collect(Guavate.toImmutableMap(MailboxMessage::getUid, SimpleMessageMetaData::new));
     }
+
     @Override
     public MessageMetaData move(Mailbox destinationMailbox, MailboxMessage original) throws MailboxException {
         CassandraId originalMailboxId = (CassandraId) original.getMailboxId();
