@@ -112,6 +112,14 @@ import com.google.common.collect.ImmutableList;
  */
 public class StoreMessageManager implements org.apache.james.mailbox.MessageManager {
 
+    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
+        .setMaxContentLen(-1)
+        .setMaxHeaderCount(-1)
+        .setMaxHeaderLen(-1)
+        .setMaxHeaderCount(-1)
+        .setMaxLineLen(-1)
+        .build();
+
     /**
      * The minimal Permanent flags the {@link MessageManager} must support. <br>
      * 
@@ -303,7 +311,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             // Disable line length... This should be handled by the smtp server
             // component and not the parser itself
             // https://issues.apache.org/jira/browse/IMAP-122
-            MimeConfig config = MimeConfig.custom().setMaxLineLen(-1).setMaxHeaderLen(-1).build();
+            MimeConfig config = MIME_ENTITY_CONFIG;
 
             final MimeTokenStream parser = new MimeTokenStream(config, new DefaultBodyDescriptorBuilder());
 
