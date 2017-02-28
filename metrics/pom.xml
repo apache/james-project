@@ -34,7 +34,58 @@
 
     <modules>
         <module>metrics-api</module>
+        <module>metrics-dropwizard</module>
     </modules>
 
+    <properties>
+        <assertj-3.version>3.3.0</assertj-3.version>
+        <es.version>2.2.1</es.version>
+        <es-reporter.version>2.2.0</es-reporter.version>
+        <guava.version>18.0</guava.version>
+        <javax.inject.version>1</javax.inject.version>
+        <junit.version>4.11</junit.version>
+        <metrics.version>3.1.0</metrics.version>
+        <testcontainers-version>1.1.7</testcontainers-version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-filesystem-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-lifecycle-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>metrics-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>metrics-dropwizard</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-core</artifactId>
+                <version>${metrics.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.inject</groupId>
+                <artifactId>javax.inject</artifactId>
+                  <version>${javax.inject.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>
 

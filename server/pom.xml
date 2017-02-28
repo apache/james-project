@@ -63,7 +63,6 @@
         <module>container/jetty</module>
         <module>container/lifecycle-api</module>
         <module>container/mailbox-adapter</module>
-        <module>container/metrics/metrics-dropwizard</module>
         <module>container/metrics/metrics-es-reporter</module>
         <module>container/spring</module>
         <module>container/util</module>
@@ -456,6 +455,11 @@
                 <artifactId>metrics-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>metrics-dropwizard</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.apache.james.protocols</groupId>
@@ -640,11 +644,6 @@
                 <artifactId>james-server-memory-guice</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>james-server-metrics-dropwizard</artifactId>
-                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
