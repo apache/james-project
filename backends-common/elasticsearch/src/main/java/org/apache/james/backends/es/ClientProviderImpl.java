@@ -19,7 +19,6 @@
 package org.apache.james.backends.es;
 
 import java.net.InetAddress;
-import java.util.Objects;
 
 import org.apache.james.util.Host;
 import org.elasticsearch.client.Client;
@@ -28,10 +27,7 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ConsumerChainer;
-import com.github.steveash.guavate.Guavate;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 public class ClientProviderImpl implements ClientProvider {

@@ -46,7 +46,6 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;

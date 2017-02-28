@@ -19,17 +19,6 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
-import java.util.List;
-
-import org.apache.james.backends.cassandra.components.CassandraIndex;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
-
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
-
 public interface CassandraDeletedMessageTable {
     String TABLE_NAME = "messageDeleted";
 

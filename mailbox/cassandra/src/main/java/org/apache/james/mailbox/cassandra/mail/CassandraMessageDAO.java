@@ -191,7 +191,7 @@ public class CassandraMessageDAO {
                 .collect(JamesCollectors.chunker(CHUNK_SIZE_ON_READ))
                 .values()
                 .stream()
-                .map(ids -> retrieveRows(ids, fetchType, limit)
+                .map((List<ComposedMessageIdWithMetaData> ids) -> retrieveRows(ids, fetchType, limit)
                     .thenApply(resultSet -> toMessagesWithAttachmentRepresentation(messageIds, fetchType, resultSet))))
             .thenApply(stream -> stream.flatMap(Function.identity()));
     }
