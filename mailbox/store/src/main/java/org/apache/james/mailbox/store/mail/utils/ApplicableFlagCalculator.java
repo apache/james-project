@@ -19,11 +19,9 @@
 
 package org.apache.james.mailbox.store.mail.utils;
 
-import java.util.List;
-
 import javax.mail.Flags;
-import javax.mail.Flags.Flag;
 
+import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.google.common.base.Function;
@@ -31,6 +29,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 
 public class ApplicableFlagCalculator {
+
     private static Function<MailboxMessage, Flags> toFlags() {
         return new Function<MailboxMessage, Flags>() {
             @Override
@@ -48,22 +47,10 @@ public class ApplicableFlagCalculator {
     }
 
     public Flags computeApplicableFlags() {
-        List<Flags> messageFlags = FluentIterable.from(mailboxMessages)
-            .transform(toFlags())
-            .toList();
-        return getFlags(messageFlags);
-    }
-
-    private Flags getFlags(List<Flags> messageFlags) {
-        Flags flags = new Flags();
-
-        for (Flags flag : messageFlags) {
-            flags.add(flag);
-        }
-
-        flags.remove(Flag.RECENT);
-        flags.remove(Flag.USER);
-
-        return flags;
+        return ApplicableFlagBuilder.builder()
+                .add(FluentIterable.from(mailboxMessages)
+                    .transform(toFlags())
+                    .toArray(Flags.class))
+                .build();
     }
 }

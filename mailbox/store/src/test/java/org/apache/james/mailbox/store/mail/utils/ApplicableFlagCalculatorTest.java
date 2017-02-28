@@ -28,12 +28,13 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.james.mailbox.FlagsBuilder;
+import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -42,10 +43,11 @@ import com.google.common.collect.ImmutableList;
 
 public class ApplicableFlagCalculatorTest {
 
-    private static final String USER_FLAGS_VALUE = "UserFlags";
-
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
+
+    @Rule
+    public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
 
     @Test
     public void constructorShouldThrowWhenNull() throws Exception {
@@ -54,29 +56,53 @@ public class ApplicableFlagCalculatorTest {
     }
 
     @Test
-    public void unionFlagsShouldWelWhenEmpty() throws Exception {
+    public void computeApplicableFlagsShouldReturnOnlyDefaultApplicableFlagsWhenNoMessage() throws Exception {
         ApplicableFlagCalculator calculator = new ApplicableFlagCalculator(ImmutableList.<MailboxMessage>of());
 
-        assertThat(calculator.computeApplicableFlags()).isEqualTo(new Flags());
+        assertThat(calculator.computeApplicableFlags()).isEqualTo(getDefaultApplicableFlag());
     }
 
     @Test
-    public void unionFlagsShouldUnionAllMessageFlagsExceptRecentAndUser() throws Exception {
+    public void computeApplicableFlagsShouldReturnOnlyDefaultApplicableFlagWhenNoMessageWithUserCustomFlag() throws Exception {
         List<MailboxMessage> mailboxMessages = ImmutableList.of(
             createMessage(new Flags(Flag.ANSWERED)),
             createMessage(new Flags(Flag.DELETED)),
             createMessage(new Flags(Flag.USER)),
-            createMessage(new Flags(Flag.RECENT)),
-            createMessage(new FlagsBuilder().add(Flag.ANSWERED)
-                .add(USER_FLAGS_VALUE)
-                .build()));
+            createMessage(new Flags(Flag.RECENT)));
 
         ApplicableFlagCalculator calculator = new ApplicableFlagCalculator(mailboxMessages);
 
-        assertThat(calculator.computeApplicableFlags()).isEqualTo(new FlagsBuilder()
-            .add(Flag.ANSWERED, Flag.DELETED)
-            .add(USER_FLAGS_VALUE)
-            .build());
+        assertThat(calculator.computeApplicableFlags()).isEqualTo(getDefaultApplicableFlag());
+    }
+
+    @Test
+    public void computeApplicableFlagsShouldReturnOnlyDefaultApplicableFlagAndAllUserCustomFlagUsedOneMessage() throws Exception {
+        List<MailboxMessage> mailboxMessages = ImmutableList.of(
+            createMessage(new Flags("capture me")),
+            createMessage(new Flags("french")));
+
+        ApplicableFlagCalculator calculator = new ApplicableFlagCalculator(mailboxMessages);
+
+        Flags expected = ApplicableFlagBuilder
+            .builder()
+            .add("capture me", "french")
+            .build();
+
+        assertThat(calculator.computeApplicableFlags()).isEqualTo(expected);
+    }
+
+    @Test
+    public void unionFlagsShouldAlwaysIgnoreRecentAndUser() throws  Exception {
+        List<MailboxMessage> mailboxMessages = ImmutableList.of(
+            createMessage(new Flags(Flag.RECENT)),
+            createMessage(new Flags(Flag.USER)));
+
+        ApplicableFlagCalculator calculator = new ApplicableFlagCalculator(mailboxMessages);
+
+        Flags result = calculator.computeApplicableFlags();
+
+        softly.assertThat(result.contains(Flag.RECENT)).isFalse();
+        softly.assertThat(result.contains(Flag.USER)).isFalse();
     }
 
     private MailboxMessage createMessage(Flags messageFlags) {
@@ -86,4 +112,7 @@ public class ApplicableFlagCalculatorTest {
             new SharedByteArrayInputStream(content.getBytes()), messageFlags, new PropertyBuilder(), TestId.of(1));
     }
 
+    private Flags getDefaultApplicableFlag() {
+        return ApplicableFlagBuilder.builder().build();
+    }
 }

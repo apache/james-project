@@ -868,7 +868,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     }
 
     @Override
-    public Flags getApplicableFlag(MailboxSession session) throws MailboxException {
+    public Flags getApplicableFlags(MailboxSession session) throws MailboxException {
         return mapperFactory.getMessageMapper(session)
             .getApplicableFlag(mailbox);
     }

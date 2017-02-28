@@ -170,7 +170,7 @@ public interface MessageManager {
      */
     MailboxPath getMailboxPath() throws MailboxException;
 
-    Flags getApplicableFlag(MailboxSession session) throws MailboxException;
+    Flags getApplicableFlags(MailboxSession session) throws MailboxException;
 
     /**
      * Gets current meta data for the mailbox.<br>

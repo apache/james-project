@@ -51,6 +51,7 @@ import org.apache.james.mailbox.store.mail.model.MapperProvider.Capabilities;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMessage;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.After;
 import org.junit.Assume;
@@ -592,7 +593,7 @@ public abstract class MessageMapperTest {
     public void flagsReplacementShouldReturnAnUpdatedFlagHighlightingTheReplacement() throws MailboxException {
         saveMessages();
         long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
-        Iterator<UpdatedFlags> updatedFlags = messageMapper.updateFlags(benwaInboxMailbox, 
+        Iterator<UpdatedFlags> updatedFlags = messageMapper.updateFlags(benwaInboxMailbox,
                 new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
         assertThat(Lists.newArrayList(updatedFlags))
             .containsOnly(UpdatedFlags.builder()
@@ -853,14 +854,17 @@ public abstract class MessageMapperTest {
 
     @Test
     public void getApplicableFlagShouldUnionAllMessageFlags() throws Exception {
-        message1.setFlags(new Flags(Flag.ANSWERED));
-        message2.setFlags(new Flags(Flag.DELETED));
+        String customFlags1 = "custom1";
+        String customFlags2 = "custom2";
+        message1.setFlags(new Flags(customFlags1));
+        message2.setFlags(new Flags(customFlags2));
 
         saveMessages();
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
-            .isEqualTo(new FlagsBuilder()
-                .add(Flag.ANSWERED, Flag.DELETED)
+            .isEqualTo(FlagsBuilder.builder()
+                .add(Flag.DELETED, Flag.ANSWERED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN)
+                .add(customFlags1, customFlags2)
                 .build());
     }
 
@@ -877,31 +881,44 @@ public abstract class MessageMapperTest {
         saveMessages();
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
-            .isEqualTo(new FlagsBuilder()
-                .add(Flag.ANSWERED, Flag.DELETED)
+            .isEqualTo(FlagsBuilder.builder()
+                .add(Flag.DELETED, Flag.ANSWERED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN)
                 .add(CUSTOMS_USER_FLAGS_VALUE)
                 .build());
     }
 
     @Test
+    public void getApplicableFlagShouldContainSystemFlagsByDefault() throws Exception {
+        assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
+            .isEqualTo(FlagsBuilder.builder()
+                .add(Flag.DELETED, Flag.ANSWERED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN)
+                .build());
+    }
+
+
+    @Test
     public void getApplicableFlagShouldHaveEffectWhenUpdateFlagsByAddingThenComputingApplicableFlagsFromCurrentMailboxState() throws Exception {
         message1.setFlags(new Flags(Flag.ANSWERED));
         message2.setFlags(new Flags(Flag.DELETED));
-        FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD);
+
+        String customFlag = "custom1";
+        FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(customFlag), FlagsUpdateMode.ADD);
 
         saveMessages();
         messageMapper.updateFlags(benwaInboxMailbox, newFlags, message1.getUid().toRange());
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
-            .isEqualTo(new FlagsBuilder()
-                .add(Flag.ANSWERED, Flag.DELETED, Flag.SEEN)
+            .isEqualTo(FlagsBuilder.builder()
+                .add(Flag.DELETED, Flag.ANSWERED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN)
+                .add(customFlag)
                 .build());
     }
 
     @Test
     public void getApplicableFlagShouldHaveNotEffectWhenUpdateFlagsByReplaceThenIncrementalApplicableFlags() throws Exception {
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(Capabilities.INCREMENTAL_APPLICABLE_FLAGS));
-        message1.setFlags(new Flags(Flag.ANSWERED));
+        String customFlags = "custom";
+        message1.setFlags(new Flags(customFlags));
         message2.setFlags(new Flags(Flag.DELETED));
         FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE);
 
@@ -910,14 +927,16 @@ public abstract class MessageMapperTest {
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
             .isEqualTo(new FlagsBuilder()
-                .add(Flag.ANSWERED, Flag.DELETED, Flag.SEEN)
+                .add(Flag.DELETED, Flag.ANSWERED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN)
+                .add(customFlags)
                 .build());
     }
 
     @Test
     public void getApplicableFlagShouldHaveEffectWhenUpdateFlagsByReplaceThenComputingApplicableFlagsFromCurrentMailboxState() throws Exception {
         Assume.assumeFalse(mapperProvider.getSupportedCapabilities().contains(Capabilities.INCREMENTAL_APPLICABLE_FLAGS));
-        message1.setFlags(new Flags(Flag.ANSWERED));
+        String customFlags = "custom";
+        message1.setFlags(new Flags(customFlags));
         message2.setFlags(new Flags(Flag.DELETED));
         FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE);
 
@@ -925,64 +944,73 @@ public abstract class MessageMapperTest {
         messageMapper.updateFlags(benwaInboxMailbox, newFlags, message1.getUid().toRange());
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
-            .isEqualTo(new FlagsBuilder()
-                .add(Flag.DELETED, Flag.SEEN)
+            .isEqualTo(FlagsBuilder.builder()
+                .add(Flag.DELETED, Flag.ANSWERED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN)
                 .build());
     }
 
     @Test
     public void getApplicableFlagShouldHaveNotEffectWhenUpdateFlagsByRemoveThenIncrementalApplicableFlags() throws Exception {
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(Capabilities.INCREMENTAL_APPLICABLE_FLAGS));
-        message1.setFlags(new FlagsBuilder().add(Flag.ANSWERED, Flag.SEEN).build());
+        String customFlags = "custom";
+        message1.setFlags(new FlagsBuilder().add(Flag.ANSWERED).add(customFlags).build());
         message2.setFlags(new Flags(Flag.DELETED));
-        FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REMOVE);
+        FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(customFlags), FlagsUpdateMode.REMOVE);
 
         saveMessages();
         messageMapper.updateFlags(benwaInboxMailbox, newFlags, message1.getUid().toRange());
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
             .isEqualTo(new FlagsBuilder()
-                .add(Flag.ANSWERED, Flag.DELETED, Flag.SEEN)
+                .add(Flag.DELETED, Flag.ANSWERED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN)
+                .add(customFlags)
                 .build());
     }
 
     @Test
     public void getApplicableFlagShouldHaveEffectWhenUpdateFlagsByRemoveThenComputingApplicableFlagsFromCurrentMailboxState() throws Exception {
         Assume.assumeFalse(mapperProvider.getSupportedCapabilities().contains(Capabilities.INCREMENTAL_APPLICABLE_FLAGS));
-        message1.setFlags(new FlagsBuilder().add(Flag.ANSWERED, Flag.SEEN).build());
+        String customFlags = "custom";
+        message1.setFlags(new FlagsBuilder().add(Flag.ANSWERED).add(customFlags).build());
         message2.setFlags(new Flags(Flag.DELETED));
-        FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REMOVE);
+        FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(customFlags), FlagsUpdateMode.REMOVE);
 
         saveMessages();
         messageMapper.updateFlags(benwaInboxMailbox, newFlags, message1.getUid().toRange());
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
-            .isEqualTo(new FlagsBuilder()
-                .add(Flag.ANSWERED, Flag.DELETED)
+            .isEqualTo(FlagsBuilder.builder()
+                .add(Flag.DELETED, Flag.ANSWERED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN)
                 .build());
     }
 
     @Test
     public void getApplicableFlagShouldHaveEffectWhenUnsetMessageFlagThenComputingApplicableFlagsFromCurrentMailboxState() throws Exception {
         Assume.assumeFalse(mapperProvider.getSupportedCapabilities().contains(Capabilities.INCREMENTAL_APPLICABLE_FLAGS));
-        message1.setFlags(new FlagsBuilder().add(Flag.ANSWERED, Flag.SEEN).build());
-        message2.setFlags(new Flags(Flag.DELETED));
+        String customFlag1 = "custom1";
+        String customFlag2 = "custom2";
+        String customFlag3 = "custom3";
+        message1.setFlags(new FlagsBuilder().add(customFlag1, customFlag2).build());
+        message2.setFlags(new Flags(customFlag3));
         FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(), FlagsUpdateMode.REPLACE);
 
         saveMessages();
         messageMapper.updateFlags(benwaInboxMailbox, newFlags, message1.getUid().toRange());
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
-            .isEqualTo(new FlagsBuilder()
-                .add(Flag.DELETED)
+            .isEqualTo(FlagsBuilder.builder()
+                .add(Flag.DELETED, Flag.ANSWERED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN)
+                .add(customFlag3)
                 .build());
     }
 
     @Test
     public void getApplicableFlagShouldHaveNotEffectWhenUnsetMessageFlagThenIncrementalApplicableFlags() throws Exception {
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.THREAD_SAFE_FLAGS_UPDATE));
-        message1.setFlags(new Flags(Flag.ANSWERED));
-        message2.setFlags(new Flags(Flag.DELETED));
+        String customFlag1 = "custom1";
+        String customFlag2 = "custom2";
+        message1.setFlags(new Flags(customFlag1));
+        message2.setFlags(new Flags(customFlag2));
         FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(), FlagsUpdateMode.REPLACE);
 
         saveMessages();
@@ -990,7 +1018,8 @@ public abstract class MessageMapperTest {
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
             .isEqualTo(new FlagsBuilder()
-                .add(Flag.ANSWERED, Flag.DELETED)
+                .add(Flag.DELETED, Flag.ANSWERED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN)
+                .add(customFlag1, customFlag2)
                 .build());
     }
 
@@ -998,29 +1027,47 @@ public abstract class MessageMapperTest {
     @Test
     public void getApplicableFlagShouldHaveNotEffectWhenDeleteMessageThenIncrementalApplicableFlags() throws Exception {
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(Capabilities.INCREMENTAL_APPLICABLE_FLAGS));
-        message1.setFlags(new Flags(Flag.ANSWERED));
-        message2.setFlags(new Flags(Flag.DELETED));
+        String customFlag1 = "custom1";
+        String customFlag2 = "custom2";
+        message1.setFlags(new Flags(customFlag1));
+        message2.setFlags(new Flags(customFlag2));
 
         saveMessages();
         messageMapper.delete(benwaInboxMailbox, message1);
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
             .isEqualTo(new FlagsBuilder()
-                .add(Flag.ANSWERED, Flag.DELETED)
+                .add(Flag.DELETED, Flag.ANSWERED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN)
+                .add(customFlag1, customFlag2)
+                .build());
+    }
+
+    @Test
+    public void getApplicableFlagShouldShouldReturnDefaultApplicableFlagsWhenMailboxEmpty() throws Exception {
+        SimpleMailbox emptyMailbox = createMailbox(new MailboxPath("#private", "benwa", "EMPTY"));
+
+        assertThat(messageMapper.getApplicableFlag(emptyMailbox))
+            .isEqualTo(new FlagsBuilder()
+                .add(Flag.DELETED, Flag.ANSWERED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN)
                 .build());
     }
 
     @Test
     public void getApplicableFlagShouldHaveEffectWhenDeleteMessageThenComputingApplicableFlagsFromCurrentMailboxState() throws Exception {
         Assume.assumeFalse(mapperProvider.getSupportedCapabilities().contains(Capabilities.INCREMENTAL_APPLICABLE_FLAGS));
-        message1.setFlags(new Flags(Flag.ANSWERED));
-        message2.setFlags(new Flags(Flag.DELETED));
+        String customFlag1 = "custom1";
+        String customFlag2 = "custom2";
+        message1.setFlags(new Flags(customFlag1));
+        message2.setFlags(new Flags(customFlag2));
 
         saveMessages();
         messageMapper.delete(benwaInboxMailbox, message1);
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
-            .isEqualTo(new Flags(Flag.DELETED));
+            .isEqualTo(FlagsBuilder.builder()
+                .add(Flag.DELETED, Flag.ANSWERED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN)
+                .add(customFlag2)
+                .build());
     }
 
     private Map<MessageUid, MessageMetaData> markThenPerformExpunge(MessageRange range) throws MailboxException {

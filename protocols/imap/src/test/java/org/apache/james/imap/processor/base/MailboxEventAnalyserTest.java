@@ -324,8 +324,8 @@ public class MailboxEventAnalyserTest {
                 }
 
                 @Override
-                public Flags getApplicableFlag(MailboxSession session) throws MailboxException {
-                    throw new NotImplementedException();
+                public Flags getApplicableFlags(MailboxSession session) throws MailboxException {
+                    return new Flags();
                 }
             };
         }
