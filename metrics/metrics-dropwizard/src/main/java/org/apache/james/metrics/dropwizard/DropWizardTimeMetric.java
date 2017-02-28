@@ -19,46 +19,27 @@
 
 package org.apache.james.metrics.dropwizard;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.metrics.api.Metric;
-import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 
-import com.codahale.metrics.JmxReporter;
-import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 
-public class DropWizardMetricFactory implements MetricFactory {
+public class DropWizardTimeMetric implements TimeMetric {
 
-    private final MetricRegistry metricRegistry;
-    private final JmxReporter jmxReporter;
+    private final String name;
+    private final Timer.Context time;
 
-    @Inject
-    public DropWizardMetricFactory(MetricRegistry metricRegistry) {
-        this.metricRegistry = metricRegistry;
-        this.jmxReporter = JmxReporter.forRegistry(metricRegistry)
-            .build();
+    public DropWizardTimeMetric(String name, Timer.Context context) {
+        this.name = name;
+        this.time = context;
     }
 
     @Override
-    public Metric generate(String name) {
-        return new DropWizardMetric(metricRegistry.counter(name));
+    public String name() {
+        return name;
     }
 
     @Override
-    public TimeMetric timer(String name) {
-        return new DropWizardTimeMetric(name, metricRegistry.timer(name).time());
+    public long stopAndPublish() {
+        return time.stop();
     }
-
-    public void start() throws ConfigurationException {
-        jmxReporter.start();
-    }
-
-    @PreDestroy
-    public void stop() {
-        jmxReporter.stop();
-    }
-
 }
