@@ -76,7 +76,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
     private final Flags applicableFlags;
 
     private boolean applicableFlagsChanged;
-    
+
     private final SortedMap<Integer, MessageUid> msnToUid =new TreeMap<Integer, MessageUid>();
 
     private final SortedMap<MessageUid, Integer> uidToMsn = new TreeMap<MessageUid, Integer>();
@@ -133,9 +133,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
     private void expunge(MessageUid uid) {
         final int msn = msn(uid);
         remove(msn, uid);
-        final List<Integer> renumberMsns = new ArrayList<Integer>(msnToUid.tailMap(msn + 1).keySet());
-        for (Integer msnInteger : renumberMsns) {
-            int aMsn = msnInteger.intValue();
+
+        for (int aMsn = msn + 1; aMsn <= msnToUid.size() + 1; aMsn++) {
             Optional<MessageUid> aUid = uid(aMsn);
             if (aUid.isPresent()) {
                 remove(aMsn, aUid.get());
