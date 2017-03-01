@@ -27,6 +27,7 @@ import java.util.TimerTask;
 import org.apache.james.backends.es.ClientProvider;
 import org.apache.james.backends.es.ClientProviderImpl;
 import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
 import org.apache.james.metrics.es.ESMetricReporter;
 import org.apache.james.metrics.es.ESReporterConfiguration;
@@ -92,6 +93,23 @@ public class ESReporterTest {
             @Override
             public void run() {
                 metric.increment();
+            }
+        };
+        timer.schedule(timerTask, DELAY_IN_MS, PERIOD_IN_MS);
+
+        await().atMost(Duration.TEN_MINUTES)
+            .until(() -> done(clientProvider));
+    }
+
+    @Test
+    public void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainerWhenRecordingTimeMetric() {
+        esMetricReporter.start();
+
+        TimeMetric metric = new DropWizardMetricFactory(registry).timer("itstime");
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                metric.stopAndPublish();
             }
         };
         timer.schedule(timerTask, DELAY_IN_MS, PERIOD_IN_MS);

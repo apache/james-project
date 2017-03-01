@@ -18,6 +18,7 @@
  ****************************************************************/
 
 package org.apache.james;
+import org.apache.james.modules.TestESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -48,6 +49,7 @@ public class CassandraJmapTestRule implements TestRule {
         return new JmapJamesServer()
             .combineWith(CassandraJamesServerMain.cassandraServerModule)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
+            .overrideWith(new TestESMetricReporterModule())
             .overrideWith(guiceModuleTestRule.getModule())
             .overrideWith(additionals);
     }

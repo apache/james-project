@@ -22,6 +22,7 @@ package org.apache.james;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
 import org.apache.james.modules.TestElasticSearchModule;
+import org.elasticsearch.node.Node;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.Description;
@@ -53,5 +54,9 @@ public class EmbeddedElasticSearchRule implements GuiceModuleTestRule {
     @Override
     public Module getModule() {
         return new TestElasticSearchModule(embeddedElasticSearch);
+    }
+
+    public Node getNode() {
+        return embeddedElasticSearch.getNode();
     }
 }
