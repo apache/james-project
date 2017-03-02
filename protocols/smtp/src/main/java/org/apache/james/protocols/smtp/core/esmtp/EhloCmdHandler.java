@@ -24,8 +24,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.smtp.SMTPResponse;
@@ -51,6 +54,11 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
     private static final Response DOMAIN_ADDRESS_REQUIRED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Domain address required: " + COMMAND_NAME).immutable();
     
     private List<EhloExtension> ehloExtensions;
+
+    @Inject
+    public EhloCmdHandler(MetricFactory metricFactory) {
+        super(metricFactory);
+    }
 
     @Override
     public void init(Configuration config) throws ConfigurationException {

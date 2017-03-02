@@ -22,6 +22,10 @@ package org.apache.james.protocols.smtp.core;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
@@ -39,9 +43,14 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
  */
 public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.protocols.smtp.hook.Hook> implements CommandHandler<SMTPSession>, ExtensibleHandler {
 
-
+    private final MetricFactory metricFactory;
     private List<Hook> hooks;
     private List<HookResultHook> rHooks;
+
+    @Inject
+    public AbstractHookableCmdHandler(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
+    }
 
     /**
      * Handle command processing
@@ -50,20 +59,25 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
      * #onCommand(org.apache.james.protocols.api.ProtocolSession, Request)
      */
     public Response onCommand(SMTPSession session, Request request) {
+        TimeMetric timeMetric = metricFactory.timer("SMTP-" + request.getCommand().toLowerCase());
         String command = request.getCommand();
         String parameters = request.getArgument();
         Response response = doFilterChecks(session, command, parameters);
 
-        if (response == null) {
-
-            response = processHooks(session, command, parameters);
+        try {
             if (response == null) {
-                return doCoreCmd(session, command, parameters);
+
+                response = processHooks(session, command, parameters);
+                if (response == null) {
+                    return doCoreCmd(session, command, parameters);
+                } else {
+                    return response;
+                }
             } else {
                 return response;
             }
-        } else {
-            return response;
+        } finally {
+            timeMetric.stopAndPublish();
         }
 
     }

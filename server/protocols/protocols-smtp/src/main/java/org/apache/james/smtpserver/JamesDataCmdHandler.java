@@ -18,8 +18,11 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import javax.inject.Inject;
+
 import org.apache.james.core.MailImpl;
 import org.apache.james.core.MimeMessageInputStreamSource;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
@@ -30,6 +33,11 @@ import org.apache.james.protocols.smtp.core.DataCmdHandler;
  * handles DATA command
  */
 public class JamesDataCmdHandler extends DataCmdHandler {
+
+    @Inject
+    public JamesDataCmdHandler(MetricFactory metricFactory) {
+        super(metricFactory);
+    }
 
     /**
      * Handler method called upon receipt of a DATA command. Reads in message

@@ -26,8 +26,12 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -108,7 +112,14 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
     }
    
     public final static String MAILENV = "MAILENV";
-    
+
+    private final MetricFactory metricFactory;
+
+    @Inject
+    public DataCmdHandler(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
+    }
+
     private LineHandler<SMTPSession> lineHandler;
 
     @Override
@@ -126,13 +137,19 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
      *
      */
     public Response onCommand(SMTPSession session, Request request) {
-        String parameters = request.getArgument();
-        Response response = doDATAFilter(session,parameters);
-        
-        if (response == null) {
-            return doDATA(session, parameters);
-        } else {
-            return response;
+        TimeMetric timeMetric = metricFactory.timer("SMTP-" + request.getCommand());
+
+        try {
+            String parameters = request.getArgument();
+            Response response = doDATAFilter(session, parameters);
+
+            if (response == null) {
+                return doDATA(session, parameters);
+            } else {
+                return response;
+            }
+        } finally {
+            timeMetric.stopAndPublish();
         }
     }
 

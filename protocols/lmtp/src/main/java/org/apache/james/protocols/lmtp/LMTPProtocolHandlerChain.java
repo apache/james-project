@@ -21,6 +21,7 @@ package org.apache.james.protocols.lmtp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.api.handler.CommandDispatcher;
 import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
@@ -53,15 +54,15 @@ import org.apache.james.protocols.smtp.hook.Hook;
 public class LMTPProtocolHandlerChain extends SMTPProtocolHandlerChain{
 
     public LMTPProtocolHandlerChain() {
-        super();
+        super(new NoopMetricFactory());
     }
 
     public LMTPProtocolHandlerChain(boolean addDefault) {
-        super(addDefault);
+        super(new NoopMetricFactory(), addDefault);
     }
 
     public LMTPProtocolHandlerChain(Hook... hooks) throws WiringException {
-        super(hooks);
+        super(new NoopMetricFactory(), hooks);
     }
 
     @Override
@@ -69,21 +70,21 @@ public class LMTPProtocolHandlerChain extends SMTPProtocolHandlerChain{
         List<ProtocolHandler> defaultHandlers = new ArrayList<ProtocolHandler>();
         defaultHandlers.add(new CommandDispatcher<SMTPSession>());
         defaultHandlers.add(new ExpnCmdHandler());
-        defaultHandlers.add(new LhloCmdHandler());
+        defaultHandlers.add(new LhloCmdHandler(new NoopMetricFactory()));
         defaultHandlers.add(new HelpCmdHandler());
-        defaultHandlers.add(new MailCmdHandler());
+        defaultHandlers.add(new MailCmdHandler(new NoopMetricFactory()));
         defaultHandlers.add(new NoopCmdHandler());
-        defaultHandlers.add(new QuitCmdHandler());
-        defaultHandlers.add(new RcptCmdHandler());
+        defaultHandlers.add(new QuitCmdHandler(new NoopMetricFactory()));
+        defaultHandlers.add(new RcptCmdHandler(new NoopMetricFactory()));
         defaultHandlers.add(new RsetCmdHandler());
         defaultHandlers.add(new VrfyCmdHandler());
-        defaultHandlers.add(new DataCmdHandler());
+        defaultHandlers.add(new DataCmdHandler(new NoopMetricFactory()));
         defaultHandlers.add(new MailSizeEsmtpExtension());
         defaultHandlers.add(new WelcomeMessageHandler());
         defaultHandlers.add(new ReceivedDataLineFilter());
         defaultHandlers.add(new DataLineMessageHookHandler());
         defaultHandlers.add(new StartTlsCmdHandler());
-        defaultHandlers.add(new UnknownCmdHandler());
+        defaultHandlers.add(new UnknownCmdHandler(new NoopMetricFactory()));
         defaultHandlers.add(new CommandHandlerResultLogger());
 
         return defaultHandlers;

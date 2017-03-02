@@ -16,11 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.imap.processor;
-
-import org.apache.james.metrics.api.Metric;
-import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.TimeMetric;
+package org.apache.james.metrics.api;
 
 public class NoopMetricFactory implements MetricFactory {
 
@@ -53,8 +49,9 @@ public class NoopMetricFactory implements MetricFactory {
             return "";
         }
 
+
         @Override
-        public long elapsed() {
+        public long stopAndPublish() {
             return 0;
         }
     }

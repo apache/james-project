@@ -22,11 +22,17 @@ import javax.inject.Inject;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.smtp.core.MailCmdHandler;
 
 public class JamesMailCmdHandler extends MailCmdHandler {
 
     private DomainList domainList;
+
+    @Inject
+    public JamesMailCmdHandler(MetricFactory metricFactory) {
+        super(metricFactory);
+    }
 
     @Inject
     public final void setDomainList(DomainList domainList) {

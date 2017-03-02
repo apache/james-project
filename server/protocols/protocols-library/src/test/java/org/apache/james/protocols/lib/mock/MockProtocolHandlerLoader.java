@@ -14,6 +14,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 
@@ -53,8 +55,12 @@ public class MockProtocolHandlerLoader implements ProtocolHandlerLoader{
 
     private final List<Object> loaderRegistry = new ArrayList<Object>();
 
-    protected ProtocolHandler create(String className) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        return (ProtocolHandler) Thread.currentThread().getContextClassLoader().loadClass(className).newInstance();
+    protected ProtocolHandler create(String className) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+        try {
+            return (ProtocolHandler) Thread.currentThread().getContextClassLoader().loadClass(className).newInstance();
+        } catch (InstantiationException e) {
+            return (ProtocolHandler) Thread.currentThread().getContextClassLoader().loadClass(className).getConstructor(MetricFactory.class).newInstance(new NoopMetricFactory());
+        }
     }
 
     /**

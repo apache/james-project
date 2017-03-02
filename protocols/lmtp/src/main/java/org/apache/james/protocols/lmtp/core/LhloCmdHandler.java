@@ -23,6 +23,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import javax.inject.Inject;
+
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.smtp.core.esmtp.EhloCmdHandler;
 
 /**
@@ -31,7 +34,12 @@ import org.apache.james.protocols.smtp.core.esmtp.EhloCmdHandler;
 public class LhloCmdHandler extends EhloCmdHandler {
 
     private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("LHLO"));
-    
+
+    @Inject
+    public LhloCmdHandler(MetricFactory metricFactory) {
+        super(metricFactory);
+    }
+
     @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;

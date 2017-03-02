@@ -23,11 +23,17 @@ import javax.inject.Inject;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.smtp.core.RcptCmdHandler;
 
 public class JamesRcptCmdHandler extends RcptCmdHandler {
 
     private DomainList domainList;
+
+    @Inject
+    public JamesRcptCmdHandler(MetricFactory metricFactory) {
+        super(metricFactory);
+    }
 
     @Inject
     public final void setDomainList(DomainList domainList) {

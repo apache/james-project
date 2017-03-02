@@ -23,8 +23,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import javax.inject.Inject;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
@@ -53,6 +56,12 @@ public class QuitCmdHandler extends AbstractHookableCmdHandler<QuitHook> {
         response.setEndSession(true);
         SYNTAX_ERROR = response.immutable();
     }
+
+    @Inject
+    public QuitCmdHandler(MetricFactory metricFactory) {
+        super(metricFactory);
+    }
+
 
     @Override
     public void init(Configuration config) throws ConfigurationException {

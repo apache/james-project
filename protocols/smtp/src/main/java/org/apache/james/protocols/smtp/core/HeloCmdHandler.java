@@ -23,8 +23,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import javax.inject.Inject;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
@@ -50,6 +53,11 @@ public class HeloCmdHandler extends AbstractHookableCmdHandler<HeloHook> {
             DSNStatus.getStatus(DSNStatus.PERMANENT,
                     DSNStatus.DELIVERY_INVALID_ARG)
                     + " Domain address required: " + COMMAND_NAME).immutable();
+
+    @Inject
+    public HeloCmdHandler(MetricFactory metricFactory) {
+        super(metricFactory);
+    }
 
     @Override
     public void init(Configuration config) throws ConfigurationException {

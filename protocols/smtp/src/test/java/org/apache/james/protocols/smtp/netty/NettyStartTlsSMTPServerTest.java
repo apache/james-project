@@ -32,6 +32,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.commons.net.smtp.SMTPSClient;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
@@ -87,7 +88,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     private Protocol createProtocol(Optional<ProtocolHandler> handler) throws WiringException {
-        SMTPProtocolHandlerChain chain = new SMTPProtocolHandlerChain();
+        SMTPProtocolHandlerChain chain = new SMTPProtocolHandlerChain(new NoopMetricFactory());
         if (handler.isPresent()) {
             chain.add(handler.get());
         }

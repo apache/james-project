@@ -25,8 +25,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import javax.inject.Inject;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.handler.UnknownCommandHandler;
 import org.apache.james.protocols.api.Response;
@@ -46,6 +49,11 @@ public class UnknownCmdHandler extends AbstractHookableCmdHandler<UnknownHook>{
      * The name of the command handled by the command handler
      */
     private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList(UnknownCommandHandler.COMMAND_IDENTIFIER));
+
+    @Inject
+    public UnknownCmdHandler(MetricFactory metricFactory) {
+        super(metricFactory);
+    }
 
     @Override
     public void init(Configuration config) throws ConfigurationException {

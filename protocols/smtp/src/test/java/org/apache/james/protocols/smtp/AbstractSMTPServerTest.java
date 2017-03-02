@@ -35,6 +35,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPReply;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.Response;
@@ -1102,7 +1103,7 @@ public abstract class AbstractSMTPServerTest {
 
     
     protected Protocol createProtocol(ProtocolHandler... handlers) throws WiringException {
-        SMTPProtocolHandlerChain chain = new SMTPProtocolHandlerChain();
+        SMTPProtocolHandlerChain chain = new SMTPProtocolHandlerChain(new NoopMetricFactory());
         chain.addAll(0, Arrays.asList(handlers));
         chain.wireExtensibleHandlers();
         return new SMTPProtocol(chain, new SMTPConfigurationImpl(), new MockLogger());

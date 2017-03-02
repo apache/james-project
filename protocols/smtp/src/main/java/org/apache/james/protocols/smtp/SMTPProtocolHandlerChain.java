@@ -22,12 +22,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.handler.CommandDispatcher;
+import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
 import org.apache.james.protocols.api.handler.ExtensibleHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChainImpl;
-import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
 import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.smtp.core.DataCmdHandler;
 import org.apache.james.protocols.smtp.core.DataLineMessageHookHandler;
@@ -58,13 +59,16 @@ import org.apache.james.protocols.smtp.hook.Hook;
  * 
  */
 public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
-    
-    public SMTPProtocolHandlerChain() {
-        this(true);
+
+    private final MetricFactory metricFactory;
+
+    public SMTPProtocolHandlerChain(MetricFactory metricFactory) {
+        this(metricFactory, true);
     }
 
         
-    public SMTPProtocolHandlerChain(boolean addDefault) {
+    public SMTPProtocolHandlerChain(MetricFactory metricFactory, boolean addDefault) {
+        this.metricFactory = metricFactory;
         if (addDefault) {
             addAll(initDefaultHandlers());      
         }
@@ -76,8 +80,8 @@ public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
      * @param hooks
      * @throws WiringException
      */
-    public SMTPProtocolHandlerChain(Hook... hooks) throws WiringException {
-        this(true);
+    public SMTPProtocolHandlerChain(MetricFactory metricFactory, Hook... hooks) throws WiringException {
+        this(metricFactory, true);
         for (Hook hook : hooks) {
             add(hook);
         }
@@ -88,23 +92,23 @@ public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
         List<ProtocolHandler> defaultHandlers = new ArrayList<ProtocolHandler>();
         defaultHandlers.add(new CommandDispatcher<SMTPSession>());
         defaultHandlers.add(new ExpnCmdHandler());
-        defaultHandlers.add(new EhloCmdHandler());
-        defaultHandlers.add(new HeloCmdHandler());
+        defaultHandlers.add(new EhloCmdHandler(metricFactory));
+        defaultHandlers.add(new HeloCmdHandler(metricFactory));
         defaultHandlers.add(new HelpCmdHandler());
-        defaultHandlers.add(new MailCmdHandler());
+        defaultHandlers.add(new MailCmdHandler(metricFactory));
         defaultHandlers.add(new NoopCmdHandler());
-        defaultHandlers.add(new QuitCmdHandler());
-        defaultHandlers.add(new RcptCmdHandler());
+        defaultHandlers.add(new QuitCmdHandler(metricFactory));
+        defaultHandlers.add(new RcptCmdHandler(metricFactory));
         defaultHandlers.add(new RsetCmdHandler());
         defaultHandlers.add(new VrfyCmdHandler());
-        defaultHandlers.add(new DataCmdHandler());
+        defaultHandlers.add(new DataCmdHandler(metricFactory));
         defaultHandlers.add(new MailSizeEsmtpExtension());
         defaultHandlers.add(new WelcomeMessageHandler());
         defaultHandlers.add(new PostmasterAbuseRcptHook());
         defaultHandlers.add(new ReceivedDataLineFilter());
         defaultHandlers.add(new DataLineMessageHookHandler());
         defaultHandlers.add(new StartTlsCmdHandler());
-        defaultHandlers.add(new UnknownCmdHandler());
+        defaultHandlers.add(new UnknownCmdHandler(metricFactory));
         defaultHandlers.add(new CommandHandlerResultLogger());
         return defaultHandlers;
     }
