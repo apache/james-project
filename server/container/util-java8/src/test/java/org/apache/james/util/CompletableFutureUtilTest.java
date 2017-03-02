@@ -22,6 +22,8 @@ package org.apache.james.util;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -55,7 +57,6 @@ public class CompletableFutureUtilTest {
                 .collect(Guavate.toImmutableList()))
             .containsOnly(value1, value2, value3);
     }
-
 
     @Test
     public void allOfShouldPreserveOrder() {
@@ -94,5 +95,81 @@ public class CompletableFutureUtilTest {
                 .boxed()
                 .map(CompletableFuture::completedFuture))
             .join();
+    }
+
+    @Test
+    public void mapShouldMapOnStreamInsideACompletableFuturOfStream() {
+        CompletableFuture<Stream<Integer>> futurOfInteger = CompletableFuture.completedFuture(Stream.of(1, 2, 3));
+
+        assertThat(
+            CompletableFutureUtil.map(futurOfInteger, integer ->
+                integer * 2)
+                .join()
+                .collect(Guavate.toImmutableList()))
+            .containsExactly(2, 4, 6);
+    }
+
+    @Test
+    public void mapShouldReturnEmptyStreamWhenGivenAnEmptyStream() {
+        CompletableFuture<Stream<Integer>> futurOfInteger = CompletableFuture.completedFuture(Stream.of());
+
+        assertThat(
+            CompletableFutureUtil.map(futurOfInteger, integer ->
+                integer * 2)
+                .join()
+                .collect(Guavate.toImmutableList()))
+            .isEmpty();
+    }
+
+    @Test
+    public void thenComposeOnAllShouldMapOnStreamInsideACompletableFuturOfStreamAndTransformTheResultingStreamOfCompletableFutureIntoACompletableOfStreamAndFlatIt() {
+        CompletableFuture<Stream<Integer>> futurOfInteger = CompletableFuture.completedFuture(Stream.of(1, 2, 3));
+
+        assertThat(
+            CompletableFutureUtil.thenComposeOnAll(futurOfInteger, integer ->
+                CompletableFuture.completedFuture(integer * 2))
+                .join()
+                .collect(Guavate.toImmutableList()))
+            .containsExactly(2, 4, 6);
+    }
+
+    @Test
+    public void thenComposeOnAllOnEmptyStreamShouldReturnAnEmptyStream() {
+        CompletableFuture<Stream<Integer>> futurOfInteger = CompletableFuture.completedFuture(Stream.of());
+
+        assertThat(
+            CompletableFutureUtil.thenComposeOnAll(futurOfInteger, integer ->
+                CompletableFuture.completedFuture(integer * 2))
+                .join()
+                .collect(Guavate.toImmutableList()))
+            .isEmpty();
+    }
+
+    @Test
+    public void keepValueShouldCompleteWhenTheGivenCompletableFutureEnd() {
+        final AtomicInteger numOfFutureExecution = new AtomicInteger(0);
+
+        Supplier<CompletableFuture<Void>> future = () ->
+            CompletableFuture.runAsync(numOfFutureExecution::incrementAndGet);
+
+        assertThat(
+            CompletableFutureUtil.keepValue(future, 42)
+                .join())
+            .isEqualTo(42);
+
+        assertThat(
+            numOfFutureExecution.get())
+            .isEqualTo(1);
+    }
+
+    @Test
+    public void keepValueShouldReturnNullWithNullValue() {
+        Supplier<CompletableFuture<Void>> future = () ->
+            CompletableFuture.completedFuture(null);
+
+        assertThat(
+            CompletableFutureUtil.keepValue(future, null)
+                .join())
+            .isNull();
     }
 }
