@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import com.jayway.awaitility.Awaitility;
 
+@Ignore("JAMES-1952")
 public class ClientProviderImplConnectionTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProviderImplConnectionTest.class);
     private static final String DOCKER_ES_IMAGE = "elasticsearch:2.2.1";
