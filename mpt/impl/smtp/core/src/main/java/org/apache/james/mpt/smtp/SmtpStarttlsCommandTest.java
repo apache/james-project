@@ -62,4 +62,14 @@ public class SmtpStarttlsCommandTest extends AbstractSimpleScriptedTestProtocol 
     public void starttlsShouldBeRejectedWhenFollowedByCommand() throws Exception {
         scriptTest("starttls_with_injection", Locale.US);
     }
+
+    @Test
+    public void shouldNotRejectContentWithStartTls() throws Exception {
+        scriptTest("data_with_starttls", Locale.US);
+    }
+
+    @Test
+    public void shouldNotRejectContentStartsWithStartTls() throws Exception {
+        scriptTest("data_starts_with_starttls", Locale.US);
+    }
 }
