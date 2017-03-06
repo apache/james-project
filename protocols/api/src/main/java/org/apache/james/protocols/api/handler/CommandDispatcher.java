@@ -179,17 +179,15 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
         }
         List<CommandHandler<Session>> commandHandlers = getCommandHandlers(request.getCommand(), session);
         // fetch the command handlers registered to the command
-        Iterator<CommandHandler<Session>> handlers = commandHandlers.iterator();
-        
-        while (handlers.hasNext()) {
+
+        for (CommandHandler<Session> commandHandler : commandHandlers) {
             final long start = System.currentTimeMillis();
-            CommandHandler<Session> cHandler = handlers.next();
-            Response response = cHandler.onCommand(session, request);
+            Response response = commandHandler.onCommand(session, request);
             if (response != null) {
                 long executionTime = System.currentTimeMillis() - start;
 
                 // now process the result handlers
-                response = executeResultHandlers(session, response, executionTime, cHandler, rHandlers.iterator());
+                response = executeResultHandlers(session, response, executionTime, commandHandler, rHandlers.iterator());
                 if (response != null) {
                     return response;
                 }
@@ -223,7 +221,7 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
                 // just return the new FutureResponse which will get notified once its ready
                 return futureResponse;
             }  else {
-                response = resultHandlers.next().onResponse(session, response, executionTime, (CommandHandler<Session>) cHandler);
+                response = resultHandlers.next().onResponse(session, response, executionTime, cHandler);
                 
                 // call the next ResultHandler 
                 return executeResultHandlers(session, response, executionTime, cHandler, resultHandlers);
@@ -233,14 +231,11 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
     }
     /**
      * Parse the line into a {@link Request}
-     * 
-     * @param session
-     * @param line
-     * @return request
+     *
      * @throws Exception
      */
     protected Request parseRequest(Session session, ByteBuffer buffer) throws Exception {
-        String curCommandName = null;
+        String curCommandName;
         String curCommandArgument = null;
         byte[] line;
         if (buffer.hasArray()) {
