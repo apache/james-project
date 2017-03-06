@@ -18,9 +18,11 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp;
 
+import org.apache.james.protocols.netty.HandlerConstants;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 
 import com.google.common.base.Charsets;
@@ -28,16 +30,22 @@ import com.google.common.base.Charsets;
 public class AllButStartTlsDelimiterChannelHandler extends DelimiterBasedFrameDecoder {
 
     private static final String STARTTLS = "starttls";
+    private final ChannelPipeline pipeline;
 
-    public AllButStartTlsDelimiterChannelHandler(int maxFrameLength, boolean stripDelimiter, ChannelBuffer[] delimiters) {
+    public AllButStartTlsDelimiterChannelHandler(ChannelPipeline pipeline, int maxFrameLength, boolean stripDelimiter, ChannelBuffer[] delimiters) {
         super(maxFrameLength, stripDelimiter, delimiters);
+        this.pipeline = pipeline;
     }
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
-        String trimedLowerCasedInput = readAll(buffer).trim().toLowerCase();
-        if (hasCommandInjection(trimedLowerCasedInput)) {
-            throw new CommandInjectionDetectedException();
+        SMTPSession session = (SMTPSession) pipeline.getContext(HandlerConstants.CORE_HANDLER).getAttachment();
+
+        if (session.needsCommandInjectionDetection()) {
+            String trimedLowerCasedInput = readAll(buffer).trim().toLowerCase();
+            if (hasCommandInjection(trimedLowerCasedInput)) {
+                throw new CommandInjectionDetectedException();
+            }
         }
         return super.decode(ctx, channel, buffer);
     }

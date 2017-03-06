@@ -39,6 +39,21 @@ public class BaseFakeSMTPSession implements SMTPSession {
 
     private static final Logger log = new MockLogger();
 
+    @Override
+    public boolean needsCommandInjectionDetection() {
+        throw new UnsupportedOperationException("Unimplemented Stub Method");
+    }
+
+    @Override
+    public void startDetectingCommadInjection() {
+        throw new UnsupportedOperationException("Unimplemented Stub Method");
+    }
+
+    @Override
+    public void stopDetectingCommandInjection() {
+        throw new UnsupportedOperationException("Unimplemented Stub Method");
+    }
+
     /**
      * @see org.apache.james.protocols.smtp.SMTPSession#getConnectionState()
      */

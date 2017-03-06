@@ -73,7 +73,7 @@ public abstract class AbstractChannelPipelineFactory implements ChannelPipelineF
 
         
         // Add the text line decoder which limit the max line length, don't strip the delimiter and use CRLF as delimiter
-        pipeline.addLast(HandlerConstants.FRAMER, frameHandlerFactory.create());
+        pipeline.addLast(HandlerConstants.FRAMER, frameHandlerFactory.create(pipeline));
        
         // Add the ChunkedWriteHandler to be able to write ChunkInput
         pipeline.addLast(HandlerConstants.CHUNK_HANDLER, new ChunkedWriteHandler());

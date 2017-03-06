@@ -20,6 +20,7 @@ package org.apache.james.protocols.smtp;
 
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.jboss.netty.channel.ChannelHandler;
+import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.handler.codec.frame.Delimiters;
 
 public class AllButStartTlsLineDelimiterChannelHandlerFactory implements ChannelHandlerFactory {
@@ -31,7 +32,7 @@ public class AllButStartTlsLineDelimiterChannelHandlerFactory implements Channel
     }
 
     @Override
-    public ChannelHandler create() {
-        return new AllButStartTlsDelimiterChannelHandler(maxFrameLength, false, Delimiters.lineDelimiter());
+    public ChannelHandler create(ChannelPipeline pipeline) {
+        return new AllButStartTlsDelimiterChannelHandler(pipeline, maxFrameLength, false, Delimiters.lineDelimiter());
     }
 }

@@ -19,8 +19,9 @@
 package org.apache.james.protocols.netty;
 
 import org.jboss.netty.channel.ChannelHandler;
+import org.jboss.netty.channel.ChannelPipeline;
 
 public interface ChannelHandlerFactory {
-    ChannelHandler create();
+    ChannelHandler create(ChannelPipeline pipeline);
 
 }

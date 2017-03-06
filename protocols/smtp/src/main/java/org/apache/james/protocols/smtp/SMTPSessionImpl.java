@@ -36,12 +36,28 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
     private static final Response FATAL_ERROR = new SMTPResponse(SMTPRetCode.LOCAL_ERROR, "Unable to process request").immutable();
     
     private boolean relayingAllowed;
+    private boolean needsCommandInjectionDetection;
     
     public SMTPSessionImpl(Logger logger, ProtocolTransport transport, SMTPConfiguration config) {
         super(logger, transport, config);
         relayingAllowed = config.isRelayingAllowed(getRemoteAddress().getAddress().getHostAddress());
+        needsCommandInjectionDetection = true;
     }
 
+    @Override
+    public boolean needsCommandInjectionDetection() {
+        return needsCommandInjectionDetection;
+    }
+
+    @Override
+    public void startDetectingCommadInjection() {
+        needsCommandInjectionDetection = true;
+    }
+
+    @Override
+    public void stopDetectingCommandInjection() {
+        needsCommandInjectionDetection = false;
+    }
 
     /**
      * @see org.apache.james.protocols.smtp.SMTPSession#isRelayingAllowed()

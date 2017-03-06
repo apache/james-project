@@ -19,6 +19,7 @@
 package org.apache.james.protocols.netty;
 
 import org.jboss.netty.channel.ChannelHandler;
+import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.jboss.netty.handler.codec.frame.Delimiters;
 
@@ -30,7 +31,7 @@ public class LineDelimiterBasedChannelHandlerFactory implements ChannelHandlerFa
     }
 
     @Override
-    public ChannelHandler create() {
+    public ChannelHandler create(ChannelPipeline pipeline) {
         return new DelimiterBasedFrameDecoder(maxLineLength, false, Delimiters.lineDelimiter());
     }
 

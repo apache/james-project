@@ -114,7 +114,7 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
                 // Add the text line decoder which limit the max line length,
                 // don't strip the delimiter and use CRLF as delimiter
                 // Use a SwitchableDelimiterBasedFrameDecoder, see JAMES-1436
-                pipeline.addLast(FRAMER, getFrameHandlerFactory().create());
+                pipeline.addLast(FRAMER, getFrameHandlerFactory().create(pipeline));
                 pipeline.addLast(CONNECTION_COUNT_HANDLER, getConnectionCountHandler());
                 pipeline.addLast(CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
 

@@ -20,6 +20,7 @@ package org.apache.james.imapserver.netty;
 
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.jboss.netty.channel.ChannelHandler;
+import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.handler.codec.frame.Delimiters;
 
 public class SwitchableLineDelimiterBasedFrameDecoderFactory implements ChannelHandlerFactory {
@@ -31,7 +32,7 @@ public class SwitchableLineDelimiterBasedFrameDecoderFactory implements ChannelH
     }
 
     @Override
-    public ChannelHandler create() {
+    public ChannelHandler create(ChannelPipeline pipeline) {
         return new SwitchableDelimiterBasedFrameDecoder(maxLineLength, false, Delimiters.lineDelimiter());
     }
 }

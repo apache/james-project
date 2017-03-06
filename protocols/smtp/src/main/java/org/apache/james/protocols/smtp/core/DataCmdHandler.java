@@ -138,7 +138,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
      */
     public Response onCommand(SMTPSession session, Request request) {
         TimeMetric timeMetric = metricFactory.timer("SMTP-" + request.getCommand());
-
+        session.stopDetectingCommandInjection();
         try {
             String parameters = request.getArgument();
             Response response = doDATAFilter(session, parameters);
@@ -150,6 +150,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
             }
         } finally {
             timeMetric.stopAndPublish();
+            session.needsCommandInjectionDetection();
         }
     }
 
