@@ -58,6 +58,17 @@ S: 18 OK LIST completed.
 C: 19 CREATE alpha
 S: 19 NO CREATE failed. Mailbox already exists.
 
+#
+# When creating a mailbox which name contains the hierarchical separator UTF-7 encoded
+# The creation should succeed as if trying to create a folder and its subfolder
+#
+C: 20 CREATE "one&AC4-two"
+S: 20 OK CREATE completed.
+C: 21 LIST "" one*
+S: \* LIST \(\\HasChildren\) "." "one"
+S: \* LIST \(\\HasNoChildren\) "." "one.two"
+S: 21 OK LIST completed.
+
 # Cleanup
 C: a1 DELETE test1.subfolder1
 S: a1 OK DELETE completed.
@@ -79,3 +90,7 @@ C: a11 DELETE another.test
 S: a11 OK DELETE completed.
 C: a11 DELETE another
 S: a11 OK DELETE completed.
+C: a12 DELETE one.two
+S: a12 OK DELETE completed.
+C: a12 DELETE one
+S: a12 OK DELETE completed.
