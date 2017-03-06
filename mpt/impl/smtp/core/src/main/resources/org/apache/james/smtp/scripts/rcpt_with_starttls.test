@@ -1,0 +1,18 @@
+S: 220 mydomain.tld smtp
+C: ehlo yopmail.com
+C: mail from:<matthieu@yopmail.com>
+C: rcpt to:<starttls@mydomain.tld>
+C: data
+S: 250.*
+S: 250-PIPELINING
+S: 250-ENHANCEDSTATUSCODES
+S: 250-8BITMIME
+S: 250 STARTTLS
+S: 250 2.1.0 Sender <matthieu@yopmail.com> OK
+S: 250 2.1.5 Recipient <starttls@mydomain.tld> OK
+S: 354 Ok Send data ending with <CRLF>.<CRLF>
+C: subject: test
+C:
+C: content content
+C: .
+S: 250 2.6.0 Message received

@@ -193,6 +193,20 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
+    public void startTlsShouldFailWhenFollowedByInjectedCommandAndNotAtBeginningOfLine() throws Exception {
+        ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
+        server.bind();
+
+        SMTPSClient client = createClient();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+        client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        client.sendCommand("EHLO localhost");
+
+        client.sendCommand("RSET\r\nSTARTTLS\r\nRSET\r\n");
+        assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).isFalse();
+    }
+
+    @Test
     public void startTlsShouldWorkWhenUsingJavamail() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         ProtocolServer server = createServer(createProtocol(Optional.<ProtocolHandler> of(hook)) , Encryption.createStartTls(BogusSslContextFactory.getServerContext()));  

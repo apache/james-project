@@ -68,6 +68,14 @@ public class SmtpStarttlsCommandTest extends AbstractSimpleScriptedTestProtocol 
         scriptTest("data_with_starttls", Locale.US);
     }
 
+
+    @Test
+    public void shouldNotRejectRcptWithStartTls() throws Exception {
+        hostSystem.addUser("starttls@mydomain.tld", PASSWORD);
+
+        scriptTest("rcpt_with_starttls", Locale.US);
+    }
+
     @Test
     public void shouldNotRejectContentStartsWithStartTls() throws Exception {
         scriptTest("data_starts_with_starttls", Locale.US);

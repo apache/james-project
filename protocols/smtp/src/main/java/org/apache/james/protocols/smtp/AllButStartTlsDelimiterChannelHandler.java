@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp;
 
+import java.util.List;
+
 import org.apache.james.protocols.netty.HandlerConstants;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
@@ -25,7 +27,11 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
+import com.google.common.base.Predicate;
+import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
 
 public class AllButStartTlsDelimiterChannelHandler extends DelimiterBasedFrameDecoder {
 
@@ -55,7 +61,27 @@ public class AllButStartTlsDelimiterChannelHandler extends DelimiterBasedFrameDe
     }
 
     private boolean hasCommandInjection(String trimedLowerCasedInput) {
-        return trimedLowerCasedInput.contains(STARTTLS)
-                && !trimedLowerCasedInput.endsWith(STARTTLS);
+        List<String> parts = Splitter.on(CharMatcher.anyOf("\r\n")).omitEmptyStrings()
+            .splitToList(trimedLowerCasedInput);
+
+        return hasInvalidStartTlsPart(parts) || multiPartsAndOneStartTls(parts);
+    }
+
+    private boolean multiPartsAndOneStartTls(List<String> parts) {
+        return FluentIterable.from(parts).anyMatch(new Predicate<String>() {
+            @Override
+            public boolean apply(String line) {
+                return line.startsWith(STARTTLS);
+            }
+        }) && parts.size() > 1;
+    }
+
+    private boolean hasInvalidStartTlsPart(List<String> parts) {
+        return FluentIterable.from(parts).anyMatch(new Predicate<String>() {
+            @Override
+            public boolean apply(String line) {
+                return line.startsWith(STARTTLS) && !line.endsWith(STARTTLS);
+            }
+        });
     }
 }
