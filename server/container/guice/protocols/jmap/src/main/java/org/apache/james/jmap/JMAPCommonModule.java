@@ -37,8 +37,6 @@ import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.send.MailFactory;
 import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.jmap.utils.HeadersAuthenticationExtractor;
-import org.apache.james.mailbox.AttachmentManager;
-import org.apache.james.mailbox.store.StoreAttachmentManager;
 import org.apache.james.util.date.DefaultZonedDateTimeProvider;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
@@ -68,7 +66,6 @@ public class JMAPCommonModule extends AbstractModule {
         bind(MessagePreviewGenerator.class).in(Scopes.SINGLETON);
         bind(MessageContentExtractor.class).in(Scopes.SINGLETON);
         bind(HeadersAuthenticationExtractor.class).in(Scopes.SINGLETON);
-        bind(StoreAttachmentManager.class).in(Scopes.SINGLETON);
 
         bind(SignatureHandler.class).to(JamesSignatureHandler.class);
         bind(ZonedDateTimeProvider.class).to(DefaultZonedDateTimeProvider.class);
@@ -78,7 +75,6 @@ public class JMAPCommonModule extends AbstractModule {
 
         bindConstant().annotatedWith(Names.named(AccessTokenRepository.TOKEN_EXPIRATION_IN_MS)).to(DEFAULT_TOKEN_EXPIRATION_IN_MS);
         bind(AccessTokenManager.class).to(AccessTokenManagerImpl.class);
-        bind(AttachmentManager.class).to(StoreAttachmentManager.class);
     }
 
     @Provides

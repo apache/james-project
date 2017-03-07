@@ -181,6 +181,10 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
+                    <artifactId>james-server-guice-jmap</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-lmtp</artifactId>
                 </dependency>
                 <dependency>
@@ -202,10 +206,6 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-smtp</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>james-server-jmap</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

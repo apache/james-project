@@ -58,7 +58,7 @@ import com.google.common.collect.Iterables;
 
 public class GuiceServerProbe implements ExtendedServerProbe, GuiceProbe {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JmapGuiceProbe.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GuiceServerProbe.class);
 
     private final MailboxManager mailboxManager;
     private final MailboxMapperFactory mailboxMapperFactory;

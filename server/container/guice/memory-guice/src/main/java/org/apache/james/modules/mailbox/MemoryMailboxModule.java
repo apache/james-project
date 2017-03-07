@@ -23,6 +23,7 @@ import javax.inject.Singleton;
 
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthorizator;
+import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MessageIdManager;
@@ -47,6 +48,7 @@ import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.StoreAttachmentManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
@@ -89,6 +91,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(MessageIdManager.class).to(InMemoryMessageIdManager.class);
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
         bind(GroupMembershipResolver.class).to(SimpleGroupMembershipResolver.class);
+        bind(AttachmentManager.class).to(StoreAttachmentManager.class);
 
         bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class);
         bind(TextExtractor.class).to(JsoupTextExtractor.class);
@@ -106,6 +109,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(InMemoryMessageId.Factory.class).in(Scopes.SINGLETON);
         bind(InMemoryMessageIdManager.class).in(Scopes.SINGLETON);
         bind(MailboxEventDispatcher.class).in(Scopes.SINGLETON);
+        bind(StoreAttachmentManager.class).in(Scopes.SINGLETON);
     }
 
     @Provides @Named(Names.MAILBOXMANAGER_NAME) @Singleton

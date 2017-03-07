@@ -46,6 +46,17 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-jmap</artifactId>
+                <version>3.0.0-beta6-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-jmap</artifactId>
+                <version>3.0.0-beta6-SNAPSHOT</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-lmtp</artifactId>
                 <version>3.0.0-beta6-SNAPSHOT</version>
             </dependency>
@@ -88,6 +99,7 @@
         <module>jpa-guice</module>
         <module>onami</module>
         <module>protocols/imap</module>
+        <module>protocols/jmap</module>
         <module>protocols/lmtp</module>
         <module>protocols/managedsieve</module>
         <module>protocols/pop</module>
