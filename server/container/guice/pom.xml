@@ -56,6 +56,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-mailet</artifactId>
+                <version>3.0.0-beta6-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-managedsieve</artifactId>
                 <version>3.0.0-beta6-SNAPSHOT</version>
             </dependency>
@@ -78,6 +83,7 @@
         <module>cassandra-guice</module>
         <module>cassandra-ldap-guice</module>
         <module>mailbox</module>
+        <module>mailet</module>
         <module>memory-guice</module>
         <module>jpa-guice</module>
         <module>onami</module>
