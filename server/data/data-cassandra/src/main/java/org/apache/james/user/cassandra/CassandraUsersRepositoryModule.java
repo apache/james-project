@@ -48,13 +48,7 @@ public class CassandraUsersRepositoryModule implements CassandraModule {
                         .addColumn(CassandraUserTable.PASSWORD, text())
                         .addColumn(CassandraUserTable.ALGORITHM, text()))
                     );
-        index = ImmutableList.of(
-                new CassandraIndex(
-                    SchemaBuilder.createIndex(CassandraIndex.INDEX_PREFIX + CassandraUserTable.TABLE_NAME + CassandraUserTable.REALNAME)
-                        .ifNotExists()
-                        .onTable(CassandraUserTable.TABLE_NAME)
-                        .andColumn(CassandraUserTable.REALNAME))
-                );
+        index = ImmutableList.of();
         types = ImmutableList.of();
     }
 

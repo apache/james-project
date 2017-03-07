@@ -67,9 +67,10 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
         ResultSet result = session.execute(
                 select(REALNAME, PASSWORD, ALGORITHM)
                 .from(TABLE_NAME)
-                .where(eq(REALNAME, name)));
+                .where(eq(NAME, name.toLowerCase())));
         return Optional.ofNullable(result.one())
             .map(row -> new DefaultUser(row.getString(REALNAME), row.getString(PASSWORD), row.getString(ALGORITHM)))
+            .filter(user -> user.getUserName().equals(name))
             .orElse(null);
     }
 
