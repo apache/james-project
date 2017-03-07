@@ -20,13 +20,14 @@
 package org.apache.james.mailbox.cassandra.modules;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.google.common.collect.ImmutableList;
+
 import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.mailbox.cassandra.table.CassandraSubscriptionTable;
 
-import java.util.Collections;
 import java.util.List;
 
 import static com.datastax.driver.core.DataType.text;
@@ -38,19 +39,14 @@ public class CassandraSubscriptionModule implements CassandraModule {
     private final List<CassandraType> types;
 
     public CassandraSubscriptionModule() {
-        tables = Collections.singletonList(
+        tables = ImmutableList.of(
             new CassandraTable(CassandraSubscriptionTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraSubscriptionTable.TABLE_NAME)
                     .ifNotExists()
-                    .addPartitionKey(CassandraSubscriptionTable.MAILBOX, text())
-                    .addClusteringColumn(CassandraSubscriptionTable.USER, text())));
-        index = Collections.singletonList(
-            new CassandraIndex(
-                SchemaBuilder.createIndex(CassandraIndex.INDEX_PREFIX + CassandraSubscriptionTable.USER)
-                    .ifNotExists()
-                    .onTable(CassandraSubscriptionTable.TABLE_NAME)
-                    .andColumn(CassandraSubscriptionTable.USER)));
-        types = Collections.emptyList();
+                    .addPartitionKey(CassandraSubscriptionTable.USER, text())
+                    .addClusteringColumn(CassandraSubscriptionTable.MAILBOX, text())));
+        index = ImmutableList.of();
+        types = ImmutableList.of();
     }
 
     @Override
