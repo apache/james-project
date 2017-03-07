@@ -115,8 +115,15 @@ public class StoreMessageIdManager implements MessageIdManager {
         try {
             MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
             final MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
-            return FluentIterable.from(messageIdMapper.find(messageIds, MessageMapper.FetchType.Full))
-                .filter(belongsToUser(mailboxSession, mailboxMapper))
+            List<MailboxMessage> messageList = messageIdMapper.find(messageIds, MessageMapper.FetchType.Full);
+            ImmutableSet<MailboxId> mailboxIds = FluentIterable.from(messageList)
+                .transform(EXTRACT_MAILBOX_ID_FUNCTION)
+                .toSet();
+            final ImmutableSet<MailboxId> allowedMailboxIds = FluentIterable.from(mailboxIds)
+                .filter(mailboxBelongsToUser(mailboxSession, mailboxMapper))
+                .toSet();
+            return FluentIterable.from(messageList)
+                .filter(inMailboxes(allowedMailboxIds))
                 .transform(messageResultConverter(fetchGroup))
                 .toList();
         } catch (WrappedException wrappedException) {
@@ -133,7 +140,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         Iterable<MetadataWithMailboxId> metadatasWithMailbox = FluentIterable
             .from(messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata))
-            .filter(inMailbox(mailboxIds))
+            .filter(inMailboxes(mailboxIds))
             .transform(EXTRACT_METADATA_FUNCTION);
 
         messageIdMapper.delete(messageId, mailboxIds);
@@ -248,7 +255,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         };
     }
 
-    private Predicate<MailboxMessage> inMailbox(final List<MailboxId> mailboxIds) {
+    private Predicate<MailboxMessage> inMailboxes(final Collection<MailboxId> mailboxIds) {
         return new Predicate<MailboxMessage>() {
             @Override
             public boolean apply(MailboxMessage mailboxMessage) {
@@ -263,6 +270,20 @@ public class StoreMessageIdManager implements MessageIdManager {
             public boolean apply(MailboxMessage input) {
                 try {
                     Mailbox currentMailbox = mailboxMapper.findMailboxById(input.getMailboxId());
+                    return belongsToCurrentUser(currentMailbox, mailboxSession);
+                } catch (MailboxException e) {
+                    return false;
+                }
+            }
+        };
+    }
+
+    private Predicate<MailboxId> mailboxBelongsToUser(final MailboxSession mailboxSession, final MailboxMapper mailboxMapper) {
+        return new Predicate<MailboxId>() {
+            @Override
+            public boolean apply(MailboxId mailboxId) {
+                try {
+                    Mailbox currentMailbox = mailboxMapper.findMailboxById(mailboxId);
                     return belongsToCurrentUser(currentMailbox, mailboxSession);
                 } catch (MailboxException e) {
                     return false;
