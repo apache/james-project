@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin;
 
+import java.util.Objects;
+
 import com.google.common.base.Preconditions;
 
 public class FixedPort implements Port {
@@ -35,4 +37,18 @@ public class FixedPort implements Port {
         return port;
     }
 
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof FixedPort) {
+            FixedPort that = (FixedPort) o;
+
+            return Objects.equals(this.port, that.port);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(port);
+    }
 }

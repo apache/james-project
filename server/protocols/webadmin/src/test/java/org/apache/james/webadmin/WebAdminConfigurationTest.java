@@ -20,38 +20,55 @@
 package org.apache.james.webadmin;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class FixedPortTest {
+public class WebAdminConfigurationTest {
+
+    public static final FixedPort PORT = new FixedPort(80);
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
-    public void toIntShouldThrowOnNegativePort() {
-        assertThatThrownBy(() -> new FixedPort(-1)).isInstanceOf(IllegalArgumentException.class);
+    public void buildShouldThrowWhenNoPortButEnabled() {
+        expectedException.expect(IllegalStateException.class);
+
+        WebAdminConfiguration.builder().enabled().build();
     }
 
     @Test
-    public void toIntShouldThrowOnNullPort() {
-        assertThatThrownBy(() -> new FixedPort(0)).isInstanceOf(IllegalArgumentException.class);
+    public void buildShouldWorkWithoutPortWhenDisabled() {
+        assertThat(WebAdminConfiguration.builder()
+            .disabled()
+            .build())
+            .isEqualTo(new WebAdminConfiguration(false, null));
     }
 
     @Test
-    public void toIntShouldThrowOnTooBigNumbers() {
-        assertThatThrownBy(() -> new FixedPort(65536)).isInstanceOf(IllegalArgumentException.class);
+    public void buildShouldFailOnNoEnable() {
+        expectedException.expect(IllegalStateException.class);
+
+        WebAdminConfiguration.builder().port(PORT).build();
     }
 
     @Test
-    public void toIntShouldReturnedDesiredPort() {
-        int expectedPort = 452;
-        assertThat(new FixedPort(expectedPort).toInt()).isEqualTo(expectedPort);
+    public void builderShouldBuildRightObject() {
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .build())
+            .isEqualTo(new WebAdminConfiguration(true, PORT));
     }
 
     @Test
     public void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(FixedPort.class).verify();
+        EqualsVerifier.forClass(WebAdminConfiguration.class).verify();
     }
 
 }
