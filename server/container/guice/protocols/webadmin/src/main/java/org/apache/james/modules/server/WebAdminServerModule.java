@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
@@ -36,6 +37,9 @@ import org.apache.james.webadmin.HttpsConfiguration;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminServer;
+import org.apache.james.webadmin.authentication.AuthenticationFilter;
+import org.apache.james.webadmin.authentication.JwtFilter;
+import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 import org.apache.james.webadmin.routes.DomainRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
@@ -51,6 +55,8 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class WebAdminServerModule extends AbstractModule {
+
+    public static final boolean DEFAULT_JWT_DISABLED = false;
 
     @Override
     protected void configure() {
@@ -79,6 +85,20 @@ public class WebAdminServerModule extends AbstractModule {
             return WebAdminConfiguration.builder()
                 .disabled()
                 .build();
+        }
+    }
+
+    @Provides
+    public AuthenticationFilter providesAuthenticationFilter(PropertiesProvider propertiesProvider,
+                                                             JwtTokenVerifier jwtTokenVerifier) throws Exception {
+        try {
+            PropertiesConfiguration configurationFile = propertiesProvider.getConfiguration("webadmin");
+            if (configurationFile.getBoolean("jwt.enabled", DEFAULT_JWT_DISABLED)) {
+                return new JwtFilter(jwtTokenVerifier);
+            }
+            return new NoAuthenticationFilter();
+        } catch (FileNotFoundException e) {
+            return new NoAuthenticationFilter();
         }
     }
 

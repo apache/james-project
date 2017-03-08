@@ -20,6 +20,9 @@ package org.apache.james.jwt;
 
 import javax.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
@@ -31,6 +34,7 @@ import io.jsonwebtoken.MalformedJwtException;
 
 public class JwtTokenVerifier {
 
+    private static Logger LOGGER = LoggerFactory.getLogger(JwtTokenVerifier.class);
     private final PublicKeyProvider pubKeyProvider;
 
     @Inject
@@ -39,12 +43,17 @@ public class JwtTokenVerifier {
         this.pubKeyProvider = pubKeyProvider;
     }
 
-    public boolean verify(String token) throws JwtException {
-        String subject = extractLogin(token);
-        if (Strings.isNullOrEmpty(subject)) {
-            throw new MalformedJwtException("'subject' field in token is mandatory");
+    public boolean verify(String token) {
+        try {
+            String subject = extractLogin(token);
+            if (Strings.isNullOrEmpty(subject)) {
+                throw new MalformedJwtException("'subject' field in token is mandatory");
+            }
+            return true;
+        } catch (JwtException e) {
+            LOGGER.info("Failed Jwt verification");
+            return false;
         }
-        return true;
     }
 
     public String extractLogin(String token) throws JwtException {
@@ -52,6 +61,20 @@ public class JwtTokenVerifier {
         return jws
                 .getBody()
                 .getSubject();
+    }
+
+    public boolean hasAttribute(String attributeName, Object expectedValue, String token) {
+        try {
+            Jwts
+                .parser()
+                .require(attributeName, expectedValue)
+                .setSigningKey(pubKeyProvider.get())
+                .parseClaimsJws(token);
+            return true;
+        } catch (JwtException e) {
+            LOGGER.info("Jwt validation failed for claim " + attributeName + " to " + expectedValue, e);
+            return false;
+        }
     }
 
     private Jws<Claims> parseToken(String token) throws JwtException {

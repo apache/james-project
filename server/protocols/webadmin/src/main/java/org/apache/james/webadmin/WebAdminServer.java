@@ -28,6 +28,8 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.webadmin.authentication.AuthenticationFilter;
+import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,12 +47,14 @@ public class WebAdminServer implements Configurable {
     private final WebAdminConfiguration configuration;
     private final Set<Routes> routesList;
     private final Service service;
+    private final AuthenticationFilter authenticationFilter;
 
     // Spark do not allow to retrieve allocated port when using a random port. Thus we generate the port.
     @Inject
-    private WebAdminServer(WebAdminConfiguration configuration, Set<Routes> routesList) {
+    private WebAdminServer(WebAdminConfiguration configuration, Set<Routes> routesList, AuthenticationFilter authenticationFilter) {
         this.configuration = configuration;
         this.routesList = routesList;
+        this.authenticationFilter = authenticationFilter;
         this.service = Service.ignite();
     }
 
@@ -60,7 +64,8 @@ public class WebAdminServer implements Configurable {
             .enabled()
             .port(new RandomPort())
             .build(),
-            ImmutableSet.copyOf(routes));
+            ImmutableSet.copyOf(routes),
+            new NoAuthenticationFilter());
     }
 
     @Override
@@ -75,6 +80,7 @@ public class WebAdminServer implements Configurable {
                     httpsConfiguration.getTruststorePassword());
                 LOGGER.info("Web admin set up to use HTTPS");
             }
+            service.before(authenticationFilter);
             routesList.forEach(routes -> routes.define(service));
             LOGGER.info("Web admin server started");
         }
