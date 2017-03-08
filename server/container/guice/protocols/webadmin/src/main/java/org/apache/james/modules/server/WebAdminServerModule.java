@@ -32,6 +32,7 @@ import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.FixedPort;
+import org.apache.james.webadmin.HttpsConfiguration;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminServer;
@@ -72,12 +73,33 @@ public class WebAdminServerModule extends AbstractModule {
             return WebAdminConfiguration.builder()
                 .enable(configurationFile.getBoolean("enabled", false))
                 .port(new FixedPort(configurationFile.getInt("port", WebAdminServer.DEFAULT_PORT)))
+                .https(readHttpsConfiguration(configurationFile))
                 .build();
         } catch (FileNotFoundException e) {
             return WebAdminConfiguration.builder()
                 .disabled()
                 .build();
         }
+    }
+
+    private HttpsConfiguration readHttpsConfiguration(PropertiesConfiguration configurationFile) {
+        boolean enabled = configurationFile.getBoolean("https.enabled", DEFAULT_HTTPS_DISABLED());
+        if (enabled) {
+            return HttpsConfiguration.builder()
+                .enabled()
+                .raw(configurationFile.getString("https.keystore", null),
+                    configurationFile.getString("https.password", null),
+                    configurationFile.getString("https.trust.keystore", null),
+                    configurationFile.getString("https.trust.password", null))
+                .build();
+        }
+        return HttpsConfiguration.builder()
+            .disabled()
+            .build();
+    }
+
+    private boolean DEFAULT_HTTPS_DISABLED() {
+        return false;
     }
 
     @Singleton

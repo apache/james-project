@@ -67,6 +67,14 @@ public class WebAdminServer implements Configurable {
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         if (configuration.isEnabled()) {
             service.port(configuration.getPort().toInt());
+            HttpsConfiguration httpsConfiguration = configuration.getHttpsConfiguration();
+            if (httpsConfiguration.isEnabled()) {
+                service.secure(httpsConfiguration.getKeystoreFilePath(),
+                    httpsConfiguration.getKeystorePassword(),
+                    httpsConfiguration.getTruststoreFilePath(),
+                    httpsConfiguration.getTruststorePassword());
+                LOGGER.info("Web admin set up to use HTTPS");
+            }
             routesList.forEach(routes -> routes.define(service));
             LOGGER.info("Web admin server started");
         }
