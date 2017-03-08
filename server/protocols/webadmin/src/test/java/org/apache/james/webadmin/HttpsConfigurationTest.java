@@ -27,64 +27,75 @@ import org.junit.rules.ExpectedException;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class WebAdminConfigurationTest {
-
-    public static final FixedPort PORT = new FixedPort(80);
+public class HttpsConfigurationTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
     @Test
-    public void buildShouldThrowWhenNoPortButEnabled() {
+    public void buildShouldThrowWhenNotEnabled() {
         expectedException.expect(IllegalStateException.class);
 
-        WebAdminConfiguration.builder().enabled().build();
+        HttpsConfiguration.builder().build();
     }
 
     @Test
-    public void buildShouldWorkWithoutPortWhenDisabled() {
-        assertThat(WebAdminConfiguration.builder()
-            .disabled()
-            .build())
-            .isEqualTo(new WebAdminConfiguration(false, null, HttpsConfiguration.builder().disabled().build()));
-    }
-
-    @Test
-    public void buildShouldFailOnNoEnable() {
+    public void buildShouldThrowWhenEnableWithoutKeystore() {
         expectedException.expect(IllegalStateException.class);
 
-        WebAdminConfiguration.builder().port(PORT).build();
+        HttpsConfiguration.builder().enabled().build();
     }
 
     @Test
-    public void builderShouldBuildRightObject() {
+    public void selfSignedShouldThrowOnNullKeyStorePath() {
+        expectedException.expect(NullPointerException.class);
+
+        HttpsConfiguration.builder()
+            .enabled()
+            .selfSigned(null, "abc");
+    }
+
+    @Test
+    public void selfSignedShouldThrowOnNullKeyStorePassword() {
+        expectedException.expect(NullPointerException.class);
+
+        HttpsConfiguration.builder()
+            .enabled()
+            .selfSigned("abc", null);
+    }
+
+    @Test
+    public void buildShouldWorkOnDisabledHttps() {
         assertThat(
-            WebAdminConfiguration.builder()
-                .enabled()
-                .port(PORT)
+            HttpsConfiguration.builder()
+                .disabled()
                 .build())
-            .isEqualTo(new WebAdminConfiguration(true, PORT, HttpsConfiguration.builder().disabled().build()));
+            .isEqualTo(new HttpsConfiguration(false, null, null, null, null));
     }
 
     @Test
-    public void builderShouldAcceptHttps() {
-        HttpsConfiguration httpsConfiguration = HttpsConfiguration.builder()
-            .enable(true)
-            .selfSigned("abcd", "efgh")
-            .build();
-
+    public void buildShouldWorkOnSelfSignedHttps() {
         assertThat(
-            WebAdminConfiguration.builder()
+            HttpsConfiguration.builder()
                 .enabled()
-                .https(httpsConfiguration)
-                .port(PORT)
+                .selfSigned("abcd", "efgh")
                 .build())
-            .isEqualTo(new WebAdminConfiguration(true, PORT, httpsConfiguration));
+            .isEqualTo(new HttpsConfiguration(true, "abcd", "efgh", null, null));
     }
 
     @Test
-    public void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(WebAdminConfiguration.class).verify();
+    public void buildShouldWorkOnTrustedHttps() {
+        assertThat(
+            HttpsConfiguration.builder()
+                .enabled()
+                .raw("a", "b", "c", "d")
+                .build())
+            .isEqualTo(new HttpsConfiguration(true, "a", "b", "c", "d"));
+    }
+
+    @Test
+    public void shouldRespectBeanContract() {
+        EqualsVerifier.forClass(HttpsConfiguration.class).verify();
     }
 
 }

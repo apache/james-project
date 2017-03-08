@@ -35,6 +35,12 @@ public class WebAdminConfiguration {
     public static class Builder {
         private Optional<Boolean> enabled = Optional.empty();
         private Port port;
+        private Optional<HttpsConfiguration> httpsConfiguration = Optional.empty();
+
+        public Builder https(HttpsConfiguration httpsConfiguration) {
+            this.httpsConfiguration = Optional.of(httpsConfiguration);
+            return this;
+        }
 
         public Builder port(Port port) {
             this.port = port;
@@ -57,17 +63,24 @@ public class WebAdminConfiguration {
         public WebAdminConfiguration build() {
             Preconditions.checkState(enabled.isPresent(), "You need to explicitly enable or disable WebAdmin server");
             Preconditions.checkState(!enabled.get() || port != null, "You need to specify a port for WebAdminConfiguration");
-            return new WebAdminConfiguration(enabled.get(), port);
+            return new WebAdminConfiguration(enabled.get(),
+                port,
+                httpsConfiguration.orElse(
+                    HttpsConfiguration.builder()
+                        .disabled()
+                        .build()));
         }
     }
 
     private final boolean enabled;
     private final Port port;
+    private final HttpsConfiguration httpsConfiguration;
 
     @VisibleForTesting
-    WebAdminConfiguration(boolean enabled, Port port) {
+    WebAdminConfiguration(boolean enabled, Port port, HttpsConfiguration httpsConfiguration) {
         this.enabled = enabled;
         this.port = port;
+        this.httpsConfiguration = httpsConfiguration;
     }
 
     public boolean isEnabled() {
@@ -76,6 +89,10 @@ public class WebAdminConfiguration {
 
     public Port getPort() {
         return port;
+    }
+
+    public HttpsConfiguration getHttpsConfiguration() {
+        return httpsConfiguration;
     }
 
     @Override
