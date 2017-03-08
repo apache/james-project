@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.crypto;
+package org.apache.james.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -25,7 +25,6 @@ import java.security.Security;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Optional;
 
-import org.apache.james.jmap.JMAPConfiguration;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -50,10 +49,7 @@ public class PublicKeyProviderTest {
     @Test
     public void getShouldNotThrowWhenPEMKeyProvided() {
 
-        JMAPConfiguration configWithPEMKey = JMAPConfiguration.builder()
-                .jwtPublicKeyPem(Optional.ofNullable(PUBLIC_PEM_KEY))
-                .keystore(".").secret(".")
-                .build();
+        JwtConfiguration configWithPEMKey = new JwtConfiguration(Optional.of(PUBLIC_PEM_KEY));
 
         PublicKeyProvider sut = new PublicKeyProvider(configWithPEMKey, new PublicKeyReader());
 
@@ -62,10 +58,7 @@ public class PublicKeyProviderTest {
 
     @Test
     public void getShouldThrowWhenPEMKeyNotProvided() {
-        JMAPConfiguration configWithPEMKey = JMAPConfiguration.builder()
-                .jwtPublicKeyPem(Optional.ofNullable(""))
-                .keystore(" ").secret(" ")
-                .build();
+        JwtConfiguration configWithPEMKey = new JwtConfiguration(Optional.of(""));
 
         PublicKeyProvider sut = new PublicKeyProvider(configWithPEMKey, new PublicKeyReader());
 

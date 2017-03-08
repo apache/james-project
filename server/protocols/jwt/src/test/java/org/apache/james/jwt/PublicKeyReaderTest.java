@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.crypto;
+package org.apache.james.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

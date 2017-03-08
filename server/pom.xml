@@ -109,6 +109,7 @@
         <module>protocols/webadmin-integration-test</module>
 
         <module>testing</module>
+        <module>protocols/jwt</module>
     </modules>
 
     <distributionManagement>
@@ -803,6 +804,11 @@
             <dependency>
                 <groupId>org.apache.james</groupId>
                 <artifactId>james-server-data-ldap-integration-testing</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-jwt</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

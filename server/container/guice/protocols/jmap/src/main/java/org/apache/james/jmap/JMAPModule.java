@@ -34,6 +34,7 @@ import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.jmap.utils.SystemMailboxesProviderImpl;
+import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
@@ -87,6 +88,12 @@ public class JMAPModule extends AbstractModule {
                 .jwtPublicKeyPem(loadPublicKey(fileSystem, Optional.ofNullable(configuration.getString("jwt.publickeypem.url"))))
                 .port(configuration.getInt("jmap.port", DEFAULT_JMAP_PORT))
                 .build();
+    }
+
+    @Provides
+    @Singleton
+    JwtConfiguration providesJwtConfiguration(JMAPConfiguration jmapConfiguration) {
+        return new JwtConfiguration(jmapConfiguration.getJwtPublicKeyPem());
     }
 
     private Optional<String> loadPublicKey(FileSystem fileSystem, Optional<String> jwtPublickeyPemUrl) {

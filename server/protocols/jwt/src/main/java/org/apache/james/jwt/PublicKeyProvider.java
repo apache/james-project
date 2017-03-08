@@ -16,29 +16,29 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.crypto;
+package org.apache.james.jwt;
 
-import com.google.common.annotations.VisibleForTesting;
-import org.apache.james.jmap.JMAPConfiguration;
+import java.security.PublicKey;
 
 import javax.inject.Inject;
-import java.security.PublicKey;
+
+import com.google.common.annotations.VisibleForTesting;
 
 public class PublicKeyProvider {
 
-    private final JMAPConfiguration config;
+    private final JwtConfiguration jwtConfiguration;
     private final PublicKeyReader reader;
 
     @Inject
     @VisibleForTesting
-    PublicKeyProvider(JMAPConfiguration config, PublicKeyReader reader) {
-        this.config = config;
+    PublicKeyProvider(JwtConfiguration jwtConfiguration, PublicKeyReader reader) {
+        this.jwtConfiguration = jwtConfiguration;
         this.reader = reader;
     }
 
     public PublicKey get() throws MissingOrInvalidKeyException {
-        return reader.fromPEM(config.getJwtPublicKeyPem())
-                .orElseThrow(() -> new MissingOrInvalidKeyException());
+        return reader.fromPEM(jwtConfiguration.getJwtPublicKeyPem())
+                .orElseThrow(MissingOrInvalidKeyException::new);
     }
 
 }

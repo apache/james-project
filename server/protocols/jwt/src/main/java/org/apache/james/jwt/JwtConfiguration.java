@@ -16,7 +16,19 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.crypto;
 
-public class MissingOrInvalidKeyException extends RuntimeException {
+package org.apache.james.jwt;
+
+import java.util.Optional;
+
+public class JwtConfiguration {
+    private final Optional<String> jwtPublicKeyPem;
+
+    public JwtConfiguration(Optional<String> jwtPublicKeyPem) {
+        this.jwtPublicKeyPem = jwtPublicKeyPem;
+    }
+
+    public Optional<String> getJwtPublicKeyPem() {
+        return jwtPublicKeyPem;
+    }
 }
