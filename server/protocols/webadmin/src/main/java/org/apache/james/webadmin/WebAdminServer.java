@@ -24,7 +24,6 @@ import java.util.Set;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -41,35 +40,33 @@ public class WebAdminServer implements Configurable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebAdminServer.class);
     public static final HierarchicalConfiguration NO_CONFIGURATION = null;
-    public static final String WEBADMIN_PORT = "webadmin_port";
-    public static final String WEBADMIN_ENABLED = "webadmin_enabled";
     public static final int DEFAULT_PORT = 8080;
 
-    private final Port port;
+    private final WebAdminConfiguration configuration;
     private final Set<Routes> routesList;
-    private final boolean enabled;
     private final Service service;
 
     // Spark do not allow to retrieve allocated port when using a random port. Thus we generate the port.
-
-
     @Inject
-    private WebAdminServer(@Named(WEBADMIN_ENABLED) boolean enabled, @Named(WEBADMIN_PORT)Port port, Set<Routes> routesList) {
-        this.port = port;
+    private WebAdminServer(WebAdminConfiguration configuration, Set<Routes> routesList) {
+        this.configuration = configuration;
         this.routesList = routesList;
-        this.enabled = enabled;
         this.service = Service.ignite();
     }
 
     @VisibleForTesting
     public WebAdminServer(Routes... routes) throws IOException {
-        this(true, new RandomPort(), ImmutableSet.copyOf(routes));
+        this(WebAdminConfiguration.builder()
+            .enabled()
+            .port(new RandomPort())
+            .build(),
+            ImmutableSet.copyOf(routes));
     }
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
-        if (enabled) {
-            service.port(port.toInt());
+        if (configuration.isEnabled()) {
+            service.port(configuration.getPort().toInt());
             routesList.forEach(routes -> routes.define(service));
             LOGGER.info("Web admin server started");
         }
@@ -77,7 +74,7 @@ public class WebAdminServer implements Configurable {
 
     @PreDestroy
     public void destroy() {
-        if (enabled) {
+        if (configuration.isEnabled()) {
             service.stop();
             LOGGER.info("Web admin server stopped");
         }
@@ -88,6 +85,6 @@ public class WebAdminServer implements Configurable {
     }
 
     public Port getPort() {
-        return port;
+        return configuration.getPort();
     }
 }

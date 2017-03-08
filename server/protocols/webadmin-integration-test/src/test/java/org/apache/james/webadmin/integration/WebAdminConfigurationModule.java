@@ -19,15 +19,11 @@
 
 package org.apache.james.webadmin.integration;
 
-import static org.apache.james.webadmin.WebAdminServer.WEBADMIN_ENABLED;
-import static org.apache.james.webadmin.WebAdminServer.WEBADMIN_PORT;
-
-import org.apache.james.webadmin.Port;
 import org.apache.james.webadmin.RandomPort;
+import org.apache.james.webadmin.WebAdminConfiguration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.name.Named;
 
 public class WebAdminConfigurationModule extends AbstractModule {
 
@@ -37,14 +33,11 @@ public class WebAdminConfigurationModule extends AbstractModule {
     }
 
     @Provides
-    @Named(WEBADMIN_PORT)
-    public Port provideWebAdminPort() throws Exception {
-        return new RandomPort();
+    public WebAdminConfiguration provideWebAdminConfiguration() throws Exception {
+        return WebAdminConfiguration.builder()
+            .enabled()
+            .port(new RandomPort())
+            .build();
     }
 
-    @Provides
-    @Named(WEBADMIN_ENABLED)
-    public boolean provideWebAdminEnabled() throws Exception {
-        return true;
-    }
 }

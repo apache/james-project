@@ -20,21 +20,20 @@
 package org.apache.james.modules.server;
 
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
-import static org.apache.james.webadmin.WebAdminServer.WEBADMIN_ENABLED;
-import static org.apache.james.webadmin.WebAdminServer.WEBADMIN_PORT;
 
 import java.io.FileNotFoundException;
 import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.FixedPort;
-import org.apache.james.webadmin.Port;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.routes.DomainRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
@@ -49,7 +48,6 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Named;
 
 public class WebAdminServerModule extends AbstractModule {
 
@@ -68,22 +66,17 @@ public class WebAdminServerModule extends AbstractModule {
     }
 
     @Provides
-    @Named(WEBADMIN_PORT)
-    public Port provideWebAdminPort(PropertiesProvider propertiesProvider) throws Exception {
+    public WebAdminConfiguration provideWebAdminConfiguration(PropertiesProvider propertiesProvider) throws Exception {
         try {
-            return new FixedPort(propertiesProvider.getConfiguration("webadmin").getInt("port", WebAdminServer.DEFAULT_PORT));
+            PropertiesConfiguration configurationFile = propertiesProvider.getConfiguration("webadmin");
+            return WebAdminConfiguration.builder()
+                .enable(configurationFile.getBoolean("enabled", false))
+                .port(new FixedPort(configurationFile.getInt("port", WebAdminServer.DEFAULT_PORT)))
+                .build();
         } catch (FileNotFoundException e) {
-            return new FixedPort(WebAdminServer.DEFAULT_PORT);
-        }
-    }
-
-    @Provides
-    @Named(WEBADMIN_ENABLED)
-    public boolean provideWebAdminEnabled(PropertiesProvider propertiesProvider) throws Exception {
-        try {
-            return propertiesProvider.getConfiguration("webadmin").getBoolean("enabled", false);
-        } catch (FileNotFoundException e) {
-            return false;
+            return WebAdminConfiguration.builder()
+                .disabled()
+                .build();
         }
     }
 
