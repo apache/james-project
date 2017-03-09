@@ -30,6 +30,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
+import org.apache.james.webadmin.routes.CORSRoute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,17 +73,30 @@ public class WebAdminServer implements Configurable {
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         if (configuration.isEnabled()) {
             service.port(configuration.getPort().toInt());
-            HttpsConfiguration httpsConfiguration = configuration.getHttpsConfiguration();
-            if (httpsConfiguration.isEnabled()) {
-                service.secure(httpsConfiguration.getKeystoreFilePath(),
-                    httpsConfiguration.getKeystorePassword(),
-                    httpsConfiguration.getTruststoreFilePath(),
-                    httpsConfiguration.getTruststorePassword());
-                LOGGER.info("Web admin set up to use HTTPS");
-            }
+            configureHTTPS();
+            configureCORS();
             service.before(authenticationFilter);
             routesList.forEach(routes -> routes.define(service));
             LOGGER.info("Web admin server started");
+        }
+    }
+
+    private void configureHTTPS() {
+        HttpsConfiguration httpsConfiguration = configuration.getHttpsConfiguration();
+        if (httpsConfiguration.isEnabled()) {
+            service.secure(httpsConfiguration.getKeystoreFilePath(),
+                httpsConfiguration.getKeystorePassword(),
+                httpsConfiguration.getTruststoreFilePath(),
+                httpsConfiguration.getTruststorePassword());
+            LOGGER.info("Web admin set up to use HTTPS");
+        }
+    }
+
+    private void configureCORS() {
+        if (configuration.isEnabled()) {
+            service.before(new CORSFilter(configuration.getUrlCORSOrigin()));
+            new CORSRoute().define(service);
+            LOGGER.info("Web admin set up to enable CORS from " + configuration.getUrlCORSOrigin());
         }
     }
 

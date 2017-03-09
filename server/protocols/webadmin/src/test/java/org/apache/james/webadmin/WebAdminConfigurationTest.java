@@ -46,7 +46,11 @@ public class WebAdminConfigurationTest {
         assertThat(WebAdminConfiguration.builder()
             .disabled()
             .build())
-            .isEqualTo(new WebAdminConfiguration(false, null, HttpsConfiguration.builder().disabled().build()));
+            .isEqualTo(new WebAdminConfiguration(false,
+                null,
+                HttpsConfiguration.builder().disabled().build(),
+                false,
+                "*"));
     }
 
     @Test
@@ -63,7 +67,12 @@ public class WebAdminConfigurationTest {
                 .enabled()
                 .port(PORT)
                 .build())
-            .isEqualTo(new WebAdminConfiguration(true, PORT, HttpsConfiguration.builder().disabled().build()));
+            .isEqualTo(new WebAdminConfiguration(
+                true,
+                PORT,
+                HttpsConfiguration.builder().disabled().build(),
+                false,
+                "*"));
     }
 
     @Test
@@ -79,7 +88,62 @@ public class WebAdminConfigurationTest {
                 .https(httpsConfiguration)
                 .port(PORT)
                 .build())
-            .isEqualTo(new WebAdminConfiguration(true, PORT, httpsConfiguration));
+            .isEqualTo(new WebAdminConfiguration(
+                true,
+                PORT,
+                httpsConfiguration,
+                false,
+                "*"));
+    }
+
+    @Test
+    public void builderShouldCORSEnabled() {
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .CORSenabled()
+                .build())
+            .isEqualTo(new WebAdminConfiguration(
+                true,
+                PORT,
+                HttpsConfiguration.builder().disabled().build(),
+                true,
+                "*"));
+    }
+
+    @Test
+    public void builderShouldCORSDisabled() {
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .CORSdisabled()
+                .build())
+            .isEqualTo(new WebAdminConfiguration(
+                true,
+                PORT,
+                HttpsConfiguration.builder().disabled().build(),
+                false,
+                "*"));
+    }
+
+    @Test
+    public void builderShouldCORSWithOrigin() {
+        String origin = "linagora.com";
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .CORSenabled()
+                .urlCORSOrigin(origin)
+                .build())
+            .isEqualTo(new WebAdminConfiguration(
+                true,
+                PORT,
+                HttpsConfiguration.builder().disabled().build(),
+                true,
+                origin));
     }
 
     @Test

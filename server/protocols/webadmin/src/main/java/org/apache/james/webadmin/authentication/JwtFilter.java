@@ -33,6 +33,7 @@ import spark.Response;
 public class JwtFilter implements AuthenticationFilter {
     public static final String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
     public static final String AUTHORIZATION_HEADER_NAME = "Authorization";
+    public static final String OPTIONS = "OPTIONS";
 
     private final JwtTokenVerifier jwtTokenVerifier;
 
@@ -43,13 +44,15 @@ public class JwtFilter implements AuthenticationFilter {
 
     @Override
     public void handle(Request request, Response response) throws Exception {
-        Optional<String> bearer = Optional.ofNullable(request.headers(AUTHORIZATION_HEADER_NAME))
-            .filter(value -> value.startsWith(AUTHORIZATION_HEADER_PREFIX))
-            .map(value -> value.substring(AUTHORIZATION_HEADER_PREFIX.length()));
+        if (request.requestMethod() != OPTIONS) {
+            Optional<String> bearer = Optional.ofNullable(request.headers(AUTHORIZATION_HEADER_NAME))
+                .filter(value -> value.startsWith(AUTHORIZATION_HEADER_PREFIX))
+                .map(value -> value.substring(AUTHORIZATION_HEADER_PREFIX.length()));
 
-        checkHeaderPresent(bearer);
-        checkValidSignature(bearer);
-        checkIsAdmin(bearer);
+            checkHeaderPresent(bearer);
+            checkValidSignature(bearer);
+            checkIsAdmin(bearer);
+        }
     }
 
     private void checkHeaderPresent(Optional<String> bearer) {

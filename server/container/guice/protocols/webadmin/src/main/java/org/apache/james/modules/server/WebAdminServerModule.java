@@ -80,6 +80,8 @@ public class WebAdminServerModule extends AbstractModule {
                 .enable(configurationFile.getBoolean("enabled", false))
                 .port(new FixedPort(configurationFile.getInt("port", WebAdminServer.DEFAULT_PORT)))
                 .https(readHttpsConfiguration(configurationFile))
+                .enableCORS(configurationFile.getBoolean("cors.enable", false))
+                .urlCORSOrigin(configurationFile.getString("cors.origin", null))
                 .build();
         } catch (FileNotFoundException e) {
             return WebAdminConfiguration.builder()

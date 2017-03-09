@@ -28,6 +28,9 @@ import com.google.common.base.Preconditions;
 
 public class WebAdminConfiguration {
 
+    public static final boolean DEFAULT_CORS_DISABLED = false;
+    public static final String CORS_ALL_ORIGINS = "*";
+
     public static Builder builder() {
         return new Builder();
     }
@@ -35,7 +38,9 @@ public class WebAdminConfiguration {
     public static class Builder {
         private Optional<Boolean> enabled = Optional.empty();
         private Port port;
+        private Optional<Boolean> enableCORS = Optional.empty();
         private Optional<HttpsConfiguration> httpsConfiguration = Optional.empty();
+        private Optional<String> urlCORSOrigin = Optional.empty();
 
         public Builder https(HttpsConfiguration httpsConfiguration) {
             this.httpsConfiguration = Optional.of(httpsConfiguration);
@@ -51,13 +56,30 @@ public class WebAdminConfiguration {
             this.enabled = Optional.of(isEnabled);
             return this;
         }
-
         public Builder enabled() {
             return enable(true);
         }
 
         public Builder disabled() {
             return enable(false);
+        }
+
+        public Builder urlCORSOrigin(String origin) {
+            this.urlCORSOrigin = Optional.ofNullable(origin);
+            return this;
+        }
+
+        public Builder enableCORS(boolean isEnabled) {
+            this.enableCORS = Optional.of(isEnabled);
+            return this;
+        }
+
+        public Builder CORSenabled() {
+            return enableCORS(true);
+        }
+
+        public Builder CORSdisabled() {
+            return enableCORS(false);
         }
 
         public WebAdminConfiguration build() {
@@ -68,23 +90,33 @@ public class WebAdminConfiguration {
                 httpsConfiguration.orElse(
                     HttpsConfiguration.builder()
                         .disabled()
-                        .build()));
+                        .build()),
+                enableCORS.orElse(DEFAULT_CORS_DISABLED),
+                urlCORSOrigin.orElse(CORS_ALL_ORIGINS));
         }
     }
 
     private final boolean enabled;
     private final Port port;
     private final HttpsConfiguration httpsConfiguration;
+    private final boolean enableCORS;
+    private final String urlCORSOrigin;
 
     @VisibleForTesting
-    WebAdminConfiguration(boolean enabled, Port port, HttpsConfiguration httpsConfiguration) {
+    WebAdminConfiguration(boolean enabled, Port port, HttpsConfiguration httpsConfiguration, boolean enableCORS, String urlCORSOrigin) {
         this.enabled = enabled;
         this.port = port;
         this.httpsConfiguration = httpsConfiguration;
+        this.enableCORS = enableCORS;
+        this.urlCORSOrigin = urlCORSOrigin;
     }
 
     public boolean isEnabled() {
         return enabled;
+    }
+
+    public String getUrlCORSOrigin() {
+        return urlCORSOrigin;
     }
 
     public Port getPort() {
@@ -95,19 +127,26 @@ public class WebAdminConfiguration {
         return httpsConfiguration;
     }
 
+    public boolean isEnableCORS() {
+        return enableCORS;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof WebAdminConfiguration) {
             WebAdminConfiguration that = (WebAdminConfiguration) o;
 
             return Objects.equals(this.enabled, that.enabled)
-                && Objects.equals(this.port, that.port);
+                && Objects.equals(this.port, that.port)
+                && Objects.equals(this.httpsConfiguration, that.httpsConfiguration)
+                && Objects.equals(this.enableCORS, that.enableCORS)
+                && Objects.equals(this.urlCORSOrigin, that.urlCORSOrigin);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(enabled, port);
+        return Objects.hash(enabled, port, httpsConfiguration, enableCORS, urlCORSOrigin);
     }
 }
