@@ -193,7 +193,7 @@
                 <dependency>
                     <groupId>com.sparkjava</groupId>
                     <artifactId>spark-core</artifactId>
-                    <version>2.5</version>
+                    <version>2.5.5</version>
                 </dependency>
                 <dependency>
                     <groupId>de.bechte.junit</groupId>
