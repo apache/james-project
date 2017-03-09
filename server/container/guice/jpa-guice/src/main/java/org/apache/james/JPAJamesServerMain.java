@@ -32,6 +32,7 @@ import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.QuotaModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.WebAdminServerModule;
@@ -57,7 +58,8 @@ public class JPAJamesServerMain {
         new QuotaModule(),
         new ActiveMQQueueModule(),
         new RawPostDequeueDecoratorModule(),
-        new MailboxModule());
+        new MailboxModule(),
+        new NoJwtModule());
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()
