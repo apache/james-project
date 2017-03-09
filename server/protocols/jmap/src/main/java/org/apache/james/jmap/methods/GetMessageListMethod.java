@@ -90,10 +90,10 @@ public class GetMessageListMethod implements Method {
     @Override
     public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMessageListRequest);
+        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + METHOD_NAME.getName());
+        
         GetMessageListRequest messageListRequest = (GetMessageListRequest) request;
         GetMessageListResponse messageListResponse = getMessageListResponse(messageListRequest, mailboxSession);
- 
-        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + METHOD_NAME.getName());
         try {
             Stream<JmapResponse> jmapResponse = Stream.of(JmapResponse.builder().clientId(clientId)
                     .response(messageListResponse)
