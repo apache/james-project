@@ -33,6 +33,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
@@ -60,7 +61,9 @@ public class UsersRoutesTest {
     private WebAdminServer webAdminServer;
 
     private void createServer(UsersRepository usersRepository) throws Exception {
-        webAdminServer = new WebAdminServer(new UserRoutes(new UserService(usersRepository), new JsonTransformer()));
+        webAdminServer = new WebAdminServer(
+            new DefaultMetricFactory(),
+            new UserRoutes(new UserService(usersRepository), new JsonTransformer()));
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 

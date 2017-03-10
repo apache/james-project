@@ -28,8 +28,12 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
+import org.apache.james.webadmin.metric.MetricPostFilter;
+import org.apache.james.webadmin.metric.MetricPreFilter;
 import org.apache.james.webadmin.routes.CORSRoute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +41,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
+import spark.Filter;
+import spark.Request;
+import spark.Response;
 import spark.Service;
 
 public class WebAdminServer implements Configurable {
@@ -49,24 +56,28 @@ public class WebAdminServer implements Configurable {
     private final Set<Routes> routesList;
     private final Service service;
     private final AuthenticationFilter authenticationFilter;
+    private final MetricFactory metricFactory;
 
     // Spark do not allow to retrieve allocated port when using a random port. Thus we generate the port.
     @Inject
-    private WebAdminServer(WebAdminConfiguration configuration, Set<Routes> routesList, AuthenticationFilter authenticationFilter) {
+    private WebAdminServer(WebAdminConfiguration configuration, Set<Routes> routesList, AuthenticationFilter authenticationFilter,
+                           MetricFactory metricFactory) {
         this.configuration = configuration;
         this.routesList = routesList;
         this.authenticationFilter = authenticationFilter;
+        this.metricFactory = metricFactory;
         this.service = Service.ignite();
     }
 
     @VisibleForTesting
-    public WebAdminServer(Routes... routes) throws IOException {
+    public WebAdminServer(MetricFactory metricFactory, Routes... routes) throws IOException {
         this(WebAdminConfiguration.builder()
             .enabled()
             .port(new RandomPort())
             .build(),
             ImmutableSet.copyOf(routes),
-            new NoAuthenticationFilter());
+            new NoAuthenticationFilter(),
+            metricFactory);
     }
 
     @Override
@@ -75,10 +86,16 @@ public class WebAdminServer implements Configurable {
             service.port(configuration.getPort().toInt());
             configureHTTPS();
             configureCORS();
+            configureMetrics();
             service.before(authenticationFilter);
             routesList.forEach(routes -> routes.define(service));
             LOGGER.info("Web admin server started");
         }
+    }
+
+    private void configureMetrics() {
+        service.before(new MetricPreFilter(metricFactory));
+        service.after(new MetricPostFilter());
     }
 
     private void configureHTTPS() {

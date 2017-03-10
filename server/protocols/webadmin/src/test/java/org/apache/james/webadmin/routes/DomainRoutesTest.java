@@ -39,6 +39,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.memory.MemoryDomainList;
+import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.junit.After;
@@ -64,7 +65,9 @@ public class DomainRoutesTest {
     private WebAdminServer webAdminServer;
 
     private void createServer(DomainList domainList) throws Exception {
-        webAdminServer = new WebAdminServer(new DomainRoutes(domainList, new JsonTransformer()));
+        webAdminServer = new WebAdminServer(
+            new DefaultMetricFactory(),
+            new DomainRoutes(domainList, new JsonTransformer()));
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 
