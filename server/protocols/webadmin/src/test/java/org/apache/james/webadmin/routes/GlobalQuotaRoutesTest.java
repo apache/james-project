@@ -247,7 +247,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void putQuotaShouldBaAbleToRemoveBothQuota() throws Exception {
+    public void putQuotaShouldBeAbleToRemoveBothQuota() throws Exception {
         given()
             .body("{\"count\":-1,\"size\":-1}")
             .put(GlobalQuotaRoutes.QUOTA_ENDPOINT)
