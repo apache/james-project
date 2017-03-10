@@ -14,12 +14,14 @@ curl -XPUT http://ip:port/domains/domainToBeCreated
 ====
 
 Resource name domainToBeCreated :
+
  - can not be null or empty
  - can not contain '@'
  - can not be more than 255 characters
  - can not contain '/'
 
 Response codes :
+
  - 204 : The domain was successfully added
  - 400 : The domain name is invalid
  - 500 : Internal error while adding the domain
@@ -32,6 +34,7 @@ curl -XDELETE http://ip:port/domains/domainToBeDeleted
 ====
 
 Response codes :
+
  - 204 : The domain was successfully removed
  - 500 : Internal error while removing the domain
 
@@ -43,6 +46,7 @@ curl -XGET http://ip:port/domains/domainName
 ====
 
 Response codes :
+
  - 204 : The domains exists
  - 404 : The domain does not exist
  - 500 : Internal error while accessing the domains
@@ -62,6 +66,7 @@ Possible response :
 ====
 
 Response codes :
+
  - 200 : The domain list was successfully retrieved
  - 500 : Internal error while accessing the domains
 
@@ -75,11 +80,13 @@ curl -XPUT http://ip:port/users/usernameToBeUsed -d '{"password":"passwordToBeUs
 ====
 
 Resource name usernameToBeUsed :
+
  - can not be null or empty
  - can not be more than 255 characters
  - can not contain '/'
 
 Response codes :
+
  - 204 : The user was successfully created
  - 400 : The user name or the payload is invalid
  - 409 : Conflict : A concurrent modification make that query to fail
@@ -101,6 +108,7 @@ curl -XDELETE http://ip:port/users/userToBeDeleted
 ====
 
 Response codes :
+
  - 204 : The user was successfully deleted
  - 500 : Internal error while deleting the user
 
@@ -119,6 +127,7 @@ The answer looks like :
 ====
 
 Response codes :
+
  - 200 : The user name list was successfully retrieved
  - 500 : Internal error while retrieving the users
 
@@ -135,6 +144,7 @@ Resource name usernameToBeUsed should be an existing user
 Resource name mailboxNameToBeCreated should not be empty, nor contain # & % * characters.
 
 Response codes :
+
  - 204 : The mailbox now exists on the server
  - 400 : Invalid mailbox name
  - 404 : The user name does not exist
@@ -158,6 +168,7 @@ Resource name usernameToBeUsed should be an existing user
 Resource name mailboxNameToBeCreated should not be empty
 
 Response codes :
+
  - 204 : The mailbox now does not exist on the server
  - 400 : Invalid mailbox name
  - 404 : The user name does not exist
@@ -174,6 +185,7 @@ Resource name usernameToBeUsed should be an existing user
 Resource name mailboxNameToBeCreated should not be empty
 
 Response codes :
+
  - 204 : The mailbox exists
  - 400 : Invalid mailbox name
  - 404 : The user name does not exist, the mailbox does not exist
@@ -196,6 +208,7 @@ The answer looks like :
 Resource name usernameToBeUsed should be an existing user
 
 Response codes :
+
  - 200 : The mailboxes list was successfully retrieved
  - 404 : The user name does not exist
  - 500 : Internal error
@@ -210,6 +223,136 @@ curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes
 Resource name usernameToBeUsed should be an existing user
 
 Response codes :
+
  - 204 : The user do not have mailboxes anymore
  - 404 : The user name does not exist
+ - 500 : Internal error
+
+== Administrating quotas
+
+A quota with a value of -1 means unlimited
+
+=== Reading per quotaroot mail count limitation
+
+.bash
+====
+curl -XGET http://ip:port/quota/count
+====
+
+The answer looks like :
+
+.json
+====
+100000
+====
+
+Response codes :
+ - 200 : Nothing special
+ - 500 : Internal error
+
+=== Updating per quotaroot mail count limitation
+
+.bash
+====
+curl -XPUT http://ip:port/quota/count -d '1024000000'
+====
+
+Response codes :
+
+ - 204 : Value updated
+ - 400 : The body is not a positive integer
+ - 500 : Internal error
+
+=== Removing per quotaroot mail count limitation
+
+It removes the limitation, and the quota becomes UNILIMITED.
+
+.bash
+====
+curl -XPUT http://ip:port/quota/count -d '1024000000'
+====
+
+Response codes :
+
+ - 204 : Value updated to UNLIMITED
+ - 500 : Internal error
+
+=== Reading per quotaroot size limitation
+
+.bash
+====
+curl -XGET http://ip:port/quota/size
+====
+
+The answer looks like :
+
+.json
+====
+100000
+====
+
+It represent the allowed Byte count of the mailboxes belonging to this quotaroot.
+
+Response codes :
+
+ - 200 : Nothing special
+ - 500 : Internal error
+
+=== Updating per quotaroot size limitation
+
+.bash
+====
+curl -XPUT http://ip:port/quota/size -d '1024000000'
+====
+
+Response codes :
+
+ - 204 : Value updated
+ - 400 : The body is not a positive integer
+ - 500 : Internal error
+
+=== Removing per quotaroot size limitation
+
+It removes the limitation, and the quota becomes UNILIMITED.
+
+.bash
+====
+curl -XPUT http://ip:port/quota/size -d '1024000000'
+====
+
+Response codes :
+
+ - 204 : Value updated to UNLIMITED
+ - 500 : Internal error
+
+=== Managing count and size at the same time
+
+.bash
+====
+curl -XGET http://ip:port/quota/
+====
+
+Will return :
+
+.json
+====
+{"count":52,"size":42}
+====
+
+Response codes :
+
+ - 200 : Success
+ - 500 : Internal error
+
+You can also write the value the same way :
+
+.bash
+====
+curl -XPUT http://ip:port/quota/ -d '{"count":52,"size":42}'
+====
+
+Response codes :
+
+ - 204 : Success
+ - 400 : Invalid JSON, or numbers are less than -1.
  - 500 : Internal error
