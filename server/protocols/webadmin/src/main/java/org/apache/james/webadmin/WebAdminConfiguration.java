@@ -37,7 +37,7 @@ public class WebAdminConfiguration {
 
     public static class Builder {
         private Optional<Boolean> enabled = Optional.empty();
-        private Port port;
+        private Optional<Port> port = Optional.empty();
         private Optional<Boolean> enableCORS = Optional.empty();
         private Optional<TlsConfiguration> httpsConfiguration = Optional.empty();
         private Optional<String> urlCORSOrigin = Optional.empty();
@@ -48,7 +48,7 @@ public class WebAdminConfiguration {
         }
 
         public Builder port(Port port) {
-            this.port = port;
+            this.port = Optional.of(port);
             return this;
         }
 
@@ -84,7 +84,7 @@ public class WebAdminConfiguration {
 
         public WebAdminConfiguration build() {
             Preconditions.checkState(enabled.isPresent(), "You need to explicitly enable or disable WebAdmin server");
-            Preconditions.checkState(!enabled.get() || port != null, "You need to specify a port for WebAdminConfiguration");
+            Preconditions.checkState(!enabled.get() || port.isPresent(), "You need to specify a port for WebAdminConfiguration");
             return new WebAdminConfiguration(enabled.get(),
                 port,
                 httpsConfiguration.orElse(
@@ -97,13 +97,13 @@ public class WebAdminConfiguration {
     }
 
     private final boolean enabled;
-    private final Port port;
+    private final Optional<Port> port;
     private final TlsConfiguration tlsConfiguration;
     private final boolean enableCORS;
     private final String urlCORSOrigin;
 
     @VisibleForTesting
-    WebAdminConfiguration(boolean enabled, Port port, TlsConfiguration tlsConfiguration, boolean enableCORS, String urlCORSOrigin) {
+    WebAdminConfiguration(boolean enabled, Optional<Port> port, TlsConfiguration tlsConfiguration, boolean enableCORS, String urlCORSOrigin) {
         this.enabled = enabled;
         this.port = port;
         this.tlsConfiguration = tlsConfiguration;
@@ -120,7 +120,7 @@ public class WebAdminConfiguration {
     }
 
     public Port getPort() {
-        return port;
+        return port.orElseThrow(() -> new IllegalStateException("No port was specified"));
     }
 
     public TlsConfiguration getTlsConfiguration() {
