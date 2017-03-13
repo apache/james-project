@@ -44,6 +44,8 @@ import org.apache.james.webadmin.routes.DomainRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -56,6 +58,7 @@ import com.google.inject.multibindings.Multibinder;
 
 public class WebAdminServerModule extends AbstractModule {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebAdminServerModule.class);
     private static final boolean DEFAULT_JWT_DISABLED = false;
     private static final boolean DEFAULT_DISABLED = false;
     private static final String DEFAULT_NO_CORS_ORIGIN = null;
@@ -92,6 +95,7 @@ public class WebAdminServerModule extends AbstractModule {
                 .urlCORSOrigin(configurationFile.getString("cors.origin", DEFAULT_NO_CORS_ORIGIN))
                 .build();
         } catch (FileNotFoundException e) {
+            LOGGER.info("No webadmin.properties file. Disabling WebAdmin interface.");
             return WebAdminConfiguration.builder()
                 .disabled()
                 .build();
