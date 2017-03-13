@@ -46,11 +46,8 @@ public class WebAdminConfigurationTest {
         assertThat(WebAdminConfiguration.builder()
             .disabled()
             .build())
-            .isEqualTo(new WebAdminConfiguration(false,
-                null,
-                TlsConfiguration.builder().disabled().build(),
-                false,
-                "*"));
+            .extracting(WebAdminConfiguration::isEnabled)
+            .containsExactly(false);
     }
 
     @Test
@@ -61,18 +58,26 @@ public class WebAdminConfigurationTest {
     }
 
     @Test
-    public void builderShouldBuildRightObject() {
+    public void builderShouldBuildWithRightPort() {
         assertThat(
             WebAdminConfiguration.builder()
                 .enabled()
                 .port(PORT)
                 .build())
-            .isEqualTo(new WebAdminConfiguration(
-                true,
-                PORT,
-                TlsConfiguration.builder().disabled().build(),
-                false,
-                "*"));
+            .extracting(WebAdminConfiguration::getPort)
+            .containsExactly(PORT);
+    }
+
+
+    @Test
+    public void builderShouldBuildWithEnable() {
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .build())
+            .extracting(WebAdminConfiguration::isEnabled)
+            .containsExactly(true);
     }
 
     @Test
@@ -88,12 +93,8 @@ public class WebAdminConfigurationTest {
                 .https(tlsConfiguration)
                 .port(PORT)
                 .build())
-            .isEqualTo(new WebAdminConfiguration(
-                true,
-                PORT,
-                tlsConfiguration,
-                false,
-                "*"));
+            .extracting(WebAdminConfiguration::getTlsConfiguration)
+            .containsExactly(tlsConfiguration);
     }
 
     @Test
@@ -104,12 +105,21 @@ public class WebAdminConfigurationTest {
                 .port(PORT)
                 .CORSenabled()
                 .build())
-            .isEqualTo(new WebAdminConfiguration(
-                true,
-                PORT,
-                TlsConfiguration.builder().disabled().build(),
-                true,
-                "*"));
+            .extracting(WebAdminConfiguration::isEnableCORS)
+            .containsExactly(true);
+    }
+
+
+    @Test
+    public void builderShouldAcceptAllOriginsByDefault() {
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .CORSenabled()
+                .build())
+            .extracting(WebAdminConfiguration::getUrlCORSOrigin)
+            .containsExactly("*");
     }
 
     @Test
@@ -120,12 +130,8 @@ public class WebAdminConfigurationTest {
                 .port(PORT)
                 .CORSdisabled()
                 .build())
-            .isEqualTo(new WebAdminConfiguration(
-                true,
-                PORT,
-                TlsConfiguration.builder().disabled().build(),
-                false,
-                "*"));
+            .extracting(WebAdminConfiguration::isEnableCORS)
+            .containsExactly(false);
     }
 
     @Test
@@ -138,12 +144,8 @@ public class WebAdminConfigurationTest {
                 .CORSenabled()
                 .urlCORSOrigin(origin)
                 .build())
-            .isEqualTo(new WebAdminConfiguration(
-                true,
-                PORT,
-                TlsConfiguration.builder().disabled().build(),
-                true,
-                origin));
+            .extracting(WebAdminConfiguration::getUrlCORSOrigin)
+            .containsExactly(origin);
     }
 
     @Test
