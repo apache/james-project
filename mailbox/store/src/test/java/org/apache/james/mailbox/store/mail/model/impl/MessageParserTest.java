@@ -198,4 +198,11 @@ public class MessageParserTest {
 
         assertThat(attachments).hasSize(0);
     }
+
+    @Test
+    public void getAttachmentsShouldRetrieveAttachmentsWhenOneFailBecauseOfNonCIDForInlined() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/multiAttachmentsWithOneWrongInlinedAttachment.eml"));
+
+        assertThat(attachments).hasSize(1);
+    }
 }

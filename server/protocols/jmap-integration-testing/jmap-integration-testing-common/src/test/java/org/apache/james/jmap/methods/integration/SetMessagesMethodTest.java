@@ -3126,4 +3126,66 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messageList"))
             .body(ARGUMENTS + ".messageIds", hasItem(messageId));
     }
+
+    @Test
+    public void setMessagesShouldReturnAttachmentsWhenMessageHasWrongInlinedAttachment() throws Exception {
+        Attachment attachment = Attachment.builder()
+            .bytes("attachment".getBytes(Charsets.UTF_8))
+            .type("application/octet-stream")
+            .build();
+        uploadAttachment(attachment);
+        Attachment attachment2 = Attachment.builder()
+            .bytes("attachment2".getBytes(Charsets.UTF_8))
+            .type("application/octet-stream")
+            .build();
+        uploadAttachment(attachment2);
+
+        String messageCreationId = "creationId";
+        String fromAddress = USERNAME;
+        String outboxId = getOutboxId(accessToken);
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"Message with two attachments\"," +
+            "        \"textBody\": \"Test body\"," +
+            "        \"mailboxIds\": [\"" + outboxId + "\"], " +
+            "        \"attachments\": [" +
+            "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "               \"type\" : \"" + attachment.getType() + "\", " +
+            "               \"size\" : " + attachment.getSize() + "}," +
+            "               {\"blobId\" : \"" + attachment2.getAttachmentId().getId() + "\", " +
+            "               \"type\" : \"" + attachment2.getType() + "\", " +
+            "               \"size\" : " + attachment2.getSize() + ", " +
+            "               \"isInline\" : true }" +
+            "           ]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String createdPath = ARGUMENTS + ".created[\""+messageCreationId+"\"]";
+        String firstAttachment = createdPath + ".attachments[0]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
+            .body(ARGUMENTS + ".created", aMapWithSize(1))
+            .body(createdPath + ".attachments", hasSize(1))
+            .body(firstAttachment + ".blobId", equalTo(attachment.getAttachmentId().getId()))
+            .body(firstAttachment + ".type", equalTo("application/octet-stream; charset=UTF-8"))
+            .body(firstAttachment + ".size", equalTo((int) attachment.getSize()))
+            .body(firstAttachment + ".cid", nullValue())
+            .body(firstAttachment + ".isInline", equalTo(false));
+    }
 }

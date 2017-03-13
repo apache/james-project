@@ -42,6 +42,8 @@ import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.MimeConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -64,6 +66,7 @@ public class MessageParser {
     private static final List<String> ATTACHMENT_CONTENT_DISPOSITIONS = ImmutableList.of(
             ContentDispositionField.DISPOSITION_TYPE_ATTACHMENT.toLowerCase(),
             ContentDispositionField.DISPOSITION_TYPE_INLINE.toLowerCase());
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageParser.class);
 
     public List<MessageAttachment> retrieveAttachments(InputStream fullContent) throws MimeException, IOException {
         DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
@@ -91,7 +94,13 @@ public class MessageParser {
                 attachments.addAll(listAttachments((Multipart) entity.getBody(), Context.fromEntity(entity)));
             } else {
                 if (isAttachment(entity, context)) {
-                    attachments.add(retrieveAttachment(messageWriter, entity));
+                    try {
+                        attachments.add(retrieveAttachment(messageWriter, entity));
+                    } catch (IllegalStateException e) {
+                        LOGGER.error("The attachment is not well-formed: " + e.getCause());
+                    } catch (IOException e) {
+                        LOGGER.error("There is error on retrieve attachment: " + e.getCause());
+                    }
                 }
             }
         }

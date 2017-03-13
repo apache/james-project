@@ -68,6 +68,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.OptionalConverter;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -304,24 +305,28 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     private ImmutableList<MessageAttachment> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) throws MailboxException {
-        ThrowingFunction<Attachment, MessageAttachment> toMessageAttachment = att -> messageAttachment(session, att);
+        ThrowingFunction<Attachment, Optional<MessageAttachment>> toMessageAttachment = att -> messageAttachment(session, att);
         return attachments.stream()
             .map(Throwing.function(toMessageAttachment).sneakyThrow())
+            .flatMap(OptionalConverter::toStream)
             .collect(Guavate.toImmutableList());
     }
 
-    private MessageAttachment messageAttachment(MailboxSession session, Attachment attachment) throws MailboxException {
+    private Optional<MessageAttachment> messageAttachment(MailboxSession session, Attachment attachment) throws MailboxException {
         try {
-            return MessageAttachment.builder()
+            return Optional.of(MessageAttachment.builder()
                     .attachment(attachmentManager.getAttachment(AttachmentId.from(attachment.getBlobId().getRawValue()), session))
                     .name(attachment.getName().orElse(null))
                     .cid(attachment.getCid().map(Cid::from).orElse(null))
                     .isInline(attachment.isIsInline())
-                    .build();
+                    .build());
         } catch (AttachmentNotFoundException e) {
             // should not happen (checked before)
             LOG.error(String.format("Attachment %s not found", attachment.getBlobId()), e);
-            return null;
+            return Optional.empty();
+        } catch (IllegalStateException e) {
+            LOG.error(String.format("Attachment %s is not well-formed", attachment.getBlobId()), e);
+            return Optional.empty();
         }
     }
 
