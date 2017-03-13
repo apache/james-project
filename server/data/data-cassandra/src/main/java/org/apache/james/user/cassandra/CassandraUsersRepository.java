@@ -32,6 +32,7 @@ import static org.apache.james.user.cassandra.tables.CassandraUserTable.REALNAME
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.TABLE_NAME;
 
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Optional;
 
 import javax.annotation.Resource;
@@ -67,7 +68,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
         ResultSet result = session.execute(
                 select(REALNAME, PASSWORD, ALGORITHM)
                 .from(TABLE_NAME)
-                .where(eq(NAME, name.toLowerCase())));
+                .where(eq(NAME, name.toLowerCase(Locale.US))));
         return Optional.ofNullable(result.one())
             .map(row -> new DefaultUser(row.getString(REALNAME), row.getString(PASSWORD), row.getString(ALGORITHM)))
             .filter(user -> user.getUserName().equals(name))
@@ -83,7 +84,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
                     .with(set(REALNAME, defaultUser.getUserName()))
                     .and(set(PASSWORD, defaultUser.getHashedPassword()))
                     .and(set(ALGORITHM, defaultUser.getHashAlgorithm()))
-                    .where(eq(NAME, defaultUser.getUserName().toLowerCase()))
+                    .where(eq(NAME, defaultUser.getUserName().toLowerCase(Locale.US)))
                     .ifExists())
                 .one()
                 .getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED);
@@ -148,7 +149,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
         user.setPassword(password);
         boolean executed = session.execute(
             insertInto(TABLE_NAME)
-                .value(NAME, user.getUserName().toLowerCase())
+                .value(NAME, user.getUserName().toLowerCase(Locale.US))
                 .value(REALNAME, user.getUserName())
                 .value(PASSWORD, user.getHashedPassword())
                 .value(ALGORITHM, user.getHashAlgorithm())

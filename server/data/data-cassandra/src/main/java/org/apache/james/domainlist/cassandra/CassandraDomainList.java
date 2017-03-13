@@ -25,6 +25,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -60,7 +61,7 @@ public class CassandraDomainList extends AbstractDomainList {
     public boolean containsDomain(String domain) throws DomainListException {
         return session.execute(select(CassandraDomainsTable.DOMAIN)
             .from(CassandraDomainsTable.TABLE_NAME)
-            .where(eq(CassandraDomainsTable.DOMAIN, domain.toLowerCase())))
+            .where(eq(CassandraDomainsTable.DOMAIN, domain.toLowerCase(Locale.US))))
             .one() != null;
     }
 
@@ -68,11 +69,11 @@ public class CassandraDomainList extends AbstractDomainList {
     public void addDomain(String domain) throws DomainListException {
         boolean executed = session.execute(insertInto(CassandraDomainsTable.TABLE_NAME)
             .ifNotExists()
-            .value(CassandraDomainsTable.DOMAIN, domain.toLowerCase()))
+            .value(CassandraDomainsTable.DOMAIN, domain.toLowerCase(Locale.US)))
             .one()
             .getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED);
         if (!executed) {
-            throw new DomainListException(domain.toLowerCase() + " already exists.");
+            throw new DomainListException(domain.toLowerCase(Locale.US) + " already exists.");
         }
     }
 
@@ -81,7 +82,7 @@ public class CassandraDomainList extends AbstractDomainList {
         ResultSet resultSet = session.execute(delete()
             .from(CassandraDomainsTable.TABLE_NAME)
             .ifExists()
-            .where(eq(CassandraDomainsTable.DOMAIN, domain.toLowerCase())));
+            .where(eq(CassandraDomainsTable.DOMAIN, domain.toLowerCase(Locale.US))));
         if (!resultSet.one().getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED)) {
             throw new DomainListException(domain + " was not found");
         }
