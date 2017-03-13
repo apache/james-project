@@ -56,7 +56,15 @@ import com.google.inject.multibindings.Multibinder;
 
 public class WebAdminServerModule extends AbstractModule {
 
-    public static final boolean DEFAULT_JWT_DISABLED = false;
+    private static final boolean DEFAULT_JWT_DISABLED = false;
+    private static final boolean DEFAULT_DISABLED = false;
+    private static final String DEFAULT_NO_CORS_ORIGIN = null;
+    private static final boolean DEFAULT_CORS_DISABLED = false;
+    private static final String DEFAULT_NO_KEYSTORE = null;
+    private static final boolean DEFAULT_HTTPS_DISABLED = false;
+    private static final String DEFAULT_NO_PASSWORD = null;
+    private static final String DEFAULT_NO_TRUST_KEYSTORE = null;
+    private static final String DEFAULT_NO_TRUST_PASSWORD = null;
 
     @Override
     protected void configure() {
@@ -77,11 +85,11 @@ public class WebAdminServerModule extends AbstractModule {
         try {
             PropertiesConfiguration configurationFile = propertiesProvider.getConfiguration("webadmin");
             return WebAdminConfiguration.builder()
-                .enable(configurationFile.getBoolean("enabled", false))
+                .enable(configurationFile.getBoolean("enabled", DEFAULT_DISABLED))
                 .port(new FixedPort(configurationFile.getInt("port", WebAdminServer.DEFAULT_PORT)))
                 .https(readHttpsConfiguration(configurationFile))
-                .enableCORS(configurationFile.getBoolean("cors.enable", false))
-                .urlCORSOrigin(configurationFile.getString("cors.origin", null))
+                .enableCORS(configurationFile.getBoolean("cors.enable", DEFAULT_CORS_DISABLED))
+                .urlCORSOrigin(configurationFile.getString("cors.origin", DEFAULT_NO_CORS_ORIGIN))
                 .build();
         } catch (FileNotFoundException e) {
             return WebAdminConfiguration.builder()
@@ -105,23 +113,19 @@ public class WebAdminServerModule extends AbstractModule {
     }
 
     private HttpsConfiguration readHttpsConfiguration(PropertiesConfiguration configurationFile) {
-        boolean enabled = configurationFile.getBoolean("https.enabled", DEFAULT_HTTPS_DISABLED());
+        boolean enabled = configurationFile.getBoolean("https.enabled", DEFAULT_HTTPS_DISABLED);
         if (enabled) {
             return HttpsConfiguration.builder()
                 .enabled()
-                .raw(configurationFile.getString("https.keystore", null),
-                    configurationFile.getString("https.password", null),
-                    configurationFile.getString("https.trust.keystore", null),
-                    configurationFile.getString("https.trust.password", null))
+                .raw(configurationFile.getString("https.keystore", DEFAULT_NO_KEYSTORE),
+                    configurationFile.getString("https.password", DEFAULT_NO_PASSWORD),
+                    configurationFile.getString("https.trust.keystore", DEFAULT_NO_TRUST_KEYSTORE),
+                    configurationFile.getString("https.trust.password", DEFAULT_NO_TRUST_PASSWORD))
                 .build();
         }
         return HttpsConfiguration.builder()
             .disabled()
             .build();
-    }
-
-    private boolean DEFAULT_HTTPS_DISABLED() {
-        return false;
     }
 
     @Singleton
