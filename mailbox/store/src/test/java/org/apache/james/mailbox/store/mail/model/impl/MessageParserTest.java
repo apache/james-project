@@ -205,4 +205,11 @@ public class MessageParserTest {
 
         assertThat(attachments).hasSize(1);
     }
+
+    @Test
+    public void getAttachmentsShouldRetrieveAttachmentsWhenOneFailOnWrongContentDisposition() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/multiAttachmentsWithOneWrongContentDisposition.eml"));
+
+        assertThat(attachments).hasSize(2);
+    }
 }
