@@ -25,7 +25,7 @@ import java.util.Optional;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
-public class HttpsConfiguration {
+public class TlsConfiguration {
 
     public static Builder builder() {
         return new Builder();
@@ -75,11 +75,11 @@ public class HttpsConfiguration {
             return this;
         }
 
-        public HttpsConfiguration build() {
+        public TlsConfiguration build() {
             Preconditions.checkState(enabled.isPresent(), "You need to specify if https is enabled");
             Preconditions.checkState(!enabled.get() || hasKeystoreInformation(), "If enabled, you need to provide keystore information");
             Preconditions.checkState(optionalHasTrustStoreInformation(), "You need to provide both information about trustStore");
-            return new HttpsConfiguration(enabled.get(), keystoreFilePath, keystorePassword, truststoreFilePath, truststorePassword);
+            return new TlsConfiguration(enabled.get(), keystoreFilePath, keystorePassword, truststoreFilePath, truststorePassword);
         }
 
         private boolean optionalHasTrustStoreInformation() {
@@ -99,7 +99,7 @@ public class HttpsConfiguration {
     private final String truststorePassword;
 
     @VisibleForTesting
-    HttpsConfiguration(boolean enabled, String keystoreFilePath, String keystorePassword, String truststoreFilePath, String truststorePassword) {
+    TlsConfiguration(boolean enabled, String keystoreFilePath, String keystorePassword, String truststoreFilePath, String truststorePassword) {
         this.enabled = enabled;
         this.keystoreFilePath = keystoreFilePath;
         this.keystorePassword = keystorePassword;
@@ -129,8 +129,8 @@ public class HttpsConfiguration {
 
     @Override
     public final boolean equals(Object o) {
-       if (o instanceof HttpsConfiguration) {
-           HttpsConfiguration that = (HttpsConfiguration) o;
+       if (o instanceof TlsConfiguration) {
+           TlsConfiguration that = (TlsConfiguration) o;
 
            return Objects.equals(this.enabled, that.enabled)
                && Objects.equals(this.keystoreFilePath, that.keystoreFilePath)

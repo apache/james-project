@@ -48,7 +48,7 @@ public class WebAdminConfigurationTest {
             .build())
             .isEqualTo(new WebAdminConfiguration(false,
                 null,
-                HttpsConfiguration.builder().disabled().build(),
+                TlsConfiguration.builder().disabled().build(),
                 false,
                 "*"));
     }
@@ -70,14 +70,14 @@ public class WebAdminConfigurationTest {
             .isEqualTo(new WebAdminConfiguration(
                 true,
                 PORT,
-                HttpsConfiguration.builder().disabled().build(),
+                TlsConfiguration.builder().disabled().build(),
                 false,
                 "*"));
     }
 
     @Test
     public void builderShouldAcceptHttps() {
-        HttpsConfiguration httpsConfiguration = HttpsConfiguration.builder()
+        TlsConfiguration tlsConfiguration = TlsConfiguration.builder()
             .enable(true)
             .selfSigned("abcd", "efgh")
             .build();
@@ -85,13 +85,13 @@ public class WebAdminConfigurationTest {
         assertThat(
             WebAdminConfiguration.builder()
                 .enabled()
-                .https(httpsConfiguration)
+                .https(tlsConfiguration)
                 .port(PORT)
                 .build())
             .isEqualTo(new WebAdminConfiguration(
                 true,
                 PORT,
-                httpsConfiguration,
+                tlsConfiguration,
                 false,
                 "*"));
     }
@@ -107,7 +107,7 @@ public class WebAdminConfigurationTest {
             .isEqualTo(new WebAdminConfiguration(
                 true,
                 PORT,
-                HttpsConfiguration.builder().disabled().build(),
+                TlsConfiguration.builder().disabled().build(),
                 true,
                 "*"));
     }
@@ -123,7 +123,7 @@ public class WebAdminConfigurationTest {
             .isEqualTo(new WebAdminConfiguration(
                 true,
                 PORT,
-                HttpsConfiguration.builder().disabled().build(),
+                TlsConfiguration.builder().disabled().build(),
                 false,
                 "*"));
     }
@@ -141,7 +141,7 @@ public class WebAdminConfigurationTest {
             .isEqualTo(new WebAdminConfiguration(
                 true,
                 PORT,
-                HttpsConfiguration.builder().disabled().build(),
+                TlsConfiguration.builder().disabled().build(),
                 true,
                 origin));
     }

@@ -27,7 +27,7 @@ import org.junit.rules.ExpectedException;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class HttpsConfigurationTest {
+public class TlsConfigurationTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -36,21 +36,21 @@ public class HttpsConfigurationTest {
     public void buildShouldThrowWhenNotEnabled() {
         expectedException.expect(IllegalStateException.class);
 
-        HttpsConfiguration.builder().build();
+        TlsConfiguration.builder().build();
     }
 
     @Test
     public void buildShouldThrowWhenEnableWithoutKeystore() {
         expectedException.expect(IllegalStateException.class);
 
-        HttpsConfiguration.builder().enabled().build();
+        TlsConfiguration.builder().enabled().build();
     }
 
     @Test
     public void selfSignedShouldThrowOnNullKeyStorePath() {
         expectedException.expect(NullPointerException.class);
 
-        HttpsConfiguration.builder()
+        TlsConfiguration.builder()
             .enabled()
             .selfSigned(null, "abc");
     }
@@ -59,7 +59,7 @@ public class HttpsConfigurationTest {
     public void selfSignedShouldThrowOnNullKeyStorePassword() {
         expectedException.expect(NullPointerException.class);
 
-        HttpsConfiguration.builder()
+        TlsConfiguration.builder()
             .enabled()
             .selfSigned("abc", null);
     }
@@ -67,35 +67,35 @@ public class HttpsConfigurationTest {
     @Test
     public void buildShouldWorkOnDisabledHttps() {
         assertThat(
-            HttpsConfiguration.builder()
+            TlsConfiguration.builder()
                 .disabled()
                 .build())
-            .isEqualTo(new HttpsConfiguration(false, null, null, null, null));
+            .isEqualTo(new TlsConfiguration(false, null, null, null, null));
     }
 
     @Test
     public void buildShouldWorkOnSelfSignedHttps() {
         assertThat(
-            HttpsConfiguration.builder()
+            TlsConfiguration.builder()
                 .enabled()
                 .selfSigned("abcd", "efgh")
                 .build())
-            .isEqualTo(new HttpsConfiguration(true, "abcd", "efgh", null, null));
+            .isEqualTo(new TlsConfiguration(true, "abcd", "efgh", null, null));
     }
 
     @Test
     public void buildShouldWorkOnTrustedHttps() {
         assertThat(
-            HttpsConfiguration.builder()
+            TlsConfiguration.builder()
                 .enabled()
                 .raw("a", "b", "c", "d")
                 .build())
-            .isEqualTo(new HttpsConfiguration(true, "a", "b", "c", "d"));
+            .isEqualTo(new TlsConfiguration(true, "a", "b", "c", "d"));
     }
 
     @Test
     public void shouldRespectBeanContract() {
-        EqualsVerifier.forClass(HttpsConfiguration.class).verify();
+        EqualsVerifier.forClass(TlsConfiguration.class).verify();
     }
 
 }

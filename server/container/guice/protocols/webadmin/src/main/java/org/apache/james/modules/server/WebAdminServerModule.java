@@ -33,7 +33,7 @@ import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.FixedPort;
-import org.apache.james.webadmin.HttpsConfiguration;
+import org.apache.james.webadmin.TlsConfiguration;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminServer;
@@ -112,10 +112,10 @@ public class WebAdminServerModule extends AbstractModule {
         }
     }
 
-    private HttpsConfiguration readHttpsConfiguration(PropertiesConfiguration configurationFile) {
+    private TlsConfiguration readHttpsConfiguration(PropertiesConfiguration configurationFile) {
         boolean enabled = configurationFile.getBoolean("https.enabled", DEFAULT_HTTPS_DISABLED);
         if (enabled) {
-            return HttpsConfiguration.builder()
+            return TlsConfiguration.builder()
                 .enabled()
                 .raw(configurationFile.getString("https.keystore", DEFAULT_NO_KEYSTORE),
                     configurationFile.getString("https.password", DEFAULT_NO_PASSWORD),
@@ -123,7 +123,7 @@ public class WebAdminServerModule extends AbstractModule {
                     configurationFile.getString("https.trust.password", DEFAULT_NO_TRUST_PASSWORD))
                 .build();
         }
-        return HttpsConfiguration.builder()
+        return TlsConfiguration.builder()
             .disabled()
             .build();
     }

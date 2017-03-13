@@ -29,7 +29,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 import org.apache.james.webadmin.metric.MetricPostFilter;
@@ -41,9 +40,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
-import spark.Filter;
-import spark.Request;
-import spark.Response;
 import spark.Service;
 
 public class WebAdminServer implements Configurable {
@@ -99,12 +95,12 @@ public class WebAdminServer implements Configurable {
     }
 
     private void configureHTTPS() {
-        HttpsConfiguration httpsConfiguration = configuration.getHttpsConfiguration();
-        if (httpsConfiguration.isEnabled()) {
-            service.secure(httpsConfiguration.getKeystoreFilePath(),
-                httpsConfiguration.getKeystorePassword(),
-                httpsConfiguration.getTruststoreFilePath(),
-                httpsConfiguration.getTruststorePassword());
+        TlsConfiguration tlsConfiguration = configuration.getTlsConfiguration();
+        if (tlsConfiguration.isEnabled()) {
+            service.secure(tlsConfiguration.getKeystoreFilePath(),
+                tlsConfiguration.getKeystorePassword(),
+                tlsConfiguration.getTruststoreFilePath(),
+                tlsConfiguration.getTruststorePassword());
             LOGGER.info("Web admin set up to use HTTPS");
         }
     }
