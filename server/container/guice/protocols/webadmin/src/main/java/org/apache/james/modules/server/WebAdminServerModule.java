@@ -19,6 +19,7 @@
 
 package org.apache.james.modules.server;
 
+import static org.apache.james.webadmin.WebAdminConfiguration.DISABLED_CONFIGURATION;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 
 import java.io.FileNotFoundException;
@@ -96,9 +97,7 @@ public class WebAdminServerModule extends AbstractModule {
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.info("No webadmin.properties file. Disabling WebAdmin interface.");
-            return WebAdminConfiguration.builder()
-                .disabled()
-                .build();
+            return DISABLED_CONFIGURATION;
         }
     }
 
@@ -127,9 +126,7 @@ public class WebAdminServerModule extends AbstractModule {
                     configurationFile.getString("https.trust.password", DEFAULT_NO_TRUST_PASSWORD))
                 .build();
         }
-        return TlsConfiguration.builder()
-            .disabled()
-            .build();
+        return TlsConfiguration.DEFAULT_DISABLE;
     }
 
     @Singleton

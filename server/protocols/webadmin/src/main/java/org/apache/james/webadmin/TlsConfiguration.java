@@ -27,6 +27,10 @@ import com.google.common.base.Preconditions;
 
 public class TlsConfiguration {
 
+    public static final TlsConfiguration DEFAULT_DISABLE = TlsConfiguration.builder()
+        .disabled()
+        .build();
+
     public static Builder builder() {
         return new Builder();
     }

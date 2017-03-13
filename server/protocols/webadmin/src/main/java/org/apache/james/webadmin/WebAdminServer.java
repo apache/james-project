@@ -67,10 +67,7 @@ public class WebAdminServer implements Configurable {
 
     @VisibleForTesting
     public WebAdminServer(MetricFactory metricFactory, Routes... routes) throws IOException {
-        this(WebAdminConfiguration.builder()
-            .enabled()
-            .port(new RandomPort())
-            .build(),
+        this(WebAdminConfiguration.TESTING_CONFIGURATION,
             ImmutableSet.copyOf(routes),
             new NoAuthenticationFilter(),
             metricFactory);
