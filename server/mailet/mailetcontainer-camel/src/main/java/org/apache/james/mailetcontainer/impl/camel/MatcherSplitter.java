@@ -33,6 +33,8 @@ import org.apache.camel.Property;
 import org.apache.james.core.MailImpl;
 import org.apache.james.mailetcontainer.impl.ProcessorUtil;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
@@ -57,6 +59,8 @@ public class MatcherSplitter {
 
     public final static String MAILETCONTAINER_PROPERTY = "container";
 
+    public final static String METRIC_FACTORY = "metricFactory";
+
     /**
      * Generate a List of MailMessage instances for the give @Body. This is done
      * by using the given Matcher to see if we need more then one instance of
@@ -70,11 +74,17 @@ public class MatcherSplitter {
      * @throws MessagingException
      */
     @Handler
-    public List<Mail> split(@Property(MATCHER_PROPERTY) Matcher matcher, @Property(ON_MATCH_EXCEPTION_PROPERTY) String onMatchException, @Property(LOGGER_PROPERTY) Logger logger, @Property(MAILETCONTAINER_PROPERTY) CamelMailetProcessor container, @Body Mail mail) throws MessagingException {
+    public List<Mail> split(@Property(MATCHER_PROPERTY) Matcher matcher,
+                            @Property(ON_MATCH_EXCEPTION_PROPERTY) String onMatchException,
+                            @Property(LOGGER_PROPERTY) Logger logger,
+                            @Property(MAILETCONTAINER_PROPERTY) CamelMailetProcessor container,
+                            @Property(METRIC_FACTORY) MetricFactory metricFactory,
+                            @Body Mail mail) throws MessagingException {
         Collection<MailAddress> matchedRcpts = null;
         Collection<MailAddress> origRcpts = new ArrayList<MailAddress>(mail.getRecipients());
         long start = System.currentTimeMillis();
         MessagingException ex = null;
+        TimeMetric timeMetric = metricFactory.timer(matcher.getClass().getSimpleName());
 
         try {
             List<Mail> mails = new ArrayList<Mail>();
@@ -151,7 +161,7 @@ public class MatcherSplitter {
 
             return mails;
         } finally {
-
+            timeMetric.stopAndPublish();
             long complete = System.currentTimeMillis() - start;
             List<MailetProcessorListener> listeners = container.getListeners();
             for (MailetProcessorListener listener : listeners) {

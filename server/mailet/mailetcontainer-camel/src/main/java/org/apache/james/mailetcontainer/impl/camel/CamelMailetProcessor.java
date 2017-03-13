@@ -153,7 +153,8 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
 
             RouteDefinition processorDef = from(getEndpoint()).routeId(state).setExchangePattern(ExchangePattern.InOnly)
             // store the logger in properties
-                    .setProperty(MatcherSplitter.LOGGER_PROPERTY, constant(getLogger()));
+                    .setProperty(MatcherSplitter.LOGGER_PROPERTY, constant(getLogger()))
+                    .setProperty(MatcherSplitter.METRIC_FACTORY, constant(metricFactory));
 
             for (MatcherMailetPair pair : pairs) {
                 Matcher matcher = pair.getMatcher();
