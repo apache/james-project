@@ -178,22 +178,27 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-imap</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-jmap</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-lmtp</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-pop</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-mailbox</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -202,14 +207,17 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-managedsieve</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-smtp</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-webadmin</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -258,6 +266,10 @@
                 <dependency>
                     <groupId>org.apache.james.protocols</groupId>
                     <artifactId>protocols-imap</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.github.steveash.guavate</groupId>
+                    <artifactId>guavate</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>com.google.inject</groupId>

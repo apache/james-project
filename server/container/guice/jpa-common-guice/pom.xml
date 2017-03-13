@@ -225,6 +225,10 @@
                     <scope>test</scope>
                 </dependency>
                 <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>james-server-guice-configuration</artifactId>
+                </dependency>
+                <dependency>
                     <groupId>ch.qos.logback</groupId>
                     <artifactId>logback-classic</artifactId>
                     <version>1.1.7</version>

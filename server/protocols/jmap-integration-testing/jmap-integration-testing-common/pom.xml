@@ -152,6 +152,11 @@
             <dependencies>
                 <dependency>
                     <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-data-jmap</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
                     <artifactId>james-server-guice-common</artifactId>
                     <scope>test</scope>
                 </dependency>
@@ -160,6 +165,16 @@
                     <artifactId>james-server-guice-common</artifactId>
                     <scope>test</scope>
                     <type>test-jar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-guice-jmap</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-guice-mailbox</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
@@ -261,6 +276,11 @@
             <dependencies>
                 <dependency>
                     <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-data-jmap</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
                     <artifactId>james-server-guice-common</artifactId>
                     <scope>test</scope>
                 </dependency>
@@ -269,6 +289,16 @@
                     <artifactId>james-server-guice-common</artifactId>
                     <scope>test</scope>
                     <type>test-jar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-guice-jmap</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-guice-mailbox</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
