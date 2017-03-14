@@ -43,7 +43,7 @@ public class TlsConfigurationTest {
     public void buildShouldThrowWhenEnableWithoutKeystore() {
         expectedException.expect(IllegalStateException.class);
 
-        TlsConfiguration.builder().enabled().build();
+        TlsConfiguration.builder().build();
     }
 
     @Test
@@ -51,7 +51,6 @@ public class TlsConfigurationTest {
         expectedException.expect(NullPointerException.class);
 
         TlsConfiguration.builder()
-            .enabled()
             .selfSigned(null, "abc");
     }
 
@@ -60,37 +59,25 @@ public class TlsConfigurationTest {
         expectedException.expect(NullPointerException.class);
 
         TlsConfiguration.builder()
-            .enabled()
             .selfSigned("abc", null);
-    }
-
-    @Test
-    public void buildShouldWorkOnDisabledHttps() {
-        assertThat(
-            TlsConfiguration.builder()
-                .disabled()
-                .build())
-            .isEqualTo(new TlsConfiguration(false, null, null, null, null));
     }
 
     @Test
     public void buildShouldWorkOnSelfSignedHttps() {
         assertThat(
             TlsConfiguration.builder()
-                .enabled()
                 .selfSigned("abcd", "efgh")
                 .build())
-            .isEqualTo(new TlsConfiguration(true, "abcd", "efgh", null, null));
+            .isEqualTo(new TlsConfiguration("abcd", "efgh", null, null));
     }
 
     @Test
     public void buildShouldWorkOnTrustedHttps() {
         assertThat(
             TlsConfiguration.builder()
-                .enabled()
                 .raw("a", "b", "c", "d")
                 .build())
-            .isEqualTo(new TlsConfiguration(true, "a", "b", "c", "d"));
+            .isEqualTo(new TlsConfiguration("a", "b", "c", "d"));
     }
 
     @Test

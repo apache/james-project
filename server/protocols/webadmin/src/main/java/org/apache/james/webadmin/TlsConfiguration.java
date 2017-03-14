@@ -20,40 +20,21 @@
 package org.apache.james.webadmin;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class TlsConfiguration {
 
-    public static final TlsConfiguration DEFAULT_DISABLE = TlsConfiguration.builder()
-        .disabled()
-        .build();
-
     public static Builder builder() {
         return new Builder();
     }
 
     public static class Builder {
-        private Optional<Boolean> enabled = Optional.empty();
         private String keystoreFilePath;
         private String keystorePassword;
         private String truststoreFilePath;
         private String truststorePassword;
-
-        public Builder enable(boolean isEnabled) {
-            this.enabled = Optional.of(isEnabled);
-            return this;
-        }
-
-        public Builder enabled() {
-            return enable(true);
-        }
-
-        public Builder disabled() {
-            return enable(false);
-        }
 
         public Builder raw(String keystoreFilePath,
                            String keystorePassword,
@@ -73,17 +54,15 @@ public class TlsConfiguration {
             Preconditions.checkNotNull(keystoreFilePath);
             Preconditions.checkNotNull(keystorePassword);
 
-            this.enabled = Optional.of(true);
             this.keystoreFilePath = keystoreFilePath;
             this.keystorePassword = keystorePassword;
             return this;
         }
 
         public TlsConfiguration build() {
-            Preconditions.checkState(enabled.isPresent(), "You need to specify if https is enabled");
-            Preconditions.checkState(!enabled.get() || hasKeystoreInformation(), "If enabled, you need to provide keystore information");
+            Preconditions.checkState(hasKeystoreInformation(), "If enabled, you need to provide keystore information");
             Preconditions.checkState(optionalHasTrustStoreInformation(), "You need to provide both information about trustStore");
-            return new TlsConfiguration(enabled.get(), keystoreFilePath, keystorePassword, truststoreFilePath, truststorePassword);
+            return new TlsConfiguration(keystoreFilePath, keystorePassword, truststoreFilePath, truststorePassword);
         }
 
         private boolean optionalHasTrustStoreInformation() {
@@ -96,23 +75,17 @@ public class TlsConfiguration {
 
     }
 
-    private final boolean enabled;
     private final String keystoreFilePath;
     private final String keystorePassword;
     private final String truststoreFilePath;
     private final String truststorePassword;
 
     @VisibleForTesting
-    TlsConfiguration(boolean enabled, String keystoreFilePath, String keystorePassword, String truststoreFilePath, String truststorePassword) {
-        this.enabled = enabled;
+    TlsConfiguration(String keystoreFilePath, String keystorePassword, String truststoreFilePath, String truststorePassword) {
         this.keystoreFilePath = keystoreFilePath;
         this.keystorePassword = keystorePassword;
         this.truststoreFilePath = truststoreFilePath;
         this.truststorePassword = truststorePassword;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
     }
 
     public String getKeystoreFilePath() {
@@ -136,8 +109,7 @@ public class TlsConfiguration {
        if (o instanceof TlsConfiguration) {
            TlsConfiguration that = (TlsConfiguration) o;
 
-           return Objects.equals(this.enabled, that.enabled)
-               && Objects.equals(this.keystoreFilePath, that.keystoreFilePath)
+           return Objects.equals(this.keystoreFilePath, that.keystoreFilePath)
                && Objects.equals(this.keystorePassword, that.keystorePassword)
                && Objects.equals(this.truststoreFilePath, that.truststoreFilePath)
                && Objects.equals(this.truststorePassword, that.truststorePassword);
@@ -147,6 +119,6 @@ public class TlsConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(enabled, keystoreFilePath, keystorePassword, truststoreFilePath, truststorePassword);
+        return Objects.hash(keystoreFilePath, keystorePassword, truststoreFilePath, truststorePassword);
     }
 }

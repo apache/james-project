@@ -24,6 +24,7 @@ import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -91,7 +92,7 @@ public class WebAdminServerModule extends AbstractModule {
             return WebAdminConfiguration.builder()
                 .enable(configurationFile.getBoolean("enabled", DEFAULT_DISABLED))
                 .port(new FixedPort(configurationFile.getInt("port", WebAdminServer.DEFAULT_PORT)))
-                .https(readHttpsConfiguration(configurationFile))
+                .tls(readHttpsConfiguration(configurationFile))
                 .enableCORS(configurationFile.getBoolean("cors.enable", DEFAULT_CORS_DISABLED))
                 .urlCORSOrigin(configurationFile.getString("cors.origin", DEFAULT_NO_CORS_ORIGIN))
                 .build();
@@ -115,18 +116,17 @@ public class WebAdminServerModule extends AbstractModule {
         }
     }
 
-    private TlsConfiguration readHttpsConfiguration(PropertiesConfiguration configurationFile) {
+    private Optional<TlsConfiguration> readHttpsConfiguration(PropertiesConfiguration configurationFile) {
         boolean enabled = configurationFile.getBoolean("https.enabled", DEFAULT_HTTPS_DISABLED);
         if (enabled) {
-            return TlsConfiguration.builder()
-                .enabled()
+            return Optional.of(TlsConfiguration.builder()
                 .raw(configurationFile.getString("https.keystore", DEFAULT_NO_KEYSTORE),
                     configurationFile.getString("https.password", DEFAULT_NO_PASSWORD),
                     configurationFile.getString("https.trust.keystore", DEFAULT_NO_TRUST_KEYSTORE),
                     configurationFile.getString("https.trust.password", DEFAULT_NO_TRUST_PASSWORD))
-                .build();
+                .build());
         }
-        return TlsConfiguration.DEFAULT_DISABLE;
+        return Optional.empty();
     }
 
     @Singleton

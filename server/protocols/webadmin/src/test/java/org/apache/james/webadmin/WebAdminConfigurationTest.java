@@ -83,18 +83,44 @@ public class WebAdminConfigurationTest {
     @Test
     public void builderShouldAcceptHttps() {
         TlsConfiguration tlsConfiguration = TlsConfiguration.builder()
-            .enable(true)
             .selfSigned("abcd", "efgh")
             .build();
 
         assertThat(
             WebAdminConfiguration.builder()
                 .enabled()
-                .https(tlsConfiguration)
+                .tls(tlsConfiguration)
                 .port(PORT)
                 .build())
             .extracting(WebAdminConfiguration::getTlsConfiguration)
             .containsExactly(tlsConfiguration);
+    }
+
+    @Test
+    public void builderShouldReturnTlsEnableWhenTlsConfiguration() {
+        TlsConfiguration tlsConfiguration = TlsConfiguration.builder()
+            .selfSigned("abcd", "efgh")
+            .build();
+
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .tls(tlsConfiguration)
+                .port(PORT)
+                .build())
+            .extracting(WebAdminConfiguration::getTlsConfiguration)
+            .containsExactly(tlsConfiguration);
+    }
+
+    @Test
+    public void builderShouldReturnTlsDisableWhenNoTlsConfiguration() {
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .build())
+            .extracting(WebAdminConfiguration::isTlsEnabled)
+            .containsExactly(false);
     }
 
     @Test
@@ -108,7 +134,6 @@ public class WebAdminConfigurationTest {
             .extracting(WebAdminConfiguration::isEnableCORS)
             .containsExactly(true);
     }
-
 
     @Test
     public void builderShouldAcceptAllOriginsByDefault() {

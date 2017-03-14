@@ -92,8 +92,8 @@ public class WebAdminServer implements Configurable {
     }
 
     private void configureHTTPS() {
-        TlsConfiguration tlsConfiguration = configuration.getTlsConfiguration();
-        if (tlsConfiguration.isEnabled()) {
+        if (configuration.isTlsEnabled()) {
+            TlsConfiguration tlsConfiguration = configuration.getTlsConfiguration();
             service.secure(tlsConfiguration.getKeystoreFilePath(),
                 tlsConfiguration.getKeystorePassword(),
                 tlsConfiguration.getTruststoreFilePath(),
