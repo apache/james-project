@@ -20,11 +20,13 @@ package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.hamcrest.CoreMatchers.is;
 
 import java.io.ByteArrayInputStream;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.Optional;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -34,7 +36,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.inmemory.JsoupTextExtractor;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -59,9 +63,12 @@ public class MessageFactoryTest {
     @Before
     public void setUp() {
         htmlTextExtractor = mock(HtmlTextExtractor.class);
+        TextExtractor textExtractor = new JsoupTextExtractor();
+
         messagePreview = new MessagePreviewGenerator(htmlTextExtractor);
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
-        messageFactory = new MessageFactory(messagePreview, messageContentExtractor);
+
+        messageFactory = new MessageFactory(messagePreview, messageContentExtractor, textExtractor);
     }
     @Test
     public void emptyMailShouldBeLoadedIntoMessage() throws Exception {
@@ -161,6 +168,7 @@ public class MessageFactoryTest {
                 .size(headers.length())
                 .preview("(Empty)")
                 .textBody("")
+                .htmlBody("")
                 .build();
         assertThat(testee).isEqualToComparingFieldByField(expected);
     }
@@ -314,4 +322,47 @@ public class MessageFactoryTest {
             .containsExactly("(Empty)", 1010L, "", ImmutableMap.of("Date", "Tue, 14 Jul 2015 12:30:42 +0000", "MIME-Version", "1.0"), ZONED_DATE);
     }
 
+    @Test
+    public void textBodyShouldBeSetIntoMessageInCaseOfHtmlBody() throws Exception {
+        ByteArrayInputStream messageContent = new ByteArrayInputStream(("CContent-Type: text/html\r\n"
+            + "Subject: message 1 subject\r\n"
+            + "\r\n"
+            + "my <b>HTML</b> message").getBytes(Charsets.UTF_8));
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(new Flags(Flag.SEEN))
+            .size(messageContent.read())
+            .internalDate(INTERNAL_DATE)
+            .content(messageContent)
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(TestMessageId.of(2))
+            .build();
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+
+        assertThat(testee.getPreview()).isEqualTo("my HTML message");
+        assertThat(testee.getTextBody()).hasValue("my HTML message");
+        assertThat(testee.getHtmlBody()).hasValue("my <b>HTML</b> message");
+    }
+
+    @Test
+    public void textBodyShouldBeEmptyInCaseOfEmptyHtmlBodyAndEmptyTextBody() throws Exception {
+        ByteArrayInputStream messageContent = new ByteArrayInputStream(("CContent-Type: text/html\r\n"
+            + "Subject: message 1 subject\r\n").getBytes(Charsets.UTF_8));
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(new Flags(Flag.SEEN))
+            .size(messageContent.read())
+            .internalDate(INTERNAL_DATE)
+            .content(messageContent)
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(TestMessageId.of(2))
+            .build();
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+
+        assertThat(testee.getPreview()).isEqualTo(MessagePreviewGenerator.NO_BODY);
+        assertThat(testee.getHtmlBody()).hasValue("");
+        assertThat(testee.getTextBody()).hasValue("");
+    }
 }

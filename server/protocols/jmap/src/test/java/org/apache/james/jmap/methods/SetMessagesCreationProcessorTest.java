@@ -60,6 +60,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.AttachmentId;
@@ -117,9 +118,10 @@ public class SetMessagesCreationProcessorTest {
     @Before
     public void setUp() throws MailboxException {
         MessagePreviewGenerator messagePreview = mock(MessagePreviewGenerator.class);
+        TextExtractor textExtractor = mock(TextExtractor.class);
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         when(messagePreview.forTextBody(any())).thenReturn("text preview");
-        messageFactory = new MessageFactory(messagePreview, messageContentExtractor);
+        messageFactory = new MessageFactory(messagePreview, messageContentExtractor, textExtractor);
         mockedMailSpool = mock(MailSpool.class);
         mockedMailFactory = mock(MailFactory.class);
         mockedAttachmentManager = mock(AttachmentManager.class);

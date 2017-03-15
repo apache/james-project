@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.ZoneId;
@@ -27,6 +28,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Function;
@@ -39,6 +41,7 @@ import javax.mail.internet.SharedInputStream;
 import org.apache.james.jmap.model.MessageContentExtractor.MessageContent;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -63,21 +66,30 @@ public class MessageFactory {
 
     private static final int NO_LINE_LENGTH_LIMIT_PARSING = -1;
 
-    public static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
+    private static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
+
+    private static final String HTML_CONTENT = "text/html";
+
+    private static final String EMPTY_FILE_NAME = "";
+
+    private static final String NO_BODY = "";
 
     private final MessagePreviewGenerator messagePreview;
     private final MessageContentExtractor messageContentExtractor;
+    private final TextExtractor textExtractor;
 
     @Inject
-    public MessageFactory(MessagePreviewGenerator messagePreview, MessageContentExtractor messageContentExtractor) {
+    public MessageFactory(MessagePreviewGenerator messagePreview, MessageContentExtractor messageContentExtractor, TextExtractor textExtractor) {
         this.messagePreview = messagePreview;
         this.messageContentExtractor = messageContentExtractor;
+        this.textExtractor = textExtractor;
     }
 
     public Message fromMetaDataWithContent(MetaDataWithContent message) throws MailboxException {
         org.apache.james.mime4j.dom.Message mimeMessage = parse(message);
         MessageContent messageContent = extractContent(mimeMessage);
-
+        String htmlBody = messageContent.getHtmlBody().orElse(NO_BODY);
+        String textBody = messageContent.getTextBody().orElseGet(() -> textBodyFromHtmlBody(htmlBody).orElse(NO_BODY));
         return Message.builder()
                 .id(message.getMessageId())
                 .blobId(BlobId.of(String.valueOf(message.getUid().asLong())))
@@ -97,11 +109,19 @@ public class MessageFactory {
                 .replyTo(fromAddressList(mimeMessage.getReplyTo()))
                 .size(message.getSize())
                 .date(message.getInternalDateAsZonedDateTime())
-                .textBody(messageContent.getTextBody().orElse(null))
-                .htmlBody(messageContent.getHtmlBody().orElse(null))
-                .preview(getPreview(messageContent))
+                .textBody(textBody)
+                .htmlBody(htmlBody)
+                .preview(getPreview(messageContent, textBody))
                 .attachments(getAttachments(message.getAttachments()))
                 .build();
+    }
+
+    private Optional<String> textBodyFromHtmlBody(String htmlBody) {
+        try {
+            return Optional.of(textExtractor.extractContent(new ByteArrayInputStream(htmlBody.getBytes()), HTML_CONTENT, EMPTY_FILE_NAME).getTextualContent());
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     private org.apache.james.mime4j.dom.Message parse(MetaDataWithContent message) throws MailboxException {
@@ -125,8 +145,11 @@ public class MessageFactory {
         }
     }
 
-    private String getPreview(MessageContent messageContent) {
+    private String getPreview(MessageContent messageContent, String computedTextBody) {
         if (messageContent.getHtmlBody().isPresent()) {
+            if (!messageContent.getTextBody().isPresent()) {
+                return messagePreview.forTextBody(Optional.of(computedTextBody));
+            }
             return messagePreview.forHTMLBody(messageContent.getHtmlBody());
         }
         return messagePreview.forTextBody(messageContent.getTextBody());
