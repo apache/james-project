@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -40,7 +39,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.james.core.MailImpl;
-import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.smtp.MailAddressException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -72,7 +71,7 @@ public abstract class AbstractJMSMailQueueTest {
     
     protected JMSMailQueue createQueue(ConnectionFactory factory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName) {
         Logger log = LoggerFactory.getLogger(AbstractJMSMailQueueTest.class);
-        return new JMSMailQueue(factory, mailQueueItemDecoratorFactory, queueName, mock(Metric.class), log);
+        return new JMSMailQueue(factory, mailQueueItemDecoratorFactory, queueName, new NoopMetricFactory(), log);
     }
 
     @Before

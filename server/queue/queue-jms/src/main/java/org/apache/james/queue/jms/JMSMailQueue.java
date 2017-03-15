@@ -51,6 +51,8 @@ import org.apache.james.core.MailImpl;
 import org.apache.james.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -78,10 +80,11 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     protected final Connection connection;
     protected final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
     protected final Metric enqueuedMailsMetric;
+    protected final MetricFactory metricFactory;
     protected final Logger logger;
     public final static String FORCE_DELIVERY = "FORCE_DELIVERY";
 
-    public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName, Metric enqueuedMailsMetric, Logger logger) {
+    public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName, MetricFactory metricFactory, Logger logger) {
         try {
             connection = connectionFactory.createConnection();
             connection.start();
@@ -90,7 +93,8 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         }
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
         this.queueName = queueName;
-        this.enqueuedMailsMetric = enqueuedMailsMetric;
+        this.metricFactory = metricFactory;
+        this.enqueuedMailsMetric = metricFactory.generate("enqueuedMail:" + queueName);
         this.logger = logger;
     }
 
@@ -113,6 +117,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         MessageConsumer consumer = null;
 
         while (true) {
+            TimeMetric timeMetric = metricFactory.timer("dequeueTime:" + queueName);
             try {
                 session = connection.createSession(true, Session.SESSION_TRANSACTED);
                 Queue queue = session.createQueue(queueName);
@@ -166,6 +171,8 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
                 }
 
                 throw new MailQueueException("Unable to dequeue next message", e);
+            } finally {
+                timeMetric.stopAndPublish();
             }
         }
 
@@ -173,6 +180,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
     @Override
     public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
+        TimeMetric timeMetric = metricFactory.timer("enqueueMailTime:" + queueName);
         Session session = null;
 
         long mydelay = 0;
@@ -207,13 +215,13 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             throw new MailQueueException("Unable to enqueue mail " + mail, e);
 
         } finally {
+            timeMetric.stopAndPublish();
             try {
                 if (session != null)
                     session.close();
             } catch (JMSException e) {
                 // ignore here
             }
-
         }
     }
 

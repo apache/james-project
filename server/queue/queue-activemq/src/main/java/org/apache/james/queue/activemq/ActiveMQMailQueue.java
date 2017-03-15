@@ -43,7 +43,7 @@ import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.james.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.core.MimeMessageInputStream;
 import org.apache.james.core.MimeMessageSource;
-import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.jms.JMSMailQueue;
@@ -93,8 +93,8 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
      * Construct a {@link ActiveMQMailQueue} which only use {@link BlobMessage}
      * 
      */
-    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, Metric enqueuedMailsMetric, Logger logger) {
-        this(connectionFactory, mailQueueItemDecoratorFactory, queuename, true, enqueuedMailsMetric, logger);
+    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, MetricFactory metricFactory, Logger logger) {
+        this(connectionFactory, mailQueueItemDecoratorFactory, queuename, true, metricFactory, logger);
     }
 
     /**
@@ -105,8 +105,8 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
      * @param useBlob
      * @param logger
      */
-    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, boolean useBlob, Metric enqueuedMailsMetric, Logger logger) {
-        super(connectionFactory, mailQueueItemDecoratorFactory, queuename, enqueuedMailsMetric, logger);
+    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, boolean useBlob, MetricFactory metricFactory, Logger logger) {
+        super(connectionFactory, mailQueueItemDecoratorFactory, queuename, metricFactory, logger);
         this.useBlob = useBlob;
     }
 

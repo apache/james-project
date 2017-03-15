@@ -50,6 +50,6 @@ public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
 
     @Override
     protected MailQueue createMailQueue(String name) {
-        return new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, useBlob, metricFactory.generate("enqueuedMails:" + name), log);
+        return new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, useBlob, metricFactory, log);
     }
 }
