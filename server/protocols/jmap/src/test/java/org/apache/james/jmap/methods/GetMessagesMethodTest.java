@@ -49,7 +49,9 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryMessageIdManager;
+import org.apache.james.mailbox.inmemory.JsoupTextExtractor;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -119,7 +121,8 @@ public class GetMessagesMethodTest {
         when(messagePreview.forHTMLBody(any())).thenReturn("html preview");
         when(messagePreview.forTextBody(any())).thenReturn("text preview");
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
-        MessageFactory messageFactory = new MessageFactory(messagePreview, messageContentExtractor);
+        TextExtractor textExtractor = new JsoupTextExtractor();
+        MessageFactory messageFactory = new MessageFactory(messagePreview, messageContentExtractor, textExtractor);
         InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
         GroupMembershipResolver groupMembershipResolver = inMemoryIntegrationResources.createGroupMembershipResolver();
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(groupMembershipResolver);
@@ -182,9 +185,9 @@ public class GetMessagesMethodTest {
             .flatExtracting(GetMessagesResponse::list)
             .extracting(Message::getId, Message::getSubject, Message::getTextBody)
             .containsOnly(
-                    Tuple.tuple(message1.getMessageId(), "message 1 subject", Optional.of("my message")), 
-                    Tuple.tuple(message2.getMessageId(), "message 2 subject", Optional.of("my message")),
-                    Tuple.tuple(message3.getMessageId(), "", Optional.of("my message")));
+                Tuple.tuple(message1.getMessageId(), "message 1 subject", Optional.of("my message")),
+                Tuple.tuple(message2.getMessageId(), "message 2 subject", Optional.of("my message")),
+                Tuple.tuple(message3.getMessageId(), "", Optional.of("my message")));
     }
     
     @Test
@@ -208,8 +211,8 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
-            .extracting(Message::getId, Message::getTextBody, Message::getHtmlBody)
-            .containsOnly(Tuple.tuple(message.getMessageId(), Optional.empty(), Optional.of("my <b>HTML</b> message")));
+            .extracting(Message::getId, Message::getHtmlBody)
+            .containsOnly(Tuple.tuple(message.getMessageId(), Optional.of("my <b>HTML</b> message")));
     }
 
     @Test
@@ -298,7 +301,93 @@ public class GetMessagesMethodTest {
             .asList()
             .containsOnlyElementsOf(expected);
     }
-    
+
+    @Test
+    public void processShouldReturnTextBodyWhenEmptyTextBodyAndNotEmptyHtmlBody() throws MailboxException {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+        Date now = new Date();
+        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Content-Type: text/html\r\n"
+            + "Subject: message 1 subject\r\n"
+            + "\r\n"
+            + "my <b>HTML</b> message").getBytes(Charsets.UTF_8));
+        ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
+
+        GetMessagesRequest request = GetMessagesRequest.builder()
+            .ids(ImmutableList.of(message.getMessageId()))
+            .build();
+
+        List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
+
+        assertThat(result).hasSize(1)
+            .extracting(JmapResponse::getResponse)
+            .hasOnlyElementsOfType(GetMessagesResponse.class)
+            .extracting(GetMessagesResponse.class::cast)
+            .flatExtracting(GetMessagesResponse::list)
+            .extracting(Message::getId, Message::getTextBody, Message::getHtmlBody)
+            .containsOnly(Tuple.tuple(message.getMessageId(), Optional.of("my HTML message"), Optional.of("my <b>HTML</b> message")));
+    }
+
+    @Test
+    public void processShouldEmptyTextBodyAndHtmlBodyWhenThoseAreEmpty() throws MailboxException {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+        Date now = new Date();
+        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Content-Type: text/html\r\n"
+            + "Subject: message 1 subject\r\n"
+            + "\r\n").getBytes(Charsets.UTF_8));
+        ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
+
+        GetMessagesRequest request = GetMessagesRequest.builder()
+            .ids(ImmutableList.of(message.getMessageId()))
+            .build();
+
+        List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
+
+        assertThat(result).hasSize(1)
+            .extracting(JmapResponse::getResponse)
+            .hasOnlyElementsOfType(GetMessagesResponse.class)
+            .extracting(GetMessagesResponse.class::cast)
+            .flatExtracting(GetMessagesResponse::list)
+            .extracting(Message::getId, Message::getTextBody, Message::getHtmlBody)
+            .containsOnly(Tuple.tuple(message.getMessageId(), Optional.empty(), Optional.empty()));
+    }
+
+    @Test
+    public void processShouldNotOverrideTextBodyWhenItIsThere() throws MailboxException {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+        Date now = new Date();
+        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Subject\n"
+            + "MIME-Version: 1.0\n"
+            + "Content-Type: multipart/alternative;\n"
+            + "\tboundary=\"----=_Part_370449_1340169331.1489506420401\"\n"
+            + "\n"
+            + "------=_Part_370449_1340169331.1489506420401\n"
+            + "Content-Type: text/plain; charset=UTF-8\n"
+            + "Content-Transfer-Encoding: 7bit\n"
+            + "\n"
+            + "My plain message\n"
+            + "------=_Part_370449_1340169331.1489506420401\n"
+            + "Content-Type: text/html; charset=UTF-8\n"
+            + "Content-Transfer-Encoding: 7bit\n"
+            + "\n"
+            + "<a>The </a> <strong>HTML</strong> message"
+        ).getBytes(Charsets.UTF_8));
+        ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
+
+        GetMessagesRequest request = GetMessagesRequest.builder()
+            .ids(ImmutableList.of(message.getMessageId()))
+            .build();
+
+        List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
+
+        assertThat(result).hasSize(1)
+            .extracting(JmapResponse::getResponse)
+            .hasOnlyElementsOfType(GetMessagesResponse.class)
+            .extracting(GetMessagesResponse.class::cast)
+            .flatExtracting(GetMessagesResponse::list)
+            .extracting(Message::getId, Message::getTextBody, Message::getHtmlBody)
+            .containsOnly(Tuple.tuple(message.getMessageId(), Optional.of("My plain message"), Optional.of("<a>The </a> <strong>HTML</strong> message")));
+    }
+
     @Test
     public void processShouldReturnHeadersFieldWhenSpecificHeadersRequestedInPropertyList() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);

@@ -50,8 +50,8 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -1052,6 +1052,34 @@ public abstract class GetMessageListMethodTest {
             .body("[0][1].messageIds[0]", equalTo(message.getMessageId().serialize()))
             .body("[1][1].list", hasSize(1))
             .body("[1][1].list[0].id", equalTo(message.getMessageId().serialize()));
+    }
+
+    @Test
+    public void getMessageListShouldComputeTextBodyWhenNoTextBodyButHtmlBody() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+
+        String mailContent = "Content-Type: text/html\r\n"
+            + "Subject: message 1 subject\r\n"
+            + "\r\n"
+            + "Hello <b>someone</b>, and thank you for joining example.com!";
+        LocalDate date = LocalDate.now();
+        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+            new ByteArrayInputStream(mailContent.getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessageList\", {\"fetchMessages\": true, \"fetchMessageProperties\": [\"htmlBody\", \"textBody\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body("[0][0]", equalTo("messageList"))
+            .body("[1][0]", equalTo("messages"))
+            .body("[0][1].messageIds", hasSize(1))
+            .body("[1][1].list[0].htmlBody", equalTo("Hello <b>someone</b>, and thank you for joining example.com!"))
+            .body("[1][1].list[0].textBody", equalTo("Hello someone, and thank you for joining example.com!"))
+        ;
     }
 
     private Date convertToDate(LocalDate localDate) {

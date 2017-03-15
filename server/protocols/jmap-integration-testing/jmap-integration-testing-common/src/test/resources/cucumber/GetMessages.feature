@@ -240,3 +240,11 @@ Feature: GetMessages method
     And the list should contain 1 message
     And the textBody of the message is "/blabla/\r\n*bloblo*\r\n"
     And the htmlBody of the message is "<i>blabla</i>\r\n<b>bloblo</b>\r\n"
+
+  Scenario: Retrieving message should compute text body from html body
+    Given the user has a message "m1" in "INBOX" mailbox with html body and no text body
+    When the user ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the textBody of the message is "The Test User created an issue"
+    And the htmlBody of the message is "<a>The Test User</a> <strong>created</strong> an issue"
