@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets.remoteDelivery;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -31,6 +32,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
@@ -74,10 +77,13 @@ public class DeliveryRunnableTest {
 
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class));
         outgoingMailsMetric = mock(Metric.class);
+        MetricFactory mockMetricFactory = mock(MetricFactory.class);
+        when(mockMetricFactory.generate(anyString())).thenReturn(outgoingMailsMetric);
+        when(mockMetricFactory.timer(anyString())).thenReturn(new NoopMetricFactory.NoopTimeMetric());
         bouncer = mock(Bouncer.class);
         mailDelivrer = mock(MailDelivrer.class);
         mailQueue = mock(MailQueue.class);
-        testee = new DeliveryRunnable(mailQueue, configuration, outgoingMailsMetric, LOGGER, bouncer, mailDelivrer, DeliveryRunnable.DEFAULT_NOT_STARTED, FIXED_DATE_SUPPLIER);
+        testee = new DeliveryRunnable(mailQueue, configuration, mockMetricFactory, LOGGER, bouncer, mailDelivrer, DeliveryRunnable.DEFAULT_NOT_STARTED, FIXED_DATE_SUPPLIER);
     }
 
     @Test

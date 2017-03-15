@@ -126,13 +126,12 @@ public class RemoteDelivery extends GenericMailet {
         DO_NOT_START_THREADS
     }
 
-    private static final String OUTGOING_MAILS = "outgoingMails";
     public static final String NAME_JUNCTION = "-to-";
 
     private final DNSService dnsServer;
     private final DomainList domainList;
     private final MailQueueFactory queueFactory;
-    private final Metric outgoingMailsMetric;
+    private final MetricFactory metricFactory;
     private final AtomicBoolean isDestroyed;
     private final THREAD_STATE startThreads;
 
@@ -150,7 +149,7 @@ public class RemoteDelivery extends GenericMailet {
         this.dnsServer = dnsServer;
         this.domainList = domainList;
         this.queueFactory = queueFactory;
-        this.outgoingMailsMetric = metricFactory.generate(OUTGOING_MAILS);
+        this.metricFactory = metricFactory;
         this.isDestroyed = new AtomicBoolean(false);
         this.startThreads = startThreads;
     }
@@ -177,7 +176,7 @@ public class RemoteDelivery extends GenericMailet {
                 new DeliveryRunnable(queue,
                     configuration,
                     dnsServer,
-                    outgoingMailsMetric,
+                    metricFactory,
                     logger,
                     getMailetContext(),
                     new Bouncer(configuration, getMailetContext(), logger),

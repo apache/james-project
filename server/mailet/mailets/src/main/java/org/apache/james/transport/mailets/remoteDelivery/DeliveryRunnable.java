@@ -26,6 +26,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.mailet.Mail;
@@ -44,34 +46,38 @@ public class DeliveryRunnable implements Runnable {
         }
     };
     public static final AtomicBoolean DEFAULT_NOT_STARTED = new AtomicBoolean(false);
+    private static final String OUTGOING_MAILS = "outgoingMails";
+    public static final String REMOTE_DELIVERY_TRIAL = "RemoteDeliveryTrial";
 
     private final MailQueue queue;
     private final RemoteDeliveryConfiguration configuration;
     private final Metric outgoingMailsMetric;
+    private final MetricFactory metricFactory;
     private final Logger logger;
     private final Bouncer bouncer;
     private final MailDelivrer mailDelivrer;
     private final AtomicBoolean isDestroyed;
     private final Supplier<Date> dateSupplier;
 
-    public DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, DNSService dnsServer, Metric outgoingMailsMetric,
+    public DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, DNSService dnsServer, MetricFactory metricFactory,
                             Logger logger, MailetContext mailetContext, Bouncer bouncer, AtomicBoolean isDestroyed) {
-        this(queue, configuration, outgoingMailsMetric, logger, bouncer,
+        this(queue, configuration, metricFactory, logger, bouncer,
             new MailDelivrer(configuration, new MailDelivrerToHost(configuration, mailetContext, logger), dnsServer, bouncer, logger),
             isDestroyed, CURRENT_DATE_SUPPLIER);
     }
 
     @VisibleForTesting
-    DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, Metric outgoingMailsMetric, Logger logger, Bouncer bouncer,
+    DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, MetricFactory metricFactory, Logger logger, Bouncer bouncer,
                      MailDelivrer mailDelivrer, AtomicBoolean isDestroyeds, Supplier<Date> dateSupplier) {
         this.queue = queue;
         this.configuration = configuration;
-        this.outgoingMailsMetric = outgoingMailsMetric;
+        this.outgoingMailsMetric = metricFactory.generate(OUTGOING_MAILS);
         this.logger = logger;
         this.bouncer = bouncer;
         this.mailDelivrer = mailDelivrer;
         this.isDestroyed = isDestroyeds;
         this.dateSupplier = dateSupplier;
+        this.metricFactory = metricFactory;
     }
 
     @Override
@@ -87,6 +93,7 @@ public class DeliveryRunnable implements Runnable {
     }
 
     private void runStep() {
+        TimeMetric timeMetric = metricFactory.timer(REMOTE_DELIVERY_TRIAL);
         try {
             // Get the 'mail' object that is ready for deliverying. If no message is
             // ready, the 'accept' will block until message is ready.
@@ -116,6 +123,8 @@ public class DeliveryRunnable implements Runnable {
             if (!isDestroyed.get()) {
                 logger.error("Exception caught in RemoteDelivery.run()", e);
             }
+        } finally {
+            timeMetric.stopAndPublish();
         }
     }
 
