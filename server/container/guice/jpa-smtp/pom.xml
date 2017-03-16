@@ -239,6 +239,12 @@
                     <groupId>com.jayway.restassured</groupId>
                     <artifactId>rest-assured</artifactId>
                     <scope>test</scope>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>commons-logging</groupId>
+                            <artifactId>commons-logging</artifactId>
+                        </exclusion>
+                    </exclusions>
                 </dependency>
                  <dependency>
                     <groupId>com.nurkiewicz.asyncretry</groupId>

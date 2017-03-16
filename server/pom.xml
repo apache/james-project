@@ -1096,6 +1096,10 @@
                         <artifactId>commons-beanutils-core</artifactId>
                         <groupId>commons-beanutils</groupId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
 
