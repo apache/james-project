@@ -19,7 +19,10 @@
 
 package org.apache.james.util;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -29,6 +32,15 @@ public class FluentFutureStream<T> {
 
     public static <T> FluentFutureStream<T> of(CompletableFuture<Stream<T>> completableFuture) {
         return new FluentFutureStream<>(completableFuture);
+    }
+
+    public static <T> FluentFutureStream<T> of(Stream<CompletableFuture<T>> completableFutureStream) {
+        return new FluentFutureStream<>(CompletableFutureUtil.allOf(completableFutureStream));
+    }
+
+    @SafeVarargs
+    public static <T> FluentFutureStream<T> ofFutures(CompletableFuture<T>... completableFutures) {
+        return new FluentFutureStream<>(CompletableFutureUtil.allOfArray(completableFutures));
     }
 
     private FluentFutureStream(CompletableFuture<Stream<T>> completableFuture) {
@@ -43,6 +55,10 @@ public class FluentFutureStream<T> {
     public <U> FluentFutureStream<U> map(Function<T, U> function) {
         return FluentFutureStream.of(
             CompletableFutureUtil.map(completableFuture(), function));
+    }
+
+    public CompletableFuture<Optional<T>> reduce(BinaryOperator<T> combiner) {
+        return CompletableFutureUtil.reduce(combiner, completableFuture);
     }
 
     public <U> FluentFutureStream<U> thenComposeOnAll(Function<T, CompletableFuture<U>> function) {

@@ -89,6 +89,59 @@ public class CompletableFutureUtilTest {
     }
 
     @Test
+    public void allOfArrayShouldPreserveOrder() {
+        long value1 = 18L;
+        long value2 = 19L;
+        long value3 = 20L;
+        long value4 = 21L;
+        long value5 = 22L;
+        long value6 = 23L;
+        long value7 = 24L;
+        long value8 = 25L;
+        long value9 = 26L;
+        long value10 = 27L;
+        assertThat(
+            CompletableFutureUtil.allOfArray(
+                    CompletableFuture.completedFuture(value1),
+                    CompletableFuture.completedFuture(value2),
+                    CompletableFuture.completedFuture(value3),
+                    CompletableFuture.completedFuture(value4),
+                    CompletableFuture.completedFuture(value5),
+                    CompletableFuture.completedFuture(value6),
+                    CompletableFuture.completedFuture(value7),
+                    CompletableFuture.completedFuture(value8),
+                    CompletableFuture.completedFuture(value9),
+                    CompletableFuture.completedFuture(value10))
+                .join()
+                .collect(Guavate.toImmutableList()))
+            .containsExactly(value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
+    }
+
+    @Test
+    public void allOfArrayShouldUnboxNoArgs() {
+        assertThat(
+            CompletableFutureUtil.allOfArray()
+                .join()
+                .collect(Guavate.toImmutableList()))
+            .isEmpty();
+    }
+
+    @Test
+    public void allOfArrayShouldUnboxArray() {
+        long value1 = 18L;
+        long value2 = 19L;
+        long value3 = 20L;
+        assertThat(
+            CompletableFutureUtil.allOfArray(
+                    CompletableFuture.completedFuture(value1),
+                    CompletableFuture.completedFuture(value2),
+                    CompletableFuture.completedFuture(value3))
+                .join()
+                .collect(Guavate.toImmutableList()))
+            .containsOnly(value1, value2, value3);
+    }
+
+    @Test
     public void allOfShouldWorkOnVeryLargeStream() {
         CompletableFutureUtil.allOf(
             IntStream.range(0, 100000)
@@ -171,5 +224,73 @@ public class CompletableFutureUtilTest {
             CompletableFutureUtil.keepValue(future, null)
                 .join())
             .isNull();
+    }
+
+    @Test
+    public void composeIfTrueShouldReturnTrueWhenTrue() {
+        assertThat(
+            CompletableFutureUtil.composeIfTrue(() -> CompletableFuture.completedFuture(null))
+                .apply(true)
+                .join())
+            .isTrue();
+    }
+
+    @Test
+    public void composeIfTrueShouldReturnFalseWhenFalse() {
+        assertThat(
+            CompletableFutureUtil.composeIfTrue(() -> CompletableFuture.completedFuture(null))
+                .apply(false)
+                .join())
+            .isFalse();
+    }
+
+    @Test
+    public void composeIfTrueShouldComposeWhenTrue() {
+        AtomicInteger atomicInteger = new AtomicInteger(0);
+        CompletableFutureUtil.composeIfTrue(() -> {
+            atomicInteger.incrementAndGet();
+            return CompletableFuture.completedFuture(null);
+        })
+            .apply(true)
+            .join();
+
+        assertThat(atomicInteger.get()).isEqualTo(1);
+    }
+
+    @Test
+    public void composeIfTrueShouldNotComposeWhenFalse() {
+        AtomicInteger atomicInteger = new AtomicInteger(0);
+        CompletableFutureUtil.composeIfTrue(() -> {
+            atomicInteger.incrementAndGet();
+            return CompletableFuture.completedFuture(null);
+        })
+            .apply(false)
+            .join();
+
+        assertThat(atomicInteger.get()).isEqualTo(0);
+    }
+
+    @Test
+    public void reduceShouldReturnEmptyWhenNoValue() {
+        assertThat(
+            CompletableFutureUtil.reduce(
+                (i, j) -> i + j,
+                CompletableFutureUtil.<Long>allOfArray())
+                .join())
+            .isEmpty();
+    }
+
+    @Test
+    public void reduceShouldWork() {
+        assertThat(
+            CompletableFutureUtil.reduce(
+                (i, j) -> i + j,
+                CompletableFutureUtil.allOfArray(
+                    CompletableFuture.completedFuture(1L),
+                    CompletableFuture.completedFuture(2L),
+                    CompletableFuture.completedFuture(3L)
+                ))
+                .join())
+            .contains(6L);
     }
 }

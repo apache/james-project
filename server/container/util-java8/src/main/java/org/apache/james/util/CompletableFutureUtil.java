@@ -19,12 +19,19 @@
 
 package org.apache.james.util;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class CompletableFutureUtil {
+
+    @SafeVarargs
+    public static <T> CompletableFuture<Stream<T>> allOfArray(CompletableFuture<T>... futures) {
+        return allOf(Stream.of(futures));
+    }
 
     public static <T> CompletableFuture<Stream<T>> allOf(Stream<CompletableFuture<T>> futureStream) {
         return futureStream
@@ -51,17 +58,29 @@ public class CompletableFutureUtil {
         return futurStream
             .thenCompose(stream ->
                 CompletableFutureUtil.allOf(
-                    stream.map(action::apply)));
+                    stream.map(action)));
     }
 
     public static <T, U> CompletableFuture<Stream<U>> map(CompletableFuture<Stream<T>> futurStream, Function<T, U> action) {
         return futurStream
             .thenApply(stream ->
-                stream.map(value ->
-                    action.apply(value)));
+                stream.map(action));
+    }
+
+    public static <T, U> CompletableFuture<Optional<T>> reduce(BinaryOperator<T> binaryOperator, CompletableFuture<Stream<T>> futureStream) {
+        return futureStream.thenApply(stream -> stream.reduce(binaryOperator));
     }
 
     public static <T> CompletableFuture<T> keepValue(Supplier<CompletableFuture<Void>> supplier, T value) {
         return supplier.get().thenApply(any -> value);
+    }
+
+    public static <T> Function<Boolean, CompletableFuture<Boolean>> composeIfTrue(Supplier<CompletableFuture<T>> composeOperation) {
+        return b -> {
+            if (b) {
+                return composeOperation.get().thenApply(any -> b);
+            }
+            return CompletableFuture.completedFuture(b);
+        };
     }
 }
