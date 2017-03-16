@@ -47,7 +47,7 @@ public class AllButStartTlsDelimiterChannelHandler extends DelimiterBasedFrameDe
     protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
         SMTPSession session = (SMTPSession) pipeline.getContext(HandlerConstants.CORE_HANDLER).getAttachment();
 
-        if (session.needsCommandInjectionDetection()) {
+        if (session == null || session.needsCommandInjectionDetection()) {
             String trimedLowerCasedInput = readAll(buffer).trim().toLowerCase();
             if (hasCommandInjection(trimedLowerCasedInput)) {
                 throw new CommandInjectionDetectedException();
