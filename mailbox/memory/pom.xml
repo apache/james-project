@@ -33,10 +33,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>${javax.mail.groupId}</groupId>
-            <artifactId>${javax.mail.artifactId}</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.james</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
         </dependency>
@@ -69,6 +65,10 @@
             <groupId>org.apache.james</groupId>
             <artifactId>james-server-util</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

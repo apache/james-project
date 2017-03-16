@@ -259,9 +259,9 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>javax.mail</groupId>
-                <artifactId>mail</artifactId>
-                <version>1.4.4</version>
+                <groupId>com.sun.mail</groupId>
+                <artifactId>javax.mail</artifactId>
+                <version>1.5.4</version>
             </dependency>
             <dependency>
                 <groupId>org.assertj</groupId>

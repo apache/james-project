@@ -31,11 +31,6 @@
     <description>Apache James Mailbox IMAP search implementation using scanning</description>
     <name>Apache James :: Mailbox :: Scanning</name>
 
-    <properties>
-        <javax.mail.groupId>javax.mail</javax.mail.groupId>
-        <javax.mail.artifactId>mail</javax.mail.artifactId>
-    </properties>
-
     <profiles>
         <profile>
             <id>disable-build-for-older-jdk</id>

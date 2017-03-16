@@ -39,7 +39,6 @@
         <!-- Override the source descriptor -->
         <sourceReleaseAssemblyDescriptor>project</sourceReleaseAssemblyDescriptor>
         <plugin.mailetdocs.version>0.1</plugin.mailetdocs.version>
-        <javax.version>1.4.4</javax.version>
         <javax.inject.version>1</javax.inject.version>
         <junit.version>4.10</junit.version>
         <activation.version>1.1.1</activation.version>
@@ -106,9 +105,9 @@
                 <version>4.0.0</version>
             </dependency>
             <dependency>
-                <groupId>javax.mail</groupId>
-                <artifactId>mail</artifactId>
-                <version>${javax.version}</version>
+                <groupId>com.sun.mail</groupId>
+                <artifactId>javax.mail</artifactId>
+                <version>1.5.4</version>
             </dependency>
             <dependency>
                 <groupId>javax.activation</groupId>

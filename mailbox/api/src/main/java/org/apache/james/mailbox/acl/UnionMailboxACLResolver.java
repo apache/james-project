@@ -38,7 +38,6 @@ import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.SimpleMailboxACL.SimpleMailboxACLEntryKey;
 
-import com.sun.mail.mbox.Mailbox;
 
 /**
  * An implementation which works with the union of the rights granted to the
