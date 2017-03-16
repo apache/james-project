@@ -82,6 +82,7 @@ public class WebAdminServer implements Configurable {
             configureMetrics();
             service.before(authenticationFilter);
             routesList.forEach(routes -> routes.define(service));
+            service.awaitInitialization();
             LOGGER.info("Web admin server started");
         }
     }
