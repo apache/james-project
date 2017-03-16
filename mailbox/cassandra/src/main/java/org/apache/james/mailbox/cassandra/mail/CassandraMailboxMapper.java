@@ -141,18 +141,13 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     private CompletableFuture<Boolean> trySave(SimpleMailbox cassandraMailbox, CassandraId cassandraId) {
         return mailboxPathDAO.save(cassandraMailbox.generateAssociatedPath(), cassandraId)
-            .thenCompose(result -> {
-                if (result) {
-                    return mailboxDAO.retrieveMailbox(cassandraId)
-                        .thenCompose(optional -> CompletableFuture
-                            .allOf(optional
-                                    .map(storedMailbox -> mailboxPathDAO.delete(storedMailbox.generateAssociatedPath()))
-                                    .orElse(CompletableFuture.completedFuture(null)),
-                                mailboxDAO.save(cassandraMailbox))
-                            .thenApply(any -> result));
-                }
-                return CompletableFuture.completedFuture(result);
-            });
+            .thenCompose(CompletableFutureUtil.composeIfTrue(
+                () -> mailboxDAO.retrieveMailbox(cassandraId)
+                    .thenCompose(optional -> CompletableFuture
+                        .allOf(optional
+                                .map(storedMailbox -> mailboxPathDAO.delete(storedMailbox.generateAssociatedPath()))
+                                .orElse(CompletableFuture.completedFuture(null)),
+                            mailboxDAO.save(cassandraMailbox)))));
     }
 
     private void manageException(CompletionException e) throws MailboxException {
