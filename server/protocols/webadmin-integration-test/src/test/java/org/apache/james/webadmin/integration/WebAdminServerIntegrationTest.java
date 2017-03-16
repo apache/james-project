@@ -60,6 +60,7 @@ public class WebAdminServerIntegrationTest {
 
     private GuiceJamesServer guiceJamesServer;
     private DataProbe dataProbe;
+    private WebAdminGuiceProbe webAdminGuiceProbe;
 
     @Before
     public void setUp() throws Exception {
@@ -67,12 +68,12 @@ public class WebAdminServerIntegrationTest {
                 .overrideWith(new WebAdminConfigurationModule());
         guiceJamesServer.start();
         dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
+        webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
         		.setContentType(ContentType.JSON)
         		.setAccept(ContentType.JSON)
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(guiceJamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort())
         		.build();
     }
 
@@ -83,7 +84,9 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void postShouldAddTheGivenDomain() throws Exception {
-        when()
+        given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+        .when()
             .put(SPECIFIC_DOMAIN)
         .then()
             .statusCode(204);
@@ -95,7 +98,9 @@ public class WebAdminServerIntegrationTest {
     public void deleteShouldRemoveTheGivenDomain() throws Exception {
         dataProbe.addDomain(DOMAIN);
 
-        when()
+        given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+        .when()
             .delete(SPECIFIC_DOMAIN)
         .then()
             .statusCode(204);
@@ -108,6 +113,7 @@ public class WebAdminServerIntegrationTest {
         dataProbe.addDomain(DOMAIN);
 
         given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
             .body("{\"password\":\"password\"}")
         .when()
             .put(SPECIFIC_USER)
@@ -123,6 +129,7 @@ public class WebAdminServerIntegrationTest {
         dataProbe.addUser(USERNAME, "anyPassword");
 
         given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
             .body("{\"username\":\"" + USERNAME + "\",\"password\":\"password\"}")
         .when()
             .delete(SPECIFIC_USER)
@@ -137,7 +144,9 @@ public class WebAdminServerIntegrationTest {
         dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(USERNAME, "anyPassword");
 
-        when()
+        given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+        .when()
             .get(UserRoutes.USERS)
         .then()
             .statusCode(200)
@@ -149,7 +158,9 @@ public class WebAdminServerIntegrationTest {
         dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(USERNAME, "anyPassword");
 
-        when()
+        given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+        .when()
             .put(SPECIFIC_MAILBOX)
         .then()
             .statusCode(204);
@@ -163,7 +174,9 @@ public class WebAdminServerIntegrationTest {
         dataProbe.addUser(USERNAME, "anyPassword");
         guiceJamesServer.getProbe(MailboxProbeImpl.class).createMailbox("#private", USERNAME, MAILBOX);
 
-        when()
+        given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+        .when()
             .delete(SPECIFIC_MAILBOX)
         .then()
             .statusCode(204);

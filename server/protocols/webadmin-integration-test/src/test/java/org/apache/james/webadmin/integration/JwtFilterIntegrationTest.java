@@ -67,6 +67,7 @@ public class JwtFilterIntegrationTest {
 
     private GuiceJamesServer guiceJamesServer;
     private DataProbeImpl dataProbe;
+    private WebAdminGuiceProbe webAdminGuiceProbe;
 
     @Before
     public void setUp() throws Exception {
@@ -80,12 +81,12 @@ public class JwtFilterIntegrationTest {
                 binder -> binder.bind(JwtConfiguration.class).toInstance(jwtConfiguration));
         guiceJamesServer.start();
         dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
+        webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-            .setPort(guiceJamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort())
             .build();
     }
 
@@ -97,6 +98,7 @@ public class JwtFilterIntegrationTest {
     @Test
     public void jwtAuthenticationShouldWork() throws Exception {
         given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
             .header(new Header("Authorization", "Bearer " + VALID_TOKEN_ADMIN_TRUE))
         .when()
             .put(SPECIFIC_DOMAIN)
@@ -110,6 +112,7 @@ public class JwtFilterIntegrationTest {
     @Test
     public void jwtShouldRejectNonAdminRequests() throws Exception {
         given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
             .header(new Header("Authorization", "Bearer " + VALID_TOKEN_ADMIN_FALSE))
         .when()
             .put(SPECIFIC_DOMAIN)
@@ -123,6 +126,7 @@ public class JwtFilterIntegrationTest {
     @Test
     public void jwtShouldRejectInvalidRequests() throws Exception {
         given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
             .header(new Header("Authorization", "Bearer invalid"))
         .when()
             .put(SPECIFIC_DOMAIN)
