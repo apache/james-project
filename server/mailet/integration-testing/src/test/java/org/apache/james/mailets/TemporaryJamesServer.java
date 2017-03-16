@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
@@ -66,7 +67,7 @@ public class TemporaryJamesServer {
 
     private void appendMailetConfigurations(TemporaryFolder temporaryFolder, MailetContainer mailetContainer) throws ConfigurationException, IOException {
         try (OutputStream outputStream = createMailetConfigurationFile(temporaryFolder)) {
-            IOUtils.write(mailetContainer.serializeAsXml(), outputStream);
+            IOUtils.write(mailetContainer.serializeAsXml(), outputStream, StandardCharsets.UTF_8);
         }
     }
 

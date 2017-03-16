@@ -21,6 +21,8 @@ package org.apache.james.jmap.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.junit.Before;
@@ -78,7 +80,7 @@ public class MailboxBasedHtmlTextExtractorTest {
 
     @Test
     public void toPlainTextShouldWorkWithMoreComplexHTML() throws Exception {
-        String html = IOUtils.toString(ClassLoader.getSystemResource("example.html"));
+        String html = IOUtils.toString(ClassLoader.getSystemResource("example.html"), StandardCharsets.UTF_8);
         String expectedPlainText = "\n" +
             "    Why a new Logo?\n" +
             "\n" +

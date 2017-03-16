@@ -51,6 +51,7 @@ import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 
 public class ManageSieveMailetTestCase {
@@ -517,7 +518,7 @@ public class ManageSieveMailetTestCase {
             if (multipart.getBodyPart(i).getContent() instanceof String) {
                 assertThat(((String) multipart.getBodyPart(i).getContent()).trim()).isEqualTo(contents[i]);
             } else {
-                assertThat(IOUtils.toString((ByteArrayInputStream) multipart.getBodyPart(i).getContent()).trim()).isEqualTo(contents[i]);
+                assertThat(IOUtils.toString((ByteArrayInputStream) multipart.getBodyPart(i).getContent(), Charsets.UTF_8).trim()).isEqualTo(contents[i]);
             }
         }
     }

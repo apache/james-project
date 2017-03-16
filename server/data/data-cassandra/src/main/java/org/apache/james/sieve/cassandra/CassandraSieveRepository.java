@@ -20,6 +20,7 @@
 package org.apache.james.sieve.cassandra;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -108,7 +109,7 @@ public class CassandraSieveRepository implements SieveRepository {
         return IOUtils.toInputStream(
             cassandraSieveDAO.getActive(user)
                 .join()
-                .orElseThrow(ScriptNotFoundException::new));
+                .orElseThrow(ScriptNotFoundException::new), StandardCharsets.UTF_8);
     }
 
     @Override
@@ -141,7 +142,7 @@ public class CassandraSieveRepository implements SieveRepository {
     public InputStream getScript(String user, String name) throws ScriptNotFoundException {
         return  cassandraSieveDAO.getScriptContent(user, name)
             .join()
-            .map(IOUtils::toInputStream)
+            .map(script -> IOUtils.toInputStream(script, StandardCharsets.UTF_8))
             .orElseThrow(ScriptNotFoundException::new);
     }
 

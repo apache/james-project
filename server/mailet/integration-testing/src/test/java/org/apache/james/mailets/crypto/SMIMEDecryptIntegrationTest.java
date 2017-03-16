@@ -21,6 +21,7 @@ package org.apache.james.mailets.crypto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 
 import org.apache.commons.io.IOUtils;
@@ -119,7 +120,7 @@ public class SMIMEDecryptIntegrationTest {
 
         try (SMTPMessageSender messageSender = SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_SECURE_PORT, DEFAULT_DOMAIN, FROM, PASSWORD);
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessageWithHeaders(FROM, FROM, IOUtils.toString(ClassLoader.getSystemResourceAsStream("eml/crypted.eml"))); 
+            messageSender.sendMessageWithHeaders(FROM, FROM, IOUtils.toString(ClassLoader.getSystemResourceAsStream("eml/crypted.eml"), StandardCharsets.US_ASCII)); 
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(FROM, PASSWORD));
 
@@ -133,7 +134,7 @@ public class SMIMEDecryptIntegrationTest {
 
         try (SMTPMessageSender messageSender = SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_SECURE_PORT, DEFAULT_DOMAIN, FROM, PASSWORD);
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessageWithHeaders(FROM, FROM, IOUtils.toString(ClassLoader.getSystemResourceAsStream("eml/crypted_with_attachment.eml"))); 
+            messageSender.sendMessageWithHeaders(FROM, FROM, IOUtils.toString(ClassLoader.getSystemResourceAsStream("eml/crypted_with_attachment.eml"), StandardCharsets.US_ASCII)); 
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(FROM, PASSWORD));
 
@@ -147,7 +148,7 @@ public class SMIMEDecryptIntegrationTest {
 
         try (SMTPMessageSender messageSender = SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_SECURE_PORT, DEFAULT_DOMAIN, FROM, PASSWORD);
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessageWithHeaders(FROM, FROM, IOUtils.toString(ClassLoader.getSystemResourceAsStream("eml/bad_crypted.eml"))); 
+            messageSender.sendMessageWithHeaders(FROM, FROM, IOUtils.toString(ClassLoader.getSystemResourceAsStream("eml/bad_crypted.eml"), StandardCharsets.US_ASCII)); 
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(FROM, PASSWORD));
 

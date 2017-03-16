@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -54,7 +55,7 @@ public class MimeMessageBodyGeneratorTest {
             mimeMessageBodyGenerator.from(original,
                 Optional.of("Plain text"),
                 Optional.empty())
-                .getInputStream()))
+                .getInputStream(), StandardCharsets.UTF_8))
             .isEqualTo("Plain text");
         verifyZeroInteractions(htmlTextExtractor);
     }
@@ -83,7 +84,7 @@ public class MimeMessageBodyGeneratorTest {
             mimeMessageBodyGenerator.from(original,
                 Optional.empty(),
                 Optional.of(htmlText))
-                .getInputStream());
+                .getInputStream(), StandardCharsets.UTF_8);
 
         assertThat(rowContent).containsSequence(htmlText);
         assertThat(rowContent).containsSequence(plainText);
@@ -98,7 +99,7 @@ public class MimeMessageBodyGeneratorTest {
             mimeMessageBodyGenerator.from(original,
                 Optional.of(plainText),
                 Optional.of(htmlText))
-                .getInputStream());
+                .getInputStream(), StandardCharsets.UTF_8);
 
         assertThat(rowContent).containsSequence(htmlText);
         assertThat(rowContent).containsSequence(plainText);
@@ -110,7 +111,7 @@ public class MimeMessageBodyGeneratorTest {
         String rowContent = IOUtils.toString(mimeMessageBodyGenerator.from(original,
             Optional.empty(),
             Optional.empty())
-            .getInputStream());
+            .getInputStream(), StandardCharsets.UTF_8);
 
         assertThat(rowContent).isEmpty();
     }

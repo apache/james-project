@@ -46,6 +46,7 @@ import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
@@ -97,7 +98,7 @@ public class JMAPModule extends AbstractModule {
     }
 
     private Optional<String> loadPublicKey(FileSystem fileSystem, Optional<String> jwtPublickeyPemUrl) {
-        return jwtPublickeyPemUrl.map(Throwing.function(url -> FileUtils.readFileToString(fileSystem.getFile(url))));
+        return jwtPublickeyPemUrl.map(Throwing.function(url -> FileUtils.readFileToString(fileSystem.getFile(url), Charsets.US_ASCII)));
     }
 
     @Singleton

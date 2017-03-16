@@ -25,6 +25,8 @@ import static org.apache.james.jmap.json.ParsingWritingObjects.MESSAGE;
 import static org.apache.james.jmap.json.ParsingWritingObjects.SUB_MESSAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.james.jmap.methods.GetMessagesMethod;
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
@@ -52,14 +54,14 @@ public class ParsingWritingObjectsTest {
         SubMessage expected = SUB_MESSAGE;
 
         SubMessage subMessage = testee.forParsing()
-            .readValue(IOUtils.toString(ClassLoader.getSystemResource("json/subMessage.json")), SubMessage.class);
+            .readValue(IOUtils.toString(ClassLoader.getSystemResource("json/subMessage.json"), StandardCharsets.UTF_8), SubMessage.class);
 
         assertThat(subMessage).isEqualToComparingFieldByField(expected);
     }
 
     @Test
     public void writingJsonShouldWorkOnSubMessage() throws Exception {
-        String expected = IOUtils.toString(ClassLoader.getSystemResource("json/subMessage.json"));
+        String expected = IOUtils.toString(ClassLoader.getSystemResource("json/subMessage.json"), StandardCharsets.UTF_8);
 
         String json = testee.forWriting()
                 .writeValueAsString(SUB_MESSAGE);
@@ -75,14 +77,14 @@ public class ParsingWritingObjectsTest {
         Message expected = MESSAGE;
 
         Message message = testee.forParsing()
-            .readValue(IOUtils.toString(ClassLoader.getSystemResource("json/message.json")), Message.class);
+            .readValue(IOUtils.toString(ClassLoader.getSystemResource("json/message.json"), StandardCharsets.UTF_8), Message.class);
 
         assertThat(message).isEqualToComparingFieldByField(expected);
     }
 
     @Test
     public void writingJsonShouldWorkOnMessage() throws Exception {
-        String expected = IOUtils.toString(ClassLoader.getSystemResource("json/message.json"));
+        String expected = IOUtils.toString(ClassLoader.getSystemResource("json/message.json"), StandardCharsets.UTF_8);
 
         SimpleFilterProvider filterProvider = new SimpleFilterProvider()
                 .addFilter(JmapResponseWriterImpl.PROPERTIES_FILTER, SimpleBeanPropertyFilter.serializeAll())
