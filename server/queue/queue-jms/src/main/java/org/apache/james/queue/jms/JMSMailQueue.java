@@ -80,6 +80,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     protected final Connection connection;
     protected final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
     protected final Metric enqueuedMailsMetric;
+    protected final Metric mailQueueSize;
     protected final MetricFactory metricFactory;
     protected final Logger logger;
     public final static String FORCE_DELIVERY = "FORCE_DELIVERY";
@@ -95,6 +96,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         this.queueName = queueName;
         this.metricFactory = metricFactory;
         this.enqueuedMailsMetric = metricFactory.generate("enqueuedMail:" + queueName);
+        this.mailQueueSize = metricFactory.generate("mailQueueSize:" + queueName);
         this.logger = logger;
     }
 
@@ -126,6 +128,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
                 message = consumer.receive(10000);
 
                 if (message != null) {
+                    mailQueueSize.decrement();
                     return createMailQueueItem(connection, session, consumer, message);
                 } else {
                     session.commit();
@@ -204,6 +207,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             produceMail(session, props, msgPrio, mail);
 
             enqueuedMailsMetric.increment();
+            mailQueueSize.increment();
         } catch (Exception e) {
             if (session != null) {
                 try {
