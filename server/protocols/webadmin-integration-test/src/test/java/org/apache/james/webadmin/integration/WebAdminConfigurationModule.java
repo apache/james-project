@@ -19,25 +19,15 @@
 
 package org.apache.james.webadmin.integration;
 
-import org.apache.james.webadmin.RandomPort;
 import org.apache.james.webadmin.WebAdminConfiguration;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
 
 public class WebAdminConfigurationModule extends AbstractModule {
 
     @Override
     protected void configure() {
-
-    }
-
-    @Provides
-    public WebAdminConfiguration provideWebAdminConfiguration() throws Exception {
-        return WebAdminConfiguration.builder()
-            .enabled()
-            .port(new RandomPort())
-            .build();
+        bind(WebAdminConfiguration.class).toProvider(WebAdminConfiguration::testingConfiguration);
     }
 
 }

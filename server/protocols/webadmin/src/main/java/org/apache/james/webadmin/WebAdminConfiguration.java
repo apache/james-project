@@ -31,10 +31,13 @@ public class WebAdminConfiguration {
     public static final boolean DEFAULT_CORS_DISABLED = false;
     public static final String CORS_ALL_ORIGINS = "*";
 
-    public static final WebAdminConfiguration TESTING_CONFIGURATION = WebAdminConfiguration.builder()
-        .enabled()
-        .port(new RandomPort())
-        .build();
+    public static WebAdminConfiguration testingConfiguration() {
+        return WebAdminConfiguration.builder()
+            .enabled()
+            .port(new RandomPort())
+            .build();
+    }
+
     public static final WebAdminConfiguration DISABLED_CONFIGURATION = WebAdminConfiguration.builder()
         .disabled()
         .build();
