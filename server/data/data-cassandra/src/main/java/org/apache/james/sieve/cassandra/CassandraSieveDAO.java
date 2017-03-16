@@ -22,7 +22,6 @@ package org.apache.james.sieve.cassandra;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.incr;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
@@ -38,9 +37,6 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.sieve.cassandra.model.ScriptContentAndActivation;
-import org.apache.james.sieve.cassandra.tables.CassandraSieveClusterQuotaTable;
-import org.apache.james.sieve.cassandra.tables.CassandraSieveQuotaTable;
-import org.apache.james.sieve.cassandra.tables.CassandraSieveSpaceTable;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveTable;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.joda.time.DateTime;
@@ -57,19 +53,11 @@ public class CassandraSieveDAO {
     private final PreparedStatement selectActiveScriptStatement;
     private final PreparedStatement selectActiveScriptMetadataStatement;
     private final PreparedStatement selectActiveScriptNameStatement;
-    private final PreparedStatement selectClusterQuotaStatement;
     private final PreparedStatement selectScriptsStatement;
     private final PreparedStatement selectScriptStatement;
     private final PreparedStatement selectScriptMetadataStatement;
-    private final PreparedStatement selectSpaceUsedByUserStatement;
-    private final PreparedStatement selectUserQuotaStatement;
-    private final PreparedStatement updateClusterQuotaStatement;
-    private final PreparedStatement updateUserQuotaStatement;
     private final PreparedStatement updateScriptActivationStatement;
-    private final PreparedStatement updateSpaceUsedStatement;
-    private final PreparedStatement deleteClusterQuotaStatement;
     private final PreparedStatement deleteScriptStatement;
-    private final PreparedStatement deleteUserQuotaStatement;
 
     @Inject
     public CassandraSieveDAO(Session session) {
@@ -93,11 +81,6 @@ public class CassandraSieveDAO {
         selectActiveScriptNameStatement = session.prepare(getScriptQuery(CassandraSieveTable.SCRIPT_NAME)
             .and(eq(CassandraSieveTable.IS_ACTIVE, bindMarker(CassandraSieveTable.IS_ACTIVE))));
 
-        selectClusterQuotaStatement = session.prepare(
-            select(CassandraSieveClusterQuotaTable.VALUE)
-                .from(CassandraSieveClusterQuotaTable.TABLE_NAME)
-                .where(eq(CassandraSieveClusterQuotaTable.NAME, bindMarker(CassandraSieveClusterQuotaTable.NAME))));
-
         selectScriptsStatement = session.prepare(
             select()
                 .from(CassandraSieveTable.TABLE_NAME)
@@ -109,21 +92,6 @@ public class CassandraSieveDAO {
         selectScriptMetadataStatement = session.prepare(getScriptQuery(CassandraSieveTable.SIZE, CassandraSieveTable.IS_ACTIVE, CassandraSieveTable.DATE)
             .and(eq(CassandraSieveTable.SCRIPT_NAME, bindMarker(CassandraSieveTable.SCRIPT_NAME))));
 
-        selectSpaceUsedByUserStatement = session.prepare(
-            select(CassandraSieveSpaceTable.SPACE_USED)
-                .from(CassandraSieveSpaceTable.TABLE_NAME)
-                .where(eq(CassandraSieveSpaceTable.USER_NAME, bindMarker(CassandraSieveSpaceTable.USER_NAME))));
-
-        selectUserQuotaStatement = session.prepare(
-            select(CassandraSieveQuotaTable.QUOTA)
-                .from(CassandraSieveQuotaTable.TABLE_NAME)
-                .where(eq(CassandraSieveQuotaTable.USER_NAME, bindMarker(CassandraSieveQuotaTable.USER_NAME))));
-
-        updateClusterQuotaStatement = session.prepare(
-            update(CassandraSieveClusterQuotaTable.TABLE_NAME)
-                .with(set(CassandraSieveClusterQuotaTable.VALUE, bindMarker(CassandraSieveClusterQuotaTable.VALUE)))
-                .where(eq(CassandraSieveClusterQuotaTable.NAME, bindMarker(CassandraSieveClusterQuotaTable.NAME))));
-
         updateScriptActivationStatement = session.prepare(
             update(CassandraSieveTable.TABLE_NAME)
                 .with(set(CassandraSieveTable.IS_ACTIVE, bindMarker(CassandraSieveTable.IS_ACTIVE)))
@@ -131,33 +99,11 @@ public class CassandraSieveDAO {
                 .and(eq(CassandraSieveTable.SCRIPT_NAME, bindMarker(CassandraSieveTable.SCRIPT_NAME)))
                 .ifExists());
 
-        updateSpaceUsedStatement = session.prepare(
-            update(CassandraSieveSpaceTable.TABLE_NAME)
-                .with(incr(CassandraSieveSpaceTable.SPACE_USED, bindMarker(CassandraSieveSpaceTable.SPACE_USED)))
-                .where(eq(CassandraSieveSpaceTable.USER_NAME, bindMarker(CassandraSieveSpaceTable.USER_NAME))));
-
-        updateUserQuotaStatement = session.prepare(
-            update(CassandraSieveQuotaTable.TABLE_NAME)
-                .with(set(CassandraSieveQuotaTable.QUOTA, bindMarker(CassandraSieveQuotaTable.QUOTA)))
-                .where(eq(CassandraSieveQuotaTable.USER_NAME, bindMarker(CassandraSieveQuotaTable.USER_NAME))));
-
         deleteScriptStatement = session.prepare(
             delete()
                 .from(CassandraSieveTable.TABLE_NAME)
                 .where(eq(CassandraSieveTable.USER_NAME, bindMarker(CassandraSieveTable.USER_NAME)))
                 .and(eq(CassandraSieveTable.SCRIPT_NAME, bindMarker(CassandraSieveTable.SCRIPT_NAME)))
-                .ifExists());
-
-        deleteClusterQuotaStatement = session.prepare(
-            delete()
-                .from(CassandraSieveClusterQuotaTable.TABLE_NAME)
-                .where(eq(CassandraSieveClusterQuotaTable.NAME, bindMarker(CassandraSieveClusterQuotaTable.NAME)))
-                .ifExists());
-
-        deleteUserQuotaStatement = session.prepare(
-            delete()
-                .from(CassandraSieveQuotaTable.TABLE_NAME)
-                .where(eq(CassandraSieveQuotaTable.USER_NAME, bindMarker(CassandraSieveQuotaTable.USER_NAME)))
                 .ifExists());
     }
 
@@ -165,14 +111,6 @@ public class CassandraSieveDAO {
         return select(selectedRows)
             .from(CassandraSieveTable.TABLE_NAME)
             .where(eq(CassandraSieveTable.USER_NAME, bindMarker(CassandraSieveTable.USER_NAME)));
-    }
-
-    public CompletableFuture<Long> spaceUsedBy(String user) {
-        return cassandraAsyncExecutor.executeSingleRow(
-            selectSpaceUsedByUserStatement.bind()
-                .setString(CassandraSieveSpaceTable.USER_NAME, user))
-            .thenApply(optional -> optional.map(row -> row.getLong(CassandraSieveSpaceTable.SPACE_USED))
-                .orElse(0L));
     }
 
     public CompletableFuture<Void> insertScript(String user, String name, String content, boolean isActive) {
@@ -196,13 +134,6 @@ public class CassandraSieveDAO {
                     row.getString(CassandraSieveTable.SCRIPT_NAME),
                     row.getBool(CassandraSieveTable.IS_ACTIVE)))
                 .collect(Collectors.toList()));
-    }
-
-    public CompletableFuture<Void> updateSpaceUsed(String user, long spaceUsed) {
-        return cassandraAsyncExecutor.executeVoid(
-            updateSpaceUsedStatement.bind()
-                .setLong(CassandraSieveSpaceTable.SPACE_USED, spaceUsed)
-                .setString(CassandraSieveSpaceTable.USER_NAME, user));
     }
 
     public CompletableFuture<Boolean> updateScriptActivation(String user, String scriptName, boolean active) {
@@ -250,32 +181,6 @@ public class CassandraSieveDAO {
         return getScriptSize(user, name).thenApply(Optional::isPresent);
     }
 
-    public CompletableFuture<Optional<Long>> getQuota() {
-        return cassandraAsyncExecutor.executeSingleRow(
-            selectClusterQuotaStatement.bind()
-                .setString(CassandraSieveClusterQuotaTable.NAME, CassandraSieveClusterQuotaTable.DEFAULT_NAME))
-            .thenApply(optional -> optional.map(row -> row.getLong(CassandraSieveClusterQuotaTable.VALUE)));
-    }
-
-    public CompletableFuture<Void> setQuota(long quota) {
-        return cassandraAsyncExecutor.executeVoid(
-            updateClusterQuotaStatement.bind()
-                .setLong(CassandraSieveClusterQuotaTable.VALUE, quota)
-                .setString(CassandraSieveClusterQuotaTable.NAME, CassandraSieveClusterQuotaTable.DEFAULT_NAME));
-    }
-
-    public CompletableFuture<Boolean> removeQuota() {
-        return cassandraAsyncExecutor.executeReturnApplied(
-            deleteClusterQuotaStatement.bind()
-                .setString(CassandraSieveClusterQuotaTable.NAME, CassandraSieveClusterQuotaTable.DEFAULT_NAME));
-    }
-
-    public CompletableFuture<Optional<Long>> getQuota(String user) {
-        return cassandraAsyncExecutor.executeSingleRow(
-            selectUserQuotaStatement.bind()
-                .setString(CassandraSieveQuotaTable.USER_NAME, user))
-            .thenApply(optional -> optional.map(row -> row.getLong(CassandraSieveQuotaTable.QUOTA)));
-    }
 
     public CompletableFuture<Optional<String>> getActiveName(String user) {
         return cassandraAsyncExecutor.executeSingleRow(
@@ -283,19 +188,6 @@ public class CassandraSieveDAO {
                 .setString(CassandraSieveTable.USER_NAME, user)
                 .setBool(CassandraSieveTable.IS_ACTIVE, true))
             .thenApply(optional -> optional.map(row -> row.getString(CassandraSieveTable.SCRIPT_NAME)));
-    }
-
-    public CompletableFuture<Void> setQuota(String user, long quota) {
-        return cassandraAsyncExecutor.executeVoid(
-            updateUserQuotaStatement.bind()
-                .setLong(CassandraSieveQuotaTable.QUOTA, quota)
-                .setString(CassandraSieveQuotaTable.USER_NAME, user));
-    }
-
-    public CompletableFuture<Boolean> removeQuota(String user)  {
-        return cassandraAsyncExecutor.executeReturnApplied(
-            deleteUserQuotaStatement.bind()
-                .setString(CassandraSieveQuotaTable.USER_NAME, user));
     }
 
     public CompletableFuture<Optional<String>> getActive(String user) {

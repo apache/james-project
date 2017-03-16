@@ -42,7 +42,9 @@ public class CassandraSieveRepositoryTest extends AbstractSieveRepositoryTest {
 
     @Override
     protected SieveRepository createSieveRepository() throws Exception {
-        return new CassandraSieveRepository(new CassandraSieveDAO(cassandra.getConf()));
+        return new CassandraSieveRepository(
+            new CassandraSieveDAO(cassandra.getConf()),
+            new CassandraSieveQuotaDAO(cassandra.getConf()));
     }
 
     @Override

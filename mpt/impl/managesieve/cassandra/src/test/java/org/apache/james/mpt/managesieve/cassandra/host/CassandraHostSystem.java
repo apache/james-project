@@ -22,6 +22,7 @@ package org.apache.james.mpt.managesieve.cassandra.host;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mpt.host.JamesManageSieveHostSystem;
 import org.apache.james.sieve.cassandra.CassandraSieveDAO;
+import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAO;
 import org.apache.james.sieve.cassandra.CassandraSieveRepository;
 import org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -40,7 +41,9 @@ public class CassandraHostSystem extends JamesManageSieveHostSystem {
     }
 
     protected static SieveRepository createSieveRepository() throws Exception {
-        return new CassandraSieveRepository(new CassandraSieveDAO(CASSANDRA_CLUSTER.getConf()));
+        return new CassandraSieveRepository(
+            new CassandraSieveDAO(CASSANDRA_CLUSTER.getConf()),
+            new CassandraSieveQuotaDAO(CASSANDRA_CLUSTER.getConf()));
     }
 
     protected static UsersRepository createUsersRepository() {

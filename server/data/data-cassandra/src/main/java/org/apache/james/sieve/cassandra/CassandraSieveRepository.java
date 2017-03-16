@@ -43,10 +43,12 @@ import org.joda.time.DateTime;
 public class CassandraSieveRepository implements SieveRepository {
 
     private final CassandraSieveDAO cassandraSieveDAO;
+    private final CassandraSieveQuotaDAO cassandraSieveQuotaDAO;
 
     @Inject
-    public CassandraSieveRepository(CassandraSieveDAO cassandraSieveDAO) {
+    public CassandraSieveRepository(CassandraSieveDAO cassandraSieveDAO, CassandraSieveQuotaDAO cassandraSieveQuotaDAO) {
         this.cassandraSieveDAO = cassandraSieveDAO;
+        this.cassandraSieveQuotaDAO = cassandraSieveQuotaDAO;
     }
 
     @Override
@@ -62,9 +64,9 @@ public class CassandraSieveRepository implements SieveRepository {
     }
 
     private void throwOnOverQuota(String user, CompletableFuture<Long> sizeDifference) throws QuotaExceededException, StorageException {
-        CompletableFuture<Optional<Long>> userQuotaFuture = cassandraSieveDAO.getQuota(user);
-        CompletableFuture<Optional<Long>> globalQuotaFuture = cassandraSieveDAO.getQuota();
-        CompletableFuture<Long> spaceUsedFuture = cassandraSieveDAO.spaceUsedBy(user);
+        CompletableFuture<Optional<Long>> userQuotaFuture = cassandraSieveQuotaDAO.getQuota(user);
+        CompletableFuture<Optional<Long>> globalQuotaFuture = cassandraSieveQuotaDAO.getQuota();
+        CompletableFuture<Long> spaceUsedFuture = cassandraSieveQuotaDAO.spaceUsedBy(user);
 
         new SieveQuota(spaceUsedFuture.join(), limitToUse(userQuotaFuture, globalQuotaFuture)).checkOverQuotaUponModification(sizeDifference.join());
     }
@@ -96,7 +98,7 @@ public class CassandraSieveRepository implements SieveRepository {
         if (spaceUsed == 0) {
             return CompletableFuture.completedFuture(null);
         }
-        return cassandraSieveDAO.updateSpaceUsed(user, spaceUsed);
+        return cassandraSieveQuotaDAO.updateSpaceUsed(user, spaceUsed);
     }
 
     @Override
@@ -186,34 +188,34 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public boolean hasQuota() {
-        return cassandraSieveDAO.getQuota()
+        return cassandraSieveQuotaDAO.getQuota()
             .join()
             .isPresent();
     }
 
     @Override
     public long getQuota() throws QuotaNotFoundException {
-        return cassandraSieveDAO.getQuota()
+        return cassandraSieveQuotaDAO.getQuota()
             .join()
             .orElseThrow(QuotaNotFoundException::new);
     }
 
     @Override
     public void setQuota(long quota) {
-        cassandraSieveDAO.setQuota(quota).join();
+        cassandraSieveQuotaDAO.setQuota(quota).join();
     }
 
     @Override
     public void removeQuota() throws QuotaNotFoundException {
-        if (!cassandraSieveDAO.removeQuota().join()) {
+        if (!cassandraSieveQuotaDAO.removeQuota().join()) {
             throw new QuotaNotFoundException();
         }
     }
 
     @Override
     public boolean hasQuota(String user) {
-        CompletableFuture<Boolean> userQuotaIsPresent = cassandraSieveDAO.getQuota(user).thenApply(Optional::isPresent);
-        CompletableFuture<Boolean> globalQuotaIsPresent = cassandraSieveDAO.getQuota().thenApply(Optional::isPresent);
+        CompletableFuture<Boolean> userQuotaIsPresent = cassandraSieveQuotaDAO.getQuota(user).thenApply(Optional::isPresent);
+        CompletableFuture<Boolean> globalQuotaIsPresent = cassandraSieveQuotaDAO.getQuota().thenApply(Optional::isPresent);
         CompletableFuture.allOf(userQuotaIsPresent, globalQuotaIsPresent).join();
 
         return userQuotaIsPresent.join() || globalQuotaIsPresent.join();
@@ -221,19 +223,19 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public long getQuota(String user) throws QuotaNotFoundException {
-        return cassandraSieveDAO.getQuota(user)
+        return cassandraSieveQuotaDAO.getQuota(user)
             .join()
             .orElseThrow(QuotaNotFoundException::new);
     }
 
     @Override
     public void setQuota(String user, long quota) {
-        cassandraSieveDAO.setQuota(user, quota).join();
+        cassandraSieveQuotaDAO.setQuota(user, quota).join();
     }
 
     @Override
     public void removeQuota(String user) throws QuotaNotFoundException {
-        if (!cassandraSieveDAO.removeQuota(user).join()) {
+        if (!cassandraSieveQuotaDAO.removeQuota(user).join()) {
             throw new QuotaNotFoundException();
         }
     }
