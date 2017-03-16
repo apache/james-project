@@ -26,6 +26,5 @@ public interface CassandraSieveTable {
     String SCRIPT_NAME = "script_name";
     String SCRIPT_CONTENT = "script_content";
     String IS_ACTIVE = "is_active";
-    String DATE = "date";
     String SIZE = "size";
 }

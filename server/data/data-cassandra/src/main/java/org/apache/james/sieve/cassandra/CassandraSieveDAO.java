@@ -26,8 +26,14 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.IS_ACTIVE;
+import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.SCRIPT_CONTENT;
+import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.SCRIPT_NAME;
+import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.SIZE;
+import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.TABLE_NAME;
+import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.USER_NAME;
 
-import java.util.Date;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -36,10 +42,8 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.sieve.cassandra.model.ScriptContentAndActivation;
-import org.apache.james.sieve.cassandra.tables.CassandraSieveTable;
+import org.apache.james.sieve.cassandra.model.Script;
 import org.apache.james.sieverepository.api.ScriptSummary;
-import org.joda.time.DateTime;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -50,12 +54,8 @@ public class CassandraSieveDAO {
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insertScriptStatement;
-    private final PreparedStatement selectActiveScriptStatement;
-    private final PreparedStatement selectActiveScriptMetadataStatement;
-    private final PreparedStatement selectActiveScriptNameStatement;
     private final PreparedStatement selectScriptsStatement;
     private final PreparedStatement selectScriptStatement;
-    private final PreparedStatement selectScriptMetadataStatement;
     private final PreparedStatement updateScriptActivationStatement;
     private final PreparedStatement deleteScriptStatement;
 
@@ -64,145 +64,90 @@ public class CassandraSieveDAO {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
 
         insertScriptStatement = session.prepare(
-            insertInto(CassandraSieveTable.TABLE_NAME)
-                .value(CassandraSieveTable.USER_NAME, bindMarker(CassandraSieveTable.USER_NAME))
-                .value(CassandraSieveTable.SCRIPT_NAME, bindMarker(CassandraSieveTable.SCRIPT_NAME))
-                .value(CassandraSieveTable.SCRIPT_CONTENT, bindMarker(CassandraSieveTable.SCRIPT_CONTENT))
-                .value(CassandraSieveTable.IS_ACTIVE, bindMarker(CassandraSieveTable.IS_ACTIVE))
-                .value(CassandraSieveTable.SIZE, bindMarker(CassandraSieveTable.SIZE))
-                .value(CassandraSieveTable.DATE, bindMarker(CassandraSieveTable.DATE)));
+            insertInto(TABLE_NAME)
+                .value(USER_NAME, bindMarker(USER_NAME))
+                .value(SCRIPT_NAME, bindMarker(SCRIPT_NAME))
+                .value(SCRIPT_CONTENT, bindMarker(SCRIPT_CONTENT))
+                .value(IS_ACTIVE, bindMarker(IS_ACTIVE))
+                .value(SIZE, bindMarker(SIZE)));
 
-        selectActiveScriptStatement = session.prepare(getScriptQuery(CassandraSieveTable.SCRIPT_CONTENT, CassandraSieveTable.DATE)
-            .and(eq(CassandraSieveTable.IS_ACTIVE, bindMarker(CassandraSieveTable.IS_ACTIVE))));
+        selectScriptsStatement = session.prepare(getScriptsQuery());
 
-        selectActiveScriptMetadataStatement = session.prepare(getScriptQuery(CassandraSieveTable.DATE)
-            .and(eq(CassandraSieveTable.IS_ACTIVE, bindMarker(CassandraSieveTable.IS_ACTIVE))));
-
-        selectActiveScriptNameStatement = session.prepare(getScriptQuery(CassandraSieveTable.SCRIPT_NAME)
-            .and(eq(CassandraSieveTable.IS_ACTIVE, bindMarker(CassandraSieveTable.IS_ACTIVE))));
-
-        selectScriptsStatement = session.prepare(
-            select()
-                .from(CassandraSieveTable.TABLE_NAME)
-                .where(eq(CassandraSieveTable.USER_NAME, bindMarker(CassandraSieveTable.USER_NAME))));
-
-        selectScriptStatement = session.prepare(getScriptQuery(CassandraSieveTable.SCRIPT_CONTENT, CassandraSieveTable.IS_ACTIVE)
-            .and(eq(CassandraSieveTable.SCRIPT_NAME, bindMarker(CassandraSieveTable.SCRIPT_NAME))));
-
-        selectScriptMetadataStatement = session.prepare(getScriptQuery(CassandraSieveTable.SIZE, CassandraSieveTable.IS_ACTIVE, CassandraSieveTable.DATE)
-            .and(eq(CassandraSieveTable.SCRIPT_NAME, bindMarker(CassandraSieveTable.SCRIPT_NAME))));
+        selectScriptStatement = session.prepare(getScriptsQuery()
+            .and(eq(SCRIPT_NAME, bindMarker(SCRIPT_NAME))));
 
         updateScriptActivationStatement = session.prepare(
-            update(CassandraSieveTable.TABLE_NAME)
-                .with(set(CassandraSieveTable.IS_ACTIVE, bindMarker(CassandraSieveTable.IS_ACTIVE)))
-                .where(eq(CassandraSieveTable.USER_NAME, bindMarker(CassandraSieveTable.USER_NAME)))
-                .and(eq(CassandraSieveTable.SCRIPT_NAME, bindMarker(CassandraSieveTable.SCRIPT_NAME)))
+            update(TABLE_NAME)
+                .with(set(IS_ACTIVE, bindMarker(IS_ACTIVE)))
+                .where(eq(USER_NAME, bindMarker(USER_NAME)))
+                .and(eq(SCRIPT_NAME, bindMarker(SCRIPT_NAME)))
                 .ifExists());
 
         deleteScriptStatement = session.prepare(
             delete()
-                .from(CassandraSieveTable.TABLE_NAME)
-                .where(eq(CassandraSieveTable.USER_NAME, bindMarker(CassandraSieveTable.USER_NAME)))
-                .and(eq(CassandraSieveTable.SCRIPT_NAME, bindMarker(CassandraSieveTable.SCRIPT_NAME)))
+                .from(TABLE_NAME)
+                .where(eq(USER_NAME, bindMarker(USER_NAME)))
+                .and(eq(SCRIPT_NAME, bindMarker(SCRIPT_NAME)))
                 .ifExists());
     }
 
-    private Select.Where getScriptQuery(String... selectedRows) {
-        return select(selectedRows)
-            .from(CassandraSieveTable.TABLE_NAME)
-            .where(eq(CassandraSieveTable.USER_NAME, bindMarker(CassandraSieveTable.USER_NAME)));
+    private Select.Where getScriptsQuery() {
+        return select(SCRIPT_CONTENT, IS_ACTIVE, SCRIPT_NAME, SIZE)
+            .from(TABLE_NAME)
+            .where(eq(USER_NAME, bindMarker(USER_NAME)));
     }
 
-    public CompletableFuture<Void> insertScript(String user, String name, String content, boolean isActive) {
+    public CompletableFuture<Void> insertScript(String user, Script script) {
         return cassandraAsyncExecutor.executeVoid(
             insertScriptStatement.bind()
-                .setString(CassandraSieveTable.USER_NAME, user)
-                .setString(CassandraSieveTable.SCRIPT_NAME, name)
-                .setString(CassandraSieveTable.SCRIPT_CONTENT, content)
-                .setBool(CassandraSieveTable.IS_ACTIVE, isActive)
-                .setLong(CassandraSieveTable.SIZE, content.getBytes().length)
-                .setDate(CassandraSieveTable.DATE, new Date()));
+                .setString(USER_NAME, user)
+                .setString(SCRIPT_NAME, script.getName())
+                .setString(SCRIPT_CONTENT, script.getContent())
+                .setBool(IS_ACTIVE, script.isActive())
+                .setLong(SIZE, script.getSize()));
     }
 
     public CompletableFuture<List<ScriptSummary>> listScripts(String user) {
         return cassandraAsyncExecutor.execute(
             selectScriptsStatement.bind()
-                .setString(CassandraSieveTable.USER_NAME, user))
+                .setString(USER_NAME, user))
             .thenApply(resultSet -> resultSet.all()
                 .stream()
                 .map(row -> new ScriptSummary(
-                    row.getString(CassandraSieveTable.SCRIPT_NAME),
-                    row.getBool(CassandraSieveTable.IS_ACTIVE)))
+                    row.getString(SCRIPT_NAME),
+                    row.getBool(IS_ACTIVE)))
                 .collect(Collectors.toList()));
     }
 
     public CompletableFuture<Boolean> updateScriptActivation(String user, String scriptName, boolean active) {
         return cassandraAsyncExecutor.executeReturnApplied(
             updateScriptActivationStatement.bind()
-                .setString(CassandraSieveTable.USER_NAME, user)
-                .setString(CassandraSieveTable.SCRIPT_NAME, scriptName)
-                .setBool(CassandraSieveTable.IS_ACTIVE, active));
+                .setString(USER_NAME, user)
+                .setString(SCRIPT_NAME, scriptName)
+                .setBool(IS_ACTIVE, active));
     }
 
-    public CompletableFuture<Optional<ScriptContentAndActivation>> getScriptContentAndActivation(String user, String name) {
-        return getScriptRow(user, name).thenApply(opt -> opt.map(row -> new ScriptContentAndActivation(
-            row.getString(CassandraSieveTable.SCRIPT_CONTENT),
-            row.getBool(CassandraSieveTable.IS_ACTIVE))));
-    }
-
-    public CompletableFuture<Optional<String>> getScriptContent(String user, String name) {
-        return getScriptRow(user, name).thenApply(opt -> opt.map(row -> row.getString(CassandraSieveTable.SCRIPT_CONTENT)));
-    }
-
-    public CompletableFuture<Optional<Long>> getScriptSize(String user, String name) {
-        return cassandraAsyncExecutor.executeSingleRow(
-            selectScriptMetadataStatement.bind()
-                .setString(CassandraSieveTable.USER_NAME, user)
-                .setString(CassandraSieveTable.SCRIPT_NAME, name))
-            .thenApply(rowOptional -> rowOptional.map(row -> row.getLong(CassandraSieveTable.SIZE)));
-    }
-
-    public CompletableFuture<Optional<DateTime>> getActiveScriptActivationDate(String user) {
-        return cassandraAsyncExecutor.executeSingleRow(
-            selectActiveScriptMetadataStatement.bind()
-                .setString(CassandraSieveTable.USER_NAME, user)
-                .setBool(CassandraSieveTable.IS_ACTIVE, true))
-            .thenApply(rowOptional -> rowOptional.map(row -> new DateTime(row.getDate(CassandraSieveTable.DATE).getTime())));
+    public CompletableFuture<Optional<Script>> getScript(String user, String name) {
+        return getScriptRow(user, name).thenApply(opt -> opt.map(row -> Script.builder()
+                .content(row.getString(SCRIPT_CONTENT))
+                .isActive(row.getBool(IS_ACTIVE))
+                .name(name)
+                .size(row.getLong(SIZE))
+                .build()));
     }
 
     public CompletableFuture<Boolean> deleteScriptInCassandra(String user, String name) {
         return cassandraAsyncExecutor.executeReturnApplied(
             deleteScriptStatement.bind()
-                .setString(CassandraSieveTable.USER_NAME, user)
-                .setString(CassandraSieveTable.SCRIPT_NAME, name));
-    }
-
-    public CompletableFuture<Boolean> scriptExists(String user, String name) {
-        return getScriptSize(user, name).thenApply(Optional::isPresent);
-    }
-
-
-    public CompletableFuture<Optional<String>> getActiveName(String user) {
-        return cassandraAsyncExecutor.executeSingleRow(
-            selectActiveScriptNameStatement.bind()
-                .setString(CassandraSieveTable.USER_NAME, user)
-                .setBool(CassandraSieveTable.IS_ACTIVE, true))
-            .thenApply(optional -> optional.map(row -> row.getString(CassandraSieveTable.SCRIPT_NAME)));
-    }
-
-    public CompletableFuture<Optional<String>> getActive(String user) {
-        return cassandraAsyncExecutor.executeSingleRow(
-            selectActiveScriptStatement.bind()
-                .setString(CassandraSieveTable.USER_NAME, user)
-                .setBool(CassandraSieveTable.IS_ACTIVE, true))
-            .thenApply(rowOptional -> rowOptional.map(row -> row.getString(CassandraSieveTable.SCRIPT_CONTENT)));
+                .setString(USER_NAME, user)
+                .setString(SCRIPT_NAME, name));
     }
 
     private CompletableFuture<Optional<Row>> getScriptRow(String user, String name) {
         return cassandraAsyncExecutor.executeSingleRow(
             selectScriptStatement.bind()
-                .setString(CassandraSieveTable.USER_NAME, user)
-                .setString(CassandraSieveTable.SCRIPT_NAME, name));
+                .setString(USER_NAME, user)
+                .setString(SCRIPT_NAME, name));
     }
 
 }

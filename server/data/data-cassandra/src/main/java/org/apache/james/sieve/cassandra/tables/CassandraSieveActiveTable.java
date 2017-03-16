@@ -17,25 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.sieve.cassandra;
+package org.apache.james.sieve.cassandra.tables;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.sieverepository.lib.AbstractSieveRepositoryTest;
+public interface CassandraSieveActiveTable {
 
-public class CassandraSieveRepositoryTest extends AbstractSieveRepositoryTest {
-    private CassandraCluster cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule());
+    String TABLE_NAME = "sieve_active";
 
-    @Override
-    protected SieveRepository createSieveRepository() throws Exception {
-        return new CassandraSieveRepository(
-            new CassandraSieveDAO(cassandra.getConf()),
-            new CassandraSieveQuotaDAO(cassandra.getConf()),
-            new CassandraActiveScriptDAO(cassandra.getConf()));
-    }
+    String USER_NAME = "user_name";
+    String SCRIPT_NAME = "script_name";
+    String DATE = "date";
 
-    @Override
-    protected void cleanUp() throws Exception {
-        cassandra.clearAllTables();
-    }
 }

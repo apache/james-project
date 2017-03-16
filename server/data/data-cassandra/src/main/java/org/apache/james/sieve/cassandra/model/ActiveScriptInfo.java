@@ -19,21 +19,25 @@
 
 package org.apache.james.sieve.cassandra.model;
 
-public class ScriptContentAndActivation {
+import java.util.Date;
 
-    private final String content;
-    private final boolean activation;
+import org.joda.time.DateTime;
 
-    public ScriptContentAndActivation(String content, boolean activation) {
-        this.content = content;
-        this.activation = activation;
+public class ActiveScriptInfo {
+
+    private final String name;
+    private final DateTime activationDate;
+
+    public ActiveScriptInfo(String content, Date date) {
+        this.name = content;
+        this.activationDate = new DateTime(date);
     }
 
-    public String getContent() {
-        return content;
+    public String getName() {
+        return name;
     }
 
-    public boolean isActive() {
-        return activation;
+    public DateTime getActivationDate() {
+        return activationDate;
     }
 }
