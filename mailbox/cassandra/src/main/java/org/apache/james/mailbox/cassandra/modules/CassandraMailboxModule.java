@@ -25,7 +25,6 @@ import static com.datastax.driver.core.DataType.timeuuid;
 
 import java.util.List;
 
-import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
@@ -38,7 +37,6 @@ import com.google.common.collect.ImmutableList;
 public class CassandraMailboxModule implements CassandraModule {
 
     private final List<CassandraTable> tables;
-    private final List<CassandraIndex> index;
     private final List<CassandraType> types;
 
     public CassandraMailboxModule() {
@@ -56,7 +54,6 @@ public class CassandraMailboxModule implements CassandraModule {
                     .addUDTPartitionKey(CassandraMailboxPathTable.NAMESPACE_AND_USER, SchemaBuilder.frozen(CassandraMailboxTable.MAILBOX_BASE))
                     .addClusteringColumn(CassandraMailboxPathTable.MAILBOX_NAME, text())
                     .addColumn(CassandraMailboxPathTable.MAILBOX_ID, timeuuid())));
-        index = ImmutableList.of();
         types = ImmutableList.of(
             new CassandraType(CassandraMailboxTable.MAILBOX_BASE,
                 SchemaBuilder.createType(CassandraMailboxTable.MAILBOX_BASE)
@@ -68,11 +65,6 @@ public class CassandraMailboxModule implements CassandraModule {
     @Override
     public List<CassandraTable> moduleTables() {
         return tables;
-    }
-
-    @Override
-    public List<CassandraIndex> moduleIndex() {
-        return index;
     }
 
     @Override

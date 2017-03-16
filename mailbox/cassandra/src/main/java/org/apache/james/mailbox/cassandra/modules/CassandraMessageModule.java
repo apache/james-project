@@ -28,11 +28,8 @@ import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.DataType.timestamp;
 import static com.datastax.driver.core.DataType.timeuuid;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
@@ -48,7 +45,6 @@ import com.google.common.collect.ImmutableList;
 public class CassandraMessageModule implements CassandraModule {
 
     private final List<CassandraTable> tables;
-    private final List<CassandraIndex> index;
     private final List<CassandraType> types;
 
     public CassandraMessageModule() {
@@ -83,7 +79,6 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(Flag.SEEN, cboolean())
                     .addColumn(Flag.USER, cboolean())
                     .addColumn(Flag.USER_FLAGS, set(text()))),
-
             new CassandraTable(CassandraMessageTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraMessageTable.TABLE_NAME)
                     .ifNotExists()
@@ -97,8 +92,7 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(CassandraMessageTable.HEADER_CONTENT, blob())
                     .addUDTListColumn(CassandraMessageTable.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageTable.ATTACHMENTS))
                     .addUDTListColumn(CassandraMessageTable.PROPERTIES, SchemaBuilder.frozen(CassandraMessageTable.PROPERTIES))));
-        index = Collections.emptyList();
-        types = Arrays.asList(
+        types = ImmutableList.of(
             new CassandraType(CassandraMessageTable.PROPERTIES,
                 SchemaBuilder.createType(CassandraMessageTable.PROPERTIES)
                     .ifNotExists()
@@ -117,11 +111,6 @@ public class CassandraMessageModule implements CassandraModule {
     @Override
     public List<CassandraTable> moduleTables() {
         return tables;
-    }
-
-    @Override
-    public List<CassandraIndex> moduleIndex() {
-        return index;
     }
 
     @Override

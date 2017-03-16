@@ -25,7 +25,6 @@ import static com.datastax.driver.core.DataType.timestamp;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
@@ -39,12 +38,10 @@ public class CassandraZonedDateTimeModule implements CassandraModule {
     public static final String TIME_ZONE = "timeZone";
 
     private final List<CassandraTable> tables;
-    private final List<CassandraIndex> index;
     private final List<CassandraType> types;
 
     public CassandraZonedDateTimeModule() {
         tables = Collections.emptyList();
-        index = Collections.emptyList();
         types = Collections.singletonList(
             new CassandraType(ZONED_DATE_TIME,
                 SchemaBuilder.createType(ZONED_DATE_TIME)
@@ -56,11 +53,6 @@ public class CassandraZonedDateTimeModule implements CassandraModule {
     @Override
     public List<CassandraTable> moduleTables() {
         return tables;
-    }
-
-    @Override
-    public List<CassandraIndex> moduleIndex() {
-        return index;
     }
 
     @Override

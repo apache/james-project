@@ -19,23 +19,21 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
+import static com.datastax.driver.core.DataType.text;
 
-import org.apache.james.backends.cassandra.components.CassandraIndex;
+import java.util.List;
+
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.mailbox.cassandra.table.CassandraSubscriptionTable;
 
-import java.util.List;
-
-import static com.datastax.driver.core.DataType.text;
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.google.common.collect.ImmutableList;
 
 public class CassandraSubscriptionModule implements CassandraModule {
 
     private final List<CassandraTable> tables;
-    private final List<CassandraIndex> index;
     private final List<CassandraType> types;
 
     public CassandraSubscriptionModule() {
@@ -45,18 +43,12 @@ public class CassandraSubscriptionModule implements CassandraModule {
                     .ifNotExists()
                     .addPartitionKey(CassandraSubscriptionTable.USER, text())
                     .addClusteringColumn(CassandraSubscriptionTable.MAILBOX, text())));
-        index = ImmutableList.of();
         types = ImmutableList.of();
     }
 
     @Override
     public List<CassandraTable> moduleTables() {
         return tables;
-    }
-
-    @Override
-    public List<CassandraIndex> moduleIndex() {
-        return index;
     }
 
     @Override

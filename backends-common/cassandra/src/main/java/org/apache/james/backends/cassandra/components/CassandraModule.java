@@ -25,8 +25,6 @@ public interface CassandraModule {
 
     List<CassandraTable> moduleTables();
 
-    List<CassandraIndex> moduleIndex();
-
     List<CassandraType> moduleTypes();
 
 }

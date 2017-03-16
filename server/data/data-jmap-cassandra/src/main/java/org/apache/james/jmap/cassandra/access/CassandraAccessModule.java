@@ -24,7 +24,6 @@ import static com.datastax.driver.core.DataType.uuid;
 
 import java.util.List;
 
-import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
@@ -36,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 public class CassandraAccessModule implements CassandraModule {
 
     private final List<CassandraTable> tables;
-    private final List<CassandraIndex> index;
     private final List<CassandraType> types;
 
     public CassandraAccessModule() {
@@ -46,18 +44,12 @@ public class CassandraAccessModule implements CassandraModule {
                     .ifNotExists()
                     .addPartitionKey(CassandraAccessTokenTable.TOKEN, uuid())
                     .addColumn(CassandraAccessTokenTable.USERNAME, text())));
-        index = ImmutableList.of();
         types = ImmutableList.of();
     }
 
     @Override
     public List<CassandraTable> moduleTables() {
         return tables;
-    }
-
-    @Override
-    public List<CassandraIndex> moduleIndex() {
-        return index;
     }
 
     @Override

@@ -19,24 +19,23 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import org.apache.james.backends.cassandra.components.CassandraIndex;
+import static com.datastax.driver.core.DataType.bigint;
+import static com.datastax.driver.core.DataType.text;
+import static com.datastax.driver.core.DataType.timeuuid;
+
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 
-import java.util.Collections;
-import java.util.List;
-
-import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.text;
-import static com.datastax.driver.core.DataType.timeuuid;
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public class CassandraAclModule implements CassandraModule {
 
     private final List<CassandraTable> tables;
-    private final List<CassandraIndex> index;
     private final List<CassandraType> types;
 
     public CassandraAclModule() {
@@ -47,18 +46,12 @@ public class CassandraAclModule implements CassandraModule {
                     .addPartitionKey(CassandraACLTable.ID, timeuuid())
                     .addColumn(CassandraACLTable.ACL, text())
                     .addColumn(CassandraACLTable.VERSION, bigint())));
-        index = Collections.emptyList();
         types = Collections.emptyList();
     }
 
     @Override
     public List<CassandraTable> moduleTables() {
         return tables;
-    }
-
-    @Override
-    public List<CassandraIndex> moduleIndex() {
-        return index;
     }
 
     @Override

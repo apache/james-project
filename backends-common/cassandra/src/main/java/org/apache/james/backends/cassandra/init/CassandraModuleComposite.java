@@ -22,7 +22,6 @@ package org.apache.james.backends.cassandra.init;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
@@ -33,15 +32,11 @@ import com.google.common.collect.ImmutableList;
 public class CassandraModuleComposite implements CassandraModule {
 
     private final ImmutableList<CassandraTable> tables;
-    private final ImmutableList<CassandraIndex> index;
     private final ImmutableList<CassandraType> types;
 
     public CassandraModuleComposite(CassandraModule... modules) {
         tables = Arrays.stream(modules)
             .flatMap(module -> module.moduleTables().stream())
-            .collect(Guavate.toImmutableList());
-        index = Arrays.stream(modules)
-            .flatMap(module -> module.moduleIndex().stream())
             .collect(Guavate.toImmutableList());
         types = Arrays.stream(modules)
             .flatMap(module -> module.moduleTypes().stream())
@@ -51,11 +46,6 @@ public class CassandraModuleComposite implements CassandraModule {
     @Override
     public List<CassandraTable> moduleTables() {
         return tables;
-    }
-
-    @Override
-    public List<CassandraIndex> moduleIndex() {
-        return index;
     }
 
     @Override

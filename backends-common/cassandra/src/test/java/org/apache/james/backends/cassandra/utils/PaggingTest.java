@@ -29,7 +29,6 @@ import java.util.UUID;
 import java.util.stream.IntStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
@@ -62,11 +61,6 @@ public class PaggingTest {
                         .ifNotExists()
                         .addPartitionKey(ID, DataType.timeuuid())
                         .addClusteringColumn(CLUSTERING, DataType.bigint())));
-            }
-
-            @Override
-            public List<CassandraIndex> moduleIndex() {
-                return ImmutableList.of();
             }
 
             @Override

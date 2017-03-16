@@ -26,7 +26,6 @@ import static com.datastax.driver.core.DataType.text;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
@@ -37,7 +36,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public class CassandraAttachmentModule implements CassandraModule {
 
     private final List<CassandraTable> tables;
-    private final List<CassandraIndex> index;
     private final List<CassandraType> types;
 
     public CassandraAttachmentModule() {
@@ -49,18 +47,12 @@ public class CassandraAttachmentModule implements CassandraModule {
                     .addColumn(CassandraAttachmentTable.PAYLOAD, blob())
                     .addColumn(CassandraAttachmentTable.TYPE, text())
                     .addColumn(CassandraAttachmentTable.SIZE, bigint())));
-        index = Collections.emptyList();
         types = Collections.emptyList();
     }
 
     @Override
     public List<CassandraTable> moduleTables() {
         return tables;
-    }
-
-    @Override
-    public List<CassandraIndex> moduleIndex() {
-        return index;
     }
 
     @Override

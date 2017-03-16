@@ -19,8 +19,12 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import org.apache.james.backends.cassandra.components.CassandraIndex;
+import static com.datastax.driver.core.DataType.bigint;
+import static com.datastax.driver.core.DataType.counter;
+import static com.datastax.driver.core.DataType.text;
+
+import java.util.List;
+
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
@@ -28,22 +32,16 @@ import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraDefaultMaxQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraMaxQuota;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.counter;
-import static com.datastax.driver.core.DataType.text;
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.google.common.collect.ImmutableList;
 
 public class CassandraQuotaModule implements CassandraModule {
 
     private final List<CassandraTable> tables;
-    private final List<CassandraIndex> index;
     private final List<CassandraType> types;
 
     public CassandraQuotaModule() {
-        tables = Arrays.asList(
+        tables = ImmutableList.of(
             new CassandraTable(CassandraCurrentQuota.TABLE_NAME,
                     SchemaBuilder.createTable(CassandraCurrentQuota.TABLE_NAME)
                     .ifNotExists()
@@ -61,18 +59,12 @@ public class CassandraQuotaModule implements CassandraModule {
                     .ifNotExists()
                     .addPartitionKey(CassandraDefaultMaxQuota.TYPE, text())
                     .addColumn(CassandraDefaultMaxQuota.VALUE, bigint())));
-        index = Collections.emptyList();
-        types = Collections.emptyList();
+        types = ImmutableList.of();
     }
 
     @Override
     public List<CassandraTable> moduleTables() {
         return tables;
-    }
-
-    @Override
-    public List<CassandraIndex> moduleIndex() {
-        return index;
     }
 
     @Override

@@ -19,24 +19,23 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
-import org.apache.james.backends.cassandra.components.CassandraIndex;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
-
-import java.util.List;
-
 import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTable.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTable.UID;
 
+import java.util.List;
+
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraTable;
+import org.apache.james.backends.cassandra.components.CassandraType;
+
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.google.common.collect.ImmutableList;
+
 public class CassandraDeletedMessageModule implements CassandraModule {
 
     private final List<CassandraTable> tables;
-    private final List<CassandraIndex> index;
     private final List<CassandraType> types;
 
     public CassandraDeletedMessageModule() {
@@ -45,18 +44,12 @@ public class CassandraDeletedMessageModule implements CassandraModule {
                 .ifNotExists()
                 .addPartitionKey(MAILBOX_ID, DataType.timeuuid())
                 .addClusteringColumn(UID, DataType.bigint())));
-        index = ImmutableList.of();
         types = ImmutableList.of();
     }
 
     @Override
     public List<CassandraTable> moduleTables() {
         return tables;
-    }
-
-    @Override
-    public List<CassandraIndex> moduleIndex() {
-        return index;
     }
 
     @Override

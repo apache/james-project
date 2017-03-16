@@ -24,7 +24,6 @@ import static com.datastax.driver.core.DataType.text;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
@@ -35,7 +34,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public class CassandraRegistrationModule implements CassandraModule {
 
     private final List<CassandraTable> tables;
-    private final List<CassandraIndex> index;
     private final List<CassandraType> types;
 
     public CassandraRegistrationModule() {
@@ -44,9 +42,7 @@ public class CassandraRegistrationModule implements CassandraModule {
                 SchemaBuilder.createTable(CassandraMailboxPathRegisterTable.TABLE_NAME)
                     .ifNotExists()
                     .addUDTPartitionKey(CassandraMailboxPathRegisterTable.MAILBOX_PATH, SchemaBuilder.frozen(CassandraMailboxPathRegisterTable.MAILBOX_PATH))
-                    .addClusteringColumn(CassandraMailboxPathRegisterTable.TOPIC, text())));
-        index = Collections.emptyList();
-        types = Collections.singletonList(
+                    .addClusteringColumn(CassandraMailboxPathRegisterTable.TOPIC, text())));types = Collections.singletonList(
             new CassandraType(CassandraMailboxPathRegisterTable.MAILBOX_PATH,
                 SchemaBuilder.createType(CassandraMailboxPathRegisterTable.MAILBOX_PATH)
                     .ifNotExists()
@@ -58,11 +54,6 @@ public class CassandraRegistrationModule implements CassandraModule {
     @Override
     public List<CassandraTable> moduleTables() {
         return tables;
-    }
-
-    @Override
-    public List<CassandraIndex> moduleIndex() {
-        return index;
     }
 
     @Override

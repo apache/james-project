@@ -21,7 +21,6 @@ package org.apache.james.mailbox.cassandra.modules;
 
 import java.util.List;
 
-import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
@@ -34,7 +33,6 @@ import com.google.common.collect.ImmutableList;
 public class CassandraFirstUnseenModule implements CassandraModule {
 
     private final List<CassandraTable> tables;
-    private final List<CassandraIndex> index;
     private final List<CassandraType> types;
 
     public CassandraFirstUnseenModule() {
@@ -45,18 +43,12 @@ public class CassandraFirstUnseenModule implements CassandraModule {
                 .addClusteringColumn(CassandraFirstUnseenTable.UID, DataType.bigint())
                 .withOptions()
                 .clusteringOrder(CassandraFirstUnseenTable.UID, SchemaBuilder.Direction.ASC)));
-        index = ImmutableList.of();
         types = ImmutableList.of();
     }
 
     @Override
     public List<CassandraTable> moduleTables() {
         return tables;
-    }
-
-    @Override
-    public List<CassandraIndex> moduleIndex() {
-        return index;
     }
 
     @Override

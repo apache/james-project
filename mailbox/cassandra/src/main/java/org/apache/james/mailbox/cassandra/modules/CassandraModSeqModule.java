@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
@@ -37,7 +36,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public class CassandraModSeqModule implements CassandraModule {
 
     private final List<CassandraTable> tables;
-    private final List<CassandraIndex> index;
     private final List<CassandraType> types;
 
     public CassandraModSeqModule() {
@@ -47,18 +45,12 @@ public class CassandraModSeqModule implements CassandraModule {
                     .ifNotExists()
                     .addPartitionKey(CassandraMessageModseqTable.MAILBOX_ID, timeuuid())
                     .addColumn(CassandraMessageModseqTable.NEXT_MODSEQ, bigint())));
-        index = Collections.emptyList();
         types = Collections.emptyList();
     }
 
     @Override
     public List<CassandraTable> moduleTables() {
         return tables;
-    }
-
-    @Override
-    public List<CassandraIndex> moduleIndex() {
-        return index;
     }
 
     @Override
