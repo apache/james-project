@@ -32,7 +32,6 @@ import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MemoryMailQueueModule;
-import org.apache.james.modules.server.QuotaModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 
 import com.google.inject.Module;
@@ -52,7 +51,6 @@ public class MemoryJamesServerMain {
             new MemoryDataModule(),
             new MemoryDataJmapModule(),
             new MemoryMailboxModule(),
-            new QuotaModule(),
             new MemoryMailQueueModule(),
             new MailboxModule());
 

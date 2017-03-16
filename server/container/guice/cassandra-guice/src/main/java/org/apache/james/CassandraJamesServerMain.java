@@ -38,7 +38,6 @@ import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.ESMetricReporterModule;
 import org.apache.james.modules.server.JMXServerModule;
-import org.apache.james.modules.server.QuotaModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 
 import com.google.inject.Module;
@@ -65,7 +64,6 @@ public class CassandraJamesServerMain {
         new CassandraMailboxModule(),
         new CassandraSessionModule(),
         new ElasticSearchMailboxModule(),
-        new QuotaModule(),
         new ActiveMQQueueModule(),
         new ESMetricReporterModule(),
         new MailboxModule());

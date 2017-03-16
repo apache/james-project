@@ -39,9 +39,16 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
+import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
+import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
+import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
+import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -54,6 +61,9 @@ import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
+import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
+import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.modules.Names;
 import org.apache.james.utils.MailboxManagerDefinition;
 
@@ -69,6 +79,7 @@ public class CassandraMailboxModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new DefaultEventModule());
+        install(new CassandraQuotaModule());
 
         bind(Integer.class)
             .annotatedWith(com.google.inject.name.Names.named(CassandraMailboxDAO.MAX_ACL_RETRY))
@@ -130,7 +141,11 @@ public class CassandraMailboxModule extends AbstractModule {
     }
 
     @Provides @Named(Names.MAILBOXMANAGER_NAME) @Singleton
-    public MailboxManager provideMailboxManager(CassandraMailboxManager cassandraMailboxManager) throws MailboxException {
+    public MailboxManager provideMailboxManager(CassandraMailboxManager cassandraMailboxManager, ListeningCurrentQuotaUpdater quotaUpdater,
+                                                QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) throws MailboxException {
+        cassandraMailboxManager.setQuotaUpdater(quotaUpdater);
+        cassandraMailboxManager.setQuotaManager(quotaManager);
+        cassandraMailboxManager.setQuotaRootResolver(quotaRootResolver);
         cassandraMailboxManager.init();
         return cassandraMailboxManager;
     }
