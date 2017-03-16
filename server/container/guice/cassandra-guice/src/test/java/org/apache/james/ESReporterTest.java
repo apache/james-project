@@ -43,9 +43,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Throwables;
 import com.jayway.awaitility.Duration;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
@@ -56,6 +57,8 @@ public class ESReporterTest {
     private static final int IMAP_PORT = 1143;
     private static final int DELAY_IN_MS = 100;
     private static final int PERIOD_IN_MS = 100;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ESReporterTest.class);
 
     private static final String DOMAIN = "james.org";
     private static final String USERNAME = "user1@" + DOMAIN;
@@ -100,11 +103,10 @@ public class ESReporterTest {
 
     @After
     public void tearDown() throws Exception {
+        timer.cancel();
         if (server != null) {
             server.stop();
         }
-
-        timer.cancel();
     }
 
     @Test
@@ -118,8 +120,8 @@ public class ESReporterTest {
             public void run() {
                 try {
                     client.list("", "*");
-                } catch (IOException e) {
-                    throw Throwables.propagate(e);
+                } catch (Exception e) {
+                    LOGGER.error("Error while sending LIST command", e);
                 }
             }
         };
@@ -134,13 +136,15 @@ public class ESReporterTest {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
+                try {
                     given()
                         .header("Authorization", accessToken.serialize())
                         .body("[[\"getMailboxes\", {}, \"#0\"]]")
-                    .when()
-                        .post("/jmap")
-                    .then()
-                        .statusCode(200);
+                    .with()
+                        .post("/jmap");
+                } catch (Exception e) {
+                    LOGGER.error("Error while listing mailboxes", e);
+                }
             }
         };
         timer.schedule(timerTask, DELAY_IN_MS, PERIOD_IN_MS);
