@@ -94,6 +94,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     
     @Before
     public void setUp() throws Exception {
+        session = new MockMailboxSession("username");
         TestMessageId.Factory factory = new TestMessageId.Factory();
         id1 = factory.generate();
         id2 = factory.generate();
@@ -122,23 +123,23 @@ public class LuceneMailboxMessageSearchIndexTest {
         
         uid1 = MessageUid.of(1);
         SimpleMailboxMembership m = new SimpleMailboxMembership(id1, mailbox.getMailboxId(), uid1, 0, new Date(), 200, new Flags(Flag.ANSWERED), "My Body".getBytes(), headersSubject);
-        index.add(null, mailbox, m);
+        index.add(session, mailbox, m);
 
         uid2 = MessageUid.of(1);
         SimpleMailboxMembership m2 = new SimpleMailboxMembership(id2, mailbox2.getMailboxId(), uid2, 0, new Date(), 20, new Flags(Flag.ANSWERED), "My Body".getBytes(), headersSubject);
-        index.add(null, mailbox2, m2);
+        index.add(session, mailbox2, m2);
         
         uid3 = MessageUid.of(2);
         Calendar cal = Calendar.getInstance();
         cal.set(1980, 2, 10);
         SimpleMailboxMembership m3 = new SimpleMailboxMembership(id3, mailbox.getMailboxId(), uid3, 0, cal.getTime(), 20, new Flags(Flag.DELETED), "My Otherbody".getBytes(), headersTest);
-        index.add(null, mailbox, m3);
+        index.add(session, mailbox, m3);
         
         uid4 = MessageUid.of(3);
         Calendar cal2 = Calendar.getInstance();
         cal2.set(8000, 2, 10);
         SimpleMailboxMembership m4 = new SimpleMailboxMembership(id4, mailbox.getMailboxId(), uid4, 0, cal2.getTime(), 20, new Flags(Flag.DELETED), "My Otherbody2".getBytes(), headersTestSubject);
-        index.add(null, mailbox, m4);
+        index.add(session, mailbox, m4);
         
         uid5 = MessageUid.of(10);
         MessageBuilder builder = new MessageBuilder();
@@ -150,9 +151,8 @@ public class LuceneMailboxMessageSearchIndexTest {
         builder.uid = uid5;
         builder.mailboxId = mailbox3.getMailboxId();
         
-        index.add(null, mailbox3, builder.build(id5));
+        index.add(session, mailbox3, builder.build(id5));
 
-        session = new MockMailboxSession("username");
     }
     
 

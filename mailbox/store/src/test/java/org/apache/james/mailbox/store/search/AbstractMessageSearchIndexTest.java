@@ -31,6 +31,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
@@ -50,6 +51,10 @@ import com.google.common.collect.Lists;
 
 public abstract class AbstractMessageSearchIndexTest {
 
+    private static final String INBOX = "INBOX";
+    private static final String OTHERUSER = "otheruser";
+    private static final String USERNAME = "benwa";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMessageSearchIndexTest.class);
     public static final long LIMIT = 100L;
 
@@ -58,7 +63,9 @@ public abstract class AbstractMessageSearchIndexTest {
     protected MessageIdManager messageIdManager;
     private Mailbox mailbox;
     private Mailbox mailbox2;
+    private Mailbox otherMailbox;
     private MailboxSession session;
+    private MailboxSession otherSession;
 
     private ComposedMessageId m1;
     private ComposedMessageId m2;
@@ -72,6 +79,7 @@ public abstract class AbstractMessageSearchIndexTest {
     private ComposedMessageId mOther;
     private ComposedMessageId mailWithAttachment;
     private ComposedMessageId mailWithInlinedAttachment;
+    private ComposedMessageId m10;
     private StoreMessageManager myFolderMessageManager;
 
 
@@ -79,16 +87,24 @@ public abstract class AbstractMessageSearchIndexTest {
     public void setUp() throws Exception {
         initializeMailboxManager();
 
-        session = storeMailboxManager.createSystemSession("benwa", LOGGER);
+        session = storeMailboxManager.createSystemSession(USERNAME, LOGGER);
+        otherSession = storeMailboxManager.createSystemSession(OTHERUSER, LOGGER);
 
-        MailboxPath inboxPath = new MailboxPath("#private", "benwa", "INBOX");
+        MailboxPath inboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, INBOX);
+        MailboxPath otherInboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, OTHERUSER, INBOX);
+
         storeMailboxManager.createMailbox(inboxPath, session);
+        storeMailboxManager.createMailbox(otherInboxPath, otherSession);
+
         StoreMessageManager inboxMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(inboxPath, session);
-        MailboxPath myFolderPath = new MailboxPath("#private", "benwa", "MyFolder");
+        StoreMessageManager otherInboxMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(otherInboxPath, otherSession);
+
+        MailboxPath myFolderPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, "MyFolder");
         storeMailboxManager.createMailbox(myFolderPath, session);
         myFolderMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(myFolderPath, session);
         mailbox = inboxMessageManager.getMailboxEntity();
         mailbox2 = myFolderMessageManager.getMailboxEntity();
+        otherMailbox = otherInboxMessageManager.getMailboxEntity();
 
         m1 = inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/spamMail.eml"),
@@ -181,6 +197,12 @@ public abstract class AbstractMessageSearchIndexTest {
             true,
             new Flags("Hello you"));
 
+        m10 = otherInboxMessageManager.appendMessage(
+            ClassLoader.getSystemResourceAsStream("eml/mail1.eml"),
+            new Date(1391295600000L),
+            otherSession,
+            true,
+            new Flags());
         await();
     }
 
@@ -1051,5 +1073,42 @@ public abstract class AbstractMessageSearchIndexTest {
 
         assertThat(actual).containsOnly(m1.getMessageId(), m2.getMessageId(), m3.getMessageId(), m4.getMessageId(), m5.getMessageId(),
             m6.getMessageId(), m7.getMessageId(), m8.getMessageId(), m9.getMessageId(), mOther.getMessageId(), mailWithAttachment.getMessageId(), mailWithInlinedAttachment.getMessageId());
+    }
+
+    @Test
+    public void searchInMultiMailboxShouldReturnMessagesBelongingToUserSession() throws Exception {
+        SearchQuery query = new SearchQuery();
+        query.andCriteria(SearchQuery.all());
+
+        MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery.from(query).build();
+
+        assertThat(messageSearchIndex.search(otherSession, multiMailboxesQuery, LIMIT))
+            .hasSize(1)
+            .containsOnly(m10.getMessageId());
+    }
+
+    @Test
+    public void searchInMultiMailboxShouldNotReturnMessagesBelongingToAnotherUserSession() throws Exception {
+        SearchQuery query = new SearchQuery();
+        query.andCriteria(SearchQuery.all());
+
+        MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery.from(query).build();
+
+        assertThat(messageSearchIndex.search(session, multiMailboxesQuery, LIMIT))
+            .doesNotContain(m10.getMessageId());
+    }
+
+    @Test
+    public void searchShouldFilterMailboxBelongingToMailboxSession() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+
+        assertThat(messageSearchIndex.search(otherSession, otherMailbox, searchQuery)).containsOnly(m10.getUid());
+    }
+
+    @Test
+    public void searchShouldReturnEmptyWhenMailboxBelongingToAnotherMailboxSession() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+
+        assertThat(messageSearchIndex.search(otherSession, mailbox, searchQuery)).isEmpty();
     }
 }
