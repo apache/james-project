@@ -71,8 +71,8 @@ public class Message {
         private ZonedDateTime date;
         private Long size;
         private String preview;
-        private String textBody;
-        private String htmlBody;
+        private Optional<String> textBody = Optional.empty();
+        private Optional<String> htmlBody = Optional.empty();
         private final ImmutableList.Builder<Attachment> attachments;
         private final ImmutableMap.Builder<BlobId, SubMessage> attachedMessages;
 
@@ -190,12 +190,12 @@ public class Message {
             return this;
         }
 
-        public Builder textBody(String textBody) {
+        public Builder textBody(Optional<String> textBody) {
             this.textBody = textBody;
             return this;
         }
 
-        public Builder htmlBody(String htmlBody) {
+        public Builder htmlBody(Optional<String> htmlBody) {
             this.htmlBody = htmlBody;
             return this;
         }
@@ -225,7 +225,7 @@ public class Message {
             boolean hasAttachment = hasAttachment(attachments);
 
             return new Message(id, blobId, threadId, mailboxIds, Optional.ofNullable(inReplyToMessageId), isUnread, isFlagged, isAnswered, isDraft, hasAttachment, headers, Optional.ofNullable(from),
-                    to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, size, preview, Optional.ofNullable(textBody), Optional.ofNullable(htmlBody), attachments, attachedMessages);
+                    to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, size, preview, textBody, htmlBody, attachments, attachedMessages);
         }
     }
 

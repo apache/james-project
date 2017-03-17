@@ -29,6 +29,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class SubMailboxMessageTest {
+
+    private static final Optional<String> DEFAULT_TEXT_BODY = Optional.of("textBody");
+    private static final Optional<String> DEFAULT_HTML_BODY = Optional.of("htmlBody");
+
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenHeadersIsNull() {
         SubMessage.builder().build();
@@ -106,8 +110,8 @@ public class SubMailboxMessageTest {
                 replyTo,
                 "subject",
                 currentDate,
-                Optional.of("textBody"),
-                Optional.of("htmlBody"),
+                DEFAULT_TEXT_BODY,
+                DEFAULT_HTML_BODY,
                 attachments,
                 attachedMessages);
         SubMessage tested = SubMessage.builder()
@@ -119,8 +123,8 @@ public class SubMailboxMessageTest {
             .replyTo(replyTo)
             .subject("subject")
             .date(currentDate)
-            .textBody("textBody")
-            .htmlBody("htmlBody")
+            .textBody(DEFAULT_TEXT_BODY)
+            .htmlBody(DEFAULT_HTML_BODY)
             .attachments(attachments)
             .attachedMessages(attachedMessages)
             .build();

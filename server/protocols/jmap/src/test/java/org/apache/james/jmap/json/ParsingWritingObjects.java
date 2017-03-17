@@ -21,6 +21,7 @@ package org.apache.james.jmap.json;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Optional;
 
 import org.apache.james.jmap.model.BlobId;
 import org.apache.james.jmap.model.Emailer;
@@ -61,8 +62,8 @@ public interface ParsingWritingObjects {
         ZonedDateTime DATE = ZonedDateTime.parse("2014-10-30T14:12:00Z").withZoneSameLocal(ZoneId.of("GMT"));
         int SIZE = 1024;
         String PREVIEW = "myPreview";
-        String TEXT_BODY = "myTextBody";
-        String HTML_BODY = "<h1>myHtmlBody</h1>";
+        Optional<String> TEXT_BODY = Optional.of("myTextBody");
+        Optional<String> HTML_BODY = Optional.of("<h1>myHtmlBody</h1>");
     }
 
     Message MESSAGE = Message.builder()

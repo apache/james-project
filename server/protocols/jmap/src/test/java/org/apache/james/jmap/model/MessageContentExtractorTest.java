@@ -435,8 +435,8 @@ public class MessageContentExtractorTest {
 
     @Test
     public void mergeMessageContentShouldReturnMixWhenFirstTextOnlyAndSecondHtmlOnly() {
-        MessageContent messageContent1 = MessageContent.ofTextOnly(TEXT_CONTENT);
-        MessageContent messageContent2 = MessageContent.ofHtmlOnly(HTML_CONTENT);
+        MessageContent messageContent1 = MessageContent.ofTextOnly(Optional.of(TEXT_CONTENT));
+        MessageContent messageContent2 = MessageContent.ofHtmlOnly(Optional.of(HTML_CONTENT));
         MessageContent expected = new MessageContent(Optional.of(TEXT_CONTENT), Optional.of(HTML_CONTENT));
 
         MessageContent actual = messageContent1.merge(messageContent2);
@@ -446,8 +446,8 @@ public class MessageContentExtractorTest {
 
     @Test
     public void mergeMessageContentShouldReturnMixWhenFirstHtmlOnlyAndSecondTextOnly() {
-        MessageContent messageContent1 = MessageContent.ofHtmlOnly(HTML_CONTENT);
-        MessageContent messageContent2 = MessageContent.ofTextOnly(TEXT_CONTENT);
+        MessageContent messageContent1 = MessageContent.ofHtmlOnly(Optional.of(HTML_CONTENT));
+        MessageContent messageContent2 = MessageContent.ofTextOnly(Optional.of(TEXT_CONTENT));
         MessageContent expected = new MessageContent(Optional.of(TEXT_CONTENT), Optional.of(HTML_CONTENT));
 
         MessageContent actual = messageContent1.merge(messageContent2);

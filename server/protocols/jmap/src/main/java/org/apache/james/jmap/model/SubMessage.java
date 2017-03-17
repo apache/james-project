@@ -49,8 +49,8 @@ public class SubMessage {
         private final ImmutableList.Builder<Emailer> replyTo;
         private String subject;
         private ZonedDateTime date;
-        private String textBody;
-        private String htmlBody;
+        private Optional<String> textBody = Optional.empty();
+        private Optional<String> htmlBody = Optional.empty();
         private final ImmutableList.Builder<Attachment> attachments;
         private final ImmutableMap.Builder<BlobId, SubMessage> attachedMessages;
         
@@ -103,12 +103,12 @@ public class SubMessage {
             return this;
         }
 
-        public Builder textBody(String textBody) {
+        public Builder textBody(Optional<String> textBody) {
             this.textBody = textBody;
             return this;
         }
 
-        public Builder htmlBody(String htmlBody) {
+        public Builder htmlBody(Optional<String> htmlBody) {
             this.htmlBody = htmlBody;
             return this;
         }
@@ -131,7 +131,7 @@ public class SubMessage {
             ImmutableMap<BlobId, SubMessage> attachedMessages = this.attachedMessages.build();
             Preconditions.checkState(Message.areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachements'");
             return new SubMessage(headers, Optional.ofNullable(from), to.build(), cc.build(), bcc.build(),
-                    replyTo.build(), subject, date, Optional.ofNullable(textBody), Optional.ofNullable(htmlBody),
+                    replyTo.build(), subject, date, textBody, htmlBody,
                     attachments, attachedMessages
                     );
         }

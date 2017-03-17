@@ -203,8 +203,8 @@ public class MessageTest {
             .date(currentDate)
             .size(123)
             .preview("preview")
-            .textBody("textBody")
-            .htmlBody("htmlBody")
+            .textBody(Optional.of("textBody"))
+            .htmlBody(Optional.of("htmlBody"))
             .attachments(attachments)
             .attachedMessages(attachedMessages)
             .build();

@@ -328,7 +328,7 @@ public class GetMessagesMethodTest {
     }
 
     @Test
-    public void processShouldEmptyTextBodyAndHtmlBodyWhenThoseAreEmpty() throws MailboxException {
+    public void processShouldReturnEmptyTextBodyAndHtmlBodyWhenThoseAreEmpty() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         Date now = new Date();
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("Content-Type: text/html\r\n"
@@ -348,7 +348,7 @@ public class GetMessagesMethodTest {
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
             .extracting(Message::getId, Message::getTextBody, Message::getHtmlBody)
-            .containsOnly(Tuple.tuple(message.getMessageId(), Optional.empty(), Optional.empty()));
+            .containsOnly(Tuple.tuple(message.getMessageId(), Optional.empty(), Optional.of("")));
     }
 
     @Test

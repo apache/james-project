@@ -72,8 +72,6 @@ public class MessageFactory {
 
     private static final String EMPTY_FILE_NAME = "";
 
-    private static final String NO_BODY = "";
-
     private final MessagePreviewGenerator messagePreview;
     private final MessageContentExtractor messageContentExtractor;
     private final TextExtractor textExtractor;
@@ -88,8 +86,8 @@ public class MessageFactory {
     public Message fromMetaDataWithContent(MetaDataWithContent message) throws MailboxException {
         org.apache.james.mime4j.dom.Message mimeMessage = parse(message);
         MessageContent messageContent = extractContent(mimeMessage);
-        String htmlBody = messageContent.getHtmlBody().orElse(NO_BODY);
-        String textBody = messageContent.getTextBody().orElseGet(() -> textBodyFromHtmlBody(htmlBody).orElse(NO_BODY));
+        Optional<String> htmlBody = messageContent.getHtmlBody();
+        Optional<String> textBody = textBodyAndComputeFromHtmlBodyIfNeeded(htmlBody, messageContent.getTextBody());
         return Message.builder()
                 .id(message.getMessageId())
                 .blobId(BlobId.of(String.valueOf(message.getUid().asLong())))
@@ -116,9 +114,15 @@ public class MessageFactory {
                 .build();
     }
 
-    private Optional<String> textBodyFromHtmlBody(String htmlBody) {
+    private Optional<String> textBodyAndComputeFromHtmlBodyIfNeeded(Optional<String> htmlBody, Optional<String> textBody) {
+        if (textBody.isPresent()) {
+            return textBody;
+        }
+        if (!htmlBody.isPresent()) {
+            return Optional.empty();
+        }
         try {
-            return Optional.of(textExtractor.extractContent(new ByteArrayInputStream(htmlBody.getBytes()), HTML_CONTENT, EMPTY_FILE_NAME).getTextualContent());
+            return Optional.of(textExtractor.extractContent(new ByteArrayInputStream(htmlBody.get().getBytes()), HTML_CONTENT, EMPTY_FILE_NAME).getTextualContent());
         } catch (Exception e) {
             return Optional.empty();
         }
@@ -145,14 +149,11 @@ public class MessageFactory {
         }
     }
 
-    private String getPreview(MessageContent messageContent, String computedTextBody) {
-        if (messageContent.getHtmlBody().isPresent()) {
-            if (!messageContent.getTextBody().isPresent()) {
-                return messagePreview.forTextBody(Optional.of(computedTextBody));
-            }
+    private String getPreview(MessageContent messageContent, Optional<String> computedTextBody) {
+        if (messageContent.getHtmlBody().isPresent() && messageContent.getTextBody().isPresent()) {
             return messagePreview.forHTMLBody(messageContent.getHtmlBody());
         }
-        return messagePreview.forTextBody(messageContent.getTextBody());
+        return messagePreview.forTextBody(computedTextBody);
     }
 
     private Emailer firstFromMailboxList(MailboxList list) {
