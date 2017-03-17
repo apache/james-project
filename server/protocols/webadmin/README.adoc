@@ -2,7 +2,7 @@
 
 The web administration supports for now the CRUD operations on the domains, the users and the users mailboxes, as described in the following sections.
 
-**WARNING** : This API do not allow authentication for now. It means that an administrator should ensure an attacker can not use this API.
+**WARNING**: This API do not allow authentication for now. It means that an administrator should ensure an attacker can not use this API.
 
 == Administrating domains
 
@@ -13,18 +13,18 @@ The web administration supports for now the CRUD operations on the domains, the 
 curl -XPUT http://ip:port/domains/domainToBeCreated
 ====
 
-Resource name domainToBeCreated :
+Resource name domainToBeCreated:
 
  - can not be null or empty
  - can not contain '@'
  - can not be more than 255 characters
  - can not contain '/'
 
-Response codes :
+Response codes:
 
- - 204 : The domain was successfully added
- - 400 : The domain name is invalid
- - 500 : Internal error while adding the domain
+ - 204: The domain was successfully added
+ - 400: The domain name is invalid
+ - 500: Internal error while adding the domain
 
 === Delete a domain
 
@@ -33,10 +33,10 @@ Response codes :
 curl -XDELETE http://ip:port/domains/domainToBeDeleted
 ====
 
-Response codes :
+Response codes:
 
- - 204 : The domain was successfully removed
- - 500 : Internal error while removing the domain
+ - 204: The domain was successfully removed
+ - 500: Internal error while removing the domain
 
 === Test if a domain exists
 
@@ -45,11 +45,11 @@ Response codes :
 curl -XGET http://ip:port/domains/domainName
 ====
 
-Response codes :
+Response codes:
 
- - 204 : The domains exists
- - 404 : The domain does not exist
- - 500 : Internal error while accessing the domains
+ - 204: The domains exists
+ - 404: The domain does not exist
+ - 500: Internal error while accessing the domains
 
 === Get the list of domains
 
@@ -58,17 +58,17 @@ Response codes :
 curl -XGET http://ip:port/domains
 ====
 
-Possible response :
+Possible response:
 
 .json
 ====
 {"domains":["domain1", "domain2"]}
 ====
 
-Response codes :
+Response codes:
 
- - 200 : The domain list was successfully retrieved
- - 500 : Internal error while accessing the domains
+ - 200: The domain list was successfully retrieved
+ - 500: Internal error while accessing the domains
 
 == Administrating users
 
@@ -79,20 +79,20 @@ Response codes :
 curl -XPUT http://ip:port/users/usernameToBeUsed -d '{"password":"passwordToBeUsed"}'
 ====
 
-Resource name usernameToBeUsed :
+Resource name usernameToBeUsed:
 
  - can not be null or empty
  - can not be more than 255 characters
  - can not contain '/'
 
-Response codes :
+Response codes:
 
- - 204 : The user was successfully created
- - 400 : The user name or the payload is invalid
- - 409 : Conflict : A concurrent modification make that query to fail
- - 500 : Internal error while adding the user
+ - 204: The user was successfully created
+ - 400: The user name or the payload is invalid
+ - 409: Conflict: A concurrent modification make that query to fail
+ - 500: Internal error while adding the user
 
-Note : if the user is already, its password will be updated.
+Note: if the user is already, its password will be updated.
 
 === Updating a user password
 
@@ -107,10 +107,10 @@ If the user do not exist, then it will be created.
 curl -XDELETE http://ip:port/users/userToBeDeleted
 ====
 
-Response codes :
+Response codes:
 
- - 204 : The user was successfully deleted
- - 500 : Internal error while deleting the user
+ - 204: The user was successfully deleted
+ - 500: Internal error while deleting the user
 
 === Retrieving the user list
 
@@ -119,17 +119,17 @@ Response codes :
 curl -XGET http://ip:port/users
 ====
 
-The answer looks like :
+The answer looks like:
 
 .json
 ====
 [{"username":"username@domain-jmapauthentication.tld"},{"username":"username@domain.tld"}]
 ====
 
-Response codes :
+Response codes:
 
- - 200 : The user name list was successfully retrieved
- - 500 : Internal error while retrieving the users
+ - 200: The user name list was successfully retrieved
+ - 500: Internal error while retrieving the users
 
 == Administrating user mailboxes
 
@@ -143,14 +143,14 @@ curl -XPUT http://ip:port/users/usernameToBeUsed/mailboxes/mailboxNameToBeCreate
 Resource name usernameToBeUsed should be an existing user
 Resource name mailboxNameToBeCreated should not be empty, nor contain # & % * characters.
 
-Response codes :
+Response codes:
 
- - 204 : The mailbox now exists on the server
- - 400 : Invalid mailbox name
- - 404 : The user name does not exist
- - 500 : Internal error
+ - 204: The mailbox now exists on the server
+ - 400: Invalid mailbox name
+ - 404: The user name does not exist
+ - 500: Internal error
 
- To create nested mailboxes, for instance a work mailbox inside the INBOX mailbox, people should use the . separator. The sample query is :
+ To create nested mailboxes, for instance a work mailbox inside the INBOX mailbox, people should use the . separator. The sample query is:
 
  .bash
  ====
@@ -167,12 +167,12 @@ curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes/mailboxNameToBeCre
 Resource name usernameToBeUsed should be an existing user
 Resource name mailboxNameToBeCreated should not be empty
 
-Response codes :
+Response codes:
 
- - 204 : The mailbox now does not exist on the server
- - 400 : Invalid mailbox name
- - 404 : The user name does not exist
- - 500 : Internal error
+ - 204: The mailbox now does not exist on the server
+ - 400: Invalid mailbox name
+ - 404: The user name does not exist
+ - 500: Internal error
 
 === Testing existence of a mailbox
 
@@ -184,12 +184,12 @@ curl -XGET http://ip:port/users/usernameToBeUsed/mailboxes/mailboxNameToBeCreate
 Resource name usernameToBeUsed should be an existing user
 Resource name mailboxNameToBeCreated should not be empty
 
-Response codes :
+Response codes:
 
- - 204 : The mailbox exists
- - 400 : Invalid mailbox name
- - 404 : The user name does not exist, the mailbox does not exist
- - 500 : Internal error
+ - 204: The mailbox exists
+ - 400: Invalid mailbox name
+ - 404: The user name does not exist, the mailbox does not exist
+ - 500: Internal error
 
 === Listing user mailboxes
 
@@ -198,7 +198,7 @@ Response codes :
 curl -XGET http://ip:port/users/usernameToBeUsed/mailboxes
 ====
 
-The answer looks like :
+The answer looks like:
 
 .json
 ====
@@ -207,11 +207,11 @@ The answer looks like :
 
 Resource name usernameToBeUsed should be an existing user
 
-Response codes :
+Response codes:
 
- - 200 : The mailboxes list was successfully retrieved
- - 404 : The user name does not exist
- - 500 : Internal error
+ - 200: The mailboxes list was successfully retrieved
+ - 404: The user name does not exist
+ - 500: Internal error
 
 === Deleting user mailboxes
 
@@ -222,11 +222,11 @@ curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes
 
 Resource name usernameToBeUsed should be an existing user
 
-Response codes :
+Response codes:
 
- - 204 : The user do not have mailboxes anymore
- - 404 : The user name does not exist
- - 500 : Internal error
+ - 204: The user do not have mailboxes anymore
+ - 404: The user name does not exist
+ - 500: Internal error
 
 == Administrating quotas
 
@@ -239,16 +239,16 @@ A quota with a value of -1 means unlimited
 curl -XGET http://ip:port/quota/count
 ====
 
-The answer looks like :
+The answer looks like:
 
 .json
 ====
 100000
 ====
 
-Response codes :
- - 200 : Nothing special
- - 500 : Internal error
+Response codes:
+ - 200: Nothing special
+ - 500: Internal error
 
 === Updating per quotaroot mail count limitation
 
@@ -257,11 +257,11 @@ Response codes :
 curl -XPUT http://ip:port/quota/count -d '1024000000'
 ====
 
-Response codes :
+Response codes:
 
- - 204 : Value updated
- - 400 : The body is not a positive integer
- - 500 : Internal error
+ - 204: Value updated
+ - 400: The body is not a positive integer
+ - 500: Internal error
 
 === Removing per quotaroot mail count limitation
 
@@ -272,10 +272,10 @@ It removes the limitation, and the quota becomes UNILIMITED.
 curl -XPUT http://ip:port/quota/count -d '1024000000'
 ====
 
-Response codes :
+Response codes:
 
- - 204 : Value updated to UNLIMITED
- - 500 : Internal error
+ - 204: Value updated to UNLIMITED
+ - 500: Internal error
 
 === Reading per quotaroot size limitation
 
@@ -284,7 +284,7 @@ Response codes :
 curl -XGET http://ip:port/quota/size
 ====
 
-The answer looks like :
+The answer looks like:
 
 .json
 ====
@@ -293,10 +293,10 @@ The answer looks like :
 
 It represent the allowed Byte count of the mailboxes belonging to this quotaroot.
 
-Response codes :
+Response codes:
 
- - 200 : Nothing special
- - 500 : Internal error
+ - 200: Nothing special
+ - 500: Internal error
 
 === Updating per quotaroot size limitation
 
@@ -305,11 +305,11 @@ Response codes :
 curl -XPUT http://ip:port/quota/size -d '1024000000'
 ====
 
-Response codes :
+Response codes:
 
- - 204 : Value updated
- - 400 : The body is not a positive integer
- - 500 : Internal error
+ - 204: Value updated
+ - 400: The body is not a positive integer
+ - 500: Internal error
 
 === Removing per quotaroot size limitation
 
@@ -320,10 +320,10 @@ It removes the limitation, and the quota becomes UNILIMITED.
 curl -XPUT http://ip:port/quota/size -d '1024000000'
 ====
 
-Response codes :
+Response codes:
 
- - 204 : Value updated to UNLIMITED
- - 500 : Internal error
+ - 204: Value updated to UNLIMITED
+ - 500: Internal error
 
 === Managing count and size at the same time
 
@@ -332,27 +332,27 @@ Response codes :
 curl -XGET http://ip:port/quota/
 ====
 
-Will return :
+Will return:
 
 .json
 ====
 {"count":52,"size":42}
 ====
 
-Response codes :
+Response codes:
 
- - 200 : Success
- - 500 : Internal error
+ - 200: Success
+ - 500: Internal error
 
-You can also write the value the same way :
+You can also write the value the same way:
 
 .bash
 ====
 curl -XPUT http://ip:port/quota/ -d '{"count":52,"size":42}'
 ====
 
-Response codes :
+Response codes:
 
- - 204 : Success
- - 400 : Invalid JSON, or numbers are less than -1.
- - 500 : Internal error
+ - 204: Success
+ - 400: Invalid JSON, or numbers are less than -1.
+ - 500: Internal error
