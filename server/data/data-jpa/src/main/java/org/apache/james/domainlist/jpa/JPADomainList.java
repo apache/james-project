@@ -20,6 +20,7 @@ package org.apache.james.domainlist.jpa;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -86,7 +87,7 @@ public class JPADomainList extends AbstractDomainList {
 
     @Override
     public boolean containsDomain(String domain) throws DomainListException {
-        String lowerCasedDomain = domain.toLowerCase();
+        String lowerCasedDomain = domain.toLowerCase(Locale.US);
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
@@ -105,7 +106,7 @@ public class JPADomainList extends AbstractDomainList {
 
     @Override
     public void addDomain(String domain) throws DomainListException {
-        String lowerCasedDomain = domain.toLowerCase();
+        String lowerCasedDomain = domain.toLowerCase(Locale.US);
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
@@ -128,7 +129,7 @@ public class JPADomainList extends AbstractDomainList {
 
     @Override
     public void removeDomain(String domain) throws DomainListException {
-        String lowerCasedDomain = domain.toLowerCase();
+        String lowerCasedDomain = domain.toLowerCase(Locale.US);
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {

@@ -30,6 +30,7 @@ import org.apache.james.user.lib.model.DefaultUser;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 
 public class MemoryUsersRepository extends AbstractUsersRepository {
@@ -71,7 +72,7 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
     protected void doAddUser(String username, String password) throws UsersRepositoryException {
         DefaultUser user = new DefaultUser(username, algo);
         user.setPassword(password);
-        userByName.put(username.toLowerCase(), user);
+        userByName.put(username.toLowerCase(Locale.US), user);
     }
 
     @Override
@@ -85,7 +86,7 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
         if (existingUser == null) {
             throw new UsersRepositoryException("Please provide an existing user to update");
         }
-        userByName.put(user.getUserName().toLowerCase(), user);
+        userByName.put(user.getUserName().toLowerCase(Locale.US), user);
     }
 
     @Override
@@ -97,7 +98,7 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
 
     @Override
     public boolean contains(String name) throws UsersRepositoryException {
-        return userByName.containsKey(name.toLowerCase());
+        return userByName.containsKey(name.toLowerCase(Locale.US));
     }
 
     @Override

@@ -21,6 +21,7 @@ package org.apache.james.domainlist.memory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
@@ -42,21 +43,21 @@ public class MemoryDomainList extends AbstractDomainList {
 
     @Override
     public boolean containsDomain(String domain) throws DomainListException {
-        return domains.contains(domain.toLowerCase());
+        return domains.contains(domain.toLowerCase(Locale.US));
     }
 
     @Override
     public void addDomain(String domain) throws DomainListException {
         if (containsDomain(domain)) {
-            throw new DomainListException(domain.toLowerCase() + " already exists.");
+            throw new DomainListException(domain.toLowerCase(Locale.US) + " already exists.");
         }
-        domains.add(domain.toLowerCase());
+        domains.add(domain.toLowerCase(Locale.US));
     }
 
     @Override
     public void removeDomain(String domain) throws DomainListException {
-        if (!domains.remove(domain.toLowerCase())) {
-            throw new DomainListException(domain.toLowerCase() + " was not found");
+        if (!domains.remove(domain.toLowerCase(Locale.US))) {
+            throw new DomainListException(domain.toLowerCase(Locale.US) + " was not found");
         }
     }
 }

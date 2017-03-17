@@ -22,6 +22,7 @@ package org.apache.james.smtpserver.fastfail;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -240,7 +241,7 @@ public class URIScanner {
 
             String host = hostFromUriStr(found);
             if (null != host) {
-                host = host.toLowerCase();
+                host = host.toLowerCase(Locale.US);
                 if (!set.contains(host)) {
                     set.add(host);
                 }
@@ -258,7 +259,7 @@ public class URIScanner {
             String host = hostFromUriStr(found);
             if (null != host) {
 
-                host = host.toLowerCase();
+                host = host.toLowerCase(Locale.US);
                 if (!set.contains(host)) {
                     set.add(host);
                 }

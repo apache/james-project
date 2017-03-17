@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Locale;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -77,9 +78,9 @@ public class SearchUtilsRFC822Test {
         assertTrue(new MessageSearches().isMatch(SearchQuery.bodyContains(RHUBARD), row,
                 recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery.bodyContains(RHUBARD
-                .toLowerCase()), row, recent));
+                .toLowerCase(Locale.US)), row, recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery.bodyContains(RHUBARD
-                .toLowerCase()), row, recent));
+                .toLowerCase(Locale.US)), row, recent));
     }
 
     @Test
@@ -103,9 +104,9 @@ public class SearchUtilsRFC822Test {
         assertTrue(new MessageSearches().isMatch(SearchQuery.mailContains(RHUBARD), row,
                 recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery.mailContains(RHUBARD
-                .toLowerCase()), row, recent));
+                .toLowerCase(Locale.US)), row, recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery.mailContains(RHUBARD
-                .toLowerCase()), row, recent));
+                .toLowerCase(Locale.US)), row, recent));
     }
 
     @Test

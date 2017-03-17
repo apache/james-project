@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.rrt.lib;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -279,7 +280,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      */
     public void addMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
 
-        String map = mapping.toLowerCase();
+        String map = mapping.toLowerCase(Locale.US);
 
         if (map.startsWith(RecipientRewriteTable.ERROR_PREFIX)) {
             addErrorMapping(user, domain, map.substring(RecipientRewriteTable.ERROR_PREFIX.length()));
@@ -301,7 +302,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      */
     public void removeMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
 
-        String map = mapping.toLowerCase();
+        String map = mapping.toLowerCase(Locale.US);
 
         if (map.startsWith(RecipientRewriteTable.ERROR_PREFIX)) {
             removeErrorMapping(user, domain, map.substring(RecipientRewriteTable.ERROR_PREFIX.length()));

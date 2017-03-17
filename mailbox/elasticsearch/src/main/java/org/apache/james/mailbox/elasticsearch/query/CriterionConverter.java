@@ -29,6 +29,7 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -243,7 +244,7 @@ public class CriterionConverter {
     private QueryBuilder convertHeader(SearchQuery.HeaderCriterion headerCriterion) {
         return headerOperatorConverterMap.get(headerCriterion.getOperator().getClass())
             .apply(
-                headerCriterion.getHeaderName().toLowerCase(),
+                headerCriterion.getHeaderName().toLowerCase(Locale.US),
                 headerCriterion.getOperator());
     }
 
@@ -254,7 +255,7 @@ public class CriterionConverter {
     }
 
     private String getFieldNameFromHeaderName(String headerName) {
-        switch (headerName.toLowerCase()) {
+        switch (headerName.toLowerCase(Locale.US)) {
         case HeaderCollection.TO:
             return JsonMessageConstants.TO;
         case HeaderCollection.CC:

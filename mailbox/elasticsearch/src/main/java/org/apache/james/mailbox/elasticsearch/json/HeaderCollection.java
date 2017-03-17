@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -81,7 +82,7 @@ public class HeaderCollection {
 
         public Builder add(Field field) {
             Preconditions.checkNotNull(field);
-            String headerName = field.getName().toLowerCase();
+            String headerName = field.getName().toLowerCase(Locale.US);
             String headerValue = field.getBody();
             headers.put(headerName, DecoderUtil.decodeEncodedWords(headerValue, DecodeMonitor.SILENT));
             handleSpecificHeader(headerName, headerValue);

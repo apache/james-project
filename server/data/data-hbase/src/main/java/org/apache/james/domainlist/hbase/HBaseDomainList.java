@@ -21,6 +21,7 @@ package org.apache.james.domainlist.hbase;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
@@ -55,7 +56,7 @@ public class HBaseDomainList extends AbstractDomainList {
         HTableInterface table = null;
         try {
             table = TablePool.getInstance().getDomainlistTable();
-            Get get = new Get(Bytes.toBytes(domain.toLowerCase()));
+            Get get = new Get(Bytes.toBytes(domain.toLowerCase(Locale.US)));
             Result result = table.get(get);
             if (!result.isEmpty()) {
                 return true;
@@ -80,7 +81,7 @@ public class HBaseDomainList extends AbstractDomainList {
      */
     @Override
     public void addDomain(String domain) throws DomainListException {
-        String lowerCasedDomain = domain.toLowerCase();
+        String lowerCasedDomain = domain.toLowerCase(Locale.US);
         if (containsDomain(lowerCasedDomain)) {
             throw new DomainListException(lowerCasedDomain + " already exists.");
         }
@@ -110,7 +111,7 @@ public class HBaseDomainList extends AbstractDomainList {
         HTableInterface table = null;
         try {
             table = TablePool.getInstance().getDomainlistTable();
-            Delete delete = new Delete(Bytes.toBytes(domain.toLowerCase()));
+            Delete delete = new Delete(Bytes.toBytes(domain.toLowerCase(Locale.US)));
             table.delete(delete);
             table.flushCommits();
         } catch (IOException e) {

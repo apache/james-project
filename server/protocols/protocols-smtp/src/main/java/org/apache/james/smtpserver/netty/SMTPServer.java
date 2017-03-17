@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.smtpserver.netty;
 
+import java.util.Locale;
+
 import javax.inject.Inject;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -125,7 +127,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     public void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
         super.doConfigure(configuration);
         if (isEnabled()) {
-            String authRequiredString = configuration.getString("authRequired", "false").trim().toLowerCase();
+            String authRequiredString = configuration.getString("authRequired", "false").trim().toLowerCase(Locale.US);
             if (authRequiredString.equals("true"))
                 authRequired = AUTH_REQUIRED;
             else if (authRequiredString.equals("announce"))

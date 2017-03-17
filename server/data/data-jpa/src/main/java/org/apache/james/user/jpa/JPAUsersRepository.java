@@ -21,6 +21,7 @@ package org.apache.james.user.jpa;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Locale;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -178,7 +179,9 @@ public class JPAUsersRepository extends AbstractUsersRepository {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
         try {
-            return (Long) entityManager.createNamedQuery("containsUser").setParameter("name", name.toLowerCase()).getSingleResult() > 0;
+            return (Long) entityManager.createNamedQuery("containsUser")
+                .setParameter("name", name.toLowerCase(Locale.US))
+                .getSingleResult() > 0;
         } catch (PersistenceException e) {
             getLogger().debug("Failed to find user", e);
             throw new UsersRepositoryException("Failed to find user" + name, e);
@@ -271,7 +274,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      * org.apache.james.user.lib.AbstractUsersRepository#doAddUser(java.lang.String, java.lang.String)
      */
     protected void doAddUser(String username, String password) throws UsersRepositoryException {
-        String lowerCasedUsername = username.toLowerCase();
+        String lowerCasedUsername = username.toLowerCase(Locale.US);
         if (contains(lowerCasedUsername)) {
             throw new UsersRepositoryException(lowerCasedUsername + " already exists.");
         }

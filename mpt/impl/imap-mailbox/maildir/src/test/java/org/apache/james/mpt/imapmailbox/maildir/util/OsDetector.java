@@ -19,6 +19,8 @@
 
 package org.apache.james.mpt.imapmailbox.maildir.util;
 
+import java.util.Locale;
+
 public class OsDetector {
 
     /**
@@ -27,7 +29,7 @@ public class OsDetector {
      * @return windows
      */
     public static boolean isWindows() {
-        String os = System.getProperty("os.name").toLowerCase();
+        String os = System.getProperty("os.name").toLowerCase(Locale.US);
         return (os.contains("win"));
     }
     

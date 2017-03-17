@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -127,7 +128,7 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
      */
     @Override
     public boolean contains(String name) throws UsersRepositoryException {
-        KeyValue keyValue = getKeyValue(name.toLowerCase());
+        KeyValue keyValue = getKeyValue(name.toLowerCase(Locale.US));
         return (keyValue != null);
     }
 
@@ -264,7 +265,7 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
     private void putUser(DefaultUser user, boolean isAdd) throws UsersRepositoryException {
         String username = user.getUserName();
         if (isAdd) {
-            username = user.getUserName().toLowerCase();
+            username = user.getUserName().toLowerCase(Locale.US);
             if (contains(username)) {
                 throw new UsersRepositoryException(username + " already exists.");
             }

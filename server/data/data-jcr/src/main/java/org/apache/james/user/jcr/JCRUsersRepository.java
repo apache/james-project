@@ -22,6 +22,7 @@ package org.apache.james.user.jcr;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.jcr.Node;
@@ -220,7 +221,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
             final Session session = login();
             try {
                 final Node rootNode = session.getRootNode();
-                final String path = USERS_PATH + "/" + toSafeName(name.toLowerCase());
+                final String path = USERS_PATH + "/" + toSafeName(name.toLowerCase(Locale.US));
                 rootNode.getNode(path);
                 return true;
             } finally {
@@ -362,7 +363,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
 
     @Override
     protected void doAddUser(String username, String password) throws UsersRepositoryException {
-        String lowerCasedUsername = username.toLowerCase();
+        String lowerCasedUsername = username.toLowerCase(Locale.US);
         if (contains(lowerCasedUsername)) {
             throw new UsersRepositoryException(lowerCasedUsername + " already exists.");
         }

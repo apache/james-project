@@ -32,6 +32,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Scanner;
 
 public class MessageToCoreToMessage {
@@ -53,7 +54,7 @@ public class MessageToCoreToMessage {
                 MimeBodyPart part = (MimeBodyPart) parts.getBodyPart(i);
                 found = part.isMimeType("application/sieve");
                 if (!found) {
-                    String fileName = null == part.getFileName() ? null : part.getFileName().toLowerCase();
+                    String fileName = null == part.getFileName() ? null : part.getFileName().toLowerCase(Locale.US);
                     found = fileName != null &&
                         (fileName.endsWith(".siv") || fileName.endsWith(".sieve"));
                 }

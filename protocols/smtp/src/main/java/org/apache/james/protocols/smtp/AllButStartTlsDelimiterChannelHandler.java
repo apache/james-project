@@ -19,6 +19,7 @@
 package org.apache.james.protocols.smtp;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.james.protocols.netty.HandlerConstants;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -48,7 +49,7 @@ public class AllButStartTlsDelimiterChannelHandler extends DelimiterBasedFrameDe
         SMTPSession session = (SMTPSession) pipeline.getContext(HandlerConstants.CORE_HANDLER).getAttachment();
 
         if (session == null || session.needsCommandInjectionDetection()) {
-            String trimedLowerCasedInput = readAll(buffer).trim().toLowerCase();
+            String trimedLowerCasedInput = readAll(buffer).trim().toLowerCase(Locale.US);
             if (hasCommandInjection(trimedLowerCasedInput)) {
                 throw new CommandInjectionDetectedException();
             }

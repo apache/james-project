@@ -19,6 +19,7 @@
 package org.apache.james.rrt.lib;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
@@ -200,8 +201,8 @@ public class RecipientRewriteTableUtil {
         while (tokenizer.hasMoreTokens()) {
             String mappingItem = tokenizer.nextToken();
             int index = mappingItem.indexOf('=');
-            String virtual = mappingItem.substring(0, index).trim().toLowerCase();
-            String real = mappingItem.substring(index + 1).trim().toLowerCase();
+            String virtual = mappingItem.substring(0, index).trim().toLowerCase(Locale.US);
+            String real = mappingItem.substring(index + 1).trim().toLowerCase(Locale.US);
             mappings.put(virtual, real);
         }
         return mappings;

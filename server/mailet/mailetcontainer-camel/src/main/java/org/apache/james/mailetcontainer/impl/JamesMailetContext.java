@@ -241,13 +241,13 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
         try {
             if (!name.contains("@")) {
                 try {
-                    return isLocalEmail(new MailAddress(name.toLowerCase(), domains.getDefaultDomain()));
+                    return isLocalEmail(new MailAddress(name.toLowerCase(Locale.US), domains.getDefaultDomain()));
                 } catch (DomainListException e) {
                     log("Unable to access DomainList", e);
                     return false;
                 }
             } else {
-                return isLocalEmail(new MailAddress(name.toLowerCase()));
+                return isLocalEmail(new MailAddress(name.toLowerCase(Locale.US)));
             }
         } catch (ParseException e) {
             log("Error checking isLocalUser for user " + name);
@@ -258,7 +258,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
     @Override
     public boolean isLocalEmail(MailAddress mailAddress) {
         if (mailAddress != null) {
-            if (!isLocalServer(mailAddress.getDomain().toLowerCase())) {
+            if (!isLocalServer(mailAddress.getDomain().toLowerCase(Locale.US))) {
                 return false;
             }
             try {

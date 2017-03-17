@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Locale;
+
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.CharMatcher;
@@ -89,7 +91,7 @@ public class MailboxAnnotationKey {
     }
 
     public String asString() {
-        return key.toLowerCase();
+        return key.toLowerCase(Locale.US);
     }
 
     public boolean isParentOrIsEqual(MailboxAnnotationKey key) {

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Locale;
 import java.util.Scanner;
 
 import javax.inject.Inject;
@@ -125,7 +126,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
             getMailetContext().log(MailetContext.LogLevel.ERROR, "Sender is null");
             return;
         }
-        if (!getMailetContext().isLocalServer(mail.getSender().getDomain().toLowerCase())) {
+        if (!getMailetContext().isLocalServer(mail.getSender().getDomain().toLowerCase(Locale.US))) {
             getMailetContext().log(LogLevel.ERROR, "Sender not local");
             return;
         }

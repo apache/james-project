@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.mailets.jsieve.delivery;
 
+import java.util.Locale;
+
 import javax.mail.MessagingException;
 
 import org.apache.james.transport.mailets.delivery.MailStore;
@@ -83,7 +85,7 @@ public class SievePoster implements Poster {
     private String retrieveUser(String url, int startOfUser, int endOfUser, String host) throws MessagingException {
         // lowerCase the user - see
         // https://issues.apache.org/jira/browse/JAMES-1369
-        String user = url.substring(startOfUser, endOfUser).toLowerCase();
+        String user = url.substring(startOfUser, endOfUser).toLowerCase(Locale.US);
         // Check if we should use the full email address as username
         try {
             return usersRepository.getUser(new MailAddress(user, host));

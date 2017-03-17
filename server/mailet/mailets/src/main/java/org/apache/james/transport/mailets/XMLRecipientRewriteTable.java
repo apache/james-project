@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.mail.MessagingException;
@@ -100,8 +101,8 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
         Collection<MailAddress> recipients = recipientsMap.keySet();
 
         for (MailAddress source : recipients) {
-            String user = source.getLocalPart().toLowerCase();
-            String domain = source.getDomain().toLowerCase();
+            String user = source.getLocalPart().toLowerCase(Locale.US);
+            String domain = source.getDomain().toLowerCase(Locale.US);
 
             String targetString = RecipientRewriteTableUtil.getTargetString(user, domain, mappings);
 

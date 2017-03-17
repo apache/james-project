@@ -27,6 +27,7 @@ import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -294,7 +295,7 @@ public class ClassifyBounce extends GenericMailet {
         }
 
         private boolean assessMessageOutOfOffice() {
-            //if ( subject.toLowerCase().startsWith("re:") ) {
+            //if ( subject.toLowerCase(Locale.US).startsWith("re:") ) {
             boolean out = findInBody("out[\\s]+of[\\s]+the[\\s]+office");
             if (!out) {
                 out = findInBody("out[\\s]+of[\\s]+my[\\s]+office");
@@ -351,7 +352,7 @@ public class ClassifyBounce extends GenericMailet {
                 failed = findInSubject("User[\\s]+unknown");
             }
             if (!failed) {  //no idea...
-                String s = subject.toLowerCase();
+                String s = subject.toLowerCase(Locale.US);
                 failed = (s.indexOf("user") > 0 && (s.indexOf("unknown") > s.indexOf("user")));
             }
             return failed;

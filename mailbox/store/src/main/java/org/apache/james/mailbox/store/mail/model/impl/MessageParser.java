@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.Cid;
@@ -64,8 +65,8 @@ public class MessageParser {
     private static final String CONTENT_DISPOSITION = "Content-Disposition";
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
     private static final List<String> ATTACHMENT_CONTENT_DISPOSITIONS = ImmutableList.of(
-            ContentDispositionField.DISPOSITION_TYPE_ATTACHMENT.toLowerCase(),
-            ContentDispositionField.DISPOSITION_TYPE_INLINE.toLowerCase());
+            ContentDispositionField.DISPOSITION_TYPE_ATTACHMENT.toLowerCase(Locale.US),
+            ContentDispositionField.DISPOSITION_TYPE_INLINE.toLowerCase(Locale.US));
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageParser.class);
 
     public List<MessageAttachment> retrieveAttachments(InputStream fullContent) throws MimeException, IOException {
@@ -200,7 +201,7 @@ public class MessageParser {
 
                     @Override
                     public Boolean apply(String dispositionType) {
-                        return ATTACHMENT_CONTENT_DISPOSITIONS.contains(dispositionType.toLowerCase());
+                        return ATTACHMENT_CONTENT_DISPOSITIONS.contains(dispositionType.toLowerCase(Locale.US));
                     }
                 }).or(false);
     }

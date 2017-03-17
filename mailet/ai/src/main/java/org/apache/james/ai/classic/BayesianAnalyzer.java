@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -449,7 +450,7 @@ public class BayesianAnalyzer {
 
         // prepare a version of the token containing all lower case (for
         // performance reasons)
-        tokenLower = token.toLowerCase();
+        tokenLower = token.toLowerCase(Locale.US);
 
         int end = token.length();
         do {

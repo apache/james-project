@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Locale;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -153,12 +154,12 @@ public class SearchUtilsMultipartMixedTest {
         assertTrue(new MessageSearches().isMatch(SearchQuery.bodyContains(SAMPLE_PART_TWO),
                 row, recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery
-                .bodyContains(SAMPLE_INNER_MAIL_BODY_ONE.toLowerCase()), row,
+                .bodyContains(SAMPLE_INNER_MAIL_BODY_ONE.toLowerCase(Locale.US)), row,
                 recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery.bodyContains(SAMPLE_PART_ONE
-                .toLowerCase()), row, recent));
+                .toLowerCase(Locale.US)), row, recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery.bodyContains(SAMPLE_PART_TWO
-                .toLowerCase()), row, recent));
+                .toLowerCase(Locale.US)), row, recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery
                 .bodyContains(SAMPLE_INNER_MAIL_BODY_ONE.toUpperCase()), row,
                 recent));
@@ -195,12 +196,12 @@ public class SearchUtilsMultipartMixedTest {
         assertTrue(new MessageSearches().isMatch(SearchQuery.mailContains(SAMPLE_PART_TWO),
                 row, recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery
-                .mailContains(SAMPLE_INNER_MAIL_BODY_ONE.toLowerCase()), row,
+                .mailContains(SAMPLE_INNER_MAIL_BODY_ONE.toLowerCase(Locale.US)), row,
                 recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery.mailContains(SAMPLE_PART_ONE
-                .toLowerCase()), row, recent));
+                .toLowerCase(Locale.US)), row, recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery.mailContains(SAMPLE_PART_TWO
-                .toLowerCase()), row, recent));
+                .toLowerCase(Locale.US)), row, recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery
                 .mailContains(SAMPLE_INNER_MAIL_BODY_ONE.toUpperCase()), row,
                 recent));

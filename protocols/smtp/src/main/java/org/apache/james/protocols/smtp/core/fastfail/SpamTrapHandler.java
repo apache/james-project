@@ -23,6 +23,7 @@ package org.apache.james.protocols.smtp.core.fastfail;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
@@ -73,7 +74,7 @@ public class SpamTrapHandler implements RcptHook {
             return HookResult.deny();
         } else {
          
-            if (spamTrapRecips.contains(rcpt.toString().toLowerCase())){
+            if (spamTrapRecips.contains(rcpt.toString().toLowerCase(Locale.US))){
         
                 addIp(address, session);
             

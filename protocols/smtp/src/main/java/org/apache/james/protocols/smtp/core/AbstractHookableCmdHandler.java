@@ -21,6 +21,7 @@ package org.apache.james.protocols.smtp.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -59,7 +60,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
      * #onCommand(org.apache.james.protocols.api.ProtocolSession, Request)
      */
     public Response onCommand(SMTPSession session, Request request) {
-        TimeMetric timeMetric = metricFactory.timer("SMTP-" + request.getCommand().toLowerCase());
+        TimeMetric timeMetric = metricFactory.timer("SMTP-" + request.getCommand().toLowerCase(Locale.US));
         String command = request.getCommand();
         String parameters = request.getArgument();
         Response response = doFilterChecks(session, command, parameters);
