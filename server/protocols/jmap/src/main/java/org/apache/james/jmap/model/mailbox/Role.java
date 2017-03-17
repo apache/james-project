@@ -48,7 +48,7 @@ public class Role {
     private static final Map<String, Role> ROLES = 
             ImmutableList.<Role>of(INBOX, ARCHIVE, DRAFTS, OUTBOX, SENT, TRASH, SPAM, TEMPLATES)
                 .stream()
-                .collect(Collectors.toMap((Role x) -> x.name.toLowerCase(Locale.ENGLISH), Function.identity()));
+                .collect(Collectors.toMap((Role x) -> x.name.toLowerCase(Locale.US), Function.identity()));
     
     private final String name;
     private final String defaultMailbox;
@@ -64,7 +64,7 @@ public class Role {
     }
 
     public static Optional<Role> from(String name) {
-        Optional<Role> predefinedRole = Optional.ofNullable(ROLES.get(name.toLowerCase(Locale.ENGLISH)));
+        Optional<Role> predefinedRole = Optional.ofNullable(ROLES.get(name.toLowerCase(Locale.US)));
         if (predefinedRole.isPresent()) {
             return predefinedRole;
         } else {
@@ -80,7 +80,7 @@ public class Role {
     }
 
     public boolean isSystemRole() {
-        return ROLES.containsKey(name.toLowerCase(Locale.ENGLISH));
+        return ROLES.containsKey(name.toLowerCase(Locale.US));
     }
 
     @JsonValue
