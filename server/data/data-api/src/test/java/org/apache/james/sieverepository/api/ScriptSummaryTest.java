@@ -20,39 +20,13 @@
 
 package org.apache.james.sieverepository.api;
 
-import com.google.common.base.Objects;
+import org.junit.Test;
 
-public class ScriptSummary {
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    private final String name;
-    private final boolean activeFile;
-
-    public ScriptSummary(String name, boolean activeFile) {
-        this.name = name;
-        this.activeFile = activeFile;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean isActive() {
-        return activeFile;
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof ScriptSummary) {
-            ScriptSummary that = (ScriptSummary) o;
-
-            return Objects.equal(this.name, that.name)
-                && Objects.equal(this.activeFile, that.activeFile);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hashCode(name, activeFile);
+public class ScriptSummaryTest {
+    @Test
+    public void shouldRespectBeanContract() {
+        EqualsVerifier.forClass(ScriptSummary.class).verify();
     }
 }
