@@ -19,6 +19,8 @@
 package org.apache.james.mailbox.store.quota;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+
 import org.apache.james.mailbox.model.Quota;
 
 public final class QuotaImpl implements Quota{
@@ -58,8 +60,7 @@ public final class QuotaImpl implements Quota{
 
     @Override
     public boolean isOverQuota() {
-        return max != UNLIMITED
-            && used > max;
+        return isOverQuotaWithAdditionalValue(0);
     }
 
     @Override
@@ -80,5 +81,12 @@ public final class QuotaImpl implements Quota{
     @Override
     public int hashCode() {
         return Objects.hashCode(used, max);
+    }
+
+    @Override
+    public boolean isOverQuotaWithAdditionalValue(long additionalValue) {
+        Preconditions.checkArgument(additionalValue >= 0);
+        return max != UNLIMITED
+            && used + additionalValue > max;
     }
 }

@@ -59,4 +59,6 @@ public interface Quota {
      */
     boolean isOverQuota();
 
+    boolean isOverQuotaWithAdditionalValue(long additionalValue);
+
 }

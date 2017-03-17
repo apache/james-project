@@ -22,9 +22,14 @@ package org.apache.james.mailbox.store.quota;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.model.Quota;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class QuotaImplTest {
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void unlimitedQuotaShouldNotBeOverQuota() {
@@ -49,6 +54,28 @@ public class QuotaImplTest {
     @Test
     public void isOverQuotaShouldReturnTrueWhenQuotaIsExceeded() {
         assertThat(QuotaImpl.quota(360, 36).isOverQuota()).isTrue();
+    }
+
+    @Test
+    public void isOverQuotaWithAdditionalValueShouldReturnTrueWhenOverLimit() {
+        assertThat(QuotaImpl.quota(36, 36).isOverQuotaWithAdditionalValue(1)).isTrue();
+    }
+
+    @Test
+    public void isOverQuotaWithAdditionalValueShouldReturnTrueWhenUnderLimit() {
+        assertThat(QuotaImpl.quota(34, 36).isOverQuotaWithAdditionalValue(1)).isFalse();
+    }
+
+    @Test
+    public void isOverQuotaWithAdditionalValueShouldReturnFalseWhenAtLimit() {
+        assertThat(QuotaImpl.quota(36, 36).isOverQuotaWithAdditionalValue(0)).isFalse();
+    }
+
+    @Test
+    public void isOverQuotaWithAdditionalValueShouldThrowOnNegativeValue() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        QuotaImpl.quota(25, 36).isOverQuotaWithAdditionalValue(-1);
     }
 
 }
