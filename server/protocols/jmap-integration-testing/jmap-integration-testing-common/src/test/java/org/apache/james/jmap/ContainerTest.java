@@ -34,14 +34,17 @@ public class ContainerTest {
 
     @Rule
     public SwarmGenericContainer container = new SwarmGenericContainer("nginx:1.7.1")
-            .withAffinityToContainer()
-            .withExposedPorts(80);
+            .withAffinityToContainer();
 
     @Test
     public void containerShouldBeReachableOnExposedPort() throws IOException, URISyntaxException {
-        String containerIpAddress = container.getContainerIpAddress();
-        Integer containerPort = container.getMappedPort(80);
-        Response response = Request.Get(new URIBuilder().setScheme("http").setHost(containerIpAddress).setPort(containerPort).build()).execute();
-        assertThat(response.returnResponse().getStatusLine().getStatusCode()).isEqualTo(200);
+        Response response = Request.Get(new URIBuilder()
+            .setScheme("http")
+            .setHost(container.getIp())
+            .setPort(80).build())
+            .execute();
+
+        assertThat(response.returnResponse().getStatusLine().getStatusCode())
+            .isEqualTo(200);
     }
 }
