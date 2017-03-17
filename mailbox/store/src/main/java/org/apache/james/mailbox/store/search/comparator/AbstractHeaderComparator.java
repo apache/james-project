@@ -43,7 +43,7 @@ public abstract class AbstractHeaderComparator implements Comparator<MailboxMess
                     String name = header.getName();
                     if (headerName.equalsIgnoreCase(name)) {
                         final String value = header.getValue();
-                        return value.toUpperCase(Locale.ENGLISH);
+                        return value.toUpperCase(Locale.US);
                     }
                 } catch (MailboxException e) {
                     // skip the header line

@@ -161,12 +161,12 @@ public class SearchUtilsMultipartMixedTest {
         assertTrue(new MessageSearches().isMatch(SearchQuery.bodyContains(SAMPLE_PART_TWO
                 .toLowerCase(Locale.US)), row, recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery
-                .bodyContains(SAMPLE_INNER_MAIL_BODY_ONE.toUpperCase()), row,
+                .bodyContains(SAMPLE_INNER_MAIL_BODY_ONE.toUpperCase(Locale.US)), row,
                 recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery.bodyContains(SAMPLE_PART_ONE
-                .toUpperCase()), row, recent));
+                .toUpperCase(Locale.US)), row, recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery.bodyContains(SAMPLE_PART_TWO
-                .toUpperCase()), row, recent));
+                .toUpperCase(Locale.US)), row, recent));
     }
 
     @Test
@@ -203,12 +203,12 @@ public class SearchUtilsMultipartMixedTest {
         assertTrue(new MessageSearches().isMatch(SearchQuery.mailContains(SAMPLE_PART_TWO
                 .toLowerCase(Locale.US)), row, recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery
-                .mailContains(SAMPLE_INNER_MAIL_BODY_ONE.toUpperCase()), row,
+                .mailContains(SAMPLE_INNER_MAIL_BODY_ONE.toUpperCase(Locale.US)), row,
                 recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery.mailContains(SAMPLE_PART_ONE
-                .toUpperCase()), row, recent));
+                .toUpperCase(Locale.US)), row, recent));
         assertTrue(new MessageSearches().isMatch(SearchQuery.mailContains(SAMPLE_PART_TWO
-                .toUpperCase()), row, recent));
+                .toUpperCase(Locale.US)), row, recent));
     }
 
     @Test

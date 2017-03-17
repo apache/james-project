@@ -20,6 +20,7 @@
 package org.apache.james.imap.decode.parser;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -117,7 +118,7 @@ public class ImapParserFactory implements ImapCommandParserFactory {
      * @see org.apache.james.imap.decode.ImapCommandParserFactory#getParser(java.lang.String)
      */
     public ImapCommandParser getParser(String commandName) {
-        Class<?> cmdClass = (Class<?>) _imapCommands.get(commandName.toUpperCase());
+        Class<?> cmdClass = _imapCommands.get(commandName.toUpperCase(Locale.US));
 
         if (cmdClass == null) {
             return null;

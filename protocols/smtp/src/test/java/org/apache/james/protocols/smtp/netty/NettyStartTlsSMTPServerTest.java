@@ -149,7 +149,7 @@ public class NettyStartTlsSMTPServerTest {
 
         public boolean isStartTLSAnnounced() {
             for (String reply: client.getReplyStrings()) {
-                if (reply.toUpperCase(Locale.UK).endsWith("STARTTLS")) {
+                if (reply.toUpperCase(Locale.US).endsWith("STARTTLS")) {
                     return true;
                 }
             }

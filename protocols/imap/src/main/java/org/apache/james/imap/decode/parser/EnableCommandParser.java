@@ -41,11 +41,11 @@ public class EnableCommandParser extends AbstractImapCommandParser {
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
         List<String> caps = new ArrayList<String>();
         String cap = request.astring();
-        caps.add(cap.toUpperCase(Locale.UK));
+        caps.add(cap.toUpperCase(Locale.US));
         while (request.nextChar() == ' ') {
             request.consume();
             cap = request.astring();
-            caps.add(cap.toUpperCase(Locale.UK));
+            caps.add(cap.toUpperCase(Locale.US));
         }
         request.eol();
         return new EnableRequest(tag, command, caps);

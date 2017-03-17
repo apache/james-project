@@ -417,7 +417,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
      */
     private boolean matchesAddress(SearchQuery.AddressOperator operator, String headerName,
                                    MailboxMessage message) throws MailboxException, IOException {
-        String text = operator.getAddress().toUpperCase(Locale.ENGLISH);
+        String text = operator.getAddress().toUpperCase(Locale.US);
         List<Header> headers = ResultUtils.createHeaders(message);
         for (Header header : headers) {
             String name = header.getName();
@@ -426,14 +426,14 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                 AddressList aList = LenientAddressParser.DEFAULT.parseAddressList(value);
                 for ( Address address : aList) {
                     if (address instanceof Mailbox) {
-                        if (AddressFormatter.DEFAULT.encode((Mailbox) address).toUpperCase(Locale.ENGLISH)
+                        if (AddressFormatter.DEFAULT.encode((Mailbox) address).toUpperCase(Locale.US)
                             .contains(text)) {
                             return true;
                         }
                     } else if (address instanceof Group) {
                         MailboxList mList = ((Group) address).getMailboxes();
                         for (Mailbox mailbox : mList) {
-                            if (AddressFormatter.DEFAULT.encode(mailbox).toUpperCase(Locale.ENGLISH)
+                            if (AddressFormatter.DEFAULT.encode(mailbox).toUpperCase(Locale.US)
                                 .contains(text)) {
                                 return true;
                             }
@@ -442,7 +442,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                 }
 
                 // Also try to match against raw header now
-                return value.toUpperCase(Locale.ENGLISH).contains(text);
+                return value.toUpperCase(Locale.US).contains(text);
             }
         }
         return false;
@@ -464,7 +464,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
     private boolean matches(SearchQuery.ContainsOperator operator, String headerName,
             MailboxMessage message) throws MailboxException, IOException {
-        String text = operator.getValue().toUpperCase();
+        String text = operator.getValue().toUpperCase(Locale.US);
         boolean result = false;
         List<Header> headers = ResultUtils.createHeaders(message);
         for (Header header : headers) {
@@ -472,7 +472,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
             if (headerName.equalsIgnoreCase(name)) {
                 String value = header.getValue();
                 if (value != null) {
-                    if (value.toUpperCase().contains(text)) {
+                    if (value.toUpperCase(Locale.US).contains(text)) {
                         result = true;
                         break;
                     }

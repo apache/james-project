@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa.migrator;
 
+import java.util.Locale;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -55,7 +57,7 @@ public class JpaMigrator {
             EntityManager em = factory.createEntityManager();
 
             for (String jira: jiras) {
-                JpaMigrateCommand jiraJpaMigratable = (JpaMigrateCommand) Class.forName(JPA_MIGRATION_COMMAND_PACKAGE + "." + jira.toUpperCase() + JpaMigrateCommand.class.getSimpleName()).newInstance();
+                JpaMigrateCommand jiraJpaMigratable = (JpaMigrateCommand) Class.forName(JPA_MIGRATION_COMMAND_PACKAGE + "." + jira.toUpperCase(Locale.US) + JpaMigrateCommand.class.getSimpleName()).newInstance();
                 System.out.println("Now executing " + jira + " migration.");
                 em.getTransaction().begin();
                 jiraJpaMigratable.migrate(em);

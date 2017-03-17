@@ -28,6 +28,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
+import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -1426,7 +1427,7 @@ public class ScriptBuilder {
                             if (commandWordIndex == 3) {
                                 commandOkPhrase = "OK SELECT completed.";
                             } else {
-                                commandOkPhrase = "OK " + words[3].toUpperCase() + " SELECT completed.";
+                                commandOkPhrase = "OK " + words[3].toUpperCase(Locale.US) + " SELECT completed.";
                             }
                         } else {
                             commandOkPhrase = null;
