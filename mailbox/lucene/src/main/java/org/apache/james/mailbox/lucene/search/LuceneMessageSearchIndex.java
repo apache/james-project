@@ -995,8 +995,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.FlagCriterion}. This is kind of a hack
      * as it will do a search for the flags in this method and 
-     * 
-     * @param crit
+     *
      * @return query
      * @throws UnsupportedSearchException
      */

@@ -371,7 +371,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      *            the domain
      * @param mapping
      *            the mapping
-     * @throws InvalidMappingException
+     * @throws RecipientRewriteTableException
      */
     protected abstract void addMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException;
 
@@ -384,7 +384,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      *            the domain
      * @param mapping
      *            the mapping
-     * @throws InvalidMappingException
+     * @throws RecipientRewriteTableException
      */
     protected abstract void removeMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException;
 
@@ -469,7 +469,6 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      * 
      * @param user the given user String
      * @return fixedUser the fixed user String
-     * @throws InvalidMappingException get thrown on invalid argument
      */
     protected String getFixedUser(String user) {
         if (user != null) {
@@ -489,7 +488,6 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      * 
      * @param domain the given domain String
      * @return fixedDomain the fixed domain String
-     * @throws InvalidMappingException get thrown on invalid argument
      */
     protected String getFixedDomain(String domain) {
         if (domain != null) {

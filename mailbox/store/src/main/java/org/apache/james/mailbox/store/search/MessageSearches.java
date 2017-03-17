@@ -136,9 +136,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
     /**
      * Does the row match the given criteria?
-     * 
-     * @param query
-     *            <code>SearchQuery</code>, not null
+     *
      * @param message
      *            <code>MailboxMessage</code>, not null
      * @return <code>true</code> if the row matches the given criteria,
