@@ -93,12 +93,13 @@ public class DeliveryRunnable implements Runnable {
     }
 
     private void runStep() {
-        TimeMetric timeMetric = metricFactory.timer(REMOTE_DELIVERY_TRIAL);
+        TimeMetric timeMetric = null;
         try {
             // Get the 'mail' object that is ready for deliverying. If no message is
             // ready, the 'accept' will block until message is ready.
             // The amount of time to block is determined by the 'getWaitTime' method of the MultipleDelayFilter.
             MailQueue.MailQueueItem queueItem = queue.deQueue();
+            timeMetric = metricFactory.timer(REMOTE_DELIVERY_TRIAL);
             Mail mail = queueItem.getMail();
 
             try {
@@ -124,7 +125,9 @@ public class DeliveryRunnable implements Runnable {
                 logger.error("Exception caught in RemoteDelivery.run()", e);
             }
         } finally {
-            timeMetric.stopAndPublish();
+            if (timeMetric != null) {
+                timeMetric.stopAndPublish();
+            }
         }
     }
 
