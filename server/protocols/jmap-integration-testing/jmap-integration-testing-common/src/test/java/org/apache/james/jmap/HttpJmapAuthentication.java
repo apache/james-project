@@ -42,19 +42,23 @@ public class HttpJmapAuthentication {
             .pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS)
             .and().with()
             .pollDelay(Duration.ONE_HUNDRED_MILLISECONDS)
-            .await();
+            .await()
+            .atMost(30, TimeUnit.SECONDS)
+            .ignoreExceptions();
 
-    public static AccessToken authenticateJamesUser(URIBuilder uriBuilder, String username, String password) throws ClientProtocolException, IOException, URISyntaxException {
+    public static AccessToken authenticateJamesUser(URIBuilder uriBuilder, String username, String password) {
+        return CALMLY_AWAIT.until(
+            () -> doAuthenticate(uriBuilder, username, password), IsAnything.anything());
+    }
+
+    public static AccessToken doAuthenticate(URIBuilder uriBuilder, String username, String password) throws ClientProtocolException, IOException, URISyntaxException {
         String continuationToken = getContinuationToken(uriBuilder, username);
 
-        Response response = CALMLY_AWAIT
-                .atMost(30, TimeUnit.SECONDS)
-                .ignoreExceptions()
-                .until(() -> postAuthenticate(uriBuilder, password, continuationToken), IsAnything.anything());
+        Response response = postAuthenticate(uriBuilder, password, continuationToken);
 
         return AccessToken.fromString(
-                    JsonPath.parse(response.returnContent().asString())
-                    .read("accessToken"));
+            JsonPath.parse(response.returnContent().asString())
+                .read("accessToken"));
     }
 
     private static Response postAuthenticate(URIBuilder uriBuilder, String password, String continuationToken) throws ClientProtocolException, IOException, URISyntaxException {
@@ -67,10 +71,11 @@ public class HttpJmapAuthentication {
 
     private static String getContinuationToken(URIBuilder uriBuilder, String username) throws ClientProtocolException, IOException, URISyntaxException {
         Response response = Request.Post(uriBuilder.setPath("/authentication").build())
-            .bodyString("{\"username\": \"" + username + "\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}", 
-                    ContentType.APPLICATION_JSON)
+            .bodyString("{\"username\": \"" + username + "\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}",
+                ContentType.APPLICATION_JSON)
             .setHeader("Accept", ContentType.APPLICATION_JSON.getMimeType())
             .execute();
+
         return JsonPath.parse(response.returnContent().asString())
             .read("continuationToken");
     }
