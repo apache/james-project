@@ -26,4 +26,6 @@ Note that you need to run a guice/cassandra version of James.
 
  - Percentiles for IMAP / JMAP / SMTP commands
  - Requests counts for IMAP / JMAP / SMTP commands
+ - Statistics about Mailet / Matcher execution times
+ - Statistics about Mail queues
  - Some other, diverse informations on the James server internals
