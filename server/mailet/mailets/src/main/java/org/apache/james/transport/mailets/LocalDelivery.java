@@ -50,21 +50,18 @@ public class LocalDelivery extends GenericMailet {
     public static final String LOCAL_DELIVERED_MAILS_METRIC_NAME = "localDeliveredMails";
     private final UsersRepository usersRepository;
     private final MailboxManager mailboxManager;
-    private final RecipientRewriteTable recipientRewriteTable;
     private final MetricFactory metricFactory;
     private MailDispatcher mailDispatcher;
 
     @Inject
-    public LocalDelivery(org.apache.james.rrt.api.RecipientRewriteTable rrt, UsersRepository usersRepository,
-                         @Named("mailboxmanager") MailboxManager mailboxManager, DomainList domainList, MetricFactory metricFactory) {
+    public LocalDelivery(UsersRepository usersRepository, @Named("mailboxmanager") MailboxManager mailboxManager,
+                         MetricFactory metricFactory) {
         this.metricFactory = metricFactory;
         this.usersRepository = usersRepository;
         this.mailboxManager = mailboxManager;
-        this.recipientRewriteTable = new RecipientRewriteTable(rrt, domainList);
     }
 
     public void service(Mail mail) throws MessagingException {
-        recipientRewriteTable.service(mail);
         mailDispatcher.dispatch(mail);
     }
 
@@ -73,8 +70,6 @@ public class LocalDelivery extends GenericMailet {
     }
 
     public void init() throws MessagingException {
-        recipientRewriteTable.init(getMailetConfig());
-
         Log log = CommonsLoggingAdapter.builder()
             .wrappedLogger(getMailetContext().getLogger())
             .quiet(getInitParameter("quiet", false))

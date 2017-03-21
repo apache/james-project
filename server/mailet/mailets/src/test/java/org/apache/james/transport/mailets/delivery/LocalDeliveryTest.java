@@ -76,7 +76,7 @@ public class LocalDeliveryTest {
 
         MetricFactory metricFactory = mock(MetricFactory.class);
         when(metricFactory.generate(anyString())).thenReturn(mock(Metric.class));
-        testee = new LocalDelivery(recipientRewriteTable, usersRepository, mailboxManager, domainList, metricFactory);
+        testee = new LocalDelivery(usersRepository, mailboxManager, metricFactory);
 
         user = mock(MailboxSession.User.class);
         MailboxSession session = mock(MailboxSession.class);
