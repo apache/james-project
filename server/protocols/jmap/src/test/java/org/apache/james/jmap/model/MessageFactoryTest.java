@@ -19,8 +19,6 @@
 package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.hamcrest.CoreMatchers.is;
 
 import java.io.ByteArrayInputStream;
 import java.time.ZoneId;
@@ -35,14 +33,14 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
+import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.mailbox.inmemory.JsoupTextExtractor;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -62,13 +60,12 @@ public class MessageFactoryTest {
     
     @Before
     public void setUp() {
-        htmlTextExtractor = mock(HtmlTextExtractor.class);
-        TextExtractor textExtractor = new JsoupTextExtractor();
+        htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new TikaTextExtractor());
 
-        messagePreview = new MessagePreviewGenerator(htmlTextExtractor);
+        messagePreview = new MessagePreviewGenerator();
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
 
-        messageFactory = new MessageFactory(messagePreview, messageContentExtractor, textExtractor);
+        messageFactory = new MessageFactory(messagePreview, messageContentExtractor, htmlTextExtractor);
     }
     @Test
     public void emptyMailShouldBeLoadedIntoMessage() throws Exception {
@@ -190,6 +187,42 @@ public class MessageFactoryTest {
                 .build();
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
         assertThat(testee.getTextBody()).hasValue("Mail body");
+    }
+
+    @Test
+    public void textBodyShouldNotOverrideWhenItIsThere() throws Exception {
+        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Subject\n"
+            + "MIME-Version: 1.0\n"
+            + "Content-Type: multipart/alternative;\n"
+            + "\tboundary=\"----=_Part_370449_1340169331.1489506420401\"\n"
+            + "\n"
+            + "------=_Part_370449_1340169331.1489506420401\n"
+            + "Content-Type: text/plain; charset=UTF-8\n"
+            + "Content-Transfer-Encoding: 7bit\n"
+            + "\n"
+            + "My plain message\n"
+            + "------=_Part_370449_1340169331.1489506420401\n"
+            + "Content-Type: text/html; charset=UTF-8\n"
+            + "Content-Transfer-Encoding: 7bit\n"
+            + "\n"
+            + "<a>The </a> <strong>HTML</strong> message"
+        ).getBytes(Charsets.UTF_8));
+
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(new Flags(Flag.SEEN))
+            .internalDate(INTERNAL_DATE)
+            .size(1000)
+            .content(messageContent)
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(TestMessageId.of(2))
+            .build();
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+
+        assertThat(testee.getTextBody())
+            .isPresent()
+            .isEqualTo(Optional.of("My plain message"));
     }
 
     @Test
@@ -364,5 +397,138 @@ public class MessageFactoryTest {
         assertThat(testee.getPreview()).isEqualTo(MessagePreviewGenerator.NO_BODY);
         assertThat(testee.getHtmlBody()).contains("");
         assertThat(testee.getTextBody()).isEmpty();
+    }
+
+    @Test
+    public void previewBodyShouldReturnTruncatedStringWithoutHtmlTagWhenHtmlBodyContainTags() throws Exception {
+        String body = "This is a <b>HTML</b> mail containing <u>underlined part</u>, <i>italic part</i> and <u><i>underlined AND italic part</i></u>9999999999"
+            + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
+            + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
+            + "000000000011111111112222222222333333333344444444445555555";
+        String expected = "This is a HTML mail containing underlined part, italic part and underlined AND italic part9999999999"
+            + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
+            + "00000000001111111111222222222233333333334444444444555...";
+
+        ByteArrayInputStream messageContent = new ByteArrayInputStream(("CContent-Type: text/html\r\n"
+            + "Subject: message 1 subject\r\n"
+            + "\r\n"
+            + body).getBytes(Charsets.UTF_8));
+
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(new Flags(Flag.SEEN))
+            .size(messageContent.read())
+            .internalDate(INTERNAL_DATE)
+            .content(messageContent)
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(TestMessageId.of(2))
+            .build();
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+
+        assertThat(testee.getPreview()).isEqualTo(expected);
+    }
+
+    @Test
+    public void previewBodyShouldReturnTextBodyWhenNoHtmlBody() throws Exception {
+        ByteArrayInputStream messageContent = new ByteArrayInputStream(("CContent-Type: text/plain\r\n"
+            + "Subject: message 1 subject\r\n"
+            + "\r\n"
+            + "My plain text").getBytes(Charsets.UTF_8));
+
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(new Flags(Flag.SEEN))
+            .size(messageContent.read())
+            .internalDate(INTERNAL_DATE)
+            .content(messageContent)
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(TestMessageId.of(2))
+            .build();
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+
+        assertThat(testee.getPreview()).isEqualTo("My plain text");
+    }
+
+    @Test
+    public void previewBodyShouldReturnStringEmptyWhenNoHtmlBodyAndNoTextBody() throws Exception {
+        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Subject: message 1 subject\r\n").getBytes(Charsets.UTF_8));
+
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(new Flags(Flag.SEEN))
+            .size(messageContent.read())
+            .internalDate(INTERNAL_DATE)
+            .content(messageContent)
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(TestMessageId.of(2))
+            .build();
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+
+        assertThat(testee)
+            .extracting(Message::getPreview, Message::getHtmlBody, Message::getTextBody)
+            .containsExactly(MessagePreviewGenerator.NO_BODY, Optional.empty(), Optional.of(""));
+    }
+
+    @Test
+    public void previewBodyShouldReturnStringEmptyWhenNoMeaningHtmlBodyAndNoTextBody() throws Exception {
+        ByteArrayInputStream messageContent = new ByteArrayInputStream(("CContent-Type: text/html\r\n"
+            + "Subject: message 1 subject\r\n"
+            + "\r\n"
+            + "<html><body></body></html>").getBytes(Charsets.UTF_8));
+
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(new Flags(Flag.SEEN))
+            .size(messageContent.read())
+            .internalDate(INTERNAL_DATE)
+            .content(messageContent)
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(TestMessageId.of(2))
+            .build();
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+
+        assertThat(testee)
+            .extracting(Message::getPreview, Message::getHtmlBody, Message::getTextBody)
+            .containsExactly(MessagePreviewGenerator.NO_BODY, Optional.of("<html><body></body></html>"), Optional.empty());
+    }
+
+    @Test
+    public void previewBodyShouldReturnTextBodyWhenNoMeaningHtmlBodyAndTextBody() throws Exception {
+        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Subject\n"
+            + "MIME-Version: 1.0\n"
+            + "Content-Type: multipart/alternative;\n"
+            + "\tboundary=\"----=_Part_370449_1340169331.1489506420401\"\n"
+            + "\n"
+            + "------=_Part_370449_1340169331.1489506420401\n"
+            + "Content-Type: text/plain; charset=UTF-8\n"
+            + "Content-Transfer-Encoding: 7bit\n"
+            + "\n"
+            + "My plain message\n"
+            + "------=_Part_370449_1340169331.1489506420401\n"
+            + "Content-Type: text/html; charset=UTF-8\n"
+            + "Content-Transfer-Encoding: 7bit\n"
+            + "\n"
+            + "<html></html>"
+        ).getBytes(Charsets.UTF_8));
+
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(new Flags(Flag.SEEN))
+            .size(messageContent.read())
+            .internalDate(INTERNAL_DATE)
+            .content(messageContent)
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(TestMessageId.of(2))
+            .build();
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+
+        assertThat(testee)
+            .extracting(Message::getPreview, Message::getHtmlBody, Message::getTextBody)
+            .containsExactly("My plain message", Optional.of("<html></html>"), Optional.of("My plain message"));
     }
 }

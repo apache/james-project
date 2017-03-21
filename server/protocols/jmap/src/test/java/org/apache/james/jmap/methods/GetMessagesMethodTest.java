@@ -20,9 +20,7 @@ package org.apache.james.jmap.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
@@ -43,20 +41,21 @@ import org.apache.james.jmap.model.MessageContentExtractor;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
+import org.apache.james.jmap.utils.HtmlTextExtractor;
+import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryMessageIdManager;
-import org.apache.james.mailbox.inmemory.JsoupTextExtractor;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.assertj.core.api.Condition;
 import org.assertj.core.data.MapEntry;
@@ -117,12 +116,10 @@ public class GetMessagesMethodTest {
     @Before
     public void setup() throws Exception {
         clientId = ClientId.of("#0");
-        MessagePreviewGenerator messagePreview = mock(MessagePreviewGenerator.class);
-        when(messagePreview.forHTMLBody(any())).thenReturn("html preview");
-        when(messagePreview.forTextBody(any())).thenReturn("text preview");
+        HtmlTextExtractor htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new TikaTextExtractor());
+        MessagePreviewGenerator messagePreview = new MessagePreviewGenerator();
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
-        TextExtractor textExtractor = new JsoupTextExtractor();
-        MessageFactory messageFactory = new MessageFactory(messagePreview, messageContentExtractor, textExtractor);
+        MessageFactory messageFactory = new MessageFactory(messagePreview, messageContentExtractor, htmlTextExtractor);
         InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
         GroupMembershipResolver groupMembershipResolver = inMemoryIntegrationResources.createGroupMembershipResolver();
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(groupMembershipResolver);
@@ -248,7 +245,6 @@ public class GetMessagesMethodTest {
                 .build();
 
         Stream<JmapResponse> result = testee.process(request, clientId, session);
-
         assertThat(result).hasSize(1)
             .extracting(JmapResponse::getProperties)
             .flatExtracting(Optional::get)
@@ -271,7 +267,6 @@ public class GetMessagesMethodTest {
         Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.subject);
 
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
-
         assertThat(result).hasSize(1)
             .extracting(JmapResponse::getProperties)
             .flatExtracting(Optional::get)

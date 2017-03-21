@@ -21,46 +21,20 @@ package org.apache.james.jmap.model;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
-import org.apache.james.jmap.utils.HtmlTextExtractor;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 
 public class MessagePreviewGenerator {
     
     public static final String NO_BODY = "(Empty)";
     public static final int MAX_PREVIEW_LENGTH = 256;
 
-    private final HtmlTextExtractor htmlTextExtractor;
-
-    @Inject
-    public MessagePreviewGenerator(HtmlTextExtractor htmlTextExtractor) {
-        this.htmlTextExtractor = htmlTextExtractor;
-    }
-
-    public String forHTMLBody(Optional<String> body) {
-        return body.filter(text -> !text.isEmpty())
-                .map(this::asText)
+    public String compute(Optional<String> textBody) {
+        return textBody.filter(text -> !text.isEmpty())
                 .map(this::abbreviate)
                 .orElse(NO_BODY);
     }
 
-    public String forTextBody(Optional<String> body) {
-        return body.filter(text -> !text.isEmpty())
-                .map(this::abbreviate)
-                .orElse(NO_BODY);
-    }
-
-    @VisibleForTesting String asText(String body) throws IllegalArgumentException {
-       Preconditions.checkArgument(body != null);
-       return htmlTextExtractor.toPlainText(body);
-    }
-
-    @VisibleForTesting String abbreviate(String body) {
+    private String abbreviate(String body) {
         return StringUtils.abbreviate(body, MAX_PREVIEW_LENGTH);
     }
-
 }

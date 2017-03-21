@@ -53,6 +53,7 @@ import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.send.MailFactory;
 import org.apache.james.jmap.send.MailMetadata;
 import org.apache.james.jmap.send.MailSpool;
+import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -117,11 +118,11 @@ public class SetMessagesCreationProcessorTest {
 
     @Before
     public void setUp() throws MailboxException {
+        HtmlTextExtractor htmlTextExtractor = mock(HtmlTextExtractor.class);
         MessagePreviewGenerator messagePreview = mock(MessagePreviewGenerator.class);
-        TextExtractor textExtractor = mock(TextExtractor.class);
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
-        when(messagePreview.forTextBody(any())).thenReturn("text preview");
-        messageFactory = new MessageFactory(messagePreview, messageContentExtractor, textExtractor);
+        when(messagePreview.compute(any())).thenReturn("text preview");
+        messageFactory = new MessageFactory(messagePreview, messageContentExtractor, htmlTextExtractor);
         mockedMailSpool = mock(MailSpool.class);
         mockedMailFactory = mock(MailFactory.class);
         mockedAttachmentManager = mock(AttachmentManager.class);
