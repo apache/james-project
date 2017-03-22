@@ -26,7 +26,6 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.cli.MissingArgumentException;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -46,7 +45,7 @@ public class FileConfigurationProvider implements ConfigurationProvider {
     private final String configurationPrefix;
 
     @Inject
-    public FileConfigurationProvider(FileSystem fileSystem, @Named(CommonServicesModule.CONFIGURATION_PATH) String configurationPrefix) throws MissingArgumentException {
+    public FileConfigurationProvider(FileSystem fileSystem, @Named(CommonServicesModule.CONFIGURATION_PATH) String configurationPrefix) {
         this.fileSystem = fileSystem;
         this.configurationPrefix = configurationPrefix;
     }

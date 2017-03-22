@@ -24,7 +24,6 @@ import java.util.Optional;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.commons.cli.MissingArgumentException;
 import org.apache.james.core.JamesServerResourceLoader;
 import org.apache.james.core.filesystem.FileSystemImpl;
 import org.apache.james.filesystem.api.FileSystem;
@@ -34,8 +33,8 @@ import org.apache.james.modules.server.ConfigurationProviderModule;
 import org.apache.james.modules.server.DNSServiceModule;
 import org.apache.james.modules.server.DropWizardMetricsModule;
 import org.apache.james.onami.lifecycle.PreDestroyModule;
-import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.GuiceProbe;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;

@@ -17,36 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.modules;
 
-import javax.persistence.EntityManagerFactory;
+public class MissingArgumentException extends RuntimeException {
 
-import org.apache.james.modules.data.JPADataModule;
-import org.apache.james.modules.protocols.ProtocolHandlerModule;
-import org.apache.james.modules.protocols.SMTPServerModule;
-import org.apache.james.modules.server.ActiveMQQueueModule;
-import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
-import org.apache.openjpa.persistence.OpenJPAPersistence;
-
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
-
-public class JPAJamesServerMain {
-
-    public static final Module protocols = Modules.combine(
-            new ProtocolHandlerModule(),
-            new SMTPServerModule());
-    
-    public static final Module jpaServerModule = Modules.combine(
-        new JPADataModule(),
-        (binder) -> binder.bind(EntityManagerFactory.class).toProvider(() -> OpenJPAPersistence.getEntityManagerFactory()),
-        new ActiveMQQueueModule(),
-        new RawPostDequeueDecoratorModule());
-
-    public static void main(String[] args) throws Exception {
-        GuiceJamesServer server = new GuiceJamesServer()
-                    .combineWith(jpaServerModule, protocols);
-        server.start();
+    public MissingArgumentException(String message) {
+        super(message);
     }
 
 }

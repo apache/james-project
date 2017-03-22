@@ -133,14 +133,6 @@
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-tool</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>james-server-cli</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-core</artifactId>
                 </dependency>
                 <dependency>
@@ -197,17 +189,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>james-server-guice-mailbox</artifactId>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-mailet</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>james-server-guice-managedsieve</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -237,15 +219,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>james-server-protocols-imap4</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-protocols-library</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>james-server-protocols-pop3</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -262,10 +236,6 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-onami</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.james.protocols</groupId>
-                    <artifactId>protocols-imap</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>com.github.steveash.guavate</groupId>

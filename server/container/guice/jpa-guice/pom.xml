@@ -235,6 +235,10 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
+                    <artifactId>james-server-guice-jmx</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-lmtp</artifactId>
                 </dependency>
                 <dependency>

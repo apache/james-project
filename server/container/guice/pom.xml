@@ -57,6 +57,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-jmx</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-lmtp</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -109,6 +114,7 @@
         <module>jpa-common-guice</module>
         <module>jpa-guice</module>
         <module>jpa-smtp</module>
+        <module>jmx</module>
         <module>onami</module>
         <module>protocols/imap</module>
         <module>protocols/jmap</module>
