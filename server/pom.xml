@@ -188,7 +188,7 @@
         <assertj-3.version>3.3.0</assertj-3.version>
         <testcontainers-version>1.1.7</testcontainers-version>
         <guavate.version>1.0.0</guavate.version>
-        <metrics.version>3.1.0</metrics.version>
+        <metrics.version>3.2.1</metrics.version>
         <joda.version>2.9.4</joda.version>
     </properties>
 
@@ -1373,6 +1373,11 @@
             <dependency>
                 <groupId>io.dropwizard.metrics</groupId>
                 <artifactId>metrics-core</artifactId>
+                <version>${metrics.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-jvm</artifactId>
                 <version>${metrics.version}</version>
             </dependency>
             <!-- This needed to let the bundle plugin to generate the right import statement -->

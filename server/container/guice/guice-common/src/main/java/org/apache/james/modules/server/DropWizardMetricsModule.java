@@ -25,6 +25,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.dropwizard.DropWizardJVMMetrics;
 import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
 import org.apache.james.utils.ConfigurationPerformer;
 
@@ -43,6 +44,7 @@ public class DropWizardMetricsModule extends AbstractModule {
     protected void configure() {
         bind(MetricRegistry.class).in(Scopes.SINGLETON);
         bind(DropWizardMetricFactory.class).in(Scopes.SINGLETON);
+        bind(DropWizardJVMMetrics.class).in(Scopes.SINGLETON);
         bind(MetricFactory.class).to(DropWizardMetricFactory.class);
 
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(DropWizardConfigurationPerformer.class);
@@ -76,15 +78,18 @@ public class DropWizardMetricsModule extends AbstractModule {
 
     public static class DropWizardInitializer implements Configurable {
         private final DropWizardMetricFactory dropWizardMetricFactory;
+        private final DropWizardJVMMetrics dropWizardJVMMetrics;
 
         @Inject
-        public DropWizardInitializer(DropWizardMetricFactory dropWizardMetricFactory) {
+        public DropWizardInitializer(DropWizardMetricFactory dropWizardMetricFactory, DropWizardJVMMetrics dropWizardJVMMetrics) {
             this.dropWizardMetricFactory = dropWizardMetricFactory;
+            this.dropWizardJVMMetrics = dropWizardJVMMetrics;
         }
 
         @Override
         public void configure(HierarchicalConfiguration config) throws ConfigurationException {
             dropWizardMetricFactory.start();
+            dropWizardJVMMetrics.start();
         }
     }
 
