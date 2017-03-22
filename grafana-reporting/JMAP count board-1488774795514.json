@@ -1,8 +1,8 @@
 {
   "__inputs": [
     {
-      "name": "DS_ELASTICSEARCH",
-      "label": "ElasticSearch",
+      "name": "DS_JAMES_ES",
+      "label": "james es",
       "description": "",
       "type": "datasource",
       "pluginId": "elasticsearch",
@@ -42,22 +42,26 @@
   "rows": [
     {
       "collapse": false,
-      "height": 194,
+      "height": 178,
       "panels": [
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
-          "id": 23,
+          "id": 29,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "alignAsTable": false,
+            "avg": true,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": true,
             "min": false,
+            "rightSide": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -67,7 +71,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -78,7 +87,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -90,10 +99,19 @@
                 {
                   "field": "count",
                   "id": "1",
+                  "inlineScript": null,
                   "meta": {},
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
               "query": "name:JMAP-request",
@@ -127,11 +145,11 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             }
           ]
@@ -139,17 +157,21 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
-          "id": 2,
+          "id": 30,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "alignAsTable": false,
+            "avg": true,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": true,
             "min": false,
+            "rightSide": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -159,7 +181,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -170,7 +197,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -182,10 +209,19 @@
                 {
                   "field": "count",
                   "id": "1",
+                  "inlineScript": null,
                   "meta": {},
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
               "query": "name:JMAP-getMailboxes",
@@ -219,11 +255,11 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             }
           ]
@@ -231,17 +267,21 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
-          "id": 11,
+          "id": 28,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "alignAsTable": false,
+            "avg": true,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": true,
             "min": false,
+            "rightSide": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -251,7 +291,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -262,7 +307,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -274,10 +319,19 @@
                 {
                   "field": "count",
                   "id": "1",
+                  "inlineScript": null,
                   "meta": {},
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
               "query": "name:JMAP-getMessageList",
@@ -311,11 +365,11 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             }
           ]
@@ -323,17 +377,21 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
-          "id": 21,
+          "id": 31,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "alignAsTable": false,
+            "avg": true,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": true,
             "min": false,
+            "rightSide": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -343,7 +401,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -354,7 +417,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -366,10 +429,19 @@
                 {
                   "field": "count",
                   "id": "1",
+                  "inlineScript": null,
                   "meta": {},
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
               "query": "name:JMAP-getMessages",
@@ -403,11 +475,11 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             }
           ]
@@ -427,17 +499,21 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
-          "id": 7,
+          "id": 32,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "alignAsTable": false,
+            "avg": true,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": true,
             "min": false,
+            "rightSide": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -447,7 +523,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -458,7 +539,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -470,10 +551,19 @@
                 {
                   "field": "count",
                   "id": "1",
+                  "inlineScript": null,
                   "meta": {},
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
               "query": "name:JMAP-setMessages",
@@ -507,11 +597,11 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             }
           ]
@@ -519,17 +609,21 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
-          "id": 20,
+          "id": 33,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "alignAsTable": false,
+            "avg": true,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": true,
             "min": false,
+            "rightSide": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -539,7 +633,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -550,7 +649,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -562,10 +661,19 @@
                 {
                   "field": "count",
                   "id": "1",
+                  "inlineScript": null,
                   "meta": {},
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
               "query": "name:JMAP-setMailboxes",
@@ -599,11 +707,11 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             }
           ]
@@ -611,17 +719,21 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
-          "id": 9,
+          "id": 34,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "alignAsTable": false,
+            "avg": true,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": true,
             "min": false,
+            "rightSide": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -631,7 +743,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -642,7 +759,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -654,10 +771,19 @@
                 {
                   "field": "count",
                   "id": "1",
+                  "inlineScript": null,
                   "meta": {},
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
               "query": "name:JMAP-getVacationResponse",
@@ -691,11 +817,11 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             }
           ]
@@ -703,17 +829,21 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
-          "id": 17,
+          "id": 35,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "alignAsTable": false,
+            "avg": true,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": true,
             "min": false,
+            "rightSide": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -723,7 +853,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -734,7 +869,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -746,10 +881,19 @@
                 {
                   "field": "count",
                   "id": "1",
+                  "inlineScript": null,
                   "meta": {},
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
               "query": "name:JMAP-setVacationResponse",
@@ -783,11 +927,11 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             }
           ]
@@ -807,17 +951,21 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
-          "id": 22,
+          "id": 36,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "alignAsTable": false,
+            "avg": true,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": true,
             "min": false,
+            "rightSide": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -827,7 +975,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -838,7 +991,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -850,10 +1003,19 @@
                 {
                   "field": "count",
                   "id": "1",
+                  "inlineScript": null,
                   "meta": {},
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
               "query": "name:JMAP-upload-post",
@@ -887,11 +1049,11 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             }
           ]
@@ -899,17 +1061,21 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
-          "id": 18,
+          "id": 11,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "alignAsTable": false,
+            "avg": true,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": true,
             "min": false,
+            "rightSide": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -919,7 +1085,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -930,7 +1101,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -942,10 +1113,19 @@
                 {
                   "field": "count",
                   "id": "1",
+                  "inlineScript": null,
                   "meta": {},
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
               "query": "name:JMAP-download-post",
@@ -979,11 +1159,11 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             }
           ]
@@ -991,17 +1171,21 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
-          "id": 19,
+          "id": 37,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "alignAsTable": false,
+            "avg": true,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": true,
             "min": false,
+            "rightSide": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -1011,7 +1195,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -1022,7 +1211,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -1034,10 +1223,19 @@
                 {
                   "field": "count",
                   "id": "1",
+                  "inlineScript": null,
                   "meta": {},
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
               "query": "name:JMAP-download-get",
@@ -1071,11 +1269,11 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             }
           ]
@@ -1083,17 +1281,21 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
-          "id": 26,
+          "id": 38,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "alignAsTable": false,
+            "avg": true,
+            "current": true,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": true,
             "min": false,
+            "rightSide": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -1103,7 +1305,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -1114,7 +1321,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -1126,10 +1333,19 @@
                 {
                   "field": "count",
                   "id": "1",
+                  "inlineScript": null,
                   "meta": {},
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
               "query": "name:JMAP-authentication-post",
@@ -1163,11 +1379,11 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             }
           ]
@@ -1188,8 +1404,8 @@
     "list": []
   },
   "time": {
-    "from": "now/d",
-    "to": "now/d"
+    "from": "now-2d",
+    "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -1218,5 +1434,5 @@
   },
   "timezone": "browser",
   "title": "JMAP count board",
-  "version": 9
+  "version": 7
 }

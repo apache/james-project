@@ -164,13 +164,13 @@
           "fill": 1,
           "id": 28,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "avg": true,
+            "current": true,
+            "max": true,
             "min": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -180,7 +180,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -191,7 +196,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -207,9 +212,17 @@
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
-              "query": "name:\"enqueuedMails:spool\"",
+              "query": "name:\"enqueuedMail:spool\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -217,7 +230,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "enqueueMailTime:spool",
+          "title": "enqueuedMail:spool",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -240,11 +253,11 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             }
           ]
@@ -586,13 +599,13 @@
           "fill": 1,
           "id": 32,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "avg": true,
+            "current": true,
+            "max": true,
             "min": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -602,7 +615,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -613,7 +631,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -629,9 +647,17 @@
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
-              "query": "name:\"enqueuedMails:outgoing\"",
+              "query": "name:\"enqueuedMail:outgoing\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -639,7 +665,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "enqueueMailTime:spool",
+          "title": "enqueuedMails:outgoing",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -662,11 +688,11 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             }
           ]
@@ -752,7 +778,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "enqueueMailTime:spool",
+          "title": "enqueueMailTime:outgoing",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -844,7 +870,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "mailQueueSize:spool",
+          "title": "mailQueueSize:outgoing",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -1047,5 +1073,5 @@
   },
   "timezone": "browser",
   "title": "MailQueue",
-  "version": 13
+  "version": 21
 }
