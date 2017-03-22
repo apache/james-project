@@ -49,7 +49,6 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.jms.JMSMailQueue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
-import org.springframework.jms.connection.SessionProxy;
 
 /**
  * <p>
@@ -227,16 +226,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
      * @throws JMSException
      */
     protected ActiveMQSession getAMQSession(Session session) {
-        ActiveMQSession amqSession;
-
-        if (session instanceof SessionProxy) {
-            // handle Springs CachingConnectionFactory
-            amqSession = (ActiveMQSession) ((SessionProxy) session).getTargetSession();
-        } else {
-            // just cast as we have no other idea
-            amqSession = (ActiveMQSession) session;
-        }
-        return amqSession;
+        return (ActiveMQSession) session;
     }
 
     @Override
