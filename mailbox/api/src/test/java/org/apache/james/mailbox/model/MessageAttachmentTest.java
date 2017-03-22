@@ -21,9 +21,6 @@ package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.mailbox.model.Attachment;
-import org.apache.james.mailbox.model.Cid;
-import org.apache.james.mailbox.model.MessageAttachment;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
@@ -58,7 +55,7 @@ public class MessageAttachmentTest {
     }
 
     @Test
-    public void buildShouldSetIsInlineDefaultValueWhenNotGiven() {
+    public void buildShouldAcceptIsInlineAndNoCid() {
         Attachment attachment = Attachment.builder()
                 .bytes("content".getBytes())
                 .type("type")
@@ -66,22 +63,10 @@ public class MessageAttachmentTest {
 
         MessageAttachment messageAttachment = MessageAttachment.builder()
             .attachment(attachment)
-            .build();
-
-        assertThat(messageAttachment.isInline()).isFalse();
-    }
-
-    @Test(expected=IllegalStateException.class)
-    public void buildShouldThrowWhenIsInlineAndNoCid() {
-        Attachment attachment = Attachment.builder()
-                .bytes("content".getBytes())
-                .type("type")
-                .build();
-
-        MessageAttachment.builder()
-            .attachment(attachment)
             .isInline(true)
             .build();
+
+        assertThat(messageAttachment.isInline()).isTrue();
     }
 
     @Test
@@ -100,5 +85,55 @@ public class MessageAttachmentTest {
             .build();
 
         assertThat(messageAttachment).isEqualTo(expectedMessageAttachment);
+    }
+
+    @Test
+    public void isInlinedWithCidShouldReturnTrueWhenIsInlineAndHasCid() throws Exception {
+        Attachment attachment = Attachment.builder()
+            .bytes("content".getBytes())
+            .type("type")
+            .build();
+
+        MessageAttachment messageAttachment = MessageAttachment.builder()
+            .attachment(attachment)
+            .name("name")
+            .cid(Cid.from("cid"))
+            .isInline(true)
+            .build();
+
+        assertThat(messageAttachment.isInlinedWithCid()).isTrue();
+    }
+
+    @Test
+    public void isInlinedWithCidShouldReturnFalseWhenIsNotInline() throws Exception {
+        Attachment attachment = Attachment.builder()
+            .bytes("content".getBytes())
+            .type("type")
+            .build();
+
+        MessageAttachment messageAttachment = MessageAttachment.builder()
+            .attachment(attachment)
+            .name("name")
+            .cid(Cid.from("cid"))
+            .isInline(false)
+            .build();
+
+        assertThat(messageAttachment.isInlinedWithCid()).isFalse();
+    }
+
+    @Test
+    public void isInlinedWithCidShouldReturnFalseWhenIsInlineButNoCid() throws Exception {
+        Attachment attachment = Attachment.builder()
+            .bytes("content".getBytes())
+            .type("type")
+            .build();
+
+        MessageAttachment messageAttachment = MessageAttachment.builder()
+            .attachment(attachment)
+            .name("name")
+            .isInline(true)
+            .build();
+
+        assertThat(messageAttachment.isInlinedWithCid()).isFalse();
     }
 }

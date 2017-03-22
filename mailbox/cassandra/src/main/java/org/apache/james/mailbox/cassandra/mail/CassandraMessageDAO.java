@@ -381,9 +381,6 @@ public class CassandraMessageDAO {
             public MessageAttachmentRepresentation build() {
                 Preconditions.checkState(attachmentId != null, "'attachmentId' is mandatory");
                 boolean builtIsInLine = isInline.orElse(false);
-                if (builtIsInLine && !cid.isPresent()) {
-                    throw new IllegalStateException("'cid' is mandatory for inline attachments");
-                }
                 return new MessageAttachmentRepresentation(attachmentId, name, cid, builtIsInLine);
             }
         }

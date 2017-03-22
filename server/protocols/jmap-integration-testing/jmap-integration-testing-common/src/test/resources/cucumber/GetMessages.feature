@@ -248,3 +248,16 @@ Feature: GetMessages method
     And the list should contain 1 message
     And the textBody of the message is "The Test User created an issue"
     And the htmlBody of the message is "<a>The Test User</a> <strong>created</strong> an issue"
+
+  Scenario: Retrieving message with inline attachment but no CID should convert that inlined attachment to normal attachment
+    Given the user has a message "m1" in "INBOX" mailbox with inline attachment but no CID
+    When the user ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the hasAttachment of the message is "true"
+    And the list of attachments of the message contains 1 attachments
+    And the first attachment is:
+      |key      | value                                     |
+      |type     |"application/pdf"                               |
+      |cid      |null                                       |
+      |isInline |true                                      |

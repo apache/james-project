@@ -208,6 +208,11 @@ public class GetMessagesMethodStepdefs {
         appendMessage(messageName, "eml/noTextBodyButHtmlBody.eml");
     }
 
+    @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with inline attachment but no CID$")
+    public void appendMessageWithInlineAttachmentButNoCid(String messageName, String mailbox) throws Throwable {
+        appendMessage(messageName, "eml/mailWithInlinedAttachmentButNoCid.eml");
+    }
+
     private void appendMessage(String messageName, String emlFileName) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         MessageId id = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(userStepdefs.lastConnectedUser,

@@ -244,7 +244,7 @@ public class Message {
 
     private static boolean hasAttachment(List<Attachment> attachments) {
         return attachments.stream()
-                .filter(attachment -> !attachment.isIsInline())
+                .filter(attachment -> !attachment.isInlinedWithCid())
                 .findAny()
                 .isPresent();
     }

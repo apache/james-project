@@ -138,6 +138,14 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     private static final Logger LOG = LoggerFactory.getLogger(StoreMessageManager.class);
 
+    private static final Predicate<MessageAttachment> NOT_INLINE_ATTACHMENT() {
+        return new Predicate<MessageAttachment>() {
+            @Override
+            public boolean apply(MessageAttachment input) {
+                return !input.isInlinedWithCid();
+            }
+        };
+    }
 
     private final Mailbox mailbox;
 
@@ -453,12 +461,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     }
 
     private boolean hasNonInlinedAttachment(List<MessageAttachment> attachments) {
-        return FluentIterable.from(attachments).anyMatch(new Predicate<MessageAttachment>() {
-            @Override
-            public boolean apply(MessageAttachment input) {
-                return !input.isInline();
-            }
-        });
+        return FluentIterable.from(attachments).anyMatch(NOT_INLINE_ATTACHMENT());
     }
 
     private List<MessageAttachment> extractAttachments(SharedFileInputStream contentIn) {

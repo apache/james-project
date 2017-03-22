@@ -3144,7 +3144,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void setMessagesShouldReturnAttachmentsWhenMessageHasWrongInlinedAttachment() throws Exception {
+    public void setMessagesShouldReturnAttachmentsWhenMessageHasInlinedAttachmentButNoCid() throws Exception {
         Attachment attachment = Attachment.builder()
             .bytes("attachment".getBytes(Charsets.UTF_8))
             .type("application/octet-stream")
@@ -3186,6 +3186,7 @@ public abstract class SetMessagesMethodTest {
 
         String createdPath = ARGUMENTS + ".created[\""+messageCreationId+"\"]";
         String firstAttachment = createdPath + ".attachments[0]";
+        String secondAttachment = createdPath + ".attachments[1]";
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -3197,11 +3198,16 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
             .body(ARGUMENTS + ".created", aMapWithSize(1))
-            .body(createdPath + ".attachments", hasSize(1))
+            .body(createdPath + ".attachments", hasSize(2))
             .body(firstAttachment + ".blobId", equalTo(attachment.getAttachmentId().getId()))
             .body(firstAttachment + ".type", equalTo("application/octet-stream; charset=UTF-8"))
             .body(firstAttachment + ".size", equalTo((int) attachment.getSize()))
             .body(firstAttachment + ".cid", nullValue())
-            .body(firstAttachment + ".isInline", equalTo(false));
+            .body(firstAttachment + ".isInline", equalTo(false))
+            .body(secondAttachment + ".blobId", equalTo(attachment2.getAttachmentId().getId()))
+            .body(secondAttachment + ".type", equalTo("application/octet-stream; charset=UTF-8"))
+            .body(secondAttachment + ".size", equalTo((int) attachment2.getSize()))
+            .body(secondAttachment + ".cid", nullValue())
+            .body(secondAttachment + ".isInline", equalTo(true));
     }
 }

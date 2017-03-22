@@ -139,6 +139,10 @@ public class Attachment {
         return isInline;
     }
 
+    public Boolean isInlinedWithCid() {
+        return isInline && cid.isPresent();
+    }
+
     public Optional<Long> getWidth() {
         return width;
     }

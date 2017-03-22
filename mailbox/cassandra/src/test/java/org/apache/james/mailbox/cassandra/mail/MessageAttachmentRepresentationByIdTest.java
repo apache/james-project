@@ -65,14 +65,17 @@ public class MessageAttachmentRepresentationByIdTest {
         assertThat(messageAttachmentRepresentation.isInline()).isFalse();
     }
 
-    @Test(expected=IllegalStateException.class)
-    public void buildShouldThrowWhenIsInlineAndNoCid() {
+    @Test
+    public void buildShouldAcceptInlineAndWithoutCid() {
         AttachmentId attachmentId = AttachmentId.from("1");
+        CassandraMessageDAO.MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, Optional.empty(), Optional.empty(), true);
 
-        CassandraMessageDAO.MessageAttachmentRepresentation.builder()
+        CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation = CassandraMessageDAO.MessageAttachmentRepresentation.builder()
             .attachmentId(attachmentId)
             .isInline(true)
             .build();
+
+        assertThat(messageAttachmentRepresentation).isEqualTo(expectedMessageAttachmentRepresentation);
     }
 
     @Test

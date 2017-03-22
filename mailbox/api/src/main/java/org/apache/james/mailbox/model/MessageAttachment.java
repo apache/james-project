@@ -35,7 +35,7 @@ public class MessageAttachment {
         private Attachment attachment;
         private Optional<String> name;
         private Optional<Cid> cid;
-        private Boolean isInline;
+        private Optional<Boolean> isInline = Optional.absent();
 
         private Builder() {
             name = Optional.absent();
@@ -65,20 +65,14 @@ public class MessageAttachment {
             return this;
         }
 
-        public Builder isInline(boolean isInline) {
-            this.isInline = isInline;
+        public Builder isInline(Boolean isInline) {
+            this.isInline = Optional.fromNullable(isInline);
             return this;
         }
 
         public MessageAttachment build() {
             Preconditions.checkState(attachment != null, "'attachment' is mandatory");
-            if (isInline == null) {
-                isInline = false;
-            }
-            if (isInline && !cid.isPresent()) {
-                throw new IllegalStateException("'cid' is mandatory for inline attachments");
-            }
-            return new MessageAttachment(attachment, name, cid, isInline);
+            return new MessageAttachment(attachment, name, cid, isInline.or(false));
         }
     }
 
@@ -112,6 +106,10 @@ public class MessageAttachment {
 
     public boolean isInline() {
         return isInline;
+    }
+
+    public boolean isInlinedWithCid() {
+        return isInline && cid.isPresent();
     }
 
     @Override

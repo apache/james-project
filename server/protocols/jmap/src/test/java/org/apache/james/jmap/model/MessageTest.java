@@ -291,12 +291,14 @@ public class MessageTest {
                         .blobId(BlobId.of("key"))
                         .size(1)
                         .type("type")
+                        .cid("cid1")
                         .isInline(true)
                         .build(),
                     Attachment.builder()
                         .blobId(BlobId.of("key2"))
                         .size(2)
                         .type("type2")
+                        .cid("cid2")
                         .isInline(true)
                         .build()))
             .build();
@@ -321,6 +323,7 @@ public class MessageTest {
                         .blobId(BlobId.of("key"))
                         .size(1)
                         .type("type")
+                        .cid("cid1")
                         .isInline(true)
                         .build(),
                     Attachment.builder()
@@ -333,6 +336,7 @@ public class MessageTest {
                         .blobId(BlobId.of("key3"))
                         .size(3)
                         .type("type3")
+                        .cid("c")
                         .isInline(true)
                         .build()))
             .build();

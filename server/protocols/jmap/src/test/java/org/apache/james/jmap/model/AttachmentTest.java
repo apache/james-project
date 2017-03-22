@@ -78,4 +78,41 @@ public class AttachmentTest {
         assertThat(tested).isEqualToComparingFieldByField(expected);
     }
 
+    @Test
+    public void isInlinedWithCidShouldReturnTrueWhenIsInlineAndHasCid() throws Exception {
+        Attachment tested = Attachment.builder()
+            .blobId(BlobId.of("blobId"))
+            .type("type")
+            .size(123)
+            .cid("cid")
+            .isInline(true)
+            .build();
+
+        assertThat(tested.isInlinedWithCid()).isTrue();
+    }
+
+    @Test
+    public void isInlinedWithCidShouldReturnFalseWhenIsNotInline() throws Exception {
+        Attachment tested = Attachment.builder()
+            .blobId(BlobId.of("blobId"))
+            .type("type")
+            .size(123)
+            .cid("cid")
+            .isInline(false)
+            .build();
+
+        assertThat(tested.isInlinedWithCid()).isFalse();
+    }
+
+    @Test
+    public void isInlinedWithCidShouldReturnFalseWhenIsInlineButNoCid() throws Exception {
+        Attachment tested = Attachment.builder()
+            .blobId(BlobId.of("blobId"))
+            .type("type")
+            .size(123)
+            .isInline(true)
+            .build();
+
+        assertThat(tested.isInlinedWithCid()).isFalse();
+    }
 }
