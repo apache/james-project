@@ -382,13 +382,13 @@
           "fill": 1,
           "id": 33,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
+            "avg": true,
+            "current": true,
+            "max": true,
+            "min": true,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -398,7 +398,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -409,7 +414,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -425,6 +430,14 @@
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
               "query": "name:\"mailQueueSize:spool\"",
@@ -450,7 +463,7 @@
           },
           "yaxes": [
             {
-              "format": "ms",
+              "format": "short",
               "label": null,
               "logBase": 1,
               "max": null,
@@ -458,7 +471,7 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
@@ -817,13 +830,13 @@
           "fill": 1,
           "id": 31,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
+            "avg": true,
+            "current": true,
+            "max": true,
+            "min": true,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -833,7 +846,12 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
           "span": 3,
           "stack": false,
           "steppedLine": false,
@@ -844,7 +862,7 @@
                   "field": "@timestamp",
                   "id": "2",
                   "settings": {
-                    "interval": "auto",
+                    "interval": "1m",
                     "min_doc_count": 0,
                     "trimEdges": 0
                   },
@@ -860,6 +878,14 @@
                   "pipelineAgg": "3",
                   "settings": {},
                   "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
                 }
               ],
               "query": "name:\"mailQueueSize:outgoing\"",
@@ -885,7 +911,7 @@
           },
           "yaxes": [
             {
-              "format": "ms",
+              "format": "short",
               "label": null,
               "logBase": 1,
               "max": null,
@@ -893,7 +919,7 @@
               "show": true
             },
             {
-              "format": "short",
+              "format": "opm",
               "label": null,
               "logBase": 1,
               "max": null,
@@ -1073,5 +1099,5 @@
   },
   "timezone": "browser",
   "title": "MailQueue",
-  "version": 21
+  "version": 23
 }
