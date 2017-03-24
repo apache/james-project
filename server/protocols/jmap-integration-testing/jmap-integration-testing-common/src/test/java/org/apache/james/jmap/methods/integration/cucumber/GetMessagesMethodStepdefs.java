@@ -213,6 +213,11 @@ public class GetMessagesMethodStepdefs {
         appendMessage(messageName, "eml/mailWithInlinedAttachmentButNoCid.eml");
     }
 
+    @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with HTML body with many empty tags$")
+    public void appendMessageWithNoPreview(String messageName, String mailbox) throws Throwable {
+        appendMessage(messageName, "eml/htmlBodyWithManyEmptyTags.eml");
+    }
+
     private void appendMessage(String messageName, String emlFileName) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         MessageId id = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(userStepdefs.lastConnectedUser,
@@ -403,6 +408,12 @@ public class GetMessagesMethodStepdefs {
     public void assertPreviewOfTheFirstMessage(String preview) throws Throwable {
         String actual = jsonPath.<String>read(FIRST_MESSAGE + ".preview").replace("\n", " ");
         assertThat(actual).isEqualToIgnoringWhitespace(StringEscapeUtils.unescapeJava(preview));
+    }
+
+    @Then("^the preview of the message is not empty$")
+    public void assertPreviewOfTheFirstMessageIsNotEmpty() throws Throwable {
+        String actual = jsonPath.<String>read(FIRST_MESSAGE + ".preview").replace("\n", " ").trim();
+        assertThat(actual).isNotEmpty();
     }
 
     @Then("^the headers of the message contains:$")

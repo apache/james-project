@@ -261,3 +261,10 @@ Feature: GetMessages method
       |type     |"application/pdf"                               |
       |cid      |null                                       |
       |isInline |true                                      |
+
+  Scenario: Preview should be computed even when HTML body contains many tags without content
+    Given the user has a message "m1" in "INBOX" mailbox with HTML body with many empty tags
+    When the user ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the preview of the message is not empty
