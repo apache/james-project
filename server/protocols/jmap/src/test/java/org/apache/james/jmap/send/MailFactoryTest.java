@@ -39,7 +39,6 @@ import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.mailet.Mail;

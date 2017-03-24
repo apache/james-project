@@ -24,7 +24,6 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.now;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveActiveTable.DATE;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveActiveTable.TABLE_NAME;

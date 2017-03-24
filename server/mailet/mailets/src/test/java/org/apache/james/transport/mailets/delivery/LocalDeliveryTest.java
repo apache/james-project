@@ -34,7 +34,6 @@ import javax.mail.Flags;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
-import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -42,7 +41,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
@@ -70,9 +68,6 @@ public class LocalDeliveryTest {
     public void setUp() {
         usersRepository = mock(UsersRepository.class);
         mailboxManager = mock(MailboxManager.class);
-        RecipientRewriteTable recipientRewriteTable = mock(RecipientRewriteTable.class);
-        DomainList domainList = mock(DomainList.class);
-
 
         MetricFactory metricFactory = mock(MetricFactory.class);
         when(metricFactory.generate(anyString())).thenReturn(mock(Metric.class));

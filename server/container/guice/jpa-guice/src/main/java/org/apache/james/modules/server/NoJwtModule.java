@@ -22,8 +22,6 @@ package org.apache.james.modules.server;
 import java.util.Optional;
 
 import org.apache.james.jwt.JwtConfiguration;
-import org.apache.james.webadmin.authentication.AuthenticationFilter;
-import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 
 import com.google.inject.AbstractModule;
 

@@ -24,7 +24,6 @@ import javax.inject.Named;
 import javax.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
-import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
 
 import org.apache.james.mailbox.model.MailboxConstants;
