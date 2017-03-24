@@ -19,108 +19,13 @@
 
 package org.apache.james.mailbox.inmemory.user;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.apache.james.mailbox.store.user.SubscriptionMapper;
+import org.apache.james.mailbox.store.user.SubscriptionMapperTest;
 
-import java.util.List;
+public class InMemorySubscriptionMapperTest extends SubscriptionMapperTest {
 
-import org.apache.james.mailbox.store.user.model.Subscription;
-import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
-import org.junit.Before;
-import org.junit.Test;
-
-public class InMemorySubscriptionMapperTest {
-
-    private static final String USER_1 = "user1";
-    private static final String USER_2 = "user2";
-    private static final String MAILBOX_1 = "mailbox1";
-    private static final String MAILBOX_2 = "mailbox2";
-
-    private InMemorySubscriptionMapper testee;
-
-    @Before
-    public void setUp() {
-        testee = new InMemorySubscriptionMapper();
-    }
-
-    @Test
-    public void findSubscriptionsForUserShouldBeEmptyByDefault() {
-        List<Subscription> subscriptions = testee.findSubscriptionsForUser(USER_1);
-
-        assertThat(subscriptions).isEmpty();
-    }
-
-    @Test
-    public void findMailboxSubscriptionForUserShouldReturnNullByDefault() {
-        Subscription subscriptions = testee.findMailboxSubscriptionForUser(USER_1,MAILBOX_1);
-
-        assertThat(subscriptions).isNull();
-    }
-
-    @Test
-    public void findMailboxSubscriptionForUserShouldReturnSubscription() {
-        SimpleSubscription subscription = new SimpleSubscription(USER_1, MAILBOX_1);
-        testee.save(subscription);
-
-        List<Subscription> results = testee.findSubscriptionsForUser(USER_1);
-
-        assertThat(results).containsOnly(subscription);
-    }
-
-    @Test
-    public void findSubscriptionsForUserShouldReturnSubscriptions() {
-        SimpleSubscription subscription1 = new SimpleSubscription(USER_1, MAILBOX_1);
-        SimpleSubscription subscription2 = new SimpleSubscription(USER_1, MAILBOX_2);
-        testee.save(subscription1);
-        testee.save(subscription2);
-
-        List<Subscription> results = testee.findSubscriptionsForUser(USER_1);
-
-        assertThat(results).containsOnly(subscription1, subscription2);
-    }
-
-    @Test
-    public void findSubscriptionsForUserShouldReturnOnlyUserSubscriptions() {
-        SimpleSubscription subscription1 = new SimpleSubscription(USER_1,MAILBOX_1);
-        SimpleSubscription subscription2 = new SimpleSubscription(USER_2,MAILBOX_2);
-        testee.save(subscription1);
-        testee.save(subscription2);
-
-        List<Subscription> results = testee.findSubscriptionsForUser(USER_1);
-
-        assertThat(results).containsOnly(subscription1);
-    }
-
-    @Test
-    public void findMailboxSubscriptionForUserShouldReturnOnlyUserSubscriptions() {
-        SimpleSubscription subscription1 = new SimpleSubscription(USER_1,MAILBOX_1);
-        SimpleSubscription subscription2 = new SimpleSubscription(USER_2,MAILBOX_1);
-        testee.save(subscription1);
-        testee.save(subscription2);
-
-        Subscription result = testee.findMailboxSubscriptionForUser(USER_1,MAILBOX_1);
-
-        assertThat(result).isEqualTo(result);
-    }
-
-    @Test
-    public void findMailboxSubscriptionForUserShouldReturnSubscriptionConcerningTheMailbox() {
-        SimpleSubscription subscription1 = new SimpleSubscription(USER_1,MAILBOX_1);
-        SimpleSubscription subscription2 = new SimpleSubscription(USER_1,MAILBOX_2);
-        testee.save(subscription1);
-        testee.save(subscription2);
-
-        Subscription result = testee.findMailboxSubscriptionForUser(USER_1,MAILBOX_1);
-
-        assertThat(result).isEqualTo(result);
-    }
-
-    @Test
-    public void deleteShouldRemoveSubscription() {
-        SimpleSubscription subscription = new SimpleSubscription(USER_1, MAILBOX_1);
-        testee.save(subscription);
-
-        testee.delete(subscription);
-
-        assertThat(testee.findSubscriptionsForUser(USER_1)).isEmpty();
+    @Override
+    protected SubscriptionMapper createSubscriptionMapper() {
+        return new InMemorySubscriptionMapper();
     }
 }
