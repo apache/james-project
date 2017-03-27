@@ -92,7 +92,7 @@ public class DownloadStepdefs {
                 ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml"), new Date(), false, new Flags());
         
         attachmentsByMessageId.put(messageId, attachmentId);
-        blobIdByAttachmentId.put(attachmentId, "4000c5145f633410b80be368c44e1c394bff9437");
+        blobIdByAttachmentId.put(attachmentId, ONE_ATTACHMENT_EML_ATTACHMENT_BLOB_ID);
     }
 
     @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with an inlined attachment \"([^\"]*)\"$")
@@ -105,6 +105,18 @@ public class DownloadStepdefs {
         attachmentsByMessageId.put(messageId, attachmentId);
         // TODO
         //blobIdByAttachmentId.put(attachmentId, "<correctComputedBlobId>");
+    }
+
+    @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with multiple same inlined attachments \"([^\"]*)\"$")
+    public void appendMessageWithSameInlinedAttachmentsToMailbox(String user, String mailbox, String messageName, String attachmentId) throws Throwable {
+        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, mailbox);
+
+        mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(user, mailboxPath,
+            ClassLoader.getSystemResourceAsStream("eml/sameInlinedImages.eml"), new Date(), false, new Flags());
+
+        attachmentsByMessageId.put(messageName, attachmentId);
+
+        blobIdByAttachmentId.put(attachmentId, ONE_ATTACHMENT_EML_ATTACHMENT_BLOB_ID);
     }
 
     @When("^\"([^\"]*)\" checks for the availability of the attachment endpoint$")
