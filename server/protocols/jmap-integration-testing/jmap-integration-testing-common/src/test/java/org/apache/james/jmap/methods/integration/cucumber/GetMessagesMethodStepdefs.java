@@ -218,13 +218,18 @@ public class GetMessagesMethodStepdefs {
         appendMessage(messageName, "eml/htmlBodyWithManyEmptyTags.eml");
     }
 
+    @Given("^the user has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with multiple same inlined attachments \"([^\"]*)\"$")
+    public void appendMessageWithSameInlinedAttachmentsToMailbox(String messageName, String mailbox, String attachmentId) throws Throwable {
+        appendMessage(messageName, "eml/sameInlinedImages.eml");
+    }
+
     private void appendMessage(String messageName, String emlFileName) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         MessageId id = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(userStepdefs.lastConnectedUser,
-                new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, DefaultMailboxes.INBOX),
+            new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, DefaultMailboxes.INBOX),
                 ClassLoader.getSystemResourceAsStream(emlFileName),
                 Date.from(dateTime.toInstant()), false, new Flags())
-                .getMessageId();
+                    .getMessageId();
         messageIdsByName.put(messageName, id);
     }
 
@@ -260,7 +265,7 @@ public class GetMessagesMethodStepdefs {
     public void requestUnknownMessage() throws Throwable {
         askMessages(ImmutableList.of(mainStepdefs.messageIdFactory.generate()));
     }
-    
+
     private void askMessages(List<MessageId> messageIds) throws Exception {
         requestedMessageIds = messageIds;
         String serializedIds = requestedMessageIds.stream()
@@ -372,7 +377,6 @@ public class GetMessagesMethodStepdefs {
                 .serialize()))
             .distinct()
             .collect(Guavate.toImmutableList());
-
         assertThat(jsonPath.<JSONArray>read(FIRST_MESSAGE + ".mailboxIds"))
             .hasSize(2)
             .containsOnlyElementsOf(values);
@@ -444,6 +448,11 @@ public class GetMessagesMethodStepdefs {
     @Then("^the list of attachments of the message contains (\\d+) attachments?$")
     public void assertAttachmentsHasSize(int numberOfAttachments) throws Throwable {
         assertThat(jsonPath.<List<Object>>read(ATTACHMENTS)).hasSize(numberOfAttachments);
+    }
+
+    @Then("^the list of attachments of the message contains only one attachment with cid \"([^\"]*)\"?$")
+    public void assertAttachmentsAndItsCid(String cid) throws Throwable {
+        assertThat(jsonPath.<String>read(FIRST_ATTACHMENT + ".cid")).isEqualTo(cid);
     }
 
     @Then("^the first attachment is:$")

@@ -128,7 +128,7 @@ Feature: GetMessages method
     Then no error is returned
     And the list of messages is empty
     And the notFound list should contain the requested message id
-    
+
   Scenario: Retrieving message should return mandatory properties when not asked
     Given the user has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
     When the user is getting messages "m1" with properties "subject"
@@ -210,7 +210,7 @@ Feature: GetMessages method
     And the list should contain 1 message
     And the textBody of the message is "Hello text body\n"
     And the htmlBody of the message is "<html>Hello html body</html>\n"
-    
+
   Scenario: Retrieving message with more than 1000 char by line should return message when exists
     Given the user has a message "m1" in "INBOX" mailbox beginning by a long line
     When the user ask for messages "m1"
@@ -268,3 +268,11 @@ Feature: GetMessages method
     Then no error is returned
     And the list should contain 1 message
     And the preview of the message is not empty
+
+  Scenario: Retrieving message which contains multiple same inlined attachments
+    Given the user has a message "m1" in the "inbox" mailbox with multiple same inlined attachments "ia1"
+    When the user ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the hasAttachment of the message is "false"
+    And the list of attachments of the message contains only one attachment with cid "1482981567586480bfca67b793175279@linagora.com"
