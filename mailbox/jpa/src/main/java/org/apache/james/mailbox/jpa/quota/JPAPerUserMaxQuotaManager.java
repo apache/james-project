@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.jpa.quota;
 
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
@@ -38,6 +39,7 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
 
     private final EntityManager entityManager;
 
+    @Inject
     public JPAPerUserMaxQuotaManager(EntityManagerFactory entityManagerFactory) {
         entityManager = entityManagerFactory.createEntityManager();
     }

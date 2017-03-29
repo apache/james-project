@@ -42,6 +42,7 @@ public class QuotaBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
     private static final String UPDATES = "updates";
     private static final String QUOTA_ROOT_RESOLVER = "quotaRootResolver";
     private static final String EVENT = "event";
+    public static final String JPA = "jpa";
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
@@ -94,6 +95,8 @@ public class QuotaBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
             registry.registerAlias("inMemoryMaxQuotaManager", MAX_QUOTA_MANAGER);
         } else if (maxQuotaManager.equalsIgnoreCase(CASSANDRA)) {
             registry.registerAlias("cassandraMaxQuotaManager", MAX_QUOTA_MANAGER);
+        } else if (maxQuotaManager.equalsIgnoreCase(JPA)) {
+            registry.registerAlias("jpaMaxQuotaManager", MAX_QUOTA_MANAGER);
         } else {
             throw new FatalBeanException("Unreadable value for Max Quota Manager : " + maxQuotaManager);
         }

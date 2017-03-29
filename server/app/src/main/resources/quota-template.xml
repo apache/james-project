@@ -36,32 +36,32 @@
 
 <quota>
     <!--
-        Quota implementation is based on several components :
-          - QuotaRootResolver : In regard of quota management, mailboxes forms abstract groups called QUOTA ROOT. This
+        Quota implementation is based on several components:
+          - QuotaRootResolver: In regard of quota management, mailboxes forms abstract groups called QUOTA ROOT. This
           component finds to which QUOTA ROOT a mailbox belongs
-          - Current quota manager : Counters for current values : how many messages belongs to this quota root ? Which
+          - Current quota manager: Counters for current values: how many messages belongs to this quota root ? Which
           size ?
-          - Max Quota manager : Sets a maximum value QUOTA ROOT resources can not exceed.
-          - QuotaManager : assemble Current quota manager and Max quota manager.
-          - Listening quota updater : Event system based quota update. On each APPED / COPY /EXPUNGE command, current
+          - Max Quota manager: Sets a maximum value QUOTA ROOT resources can not exceed.
+          - QuotaManager: assemble Current quota manager and Max quota manager.
+          - Listening quota updater: Event system based quota update. On each APPED / COPY /EXPUNGE command, current
           quotas gets updated.
     -->
 
     <quotaRootResolver>
         <!--
-        Possible value :
+        Possible value:
          - default
         -->
         <provider>default</provider>
     </quotaRootResolver>
     <currentQuotaManager>
         <!--
-        Possible value for provider :
-         - none : when you use fake as a value for quotaManager's provider
+        Possible value for provider:
+         - none: when you use fake as a value for quotaManager's provider
          - inmemory
          - cassandra
 
-        The inmemory implementation :
+        The inmemory implementation:
          - Does not work in a distributed context
         Note that quota need to be (lazy) re-calculated after each starts
 
@@ -75,12 +75,15 @@
         <!--
         This component is exposed to the CLI for quota administration tasks.
 
-        Possible value are :
-         - fake : will always return UNLIMITED. Throws on modifications.
-         - fixed : all QUOTA ROOT get the same upper bound for their quotas.
-         - inmemory : allows you to define QUOTA ROOT specific limits, backed with a fixed policy. It does not
+        Possible value are:
+         - fake: will always return UNLIMITED. Throws on modifications.
+         - fixed: all QUOTA ROOT get the same upper bound for their quotas.
+         - inmemory: allows you to define QUOTA ROOT specific limits, backed with a fixed policy. It does not
          work in a distributed context.
-         - cassandra : Same thing than inmemory but backed on cassandra. Works on a distributed context. Note that using
+         - cassandra: Same thing than inmemory but backed on cassandra. Works on a distributed context. Note that using
+         the default* configuration options and the CLI to set default options is dangerous as server startup might override
+         CLI values.
+         - jpa: Same thing than inmemory but backed on jpa. Works on a distributed context. Note that using
          the default* configuration options and the CLI to set default options is dangerous as server startup might override
          CLI values.
         -->
@@ -110,16 +113,16 @@
         <!--
         The QuotaManager you use.
 
-        Possible values are :
-         - fake : returns only UNKNOWN/UNLIMITED quotas
-         - store : returns quotas using a CurrentQuotaManager and a MaxQuotaManager
+        Possible values are:
+         - fake: returns only UNKNOWN/UNLIMITED quotas
+         - store: returns quotas using a CurrentQuotaManager and a MaxQuotaManager
         -->
         <provider>fake</provider>
     </quotaManager>
     <updates>
         <!--
         This defines the way your quotas gets updated.
-        Possible values are :
+        Possible values are:
          - fake
          - event
         -->

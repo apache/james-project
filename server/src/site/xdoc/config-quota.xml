@@ -51,10 +51,11 @@
         <li>Quota Manager : This component retrieves quota associated with a QUOTA ROOT. A store implementation is available and relies on other components.
           A fake implementation is available in order to add no overhead.</li>
         <li>Max Quota Manager : This component retrieves maximum values associated with quotas and gives a way to potentially
-        (depending on the implementation) update these per QUOTA ROOT maximum values. Three implementation are available for now. A NoQuotaManager implementation
+        (depending on the implementation) update these per QUOTA ROOT maximum values. Four implementations are available for now. A NoQuotaManager implementation
         is read only and returns UNLIMITED maximum values. FixedMaxQuotaManager returns one and only one value for all user. You can configure these maximum values
           threw the configuration files. A InMemoryPerUserMaxQuotaManager allows you to configure quota for each QUOTA ROOT. Note that it needs to be done threw
-          configuration to be persistent. And finally a Cassandra implementation allows to store maximum quota values in Cassandra.</li>
+          configuration to be persistent. We provide some other implementation: A Cassandra implementation allows to store maximum quota values in Cassandra,
+          and a JPA implementation.</li>
         <li>Current Quota Manager : This component can be omitted if you are running a fake QUOTA manager. inmemory implementation is an event updated cache on
         top of a Quota calculator (that fetches every e-mail metadata of every mailboxes belonging to the QUOTA ROOT: it is expensive). A cassandra implementation
         is also available.</li>

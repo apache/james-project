@@ -90,4 +90,5 @@
 
     <bean id="jpa-mailbox-id-deserializer" class="org.apache.james.mailbox.jpa.JPAMailboxIdDeserializer"/>
 
+    <bean id="jpaMaxQuotaManager" class="org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaManager"/>
 </beans>
