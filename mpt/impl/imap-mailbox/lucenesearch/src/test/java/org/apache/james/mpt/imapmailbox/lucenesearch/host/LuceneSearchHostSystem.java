@@ -25,6 +25,7 @@ import java.io.IOException;
 import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
@@ -153,6 +154,11 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
     @Override
     public boolean supports(Feature... features) {
         return SUPPORTED_FEATURES.supports(features);
+    }
+
+    @Override
+    public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws Exception {
+        throw new NotImplementedException();
     }
 
 }

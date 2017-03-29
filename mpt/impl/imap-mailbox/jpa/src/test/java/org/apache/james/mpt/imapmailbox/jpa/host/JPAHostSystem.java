@@ -35,18 +35,22 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAMailboxFixture;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
 import org.apache.james.mailbox.jpa.JPASubscriptionManager;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
+import org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaManager;
+import org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
-import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
+import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
@@ -54,12 +58,22 @@ import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+
 public class JPAHostSystem extends JamesImapHostSystem {
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
+    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(
+        ImmutableList.<Class<?>>builder()
+            .addAll(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES)
+            .addAll(JPAMailboxFixture.QUOTA_PERSISTANCE_CLASSES)
+            .build());
 
     public static final String META_DATA_DIRECTORY = "target/user-meta-data";
-    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT, Feature.USER_FLAGS_SUPPORT, Feature.ANNOTATION_SUPPORT);
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
+        Feature.USER_FLAGS_SUPPORT,
+        Feature.ANNOTATION_SUPPORT,
+        Feature.QUOTA_SUPPORT);
+    private final JPAPerUserMaxQuotaManager maxQuotaManager;
 
     public static JamesImapHostSystem build() throws Exception {
         return new JPAHostSystem();
@@ -72,27 +86,39 @@ public class JPAHostSystem extends JamesImapHostSystem {
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
         JPAUidProvider uidProvider = new JPAUidProvider(locker, entityManagerFactory);
         JPAModSeqProvider modSeqProvider = new JPAModSeqProvider(locker, entityManagerFactory);
-        JPAMailboxSessionMapperFactory mf = new JPAMailboxSessionMapperFactory(entityManagerFactory, uidProvider, modSeqProvider);
+        JPAMailboxSessionMapperFactory mapperFactory = new JPAMailboxSessionMapperFactory(entityManagerFactory, uidProvider, modSeqProvider);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
 
-        mailboxManager = new OpenJPAMailboxManager(mf, authenticator, authorizator, locker, false, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
+        mailboxManager = new OpenJPAMailboxManager(mapperFactory, authenticator, authorizator, locker, false, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
+
+        DefaultQuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(mapperFactory);
+        JpaCurrentQuotaManager currentQuotaManager = new JpaCurrentQuotaManager(entityManagerFactory);
+        maxQuotaManager = new JPAPerUserMaxQuotaManager(entityManagerFactory);
+        StoreQuotaManager storeQuotaManager = new StoreQuotaManager();
+        storeQuotaManager.setCurrentQuotaManager(currentQuotaManager);
+        storeQuotaManager.setMaxQuotaManager(maxQuotaManager);
+        ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater();
+        quotaUpdater.setCurrentQuotaManager(currentQuotaManager);
+        quotaUpdater.setQuotaRootResolver(quotaRootResolver);
+
+        mailboxManager.setQuotaManager(storeQuotaManager);
+        mailboxManager.setQuotaUpdater(quotaUpdater);
+        mailboxManager.setQuotaRootResolver(quotaRootResolver);
         mailboxManager.init();
 
-        SubscriptionManager subscriptionManager = new JPASubscriptionManager(mf);
+        SubscriptionManager subscriptionManager = new JPASubscriptionManager(mapperFactory);
         
         final ImapProcessor defaultImapProcessorFactory = 
                 DefaultImapProcessorFactory.createDefaultProcessor(
                         mailboxManager, 
                         subscriptionManager, 
-                        new NoQuotaManager(), 
-                        new DefaultQuotaRootResolver(mf),
+                        storeQuotaManager,
+                        quotaRootResolver,
                         new DefaultMetricFactory());
-        
-        resetUserMetaData();
-        
+
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
                 new DefaultImapEncoderFactory().buildImapEncoder(),
                 defaultImapProcessorFactory);
@@ -127,4 +153,9 @@ public class JPAHostSystem extends JamesImapHostSystem {
         return SUPPORTED_FEATURES.supports(features);
     }
 
+    @Override
+    public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws MailboxException {
+        maxQuotaManager.setDefaultMaxMessage(maxMessageQuota);
+        maxQuotaManager.setDefaultMaxStorage(maxStorageQuota);
+    }
 }

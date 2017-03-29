@@ -21,6 +21,7 @@ package org.apache.james.mpt.imapmailbox.jcr.host;
 import java.io.File;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -165,6 +166,11 @@ public class JCRHostSystem extends JamesImapHostSystem {
     @Override
     public boolean supports(Feature... features) {
         return SUPPORTED_FEATURES.supports(features);
+    }
+
+    @Override
+    public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws Exception {
+        throw new NotImplementedException();
     }
     
 }

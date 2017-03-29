@@ -57,6 +57,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
         Feature.ANNOTATION_SUPPORT);
 
     private InMemoryMailboxManager mailboxManager;
+    private InMemoryPerUserMaxQuotaManager perUserMaxQuotaManager;
 
     public static JamesImapHostSystem build() throws Exception {
         return new InMemoryHostSystem();
@@ -81,9 +82,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
                 new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser, new InMemoryMessageId.Factory());
         QuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(mailboxManager.getMapperFactory());
 
-        InMemoryPerUserMaxQuotaManager perUserMaxQuotaManager = new InMemoryPerUserMaxQuotaManager();
-        perUserMaxQuotaManager.setDefaultMaxMessage(4096);
-        perUserMaxQuotaManager.setDefaultMaxStorage(5L * 1024L * 1024L * 1024L);
+        perUserMaxQuotaManager = new InMemoryPerUserMaxQuotaManager();
 
         InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(
             new CurrentQuotaCalculator(mailboxManager.getMapperFactory(), quotaRootResolver),
@@ -118,5 +117,10 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
     public boolean supports(Feature... features) {
         return SUPPORTED_FEATURES.supports(features);
     }
-    
+
+    @Override
+    public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws MailboxException {
+        perUserMaxQuotaManager.setDefaultMaxMessage(maxMessageQuota);
+        perUserMaxQuotaManager.setDefaultMaxStorage(maxStorageQuota);
+    }
 }

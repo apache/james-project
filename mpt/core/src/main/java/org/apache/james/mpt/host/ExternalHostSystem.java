@@ -107,5 +107,10 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
     public boolean supports(Feature... features) {
         return this.features.supports(features);
     }
+
+    @Override
+    public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws Exception {
+        throw new NotImplementedException();
+    }
     
 }

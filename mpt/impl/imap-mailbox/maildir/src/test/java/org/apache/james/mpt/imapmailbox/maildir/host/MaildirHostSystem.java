@@ -21,6 +21,7 @@ package org.apache.james.mpt.imapmailbox.maildir.host;
 import java.io.File;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
@@ -114,4 +115,8 @@ public class MaildirHostSystem extends JamesImapHostSystem {
         return SUPPORTED_FEATURES.supports(features);
     }
 
+    @Override
+    public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws Exception {
+        throw new NotImplementedException();
+    }
 }

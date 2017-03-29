@@ -25,6 +25,7 @@ import java.time.ZoneId;
 import java.util.concurrent.Executors;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.es.DeleteByQueryPerformer;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
@@ -150,4 +151,8 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
         return SUPPORTED_FEATURES.supports(features);
     }
 
+    @Override
+    public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws Exception {
+        throw new NotImplementedException();
+    }
 }

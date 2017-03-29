@@ -30,6 +30,9 @@ import java.util.Locale;
 
 public class QuotaTest extends BaseSelectedState {
 
+    private static final int MAX_MESSAGE_QUOTA = 4096;
+    private static final long MAX_STORAGE_QUOTA = 5 * 1024L * 1024L * 1024L;
+
     @Inject
     private static ImapHostSystem system;
 
@@ -40,6 +43,9 @@ public class QuotaTest extends BaseSelectedState {
     @Test
     public void testQuotaScript() throws Exception {
         Assume.assumeTrue(system.supports(ImapFeatures.Feature.QUOTA_SUPPORT));
+
+        system.setQuotaLimits(MAX_MESSAGE_QUOTA, MAX_STORAGE_QUOTA);
+
         scriptTest("Quota", Locale.CANADA);
     }
 }

@@ -74,5 +74,10 @@ public class ExternalJamesHostSystem extends ExternalHostSystem {
     public void createMailbox(MailboxPath mailboxPath) {
         throw new NotImplementedException();
     }
+
+    @Override
+    public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws Exception {
+        throw new NotImplementedException();
+    }
     
 }
