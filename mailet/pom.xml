@@ -237,11 +237,6 @@
                 <artifactId>jackson-datatype-jdk8</artifactId>
                 <version>${jackson-data.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.github.steveash.guavate</groupId>
-                <artifactId>guavate</artifactId>
-                <version>${guavate.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
