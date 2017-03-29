@@ -131,7 +131,18 @@
                         <property>
                             <name>metaDataFactory</name>
                             <value>
-                                jpa(Types=org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;org.apache.james.mailbox.jpa.mail.model.JPAMailbox;org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMessage;org.apache.james.mailbox.jpa.mail.model.openjpa.JPAEncryptedMessage;org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMessage;org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMessage;org.apache.james.mailbox.jpa.mail.model.JPAProperty;org.apache.james.mailbox.jpa.user.model.JPASubscription)
+                                jpa(Types=org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
+                                org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
+                                org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMessage;
+                                org.apache.james.mailbox.jpa.mail.model.openjpa.JPAEncryptedMessage;
+                                org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMessage;
+                                org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMessage;
+                                org.apache.james.mailbox.jpa.mail.model.JPAProperty;
+                                org.apache.james.mailbox.jpa.user.model.JPASubscription;
+                                org.apache.james.mailbox.jpa.quota.model.MaxDefaultMessageCount;
+                                org.apache.james.mailbox.jpa.quota.model.MaxDefaultStorage
+                                org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount
+                                org.apache.james.mailbox.jpa.quota.model.MaxUserStorage)
                             </value>
                         </property>
                     </toolProperties>
