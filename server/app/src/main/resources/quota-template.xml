@@ -60,6 +60,7 @@
          - none: when you use fake as a value for quotaManager's provider
          - inmemory
          - cassandra
+         - jpa
 
         The inmemory implementation:
          - Does not work in a distributed context

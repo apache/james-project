@@ -90,5 +90,10 @@
 
     <bean id="jpa-mailbox-id-deserializer" class="org.apache.james.mailbox.jpa.JPAMailboxIdDeserializer"/>
 
-    <bean id="jpaMaxQuotaManager" class="org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaManager"/>
+    <bean id="jpaMaxQuotaManager" class="org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaManager">
+        <constructor-arg index="0" ref="entityManagerFactory"/>
+    </bean>
+    <bean id="jpaCurrentQuotaManager" class="org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager">
+        <constructor-arg index="0" ref="entityManagerFactory"/>
+    </bean>
 </beans>

@@ -107,6 +107,8 @@ public class QuotaBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
             registry.registerAlias("inMemoryCurrentQuotaManager", CURRENT_QUOTA_MANAGER);
         } else if (currentQuotaManager.equalsIgnoreCase(CASSANDRA)) {
             registry.registerAlias("cassandraCurrentQuotaManager", CURRENT_QUOTA_MANAGER);
+        }  else if (currentQuotaManager.equalsIgnoreCase(JPA)) {
+            registry.registerAlias("jpaCurrentQuotaManager", CURRENT_QUOTA_MANAGER);
         } else if (! currentQuotaManager.equalsIgnoreCase("none")) {
             throw new FatalBeanException("Unreadable value for Current Quota Manager : " + currentQuotaManager);
         }

@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.jpa.quota;
 
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
@@ -39,6 +40,7 @@ public class JpaCurrentQuotaManager implements StoreCurrentQuotaManager {
 
     private final EntityManager entityManager;
 
+    @Inject
     public JpaCurrentQuotaManager(EntityManagerFactory entityManagerFactory) {
         this.entityManager = entityManagerFactory.createEntityManager();
     }

@@ -57,8 +57,8 @@
           configuration to be persistent. We provide some other implementation: A Cassandra implementation allows to store maximum quota values in Cassandra,
           and a JPA implementation.</li>
         <li>Current Quota Manager : This component can be omitted if you are running a fake QUOTA manager. inmemory implementation is an event updated cache on
-        top of a Quota calculator (that fetches every e-mail metadata of every mailboxes belonging to the QUOTA ROOT: it is expensive). A cassandra implementation
-        is also available.</li>
+        top of a Quota calculator (that fetches every e-mail metadata of every mailboxes belonging to the QUOTA ROOT: it is expensive). Cassandra and Jpa implementations
+        are also available.</li>
         <li>Quota Updater : This components allows to update current quota values. A fake implementation is available. A real, event base solution also exists.</li>
       </ul>
     </p>
