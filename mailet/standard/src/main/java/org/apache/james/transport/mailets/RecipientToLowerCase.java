@@ -30,7 +30,6 @@ import org.apache.mailet.base.GenericMailet;
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 
 /**
  * {@link GenericMailet} which convert all Recipients to lowercase
