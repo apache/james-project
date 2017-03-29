@@ -34,6 +34,7 @@
         <class>org.apache.james.mailbox.jpa.quota.model.MaxDefaultStorage</class>
         <class>org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount</class>
         <class>org.apache.james.mailbox.jpa.quota.model.MaxUserStorage</class>
+        <class>org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota</class>
         <properties>
             <property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)"/>
             <property name="openjpa.jdbc.MappingDefaults" value="ForeignKeyDeleteAction=cascade, JoinForeignKeyDeleteAction=cascade"/>

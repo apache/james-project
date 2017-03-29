@@ -25,6 +25,7 @@ import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
 import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
+import org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota;
 import org.apache.james.mailbox.jpa.quota.model.MaxDefaultMessageCount;
 import org.apache.james.mailbox.jpa.quota.model.MaxDefaultStorage;
 import org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount;
@@ -39,13 +40,15 @@ public interface JPAMailboxFixture {
         JPAProperty.class,
         JPAUserFlag.class,
         JPAMailboxAnnotation.class,
-        JPASubscription.class};
+        JPASubscription.class
+    };
 
     Class<?>[] QUOTA_PERSISTANCE_CLASSES = new Class[] {
         MaxDefaultMessageCount.class,
         MaxDefaultStorage.class,
         MaxUserMessageCount.class,
-        MaxUserStorage.class
+        MaxUserStorage.class,
+        JpaCurrentQuota.class
     };
 
     String[] MAILBOX_TABLE_NAMES = new String[] {"JAMES_MAIL_USERFLAG",
@@ -58,6 +61,7 @@ public interface JPAMailboxFixture {
         "JAMES_MAX_DEFAULT_MESSAGE_COUNT",
         "JAMES_MAX_DEFAULT_STORAGE",
         "JAMES_MAX_USER_MESSAGE_COUNT",
-        "JAMES_MAX_USER_STORAGE"
+        "JAMES_MAX_USER_STORAGE",
+        "JAMES_QUOTA_CURRENTQUOTA"
     };
 }

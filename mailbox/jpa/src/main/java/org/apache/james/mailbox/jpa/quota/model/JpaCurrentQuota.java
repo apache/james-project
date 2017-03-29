@@ -17,26 +17,41 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.quota;
+package org.apache.james.mailbox.jpa.quota.model;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
-import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
-import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManagerTest;
-import org.junit.After;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-public class CassandraCurrentQuotaManagerTest extends StoreCurrentQuotaManagerTest {
+@Entity(name = "CurrentQuota")
+@Table(name = "JAMES_QUOTA_CURRENTQUOTA")
+public class JpaCurrentQuota {
 
-    private static final CassandraCluster CASSANDRA_CLUSTER = CassandraCluster.create(new CassandraQuotaModule());
+    @Id
+    @Column(name = "CURRENTQUOTA_QUOTAROOT")
+    private String quotaRoot;
 
-    @Override
-    protected StoreCurrentQuotaManager provideTestee() {
-        return new CassandraCurrentQuotaManager(CASSANDRA_CLUSTER.getConf());
+    @Column(name = "CURRENTQUOTA_MESSAGECOUNT")
+    private long messageCount;
+
+    @Column(name = "CURRENTQUOTA_SIZE")
+    private long size;
+
+    public JpaCurrentQuota() {
     }
 
-    @After
-    public void tearDown() {
-        CASSANDRA_CLUSTER.clearAllTables();
+    public JpaCurrentQuota(String quotaRoot, long messageCount, long size) {
+        this.quotaRoot = quotaRoot;
+        this.messageCount = messageCount;
+        this.size = size;
     }
 
+    public long getMessageCount() {
+        return messageCount;
+    }
+
+    public long getSize() {
+        return size;
+    }
 }

@@ -17,26 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.quota;
+package org.apache.james.mailbox.jpa.quota;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
+import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.mailbox.jpa.JPAMailboxFixture;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManagerTest;
 import org.junit.After;
 
-public class CassandraCurrentQuotaManagerTest extends StoreCurrentQuotaManagerTest {
+public class JPACurrentQuotaManagerTest extends StoreCurrentQuotaManagerTest {
 
-    private static final CassandraCluster CASSANDRA_CLUSTER = CassandraCluster.create(new CassandraQuotaModule());
+    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.QUOTA_PERSISTANCE_CLASSES);
 
     @Override
     protected StoreCurrentQuotaManager provideTestee() {
-        return new CassandraCurrentQuotaManager(CASSANDRA_CLUSTER.getConf());
+        return new JpaCurrentQuotaManager(JPA_TEST_CLUSTER.getEntityManagerFactory());
     }
 
     @After
     public void tearDown() {
-        CASSANDRA_CLUSTER.clearAllTables();
+        JPA_TEST_CLUSTER.clear(JPAMailboxFixture.QUOTA_TABLES_NAMES);
     }
 
 }

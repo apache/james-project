@@ -142,7 +142,8 @@
                                 org.apache.james.mailbox.jpa.quota.model.MaxDefaultMessageCount;
                                 org.apache.james.mailbox.jpa.quota.model.MaxDefaultStorage
                                 org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount
-                                org.apache.james.mailbox.jpa.quota.model.MaxUserStorage)
+                                org.apache.james.mailbox.jpa.quota.model.MaxUserStorage
+                                org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota)
                             </value>
                         </property>
                     </toolProperties>
