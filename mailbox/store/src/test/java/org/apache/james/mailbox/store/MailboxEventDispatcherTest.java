@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import javax.mail.Flags;
+import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxListener;
@@ -32,6 +33,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -44,6 +46,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class MailboxEventDispatcherTest {
     private static final int sessionId = 10;
@@ -364,5 +367,24 @@ public class MailboxEventDispatcherTest {
                 .get(0);
         assertThat(event.getUpdatedFlags().get(0).systemFlagIterator())
             .containsOnly(Flags.Flag.SEEN, Flags.Flag.RECENT, Flags.Flag.ANSWERED);
+    }
+
+    @Test
+    public void expungedShouldNotFireEventWhenEmptyMap() {
+        dispatcher.expunged(session, ImmutableMap.<MessageUid, MessageMetaData> of(), mailbox);
+        assertThat(collector.getEvents()).isEmpty();
+    }
+
+    @Test
+    public void flagsUpdatedShouldNotFireEventWhenEmptyIdList() {
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+                .uid(MessageUid.of(1))
+                .modSeq(2)
+                .oldFlags(new Flags(Flag.RECENT))
+                .newFlags(new Flags(Flag.ANSWERED))
+                .build();
+        
+        dispatcher.flagsUpdated(session, ImmutableList.<MessageUid> of(), mailbox, ImmutableList.of(updatedFlags));
+        assertThat(collector.getEvents()).isEmpty();
     }
 }

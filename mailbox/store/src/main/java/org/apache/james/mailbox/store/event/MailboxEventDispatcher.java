@@ -89,7 +89,9 @@ public class MailboxEventDispatcher {
      * @param mailbox The mailbox
      */
     public void expunged(MailboxSession session,  Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        listener.event(eventFactory.expunged(session, uids, mailbox));
+        if (!uids.isEmpty()) {
+            listener.event(eventFactory.expunged(session, uids, mailbox));
+        }
     }
 
     public void expunged(MailboxSession session,  MessageMetaData messageMetaData, Mailbox mailbox) {
@@ -104,7 +106,9 @@ public class MailboxEventDispatcher {
      * registered MailboxListener will get triggered then
      */
     public void flagsUpdated(MailboxSession session, List<MessageUid> uids, Mailbox mailbox, List<UpdatedFlags> uflags) {
-        listener.event(eventFactory.flagsUpdated(session, uids, mailbox, uflags));
+        if (!uids.isEmpty()) {
+            listener.event(eventFactory.flagsUpdated(session, uids, mailbox, uflags));
+        }
     }
 
     public void flagsUpdated(MailboxSession session, MessageUid uid, Mailbox mailbox, UpdatedFlags uflags) {
