@@ -47,7 +47,7 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
     /**
      * Constructs a host system suitable for connection to an open port.
      * 
-     * @param supportedFeatures
+     * @param features
      *            set of features supported by the system
      * @param host
      *            host name that will be connected to, not null
