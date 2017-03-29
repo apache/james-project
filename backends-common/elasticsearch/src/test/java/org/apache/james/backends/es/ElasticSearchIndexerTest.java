@@ -239,5 +239,14 @@ public class ElasticSearchIndexerTest {
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
         }
     }
-
+    
+    @Test
+    public void updateMessagesShouldNotThrowWhenEmptyList() throws Exception {
+        testee.updateMessages(Lists.newArrayList());
+    }
+    
+    @Test
+    public void deleteMessagesShouldNotThrowWhenEmptyList() throws Exception {
+        testee.deleteMessages(Lists.newArrayList());
+    }
 }

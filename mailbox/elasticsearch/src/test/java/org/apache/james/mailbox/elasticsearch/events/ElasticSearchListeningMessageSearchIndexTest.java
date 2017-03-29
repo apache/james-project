@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -169,7 +170,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
 
         BulkResponse expectedBulkResponse = mock(BulkResponse.class);
         when(indexer.deleteMessages(any(List.class)))
-            .thenReturn(expectedBulkResponse);
+            .thenReturn(Optional.of(expectedBulkResponse));
 
         //When
         testee.delete(session, mailbox, Lists.newArrayList(MESSAGE_UID));
@@ -192,7 +193,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
 
         BulkResponse expectedBulkResponse = mock(BulkResponse.class);
         when(indexer.deleteMessages(any(List.class)))
-            .thenReturn(expectedBulkResponse);
+            .thenReturn(Optional.of(expectedBulkResponse));
         
         //When
         testee.delete(session, mailbox, Lists.newArrayList(MESSAGE_UID, messageId2, messageId3, messageId4, messageId5));

@@ -20,6 +20,7 @@ package org.apache.james.backends.es;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -28,6 +29,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.ValidationException;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,26 +105,36 @@ public class ElasticSearchIndexer {
             .get();
     }
 
-    public BulkResponse updateMessages(List<UpdatedRepresentation> updatedDocumentParts) {
-        Preconditions.checkNotNull(updatedDocumentParts);
-        BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-        updatedDocumentParts.forEach(updatedDocumentPart -> bulkRequestBuilder.add(
-            client.prepareUpdate(
-                indexName.getValue(),
-                typeName.getValue(),
-                updatedDocumentPart.getId())
-            .setDoc(updatedDocumentPart.getUpdatedDocumentPart())));
-        return bulkRequestBuilder.get();
+    public Optional<BulkResponse> updateMessages(List<UpdatedRepresentation> updatedDocumentParts) {
+        try {
+            Preconditions.checkNotNull(updatedDocumentParts);
+            BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
+            updatedDocumentParts.forEach(updatedDocumentPart -> bulkRequestBuilder.add(
+                client.prepareUpdate(
+                    indexName.getValue(),
+                    typeName.getValue(),
+                    updatedDocumentPart.getId())
+                .setDoc(updatedDocumentPart.getUpdatedDocumentPart())));
+            return Optional.of(bulkRequestBuilder.get());
+        } catch (ValidationException e) {
+            LOGGER.warn("Error while updating index", e);
+            return Optional.empty();
+        }
     }
 
-    public BulkResponse deleteMessages(List<String> ids) {
-        BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-        ids.forEach(id -> bulkRequestBuilder.add(
-            client.prepareDelete(
-                indexName.getValue(),
-                typeName.getValue(),
-                id)));
-        return bulkRequestBuilder.get();
+    public Optional<BulkResponse> deleteMessages(List<String> ids) {
+        try {
+            BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
+            ids.forEach(id -> bulkRequestBuilder.add(
+                client.prepareDelete(
+                    indexName.getValue(),
+                    typeName.getValue(),
+                    id)));
+            return Optional.of(bulkRequestBuilder.get());
+        } catch (ValidationException e) {
+            LOGGER.warn("Error while deleting index", e);
+            return Optional.empty();
+        }
     }
     
     public void deleteAllMatchingQuery(QueryBuilder queryBuilder) {
