@@ -19,8 +19,8 @@
 
 package org.apache.james.backends.jpa;
 
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -30,10 +30,15 @@ import org.apache.openjpa.persistence.OpenJPAPersistence;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 
 public class JpaTestCluster {
 
     public static JpaTestCluster create(Class<?>... clazz) {
+        return create(ImmutableList.copyOf(clazz));
+    }
+
+    public static JpaTestCluster create(List<Class<?>> clazz) {
         HashMap<String, String> properties = new HashMap<String, String>();
         properties.put("openjpa.ConnectionDriverName", org.h2.Driver.class.getName());
         properties.put("openjpa.ConnectionURL", "jdbc:h2:mem:mailboxintegration;DB_CLOSE_DELAY=-1"); // Memory H2 database
@@ -46,7 +51,7 @@ public class JpaTestCluster {
         properties.put("openjpa.ConnectionFactoryProperties", "PrettyPrint=true, PrettyPrintLineLength=72");
         properties.put("openjpa.MetaDataFactory", "jpa(Types=" +
             Joiner.on(";").join(
-                FluentIterable.from(Arrays.asList(clazz))
+                FluentIterable.from(clazz)
                     .transform(toFQDN()))
             + ")");
         return new JpaTestCluster(OpenJPAPersistence.getEntityManagerFactory(properties));
@@ -72,6 +77,10 @@ public class JpaTestCluster {
     }
 
     public void clear(String... tables) {
+        clear(ImmutableList.copyOf(tables));
+    }
+
+    public void clear(List<String> tables) {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         entityManager.getTransaction().begin();
         for(String tableName: tables) {

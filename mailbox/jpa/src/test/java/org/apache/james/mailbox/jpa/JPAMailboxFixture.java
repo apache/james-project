@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.jpa;
 
+import java.util.List;
+
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailboxAnnotation;
 import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
@@ -32,36 +34,38 @@ import org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount;
 import org.apache.james.mailbox.jpa.quota.model.MaxUserStorage;
 import org.apache.james.mailbox.jpa.user.model.JPASubscription;
 
+import com.google.common.collect.ImmutableList;
+
 public interface JPAMailboxFixture {
 
-    Class<?>[] MAILBOX_PERSISTANCE_CLASSES = new Class[] {JPAMailbox.class,
+    List<Class<?>> MAILBOX_PERSISTANCE_CLASSES = ImmutableList.<Class<?>>of(JPAMailbox.class,
         AbstractJPAMailboxMessage.class,
         JPAMailboxMessage.class,
         JPAProperty.class,
         JPAUserFlag.class,
         JPAMailboxAnnotation.class,
         JPASubscription.class
-    };
+    );
 
-    Class<?>[] QUOTA_PERSISTANCE_CLASSES = new Class[] {
+    List<Class<?>> QUOTA_PERSISTANCE_CLASSES = ImmutableList.<Class<?>>of(
         MaxDefaultMessageCount.class,
         MaxDefaultStorage.class,
         MaxUserMessageCount.class,
         MaxUserStorage.class,
         JpaCurrentQuota.class
-    };
+    );
 
-    String[] MAILBOX_TABLE_NAMES = new String[] {"JAMES_MAIL_USERFLAG",
+    List<String> MAILBOX_TABLE_NAMES = ImmutableList.<String>of("JAMES_MAIL_USERFLAG",
         "JAMES_MAIL_PROPERTY",
         "JAMES_MAILBOX_ANNOTATION",
         "JAMES_MAILBOX",
-        "JAMES_MAIL"};
+        "JAMES_MAIL");
 
-    String[] QUOTA_TABLES_NAMES = new String[] {
+    List<String> QUOTA_TABLES_NAMES = ImmutableList.<String>of(
         "JAMES_MAX_DEFAULT_MESSAGE_COUNT",
         "JAMES_MAX_DEFAULT_STORAGE",
         "JAMES_MAX_USER_MESSAGE_COUNT",
         "JAMES_MAX_USER_STORAGE",
         "JAMES_QUOTA_CURRENTQUOTA"
-    };
+    );
 }
