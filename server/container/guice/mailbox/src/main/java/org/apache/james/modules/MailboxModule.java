@@ -27,7 +27,9 @@ public class MailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MailboxProbeImpl.class);
+        Multibinder<GuiceProbe> probeMultiBinder = Multibinder.newSetBinder(binder(), GuiceProbe.class);
+        probeMultiBinder.addBinding().to(MailboxProbeImpl.class);
+        probeMultiBinder.addBinding().to(QuotaProbesImpl.class);
     }
 
 }
