@@ -143,6 +143,7 @@
         <geronimo-javamail.version>1.8.3</geronimo-javamail.version>
         <slf4j.version>1.7.2</slf4j.version>
         <servlet-api.version>2.4</servlet-api.version>
+        <james-jdkim.version>0.3-SNAPSHOT</james-jdkim.version>
         <!-- commons -->
         <commons-daemon.version>1.0.10</commons-daemon.version>
         <commons-collections.version>3.2.1</commons-collections.version>
@@ -1626,6 +1627,12 @@
                 <artifactId>testcontainers</artifactId>
                 <version>${testcontainers-version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.james.jdkim</groupId>
+                <artifactId>apache-jdkim-library</artifactId>
+                <version>{james-jdkim.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
