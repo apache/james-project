@@ -95,21 +95,23 @@
         <module>protocols/protocols-imap4</module>
         <module>protocols/jmap</module>
         <module>protocols/jmap-integration-testing</module>
+        <module>protocols/jwt</module>
         <module>protocols/protocols-library</module>
         <module>protocols/protocols-lmtp</module>
         <module>protocols/protocols-managesieve</module>
         <module>protocols/protocols-pop3</module>
         <module>protocols/protocols-smtp</module>
+        <module>protocols/webadmin/webadmin-core</module>
+        <module>protocols/webadmin/webadmin-data</module>
+        <module>protocols/webadmin/webadmin-mailbox</module>
+        <module>protocols/webadmin-integration-test</module>
 
         <module>queue/queue-api</module>
         <module>queue/queue-file</module>
         <module>queue/queue-jms</module>
         <module>queue/queue-activemq</module>
-        <module>protocols/webadmin</module>
-        <module>protocols/webadmin-integration-test</module>
 
         <module>testing</module>
-        <module>protocols/jwt</module>
     </modules>
 
     <distributionManagement>
@@ -683,7 +685,17 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
-                <artifactId>james-server-webadmin</artifactId>
+                <artifactId>james-server-webadmin-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-webadmin-data</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-webadmin-mailbox</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

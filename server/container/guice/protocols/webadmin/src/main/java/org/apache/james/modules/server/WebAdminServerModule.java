@@ -36,16 +36,11 @@ import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.FixedPort;
 import org.apache.james.webadmin.TlsConfiguration;
-import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.JwtFilter;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
-import org.apache.james.webadmin.routes.DomainRoutes;
-import org.apache.james.webadmin.routes.GlobalQuotaRoutes;
-import org.apache.james.webadmin.routes.UserMailboxesRoutes;
-import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,12 +71,6 @@ public class WebAdminServerModule extends AbstractModule {
     protected void configure() {
         bind(JsonTransformer.class).in(Scopes.SINGLETON);
         bind(WebAdminServer.class).in(Scopes.SINGLETON);
-
-        Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
-        routesMultibinder.addBinding().to(DomainRoutes.class);
-        routesMultibinder.addBinding().to(UserRoutes.class);
-        routesMultibinder.addBinding().to(UserMailboxesRoutes.class);
-        routesMultibinder.addBinding().to(GlobalQuotaRoutes.class);
 
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(WebAdminServerModuleConfigurationPerformer.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(WebAdminGuiceProbe.class);

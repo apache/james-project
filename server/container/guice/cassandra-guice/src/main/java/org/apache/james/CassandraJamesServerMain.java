@@ -36,8 +36,10 @@ import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
+import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.ESMetricReporterModule;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 
 import com.google.inject.Module;
@@ -52,7 +54,9 @@ public class CassandraJamesServerMain {
             new SMTPServerModule(),
             new LMTPServerModule(),
             new ManageSieveServerModule(),
-            new WebAdminServerModule());
+            new WebAdminServerModule(),
+            new DataRoutesModules(),
+            new MailboxRoutesModule());
     
     public static final Module cassandraServerModule = Modules.combine(
         new JMAPServerModule(),

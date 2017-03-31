@@ -172,7 +172,17 @@
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
-                    <artifactId>james-server-webadmin</artifactId>
+                    <artifactId>james-server-webadmin-core</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-webadmin-data</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-webadmin-mailbox</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>

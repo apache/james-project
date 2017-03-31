@@ -97,6 +97,16 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-webadmin-data</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-webadmin-mailbox</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-jpa-common-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -123,6 +133,8 @@
         <module>protocols/pop</module>
         <module>protocols/smtp</module>
         <module>protocols/webadmin</module>
+        <module>protocols/webadmin-mailbox</module>
+        <module>protocols/webadmin-data</module>
     </modules>
 </project>
 

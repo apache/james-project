@@ -31,7 +31,9 @@ import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
+import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.WebAdminServerModule;
@@ -48,7 +50,9 @@ public class JPAJamesServerMain {
             new SMTPServerModule(),
             new LMTPServerModule(),
             new ManageSieveServerModule(),
-            new WebAdminServerModule());
+            new WebAdminServerModule(),
+            new DataRoutesModules(),
+            new MailboxRoutesModule());
     
     public static final Module jpaServerModule = Modules.combine(
         new JPAMailboxModule(),

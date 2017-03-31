@@ -30,7 +30,9 @@ import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
+import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MemoryMailQueueModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 
@@ -48,6 +50,8 @@ public class MemoryJamesServerMain {
             new LMTPServerModule(),
             new ManageSieveServerModule(),
             new WebAdminServerModule(),
+            new DataRoutesModules(),
+            new MailboxRoutesModule(),
             new MemoryDataModule(),
             new MemoryDataJmapModule(),
             new MemoryMailboxModule(),
