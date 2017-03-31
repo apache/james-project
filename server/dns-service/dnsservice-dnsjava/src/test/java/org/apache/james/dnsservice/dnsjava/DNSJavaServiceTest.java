@@ -20,6 +20,8 @@ package org.apache.james.dnsservice.dnsjava;
 
 import com.google.common.io.Resources;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -224,6 +226,10 @@ public class DNSJavaServiceTest {
     }
 
     private final class TestableDNSServer extends DNSJavaService {
+
+        public TestableDNSServer() {
+            super(new NoopMetricFactory());
+        }
 
         public void setResolver(Resolver r) {
             resolver = r;

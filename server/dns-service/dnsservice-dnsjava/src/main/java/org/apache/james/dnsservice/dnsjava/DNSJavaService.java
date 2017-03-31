@@ -25,6 +25,8 @@ import org.apache.james.dnsservice.api.DNSServiceMBean;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.LogEnabled;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.xbill.DNS.ARecord;
 import org.xbill.DNS.Cache;
@@ -44,6 +46,8 @@ import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -85,6 +89,8 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
      */
     private final List<String> dnsServers = new ArrayList<String>();
 
+    private final MetricFactory metricFactory;
+
     /**
      * The search paths to be used
      */
@@ -111,6 +117,11 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
 
     public void setLog(Logger logger) {
         this.logger = logger;
+    }
+
+    @Inject
+    public DNSJavaService(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
     }
 
     @Override
@@ -306,6 +317,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
 
     @Override
     public Collection<String> findMXRecords(String hostname) throws TemporaryResolutionException {
+        TimeMetric timeMetric = metricFactory.timer("findMXRecords");
         List<String> servers = new ArrayList<String>();
         try {
             servers = findMXRecordsRaw(hostname);
@@ -327,6 +339,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
                     logger.error(logBuffer.toString());
                 }
             }
+            timeMetric.stopAndPublish();
         }
     }
 
@@ -424,6 +437,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
 
     @Override
     public InetAddress getByName(String host) throws UnknownHostException {
+        TimeMetric timeMetric = metricFactory.timer("getByName");
         String name = allowIPLiteral(host);
 
         try {
@@ -441,11 +455,14 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
                 return InetAddress.getByAddress(name, a.getAddress().getAddress());
             } else
                 throw e;
+        } finally {
+            timeMetric.stopAndPublish();
         }
     }
 
     @Override
     public InetAddress[] getAllByName(String host) throws UnknownHostException {
+        TimeMetric timeMetric = metricFactory.timer("getAllByName");
         String name = allowIPLiteral(host);
         try {
             // Check if its local
@@ -467,37 +484,49 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
                 return addrs;
             } else
                 throw e;
+        } finally {
+            timeMetric.stopAndPublish();
         }
     }
 
     @Override
     public Collection<String> findTXTRecords(String hostname) {
+        TimeMetric timeMetric = metricFactory.timer("findTXTRecords");
         List<String> txtR = new ArrayList<String>();
         Record[] records = lookupNoException(hostname, Type.TXT, "TXT");
 
-        if (records != null) {
-            for (Record record : records) {
-                TXTRecord txt = (TXTRecord) record;
-                txtR.add(txt.rdataToString());
-            }
+        try {
+            if (records != null) {
+                for (Record record : records) {
+                    TXTRecord txt = (TXTRecord) record;
+                    txtR.add(txt.rdataToString());
+                }
 
+            }
+            return txtR;
+        } finally {
+            timeMetric.stopAndPublish();
         }
-        return txtR;
     }
 
     @Override
     public String getHostName(InetAddress addr) {
+        TimeMetric timeMetric = metricFactory.timer("getHostName");
         String result;
         Name name = ReverseMap.fromAddress(addr);
         Record[] records = lookupNoException(name.toString(), Type.PTR, "PTR");
 
-        if (records == null) {
-            result = addr.getHostAddress();
-        } else {
-            PTRRecord ptr = (PTRRecord) records[0];
-            result = ptr.getTarget().toString();
+        try {
+            if (records == null) {
+                result = addr.getHostAddress();
+            } else {
+                PTRRecord ptr = (PTRRecord) records[0];
+                result = ptr.getTarget().toString();
+            }
+            return result;
+        } finally {
+            timeMetric.stopAndPublish();
         }
-        return result;
     }
 
     @Override
