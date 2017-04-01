@@ -57,6 +57,7 @@
         <module>karaf/integration</module>
 
         <module>container/cli</module>
+        <module>container/cli-integration</module>
         <module>container/core</module>
         <module>container/filesystem-api</module>
         <module>container/guice</module>

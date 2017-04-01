@@ -23,6 +23,8 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.server.RMISocketFactory;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * {@link RMISocketFactory} implementation which allow to bind JMX to a specific
@@ -31,6 +33,8 @@ import java.rmi.server.RMISocketFactory;
 public class RestrictingRMISocketFactory extends RMISocketFactory {
 
     private final String address;
+
+    private final List<ServerSocket> sockets = new ArrayList<ServerSocket>();
 
     public RestrictingRMISocketFactory(String address) {
         this.address = address;
@@ -48,6 +52,7 @@ public class RestrictingRMISocketFactory extends RMISocketFactory {
     public ServerSocket createServerSocket(int port) throws IOException {
         ServerSocket socket = new ServerSocket();
         socket.bind(new InetSocketAddress(address, port));
+        sockets.add(socket);
         return socket;
     }
 
@@ -58,4 +63,7 @@ public class RestrictingRMISocketFactory extends RMISocketFactory {
         return new Socket(host, port);
     }
 
+    public List<ServerSocket> getSockets() {
+        return sockets;
+    }
 }
