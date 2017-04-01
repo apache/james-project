@@ -35,8 +35,6 @@ public class SieveFileRepositoryTest extends AbstractSieveRepositoryTest {
 
     @Override
     protected SieveRepository createSieveRepository() throws Exception {
-        File root = fileSystem.getFile(SIEVE_ROOT);
-        FileUtils.forceMkdir(root);
         return new SieveFileRepository(fileSystem);
     }
 

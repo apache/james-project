@@ -20,20 +20,6 @@
 
 package org.apache.james.sieverepository.file;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.sieverepository.api.ScriptSummary;
-import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.sieverepository.api.exception.DuplicateException;
-import org.apache.james.sieverepository.api.exception.IsActiveException;
-import org.apache.james.sieverepository.api.exception.QuotaExceededException;
-import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
-import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.apache.james.sieverepository.api.exception.StorageException;
-import org.joda.time.DateTime;
-
-import javax.inject.Inject;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,6 +34,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+
+import javax.inject.Inject;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.sieverepository.api.ScriptSummary;
+import org.apache.james.sieverepository.api.SieveRepository;
+import org.apache.james.sieverepository.api.exception.DuplicateException;
+import org.apache.james.sieverepository.api.exception.IsActiveException;
+import org.apache.james.sieverepository.api.exception.QuotaExceededException;
+import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
+import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
+import org.apache.james.sieverepository.api.exception.StorageException;
+import org.joda.time.DateTime;
 
 /**
  * <code>SieveFileRepository</code> manages sieve scripts stored on the file system.
@@ -65,7 +66,7 @@ public class SieveFileRepository implements SieveRepository {
     private static final int MAX_BUFF_SIZE = 32768;
     public static final String SIEVE_EXTENSION = ".sieve";
 
-    private FileSystem _fileSystem = null;
+    private final FileSystem fileSystem;
     private final Object lock = new Object();
 
     /**
@@ -134,25 +135,11 @@ public class SieveFileRepository implements SieveRepository {
         }
     }
 
-    /**
-     * Creates a new instance of SieveFileRepository.
-     */
-    public SieveFileRepository() {
-
-    }
-
-    /**
-     * Creates a new instance of SieveFileRepository.
-     *
-     * @param fileSystem
-     */
-    public SieveFileRepository(FileSystem fileSystem) {
-        setFileSystem(fileSystem);
-    }
-
     @Inject
-    public void setFileSystem(FileSystem fileSystem) {
-        _fileSystem = fileSystem;
+    public SieveFileRepository(FileSystem fileSystem) throws IOException {
+        this.fileSystem = fileSystem;
+        File root = fileSystem.getFile(SIEVE_ROOT);
+        FileUtils.forceMkdir(root);
     }
 
     @Override
@@ -318,7 +305,7 @@ public class SieveFileRepository implements SieveRepository {
 
     protected File getSieveRootDirectory() throws StorageException {
         try {
-            return _fileSystem.getFile(SIEVE_ROOT);
+            return fileSystem.getFile(SIEVE_ROOT);
         } catch (FileNotFoundException ex1) {
             throw new StorageException(ex1);
         }

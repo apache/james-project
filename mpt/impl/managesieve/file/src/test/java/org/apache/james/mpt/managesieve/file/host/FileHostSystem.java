@@ -52,8 +52,6 @@ public class FileHostSystem extends JamesManageSieveHostSystem {
     }
 
     protected static SieveRepository createSieveRepository() throws Exception {
-        File root = getFileSystem().getFile(SIEVE_ROOT);
-        FileUtils.forceMkdir(root);
         return new SieveFileRepository(fileSystem);
     }
 
