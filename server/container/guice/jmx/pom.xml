@@ -190,6 +190,10 @@
                     <artifactId>guice-multibindings</artifactId>
                 </dependency>
                 <dependency>
+                    <groupId>com.github.fge</groupId>
+                    <artifactId>throwing-lambdas</artifactId>
+                </dependency>
+                <dependency>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
                 </dependency>

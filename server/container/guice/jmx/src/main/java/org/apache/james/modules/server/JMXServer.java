@@ -19,8 +19,8 @@
 
 package org.apache.james.modules.server;
 
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.net.ServerSocket;
 import java.rmi.registry.LocateRegistry;
 import java.util.HashSet;
 import java.util.Map;
@@ -38,6 +38,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.util.RestrictingRMISocketFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 
@@ -48,6 +49,7 @@ public class JMXServer {
     private final Object lock;
     private JMXConnectorServer jmxConnectorServer;
     private boolean isStarted;
+    private RestrictingRMISocketFactory restrictingRMISocketFactory;
 
     @Inject
     public JMXServer(FileSystem fileSystem) {
@@ -88,10 +90,10 @@ public class JMXServer {
     private void doStart() {
         try {
             PropertiesConfiguration configuration = new PropertiesConfiguration(fileSystem.getFile(FileSystem.FILE_PROTOCOL_AND_CONF + "jmx.properties"));
-            String address = configuration.getString("jmx.address");
-            int port = configuration.getInt("jmx.port");
+            String address = configuration.getString("jmx.address", "localhost");
+            int port = configuration.getInt("jmx.port", 9999);
             String serviceURL = "service:jmx:rmi://" + address + "/jndi/rmi://" + address+ ":" + port +"/jmxrmi";
-            RestrictingRMISocketFactory restrictingRMISocketFactory = new RestrictingRMISocketFactory(address);
+            restrictingRMISocketFactory = new RestrictingRMISocketFactory(address);
             LocateRegistry.createRegistry(port, restrictingRMISocketFactory, restrictingRMISocketFactory);
 
             Map<String, ?> environment = ImmutableMap.of();
@@ -117,7 +119,10 @@ public class JMXServer {
             });
             registeredKeys.clear();
             jmxConnectorServer.stop();
-        } catch (IOException e) {
+            restrictingRMISocketFactory.getSockets()
+                .forEach(Throwing.consumer(ServerSocket::close)
+                    .sneakyThrow());
+        } catch (Exception e) {
             throw Throwables.propagate(e);
         }
     }
