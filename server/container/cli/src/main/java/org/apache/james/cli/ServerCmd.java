@@ -102,6 +102,11 @@ public class ServerCmd {
     }
 
     public static void doMain(String[] args) throws Exception {
+        PrintStream printStream = System.out;
+        executeAndOutputToStream(args, printStream);
+    }
+
+    public static void executeAndOutputToStream(String[] args, PrintStream printStream) throws Exception {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         CommandLine cmd = parseCommandLine(args);
@@ -112,11 +117,11 @@ public class ServerCmd {
                 new JmxQuotaProbe().connect(jmxConnection),
                 new JmxSieveProbe().connect(jmxConnection)
             )
-            .executeCommandLine(cmd);
+            .executeCommandLine(cmd, printStream);
         stopWatch.split();
         print(new String[] { Joiner.on(' ')
                 .join(cmdType.getCommand(), "command executed sucessfully in", stopWatch.getSplitTime(), "ms.")},
-            System.out);
+            printStream);
         stopWatch.stop();
     }
 
@@ -169,8 +174,8 @@ public class ServerCmd {
     }
 
     @VisibleForTesting
-    CmdType executeCommandLine(CommandLine cmd) throws Exception {
-        String[] arguments = cmd.getArgs();
+    private CmdType executeCommandLine(CommandLine commandLine, PrintStream printStream) throws Exception {
+        String[] arguments = commandLine.getArgs();
         String cmdName = arguments[0];
         CmdType cmdType = CmdType.lookup(cmdName);
         if (cmdType == null) {
@@ -179,11 +184,17 @@ public class ServerCmd {
         if (! cmdType.hasCorrectArguments(arguments.length)) {
             throw new InvalidArgumentNumberException(cmdType, arguments.length);
         }
-        executeCommand(arguments, cmdType);
+        executeCommand(arguments, cmdType, printStream);
         return cmdType;
     }
 
-    private void executeCommand(String[] arguments, CmdType cmdType) throws Exception {
+
+    @VisibleForTesting
+    CmdType executeCommandLine(CommandLine commandLine) throws Exception {
+        return executeCommandLine(commandLine, new PrintStream(System.out));
+    }
+
+    private void executeCommand(String[] arguments, CmdType cmdType, PrintStream printStream) throws Exception {
         switch (cmdType) {
         case ADDUSER:
             probe.addUser(arguments[1], arguments[2]);
@@ -192,7 +203,7 @@ public class ServerCmd {
             probe.removeUser(arguments[1]);
             break;
         case LISTUSERS:
-            print(probe.listUsers(), System.out);
+            print(probe.listUsers(), printStream);
             break;
         case ADDDOMAIN:
             probe.addDomain(arguments[1]);
@@ -202,20 +213,20 @@ public class ServerCmd {
             break;
         case CONTAINSDOMAIN:
             if (probe.containsDomain(arguments[1])) {
-                System.out.println(arguments[1] + " exists");
+                printStream.println(arguments[1] + " exists");
             } else {
-                System.out.println(arguments[1] + " does not exists");
+                printStream.println(arguments[1] + " does not exists");
             }
             break;
         case LISTDOMAINS:
-            print(probe.listDomains(), System.out);
+            print(probe.listDomains(), printStream);
             break;
         case LISTMAPPINGS:
-            print(probe.listMappings(), System.out);
+            print(probe.listMappings(), printStream);
             break;
         case LISTUSERDOMAINMAPPINGS:
             Mappings userDomainMappings = probe.listUserDomainMappings(arguments[1], arguments[2]);
-            print(userDomainMappings.asStrings(), System.out);
+            print(userDomainMappings.asStrings(), printStream);
             break;
         case ADDADDRESSMAPPING:
             probe.addAddressMapping(arguments[1], arguments[2], arguments[3]);
@@ -243,28 +254,28 @@ public class ServerCmd {
             break;
         case LISTUSERMAILBOXES:
             Collection<String> mailboxes = mailboxProbe.listUserMailboxes(arguments[1]);
-            print(mailboxes.toArray(new String[0]), System.out);
+            print(mailboxes.toArray(new String[0]), printStream);
             break;
         case DELETEMAILBOX:
             mailboxProbe.deleteMailbox(arguments[1], arguments[2], arguments[3]);
             break;
         case GETSTORAGEQUOTA:
-            printStorageQuota(arguments[1], quotaProbe.getStorageQuota(arguments[1]));
+            printStorageQuota(arguments[1], quotaProbe.getStorageQuota(arguments[1]), printStream);
             break;
         case GETMESSAGECOUNTQUOTA:
-            printMessageQuota(arguments[1], quotaProbe.getMessageCountQuota(arguments[1]));
+            printMessageQuota(arguments[1], quotaProbe.getMessageCountQuota(arguments[1]), printStream);
             break;
         case GETQUOTAROOT:
-            System.out.println("Quota Root : " + quotaProbe.getQuotaRoot(arguments[1], arguments[2], arguments[3]));
+            printStream.println("Quota Root : " + quotaProbe.getQuotaRoot(arguments[1], arguments[2], arguments[3]));
             break;
         case GETMAXSTORAGEQUOTA:
-            System.out.println("Storage space allowed for Quota Root "
+            printStream.println("Storage space allowed for Quota Root "
                 + arguments[1]
                 + " : "
                 + formatStorageValue(quotaProbe.getMaxStorage(arguments[1])));
             break;
         case GETMAXMESSAGECOUNTQUOTA:
-            System.out.println("MailboxMessage count allowed for Quota Root " + arguments[1] + " : " + formatMessageValue(quotaProbe.getMaxMessageCount(arguments[1])));
+            printStream.println("MailboxMessage count allowed for Quota Root " + arguments[1] + " : " + formatMessageValue(quotaProbe.getMaxMessageCount(arguments[1])));
             break;
         case SETMAXSTORAGEQUOTA:
             quotaProbe.setMaxStorage(arguments[1], ValueWithUnit.parse(arguments[2]).getConvertedValue());
@@ -279,10 +290,10 @@ public class ServerCmd {
             quotaProbe.setDefaultMaxMessageCount(Long.parseLong(arguments[1]));
             break;
         case GETDEFAULTMAXSTORAGEQUOTA:
-            System.out.println("Default Maximum Storage Quota : " + formatStorageValue(quotaProbe.getDefaultMaxStorage()));
+            printStream.println("Default Maximum Storage Quota : " + formatStorageValue(quotaProbe.getDefaultMaxStorage()));
             break;
         case GETDEFAULTMAXMESSAGECOUNTQUOTA:
-            System.out.println("Default Maximum message count Quota : " + formatMessageValue(quotaProbe.getDefaultMaxMessageCount()));
+            printStream.println("Default Maximum message count Quota : " + formatMessageValue(quotaProbe.getDefaultMaxMessageCount()));
             break;
         case REINDEXMAILBOX:
             mailboxProbe.reIndexMailbox(arguments[1], arguments[2], arguments[3]);
@@ -297,11 +308,11 @@ public class ServerCmd {
             sieveProbe.setSieveQuota(arguments[1], ValueWithUnit.parse(arguments[2]).getConvertedValue());
             break;
         case GETSIEVEQUOTA:
-            System.out.println("Storage space allowed for Sieve scripts by default : "
+            printStream.println("Storage space allowed for Sieve scripts by default : "
                 + formatStorageValue(sieveProbe.getSieveQuota()));
             break;
         case GETSIEVEUSERQUOTA:
-            System.out.println("Storage space allowed for "
+            printStream.println("Storage space allowed for "
                 + arguments[1]
                 + " Sieve scripts : "
                 + formatStorageValue(sieveProbe.getSieveQuota(arguments[1])));
@@ -327,15 +338,15 @@ public class ServerCmd {
         }
     }
 
-    private void printStorageQuota(String quotaRootString, SerializableQuota quota) {
-        System.out.println(String.format("Storage quota for %s is : %s / %s",
+    private void printStorageQuota(String quotaRootString, SerializableQuota quota, PrintStream printStream) {
+        printStream.println(String.format("Storage quota for %s is : %s / %s",
             quotaRootString,
             formatStorageValue(quota.getUsed()),
             formatStorageValue(quota.getMax())));
     }
 
-    private void printMessageQuota(String quotaRootString, SerializableQuota quota) {
-        System.out.println(String.format("MailboxMessage count quota for %s is : %s / %s",
+    private void printMessageQuota(String quotaRootString, SerializableQuota quota, PrintStream printStream) {
+        printStream.println(String.format("MailboxMessage count quota for %s is : %s / %s",
             quotaRootString,
             formatMessageValue(quota.getUsed()),
             formatMessageValue(quota.getMax())));

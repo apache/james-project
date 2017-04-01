@@ -22,26 +22,20 @@ package org.apache.james.cli;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import javax.inject.Singleton;
-
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
+import org.apache.james.cli.util.OutputCapture;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.modules.TestFilesystemModule;
 import org.apache.james.modules.protocols.SieveProbeImpl;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
-import org.apache.james.utils.MailboxManagerDefinition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
-
-import com.google.inject.Inject;
-import com.google.inject.multibindings.Multibinder;
 
 public class SieveQuotaCommandsIntegrationTest {
     public static final String USER = "user";
@@ -54,6 +48,7 @@ public class SieveQuotaCommandsIntegrationTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     private GuiceJamesServer guiceJamesServer;
     private SieveProbeImpl sieveProbe;
+    private OutputCapture outputCapture;
 
     @Before
     public void setUp() throws Exception {
@@ -61,6 +56,7 @@ public class SieveQuotaCommandsIntegrationTest {
             binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class)))
             .overrideWith(new TestFilesystemModule(temporaryFolder));
         guiceJamesServer.start();
+        outputCapture = new OutputCapture();
         sieveProbe = guiceJamesServer.getProbe(SieveProbeImpl.class);
     }
 
@@ -77,12 +73,33 @@ public class SieveQuotaCommandsIntegrationTest {
     }
 
     @Test
+    public void getSieveUserQuotaShouldWork() throws Exception {
+        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setsieveuserquota", USER, "36"});
+
+        ServerCmd.executeAndOutputToStream(new String[] {"-h", "127.0.0.1", "-p", "9999", "getsieveuserquota", USER},
+            outputCapture.getPrintStream());
+
+        assertThat(outputCapture.getContent())
+            .containsOnlyOnce("Storage space allowed for user Sieve scripts: 36 bytes");
+    }
+
+    @Test
     public void setSieveQuotaShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setsievequota", "36"});
 
         assertThat(sieveProbe.getSieveQuota()).isEqualTo(36);
     }
 
+    @Test
+    public void getSieveQuotaShouldWork() throws Exception {
+        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setsievequota", "36"});
+
+        ServerCmd.executeAndOutputToStream(new String[] {"-h", "127.0.0.1", "-p", "9999", "getsievequota"},
+            outputCapture.getPrintStream());
+
+        assertThat(outputCapture.getContent())
+            .containsOnlyOnce("Storage space allowed for Sieve scripts by default: 36 bytes");
+    }
 
     @Test
     public void removeSieveUserQuotaShouldWork() throws Exception {
