@@ -19,44 +19,39 @@
 
 package org.apache.james.cli;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-
-import javax.inject.Singleton;
+import static org.mockito.Mockito.verify;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
+import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.store.quota.QuotaRootImpl;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
-import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.server.JMXServerModule;
-import org.apache.james.utils.MailboxManagerDefinition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.inject.Inject;
-import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 
-public class MailboxCommandsIntegrationTest {
+public class ReindexCommandIntegrationTest {
     public static final String USER = "user";
-    public static final String MAILBOX = "mailbox";
+    private ReIndexer reIndexer;
 
     @Rule
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
     private GuiceJamesServer guiceJamesServer;
-    private MailboxProbeImpl mailboxProbe;
 
     @Before
     public void setUp() throws Exception {
+        reIndexer = mock(ReIndexer.class);
         guiceJamesServer = memoryJmap.jmapServer(new JMXServerModule(),
-            binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class)));
+            binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class)))
+            .overrideWith(binder -> binder.bind(ReIndexer.class)
+                .annotatedWith(Names.named("reindexer")).toInstance(reIndexer));
         guiceJamesServer.start();
-        mailboxProbe = guiceJamesServer.getProbe(MailboxProbeImpl.class);
     }
 
     @After
@@ -65,27 +60,18 @@ public class MailboxCommandsIntegrationTest {
     }
 
     @Test
-    public void createMailboxShouldWork() throws Exception {
-        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "createmailbox", MailboxConstants.USER_NAMESPACE, USER, MAILBOX});
+    public void reindexAllShouldWork() throws Exception {
+        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "reindexall"});
 
-        assertThat(mailboxProbe.listUserMailboxes(USER)).containsOnly(MAILBOX);
+        verify(reIndexer).reIndex();
     }
 
     @Test
-    public void deleteUserMailboxesShouldWork() throws Exception {
-        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "createmailbox", MailboxConstants.USER_NAMESPACE, USER, MAILBOX});
+    public void reindexMailboxShouldWork() throws Exception {
+        String mailbox = "mailbox";
+        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "reindexmailbox", MailboxConstants.USER_NAMESPACE, USER, mailbox});
 
-        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "deleteusermailboxes", USER});
-
-        assertThat(mailboxProbe.listUserMailboxes(USER)).isEmpty();
+        verify(reIndexer).reIndex(new MailboxPath(MailboxConstants.USER_NAMESPACE, USER, mailbox));
     }
 
-    @Test
-    public void deleteMailboxeShouldWork() throws Exception {
-        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "createmailbox", MailboxConstants.USER_NAMESPACE, USER, MAILBOX});
-
-        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "deletemailbox", MailboxConstants.USER_NAMESPACE, USER, MAILBOX});
-
-        assertThat(mailboxProbe.listUserMailboxes(USER)).isEmpty();
-    }
 }

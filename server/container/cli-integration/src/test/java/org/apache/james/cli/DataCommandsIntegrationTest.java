@@ -51,14 +51,6 @@ public class DataCommandsIntegrationTest {
     public static final String MAIL_ADDRESS = USER + "@" + DOMAIN_COM;
     public static final String PASSWORD = "12345";
 
-    @Singleton
-    private static class MemoryMailboxManagerDefinition extends MailboxManagerDefinition {
-        @Inject
-        private MemoryMailboxManagerDefinition(InMemoryMailboxManager manager) {
-            super("memory-mailboxmanager", manager);
-        }
-    }
-
     @Rule
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
     private GuiceJamesServer guiceJamesServer;
@@ -67,10 +59,7 @@ public class DataCommandsIntegrationTest {
     @Before
     public void setUp() throws Exception {
         guiceJamesServer = memoryJmap.jmapServer(new JMXServerModule(),
-            binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class)),
-            binder -> Multibinder.newSetBinder(binder, MailboxManagerDefinition.class)
-                .addBinding()
-                .to(MemoryMailboxManagerDefinition.class));
+            binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class)));
         guiceJamesServer.start();
         dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
     }

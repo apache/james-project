@@ -46,14 +46,6 @@ import com.google.inject.multibindings.Multibinder;
 public class SieveQuotaCommandsIntegrationTest {
     public static final String USER = "user";
 
-    @Singleton
-    private static class MemoryMailboxManagerDefinition extends MailboxManagerDefinition {
-        @Inject
-        private MemoryMailboxManagerDefinition(InMemoryMailboxManager manager) {
-            super("memory-mailboxmanager", manager);
-        }
-    }
-
     @Rule
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
     @Rule
@@ -66,10 +58,7 @@ public class SieveQuotaCommandsIntegrationTest {
     @Before
     public void setUp() throws Exception {
         guiceJamesServer = memoryJmap.jmapServer(new JMXServerModule(),
-            binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class)),
-            binder -> Multibinder.newSetBinder(binder, MailboxManagerDefinition.class)
-                .addBinding()
-                .to(MemoryMailboxManagerDefinition.class))
+            binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class)))
             .overrideWith(new TestFilesystemModule(temporaryFolder));
         guiceJamesServer.start();
         sieveProbe = guiceJamesServer.getProbe(SieveProbeImpl.class);

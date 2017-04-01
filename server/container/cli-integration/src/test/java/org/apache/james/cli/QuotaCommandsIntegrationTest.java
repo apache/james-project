@@ -61,10 +61,7 @@ public class QuotaCommandsIntegrationTest {
     @Before
     public void setUp() throws Exception {
         guiceJamesServer = memoryJmap.jmapServer(new JMXServerModule(),
-            binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class)),
-            binder -> Multibinder.newSetBinder(binder, MailboxManagerDefinition.class)
-                .addBinding()
-                .to(MemoryMailboxManagerDefinition.class));
+            binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class)));
         guiceJamesServer.start();
         quotaProbe = guiceJamesServer.getProbe(QuotaProbesImpl.class);
     }

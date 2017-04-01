@@ -63,10 +63,13 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.modules.Names;
+import org.apache.james.utils.MailboxManagerDefinition;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 
 public class MemoryMailboxModule extends AbstractModule {
@@ -114,6 +117,10 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(InMemoryMessageIdManager.class).in(Scopes.SINGLETON);
         bind(MailboxEventDispatcher.class).in(Scopes.SINGLETON);
         bind(StoreAttachmentManager.class).in(Scopes.SINGLETON);
+
+        Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class)
+            .addBinding()
+            .to(MemoryMailboxManagerDefinition.class);
     }
 
     @Provides @Named(Names.MAILBOXMANAGER_NAME) @Singleton
@@ -124,5 +131,13 @@ public class MemoryMailboxModule extends AbstractModule {
         mailboxManager.setQuotaUpdater(quotaUpdater);
         mailboxManager.init();
         return mailboxManager;
+    }
+
+    @Singleton
+    private static class MemoryMailboxManagerDefinition extends MailboxManagerDefinition {
+        @Inject
+        private MemoryMailboxManagerDefinition(InMemoryMailboxManager manager) {
+            super("memory-mailboxmanager", manager);
+        }
     }
 }
