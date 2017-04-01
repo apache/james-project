@@ -28,6 +28,8 @@ import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.RecipientRewriteTableManagementMBean;
 
+import com.google.common.collect.ImmutableMap;
+
 /**
  * Management for RecipientRewriteTables
  */
@@ -182,7 +184,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
      */
     public Map<String, Mappings> getAllMappings() throws Exception {
         try {
-            return rrt.getAllMappings();
+            return ImmutableMap.copyOf(rrt.getAllMappings());
         } catch (RecipientRewriteTableException e) {
             throw new Exception(e.getMessage());
         }
