@@ -47,11 +47,13 @@ import org.apache.james.user.api.UsersRepositoryManagementMBean;
 import org.apache.james.user.lib.UsersRepositoryManagement;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceMailboxManagerResolver;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
@@ -69,6 +71,15 @@ public class JMXServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(ReIndexerManagement.class).in(Scopes.SINGLETON);
+        bind(QuotaManagement.class).in(Scopes.SINGLETON);
+        bind(RecipientRewriteTableManagement.class).in(Scopes.SINGLETON);
+        bind(MailboxManagerManagement.class).in(Scopes.SINGLETON);
+        bind(UsersRepositoryManagement.class).in(Scopes.SINGLETON);
+        bind(DomainListManagement.class).in(Scopes.SINGLETON);
+        bind(MailboxCopierManagement.class).in(Scopes.SINGLETON);
+        bind(SieveRepositoryManagement.class).in(Scopes.SINGLETON);
+
         bind(MailboxCopier.class).annotatedWith(Names.named("mailboxcopier")).to(MailboxCopierImpl.class);
         bind(MailboxCopierManagementMBean.class).to(MailboxCopierManagement.class);
         bind(MailboxManagerResolver.class).to(GuiceMailboxManagerResolver.class);
@@ -81,7 +92,9 @@ public class JMXServerModule extends AbstractModule {
         bind(ReIndexerManagementMBean.class).to(ReIndexerManagement.class);
         bind(QuotaManagementMBean.class).to(QuotaManagement.class);
         bind(SieveRepositoryManagementMBean.class).to(SieveRepositoryManagement.class);
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(JMXModuleConfigurationPerformer.class);
+        Multibinder<ConfigurationPerformer> configurationMultibinder = Multibinder.newSetBinder(binder(), ConfigurationPerformer.class);
+        configurationMultibinder.addBinding().to(JMXModuleConfigurationPerformer.class);
+        configurationMultibinder.addBinding().to(MailboxManagementLogSetter.class);
     }
 
     @Singleton
@@ -133,6 +146,27 @@ public class JMXServerModule extends AbstractModule {
             } catch (Exception e) {
                 Throwables.propagate(e);
             }
+        }
+
+        @Override
+        public List<Class<? extends Configurable>> forClasses() {
+            return ImmutableList.of();
+        }
+    }
+
+    @Singleton
+    public static class MailboxManagementLogSetter implements ConfigurationPerformer {
+
+        private final MailboxManagerManagement mailboxManagerManagement;
+
+        @Inject
+        public MailboxManagementLogSetter(MailboxManagerManagement mailboxManagerManagement) {
+            this.mailboxManagerManagement = mailboxManagerManagement;
+        }
+
+        @Override
+        public void initModule() {
+            mailboxManagerManagement.setLog(LoggerFactory.getLogger(MailboxManagerManagement.class));
         }
 
         @Override
