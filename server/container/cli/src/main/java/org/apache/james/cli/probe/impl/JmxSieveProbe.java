@@ -34,7 +34,7 @@ public class JmxSieveProbe implements SieveProbe, JmxProbe {
     
     public JmxSieveProbe connect(JmxConnection jmxc) throws IOException {
         try {
-            jmxc.retrieveBean(SieveRepositoryManagementMBean.class, SIEVEMANAGER_OBJECT_NAME);
+            sieveRepositoryManagement = jmxc.retrieveBean(SieveRepositoryManagementMBean.class, SIEVEMANAGER_OBJECT_NAME);
         } catch (MalformedObjectNameException e) {
             throw new RuntimeException("Invalid ObjectName? Please report this as a bug.", e);
         }
