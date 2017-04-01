@@ -19,6 +19,8 @@
 
 package org.apache.james.adapter.mailbox;
 
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
@@ -28,19 +30,14 @@ import org.apache.james.mailbox.store.mail.model.SerializableQuota;
 
 public class QuotaManagement implements QuotaManagementMBean {
 
-    private QuotaManager quotaManager;
-    private MaxQuotaManager maxQuotaManager;
-    private QuotaRootResolver quotaRootResolver;
+    private final QuotaManager quotaManager;
+    private final MaxQuotaManager maxQuotaManager;
+    private final QuotaRootResolver quotaRootResolver;
 
-    public void setQuotaManager(QuotaManager quotaManager) {
+    @Inject
+    public QuotaManagement(QuotaManager quotaManager, MaxQuotaManager maxQuotaManager, QuotaRootResolver quotaRootResolver) {
         this.quotaManager = quotaManager;
-    }
-
-    public void setMaxQuotaManager(MaxQuotaManager maxQuotaManager) {
         this.maxQuotaManager = maxQuotaManager;
-    }
-
-    public void setQuotaRootResolver(QuotaRootResolver quotaRootResolver) {
         this.quotaRootResolver = quotaRootResolver;
     }
 

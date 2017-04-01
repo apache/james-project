@@ -280,11 +280,7 @@
     <bean id="domainlistmanagement" class="org.apache.james.domainlist.lib.DomainListManagement"/>
     <bean id="mailboxmanagermanagementbean" class="org.apache.james.adapter.mailbox.MailboxManagerManagement"/>
     <bean id="mailboxcopiermanagement" class="org.apache.james.adapter.mailbox.MailboxCopierManagement"/>
-    <bean id="quotamanagermanagement" class="org.apache.james.adapter.mailbox.QuotaManagement">
-        <property name="maxQuotaManager" ref="maxQuotaManager"/>
-        <property name="quotaRootResolver" ref="quotaRootResolver"/>
-        <property name="quotaManager" ref="quotaManager"/>
-    </bean>
+    <bean id="quotamanagermanagement" class="org.apache.james.adapter.mailbox.QuotaManagement"/>
     <bean id="reindexermanagement" class="org.apache.james.adapter.mailbox.ReIndexerManagement"/>
     <bean id="sievemanagerbean" class="org.apache.james.sieverepository.lib.SieveRepositoryManagement"/>
     <!--
