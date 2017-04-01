@@ -86,24 +86,8 @@ public class ServerCmd {
      * @param args Command-line arguments.
      */
     public static void main(String[] args) {
-
         try {
-            StopWatch stopWatch = new StopWatch();
-            stopWatch.start();
-            CommandLine cmd = parseCommandLine(args);
-            JmxConnection jmxConnection = new JmxConnection(cmd.getOptionValue(HOST_OPT_LONG), getPort(cmd));
-            CmdType cmdType = new ServerCmd(
-                    new JmxDataProbe().connect(jmxConnection),
-                    new JmxMailboxProbe().connect(jmxConnection),
-                    new JmxQuotaProbe().connect(jmxConnection),
-                    new JmxSieveProbe().connect(jmxConnection)
-                )
-                .executeCommandLine(cmd);
-            stopWatch.split();
-            print(new String[] { Joiner.on(' ')
-                    .join(cmdType.getCommand(), "command executed sucessfully in", stopWatch.getSplitTime(), "ms.")},
-                System.out);
-            stopWatch.stop();
+            doMain(args);
             System.exit(0);
         } catch (JamesCliException e) {
             failWithMessage(e.getMessage());
@@ -115,7 +99,25 @@ public class ServerCmd {
             LOG.error("Error on command: {}", e);
             failWithMessage("Error " + e.getClass() + " while executing command:" + e.getMessage());
         }
+    }
 
+    public static void doMain(String[] args) throws Exception {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        CommandLine cmd = parseCommandLine(args);
+        JmxConnection jmxConnection = new JmxConnection(cmd.getOptionValue(HOST_OPT_LONG), getPort(cmd));
+        CmdType cmdType = new ServerCmd(
+                new JmxDataProbe().connect(jmxConnection),
+                new JmxMailboxProbe().connect(jmxConnection),
+                new JmxQuotaProbe().connect(jmxConnection),
+                new JmxSieveProbe().connect(jmxConnection)
+            )
+            .executeCommandLine(cmd);
+        stopWatch.split();
+        print(new String[] { Joiner.on(' ')
+                .join(cmdType.getCommand(), "command executed sucessfully in", stopWatch.getSplitTime(), "ms.")},
+            System.out);
+        stopWatch.stop();
     }
 
     private final DataProbe probe;
@@ -321,9 +323,6 @@ public class ServerCmd {
     
     private static void print(Iterable<String> data, PrintStream out) {
         if (data != null) {
-            for (String u : data) {
-                out.println(u);
-            }
             out.println(Joiner.on('\n').join(data));
         }
     }
