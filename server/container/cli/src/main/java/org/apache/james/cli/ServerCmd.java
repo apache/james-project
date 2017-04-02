@@ -266,16 +266,16 @@ public class ServerCmd {
             printMessageQuota(arguments[1], quotaProbe.getMessageCountQuota(arguments[1]), printStream);
             break;
         case GETQUOTAROOT:
-            printStream.println("Quota Root : " + quotaProbe.getQuotaRoot(arguments[1], arguments[2], arguments[3]));
+            printStream.println("Quota Root: " + quotaProbe.getQuotaRoot(arguments[1], arguments[2], arguments[3]));
             break;
         case GETMAXSTORAGEQUOTA:
             printStream.println("Storage space allowed for Quota Root "
                 + arguments[1]
-                + " : "
+                + ": "
                 + formatStorageValue(quotaProbe.getMaxStorage(arguments[1])));
             break;
         case GETMAXMESSAGECOUNTQUOTA:
-            printStream.println("MailboxMessage count allowed for Quota Root " + arguments[1] + " : " + formatMessageValue(quotaProbe.getMaxMessageCount(arguments[1])));
+            printStream.println("MailboxMessage count allowed for Quota Root " + arguments[1] + ": " + formatMessageValue(quotaProbe.getMaxMessageCount(arguments[1])));
             break;
         case SETMAXSTORAGEQUOTA:
             quotaProbe.setMaxStorage(arguments[1], ValueWithUnit.parse(arguments[2]).getConvertedValue());
@@ -290,10 +290,10 @@ public class ServerCmd {
             quotaProbe.setDefaultMaxMessageCount(Long.parseLong(arguments[1]));
             break;
         case GETDEFAULTMAXSTORAGEQUOTA:
-            printStream.println("Default Maximum Storage Quota : " + formatStorageValue(quotaProbe.getDefaultMaxStorage()));
+            printStream.println("Default Maximum Storage Quota: " + formatStorageValue(quotaProbe.getDefaultMaxStorage()));
             break;
         case GETDEFAULTMAXMESSAGECOUNTQUOTA:
-            printStream.println("Default Maximum message count Quota : " + formatMessageValue(quotaProbe.getDefaultMaxMessageCount()));
+            printStream.println("Default Maximum message count Quota: " + formatMessageValue(quotaProbe.getDefaultMaxMessageCount()));
             break;
         case REINDEXMAILBOX:
             mailboxProbe.reIndexMailbox(arguments[1], arguments[2], arguments[3]);
@@ -308,13 +308,13 @@ public class ServerCmd {
             sieveProbe.setSieveQuota(arguments[1], ValueWithUnit.parse(arguments[2]).getConvertedValue());
             break;
         case GETSIEVEQUOTA:
-            printStream.println("Storage space allowed for Sieve scripts by default : "
+            printStream.println("Storage space allowed for Sieve scripts by default: "
                 + formatStorageValue(sieveProbe.getSieveQuota()));
             break;
         case GETSIEVEUSERQUOTA:
             printStream.println("Storage space allowed for "
                 + arguments[1]
-                + " Sieve scripts : "
+                + " Sieve scripts: "
                 + formatStorageValue(sieveProbe.getSieveQuota(arguments[1])));
             break;
         case REMOVESIEVEQUOTA:
@@ -339,14 +339,14 @@ public class ServerCmd {
     }
 
     private void printStorageQuota(String quotaRootString, SerializableQuota quota, PrintStream printStream) {
-        printStream.println(String.format("Storage quota for %s is : %s / %s",
+        printStream.println(String.format("Storage quota for %s is: %s / %s",
             quotaRootString,
             formatStorageValue(quota.getUsed()),
             formatStorageValue(quota.getMax())));
     }
 
     private void printMessageQuota(String quotaRootString, SerializableQuota quota, PrintStream printStream) {
-        printStream.println(String.format("MailboxMessage count quota for %s is : %s / %s",
+        printStream.println(String.format("MailboxMessage count quota for %s is: %s / %s",
             quotaRootString,
             formatMessageValue(quota.getUsed()),
             formatMessageValue(quota.getMax())));
