@@ -36,6 +36,7 @@ import org.apache.james.mime4j.dom.TextBody;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
+import com.google.common.base.Charsets;
 
 public class MessageContentExtractor {
 
@@ -91,7 +92,7 @@ public class MessageContentExtractor {
     }
 
     private Optional<String> asString(TextBody textBody) throws IOException {
-        return Optional.ofNullable(IOUtils.toString(textBody.getInputStream(), textBody.getMimeCharset()));
+        return Optional.ofNullable(IOUtils.toString(textBody.getInputStream(), Charsets.UTF_8));
     }
 
     private MessageContent retrieveHtmlAndPlainTextContent(Multipart multipart) throws IOException {

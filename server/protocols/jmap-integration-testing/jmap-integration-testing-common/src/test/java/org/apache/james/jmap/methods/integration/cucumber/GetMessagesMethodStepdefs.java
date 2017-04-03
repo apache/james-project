@@ -223,6 +223,11 @@ public class GetMessagesMethodStepdefs {
         appendMessage(messageName, "eml/sameInlinedImages.eml");
     }
 
+    @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with specific charset$")
+    public void appendMessageWithSpecificCharset(String messageName, String mailbox) throws Throwable {
+        appendMessage(messageName, "eml/windows1252charset.eml");
+    }
+
     private void appendMessage(String messageName, String emlFileName) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         MessageId id = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(userStepdefs.lastConnectedUser,
