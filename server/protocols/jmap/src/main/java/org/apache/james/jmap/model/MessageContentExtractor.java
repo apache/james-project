@@ -107,12 +107,17 @@ public class MessageContentExtractor {
     }
 
     private MessageContent retrieveFirstReadablePart(Multipart multipart) throws IOException {
+        return retrieveFirstReadablePartMatching(multipart, this::isNotAttachment)
+            .orElseGet(() -> retrieveFirstReadablePartMatching(multipart, this::isInlinedWithoutCid)
+                .orElse(MessageContent.empty()));
+    }
+
+    private Optional<MessageContent> retrieveFirstReadablePartMatching(Multipart multipart, Predicate<Entity> predicate) {
         return multipart.getBodyParts()
             .stream()
-            .filter(this::isNotAttachment)
+            .filter(predicate)
             .flatMap(Throwing.function(this::extractContentIfReadable).sneakyThrow())
-            .findFirst()
-            .orElse(MessageContent.empty());
+            .findFirst();
     }
 
     private Stream<MessageContent> extractContentIfReadable(Entity entity) throws IOException {

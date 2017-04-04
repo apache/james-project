@@ -180,6 +180,28 @@ public class MessageContentExtractorTest {
     }
 
     @Test
+    public void extractShouldReturnInlinedTextBodyWithoutCIDWhenNoOtherValidParts() throws IOException {
+        String textBody = "body 1";
+        Multipart multipart = MultipartBuilder.create("report")
+            .addBodyPart(BodyPartBuilder.create()
+                .setBody(textBody, "plain", Charsets.UTF_8)
+                .setContentDisposition("inline")
+                .build())
+            .addBodyPart(BodyPartBuilder.create()
+                .setBody("body 2", "rfc822-headers", Charsets.UTF_8)
+                .setContentDisposition("inline")
+                .build())
+            .build();
+        Message message = MessageBuilder.create()
+            .setBody(multipart)
+            .build();
+
+        MessageContent actual = testee.extract(message);
+
+        assertThat(actual.getTextBody()).contains(textBody);
+    }
+
+    @Test
     public void extractShouldReturnEmptyWhenMultipartMixedAndFirstPartIsATextAttachment() throws IOException {
         Multipart multipart = MultipartBuilder.create("mixed")
                 .addBodyPart(textAttachment)
