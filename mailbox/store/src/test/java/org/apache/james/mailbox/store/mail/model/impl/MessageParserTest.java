@@ -212,4 +212,12 @@ public class MessageParserTest {
 
         assertThat(attachments).hasSize(2);
     }
+
+    @Test
+    public void getAttachmentsShouldRetrieveOneAttachmentWhenMessageWithAttachmentContentDisposition() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(
+            ClassLoader.getSystemResourceAsStream("eml/emailWithOnlyAttachment.eml"));
+
+        assertThat(attachments).hasSize(1);
+    }
 }
