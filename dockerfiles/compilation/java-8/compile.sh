@@ -54,6 +54,7 @@ fi
 
 if [ $? -eq 0 ]; then
    if [ -d "$CASSANDRA_DESTINATION" ]; then
+      echo "Copying cassandra JARs"
       cp server/container/guice/cassandra-guice/target/james-server-cassandra-guice.jar $CASSANDRA_DESTINATION || true
       cp -r server/container/guice/cassandra-guice/target/james-server-cassandra-guice.lib $CASSANDRA_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $CASSANDRA_DESTINATION || true
@@ -64,6 +65,7 @@ if [ $? -eq 0 ]; then
    fi
 
    if [ -d "$JPA_DESTINATION" ]; then
+      echo "Copying JPA jars"
       cp server/container/guice/jpa-guice/target/james-server-jpa-guice.jar $JPA_DESTINATION || true
       cp -r server/container/guice/jpa-guice/target/james-server-jpa-guice.lib $JPA_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $JPA_DESTINATION || true
