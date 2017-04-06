@@ -31,7 +31,6 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.jmap.model.Message;
-import org.apache.james.jmap.model.MessageContentExtractor;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
@@ -41,6 +40,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.junit.Before;

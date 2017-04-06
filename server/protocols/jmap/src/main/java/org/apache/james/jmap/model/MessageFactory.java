@@ -37,7 +37,6 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
 
-import org.apache.james.jmap.model.MessageContentExtractor.MessageContent;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -52,6 +51,8 @@ import org.apache.james.mime4j.dom.address.MailboxList;
 import org.apache.james.mime4j.message.MessageBuilder;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.MimeConfig;
+import org.apache.james.util.mime.MessageContentExtractor;
+import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;

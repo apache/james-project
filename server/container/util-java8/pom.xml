@@ -127,12 +127,28 @@
             </activation>
             <dependencies>
                 <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>apache-mime4j-dom</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.github.fge</groupId>
+                    <artifactId>throwing-lambdas</artifactId>
+                </dependency>
+                <dependency>
                     <groupId>com.github.steveash.guavate</groupId>
                     <artifactId>guavate</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.sun.mail</groupId>
+                    <artifactId>javax.mail</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>javax.inject</groupId>

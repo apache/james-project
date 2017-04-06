@@ -31,7 +31,6 @@ import org.apache.james.jmap.crypto.SignatureHandler;
 import org.apache.james.jmap.crypto.SignedTokenFactory;
 import org.apache.james.jmap.crypto.SignedTokenManager;
 import org.apache.james.jmap.model.MailboxFactory;
-import org.apache.james.jmap.model.MessageContentExtractor;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.send.MailFactory;
@@ -39,6 +38,7 @@ import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.jmap.utils.HeadersAuthenticationExtractor;
 import org.apache.james.util.date.DefaultZonedDateTimeProvider;
 import org.apache.james.util.date.ZonedDateTimeProvider;
+import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.AutomaticallySentMailDetectorImpl;
 

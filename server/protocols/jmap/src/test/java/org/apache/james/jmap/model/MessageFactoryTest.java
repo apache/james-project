@@ -41,6 +41,7 @@ import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
+import org.apache.james.util.mime.MessageContentExtractor;
 import org.junit.Before;
 import org.junit.Test;
 

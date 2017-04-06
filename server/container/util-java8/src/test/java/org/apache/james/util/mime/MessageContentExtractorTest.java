@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.model;
+package org.apache.james.util.mime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,7 +25,6 @@ import java.util.Optional;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.jmap.model.MessageContentExtractor.MessageContent;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.field.Fields;
@@ -37,6 +36,8 @@ import org.apache.james.mime4j.message.MessageBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.util.ByteSequence;
+import org.apache.james.util.mime.MessageContentExtractor;
+import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
 import org.junit.Before;
 import org.junit.Test;
 

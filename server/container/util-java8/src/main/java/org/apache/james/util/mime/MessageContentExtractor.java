@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model;
+package org.apache.james.util.mime;
 
 import java.io.IOException;
 import java.util.Objects;
