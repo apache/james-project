@@ -24,8 +24,11 @@ import java.util.*;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.PerRecipientHeaders;
+import org.apache.mailet.PerRecipientHeaders.Header;
 
 public class MockMail implements Mail {
 
@@ -159,5 +162,15 @@ public class MockMail implements Mail {
 
     public void setRemoteAddr(String remoteAddr) {
         this.remoteAddr = remoteAddr;
+    }
+
+    @Override
+    public PerRecipientHeaders getPerRecipientSpecificHeaders() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void addSpecificHeaderForRecipient(Header header, MailAddress recipient) {
+        throw new NotImplementedException();
     }
 }

@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.delivery;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.mail.MessagingException;
@@ -30,10 +30,14 @@ import org.apache.commons.logging.Log;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
+import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.RFC2822Headers;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 public class MailDispatcher {
 
@@ -116,38 +120,57 @@ public class MailDispatcher {
         // This only works because there is a placeholder inserted by MimeMessageWrapper
         message.setHeader(RFC2822Headers.RETURN_PATH, DeliveryUtils.prettyPrint(mail.getSender()));
 
-        List<String> deliveredToHeader = removeDeliveryHeaders(message);
         Collection<MailAddress> errors = deliver(mail, message);
-        putDeliveryHeadersBack(message, deliveredToHeader);
 
         return errors;
-    }
-
-    private List<String> removeDeliveryHeaders(MimeMessage message) throws MessagingException {
-        List<String> deliveredToHeader = Arrays.asList(Optional.fromNullable(message.getHeader(DELIVERED_TO)).or(NO_HEADERS));
-        message.removeHeader(DELIVERED_TO);
-        return deliveredToHeader;
-    }
-
-    private void putDeliveryHeadersBack(MimeMessage message, List<String> deliveredToHeader) throws MessagingException {
-        for (String deliveredTo : deliveredToHeader) {
-            message.addHeader(DELIVERED_TO, deliveredTo);
-        }
     }
 
     private Collection<MailAddress> deliver(Mail mail, MimeMessage message) {
         Collection<MailAddress> errors = new Vector<MailAddress>();
         for (MailAddress recipient : mail.getRecipients()) {
             try {
-                // Add qmail's de facto standard Delivered-To header
-                message.addHeader(DELIVERED_TO, recipient.toString());
+                Map<String, List<String>> savedHeaders = saveHeaders(mail, recipient);
+
+                addSpecificHeadersForRecipient(mail, message, recipient);
                 mailStore.storeMail(recipient, mail);
-                message.removeHeader(DELIVERED_TO);
+                
+                restoreHeaders(mail.getMessage(), savedHeaders);
             } catch (Exception ex) {
                 log.error("Error while storing mail.", ex);
                 errors.add(recipient);
             }
         }
         return errors;
+    }
+
+    private Map<String, List<String>> saveHeaders(Mail mail, MailAddress recipient) throws MessagingException {
+        ImmutableMap.Builder<String, List<String>> backup = ImmutableMap.builder();
+        Collection<String> headersForRecipient = mail.getPerRecipientSpecificHeaders().getHeaderNamesForRecipient(recipient);
+        Iterable<String> headersToSave = Iterables.concat(headersForRecipient, ImmutableList.of(DELIVERED_TO));
+        for (String headerName: headersToSave) {
+            List<String> values = ImmutableList.copyOf(
+                        Optional.fromNullable(mail.getMessage().getHeader(headerName))
+                            .or(NO_HEADERS));
+            backup.put(headerName, values);
+        }
+        return backup.build();
+    }
+
+    private void restoreHeaders(MimeMessage mimeMessage, Map<String, List<String>> savedHeaders) throws MessagingException {
+        for (Map.Entry<String, List<String>> header: savedHeaders.entrySet()) {
+            String name = header.getKey();
+            mimeMessage.removeHeader(name);
+            for (String value: header.getValue()) {
+                mimeMessage.addHeader(name, value);
+            }
+        }
+    }
+
+    private void addSpecificHeadersForRecipient(Mail mail, MimeMessage message, MailAddress recipient) throws MessagingException {
+        for (Header header: mail.getPerRecipientSpecificHeaders().getHeadersForRecipient(recipient)) {
+            message.addHeader(header.getName(), header.getValue());
+        }
+        // Add qmail's de facto standard Delivered-To header
+        message.addHeader(DELIVERED_TO, recipient.toString());
     }
 }

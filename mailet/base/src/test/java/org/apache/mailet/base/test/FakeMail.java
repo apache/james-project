@@ -37,6 +37,8 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.PerRecipientHeaders;
+import org.apache.mailet.PerRecipientHeaders.Header;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -216,6 +218,7 @@ public class FakeMail implements Mail {
     private Map<String, Serializable> attributes;
     private long size;
     private String remoteAddr;
+    private PerRecipientHeaders perRecipientHeaders;
     
     public FakeMail(MimeMessage msg, List<MailAddress> recipients, String name, MailAddress sender, String state, String errorMessage, Date lastUpdated,
             Map<String, Serializable> attributes, long size, String remoteAddr) {
@@ -229,6 +232,7 @@ public class FakeMail implements Mail {
         this.attributes = attributes;
         this.size = size;
         this.remoteAddr = remoteAddr;
+        this.perRecipientHeaders = new PerRecipientHeaders();
     }
 
     @Override
@@ -391,5 +395,15 @@ public class FakeMail implements Mail {
             .add("size", size)
             .add("remoteAddr", remoteAddr)
             .toString();
+    }
+
+    @Override
+    public PerRecipientHeaders getPerRecipientSpecificHeaders() {
+        return perRecipientHeaders;
+    }
+
+    @Override
+    public void addSpecificHeaderForRecipient(Header header, MailAddress recipient) {
+        perRecipientHeaders.addHeaderForRecipient(header, recipient);
     }
 }

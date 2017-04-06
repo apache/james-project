@@ -21,6 +21,9 @@
 package org.apache.mailet;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+
+import org.apache.mailet.PerRecipientHeaders.Header;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
@@ -232,6 +235,22 @@ public interface Mail extends Serializable, Cloneable {
      * @since Mailet API v2.1
      */
     Serializable setAttribute(String name, Serializable object);
+
+    /**
+     * Store a header (and its specific values) for a recipient
+     * This header will be stored only for this recipient at delivery time
+     * 
+     * Note that the headers must contain only US-ASCII characters, so a header that
+     * contains non US-ASCII characters must have been encoded by the
+     * caller as per the rules of RFC 2047.
+     */
+    void addSpecificHeaderForRecipient(Header header, MailAddress recipient);
+
+    /** 
+     * Get the currently stored association between recipients and
+     * specific headers
+     */
+    PerRecipientHeaders getPerRecipientSpecificHeaders();
 
     /**
      * Returns the message size (including headers).

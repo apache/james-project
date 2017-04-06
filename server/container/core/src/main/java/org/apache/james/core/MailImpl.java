@@ -23,6 +23,8 @@ import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.PerRecipientHeaders;
+import org.apache.mailet.PerRecipientHeaders.Header;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -110,6 +112,11 @@ public class MailImpl implements Disposable, Mail {
      * Attributes added to this MailImpl instance
      */
     private Map<String, Object> attributes;
+    /**
+     * Specific headers for some recipients
+     * These headers will be added at delivery time
+     */
+    private PerRecipientHeaders perRecipientSpecificHeaders;
 
     /**
      * A constructor that creates a new, uninitialized MailImpl
@@ -117,6 +124,7 @@ public class MailImpl implements Disposable, Mail {
     public MailImpl() {
         setState(Mail.DEFAULT);
         attributes = new HashMap<String, Object>();
+        perRecipientSpecificHeaders = new PerRecipientHeaders();
     }
 
     /**
@@ -670,4 +678,13 @@ public class MailImpl implements Disposable, Mail {
         return "Mail" + System.currentTimeMillis() + "-" + UUID.randomUUID();
     }
 
+    @Override
+    public PerRecipientHeaders getPerRecipientSpecificHeaders() {
+        return perRecipientSpecificHeaders;
+    }
+
+    @Override
+    public void addSpecificHeaderForRecipient(Header header, MailAddress recipient) {
+        perRecipientSpecificHeaders.addHeaderForRecipient(header, recipient);
+    }
 }
