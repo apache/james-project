@@ -22,13 +22,20 @@ package org.apache.mailet.base;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.guava.api.Assertions.assertThat;
 
+import javax.mail.MessagingException;
+
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class MailetUtilTest {
 
     private static final String A_PARAMETER = "aParameter";
-    public static final String DEFAULT_VALUE = "default";
+    public static final int DEFAULT_VALUE = 36;
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void getInitParameterShouldReturnTrueWhenIsValueTrueLowerCase() {
@@ -83,6 +90,87 @@ public class MailetUtilTest {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .build();
         assertThat(MailetUtil.getInitParameter(mailetConfig, A_PARAMETER)).isAbsent();
+    }
+
+    @Test
+    public void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnEmptyString() throws Exception {
+        expectedException.expect(MessagingException.class);
+
+        MailetUtil.getInitParameterAsStrictlyPositiveInteger("");
+    }
+
+    @Test
+    public void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnNull() throws Exception {
+        expectedException.expect(MessagingException.class);
+
+        MailetUtil.getInitParameterAsStrictlyPositiveInteger(null);
+    }
+
+    @Test
+    public void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnInvalid() throws Exception {
+        expectedException.expect(MessagingException.class);
+
+        MailetUtil.getInitParameterAsStrictlyPositiveInteger("invalid");
+    }
+
+    @Test
+    public void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnNegativeNumber() throws Exception {
+        expectedException.expect(MessagingException.class);
+
+        MailetUtil.getInitParameterAsStrictlyPositiveInteger("-1");
+    }
+
+    @Test
+    public void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnZero() throws Exception {
+        expectedException.expect(MessagingException.class);
+
+        MailetUtil.getInitParameterAsStrictlyPositiveInteger("0");
+    }
+
+    @Test
+    public void getInitParameterAsStrictlyPositiveIntegerShouldParseCorrectValue() throws Exception {
+        assertThat(MailetUtil.getInitParameterAsStrictlyPositiveInteger("1"))
+            .isEqualTo(1);
+    }
+
+    @Test
+    public void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldThrowOnEmptyString() throws Exception {
+        expectedException.expect(MessagingException.class);
+
+        MailetUtil.getInitParameterAsStrictlyPositiveInteger("", DEFAULT_VALUE);
+    }
+
+    @Test
+    public void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldReturnDefaultValueOnNull() throws Exception {
+        assertThat(MailetUtil.getInitParameterAsStrictlyPositiveInteger(null, DEFAULT_VALUE))
+            .isEqualTo(DEFAULT_VALUE);
+    }
+
+    @Test
+    public void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldThrowOnInvalid() throws Exception {
+        expectedException.expect(MessagingException.class);
+
+        MailetUtil.getInitParameterAsStrictlyPositiveInteger("invalid", DEFAULT_VALUE);
+    }
+
+    @Test
+    public void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldThrowOnNegativeNumber() throws Exception {
+        expectedException.expect(MessagingException.class);
+
+        MailetUtil.getInitParameterAsStrictlyPositiveInteger("-1", DEFAULT_VALUE);
+    }
+
+    @Test
+    public void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldThrowOnZero() throws Exception {
+        expectedException.expect(MessagingException.class);
+
+        MailetUtil.getInitParameterAsStrictlyPositiveInteger("0", DEFAULT_VALUE);
+    }
+
+    @Test
+    public void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldParseCorrectValue() throws Exception {
+        assertThat(MailetUtil.getInitParameterAsStrictlyPositiveInteger("1", DEFAULT_VALUE))
+            .isEqualTo(1);
     }
 
     private boolean getParameterValued(String value, boolean defaultValue) {

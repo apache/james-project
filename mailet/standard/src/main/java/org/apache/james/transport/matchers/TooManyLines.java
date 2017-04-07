@@ -26,6 +26,7 @@ import javax.mail.MessagingException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
+import org.apache.mailet.base.MailetUtil;
 
 import com.google.common.collect.ImmutableList;
 
@@ -35,25 +36,7 @@ public class TooManyLines extends GenericMatcher {
 
     @Override
     public void init() throws MessagingException {
-        String condition = getCondition();
-
-        maximumLineCount = parseCondition(condition);
-
-        if (maximumLineCount < 1) {
-            throw new MessagingException("Condition should be strictly positive");
-        }
-    }
-
-    private int parseCondition(String condition) throws MessagingException {
-        if (condition == null) {
-            throw new MessagingException("Missing condition");
-        }
-
-        try {
-            return Integer.valueOf(condition);
-        } catch (NumberFormatException e) {
-            throw new MessagingException("Invalid formating. Condition is expected to be an integer");
-        }
+        maximumLineCount = MailetUtil.getInitParameterAsStrictlyPositiveInteger(getCondition());
     }
 
     @Override

@@ -21,6 +21,7 @@
 
 package org.apache.james.transport.matchers;
 
+import org.apache.mailet.base.MailetUtil;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.GenericMatcher;
 import org.apache.mailet.Mail;
@@ -42,14 +43,7 @@ public class RelayLimit extends GenericMatcher {
     int limit = 30;
 
     public void init() throws MessagingException {
-        try {
-            limit = Integer.parseInt(getCondition());
-        } catch (NumberFormatException e) {
-            throw new MessagingException("No valid integer: " + getCondition());
-        }
-        if (limit <= 0) {
-            throw new MessagingException("Relay limit should be superior to 0");
-        }
+        limit = MailetUtil.getInitParameterAsStrictlyPositiveInteger(getCondition());
     }
 
     public Collection<MailAddress> match(Mail mail) throws javax.mail.MessagingException {

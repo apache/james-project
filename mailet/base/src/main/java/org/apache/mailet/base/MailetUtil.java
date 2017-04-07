@@ -21,9 +21,12 @@
 
 package org.apache.mailet.base;
 
+import javax.mail.MessagingException;
+
 import org.apache.mailet.MailetConfig;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 
 
 /**
@@ -106,5 +109,38 @@ public class MailetUtil {
             return Optional.of(false);
         }
         return Optional.absent();
+    }
+
+    public static int getInitParameterAsStrictlyPositiveInteger(String condition, int defaultValue) throws MessagingException {
+        String defaultStringValue = String.valueOf(defaultValue);
+        return getInitParameterAsStrictlyPositiveInteger(condition, Optional.of(defaultStringValue));
+    }
+
+    public static int getInitParameterAsStrictlyPositiveInteger(String condition) throws MessagingException {
+        return getInitParameterAsStrictlyPositiveInteger(condition, Optional.<String>absent());
+    }
+
+    public static int getInitParameterAsStrictlyPositiveInteger(String condition, Optional<String> defaultValue) throws MessagingException {
+        Optional<String> value = Optional.fromNullable(condition)
+            .or(defaultValue);
+
+        if (Strings.isNullOrEmpty(value.orNull())) {
+            throw new MessagingException("Condition is required. It should be a strictly positive integer");
+        }
+
+        int valueAsInt = tryParseInteger(value.orNull());
+
+        if (valueAsInt < 1) {
+            throw new MessagingException("Expecting condition to be a strictly positive integer. Got " + value.get());
+        }
+        return valueAsInt;
+    }
+
+    private static int tryParseInteger(String value) throws MessagingException {
+        try {
+            return Integer.valueOf(value);
+        } catch (NumberFormatException e) {
+            throw new MessagingException("Expecting condition to be a strictly positive integer. Got " + value);
+        }
     }
 }

@@ -26,6 +26,7 @@ import javax.mail.MessagingException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
+import org.apache.mailet.base.MailetUtil;
 
 import com.google.common.collect.ImmutableList;
 
@@ -35,21 +36,7 @@ public class TooManyRecipients extends GenericMatcher {
 
     @Override
     public void init() throws MessagingException {
-        String condition = getCondition();
-
-        if (condition == null) {
-            throw new MessagingException("it should have a condition");
-        }
-
-        try {
-            maximumRecipientCount = Integer.parseInt(condition);
-        } catch (Exception e) {
-            throw new MessagingException("Condition should be a number");
-        }
-
-        if (maximumRecipientCount < 1) {
-            throw new MessagingException("it should be positive condition");
-        }
+        maximumRecipientCount = MailetUtil.getInitParameterAsStrictlyPositiveInteger(getCondition());
     }
 
     @Override
