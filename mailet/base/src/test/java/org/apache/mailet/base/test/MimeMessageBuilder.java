@@ -209,8 +209,8 @@ public class MimeMessageBuilder {
     private Optional<String> text = Optional.absent();
     private Optional<String> subject = Optional.absent();
     private Optional<InternetAddress> sender = Optional.absent();
-    private Optional<InternetAddress> from = Optional.absent();
     private Optional<MimeMultipart> content = Optional.absent();
+    private ImmutableList.Builder<InternetAddress> from = ImmutableList.builder();
     private ImmutableList.Builder<InternetAddress> cc = ImmutableList.builder();
     private ImmutableList.Builder<InternetAddress> to = ImmutableList.builder();
     private ImmutableList.Builder<InternetAddress> bcc = ImmutableList.builder();
@@ -236,8 +236,13 @@ public class MimeMessageBuilder {
         return this;
     }
 
-    public MimeMessageBuilder setFrom(String from) throws AddressException {
-        this.from = Optional.of(new InternetAddress(from));
+    public MimeMessageBuilder addFrom(String from) throws AddressException {
+        this.from.add(new InternetAddress(from));
+        return this;
+    }
+
+    public MimeMessageBuilder addFrom(InternetAddress... from) throws AddressException {
+        this.from.addAll(Arrays.asList(from));
         return this;
     }
 
@@ -269,6 +274,21 @@ public class MimeMessageBuilder {
         this.bcc.addAll(FluentIterable.from(Arrays.asList(bccs))
             .transform(TO_INTERNET_ADDRESS)
             .toList());
+        return this;
+    }
+
+    public MimeMessageBuilder addToRecipient(InternetAddress... tos) throws AddressException {
+        this.to.addAll(Arrays.asList(tos));
+        return this;
+    }
+
+    public MimeMessageBuilder addCcRecipient(InternetAddress... ccs) throws AddressException {
+        this.cc.addAll(Arrays.asList(ccs));
+        return this;
+    }
+
+    public MimeMessageBuilder addBccRecipient(InternetAddress... bccs) throws AddressException {
+        this.bcc.addAll(Arrays.asList(bccs));
         return this;
     }
 
@@ -305,9 +325,7 @@ public class MimeMessageBuilder {
         Preconditions.checkState(!(text.isPresent() && content.isPresent()), "Can not get at the same time a text and a content");
         MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
         if (text.isPresent()) {
-            BodyPart bodyPart = new MimeBodyPart();
-            bodyPart.setText(text.get());
-            mimeMessage.setContent(bodyPart, "text/plain");
+            mimeMessage.setContent(text.get(), "text/plain");
         }
         if (content.isPresent()) {
             mimeMessage.setContent(content.get());
@@ -315,11 +333,12 @@ public class MimeMessageBuilder {
         if (sender.isPresent()) {
             mimeMessage.setSender(sender.get());
         }
-        if (from.isPresent()) {
-            mimeMessage.setFrom(from.get());
-        }
         if (subject.isPresent()) {
             mimeMessage.setSubject(subject.get());
+        }
+        ImmutableList<InternetAddress> fromAddresses = from.build();
+        if (!fromAddresses.isEmpty()) {
+            mimeMessage.addFrom(fromAddresses.toArray(new InternetAddress[fromAddresses.size()]));
         }
         List<InternetAddress> toAddresses = to.build();
         if (!toAddresses.isEmpty()) {

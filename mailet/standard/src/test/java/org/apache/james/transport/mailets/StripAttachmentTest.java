@@ -53,7 +53,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -125,8 +124,7 @@ public class StripAttachmentTest {
         mailet.service(mail);
 
         assertThat(mail).isEqualToComparingFieldByField(expectedMail);
-        BodyPart content = (BodyPart) mail.getMessage().getContent();
-        assertThat(IOUtils.toString(content.getInputStream(), Charsets.UTF_8)).isEqualTo("simple text");
+        assertThat(mail.getMessage().getContent()).isEqualTo("simple text");
     }
     
     @Test

@@ -72,7 +72,7 @@ public class MailUtil {
     private static MimeMessage createMimeMessage(String headerName, String headerValue, String subject) throws MessagingException {
         MimeMessageBuilder mimeMessageBuilder = MimeMessageBuilder.mimeMessageBuilder()
             .addToRecipient(RECIPIENT)
-            .setFrom(SENDER)
+            .addFrom(SENDER)
             .setSubject(subject);
         if (headerName != null) {
             mimeMessageBuilder.addHeader(headerName, headerValue);
