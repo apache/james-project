@@ -37,11 +37,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
 public class MailDispatcher {
 
-    public static final String DELIVERED_TO = "Delivered-To";
     public static final String[] NO_HEADERS = {};
 
     public static Builder builder() {
@@ -145,8 +143,7 @@ public class MailDispatcher {
 
     private Map<String, List<String>> saveHeaders(Mail mail, MailAddress recipient) throws MessagingException {
         ImmutableMap.Builder<String, List<String>> backup = ImmutableMap.builder();
-        Collection<String> headersForRecipient = mail.getPerRecipientSpecificHeaders().getHeaderNamesForRecipient(recipient);
-        Iterable<String> headersToSave = Iterables.concat(headersForRecipient, ImmutableList.of(DELIVERED_TO));
+        Collection<String> headersToSave = mail.getPerRecipientSpecificHeaders().getHeaderNamesForRecipient(recipient);
         for (String headerName: headersToSave) {
             List<String> values = ImmutableList.copyOf(
                         Optional.fromNullable(mail.getMessage().getHeader(headerName))
@@ -170,7 +167,5 @@ public class MailDispatcher {
         for (Header header: mail.getPerRecipientSpecificHeaders().getHeadersForRecipient(recipient)) {
             message.addHeader(header.getName(), header.getValue());
         }
-        // Add qmail's de facto standard Delivered-To header
-        message.addHeader(DELIVERED_TO, recipient.toString());
     }
 }

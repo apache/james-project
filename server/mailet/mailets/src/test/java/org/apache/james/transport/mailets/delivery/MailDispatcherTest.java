@@ -188,56 +188,6 @@ public class MailDispatcherTest {
     }
 
     @Test
-    public void dispatchShouldPreserveDeliveredTo() throws Exception {
-        MailDispatcher testee = MailDispatcher.builder()
-            .log(mock(Log.class))
-            .mailetContext(fakeMailContext)
-            .mailStore(mailStore)
-            .consume(false)
-            .build();
-
-        String delivered_to_1 = "delivered_to_1";
-        String delivered_to_2 = "delivered_to_2";
-        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
-            .addHeaders(new MimeMessageBuilder.Header(MailDispatcher.DELIVERED_TO, delivered_to_1),
-                new MimeMessageBuilder.Header(MailDispatcher.DELIVERED_TO, delivered_to_2))
-            .build();
-        FakeMail mail = FakeMail.builder()
-            .sender(MailAddressFixture.OTHER_AT_JAMES)
-            .recipients(MailAddressFixture.ANY_AT_JAMES)
-            .mimeMessage(mimeMessage)
-            .state("state")
-            .build();
-        testee.dispatch(mail);
-
-        assertThat(mimeMessage.getHeader(MailDispatcher.DELIVERED_TO)).containsOnly(delivered_to_1, delivered_to_2);
-    }
-
-    @Test
-    public void dispatchShouldCustomizeDeliveredToHeader() throws Exception {
-        AccumulatorHeaderMailStore accumulatorDeliveredToHeaderMailStore = new AccumulatorHeaderMailStore(MailDispatcher.DELIVERED_TO);
-        MailDispatcher testee = MailDispatcher.builder()
-            .log(mock(Log.class))
-            .mailetContext(fakeMailContext)
-            .mailStore(accumulatorDeliveredToHeaderMailStore)
-            .consume(false)
-            .build();
-
-        FakeMail mail = FakeMail.builder()
-            .sender(MailAddressFixture.OTHER_AT_JAMES)
-            .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
-            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
-            .state("state")
-            .build();
-        testee.dispatch(mail);
-
-        assertThat(accumulatorDeliveredToHeaderMailStore.getHeaderValues(MailAddressFixture.ANY_AT_JAMES))
-            .containsOnly(new String[]{MailAddressFixture.ANY_AT_JAMES.toString()});
-        assertThat(accumulatorDeliveredToHeaderMailStore.getHeaderValues(MailAddressFixture.ANY_AT_JAMES2))
-            .containsOnly(new String[]{MailAddressFixture.ANY_AT_JAMES2.toString()});
-    }
-
-    @Test
     public void dispatchShouldNotAddSpecificHeaderIfRecipientDoesNotMatch() throws Exception {
         AccumulatorHeaderMailStore accumulatorTestHeaderMailStore = new AccumulatorHeaderMailStore(TEST_HEADER_NAME);
         MailDispatcher testee = MailDispatcher.builder()

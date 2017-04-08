@@ -25,7 +25,7 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.utils.SMTPMessageSender;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.transport.mailets.delivery.MailDispatcher;
+import org.apache.james.transport.mailets.AddDeliveredToHeader;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.junit.After;
@@ -100,7 +100,7 @@ public class AddDeliveredToHeaderTest {
             messageSender.sendMessage(from, recipient);
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.readFirstMessageHeadersInInbox(recipient, PASSWORD)
-                .contains(MailDispatcher.DELIVERED_TO + ": " + recipient));
+                .contains(AddDeliveredToHeader.DELIVERED_TO + ": " + recipient));
         }
     }
 }
