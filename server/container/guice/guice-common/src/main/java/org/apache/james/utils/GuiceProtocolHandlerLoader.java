@@ -31,10 +31,12 @@ import com.google.inject.Injector;
 public class GuiceProtocolHandlerLoader implements ProtocolHandlerLoader {
 
     private final Injector injector;
+    private final ExtendedClassLoader extendedClassLoader;
 
     @Inject
-    public GuiceProtocolHandlerLoader(Injector injector) {
+    public GuiceProtocolHandlerLoader(Injector injector, ExtendedClassLoader extendedClassLoader) {
         this.injector = injector;
+        this.extendedClassLoader = extendedClassLoader;
     }
 
     @Override
@@ -50,8 +52,7 @@ public class GuiceProtocolHandlerLoader implements ProtocolHandlerLoader {
 
     private ProtocolHandler createProtocolHandler(String name) throws LoadingException {
         try {
-            @SuppressWarnings("unchecked")
-            Class<ProtocolHandler> clazz = (Class<ProtocolHandler>) ClassLoader.getSystemClassLoader().loadClass(name);
+            Class<ProtocolHandler> clazz = extendedClassLoader.locateClass(name);
             return injector.getInstance(clazz);
         } catch (ClassNotFoundException e) {
             throw new LoadingException("Can not load " + name);

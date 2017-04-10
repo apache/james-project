@@ -35,8 +35,8 @@ public class GuiceMatcherLoader implements MatcherLoader {
     private final GuiceGenericLoader<Matcher> genericLoader;
 
     @Inject
-    public GuiceMatcherLoader(Injector injector) {
-        this.genericLoader = new GuiceGenericLoader<>(injector, STANDARD_PACKAGE);
+    public GuiceMatcherLoader(Injector injector, ExtendedClassLoader extendedClassLoader) {
+        this.genericLoader = new GuiceGenericLoader<>(injector, extendedClassLoader, STANDARD_PACKAGE);
     }
 
     @Override

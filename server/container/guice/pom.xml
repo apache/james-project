@@ -118,6 +118,7 @@
         <module>guice-common</module>
         <module>cassandra-guice</module>
         <module>cassandra-ldap-guice</module>
+        <module>custom-mailets</module>
         <module>mailbox</module>
         <module>mailet</module>
         <module>memory-guice</module>

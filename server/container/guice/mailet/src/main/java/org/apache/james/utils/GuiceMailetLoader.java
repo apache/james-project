@@ -35,8 +35,8 @@ public class GuiceMailetLoader implements MailetLoader {
     private final GuiceGenericLoader<Mailet> genericLoader;
 
     @Inject
-    public GuiceMailetLoader(Injector injector) {
-        this.genericLoader = new GuiceGenericLoader<>(injector, STANDARD_PACKAGE);
+    public GuiceMailetLoader(Injector injector, ExtendedClassLoader extendedClassLoader) {
+        this.genericLoader = new GuiceGenericLoader<>(injector, extendedClassLoader, STANDARD_PACKAGE);
     }
 
     @Override

@@ -17,32 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package com.custom.mailets;
 
-import com.google.inject.Injector;
+import javax.mail.MessagingException;
 
-public class GuiceGenericLoader<T> {
-    private final Injector injector;
-    private final String defaultPackageName;
-    private final ExtendedClassLoader extendedClassLoader;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMailet;
 
-    public GuiceGenericLoader(Injector injector, ExtendedClassLoader extendedClassLoader, String defaultPackageName) {
-        this.injector = injector;
-        this.defaultPackageName = defaultPackageName;
-        this.extendedClassLoader = extendedClassLoader;
+public class AnotherMailet extends GenericMailet {
+
+    @Override
+    public void service(Mail mail) throws MessagingException {
+
     }
-
-
-    public T instanciate(String className) throws Exception {
-        Class<T> clazz = extendedClassLoader.locateClass(constructFullName(className));
-        return injector.getInstance(clazz);
-    }
-
-    private String constructFullName(String name) {
-        if (! name.contains(".")) {
-            return defaultPackageName + name;
-        }
-        return name;
-    }
-
 }
