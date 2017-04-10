@@ -64,7 +64,13 @@ import com.google.common.collect.Sets;
 
 public class MessageFactory {
 
-    private static final int NO_LINE_LENGTH_LIMIT_PARSING = -1;
+    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
+        .setMaxContentLen(-1)
+        .setMaxHeaderCount(-1)
+        .setMaxHeaderLen(-1)
+        .setMaxHeaderCount(-1)
+        .setMaxLineLen(-1)
+        .build();
 
     private static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
 
@@ -130,7 +136,7 @@ public class MessageFactory {
         try {
             return MessageBuilder
                     .create()
-                    .use(MimeConfig.custom().setMaxLineLen(NO_LINE_LENGTH_LIMIT_PARSING).build())
+                    .use(MIME_ENTITY_CONFIG)
                     .parse(message.getContent())
                     .setDate(message.getInternalDate(), TimeZone.getTimeZone(UTC_ZONE_ID))
                     .build();
