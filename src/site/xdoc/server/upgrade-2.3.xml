@@ -55,6 +55,21 @@
          
     </subsection>
 
+    <subsection name="Limitations">
+         
+     <p>The migration is only available for the same backend.
+        e.g.: you can't migrate from JPA to Cassandra.</p>
+     
+     <p>We are also not supporting this migration process.
+       You can try it, but be sure to check that everything is correct.</p>
+     
+     <p>The migration will be provided and fully supported in next release.</p>
+     
+     <p>If you can't wait for the next release, we advise you to use external mail migration tools such as 
+       <a href="https://github.com/imapsync/imapsync">imapsync</a>
+       or <a href="http://www.linux-france.org/prj/pop2imap/pop2imap">popsync</a></p>
+    </subsection>
+
   </section>
   
 </body>
