@@ -26,7 +26,11 @@
 <body>
 
   <section name="Monitor James Server">
-  
+
+    <subsection name="Live Grafana metrics">
+      <p>You can monitor James Server via live Grafana metrics - <a href="metrics.html">read more</a>.</p>
+    </subsection>
+
     <subsection name="Monitor James Server via Loging">
   
       <p>You can monitor James Server via logging - <a href="monitor-logging.html">read more</a>.</p>

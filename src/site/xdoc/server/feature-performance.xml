@@ -27,23 +27,76 @@
 
   <section name="Performance">
 
-    <p>James can spool more than 100 mails per second (configured with Maildir mail storage).</p>
-    
-    <p>We ran following command (from postfix distribution) with only 10 dequeue threads.</p>
+    <subsection name="Gatling load testing">
+      <p>In mail servers, performance do matters. Users expect good, and fast responding commands. Thus performance is a
+        priority concern for Apache James developers.</p>
 
-    <source>time smtp-source -A -C1500 -l 100 -m 100000 -s 500 -d -c -f user@domain.net -t te localhost:25 100000</source>
+      <p>As part of our work on the project, we need rock-solid tools to benchmark our software. And this across all protocols
+        (JMAP, IMAP and SMTP). We used third-party Gatling load testing implementations for :</p>
 
-    <p>The result was:</p>
-    <ol> 
-      <li>The queuing of the 100000 emails took 8 minutes.</li>
-      <li>The dequeueing of the 100000 emails took 16 minutes.</li>
-    </ol>
+      <img src="images/performances/gatling_1.png"/>
 
-    <p>We thus have a throughput of more than <b>100 mails/second</b>.</p>
+      <ul>
+        <li>Testing main <a href="https://github.com/linagora/james-gatling">JMAP</a> commands</li>
+        <li>Testing main <a href="https://github.com/linagora/gatling-imap">IMAP</a> commands</li>
+        <li>Testing basic <a href="https://github.com/linagora/james-gatling/tree/master/src/main/scala-2.11/org/apache/james/gatling/smtp">SMTP</a> scenarios</li>
+      </ul>
 
-    <p>These numbers are obtained with the out-of-the-box configuration (not optimized).
-       I you run for example (depends on JVM) with <code>-XX:+UseParallelGC -XX:+AggressiveOpts -XX:+UseFastAccessorMethods</code>,
-       you may have 10000 mails enqueued in 38 seconds, which represents <b>263 mails per second</b>.</p>
+      <img src="images/performances/gatling_2.png"/>
+
+      <p>Load testing was conducted both on top of JPA and Cassandra + ElasticSearch implementations. We succeeded to support
+        1.000 Thunderbird like users on top of both backends.</p>
+
+      <p>The following results were obtained on a server with an Intel Xeon CPU (E3–1231 3.40GHz 4 cores 8 threads) with 32
+        GB of RAM. We run Gatling on the same host, thus it has performance impact on the results. So far Gatling is run
+        manually when we take time for it. This might eventually become part of our CI.</p>
+    </subsection>
+
+    <subsection name="Metric collection">
+      <p> Additionally, we added metrics a bit everywhere in James using the brand new metrics API. We collect and export
+        everything in ElasticSearch using <a href="http://metrics.dropwizard.io/3.2.1/">Dropwizard metrics</a>. Then we
+        graph it all using <a href="http://grafana.com/">Grafana</a>. This allows us to collect all statistics and percentiles.
+        Boards can be downloaded <a href="https://github.com/apache/james-project/tree/master/grafana-reporting">here</a>.</p>
+
+      <img src="images/performances/metrics.png"/>
+
+      <ul>We track so far:
+         <li>Protocols detailed time execution (and counts)</li>
+         <li>Percentile of mailet and matcher executions</li>
+         <li>Enqueue and Dequeue time</li>
+      </ul>
+
+      <ul>All these solutions allow us to identify the components that need improvement. Here are some example of classical
+        metrics James can reach with a mono server Guice + Cassandra + ElasticSearch installation:
+         <li>About 100 users</li>
+         <li>So far a number of 1.500.000 e-mails, that we imported using IMAP-sync scripts</li>
+         <li>Around 15.000 incoming e-mails a day</li>
+         <li>42.500 IMAP commands a day</li>
+         <li>20.000 JMAP requests a day</li>
+      </ul>
+
+      <p>More details on metrics are available on <a href="metrics.html">the metric page</a>.</p>
+    </subsection>
+
+    <subsection name="Measuring dequeueing speed">
+      <p>James can spool more than 100 mails per second (configured with Maildir mail storage).</p>
+
+      <p>We ran following command (from postfix distribution) with only 10 dequeue threads.</p>
+
+      <source>time smtp-source -A -C1500 -l 100 -m 100000 -s 500 -d -c -f user@domain.net -t te localhost:25 100000</source>
+
+      <p>The result was:</p>
+      <ol>
+        <li>The queuing of the 100000 emails took 8 minutes.</li>
+        <li>The dequeueing of the 100000 emails took 16 minutes.</li>
+      </ol>
+
+      <p>We thus have a throughput of more than <b>100 mails/second</b>.</p>
+
+      <p>These numbers are obtained with the out-of-the-box configuration (not optimized).
+        I you run for example (depends on JVM) with <code>-XX:+UseParallelGC -XX:+AggressiveOpts -XX:+UseFastAccessorMethods</code>,
+        you may have 10000 mails enqueued in 38 seconds, which represents <b>263 mails per second</b>.</p>
+    </subsection>
 
   </section>
 
