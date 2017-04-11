@@ -69,7 +69,7 @@
                 href="http://james.apache.org/index.html" />
             <item
                 name="James"
-                href="http://james.apache.org/index.html" />
+                href="http://james.apache.org/documentation.html" />
             <item
                 name="Mime4J"
                 href="http://james.apache.org/mime4j/index.html" />
@@ -88,7 +88,7 @@
         </links>
 
         <menu name="James components">
-            <item name="About James" href="/index.html" collapse="true">
+            <item name="About James" href="/documentation.html" collapse="true">
                 <item name="Mailing Lists" href="/mail.html" />
                 <item name="Contributing" href="/contribute.html" />
                 <item name="Guidelines" href="/guidelines.html" />
