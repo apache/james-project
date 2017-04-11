@@ -37,7 +37,7 @@ import org.junit.rules.ExpectedException;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-public class GuilceMailetLoaderTest {
+public class GuiceMailetLoaderTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -70,7 +70,7 @@ public class GuilceMailetLoaderTest {
     }
 
     @Test
-    public void getMailetShouldLoadClassWhenInIncludedJars() throws Exception {
+    public void getMailetShouldLoadClassWhenInExtensionsJars() throws Exception {
         GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(injector,
             new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM));
 
@@ -84,7 +84,7 @@ public class GuilceMailetLoaderTest {
     }
 
     @Test
-    public void getMailetShouldShouldRecursivelyIncludeJar() throws Exception {
+    public void getMailetShouldBrowseRecursivelyExtensionsJars() throws Exception {
         GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(injector,
             new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM));
 
@@ -98,7 +98,7 @@ public class GuilceMailetLoaderTest {
     }
 
     @Test
-    public void getMailedShouldShouldAllowCustomPackages() throws Exception {
+    public void getMailedShouldAllowCustomPackages() throws Exception {
         GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(injector,
             new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM));
 

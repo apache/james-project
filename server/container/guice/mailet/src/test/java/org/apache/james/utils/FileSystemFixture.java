@@ -54,7 +54,7 @@ public class FileSystemFixture {
 
         @Override
         public File getFile(String fileURL) throws FileNotFoundException {
-            return new File(ClassLoader.getSystemResource("recursive/included-jars").getFile());
+            return new File(ClassLoader.getSystemResource("recursive/extensions-jars").getFile());
         }
 
         @Override

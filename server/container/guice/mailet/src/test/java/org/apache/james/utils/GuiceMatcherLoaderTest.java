@@ -37,7 +37,7 @@ import org.junit.rules.ExpectedException;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-public class GuilceMatcherLoaderTest {
+public class GuiceMatcherLoaderTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -70,7 +70,7 @@ public class GuilceMatcherLoaderTest {
     }
 
     @Test
-    public void getMatcherShouldLoadClassWhenInIncludedJars() throws Exception {
+    public void getMatcherShouldLoadClassWhenInExtensionsJars() throws Exception {
         GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(injector,
             new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM));
 
@@ -84,7 +84,7 @@ public class GuilceMatcherLoaderTest {
     }
 
     @Test
-    public void getMatcherShouldShouldRecursivelyIncludeJar() throws Exception {
+    public void getMatcherShouldBrowseRecursivelyExtensionJars() throws Exception {
         GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(injector,
             new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM));
 
