@@ -1,0 +1,13 @@
+---
+layout: post
+title:  "Apache JSieve 0.2 released"
+date:   2008-08-17 16:13:22 +0200
+categories: james update
+---
+
+The Apache James Project is pleased to announce the first public release of
+[jsieve][Apache JSieve] an implementation of [RFC3028][RFC3028 - Sieve: A Mail Filtering Language]
+for Java.
+
+[jsieve]: http://james.apache.org/jsieve
+[RFC3028]: http://www.faqs.org/rfcs/rfc3028.html

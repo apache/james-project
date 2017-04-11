@@ -1,0 +1,34 @@
+---
+layout: post
+title:  "Apache IMAP 0.2-M1 released"
+date:   2010-11-05 16:13:22 +0200
+categories: james update
+---
+
+The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce
+the release of version 3.0-M1 (Milestone 1) of the Apache James server.
+
+The Apache James Server is a 100% pure Java enterprise mail server based on open protocols.
+Currently supported are SMTP/LMTP, POP3, IMAP4 protocols together with several different
+storage solutions (relational database via JPA and JDBC, File system with MailDir, JCR Content Repsitory).
+
+The James server also serves as a mail application platform. It hosts the Apache Mailet API,
+and acts has a Mailet container. This feature makes it easy to design, write, and deploy custom applications for
+mail processing. This modularity and ease of customization is one of James' strengths, and can allow administrators to
+produce powerful applications surprisingly easily.
+
+Features for that version include enhancements to nearly every area of functionality,
+including full IMAP support, improved mailing list capabilities, fastfail support, SMTP API
+for developing own fastfail filters and the next revision of the Mailet API.
+
+This was an exciting time in James development and we thank all contributors.
+
+We are still actively looking for eager, capable developers to contribute to James.
+If you're interesting in contributing to the James project, please subscribe to the James
+[mailing lists]: http://james.apache.org/mail.html.
+
+Information about James can be found at the James web site
+at [http://james.apache.org/][web].
+
+[web]: http://james.apache.org/
+

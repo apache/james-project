@@ -1,0 +1,15 @@
+---
+layout: post
+title:  "Mime4j 0.5 released"
+date:   2008-10-16 16:13:22 +0200
+categories: james update
+---
+
+we are proud to announce the [availability][availability] of APACHE Mime4j-0.5. This release addresses a number of
+important issues discovered since 0.4. In particular, it improves Mime4j ability to deal with malformed data streams
+including those intentionally crafted to cause excessive CPU and memory utilization that can lead to DoS condition
+
+This release also fixes a serious bug that can prevent Mime4j from correctly processing binary content
+
+[availability]: /download.cgi
+

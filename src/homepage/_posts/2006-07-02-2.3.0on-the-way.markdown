@@ -1,0 +1,11 @@
+---
+layout: post
+title:  "James Server 2.3.0 on the way"
+date:   2006-07-02 16:13:22 +0200
+categories: james update
+---
+
+After a long time of development we have released the first [release candidate][rc]
+ of James Server 2.3.0. After a period of user testing version 2.3.0 will be released.
+
+[rc]: http://people.apache.org/dist/james/server/

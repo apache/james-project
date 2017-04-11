@@ -1,0 +1,13 @@
+---
+layout: post
+title:  "JMAP implementation"
+date:   2016-05-09 16:13:22 +0200
+categories: james update
+---
+
+We are now supporting all basic operations on mailboxes:
+
+  - creating: through the *setMailboxes* JMAP command
+  - reading: through the *getMailboxes* JMAP command
+  - updating: through the *setMailboxes* JMAP command
+  - deleting: through the *setMailboxes* JMAP command

@@ -1,0 +1,13 @@
+---
+layout: post
+title:  "Hupa joins Apache James as sub-project"
+date:   2009-09-17 16:13:22 +0200
+categories: james update
+---
+
+The Apache James project is pleased to announce the inclusion of a new sub-project called
+[Hupa][Hupa].
+
+Hupa is a GWT based webmail which use IMAP to connect to the backend mailserver.
+
+[Hupa]: http://james.apache.org/hupa/

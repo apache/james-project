@@ -1,0 +1,9 @@
+---
+layout: post
+title:  "Apache James Mime4j 0.7.1 released"
+date:   2011-10-07 16:13:22 +0200
+categories: james update
+---
+
+The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce the release of version 0.7.1 of Apache James Mime4j library
+

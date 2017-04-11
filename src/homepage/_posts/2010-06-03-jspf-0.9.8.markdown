@@ -1,0 +1,11 @@
+---
+layout: post
+title:  "Apache jSPF 0.9.8 released"
+date:   2010-06-03 16:13:22 +0200
+categories: james update
+---
+
+The Apache James Project is pleased to announce a new [Apache jSPF][jSPF] release which includes
+fixed to TXT record escaping and pass the rfc4408-tests-2009.10 testsuite.
+
+[jSPF]: http://james.apache.org/jspf

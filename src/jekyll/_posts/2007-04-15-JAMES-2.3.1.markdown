@@ -1,0 +1,13 @@
+---
+layout: post
+title:  "James Server 2.3.1 Final Released"
+date:   2007-04-15 16:13:22 +0200
+categories: james update
+---
+
+James PMC is proud to announce the [availability][availability] of the final release of James Server 2.3.1. More information
+ on what has been fixed since the 2.3.0 release can be found in the [changelog][changelog] .
+
+
+[availability]: download.cgi
+[changelog]: /server/2.3.1/changelog.html

@@ -1,0 +1,20 @@
+---
+layout: post
+title:  "James publishes project ideas for Google Summer of Code '08"
+date:   2008-03-16 16:13:22 +0200
+categories: james update
+---
+
+The James Team are delighted to announce that we're proposing two project ideas for
+[Google Summer of Code (GSOC) 2008][gsoc]. The project Ideas are set out on the Apache GSOC
+wiki [here]: http://wiki.apache.org/general/SummerOfCode2008#james .
+
+In brief they are:
+
+ - Develop a VERP Mailet to allow James to write VERP modified return addresses on outbound messages, and an inbound mailet/matcher
+ to identify VERP bounces and invoke configurable "do something" code.
+ - James' provided mailing list manager is fine for small closed groups, but lacks the functionality of a more robust MLM,
+ the project is to add some all or more of the following features subscriber and message moderation, double opt-in and bounce handling.
+
+[gsoc]: : http://code.google.com/soc/2008/
+

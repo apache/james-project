@@ -1,0 +1,11 @@
+---
+layout: post
+title:  "jSPF-0.9.6 released"
+date:   2008-04-16 16:13:22 +0200
+categories: james update
+---
+
+We are proud to announce the [availability][availability] release of APACHE jSPF-0.9.6. This release fix two possible
+ NullPointerExceptions and handle the "exp=" modifier correctly.
+
+[availability]: /download.cgi

@@ -1,0 +1,12 @@
+---
+layout: post
+title:  "James Server 2.3.0 Final Released"
+date:   2006-10-03 16:13:22 +0200
+categories: james update
+---
+
+James PMC is proud to announce the [availability][availability] of the long awaited final release of James Server 2.3.0.
+More informations on what's new can be found in the [changelog][changelog] .
+
+[availability]: download.cgi
+[changelog]: /server/2.3.0/changelog.html

@@ -1,0 +1,13 @@
+---
+layout: post
+title:  "Apache Mailet Standard 1.0 released"
+date:   2010-05-01 16:13:22 +0200
+categories: james update
+---
+
+The Apache James Project is pleased to announce that the first independent release of
+[Apache Mailet Standard][standard]/ - was bundled with James Server 2.3 before -
+is now available for [download][download].
+
+[standard]: http://james.apache.org/mailet/standard/
+[download]: download.cgi#Apache_JSieve

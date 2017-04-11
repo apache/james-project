@@ -1,0 +1,17 @@
+---
+layout: post
+title:  "JMAP implementation"
+date:   2016-02-09 16:13:22 +0200
+categories: james update
+---
+
+We are actively working on implementing JMAP protocol into James.
+
+[JMAP][JMAP] is a transport-agnostic, stateless JSON-based API for synchronising a mail client with a mail server.
+
+It allows to develop easily a mail client in a browser, without the pain of using a server to proxy IMAP commands.
+
+Feel free to help us, you can see our advancement on the specification implementation into [jmap/doc][doc]
+
+[JMAP]: http://jmap.io
+[doc]: https://github.com/apache/james-project/tree/master/server/protocols/jmap/doc/specs

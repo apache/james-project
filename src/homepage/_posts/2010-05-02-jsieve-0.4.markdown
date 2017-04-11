@@ -1,0 +1,16 @@
+---
+layout: post
+title:  "Apache JSieve 0.4 released"
+date:   2010-05-02 16:13:22 +0200
+categories: james update
+---
+
+The Apache James Project is pleased to announce that the forth release of [Apache JSieve][JSieve] -
+an implementation of the [Sieve][Sieve] mail filtering language -
+is now available for [download][download]
+
+[JSieve]: http://james.apache.org/jsieve
+[mailet]: http://james.apache.org/mailet.
+[download]: /download.cgi#Apache_JSieve
+[notes]: http://james.apache.org/jsieve/0.3/release-notes.html
+[Sieve]: http://www.ietf.org/rfc/rfc3028.txt

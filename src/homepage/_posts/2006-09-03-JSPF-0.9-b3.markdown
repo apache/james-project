@@ -1,0 +1,11 @@
+---
+layout: post
+title:  "jSPF 0.9 b3 Released"
+date:   2006-09-03 16:13:22 +0200
+categories: james update
+---
+
+James PMC is proud to announce the [availability][availability] of the third beta of jspf 0.9.
+This version has start to use the official spf testsuite to fix all rfc issues.
+
+[availability]: http://people.apache.org/dist/james/jspf/

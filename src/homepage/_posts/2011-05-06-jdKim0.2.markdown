@@ -1,0 +1,23 @@
+---
+layout: post
+title:  "Apache James jDKIM 0.2"
+date:   2011-05-06 16:13:22 +0200
+categories: james update
+---
+
+The Apache James Project is happy to announce
+the release of version 0.2 of the Apache James jDKIM library.
+
+jDKIM is a DKIM implementation library written in Java. It provides
+both verification and signing and also provides Mailets for the
+Apache JAMES project.
+
+This is the first official release of the library, but the code has
+been in production almost unchanged since two years.
+
+[Read the release notes][notes]
+
+[notes]: https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12310990&amp;version=12314300
+
+
+

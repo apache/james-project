@@ -1,0 +1,13 @@
+---
+layout: post
+title:  "Apache James Server 3.0-beta5"
+date:   2016-11-19 16:13:22 +0200
+categories: james update
+---
+
+James server 3.0.0-beta5 has been released.
+
+Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
+
+[tracker]: https://issues.apache.org/jira/browse/JAMES
+[download]: http://james.apache.org/download.cgi#Apache_James_Server

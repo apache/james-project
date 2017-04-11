@@ -1,0 +1,15 @@
+---
+layout: post
+title:  "JMAP implementation"
+date:   2016-07-19 16:13:22 +0200
+categories: james update
+---
+
+Full text search via JMAP.
+
+Full text search via the *getMessageList* JMAP command is now supported.
+
+The JMAP search **filtering** parameter is converted to an internal *SearchQuery*; then this query is processed by your
+binded search backend.
+
+
