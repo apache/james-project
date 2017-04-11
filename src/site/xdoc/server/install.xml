@@ -75,8 +75,25 @@
   </subsection>
   
   </section>
-  
+
+  <section name="Build instructions">
+      <p>Checkout code from the chosen version on <a href="https://github.com/apache/james-project/tree/9502cfebfd9a4eaebbba7dda802d1fe0ad3589b7">
+          GitHub</a>. Follow <a href="https://github.com/apache/james-project/blob/9502cfebfd9a4eaebbba7dda802d1fe0ad3589b7/README.adoc">README instructions</a> about compilation.</p>
+
+      <ul>Using these instructions, you can build the following images:
+          <li>Guice + JPA + Lucene</li>
+          <li>Guice + Cassandra + ElasticSearch</li>
+          <li>Guice + Cassandra + ElasticSearch + LDAP</li>
+          <li>Spring</li>
+      </ul>
+
+      <p>Alternatively, if you don't want your build to be handled via Docker, you can follow <a href="quick-start-cassandra.html">
+          Guice Cassandra quick-start</a> </p>
+  </section>
+
   <section name="Install Step by Step">
+
+  This guide document how to install a Spring flavoured JAMES server.
   
   <subsection name="Step 1: Download James"> 
   
