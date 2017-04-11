@@ -135,7 +135,7 @@
                         <item name="Domains" href="/server/manage-domains.html" />
                         <item name="Users" href="/server/manage-users.html" />
                         <item name="Recipient Rewrite" href="/server/manage-recipientrewrite.html" />
-                        <item name="Metrics" href="/metrics.html" />
+                        <item name="Metrics" href="/server/metrics.html" />
                     </item>
                     <item name="5. Monitor" href="/server/monitor.html" collapse="true" >
                         <item name="Logging" href="/server/monitor-logging.html" />
