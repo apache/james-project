@@ -52,7 +52,11 @@ http://maven.apache.org/plugins/maven-deploy-plugin/examples/deploy-ssh-external
 
 You can alternatively use a docker container to build the website :
 
-    $ docker build -t james/site dockerfiles/site
+You need to build the homepage by:
+    $ docker build -t james/homepage dockerfiles/site/homepage
+    $ docker run -v $PWD:/origin -v $PWD/site:/destination james/homepage master
+Then you build the other pages by:
+    $ docker build -t james/site dockerfiles/site/website
     $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/site:/destination james/site master
 
 === How to release via maven release plugin
