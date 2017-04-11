@@ -89,11 +89,14 @@
 
       <p>Alternatively, if you don't want your build to be handled via Docker, you can follow <a href="quick-start-cassandra.html">
           Guice Cassandra quick-start</a> </p>
+
+      <p>A <a href="https://github.com/apache/james-project/blob/9502cfebfd9a4eaebbba7dda802d1fe0ad3589b7/dockerfiles/run/docker-compose.yml">
+          docker-compose</a> is available for Guice + Cassandra + ElasticSearch</p>
   </section>
 
   <section name="Install Step by Step">
 
-  This guide document how to install a Spring flavoured JAMES server.
+  This guide documents how to install a Spring flavoured JAMES server.
   
   <subsection name="Step 1: Download James"> 
   

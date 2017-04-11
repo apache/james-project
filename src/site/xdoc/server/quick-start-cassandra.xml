@@ -30,6 +30,9 @@
   <p>The goal of the document is to allow anyone to start with James on Docker as an operational mail server.</p>
   <p>The method described bellow should not be used in production.</p>
 
+  <p>Alternatively a <a href="https://github.com/apache/james-project/blob/9502cfebfd9a4eaebbba7dda802d1fe0ad3589b7/dockerfiles/run/docker-compose.yml">
+    docker-compose</a> is available for Guice + Cassandra + ElasticSearch</p>
+
 <source>
 Step 0: Requirements
 ####################
