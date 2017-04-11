@@ -32,9 +32,6 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-
 public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
 
     private final EntityManager entityManager;
