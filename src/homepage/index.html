@@ -1,0 +1,240 @@
+---
+layout: default
+---
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<link href="assets/css/lightbox.css" rel="stylesheet">
+<div id="wrapper">
+  <div class="apache_ref">
+    <a href="https://www.apache.org" alt="apache foundation link"><img src="https://www.apache.org/foundation/press/kit/asf_logo.svg" title="apache foundation logo"/></a>
+  </div>
+  <div class="apache_ref_mobile">
+    <a href="https://www.apache.org" alt="apache foundation link">The Apache Software Foundation</a>
+  </div>
+
+  <!-- Header -->
+    <header id="header" class="alt">
+      <div class="logo"><img src="images/james.svg" alt="james logo"/></div>
+      <h1 class="hidden">James Enterprise Mail Server</h1>
+      <h2>Emails at the heart of your business logic</h2>
+    </header>
+
+  <!-- Nav -->
+    <nav id="nav">
+      <ul>
+        <li class="logo_li"><span class="logo"><img src="images/james-alt.svg" alt="james logo" /></span></li>
+        <li><a href="#intro" class="active">About</a></li>
+        <li><a href="#first">Get Started</a></li>
+        <li><a href="#posts">Last Posts</a></li>
+        <li><a href="#second">Community</a></li>
+        <li><a href="documentation.html"><span class="fa fa-external-link"></span> Documentation</a></li>
+      </ul>
+    </nav>
+
+  <!-- Main -->
+    <div id="main">
+
+      <!-- Introduction -->
+        <section id="intro" class="main special">
+          <div class="">
+            <div class="content">
+              <header class="major">
+                <h2>About</h2>
+              </header>
+              <p class="align-left">James is the <b>Java Apache Mail Enterprise Server!</b><br/>
+                It has a modular architecture based on a rich set of <b>modern</b> and <b>efficient</b> components which provides at the <b>end, complete, stable, secure and extendable Mail Servers running on the JVM</b>.
+              </p>
+              <p class="align-left">Create your <b>own personal solution</b> of emails treatment by assembling the components you need thanks to the Inversion of Control mail platform offered and  go further customizing filtering and routing rules using <b>James Mailet Container</b>.</p>
+              <div class="about-table">
+                <h3 class="tb-h3">James from a technical point of view</h3>
+                <b>Complete portability</b> (100% pure Java)<br/>
+                <b>Running on Java 6 onwards</b> and on the <b>JVM</b><br/><br/>
+                <b>James Components:</b><br/>
+                - <b>Emailing protocols:</b> SMTP, LMP, POP3, IMAP, ManageSieve, JMAP<br/>
+                - <b>Mailet container:</b> independent, extensible and pluggable email processing agents<br/>
+                - <b>Storage API:</b> Mailbox API / Search API / User API<br/>
+                - <b>Storage Implementations:</b> Cassandra / PostgreSQL / HSQLDB / MySQL / ElasticSearch...<br/>
+                - <b>Administration:</b> JMX / REST / Command Line<br/>
+                - <b>James Core</b>
+              </div>
+              <p class="align-left"><br/><br/>Your James server <b>can also be used as Mail Transfer Agent</b>, by enabling only <b>SMTP</b> or as a <b>IMAP</b> Mail Delivery Agent.</p>
+              <a href="images/james-general-architecture.png" data-lightbox="james-schema" data-title="James General architecture" alt="James General architecture" class="james-schema" ><span class="fa fa-sitemap"></span>james general architecture<span class="fa fa-long-arrow-right"></span></a>
+              <a href="images/james-smtp-relay.png" data-lightbox="james-schema" data-title="James SMTP relay" alt="James SMTP relay" class="james-schema"><span class="fa fa-sitemap"></span>using james as smtp relay<span class="fa fa-long-arrow-right"></span></a>
+              <a href="images/james-imap-server.png" data-lightbox="james-schema" data-title="James IMAP server" alt="James IMAP server" class="james-schema"><span class="fa fa-sitemap"></span>using james as an imap server<span class="fa fa-long-arrow-right"></span></a><br/><br/>
+              <h2 class="big-h2"><span class="fa fa-wrench"></span> <span>James is a <b>living Open Source project</b> (all developments and implementations are based on open technical standards), any function which is not already available from <b>can be developed!</b></span></h2>
+            </div>
+          </div>
+        </section>
+
+      <!-- First Section -->
+        <section id="first" class="main">
+          <header class="major">
+            <h2>Get Started With James</h2>
+          </header>
+          <section>
+            <ul class="james-ul no-padding">
+              <li class="post-template"><span class="long-arrow-right">&#8594;</span><span><b>
+WHAT WILL I TRY:</b><br>
+              <span>Here you will try James server v 3.0 thanks to an image.This James image has a default configuration using JPA (hsqldb) and Lucene. It also includes a default domain named james.local and three default users: user01, user02, user03.<br>
+                <i>Note: this James server will respond to IMAP port 143 and SMTP port 25.</i></span></span>
+              </li>
+              <li class="post-template"><span class="long-arrow-right">&#8594;</span><span><b>STEPS YOU HAVE TO FOLLOW:</b><br>
+                Pull the James image with the following single command starting the three components:<br><br>
+		<code class="highlighter-rouge">docker pull linagora/james-jpa-sample</code>
+
+                <br><br>
+                Then, connect this image with for instance, Thunderbird.<br>
+                <i>Notes: for more information about James CLI, have a look at <a href="https://github.com/apache/james-project/#other-useful-commands" alt="Useful commands">'Useful commands section README.txt'</a>.</i></span>
+              </li>
+            </ul>
+          </section>
+        </section>
+
+    <!-- Last Posts -->
+      <section id="posts" class="main">
+        <header class="major">
+          <h2>Last Posts</h2>
+        </header>
+        <section>
+          <ul class="no-padding">
+            {% for post in site.posts limit:2 %}
+              <li class="post-template">
+                <span class="icon fa-file-text-o"></span>
+                <span class="details">
+                  <a href="{{ post.url }}" alt="{{ post.title }}"><b>{{ post.title }} - {{ post.date | date: '%B %d, %Y' }}</b><br><small>{{ post.excerpt }}</small></a>
+                </span>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+        <footer>
+          <ul class="actions">
+            <li><a href="posts.html" class="button">READ MORE POST</a></li>
+          </ul>
+        </footer>
+      </section>
+
+      <!-- Second Section -->
+        <section id="second" class="main">
+          <header class="major">
+            <h2>Community </h2>
+          </header>
+          <section>
+            <p class="align-left">
+            Apache James Project is  an Open Source all-volunteer project obtaining its strength from its Community made of developers and users. All are welcome to the Community!<br>
+            That way, we recommend that Users, Developers, Curious and Fans join the James Community.<br>
+            Here are the different ways of contributing sorted in order of increasing level of expertise you need to use them:
+            </p>
+            <ul class="no-padding no-margin">
+              <li class="post-template center-icon">
+                <a href="https://james.apache.org/mail.html" alt="mailing list james"><span class="icon fa-envelope"></span></a>
+                <span class="details">
+                  <b>Mailing list:</b>
+                  <br/>subscribe to the appropriate <a href="https://james.apache.org/mail.html" class="comm" alt="mailing lists">Mailing Lists</a> according to your interests and your profile.<br/> <a href="https://james.apache.org/mail.html#Guidelines" class="comm" alt="mail guideline">Mail guidelines</a> explain you more precisely how it works.
+                </span>
+              </li>
+              <li class="post-template center-icon">
+                <a href=""><span class="icon fa-bug"></span></a>
+                <span class="details">
+                  <b>Bug tracker:</b>
+                  <br/>you can here enter bug encountered or share your point of view about a specific feature or anything else... <br/>
+                  Each subproject has its own bug tracker.<br/>
+                  <a href="https://issues.apache.org/jira/browse/JAMES/?selectedTab=com.atlassian.jira.jira-projects-plugin:summary-panel" class="comm" alt="James Server bugtracker">Go to James Server project bugtracker</a><br/>
+                  For other projects click on the appropriate links mentioned in the concerned subproject. Finally, create your issue.
+                </span>
+              </li>
+              <li class="post-template center-icon">
+                <a href="http://twitter.com/ApacheJames" alt="twitter account"><span class="icon fa-twitter"></span></a>
+                <span class="details">
+                  <b>Twitter:</b>
+                  <br/>express yourself and follow us <a href="http://twitter.com/ApacheJames" class="comm" alt="twitter account">@ApacheJames</a>
+                </span>
+              </li>
+            </ul>
+          </section>
+        </section>
+
+        <section id="stats" class="main">
+          <header class="major">
+            <h2>Some statistics...</h2>
+          </header>
+          <section>
+            <ul class="statistics" onclick="location.href='https://github.com/apache/james-project'" title="Github James Project">
+              <li class="style1">
+                <span class="icon fa-users"></span>
+                <strong id="contributor-num"></strong> Contributors
+              </li>
+              <li class="style2">
+                <span class="icon fa-file-code-o"></span>
+                <strong id="commit-num"></strong> Last year commits
+              </li>
+              <li class="style3">
+                <span class="icon fa-code-fork"></span>
+                <strong id="fork-num"></strong> Forks
+              </li>
+              <li class="style4">
+                <span class="icon fa-star-o"></span>
+                <strong id="star-num"></strong> Stars
+              </li>
+            </ul>
+            <header class="major">
+              <h2>...and contributors</h2>
+            </header>
+            <ul class="no-padding align-center" id="contributor-list"></ul>
+          </section>
+      </section>
+    </div>
+    <footer id="footer" class="major">
+      <section>
+        <h2>James</h2>
+        <ul class="no-padding">
+          <li class="no-padding"><a href="#intro" class="active">About</a></li>
+          <li class="no-padding"><a href="#first">Get Started</a></li>
+          <li class="no-padding"><a href="#posts">Last Posts</a></li>
+          <li class="no-padding"><a href="#second">Community</a></li>
+          <li class="no-padding"><a href="https://james.apache.org/"><span class="fa fa-external-link"></span> Documentation</a></li>
+        </ul>
+      </section>
+      <section>
+        <h2>Connect</h2>
+        <ul class="icons">
+          <li><a href="http://twitter.com/ApacheJames" class="icon fa-twitter alt"><span class="label">Twitter</span></a></li>
+          <li><a href="https://github.com/apache/james-project" class="icon fa-github alt"><span class="label">GitHub</span></a></li>
+          <li><a href="http://james.apache.org/mail.html" class="icon fa-envelope-o alt"><span class="label">Mailing-list</span></a></li>
+        </ul>
+      </section>
+      <section class="legal-section">
+        <h2>Copyright</h2>
+        Copyright <a href="http://www.apache.org/"> © 2006-2016 The Apache Software Foundation. All Rights Reserved.</a><br/>
+        Design: <a href="https://html5up.net">HTML5 UP</a>
+      </section>
+  </footer>
+</div>
+
+<!-- Scripts -->
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/jquery.scrollex.min.js"></script>
+<script src="assets/js/jquery.scrolly.min.js"></script>
+<script src="assets/js/skel.min.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/lightbox.js"></script>
+<script src="assets/js/github-fetch.js"></script>
+<!--[if lte IE 8]><script src="assets/js/ie/respond.min.js"></script><![endif]-->
+<script src="assets/js/main.js"></script>
+
