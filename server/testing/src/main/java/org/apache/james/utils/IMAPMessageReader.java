@@ -29,6 +29,8 @@ import com.google.common.base.Splitter;
 
 public class IMAPMessageReader implements Closeable {
 
+    private static final String INBOX = "INBOX";
+
     private final IMAPClient imapClient;
 
     public IMAPMessageReader(String host, int port) throws IOException {
@@ -42,7 +44,7 @@ public class IMAPMessageReader implements Closeable {
     }
 
     public boolean userReceivedMessage(String user, String password) throws IOException {
-        return userReceivedMessageInMailbox(user, password, "INBOX");
+        return userReceivedMessageInMailbox(user, password, INBOX);
     }
 
     public boolean userReceivedMessageInMailbox(String user, String password, String mailbox) throws IOException {
@@ -59,7 +61,7 @@ public class IMAPMessageReader implements Closeable {
     }
 
     public boolean userDoesNotReceiveMessage(String user, String password) throws IOException {
-        return userDoesNotReceiveMessageInMailbox(user, password, "INBOX");
+        return userDoesNotReceiveMessageInMailbox(user, password, INBOX);
     }
 
     public boolean userDoesNotReceiveMessageInMailbox(String user, String password, String mailboxName) throws IOException {
@@ -71,16 +73,20 @@ public class IMAPMessageReader implements Closeable {
 
     public String readFirstMessageInInbox(String user, String password) throws IOException {
 
-        return readFirstMessageInInbox(user, password, "(BODY[])");
+        return readFirstMessageInMailbox(user, password, "(BODY[])", INBOX);
+    }
+
+    public String readFirstMessageHeadersInMailbox(String user, String password, String mailboxName) throws IOException {
+        return readFirstMessageInMailbox(user, password, "(RFC822.HEADER)", mailboxName);
     }
 
     public String readFirstMessageHeadersInInbox(String user, String password) throws IOException {
-        return readFirstMessageInInbox(user, password, "(RFC822.HEADER)");
+        return readFirstMessageInMailbox(user, password, "(RFC822.HEADER)", INBOX);
     }
 
-    private String readFirstMessageInInbox(String user, String password, String parameters) throws IOException {
+    private String readFirstMessageInMailbox(String user, String password, String parameters, String mailboxName) throws IOException {
         imapClient.login(user, password);
-        imapClient.select("INBOX");
+        imapClient.select(mailboxName);
         imapClient.fetch("1:1", parameters);
         return imapClient.getReplyString();
     }
