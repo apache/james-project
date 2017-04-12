@@ -20,13 +20,22 @@ layout: default
     under the License.
 -->
 
+<link href="/assets/css/lightbox.css" rel="stylesheet">
 <div id="wrapper" class="post-page">
+  <div class="apache_ref">
+    <a href="https://www.apache.org" alt="apache foundation link"><img src="https://www.apache.org/foundation/press/kit/asf_logo.svg" title="apache foundation logo"/></a>
+  </div>
+  <div class="apache_ref_mobile">
+    <a href="https://www.apache.org" alt="apache foundation link">The Apache Software Foundation</a>
+  </div>
 
-  <!-- Header -->
-    <header id="header" class="alt">
-      <h1><span class="icon fa-file-text-o"></span> {{ page.title }}</h1>
-      <p>{{ page.date | date: '%B %d, %Y' }}</p>
-    </header>
+  <header id="header" class="alt">
+    <div class="logo"><img src="/images/james.svg" alt="james logo"/></div>
+    <h1 class="hidden">James Enterprise Mail Server</h1>
+    <h2>Emails at the heart of your business logic</h2>
+    <h2><span class="icon fa-file-text-o"></span> {{ page.title }}</h2>
+    <p>{{ page.date | date: '%B %d, %Y' }}</p>
+  </header>
 
   <!-- Main -->
     <div id="main">
