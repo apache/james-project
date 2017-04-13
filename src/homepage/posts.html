@@ -21,15 +21,18 @@ layout: default
 -->
 <div id="wrapper" class="post-page">
 
-  <!-- Header -->
-    <header id="header" class="alt">
-      <h1><span class="icon fa-newspaper-o"></span> Apache James Posts</h1>
-    </header>
+  <header id="header" class="alt">
+    <div class="logo"><a href="/index.html" alt="Apache James"><img src="/images/james.svg" alt="james logo"/></a></div>
+    <h1 class="hidden">James Enterprise Mail Server</h1>
+    <h2>Emails at the heart of your business logic</h2>
+  </header>
 
   <!-- Main -->
     <div id="main">
       <section id="posts" class="main">
-        <ul class="no-padding">
+        <h1><span class="icon fa-newspaper-o"></span> Apache James Posts</h1>
+        <br/>
+        <ul>
             {% for post in site.posts %}
               <li class="post-template">
                 <span class="icon fa-lg fa-file-text-o"></span>

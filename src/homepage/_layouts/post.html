@@ -30,11 +30,9 @@ layout: default
   </div>
 
   <header id="header" class="alt">
-    <div class="logo"><img src="/images/james.svg" alt="james logo"/></div>
+    <div class="logo"><a href="/index.html" alt="Apache James"><img src="/images/james.svg" alt="james logo"/></a></div>
     <h1 class="hidden">James Enterprise Mail Server</h1>
     <h2>Emails at the heart of your business logic</h2>
-    <h2><span class="icon fa-file-text-o"></span> {{ page.title }}</h2>
-    <p>{{ page.date | date: '%B %d, %Y' }}</p>
   </header>
 
   <!-- Main -->
@@ -43,8 +41,15 @@ layout: default
       <!-- Content -->
         <section id="content" class="main">
 
-          {{ content }}
+          <h1><span class="icon fa-file-text-o"></span> {{ page.title }}</h1>
+          <h2><span class="icon fa-clock-o"></span><b> {{ page.date | date: '%B %d, %Y' }}</b></h2>
 
+          <br/>
+
+          <div>
+            {{ content }}
+
+          </div>
           <footer class="major special">
             <hr>
             <center>
