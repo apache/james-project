@@ -1,9 +1,0 @@
----
-layout: post
-title:  "Apache James Protocols 1.6.0 released"
-date:   2012-01-07 16:13:22 +0200
-categories: james update
----
-
-The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce the release of version 1.6.0
-of Apache James Protocols library.
