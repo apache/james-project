@@ -2888,6 +2888,7 @@
 			color: #ffffff;
 			background: url('images/overlay.png');
 			text-align: center;
+    		width: 25%;
 		}
 
 			.statistics li.style1 {

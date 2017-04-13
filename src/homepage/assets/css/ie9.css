@@ -37,7 +37,6 @@
 
 	.statistics {
 		display: inline-block;
-		width: auto;
 	}
 
 		.statistics:after {
