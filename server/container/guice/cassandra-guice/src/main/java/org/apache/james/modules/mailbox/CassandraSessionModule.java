@@ -29,6 +29,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
+import com.nurkiewicz.asyncretry.function.RetryCallable;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -40,6 +41,9 @@ import org.apache.james.backends.cassandra.init.QueryLoggerConfiguration;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.util.Host;
+import org.apache.james.utils.RetryExecutorUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.util.Arrays;
@@ -51,6 +55,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class CassandraSessionModule extends AbstractModule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraSessionModule.class);
 
     private static final int DEFAULT_CONNECTION_MAX_RETRIES = 10;
     private static final int DEFAULT_CONNECTION_MIN_DELAY = 5000;
@@ -91,17 +96,28 @@ public class CassandraSessionModule extends AbstractModule {
         List<Host> servers = listCassandraServers(configuration);
         QueryLoggerConfiguration queryLoggerConfiguration = getCassandraQueryLoggerConf(configuration);
 
-        return getRetryer(executor, configuration)
-                .getWithRetry(ctx -> ClusterWithKeyspaceCreatedFactory
-                        .config(
-                            ClusterBuilder.builder()
-                                .servers(servers)
-                                .queryLoggerConfiguration(queryLoggerConfiguration)
-                                .build(),
-                            configuration.getString("cassandra.keyspace"))
-                        .replicationFactor(configuration.getInt("cassandra.replication.factor"))
-                        .clusterWithInitializedKeyspace())
+        int maxRetries = configuration.getInt("cassandra.retryConnection.maxRetries", DEFAULT_CONNECTION_MAX_RETRIES);
+        int minDelay = configuration.getInt("cassandra.retryConnection.minDelay", DEFAULT_CONNECTION_MIN_DELAY);
+
+        return RetryExecutorUtil.retryOnExceptions(executor, maxRetries, minDelay, NoHostAvailableException.class)
+                .getWithRetry(getClusterRetryCallable(configuration, servers, queryLoggerConfiguration))
                 .get();
+    }
+
+    private RetryCallable<Cluster> getClusterRetryCallable(PropertiesConfiguration configuration, List<Host> servers, QueryLoggerConfiguration queryLoggerConfiguration) {
+        LOGGER.info("Trying to connect to Cassandra service");
+
+        return context -> ClusterWithKeyspaceCreatedFactory
+            .config(getCluster(servers, queryLoggerConfiguration), configuration.getString("cassandra.keyspace"))
+            .replicationFactor(configuration.getInt("cassandra.replication.factor"))
+            .clusterWithInitializedKeyspace();
+    }
+
+    private Cluster getCluster(List<Host> servers, QueryLoggerConfiguration queryLoggerConfiguration) {
+        return ClusterBuilder.builder()
+            .servers(servers)
+            .queryLoggerConfiguration(queryLoggerConfiguration)
+            .build();
     }
 
     private List<Host> listCassandraServers(PropertiesConfiguration configuration) {
@@ -152,13 +168,6 @@ public class CassandraSessionModule extends AbstractModule {
         });
 
         return builder.build();
-    }
-
-    private static AsyncRetryExecutor getRetryer(AsyncRetryExecutor executor, PropertiesConfiguration configuration) {
-        return executor.retryOn(NoHostAvailableException.class)
-                .withProportionalJitter()
-                .withMaxRetries(configuration.getInt("cassandra.retryConnection.maxRetries", DEFAULT_CONNECTION_MAX_RETRIES))
-                .withMinDelay(configuration.getInt("cassandra.retryConnection.minDelay", DEFAULT_CONNECTION_MIN_DELAY));
     }
 
     @Provides
