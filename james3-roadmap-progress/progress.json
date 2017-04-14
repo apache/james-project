@@ -8,7 +8,7 @@
    },
    {
      "name" : "Make a marketing James 3.0 website",
-     "completion" : 80,
+     "completion" : 95,
      "complexity" : 30
    },
    {
@@ -18,12 +18,12 @@
    },
    {
      "name" : "Deploy James @ Linagora",
-     "completion" : 95,
+     "completion" : 100,
      "complexity" : 10
    },
    {
      "name" : "Gatling load and endurance testing",
-     "completion" : 70,
+     "completion" : 90,
      "complexity" : 30
    },
    {
@@ -53,7 +53,7 @@
    },
    {
      "name" : "Implement a Guice JPA + Lucene module",
-     "completion" : 80,
+     "completion" : 100,
      "complexity" : 5
    },
    {
@@ -68,7 +68,7 @@
    },
   {
    "name": "TTN",
-   "completion" : 60,
+   "completion" : 100,
    "complexity": 10
   },
    {
