@@ -30,6 +30,7 @@ import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.smtp.MailEnvelope;
+import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.DataLineFilter;
@@ -50,6 +51,8 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
     
     private static final HookResult SYNTAX_ERROR = new HookResult(HookReturnCode.DENY, SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Syntactically incorrect value for SIZE parameter");
     private static final HookResult QUOTA_EXCEEDED = new HookResult(HookReturnCode.DENY, SMTPRetCode.QUOTA_EXCEEDED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SYSTEM_MSG_TOO_BIG) + " Message size exceeds fixed maximum message size");
+    public static final int SINGLE_CHARACTER_LINE = 3;
+    public static final int DOT_BYTE = 46;
 
     @Override
     public void init(Configuration config) throws ConfigurationException {
@@ -148,16 +151,21 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
      * @see org.apache.james.protocols.smtp.core.DataLineFilter#onLine(SMTPSession, byte[], LineHandler)
      */
     public Response onLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
-        Response response = null;
-    	Boolean failed = (Boolean) session.getAttachment(MESG_FAILED, State.Transaction);
+        Boolean failed = (Boolean) session.getAttachment(MESG_FAILED, State.Transaction);
         // If we already defined we failed and sent a reply we should simply
         // wait for a CRLF.CRLF to be sent by the client.
-        if (failed != null && failed.booleanValue()) {
-            // TODO
-        } else {
-            if (line.remaining() == 3 && line.get() == 46) {
+        if (failed != null && failed) {
+            if (isDataTerminated(line)) {
                 line.rewind();
-                response = next.onLine(session, line);
+                next.onLine(session, ByteBuffer.wrap(".\r\n".getBytes()));
+                return new SMTPResponse(SMTPRetCode.QUOTA_EXCEEDED, "Quota exceeded");
+            } else {
+                return null;
+            }
+        } else {
+            if (isDataTerminated(line)) {
+                line.rewind();
+                return next.onLine(session, line);
             } else {
                 line.rewind();
                 Long currentSize = (Long) session.getAttachment("CURRENT_SIZE", State.Transaction);
@@ -167,25 +175,27 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
                 } else {
                     newSize = Long.valueOf(currentSize.intValue()+line.remaining());
                 }
-                
+
+                session.setAttachment("CURRENT_SIZE", newSize, State.Transaction);
+
                 if (session.getConfiguration().getMaxMessageSize() > 0 && newSize.intValue() > session.getConfiguration().getMaxMessageSize()) {
                     // Add an item to the state to suppress
                     // logging of extra lines of data
                     // that are sent after the size limit has
                     // been hit.
                     session.setAttachment(MESG_FAILED, Boolean.TRUE, State.Transaction);
-                    // then let the client know that the size
-                    // limit has been hit.
-                    response = next.onLine(session, ByteBuffer.wrap(".\r\n".getBytes()));
+
+                    return null;
                 } else {
                     line.rewind();
-                    response = next.onLine(session, line);
+                    return next.onLine(session, line);
                 }
-                
-                session.setAttachment("CURRENT_SIZE", newSize, State.Transaction);
             }
         }
-        return response;
+    }
+
+    private boolean isDataTerminated(ByteBuffer line) {
+        return line.remaining() == SINGLE_CHARACTER_LINE && line.get() == DOT_BYTE;
     }
 
     /**
