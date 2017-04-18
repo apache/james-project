@@ -22,6 +22,7 @@ package org.apache.james.utils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -31,6 +32,8 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.modules.CommonServicesModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -39,7 +42,17 @@ import com.google.common.collect.Iterables;
 
 public class FileConfigurationProvider implements ConfigurationProvider {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileConfigurationProvider.class);
     private static final String CONFIGURATION_FILE_SUFFIX = ".xml";
+    public static final HierarchicalConfiguration EMTY_CONFIGURATION = new HierarchicalConfiguration();
+
+    public static XMLConfiguration getConfig(InputStream configStream) throws ConfigurationException {
+        XMLConfiguration config = new XMLConfiguration();
+        config.setDelimiterParsingDisabled(true);
+        config.setAttributeSplittingDisabled(true);
+        config.load(configStream);
+        return config;
+    }
     
     private final FileSystem fileSystem;
     private final String configurationPrefix;
@@ -55,25 +68,28 @@ public class FileConfigurationProvider implements ConfigurationProvider {
         Preconditions.checkNotNull(component);
         List<String> configPathParts = Splitter.on(".").splitToList(component);
         Preconditions.checkArgument(!configPathParts.isEmpty());
-        HierarchicalConfiguration config = getConfig(retrieveConfigInputStream(configPathParts.get(0)));
+
+        Optional<InputStream> inputStream = retrieveConfigInputStream(configPathParts.get(0));
+        if (inputStream.isPresent()) {
+            return selectConfigurationPart(configPathParts,
+                getConfig(inputStream.get()));
+        }
+        return EMTY_CONFIGURATION;
+    }
+
+    private HierarchicalConfiguration selectConfigurationPart(List<String> configPathParts, HierarchicalConfiguration config) {
         return selectHierarchicalConfigPart(config, Iterables.skip(configPathParts, 1));
     }
 
-    private InputStream retrieveConfigInputStream(String configurationFileWithoutExtension) throws ConfigurationException {
+    private Optional<InputStream> retrieveConfigInputStream(String configurationFileWithoutExtension) throws ConfigurationException {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(configurationFileWithoutExtension), "The configuration file name should not be empty or null");
         try {
-            return fileSystem.getResource(configurationPrefix + configurationFileWithoutExtension + CONFIGURATION_FILE_SUFFIX);
+            return Optional.of(
+                fileSystem.getResource(configurationPrefix + configurationFileWithoutExtension + CONFIGURATION_FILE_SUFFIX));
         } catch (IOException e) {
-            throw new ConfigurationException("Unable to locate configuration file " + configurationFileWithoutExtension + CONFIGURATION_FILE_SUFFIX, e);
+            LOGGER.warn("Unable to locate configuration file " + configurationFileWithoutExtension + CONFIGURATION_FILE_SUFFIX + ", assuming empty configuration");
+            return Optional.empty();
         }
-    }
-
-    private XMLConfiguration getConfig(InputStream configStream) throws ConfigurationException {
-        XMLConfiguration config = new XMLConfiguration();
-        config.setDelimiterParsingDisabled(true);
-        config.setAttributeSplittingDisabled(true);
-        config.load(configStream);
-        return config;
     }
 
     private HierarchicalConfiguration selectHierarchicalConfigPart(HierarchicalConfiguration config, Iterable<String> configsPathParts) {

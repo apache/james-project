@@ -160,6 +160,10 @@
                     <scope>test</scope>
                 </dependency>
                 <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-guice-common</artifactId>
+                </dependency>
+                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-guice-configuration</artifactId>
                 </dependency>
@@ -178,6 +182,11 @@
                 <dependency>
                     <groupId>com.google.inject.extensions</groupId>
                     <artifactId>guice-multibindings</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.jayway.restassured</groupId>
+                    <artifactId>rest-assured</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>junit</groupId>

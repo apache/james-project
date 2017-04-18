@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.SimpleRegistry;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.lifecycle.api.Configurable;
@@ -65,6 +66,7 @@ public class CamelMailetContainerModule extends AbstractModule {
     private static final Logger CAMEL_LOGGER = LoggerFactory.getLogger(CamelCompositeProcessor.class);
     private static final Logger SPOOLER_LOGGER = LoggerFactory.getLogger(JamesMailSpooler.class);
     private static final Logger MAILET_LOGGER = LoggerFactory.getLogger(JamesMailetContext.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CamelMailetContainerModule.class);
 
     @Override
     protected void configure() {
@@ -106,7 +108,8 @@ public class CamelMailetContainerModule extends AbstractModule {
         private final JamesMailSpooler jamesMailSpooler;
         private final JamesMailetContext mailetContext;
         private final MailQueueFactory mailQueueFactory;
-        private Set<TransportProcessorCheck> transportProcessorCheckSet;
+        private final DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier;
+        private final Set<TransportProcessorCheck> transportProcessorCheckSet;
 
         @Inject
         public MailetModuleConfigurationPerformer(ConfigurationProvider configurationProvider,
@@ -114,13 +117,15 @@ public class CamelMailetContainerModule extends AbstractModule {
                                                 JamesMailSpooler jamesMailSpooler,
                                                 JamesMailetContext mailetContext,
                                                 MailQueueFactory mailQueueFactory,
-                                                Set<TransportProcessorCheck> transportProcessorCheckSet) {
+                                                Set<TransportProcessorCheck> transportProcessorCheckSet,
+                                                DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier) {
             this.configurationProvider = configurationProvider;
             this.camelCompositeProcessor = camelCompositeProcessor;
             this.jamesMailSpooler = jamesMailSpooler;
             this.mailetContext = mailetContext;
             this.mailQueueFactory = mailQueueFactory;
             this.transportProcessorCheckSet = transportProcessorCheckSet;
+            this.defaultProcessorsConfigurationSupplier = defaultProcessorsConfigurationSupplier;
         }
 
         @Override
@@ -129,22 +134,64 @@ public class CamelMailetContainerModule extends AbstractModule {
                 DefaultCamelContext camelContext = new DefaultCamelContext();
                 camelContext.disableJMX();
                 camelContext.setRegistry(new SimpleRegistry());
-                camelCompositeProcessor.setLog(CAMEL_LOGGER);
-                camelCompositeProcessor.setCamelContext(camelContext);
-                camelCompositeProcessor.configure(configurationProvider.getConfiguration("mailetcontainer").configurationAt("processors"));
-                camelCompositeProcessor.init();
+                configureProcessors(camelContext);
                 checkProcessors();
-                jamesMailSpooler.setMailProcessor(camelCompositeProcessor);
-                jamesMailSpooler.setLog(SPOOLER_LOGGER);
-                jamesMailSpooler.configure(configurationProvider.getConfiguration("mailetcontainer").configurationAt("spooler"));
-                jamesMailSpooler.init();
-                mailetContext.setLog(MAILET_LOGGER);
-                mailetContext.configure(configurationProvider.getConfiguration("mailetcontainer").configurationAt("context"));
-                mailetContext.retrieveRootMailQueue(mailQueueFactory);
+                configureJamesSpooler();
+                configureMailetContext();
             } catch (Exception e) {
                 throw Throwables.propagate(e);
             }
 
+        }
+
+        private void configureProcessors(DefaultCamelContext camelContext) throws Exception {
+            camelCompositeProcessor.setLog(CAMEL_LOGGER);
+            camelCompositeProcessor.setCamelContext(camelContext);
+            camelCompositeProcessor.configure(getProcessorConfiguration());
+            camelCompositeProcessor.init();
+        }
+
+        private HierarchicalConfiguration getProcessorConfiguration() {
+            try {
+                return configurationProvider.getConfiguration("mailetcontainer")
+                    .configurationAt("processors");
+            } catch (Exception e) {
+                LOGGER.warn("Could not load configuration for Processors. Fallback to default.");
+                return defaultProcessorsConfigurationSupplier.getDefaultConfiguration();
+            }
+        }
+
+        private void configureJamesSpooler() throws ConfigurationException {
+            jamesMailSpooler.setMailProcessor(camelCompositeProcessor);
+            jamesMailSpooler.setLog(SPOOLER_LOGGER);
+            jamesMailSpooler.configure(getJamesSpoolerConfiguration());
+            jamesMailSpooler.init();
+        }
+
+        private HierarchicalConfiguration getJamesSpoolerConfiguration() {
+            try {
+                return configurationProvider.getConfiguration("mailetcontainer")
+                    .configurationAt("spooler");
+            } catch (Exception e) {
+                LOGGER.warn("Could not locate configuration for James Spooler. Assuming empty configuration for this component.");
+                return new HierarchicalConfiguration();
+            }
+        }
+
+        private void configureMailetContext() throws ConfigurationException {
+            mailetContext.setLog(MAILET_LOGGER);
+            mailetContext.configure(getMailetContextConfiguration());
+            mailetContext.retrieveRootMailQueue(mailQueueFactory);
+        }
+
+        private HierarchicalConfiguration getMailetContextConfiguration() {
+            try {
+                return configurationProvider.getConfiguration("mailetcontainer")
+                    .configurationAt("context");
+            } catch (Exception e) {
+                LOGGER.warn("Could not locate configuration for Mailet context. Assuming empty configuration for this component.");
+                return new HierarchicalConfiguration();
+            }
         }
 
         private void checkProcessors() throws ConfigurationException {
@@ -182,6 +229,10 @@ public class CamelMailetContainerModule extends AbstractModule {
                 .findAny()
                 .orElseThrow(() -> new ConfigurationException("Missing RemoveMimeHeader in mailets configuration (mailetcontainer -> processors -> transport). Should be configured to remove Bcc header"));
         }
+    }
+
+    public interface DefaultProcessorsConfigurationSupplier {
+        HierarchicalConfiguration getDefaultConfiguration();
     }
 
 }

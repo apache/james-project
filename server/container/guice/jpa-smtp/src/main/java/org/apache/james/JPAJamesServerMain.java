@@ -26,6 +26,7 @@ import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.DataRoutesModules;
+import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.WebAdminServerModule;
@@ -37,11 +38,12 @@ import com.google.inject.util.Modules;
 public class JPAJamesServerMain {
 
     public static final Module protocols = Modules.combine(
-            new ProtocolHandlerModule(),
-            new SMTPServerModule(),
-            new WebAdminServerModule(),
-            new DataRoutesModules(),
-            new NoJwtModule());
+        new ProtocolHandlerModule(),
+        new SMTPServerModule(),
+        new WebAdminServerModule(),
+        new DataRoutesModules(),
+        new NoJwtModule(),
+        new DefaultProcessorsConfigurationProviderModule());
     
     public static final Module jpaServerModule = Modules.combine(
         new JPADataModule(),

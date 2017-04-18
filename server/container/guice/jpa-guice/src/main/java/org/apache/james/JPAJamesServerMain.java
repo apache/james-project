@@ -32,6 +32,7 @@ import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.DataRoutesModules;
+import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
@@ -44,15 +45,15 @@ import com.google.inject.util.Modules;
 public class JPAJamesServerMain {
 
     public static final Module protocols = Modules.combine(
-            new IMAPServerModule(),
-            new ProtocolHandlerModule(),
-            new POP3ServerModule(),
-            new SMTPServerModule(),
-            new LMTPServerModule(),
-            new ManageSieveServerModule(),
-            new WebAdminServerModule(),
-            new DataRoutesModules(),
-            new MailboxRoutesModule());
+        new IMAPServerModule(),
+        new ProtocolHandlerModule(),
+        new POP3ServerModule(),
+        new SMTPServerModule(),
+        new LMTPServerModule(),
+        new ManageSieveServerModule(),
+        new WebAdminServerModule(),
+        new DataRoutesModules(),
+        new MailboxRoutesModule());
     
     public static final Module jpaServerModule = Modules.combine(
         new JPAMailboxModule(),
@@ -61,7 +62,8 @@ public class JPAJamesServerMain {
         new ActiveMQQueueModule(),
         new RawPostDequeueDecoratorModule(),
         new MailboxModule(),
-        new NoJwtModule());
+        new NoJwtModule(),
+        new DefaultProcessorsConfigurationProviderModule());
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()

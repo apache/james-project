@@ -105,9 +105,9 @@ public class FileConfigurationProviderTest {
         assertThat(hierarchicalConfiguration.getProperty(CONFIG_KEY_2)).isEqualTo(VALUE_2);
     }
 
-    @Test(expected = ConfigurationException.class)
-    public void getConfigurationShouldThrowOnNonExistingXMLFile() throws Exception {
-        assertThat(configurationProvider.getConfiguration(FAKE_CONFIG_KEY)).isNotNull();
+    @Test
+    public void getConfigurationShouldReturnDefaultOnNonExistingXMLFile() throws Exception {
+        assertThat(configurationProvider.getConfiguration(FAKE_CONFIG_KEY)).isEqualTo(FileConfigurationProvider.EMTY_CONFIGURATION);
     }
 
     @Test(expected = IllegalArgumentException.class)

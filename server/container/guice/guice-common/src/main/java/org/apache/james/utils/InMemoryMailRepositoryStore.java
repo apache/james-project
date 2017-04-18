@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 import org.apache.commons.configuration.CombinedConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -39,6 +38,7 @@ import org.apache.james.repository.api.Initializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configurable {
@@ -61,9 +61,7 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
 
     @Override
     public List<String> getUrls() {
-        return destinationToRepositoryAssociations.keySet()
-            .stream()
-            .collect(Collectors.toList());
+        return ImmutableList.copyOf(destinationToRepositoryAssociations.keySet());
     }
 
     @Override
@@ -73,9 +71,18 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
 
     public void init() throws Exception {
         LOGGER.info("JamesMailStore init... " + this);
-        List<HierarchicalConfiguration> registeredClasses = configuration.configurationsAt("mailrepositories.mailrepository");
+        List<HierarchicalConfiguration> registeredClasses = retrieveRegisteredClassConfiguration();
         for (HierarchicalConfiguration registeredClass : registeredClasses) {
             readConfigurationEntry(registeredClass);
+        }
+    }
+
+    private List<HierarchicalConfiguration> retrieveRegisteredClassConfiguration() {
+        try {
+            return configuration.configurationsAt("mailrepositories.mailrepository");
+        } catch (Exception e) {
+            LOGGER.warn("Could not process configuration. Skipping Mail Repository initialization.", e);
+            return ImmutableList.of();
         }
     }
 

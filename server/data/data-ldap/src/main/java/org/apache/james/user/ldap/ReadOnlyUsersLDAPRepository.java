@@ -388,6 +388,20 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         filter = configuration.getString("[@filter]");
 
         administratorId = Optional.fromNullable(configuration.getString("[@administratorId]"));
+
+        checkState();
+    }
+
+    private void checkState() throws ConfigurationException {
+        if (userBase == null) {
+            throw new ConfigurationException("[@userBase] is mandatory");
+        }
+        if (userIdAttribute == null) {
+            throw new ConfigurationException("[@userIdAttribute] is mandatory");
+        }
+        if (userObjectClass == null) {
+            throw new ConfigurationException("[@userObjectClass] is mandatory");
+        }
     }
 
     /**

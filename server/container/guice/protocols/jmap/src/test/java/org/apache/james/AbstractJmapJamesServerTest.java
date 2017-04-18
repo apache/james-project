@@ -61,11 +61,11 @@ public abstract class AbstractJmapJamesServerTest {
         server.start();
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
-        		.setContentType(ContentType.JSON)
-        		.setAccept(ContentType.JSON)
-        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort())
-        		.build();
+            .setContentType(ContentType.JSON)
+            .setAccept(ContentType.JSON)
+            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+            .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort())
+            .build();
     }
 
     protected abstract GuiceJamesServer createJamesServer();

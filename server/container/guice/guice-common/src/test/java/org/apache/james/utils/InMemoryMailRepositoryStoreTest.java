@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.JamesServerResourceLoader;
 import org.apache.james.core.filesystem.FileSystemImpl;
 import org.apache.james.filesystem.api.FileSystem;
@@ -45,7 +46,8 @@ public class InMemoryMailRepositoryStoreTest {
         repositoryStore = new InMemoryMailRepositoryStore(Sets.newHashSet(
                 new MailStoreRepositoryModule.FileMailRepositoryProvider(
                         fileSystem)));
-        repositoryStore.configure(new FileConfigurationProvider(fileSystem, FileSystem.CLASSPATH_PROTOCOL).getConfiguration("mailrepositorystore"));
+        repositoryStore.configure(new FileConfigurationProvider(fileSystem, FileSystem.CLASSPATH_PROTOCOL)
+            .getConfiguration("mailrepositorystore"));
         repositoryStore.init();
     }
 
@@ -79,6 +81,20 @@ public class InMemoryMailRepositoryStoreTest {
         } catch (ConfigurationException e) {
             fail("Unexpected failure : ", e);
         }
+        repositoryStore.init();
+    }
+
+    @Test
+    public void configureShouldNotThrowOnEmptyConfiguration() throws Exception {
+        try {
+            repositoryStore = new InMemoryMailRepositoryStore(Sets.newHashSet(
+                new MailStoreRepositoryModule.FileMailRepositoryProvider(
+                    fileSystem)));
+        } catch (Exception e) {
+            fail("Unexpected failure : ", e);
+        }
+        repositoryStore.configure(new HierarchicalConfiguration());
+
         repositoryStore.init();
     }
 
