@@ -33,8 +33,6 @@
         <processor state="root" enableJmx="false">
             <mailet match="All" class="PostmasterAlias"/>
             <mailet match="RelayLimit=30" class="Null"/>
-            <!-- Hook on sievemanager@james.linagora.com
-                 Mail send to this address will get interpreted with SIEVE Manage -->
             <mailet match="All" class="ToProcessor">
                 <processor>transport</processor>
             </mailet>
@@ -43,7 +41,6 @@
         <processor state="error" enableJmx="false">
             <mailet match="All" class="Bounce"/>
         </processor>
-
 
         <processor state="transport" enableJmx="false">
             <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">

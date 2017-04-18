@@ -34,10 +34,6 @@
             <mailet match="All" class="PostmasterAlias"/>
             <mailet match="RelayLimit=30" class="Null"/>
 
-            <mailet match="SMTPAuthSuccessful" class="ToProcessor">
-                <processor>transport</processor>
-            </mailet>
-
             <mailet match="All" class="ToProcessor">
                 <processor>transport</processor>
             </mailet>
@@ -69,10 +65,6 @@
             </mailet>
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
             <mailet match="All" class="RecipientRewriteTable" />
-            <!-- <mailet match="HostIsLocal" class="ToProcessor">
-                <processor>local-address-error</processor>
-                <notice>550 - Requested action not taken: no such user here</notice>
-            </mailet> -->
             <mailet match="All" class="RemoteDelivery">
                 <outgoingQueue>outgoing</outgoingQueue>
                 <delayTime>5 minutes</delayTime>
@@ -87,9 +79,6 @@
                 <sendpartial>false</sendpartial>
                 <bounceProcessor>bounces</bounceProcessor>
             </mailet>
-            <!-- mailet match="All" class="ToProcessor">
-                <processor>relay-denied</processor>
-            </mailet-->
         </processor>
 
         <processor state="local-address-error" enableJmx="true">
