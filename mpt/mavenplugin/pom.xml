@@ -27,7 +27,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>maven-mpt-plugin</artifactId>
+    <artifactId>mpt-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
 
     <name>Apache James MPT Maven2 Plugin</name>
