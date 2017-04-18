@@ -19,7 +19,7 @@
  -->
 
 <!-- The default table for storing James' RecipientRewriteTable mappings. -->
-<recipientrewritetable class="org.apache.james.rrt.jpa.JPARecipientRewriteTable">
+<recipientrewritetable>
   <recursiveMapping>true</recursiveMapping>
   <mappingLimit>10</mappingLimit>
   <mapping>some@domain=some</mapping>

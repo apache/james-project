@@ -20,7 +20,7 @@
  
 <!-- See http://james.apache.org/server/3/config.html for usage -->
 
-<domainlist class="org.apache.james.domainlist.jpa.JPADomainList">
+<domainlist>
   <autodetect>true</autodetect>
   <autodetectIP>true</autodetectIP>
   <defaultDomain>localhost</defaultDomain>

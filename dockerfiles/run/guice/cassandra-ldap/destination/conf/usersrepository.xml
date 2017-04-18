@@ -18,8 +18,7 @@
   under the License.                                           
  -->
 
-<repository name="LocalUsers" 
-    class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" 
+<repository name="LocalUsers"
     ldapHost="ldap://myldapserver:389" 
     principal="uid=ldapUser,ou=system" 
     credentials="password" 
