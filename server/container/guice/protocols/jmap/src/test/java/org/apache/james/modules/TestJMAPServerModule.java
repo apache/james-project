@@ -59,6 +59,7 @@ public class TestJMAPServerModule extends AbstractModule{
     @Singleton
     JMAPConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException{
         return JMAPConfiguration.builder()
+                .enable()
                 .keystore("keystore")
                 .secret("james72laBalle")
                 .jwtPublicKeyPem(Optional.of(PUBLIC_PEM_KEY))

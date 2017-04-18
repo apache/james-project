@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
@@ -44,6 +45,8 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.PropertiesProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Charsets;
@@ -58,6 +61,7 @@ import com.google.inject.multibindings.Multibinder;
 
 public class JMAPModule extends AbstractModule {
     private static final int DEFAULT_JMAP_PORT = 80;
+    private static final Logger LOGGER = LoggerFactory.getLogger(JMAPModule.class);
 
     @Override
     protected void configure() {
@@ -82,13 +86,21 @@ public class JMAPModule extends AbstractModule {
     @Provides
     @Singleton
     JMAPConfiguration provideConfiguration(PropertiesProvider propertiesProvider, FileSystem fileSystem) throws ConfigurationException, IOException{
-        PropertiesConfiguration configuration = propertiesProvider.getConfiguration("jmap");
-        return JMAPConfiguration.builder()
+        try {
+            PropertiesConfiguration configuration = propertiesProvider.getConfiguration("jmap");
+            return JMAPConfiguration.builder()
+                .enabled(configuration.getBoolean("enabled", true))
                 .keystore(configuration.getString("tls.keystoreURL"))
                 .secret(configuration.getString("tls.secret"))
                 .jwtPublicKeyPem(loadPublicKey(fileSystem, Optional.ofNullable(configuration.getString("jwt.publickeypem.url"))))
                 .port(configuration.getInt("jmap.port", DEFAULT_JMAP_PORT))
                 .build();
+        } catch (FileNotFoundException e) {
+            LOGGER.warn("Could not find JMAP configuration file. JMAP server will not be enabled.");
+            return JMAPConfiguration.builder()
+                .disable()
+                .build();
+        }
     }
 
     @Provides

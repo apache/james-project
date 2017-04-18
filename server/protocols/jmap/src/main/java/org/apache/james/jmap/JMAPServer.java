@@ -21,6 +21,8 @@ package org.apache.james.jmap;
 
 import static org.apache.james.jmap.BypassAuthOnRequestMethod.bypass;
 
+import java.util.Optional;
+
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
@@ -31,42 +33,45 @@ import org.apache.james.http.jetty.Configuration.Builder;
 import org.apache.james.http.jetty.JettyHttpServer;
 import org.apache.james.lifecycle.api.Configurable;
 
-import com.google.common.base.Throwables;
+import com.github.fge.lambdas.Throwing;
 
 public class JMAPServer implements Configurable {
 
-    private final JettyHttpServer server;
+    private final Optional<JettyHttpServer> server;
 
     @Inject
     private JMAPServer(JMAPConfiguration jmapConfiguration,
                        AuthenticationServlet authenticationServlet, JMAPServlet jmapServlet, DownloadServlet downloadServlet, UploadServlet uploadServlet,
                        AuthenticationFilter authenticationFilter, UserProvisioningFilter userProvisioningFilter, DefaultMailboxesProvisioningFilter defaultMailboxesProvisioningFilter) {
-
-        server = JettyHttpServer.create(
+        if (jmapConfiguration.isEnabled()) {
+            server = Optional.of(JettyHttpServer.create(
                 configurationBuilderFor(jmapConfiguration)
-                        .serve(JMAPUrls.AUTHENTICATION)
-                            .with(authenticationServlet)
-                        .filter(JMAPUrls.AUTHENTICATION)
-                            .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("POST").and("OPTIONS").only()))
-                            .only()
-                        .serve(JMAPUrls.JMAP)
-                            .with(jmapServlet)
-                        .filter(JMAPUrls.JMAP)
-                            .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("OPTIONS").only()))
-                            .and(userProvisioningFilter)
-                            .and(defaultMailboxesProvisioningFilter)
-                            .only()
-                        .serveAsOneLevelTemplate(JMAPUrls.DOWNLOAD)
-                            .with(downloadServlet)
-                        .filterAsOneLevelTemplate(JMAPUrls.DOWNLOAD)
-                            .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("OPTIONS").only()))
-                            .only()
-                        .serve(JMAPUrls.UPLOAD)
-                            .with(uploadServlet)
-                        .filterAsOneLevelTemplate(JMAPUrls.UPLOAD)
-                            .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("OPTIONS").only()))
-                            .only()
-                        .build());
+                    .serve(JMAPUrls.AUTHENTICATION)
+                        .with(authenticationServlet)
+                    .filter(JMAPUrls.AUTHENTICATION)
+                        .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("POST").and("OPTIONS").only()))
+                        .only()
+                    .serve(JMAPUrls.JMAP)
+                        .with(jmapServlet)
+                    .filter(JMAPUrls.JMAP)
+                        .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("OPTIONS").only()))
+                        .and(userProvisioningFilter)
+                        .and(defaultMailboxesProvisioningFilter)
+                        .only()
+                    .serveAsOneLevelTemplate(JMAPUrls.DOWNLOAD)
+                        .with(downloadServlet)
+                    .filterAsOneLevelTemplate(JMAPUrls.DOWNLOAD)
+                        .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("OPTIONS").only()))
+                        .only()
+                    .serve(JMAPUrls.UPLOAD)
+                        .with(uploadServlet)
+                    .filterAsOneLevelTemplate(JMAPUrls.UPLOAD)
+                        .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("OPTIONS").only()))
+                        .only()
+                    .build()));
+        } else {
+            server = Optional.empty();
+        }
     }
 
     private Builder configurationBuilderFor(JMAPConfiguration jmapConfiguration) {
@@ -81,23 +86,15 @@ public class JMAPServer implements Configurable {
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
-        try {
-            server.start();
-        } catch (Exception e) {
-            Throwables.propagate(e);
-        }
+        server.ifPresent(Throwing.consumer(JettyHttpServer::start).sneakyThrow());
     }
 
     @PreDestroy
     public void stop() {
-        try {
-            server.stop();
-        } catch (Exception e) {
-            Throwables.propagate(e);
-        }
+        server.ifPresent(Throwing.consumer(JettyHttpServer::stop).sneakyThrow());
     }
 
     public int getPort() {
-        return server.getPort();
+        return server.map(JettyHttpServer::getPort).orElseThrow(() -> new RuntimeException("JMAP server was disabled. No port bound"));
     }
 }
