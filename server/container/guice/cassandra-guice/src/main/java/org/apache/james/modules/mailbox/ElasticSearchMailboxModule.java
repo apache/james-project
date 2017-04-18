@@ -27,7 +27,6 @@ import javax.inject.Singleton;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.backends.es.ClientProvider;
 import org.apache.james.backends.es.ClientProviderImpl;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.IndexName;
@@ -79,8 +78,8 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    protected Client provideClientProvider(FileSystem fileSystem, AsyncRetryExecutor executor) throws ConfigurationException, FileNotFoundException, ExecutionException, InterruptedException {
-        PropertiesConfiguration propertiesReader = new PropertiesConfiguration(fileSystem.getFile(ES_CONFIG_FILE));
+    protected Client provideClientProvider(ElasticSearchConfiguration elasticSearchConfiguration, AsyncRetryExecutor executor) throws ConfigurationException, FileNotFoundException, ExecutionException, InterruptedException {
+        PropertiesConfiguration propertiesReader = elasticSearchConfiguration.getConfiguration();
         int maxRetries = propertiesReader.getInt("elasticsearch.retryConnection.maxRetries", DEFAULT_CONNECTION_MAX_RETRIES);
         int minDelay = propertiesReader.getInt("elasticsearch.retryConnection.minDelay", DEFAULT_CONNECTION_MIN_DELAY);
 
@@ -89,9 +88,17 @@ public class ElasticSearchMailboxModule extends AbstractModule {
             .get();
     }
 
-    private Client createClientAndIndex(ClientProvider clientProvider, PropertiesConfiguration propertiesReader) {
-        LOGGER.info("Trying to connect to ElasticSearch service");
-        Client client = clientProvider.get();
+    @Provides
+    @Singleton
+    ElasticSearchConfiguration getElasticSearchConfiguration(FileSystem fileSystem) {
+        return () -> getConfiguration(fileSystem);
+    }
+
+    private PropertiesConfiguration getConfiguration(FileSystem fileSystem) throws FileNotFoundException, ConfigurationException {
+        return new PropertiesConfiguration(fileSystem.getFile(ES_CONFIG_FILE));
+    }
+
+    private Client createIndexAndMapping(Client client, PropertiesConfiguration propertiesReader) {
         IndexCreationFactory.createIndex(client,
             MailboxElasticsearchConstants.MAILBOX_INDEX,
             propertiesReader.getInt("elasticsearch.nb.shards"),
@@ -103,7 +110,13 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         return client;
     }
 
-    private static ClientProvider connectToCluster(PropertiesConfiguration propertiesReader) throws ConfigurationException {
+    private Client connectToCluster(PropertiesConfiguration propertiesReader) throws ConfigurationException {
+        LOGGER.info("Trying to connect to ElasticSearch service");
+
+        return createIndexAndMapping(createClient(propertiesReader), propertiesReader);
+    }
+
+    private Client createClient(PropertiesConfiguration propertiesReader) throws ConfigurationException {
         Optional<String> monoHostAddress = Optional.ofNullable(propertiesReader.getString(ELASTICSEARCH_MASTER_HOST, null));
         Optional<Integer> monoHostPort = Optional.ofNullable(propertiesReader.getInteger(ELASTICSEARCH_PORT, null));
         Optional<String> multiHosts = Optional.ofNullable(propertiesReader.getString(ELASTICSEARCH_HOSTS, null));
@@ -111,9 +124,9 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         validateHostsConfigurationOptions(monoHostAddress, monoHostPort, multiHosts);
 
         if (monoHostAddress.isPresent()) {
-            return ClientProviderImpl.forHost(monoHostAddress.get(), monoHostPort.get());
+            return ClientProviderImpl.forHost(monoHostAddress.get(), monoHostPort.get()).get();
         } else {
-            return ClientProviderImpl.fromHostsString(multiHosts.get());
+            return ClientProviderImpl.fromHostsString(multiHosts.get()).get();
         }
     }
 
