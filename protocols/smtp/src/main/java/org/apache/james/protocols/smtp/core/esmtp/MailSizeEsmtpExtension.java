@@ -157,7 +157,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
         if (failed != null && failed) {
             if (isDataTerminated(line)) {
                 line.rewind();
-                next.onLine(session, ByteBuffer.wrap(".\r\n".getBytes()));
+                next.onLine(session, line);
                 return new SMTPResponse(SMTPRetCode.QUOTA_EXCEEDED, "Quota exceeded");
             } else {
                 return null;
