@@ -42,6 +42,7 @@ import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.apache.james.utils.RetryExecutorUtil;
+import org.apache.james.utils.PropertiesProvider;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.slf4j.Logger;
@@ -88,16 +89,6 @@ public class ElasticSearchMailboxModule extends AbstractModule {
             .get();
     }
 
-    @Provides
-    @Singleton
-    ElasticSearchConfiguration getElasticSearchConfiguration(FileSystem fileSystem) {
-        return () -> getConfiguration(fileSystem);
-    }
-
-    private PropertiesConfiguration getConfiguration(FileSystem fileSystem) throws FileNotFoundException, ConfigurationException {
-        return new PropertiesConfiguration(fileSystem.getFile(ES_CONFIG_FILE));
-    }
-
     private Client createIndexAndMapping(Client client, PropertiesConfiguration propertiesReader) {
         IndexCreationFactory.createIndex(client,
             MailboxElasticsearchConstants.MAILBOX_INDEX,
@@ -114,6 +105,20 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         LOGGER.info("Trying to connect to ElasticSearch service");
 
         return createIndexAndMapping(createClient(propertiesReader), propertiesReader);
+    }
+
+    @Provides
+    @Singleton
+    private ElasticSearchConfiguration getElasticSearchConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+        try {
+            PropertiesConfiguration configuration = propertiesProvider.getConfiguration("elasticsearch");
+            return () -> configuration;
+        } catch (FileNotFoundException e) {
+            LOGGER.warn("Could not find elasticsearch configuration file. Using 127.0.0.1:9300 as contact point");
+            PropertiesConfiguration propertiesConfiguration = new PropertiesConfiguration();
+            propertiesConfiguration.addProperty(ELASTICSEARCH_HOSTS, "127.0.0.1");
+            return () -> propertiesConfiguration;
+        }
     }
 
     private Client createClient(PropertiesConfiguration propertiesReader) throws ConfigurationException {
