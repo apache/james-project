@@ -53,60 +53,8 @@
        <!-- this requirement through other means (e.g. a XML/JDBCRecipientRewriteTable defined in recipientrewritetable-store.xml) -->
        <mailet match="All" class="PostmasterAlias"/>
 
-       <!-- Checks that the email Sender is associated with a valid domain. -->
-       <!-- Useful for detecting and eliminating spam. -->
-       <!-- For this block to function, the spam processor must be configured. -->
-       <!--
-       <mailet match="SenderInFakeDomain=64.55.105.9,64.94.110.11,194.205.62.122,194.205.62.62,195.7.77.20,206.253.214.102,212.181.91.6,219.88.106.80,194.205.62.42,216.35.187.246,203.119.4.6" class="ToProcessor">
-          <processor>spam</processor>
-       </mailet>
-         -->
-
        <!-- Important check to avoid looping -->
        <mailet match="RelayLimit=30" class="Null"/>
-
-       <!-- Check for viruses -->
-       <!-- -->
-       <!-- Does an antivirus scan check using a ClamAV daemon (CLAMD). -->
-       <!-- -->
-       <!-- Interacts directly with the daemon using the "stream" method, -->
-       <!-- which should have the lowest possible overhead. -->
-       <!-- The CLAMD daemon will typically reside on localhost, but could reside on a -->
-       <!-- different host. -->
-       <!-- It may also consist on a set of multiple daemons, each residing on a different -->
-       <!-- server and on different IP number. -->
-       <!-- In such case a DNS host name with multiple IP addresses (round-robin load sharing) -->
-       <!-- is supported by the mailet (but on the same port number). -->
-       <!-- -->
-       <!-- Handles the following init parameters: -->
-       <!--<debug>-->
-       <!--<host>: the host name of the server where CLAMD runs. It can either be -->
-       <!--     a machine name, such as -->
-       <!--     "java.sun.com", or a textual representation of its -->
-       <!--     IP address. If a literal IP address is supplied, only the -->
-       <!--     validity of the address format is checked. -->
-       <!--     If the machine name resolves to multiple IP addresses, round-robin load sharing will -->
-       <!--     be used. -->
-       <!--     The default is "localhost". -->
-       <!--<port>: the port on which CLAMD listens. The default is "3310". -->
-       <!--<maxPings>: the maximum number of connection retries during startup. -->
-       <!--     If the value is "0" no startup test will be done. -->
-       <!--     The default is "6". -->
-       <!--<pingIntervalMilli>: the interval (in milliseconds) -->
-       <!--     between each connection retry during startup. -->
-       <!--     The default is "30000" (30 seconds). -->
-       <!--<streamBufferSize>: the BufferedOutputStream buffer size to use  -->
-       <!--     writing to the stream connection. The default is "8192". -->
-       <!--
-       <mailet match="All" class="ClamAVScan" onMailetException="ignore">
-          <debug>true</debug>
-       </mailet>
-         -->
-
-       <!-- If infected go to virus processor -->
-       <mailet match="HasMailAttributeWithValue=org.apache.james.infected, true" class="ToProcessor">
-          <processor>virus</processor>
-       </mailet>
 
        <!-- Check attachment extensions for possible viruses -->
        <!-- The "-z" option requests the check to be non-recursively applied -->
@@ -125,55 +73,6 @@ Please don't reply to this e-mail as it has been automatically sent by the antiv
 Regards, Postmaster XXX.YYY
 .....................................
           </notice>
-       </mailet>
-         -->
-
-       <!-- Whitelist Management -->
-       <!-- Manages for each local user a "white list" of remote addresses whose messages -->
-       <!-- should never be blocked as spam. -->
-       <!-- -->
-       <!-- If<automaticInsert>is true, it will check, for a local sender, if a remote recipient -->
-       <!-- is already in the list: if not, it will be automatically inserted. -->
-       <!-- This is under the interpretation that if a local sender X sends a message to a -->
-       <!-- remote recipient Y, then later on if a message is sent by Y to X it should be -->
-       <!-- considered always valid and never blocked; hence Y should be in the white list -->
-       <!-- of X. -->
-       <!-- -->
-       <!-- Another mode of operations is when a local sender sends a message to<whitelistManagerAddress>-->
-       <!-- with one of three specific values in the subject, to -->
-       <!-- (i) send back a message displaying a list of the addresses in his own list (<displayFlag>); -->
-       <!-- (ii) insert some new addresses in his own list (<insertFlag>); -->
-       <!-- (iii) remove some addresses from his own list (<removeFlag>). -->
-       <!-- In all of the three above cases the message will be ghosted and the postmaster will reply -->
-       <!-- to the sender. -->
-       <!-- -->
-       <!-- The sender name is always converted to its primary name (handling aliases). -->
-       <!--
-       <mailet match="SMTPAuthSuccessful" class="WhiteListManager" onMailetException="ignore">
-          <repositoryPath>db://maildb</repositoryPath>
-          <automaticInsert>true</automaticInsert>
-          <whitelistManagerAddress>whitelist.manager@xxx.yyy</whitelistManagerAddress>
-          <displayFlag>display</displayFlag>
-          <insertFlag>insert</insertFlag>
-          <removeFlag>remove</removeFlag>
-       </mailet>
-         -->
-
-       <!-- "not spam" bayesian analysis feeder. -->
-       <!--
-       <mailet match="RecipientIs=not.spam@xxx.yyy" class="BayesianAnalysisFeeder">
-          <repositoryPath>db://maildb</repositoryPath>
-          <feedType>ham</feedType>
-          <maxSize>200000</maxSize>
-       </mailet>
-         -->
-     
-       <!-- "spam" bayesian analysis feeder. -->
-       <!--
-       <mailet match="RecipientIs=spam@xxx.yyy" class="BayesianAnalysisFeeder">
-          <repositoryPath>db://maildb</repositoryPath>
-          <feedType>spam</feedType>
-          <maxSize>200000</maxSize>
        </mailet>
          -->
 
@@ -196,28 +95,6 @@ Regards, Postmaster XXX.YYY
        </mailet>
          -->
 
-       <!--
-         
-         XMLRecipientRewriteTable is deprecated - Use the definitions in recipientrewritetable-store.xml
-         
-       <mailet match="All" class="XMLRecipientRewriteTable">
-          <!- 1:1 mapping ->
-          <mapping>morgoth@middle-earth=sauron@mordor</mapping>
-          <!- 1:n mapping ->
-          <mapping>istari@middle-earth=saruman@isengard;radigast;gandalf</mapping>
-          <!- DSN mapping ->
-          <mapping>boromir@osgilliath=error:550 Requested action not taken: no such user here</mapping>
-          <!- regex based mapping ->
-          <mapping>*@osgilliath=regex:(.*)@osgilliath:${1}@minas-tirith</mapping>
-          <!- both standard and regex mapping ->
-          <mapping>ring@*=onering@mordor;regex:ring@(.*):ring@${1}</mapping>
-          <!- conditional regex mapping example ->
-          <mapping>*@listserver=regex:(.*)-on@listserver:${1}-subscribe@listserver;
-                                  regex:(.*)-off@listserver:${1}-unsubscribe@listserver
-          </mapping>
-       </mailet>
-         
-         -->
 
        <!-- Anti-spam processing -->
        <!-- The following two entries avoid double anti-spam analysis -->
@@ -262,53 +139,13 @@ Regards, Postmaster XXX.YYY
        </mailet>
          -->
 
-       <!-- People on this list agree to pay a penalty if they send spam -->
-       <mailet match="InSpammerBlacklist=query.bondedsender.org."
-                 class="ToProcessor">
-         <processor>transport</processor>
-       </mailet>
-
-       <!-- E-mail legally required not to be spam (see: http://www.habeas.com) -->
-       <!--
-       <mailet match="HasHabeasWarrantMark" class="ToProcessor">
-          <processor>transport</processor>
-       </mailet>
-         -->
-
-       <!-- If the sender is in a recipient's whitelist, it is a valid sender, -->
-       <!-- and as such the message should not be considered spam for such recipient. -->
-       <!--
-       <mailet match="IsInWhiteList=db://maildb" class="ToProcessor" onMatchException="noMatch">
-          <processor>transport</processor>
-       </mailet>
-         -->
-
        <!-- End of White List -->
 
-       <!-- Check for delivery from a known spam server -->
-       <!-- This set of matchers/mailets redirect all emails from known -->
-       <!-- black holes, open relays, and spam servers to the spam processor -->
-       <!-- For this set to function properly, the spam processor must be configured. -->
-       <mailet match="InSpammerBlacklist=dnsbl.njabl.org."
-                 class="ToProcessor">
-         <processor>spam</processor>
-         <notice>550 Requested action not taken: rejected - see http://njabl.org/</notice>
-       </mailet>
-         
        <!-- Sample matching to kill a message (send to Null) -->
        <!--
        <mailet match="RecipientIs=badboy@badhost" class="Null"/>
          -->
-
-       <!-- Anti spam bayesian analysis -->
-       <!--
-       <mailet match="All" class="BayesianAnalysis" onMailetException="ignore">
-          <repositoryPath>db://maildb</repositoryPath>
-          <maxSize>200000</maxSize>
-          <headerName>X-MessageIsSpamProbability</headerName>
-          <ignoreLocalSender>true</ignoreLocalSender>
-       </mailet>
-
+        <!--
        <mailet match="CompareNumericHeaderValue=X-MessageIsSpamProbability >0.90" class="SetMailAttribute" onMatchException="noMatch">
           <isSpam>true</isSpam>
        </mailet>
@@ -323,11 +160,6 @@ Regards, Postmaster XXX.YYY
           <notice>Spam not accepted</notice>
        </mailet>
          -->
-         
-       <mailet notmatch="SenderHostIsLocal" class="SpamAssassin">
-          <spamdHost>localhost</spamdHost>
-          <spamdPort>783</spamdPort>
-       </mailet>
 
        <!-- Send remaining mails to the transport processor for either local or remote delivery -->
        <mailet match="All" class="ToProcessor">
@@ -398,26 +230,12 @@ Regards, Postmaster XXX.YYY
          -->
 
        <!-- Experimental quota Matcher -->
-       <!-- This matcher need to calculate the mailbox size everytime it is called. This can slow down things if there are many mails in -->
-       <!-- the mailbox. Some users also report big problems with the matcher if a JDBC based mailrepository is used. -->
        <!-- Check if over quota -->
-       <!-- 
-       <mailet match="RecipientIsOverFixedQuota=20M" class="Resend">
-          <sender>postmaster</sender>
-          <replyTo>postmaster</replyTo>
-          <reversePath>null</reversePath>
-          <inline>none</inline>
-          <attachment>message</attachment>
-          <prefix>[OVER QUOTA WARNING]</prefix>
-          <message>
-When receiving the attached message, your mailbox is larger than 20 MB, which is the maximum allowed quota. The mailbox will not be blocked, but we ask you to empty it ASAP.
+       <!--
 
-It is likely that you have set, in your mail client account, the option "leave a copy of messages on server". For any help ask your administrators.
-
-Regards, Postmaster XXX.YYY
-.....................................
-          </message>
-       </mailet>
+       <mailet match="IsOverQuota" class="ToProcessor">
+	      <processor>over-quota</processor>
+	    </mailet>
          -->
 
        <!--  The RecipientRewriteTable will use the definitions found in recipientrewritetablexml -->
@@ -536,7 +354,21 @@ Regards, Postmaster XXX.YYY
 
     </processor>
 
-    <!-- Processor CONFIGURATION SAMPLE: spam is a sample custom processor for handling -->
+    <processor state="over-quota" enableJmx="true">
+      <mailet match="All" class="MetricsMailet">
+        <metricName>mailet-over-quota-error</metricName>
+      </mailet>
+      <mailet match="All" class="Bounce">
+        <message>The following recipients do not have enough space for storing the email you sent them.</message>
+        <attachment>none</attachment>
+      </mailet>
+      <mailet match="All" class="ToRepository">
+        <repositoryPath>file://var/mail/over-quota-error/</repositoryPath>
+      </mailet>
+    </processor>
+
+
+      <!-- Processor CONFIGURATION SAMPLE: spam is a sample custom processor for handling -->
     <!-- spam. -->
     <!-- You can either log these, bounce these, or just ignore them. -->
     <processor state="spam" enableJmx="true">
