@@ -18,46 +18,55 @@
  ****************************************************************/
 
 package org.apache.james;
-import java.util.Arrays;
 
+import com.google.inject.Module;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.modules.mailbox.CassandraSessionConfiguration;
+import org.apache.james.modules.mailbox.ElasticSearchConfiguration;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.testcontainers.shaded.com.github.dockerjava.api.model.ExposedPort;
-import org.testcontainers.shaded.com.github.dockerjava.api.model.Ports;
 import org.testcontainers.shaded.com.github.dockerjava.api.model.Ports.Binding;
 
-import com.google.inject.Module;
+import java.util.Arrays;
 
 
-public class DockerCassandraRule implements GuiceModuleTestRule {
+public class DockerElasticSearchRule implements GuiceModuleTestRule {
 
-    private static final int CASSANDRA_PORT = 9042;
+    private static final int ELASTIC_SEARCH_PORT = 9300;
+    public static final int ELASTIC_SEARCH_HTTP_PORT = 9200;
 
     private static boolean isBindingToEveryThing(Binding binding) {
         String bindingIp = binding.getHostIp();
         return bindingIp == null || bindingIp.equals("0.0.0.0");
     }
 
-    public PropertiesConfiguration getCassandraConfigurationForDocker() {
+    public PropertiesConfiguration getElasticSearchConfigurationForDocker() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
 
-        configuration.addProperty("cassandra.nodes", getIp() + ":" + CASSANDRA_PORT);
-        configuration.addProperty("cassandra.keyspace", "apache_james");
-        configuration.addProperty("cassandra.replication.factor", 1);
-        configuration.addProperty("cassandra.retryConnection.maxRetries", 10);
-        configuration.addProperty("cassandra.retryConnection.minDelay", 5000);
+        configuration.addProperty("elasticsearch.masterHost", getIp());
+        configuration.addProperty("elasticsearch.port", ELASTIC_SEARCH_PORT);
+
+        configuration.addProperty("elasticsearch.nb.shards", 1);
+        configuration.addProperty("elasticsearch.nb.replica", 0);
+        configuration.addProperty("elasticsearch.retryConnection.maxRetries", 7);
+        configuration.addProperty("elasticsearch.retryConnection.minDelay", 30);
+        configuration.addProperty("elasticsearch.indexAttachments", false);
+        configuration.addProperty("elasticsearch.http.host", getIp());
+        configuration.addProperty("elasticsearch.http.port", ELASTIC_SEARCH_HTTP_PORT);
+        configuration.addProperty("elasticsearch.metrics.reports.enabled", true);
+        configuration.addProperty("elasticsearch.metrics.reports.period", 30);
+        configuration.addProperty("elasticsearch.metrics.reports.index", "james-metrics");
 
         return configuration;
     }
 
-    private SwarmGenericContainer cassandraContainer = new SwarmGenericContainer("cassandra:2.2");
+    private SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer("elasticsearch:2.2.2");
 
     @Override
     public Statement apply(Statement base, Description description) {
-        return cassandraContainer.apply(base, description);
+        return elasticSearchContainer.apply(base, description);
     }
 
     @Override
@@ -66,29 +75,29 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
 
     @Override
     public Module getModule() {
-        return (binder) -> binder.bind(CassandraSessionConfiguration.class).toInstance(this::getCassandraConfigurationForDocker);
+        return (binder) -> binder.bind(ElasticSearchConfiguration.class).toInstance(this::getElasticSearchConfigurationForDocker);
     }
 
     public String getIp() {
-        return cassandraContainer.getIp();
+        return elasticSearchContainer.getIp();
     }
 
     public int getBindingPort() {
-        Ports.Binding[] bindings =  cassandraContainer
+        Binding[] bindings =  elasticSearchContainer
                 .getContainerInfo()
                 .getNetworkSettings()
                 .getPorts()
                 .getBindings()
-                .get(ExposedPort.tcp(CASSANDRA_PORT));
+                .get(ExposedPort.tcp(ELASTIC_SEARCH_PORT));
 
         return Integer.valueOf(
                 Arrays.stream(bindings)
-                    .filter(DockerCassandraRule::isBindingToEveryThing)
+                    .filter(DockerElasticSearchRule::isBindingToEveryThing)
                     .map(binding -> binding.getHostPortSpec())
                     .findFirst().get());
     }
 
-    public SwarmGenericContainer getCassandraContainer() {
-        return cassandraContainer;
+    public SwarmGenericContainer getElasticSearchContainer() {
+        return elasticSearchContainer;
     }
 }
