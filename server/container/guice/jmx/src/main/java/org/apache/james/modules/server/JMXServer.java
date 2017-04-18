@@ -19,6 +19,7 @@
 
 package org.apache.james.modules.server;
 
+import java.io.FileNotFoundException;
 import java.lang.management.ManagementFactory;
 import java.net.ServerSocket;
 import java.rmi.registry.LocateRegistry;
@@ -34,9 +35,13 @@ import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.util.RestrictingRMISocketFactory;
+import org.apache.james.utils.PropertiesProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Throwables;
@@ -44,7 +49,9 @@ import com.google.common.collect.ImmutableMap;
 
 public class JMXServer {
 
-    private final FileSystem fileSystem;
+    private static final Logger LOGGER = LoggerFactory.getLogger(JMXServer.class);
+
+    private final PropertiesProvider propertiesProvider;
     private final Set<String> registeredKeys;
     private final Object lock;
     private JMXConnectorServer jmxConnectorServer;
@@ -52,8 +59,8 @@ public class JMXServer {
     private RestrictingRMISocketFactory restrictingRMISocketFactory;
 
     @Inject
-    public JMXServer(FileSystem fileSystem) {
-        this.fileSystem = fileSystem;
+    public JMXServer(PropertiesProvider propertiesProvider) {
+        this.propertiesProvider = propertiesProvider;
         isStarted = false;
         registeredKeys = new HashSet<>();
         lock = new Object();
@@ -89,7 +96,7 @@ public class JMXServer {
 
     private void doStart() {
         try {
-            PropertiesConfiguration configuration = new PropertiesConfiguration(fileSystem.getFile(FileSystem.FILE_PROTOCOL_AND_CONF + "jmx.properties"));
+            PropertiesConfiguration configuration = getPropertiesConfiguration();
             String address = configuration.getString("jmx.address", "localhost");
             int port = configuration.getInt("jmx.port", 9999);
             String serviceURL = "service:jmx:rmi://" + address + "/jndi/rmi://" + address+ ":" + port +"/jmxrmi";
@@ -104,6 +111,15 @@ public class JMXServer {
             jmxConnectorServer.start();
         } catch (Exception e) {
             throw Throwables.propagate(e);
+        }
+    }
+
+    private PropertiesConfiguration getPropertiesConfiguration() throws ConfigurationException {
+        try {
+            return propertiesProvider.getConfiguration("jmx");
+        } catch (FileNotFoundException e) {
+            LOGGER.warn("Could not locate configuration file for JMX. Defaults to rmi://127.0.0.1:9999");
+            return new PropertiesConfiguration();
         }
     }
 
