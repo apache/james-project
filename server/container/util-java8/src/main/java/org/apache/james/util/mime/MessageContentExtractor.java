@@ -20,6 +20,7 @@
 package org.apache.james.util.mime;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -36,7 +37,6 @@ import org.apache.james.mime4j.dom.TextBody;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
-import com.google.common.base.Charsets;
 
 public class MessageContentExtractor {
 
@@ -92,7 +92,13 @@ public class MessageContentExtractor {
     }
 
     private Optional<String> asString(TextBody textBody) throws IOException {
-        return Optional.ofNullable(IOUtils.toString(textBody.getInputStream(), Charsets.UTF_8));
+        return Optional.ofNullable(IOUtils.toString(textBody.getInputStream(), charset(Optional.ofNullable(textBody.getMimeCharset()))));
+    }
+
+    private Charset charset(Optional<String> charset) {
+        return charset
+                .map(Charset::forName)
+                .orElse(org.apache.james.mime4j.Charsets.DEFAULT_CHARSET);
     }
 
     private MessageContent retrieveHtmlAndPlainTextContent(Multipart multipart) throws IOException {

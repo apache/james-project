@@ -21,6 +21,7 @@ package org.apache.james.util.mime;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Optional;
 
 import javax.mail.internet.MimeMessage;
@@ -36,7 +37,6 @@ import org.apache.james.mime4j.message.MessageBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.util.ByteSequence;
-import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
 import org.junit.Before;
 import org.junit.Test;
@@ -487,5 +487,35 @@ public class MessageContentExtractorTest {
         MessageContent actual = messageContent1.merge(messageContent2);
 
         assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void extractShouldRespectCharsetWhenOtherThanUTF8() throws IOException {
+        String text = "éééé\r\nèèèè\r\nàààà";
+        Message message = MessageBuilder.create()
+                .setBody(text, Charset.forName("windows-1252"))
+                .build();
+        MessageContent actual = testee.extract(message);
+        assertThat(actual.getTextBody()).contains(text);
+    }
+
+    @Test
+    public void extractShouldRespectCharsetWhenUTF8() throws IOException {
+        String text = "éééé\r\nèèèè\r\nàààà";
+        Message message = MessageBuilder.create()
+                .setBody(text, Charsets.UTF_8)
+                .build();
+        MessageContent actual = testee.extract(message);
+        assertThat(actual.getTextBody()).contains(text);
+    }
+
+    @Test
+    public void extractShouldUseUSASCIIWhenNoCharset() throws IOException {
+        String text = "éééé\r\nèèèè\r\nàààà";
+        Message message = MessageBuilder.create()
+                .setBody(text, null)
+                .build();
+        MessageContent actual = testee.extract(message);
+        assertThat(actual.getTextBody()).contains("????\r\n????\r\n????");
     }
 }

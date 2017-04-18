@@ -24,20 +24,20 @@ This is a multi-part message in MIME format.
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 8bit
 
-Ã Ã Ã Ã 
+àààà
 
-Ã©Ã©Ã©Ã©
+éééé
 
-Ã¨Ã¨Ã¨Ã¨
+èèèè
 
 --------------4609A4E8FA0583CE89472864
 Content-Type: text/html; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 
 <html>
-  <p>Ã Ã Ã Ã </p>
-  <p>Ã©Ã©Ã©Ã©</p>
-  <p>Ã¨Ã¨Ã¨Ã¨</p>
+  <p>àààà</p>
+  <p>éééé</p>
+  <p>èèèè</p>
 </html>
 
 --------------4609A4E8FA0583CE89472864--
