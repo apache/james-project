@@ -19,6 +19,7 @@
 
 package org.apache.james.utils;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 
 import javax.inject.Inject;
@@ -41,6 +42,10 @@ public class PropertiesProvider {
 
     public PropertiesConfiguration getConfiguration(String fileName) throws FileNotFoundException, ConfigurationException {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(fileName));
-        return new PropertiesConfiguration(fileSystem.getFile(FileSystem.FILE_PROTOCOL_AND_CONF + fileName + ".properties"));
+        File file = fileSystem.getFile(FileSystem.FILE_PROTOCOL_AND_CONF + fileName + ".properties");
+        if (!file.exists()) {
+            throw new FileNotFoundException();
+        }
+        return new PropertiesConfiguration(file);
     }
 }
