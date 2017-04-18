@@ -60,6 +60,8 @@ public class CassandraSessionModule extends AbstractModule {
     private static final int DEFAULT_CONNECTION_MAX_RETRIES = 10;
     private static final int DEFAULT_CONNECTION_MIN_DELAY = 5000;
     private static final long CASSANDRA_HIGHEST_TRACKABLE_LATENCY_MILLIS = TimeUnit.SECONDS.toMillis(10);
+    public static final int DEFAULT_REPLICATION_FACTOR = 1;
+    public static final String DEFAULT_KEYSPACE = "apache_james";
 
     @Override
     protected void configure() {
@@ -79,7 +81,7 @@ public class CassandraSessionModule extends AbstractModule {
     @Singleton
     Session provideSession(CassandraSessionConfiguration configuration, Cluster cluster, CassandraModule cassandraModule)
             throws FileNotFoundException, ConfigurationException{
-        String keyspace = configuration.getConfiguration().getString("cassandra.keyspace");
+        String keyspace = configuration.getConfiguration().getString("cassandra.keyspace", DEFAULT_KEYSPACE);
         return new SessionWithInitializedTablesFactory(cassandraModule).createSession(cluster, keyspace);
     }
 
@@ -108,8 +110,8 @@ public class CassandraSessionModule extends AbstractModule {
         LOGGER.info("Trying to connect to Cassandra service");
 
         return context -> ClusterWithKeyspaceCreatedFactory
-            .config(getCluster(servers, queryLoggerConfiguration), configuration.getString("cassandra.keyspace"))
-            .replicationFactor(configuration.getInt("cassandra.replication.factor"))
+            .config(getCluster(servers, queryLoggerConfiguration), configuration.getString("cassandra.keyspace", DEFAULT_KEYSPACE))
+            .replicationFactor(configuration.getInt("cassandra.replication.factor", DEFAULT_REPLICATION_FACTOR))
             .clusterWithInitializedKeyspace();
     }
 
