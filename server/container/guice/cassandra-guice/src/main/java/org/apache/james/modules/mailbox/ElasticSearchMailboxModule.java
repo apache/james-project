@@ -57,13 +57,16 @@ import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 public class ElasticSearchMailboxModule extends AbstractModule {
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchMailboxModule.class);
 
-    public static final String ES_CONFIG_FILE = FileSystem.FILE_PROTOCOL_AND_CONF + "elasticsearch.properties";
+    public static final String ELASTICSEARCH_CONFIGURATION_NAME = "elasticsearch";
     public static final String ELASTICSEARCH_HOSTS = "elasticsearch.hosts";
     public static final String ELASTICSEARCH_MASTER_HOST = "elasticsearch.masterHost";
     public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
     private static final int DEFAULT_CONNECTION_MAX_RETRIES = 7;
     private static final int DEFAULT_CONNECTION_MIN_DELAY = 3000;
     private static final boolean DEFAULT_INDEX_ATTACHMENTS = true;
+    private static final int DEFAULT_NB_SHARDS = 1;
+    private static final int DEFAULT_NB_REPLICA = 0;
+    private static final String LOCALHOST = "127.0.0.1";
 
     @Override
     protected void configure() {
@@ -92,8 +95,8 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     private Client createIndexAndMapping(Client client, PropertiesConfiguration propertiesReader) {
         IndexCreationFactory.createIndex(client,
             MailboxElasticsearchConstants.MAILBOX_INDEX,
-            propertiesReader.getInt("elasticsearch.nb.shards"),
-            propertiesReader.getInt("elasticsearch.nb.replica"));
+            propertiesReader.getInt(ELASTICSEARCH_CONFIGURATION_NAME + ".nb.shards", DEFAULT_NB_SHARDS),
+            propertiesReader.getInt(ELASTICSEARCH_CONFIGURATION_NAME + ".nb.replica", DEFAULT_NB_REPLICA));
         NodeMappingFactory.applyMapping(client,
             MailboxElasticsearchConstants.MAILBOX_INDEX,
             MailboxElasticsearchConstants.MESSAGE_TYPE,
@@ -111,12 +114,12 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     @Singleton
     private ElasticSearchConfiguration getElasticSearchConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            PropertiesConfiguration configuration = propertiesProvider.getConfiguration("elasticsearch");
+            PropertiesConfiguration configuration = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
             return () -> configuration;
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not find elasticsearch configuration file. Using 127.0.0.1:9300 as contact point");
+            LOGGER.warn("Could not find " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration file. Using 127.0.0.1:9300 as contact point");
             PropertiesConfiguration propertiesConfiguration = new PropertiesConfiguration();
-            propertiesConfiguration.addProperty(ELASTICSEARCH_HOSTS, "127.0.0.1");
+            propertiesConfiguration.addProperty(ELASTICSEARCH_HOSTS, LOCALHOST);
             return () -> propertiesConfiguration;
         }
     }
@@ -153,7 +156,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     @Provides
     @Singleton
     public IndexAttachments provideIndexAttachments(PropertiesConfiguration configuration) {
-        if (configuration.getBoolean("elasticsearch.indexAttachments", DEFAULT_INDEX_ATTACHMENTS)) {
+        if (configuration.getBoolean(ELASTICSEARCH_CONFIGURATION_NAME + ".indexAttachments", DEFAULT_INDEX_ATTACHMENTS)) {
             return IndexAttachments.YES;
         }
         return IndexAttachments.NO;

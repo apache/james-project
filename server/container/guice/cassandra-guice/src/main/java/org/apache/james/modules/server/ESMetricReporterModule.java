@@ -26,12 +26,12 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.metrics.es.ESMetricReporter;
 import org.apache.james.metrics.es.ESReporterConfiguration;
 import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
 import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,9 +54,9 @@ public class ESMetricReporterModule extends AbstractModule {
     }
 
     @Provides
-    public ESReporterConfiguration provideConfiguration(FileSystem fileSystem) throws ConfigurationException {
+    public ESReporterConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            PropertiesConfiguration propertiesReader = getPropertiesConfiguration(fileSystem);
+            PropertiesConfiguration propertiesReader = propertiesProvider.getConfiguration(ElasticSearchMailboxModule.ELASTICSEARCH_CONFIGURATION_NAME);
 
             if (isMetricEnable(propertiesReader)) {
                 return ESReporterConfiguration.builder()
@@ -68,7 +68,7 @@ public class ESMetricReporterModule extends AbstractModule {
                     .build();
             }
         } catch (FileNotFoundException e) {
-            LOGGER.info("Can not locate " + ElasticSearchMailboxModule.ES_CONFIG_FILE);
+            LOGGER.info("Can not locate " + ElasticSearchMailboxModule.ELASTICSEARCH_CONFIGURATION_NAME + " configuration");
         }
         return ESReporterConfiguration.builder()
             .disabled()
@@ -82,11 +82,6 @@ public class ESMetricReporterModule extends AbstractModule {
 
     private boolean isMetricEnable(PropertiesConfiguration propertiesReader) {
         return propertiesReader.getBoolean("elasticsearch.metrics.reports.enabled", DEFAULT_DISABLE);
-    }
-
-    private PropertiesConfiguration getPropertiesConfiguration(FileSystem fileSystem) throws ConfigurationException, FileNotFoundException {
-        return new PropertiesConfiguration(
-                    fileSystem.getFile(ElasticSearchMailboxModule.ES_CONFIG_FILE));
     }
 
     @Singleton
