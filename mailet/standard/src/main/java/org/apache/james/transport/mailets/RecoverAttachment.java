@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
@@ -55,6 +56,7 @@ import java.util.Map;
  * 
  * </p>
  */
+@Experimental
 public class RecoverAttachment extends GenericMailet {
 
     public static final String ATTRIBUTE_PARAMETER_NAME = "attribute";

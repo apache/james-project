@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
@@ -42,6 +43,7 @@ import java.util.regex.Pattern;
  * <headerName>X-MailetHeader</headerName>
  * </mailet>
  */
+@Experimental
 public class ClassifyBounce extends GenericMailet {
 
     /**

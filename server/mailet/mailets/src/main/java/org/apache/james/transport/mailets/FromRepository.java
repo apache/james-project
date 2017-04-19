@@ -29,6 +29,7 @@ import javax.mail.MessagingException;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
@@ -43,6 +44,7 @@ import org.apache.mailet.base.GenericMailet;
  * &lt;/mailet&gt;
  * </pre>
  */
+@Experimental
 public class FromRepository extends GenericMailet {
 
     /** The repository from where this mailet spools mail. */

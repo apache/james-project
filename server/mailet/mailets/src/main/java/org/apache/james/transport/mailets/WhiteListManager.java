@@ -50,6 +50,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.model.JamesUser;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
@@ -118,6 +119,7 @@ import org.apache.mailet.base.DateFormats;
  * @see org.apache.james.transport.matchers.IsInWhiteList
  * @since 2.3.0
  */
+@Experimental
 @SuppressWarnings("deprecation")
 public class WhiteListManager extends GenericMailet {
 

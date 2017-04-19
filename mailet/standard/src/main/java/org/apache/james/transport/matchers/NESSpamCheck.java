@@ -25,6 +25,7 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.mail.MessagingException;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.base.RFC2822Headers;
 
 /**
@@ -32,6 +33,7 @@ import org.apache.mailet.base.RFC2822Headers;
  * spam.
  *
  */
+@Experimental
 public class NESSpamCheck extends GenericRegexMatcher {
     protected Object NESPatterns[][] = {{RFC2822Headers.RECEIVED, "GAA.*-0600.*EST"},
     {RFC2822Headers.RECEIVED, "XAA.*-0700.*EDT"},

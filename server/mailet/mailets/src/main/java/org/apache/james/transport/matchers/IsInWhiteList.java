@@ -27,6 +27,7 @@ import java.util.Locale;
 
 import javax.mail.MessagingException;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
@@ -56,6 +57,7 @@ import org.apache.mailet.MailAddress;
  * @see org.apache.james.transport.mailets.WhiteListManager
  * @since 2.3.0
  */
+@Experimental
 public class IsInWhiteList extends AbstractSQLWhitelistMatcher {
 
     private String selectByPK;

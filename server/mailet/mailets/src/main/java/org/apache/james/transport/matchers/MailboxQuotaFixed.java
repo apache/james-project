@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.transport.matchers;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
@@ -29,6 +30,7 @@ import javax.mail.MessagingException;
  * {@link Matcher} need to recalculate the used space of users mailbox on every
  * call. So use it with caution!
  */
+@Experimental
 public class MailboxQuotaFixed extends AbstractStorageQuota {
 
     /**

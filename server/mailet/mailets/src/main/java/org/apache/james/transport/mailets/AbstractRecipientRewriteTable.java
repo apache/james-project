@@ -37,6 +37,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
@@ -49,6 +50,7 @@ import org.apache.mailet.base.GenericMailet;
  * @deprecated use the definitions in virtualusertable-store.xml instead
  */
 @Deprecated
+@Experimental
 public abstract class AbstractRecipientRewriteTable extends GenericMailet {
     static private final String MARKER = "org.apache.james.transport.mailets.AbstractRecipientRewriteTable.mapped";
     private DNSService dns;

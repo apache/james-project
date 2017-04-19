@@ -39,6 +39,7 @@ import org.apache.james.managesieve.util.SettableSession;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.transport.mailets.managesieve.transcode.MessageToCoreToMessage;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.MailetContext.LogLevel;
@@ -87,6 +88,7 @@ import com.google.common.collect.Lists;
  * Sieve provides powerful email processing capabilities that if hijacked can
  * expose the mail of individuals and organisations to intruders.
  */
+@Experimental
 public class ManageSieveMailet extends GenericMailet implements MessageToCoreToMessage.HelpProvider {
 
     public final static String SMTP_AUTH_USER_ATTRIBUTE_NAME = "org.apache.james.SMTPAuthUser";

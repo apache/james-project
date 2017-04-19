@@ -21,6 +21,7 @@
 
 package org.apache.james.transport.matchers;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.base.GenericMatcher;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -36,6 +37,7 @@ import java.util.Collection;
  * class=&quot;&lt;any-class&gt;&quot;&gt; </CODE></PRE>
  * 
  */
+@Experimental
 public class SMTPIsAuthNetwork extends GenericMatcher {
 
     /**

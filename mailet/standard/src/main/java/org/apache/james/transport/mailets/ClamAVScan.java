@@ -20,6 +20,7 @@
 
 package org.apache.james.transport.mailets;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
@@ -179,6 +180,7 @@ import java.util.Set;
  * @see <a href="http://www.sosdg.org/clamav-win32/">ClamAV For Windows</a>
  * @since 2.2.1
  */
+@Experimental
 public class ClamAVScan extends GenericMailet {
 
     private static final int DEFAULT_PORT = 3310;

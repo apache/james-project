@@ -33,6 +33,7 @@ import javax.mail.internet.ParseException;
 import javax.sql.DataSource;
 
 import org.apache.james.util.sql.JDBCUtil;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetException;
@@ -52,6 +53,7 @@ import org.apache.mailet.base.GenericMailet;
  * &lt;/mailet&gt;
  * </pre>
  */
+@Experimental
 public class JDBCAlias extends GenericMailet {
 
     protected DataSource datasource;

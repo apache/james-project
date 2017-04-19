@@ -36,6 +36,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
@@ -53,6 +54,7 @@ import org.apache.mailet.base.GenericMailet;
 
  * 
  */
+@Experimental
 public class HeadersToHTTP extends GenericMailet {
 
     /**

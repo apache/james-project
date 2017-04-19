@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.matchers;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
@@ -28,6 +29,7 @@ import java.util.Collection;
  * Does a DNS lookup (MX and A/CNAME records) on the sender's domain. If there
  * are no entries, the domain is considered fake and the match is successful.
  */
+@Experimental
 public class SenderInFakeDomain extends AbstractNetworkMatcher {
 
     public Collection<MailAddress> match(Mail mail) {

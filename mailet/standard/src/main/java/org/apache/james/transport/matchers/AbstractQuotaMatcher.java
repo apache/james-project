@@ -24,6 +24,8 @@ package org.apache.james.transport.matchers;
 import java.util.Collection;
 import java.util.ArrayList;
 import javax.mail.MessagingException;
+
+import org.apache.mailet.Experimental;
 import org.apache.mailet.base.GenericMatcher;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Mail;
@@ -37,6 +39,7 @@ import org.apache.mailet.Mail;
  * @version CVS $Revision$ $Date$
  * @since 2.2.0
  */
+@Experimental
 abstract public class AbstractQuotaMatcher extends GenericMatcher { 
 
     /**

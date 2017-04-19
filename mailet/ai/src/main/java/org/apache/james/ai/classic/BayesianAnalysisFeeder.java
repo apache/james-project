@@ -31,6 +31,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.sql.DataSource;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
@@ -123,7 +124,7 @@ import org.apache.mailet.base.GenericMailet;
  * @see JDBCBayesianAnalyzer
  * @since 2.3.0
  */
-
+@Experimental
 public class BayesianAnalysisFeeder extends GenericMailet implements Log {
     /**
      * The JDBCUtil helper class

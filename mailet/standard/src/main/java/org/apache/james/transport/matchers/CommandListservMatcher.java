@@ -21,6 +21,7 @@
 
 package org.apache.james.transport.matchers;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.base.GenericRecipientMatcher;
 import org.apache.mailet.MailAddress;
 
@@ -40,6 +41,7 @@ import javax.mail.MessagingException;
  * @version CVS $Revision$ $Date$
  * @since 2.2.0
  */
+@Experimental
 public class CommandListservMatcher extends GenericRecipientMatcher {
 
     private MailAddress listservAddress;

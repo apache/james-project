@@ -34,6 +34,7 @@ import javax.sql.DataSource;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.util.bayesian.JDBCBayesianAnalyzer;
 import org.apache.james.util.sql.JDBCUtil;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
@@ -126,7 +127,7 @@ import org.apache.mailet.base.GenericMailet;
  * @see org.apache.james.util.bayesian.JDBCBayesianAnalyzer
  * @since 2.3.0
  */
-
+@Experimental
 public class BayesianAnalysisFeeder extends GenericMailet {
     /**
      * The JDBCUtil helper class

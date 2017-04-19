@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
@@ -51,6 +52,7 @@ import org.apache.mailet.base.GenericMatcher;
  * &lt;/mailet&gt;
  * </pre>
  */
+@Experimental
 public class InSpammerBlacklist extends GenericMatcher {
     private String network = null;
 

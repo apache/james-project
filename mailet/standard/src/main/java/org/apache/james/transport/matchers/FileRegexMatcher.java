@@ -26,10 +26,13 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.mail.MessagingException;
 
+import org.apache.mailet.Experimental;
+
 /**
  * Initializes RegexMatcher with regular expressions from a file.
  *
  */
+@Experimental
 public class FileRegexMatcher extends GenericRegexMatcher {
     
     /**

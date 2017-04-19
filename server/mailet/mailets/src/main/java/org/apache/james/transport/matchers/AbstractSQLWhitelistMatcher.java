@@ -40,11 +40,13 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.model.JamesUser;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
 
 @SuppressWarnings("deprecation")
+@Experimental
 public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
 
     /**

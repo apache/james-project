@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.base.FlowedMessageUtils;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
@@ -52,6 +53,7 @@ import java.util.regex.Pattern;
  *  <code>quotewidth = -10</code>
  * </p>
  */
+@Experimental
 public class UnwrapText extends GenericMailet {
     public final static String PARAMETER_NAME_QUOTEWIDTH = "quotewidth";
     

@@ -21,6 +21,7 @@
 
 package org.apache.james.transport.matchers;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.base.GenericRecipientMatcher;
 import org.apache.mailet.MailAddress;
 
@@ -32,6 +33,7 @@ import javax.mail.MessagingException;
  * for james-on@list.working-dogs.com and james-off@list.working-dogs.com.
  *
  */
+@Experimental
 public class CommandForListserv extends GenericRecipientMatcher {
 
     private MailAddress listservAddress;

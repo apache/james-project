@@ -31,6 +31,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
@@ -46,6 +47,7 @@ import org.apache.mailet.MailAddress;
  * Th whitelisting is done per recipient
  * </p>
  */
+@Experimental
 public class NetworkIsInWhitelist extends AbstractSQLWhitelistMatcher {
 
     private DNSService dns;

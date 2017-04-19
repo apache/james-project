@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.base.FlowedMessageUtils;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
@@ -31,6 +32,7 @@ import java.io.IOException;
 /**
  * Convert a message to format=flowed
  */
+@Experimental
 public class WrapText extends GenericMailet {
     private static final String PARAMETER_NAME_FLOWED_DELSP = "delsp";
     private static final String PARAMETER_NAME_WIDTH = "width";

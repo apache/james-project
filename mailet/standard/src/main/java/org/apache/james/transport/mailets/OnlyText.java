@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
@@ -39,6 +40,7 @@ import java.util.HashMap;
  * - text/html => with a conversion to text only<br>
  * - text/* as is.</p>
  */
+@Experimental
 public class OnlyText extends GenericMailet {
     private static final String PARAMETER_NAME_NOTEXT_PROCESSOR = "NoTextProcessor";
 

@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import org.apache.james.util.scanner.SpamAssassinInvoker;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
 
@@ -50,6 +51,7 @@ import javax.mail.internet.MimeMessage;
  * &lt;spamdPort&gt;783&lt;/spamdPort&gt;
  * </pre>
  */
+@Experimental
 public class SpamAssassin extends GenericMailet {
 
     String spamdHost;

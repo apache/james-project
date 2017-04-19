@@ -21,6 +21,7 @@
 
 package org.apache.james.transport.mailets;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
 
@@ -34,6 +35,7 @@ import javax.mail.internet.MimeMessage;
  * </code></pre>
  *
  */
+@Experimental
 public class ServerTime extends GenericMailet {
     /**
      * Sends a message back to the sender indicating what time the server thinks it is.

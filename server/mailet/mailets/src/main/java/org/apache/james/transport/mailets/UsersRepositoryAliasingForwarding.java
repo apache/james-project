@@ -25,6 +25,7 @@ import javax.mail.MessagingException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
@@ -45,6 +46,7 @@ import com.google.common.base.Preconditions;
  * 
  * @deprecated use org.apache.james.transport.mailets.RecipientRewriteTable
  */
+@Experimental
 @Deprecated
 public class UsersRepositoryAliasingForwarding extends GenericMailet {
     private final UsersRepository usersRepository;

@@ -25,6 +25,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.jspf.core.Logger;
 import org.apache.james.jspf.executor.SPFResult;
 import org.apache.james.jspf.impl.DefaultSPF;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -49,6 +50,7 @@ import org.apache.mailet.MailAddress;
  * &lt;/mailet&gt;
  * </pre>
  */
+@Experimental
 public class SPF extends GenericMailet {
     private boolean addHeader = false;
     private org.apache.james.jspf.impl.SPF spf;

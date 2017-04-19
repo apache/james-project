@@ -33,6 +33,7 @@ import javax.sql.DataSource;
 
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.apache.james.util.sql.JDBCUtil;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetException;
 
@@ -107,6 +108,7 @@ import org.apache.mailet.MailetException;
  * 
  * @deprecated use the definitions in virtualusertable-store.xml instead
  */
+@Experimental
 @Deprecated
 public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     protected DataSource datasource;

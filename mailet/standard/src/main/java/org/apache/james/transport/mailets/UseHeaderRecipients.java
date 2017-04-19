@@ -34,6 +34,7 @@ import org.apache.james.mime4j.dom.address.Group;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.util.MimeUtil;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
@@ -66,6 +67,7 @@ import com.google.common.collect.ImmutableList;
  *
  * @version 1.0.0, 24/11/2000
  */
+@Experimental
 public class UseHeaderRecipients extends GenericMailet {
 
     public static final Function<Mailbox, MailAddress> TO_MAIL_ADDRESS = new Function<Mailbox, MailAddress>() {

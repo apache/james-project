@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.mail.MessagingException;
 
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.MailAddress;
 
 /**
@@ -72,6 +73,7 @@ import org.apache.mailet.MailAddress;
  * @deprecated use the definitions in virtualusertable-store.xml instead
  * 
  */
+@Experimental
 @Deprecated
 public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     /**

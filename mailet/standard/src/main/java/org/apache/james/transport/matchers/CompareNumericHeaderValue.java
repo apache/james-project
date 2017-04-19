@@ -21,6 +21,7 @@
 
 package org.apache.james.transport.matchers;
 
+import org.apache.mailet.Experimental;
 import org.apache.mailet.base.GenericMatcher;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -51,6 +52,7 @@ import java.util.StringTokenizer;
  * @version CVS $Revision$ $Date$
  * @since 2.2.0
  */
+@Experimental
 public class CompareNumericHeaderValue extends GenericMatcher {
 
     private String headerName = null;

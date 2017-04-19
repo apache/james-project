@@ -40,6 +40,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
@@ -62,6 +63,7 @@ import org.apache.mailet.MailetContext;
  * 
  * @since 2.2.0
  */
+@Experimental
 abstract public class AbstractStorageQuota extends AbstractQuotaMatcher {
 
     private MailboxManager manager;
