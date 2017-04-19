@@ -17,43 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail;
+package org.apache.james.mailbox.inmemory.mail;
 
-import org.apache.james.mailbox.exception.MailboxException;
-import org.junit.runner.RunWith;
-import org.xenei.junit.contract.Contract;
-import org.xenei.junit.contract.ContractImpl;
-import org.xenei.junit.contract.ContractSuite;
-import org.xenei.junit.contract.IProducer;
+import org.apache.james.mailbox.store.mail.model.MailboxMapperTest;
+import org.apache.james.mailbox.store.mail.model.MapperProvider;
 
-import com.google.common.base.Throwables;
-
-@RunWith(ContractSuite.class)
-@ContractImpl(CassandraMapperProvider.class)
-public class CassandraMappersTest {
-
-    private IProducer<CassandraMapperProvider> producer = new IProducer<CassandraMapperProvider>() {
-
-        private final CassandraMapperProvider cassandraMapperProvider = new CassandraMapperProvider();
-
-        @Override
-        public CassandraMapperProvider newInstance() {
-            return cassandraMapperProvider;
-        }
-
-        @Override
-        public void cleanUp() {
-            try {
-                cassandraMapperProvider.clearMapper();
-            } catch (MailboxException e) {
-                throw Throwables.propagate(e);
-            }
-        }
-    };
-
-    @Contract.Inject
-    public IProducer<CassandraMapperProvider> getProducer() {
-        return producer;
+public class MemoryMailboxMapperTest extends MailboxMapperTest {
+    @Override
+    protected MapperProvider createMapperProvider() {
+        return new InMemoryMapperProvider();
     }
-
 }

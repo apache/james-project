@@ -46,23 +46,19 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.After;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.xenei.junit.contract.Contract;
-import org.xenei.junit.contract.ContractTest;
-import org.xenei.junit.contract.IProducer;
 
 import com.google.common.collect.ImmutableList;
 
-@Contract(MapperProvider.class)
-public class MessageWithAttachmentMapperTest<T extends MapperProvider> {
+public abstract class MessageWithAttachmentMapperTest {
 
     private static final int LIMIT = 10;
     private static final int BODY_START = 16;
     public static final int UID_VALIDITY = 42;
-    public static final String USER_FLAG = "userFlag";
 
-    private IProducer<T> producer;
     private MapperProvider mapperProvider;
     private MessageMapper messageMapper;
     private AttachmentMapper attachmentMapper;
@@ -76,10 +72,11 @@ public class MessageWithAttachmentMapperTest<T extends MapperProvider> {
     @Rule
     public ExpectedException expected = ExpectedException.none();
 
-    @Contract.Inject
-    public final void setProducer(IProducer<T> producer) throws MailboxException {
-        this.producer = producer;
-        this.mapperProvider = producer.newInstance();
+    protected abstract MapperProvider createMapperProvider();
+
+    @Before
+    public final void setUp() throws MailboxException {
+        this.mapperProvider = createMapperProvider();
         this.mapperProvider.ensureMapperPrepared();
 
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.MESSAGE));
@@ -126,10 +123,10 @@ public class MessageWithAttachmentMapperTest<T extends MapperProvider> {
 
     @After
     public void tearDown() throws MailboxException {
-        producer.cleanUp();
+        mapperProvider.clearMapper();
     }
 
-    @ContractTest
+    @Test
     public void messagesRetrievedUsingFetchTypeFullShouldHaveAttachmentsLoadedWhenOneAttachment() throws MailboxException, IOException{
         saveMessages();
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.Full;
@@ -137,7 +134,7 @@ public class MessageWithAttachmentMapperTest<T extends MapperProvider> {
         assertThat(retrievedMessageIterator.next().getAttachments()).isEqualTo(messageWith1Attachment.getAttachments());
     }
 
-    @ContractTest
+    @Test
     public void messagesRetrievedUsingFetchTypeFullShouldHaveAttachmentsLoadedWhenTwoAttachments() throws MailboxException, IOException{
         saveMessages();
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.Full;
@@ -145,7 +142,7 @@ public class MessageWithAttachmentMapperTest<T extends MapperProvider> {
         assertThat(retrievedMessageIterator.next().getAttachments()).isEqualTo(messageWith2Attachments.getAttachments());
     }
 
-    @ContractTest
+    @Test
     public void messagesRetrievedUsingFetchTypeBodyShouldHaveAttachmentsLoadedWhenOneAttachment() throws MailboxException, IOException{
         saveMessages();
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.Body;
@@ -153,7 +150,7 @@ public class MessageWithAttachmentMapperTest<T extends MapperProvider> {
         assertThat(retrievedMessageIterator.next().getAttachments()).isEqualTo(messageWith1Attachment.getAttachments());
     }
 
-    @ContractTest
+    @Test
     public void messagesRetrievedUsingFetchTypeHeadersShouldHaveAttachmentsEmptyWhenOneAttachment() throws MailboxException, IOException{
         Assume.assumeTrue(mapperProvider.supportPartialAttachmentFetch());
         saveMessages();
@@ -162,7 +159,7 @@ public class MessageWithAttachmentMapperTest<T extends MapperProvider> {
         assertThat(retrievedMessageIterator.next().getAttachments()).isEmpty();
     }
 
-    @ContractTest
+    @Test
     public void messagesRetrievedUsingFetchTypeMetadataShouldHaveAttachmentsEmptyWhenOneAttachment() throws MailboxException, IOException{
         Assume.assumeTrue(mapperProvider.supportPartialAttachmentFetch());
         saveMessages();
@@ -171,7 +168,7 @@ public class MessageWithAttachmentMapperTest<T extends MapperProvider> {
         assertThat(retrievedMessageIterator.next().getAttachments()).isEmpty();
     }
 
-    @ContractTest
+    @Test
     public void messagesRetrievedUsingFetchTypeFullShouldHaveAttachmentsEmptyWhenNoAttachment() throws MailboxException, IOException{
         saveMessages();
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.Full;
@@ -179,7 +176,7 @@ public class MessageWithAttachmentMapperTest<T extends MapperProvider> {
         assertThat(retrievedMessageIterator.next().getAttachments()).isEmpty();
     }
     
-    @ContractTest
+    @Test
     public void messagesCanBeRetrievedInMailboxWithRangeTypeOne() throws MailboxException, IOException{
         saveMessages();
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.Full;
@@ -187,7 +184,7 @@ public class MessageWithAttachmentMapperTest<T extends MapperProvider> {
             .isEqualTo(messageWith1Attachment, fetchType);
     }
 
-    @ContractTest
+    @Test
     public void messagesRetrievedUsingFetchTypeBodyShouldHaveBodyDataLoaded() throws MailboxException, IOException{
         saveMessages();
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.Body;

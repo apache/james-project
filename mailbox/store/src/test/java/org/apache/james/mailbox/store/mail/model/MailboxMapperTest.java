@@ -33,19 +33,17 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.xenei.junit.contract.Contract;
-import org.xenei.junit.contract.ContractTest;
-import org.xenei.junit.contract.IProducer;
 
 /**
  * Generic purpose tests for your implementation MailboxMapper.
  * 
  * You then just need to instantiate your mailbox mapper and an IdGenerator.
  */
-@Contract(MapperProvider.class)
-public class MailboxMapperTest<T extends MapperProvider> {
+public abstract class MailboxMapperTest {
     
     private final static char DELIMITER = '.';
     private final static char WILDCARD = '%';
@@ -82,16 +80,16 @@ public class MailboxMapperTest<T extends MapperProvider> {
 
     @Rule
     public ExpectedException expected = ExpectedException.none();
-    private IProducer<T> producer;
     private MailboxMapper mailboxMapper;
-    private T mapperProvider;
+    private MapperProvider mapperProvider;
 
-    @Contract.Inject
-    public final void setProducer(IProducer<T> producer) throws MailboxException {
-        this.mapperProvider = producer.newInstance();
+    protected abstract MapperProvider createMapperProvider();
+
+    @Before
+    public final void setUp() throws MailboxException {
+        this.mapperProvider = createMapperProvider();
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.MAILBOX));
 
-        this.producer = producer;
         this.mailboxMapper = mapperProvider.createMailboxMapper();
         
         initData();
@@ -99,28 +97,28 @@ public class MailboxMapperTest<T extends MapperProvider> {
 
     @After
     public void tearDown() throws MailboxException {
-        producer.cleanUp();
+        mapperProvider.clearMapper();
     }
 
-    @ContractTest
+    @Test
     public void findMailboxByPathWhenAbsentShouldFail() throws MailboxException {
         expected.expect(MailboxNotFoundException.class);
         mailboxMapper.findMailboxByPath(new MailboxPath("#private", "benwa", "INBOX"));
     }
 
-    @ContractTest
+    @Test
     public void saveShouldPersistTheMailbox() throws MailboxException{
         mailboxMapper.save(benwaInboxMailbox);
         MailboxAssert.assertThat(mailboxMapper.findMailboxByPath(benwaInboxPath)).isEqualTo(benwaInboxMailbox);
     }
 
-    @ContractTest
+    @Test
     public void saveWithNullUserShouldPersistTheMailbox() throws MailboxException{
         mailboxMapper.save(esnDevGroupInboxMailbox);
         MailboxAssert.assertThat(mailboxMapper.findMailboxByPath(esnDevGroupInboxPath)).isEqualTo(esnDevGroupInboxMailbox);
     }
 
-    @ContractTest
+    @Test
     public void listShouldRetrieveAllMailbox() throws MailboxException {
         saveAll();
         List<Mailbox> mailboxes = mailboxMapper.list();
@@ -132,37 +130,37 @@ public class MailboxMapperTest<T extends MapperProvider> {
                 bobyMailbox, bobDifferentNamespaceMailbox, bobInboxMailbox);
     }
     
-    @ContractTest
+    @Test
     public void hasChildrenShouldReturnFalseWhenNoChildrenExists() throws MailboxException {
         saveAll();
         assertThat(mailboxMapper.hasChildren(benwaWorkTodoMailbox, DELIMITER)).isFalse();
     }
 
-    @ContractTest
+    @Test
     public void hasChildrenShouldReturnTrueWhenChildrenExists() throws MailboxException {
         saveAll();
         assertThat(mailboxMapper.hasChildren(benwaInboxMailbox, DELIMITER)).isTrue();
     }
 
-    @ContractTest
+    @Test
     public void hasChildrenWithNullUserShouldReturnFalseWhenNoChildrenExists() throws MailboxException {
         saveAll();
         assertThat(mailboxMapper.hasChildren(esnDevGroupHublinMailbox, DELIMITER)).isFalse();
     }
 
-    @ContractTest
+    @Test
     public void hasChildrenWithNullUserShouldReturnTrueWhenChildrenExists() throws MailboxException {
         saveAll();
         assertThat(mailboxMapper.hasChildren(esnDevGroupInboxMailbox, DELIMITER)).isTrue();
     }
 
-    @ContractTest
+    @Test
     public void hasChildrenShouldNotBeAcrossUsersAndNamespace() throws MailboxException {
         saveAll();
         assertThat(mailboxMapper.hasChildren(bobInboxMailbox, '.')).isFalse();
     }
 
-    @ContractTest
+    @Test
     public void findMailboxWithPathLikeShouldBeLimitedToUserAndNamespace() throws MailboxException {
         saveAll();
         MailboxPath mailboxPathQuery = new MailboxPath(bobInboxMailbox.getNamespace(), bobInboxMailbox.getUser(), "IN" + WILDCARD);
@@ -171,7 +169,7 @@ public class MailboxMapperTest<T extends MapperProvider> {
         assertMailboxes(mailboxes).containOnly(bobInboxMailbox);
     }
     
-    @ContractTest
+    @Test
     public void deleteShouldEraseTheGivenMailbox() throws MailboxException {
         expected.expect(MailboxNotFoundException.class);
         try {
@@ -183,7 +181,7 @@ public class MailboxMapperTest<T extends MapperProvider> {
         mailboxMapper.findMailboxByPath(benwaInboxPath);
     }
 
-    @ContractTest
+    @Test
     public void deleteWithNullUserShouldEraseTheGivenMailbox() throws MailboxException {
         expected.expect(MailboxNotFoundException.class);
         try {
@@ -195,7 +193,7 @@ public class MailboxMapperTest<T extends MapperProvider> {
         mailboxMapper.findMailboxByPath(esnDevGroupJamesPath);
     }
 
-    @ContractTest
+    @Test
     public void findMailboxWithPathLikeWithChildRegexShouldRetrieveChildren() throws MailboxException {
         saveAll();
         MailboxPath regexPath = new MailboxPath(benwaWorkPath.getNamespace(), benwaWorkPath.getUser(), benwaWorkPath.getName() + WILDCARD);
@@ -204,7 +202,7 @@ public class MailboxMapperTest<T extends MapperProvider> {
         assertMailboxes(mailboxes).containOnly(benwaWorkMailbox, benwaWorkDoneMailbox, benwaWorkTodoMailbox);
     }
 
-    @ContractTest
+    @Test
     public void findMailboxWithPathLikeWithNullUserWithChildRegexShouldRetrieveChildren() throws MailboxException {
         saveAll();
         MailboxPath regexPath = new MailboxPath(obmTeamGroupInboxPath.getNamespace(), obmTeamGroupInboxPath.getUser(), obmTeamGroupInboxPath.getName() + WILDCARD);
@@ -214,7 +212,7 @@ public class MailboxMapperTest<T extends MapperProvider> {
         assertMailboxes(mailboxes).containOnly(obmTeamGroupInboxMailbox, obmTeamGroupOPushMailbox, obmTeamGroupRoundCubeMailbox);
     }
     
-    @ContractTest
+    @Test
     public void findMailboxWithPathLikeWithRegexShouldRetrieveCorrespondingMailbox() throws MailboxException {
         saveAll();
         MailboxPath regexPath = new MailboxPath(benwaInboxPath.getNamespace(), benwaInboxPath.getUser(), WILDCARD + "X");
@@ -224,7 +222,7 @@ public class MailboxMapperTest<T extends MapperProvider> {
         assertMailboxes(mailboxes).containOnly(benwaInboxMailbox);
     }
 
-    @ContractTest
+    @Test
     public void findMailboxWithPathLikeWithNullUserWithRegexShouldRetrieveCorrespondingMailbox() throws MailboxException {
         saveAll();
         MailboxPath regexPath = new MailboxPath(esnDevGroupInboxPath.getNamespace(), esnDevGroupInboxPath.getUser(), WILDCARD + "X");
@@ -234,21 +232,21 @@ public class MailboxMapperTest<T extends MapperProvider> {
         assertMailboxes(mailboxes).containOnly(esnDevGroupInboxMailbox);
     }
 
-    @ContractTest
+    @Test
     public void findMailboxWithPathLikeShouldEscapeMailboxName() throws MailboxException {
         saveAll();
         MailboxPath regexPath = new MailboxPath(benwaInboxPath.getNamespace(), benwaInboxPath.getUser(), "INB?X");
         assertThat(mailboxMapper.findMailboxWithPathLike(regexPath)).isEmpty();
     }
 
-    @ContractTest
+    @Test
     public void findMailboxByIdShouldReturnExistingMailbox() throws MailboxException {
         saveAll();
         Mailbox actual = mailboxMapper.findMailboxById(benwaInboxMailbox.getMailboxId());
         MailboxAssert.assertThat(actual).isEqualTo(benwaInboxMailbox);
     }
     
-    @ContractTest
+    @Test
     public void findMailboxByIdShouldFailWhenAbsent() throws MailboxException {
         expected.expect(MailboxNotFoundException.class);
         saveAll();

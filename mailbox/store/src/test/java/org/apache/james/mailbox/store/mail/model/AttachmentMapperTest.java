@@ -30,50 +30,49 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.junit.After;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
-import org.xenei.junit.contract.Contract;
-import org.xenei.junit.contract.ContractTest;
-import org.xenei.junit.contract.IProducer;
+import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
-@Contract(MapperProvider.class)
-public class AttachmentMapperTest<T extends MapperProvider> {
+public abstract class AttachmentMapperTest {
 
-    private IProducer<T> producer;
     private AttachmentMapper attachmentMapper;
+    private MapperProvider mapperProvider;
 
     @Rule
     public ExpectedException expected = ExpectedException.none();
 
-    @Contract.Inject
-    public final void setProducer(IProducer<T> producer) throws MailboxException {
-        this.producer = producer;
-        T newInstance = producer.newInstance();
-        Assume.assumeTrue(newInstance.getSupportedCapabilities().contains(MapperProvider.Capabilities.ATTACHMENT));
-        this.attachmentMapper = newInstance.createAttachmentMapper();
+    protected abstract MapperProvider createMapperProvider();
+
+    @Before
+    public final void setUp() throws MailboxException {
+        mapperProvider = createMapperProvider();
+        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.ATTACHMENT));
+        this.attachmentMapper = mapperProvider.createAttachmentMapper();
     }
 
     @After
-    public void tearDown() {
-        producer.cleanUp();
+    public void tearDown() throws MailboxException {
+        mapperProvider.clearMapper();
     }
 
-    @ContractTest
+    @Test
     public void getAttachmentShouldThrowWhenNullAttachmentId() throws Exception {
         expected.expect(IllegalArgumentException.class);
         attachmentMapper.getAttachment(null);
     }
 
-    @ContractTest
+    @Test
     public void getAttachmentShouldThrowWhenNonReferencedAttachmentId() throws Exception {
         expected.expect(AttachmentNotFoundException.class);
         attachmentMapper.getAttachment(AttachmentId.forPayload("unknown".getBytes(Charsets.UTF_8)));
     }
 
-    @ContractTest
+    @Test
     public void getAttachmentShouldReturnTheAttachmentWhenReferenced() throws Exception {
         //Given
         Attachment expected = Attachment.builder()
@@ -88,7 +87,7 @@ public class AttachmentMapperTest<T extends MapperProvider> {
         assertThat(attachment).isEqualTo(expected);
     }
 
-    @ContractTest
+    @Test
     public void getAttachmentShouldReturnTheAttachmentsWhenMultipleStored() throws Exception {
         //Given
         Attachment expected1 = Attachment.builder()
@@ -110,20 +109,20 @@ public class AttachmentMapperTest<T extends MapperProvider> {
         assertThat(attachment2).isEqualTo(expected2);
     }
 
-    @ContractTest
+    @Test
     public void getAttachmentsShouldThrowWhenNullAttachmentId() throws Exception {
         expected.expect(IllegalArgumentException.class);
         attachmentMapper.getAttachments(null);
     }
 
-    @ContractTest
+    @Test
     public void getAttachmentsShouldReturnEmptyListWhenNonReferencedAttachmentId() throws Exception {
         List<Attachment> attachments = attachmentMapper.getAttachments(ImmutableList.of(AttachmentId.forPayload("unknown".getBytes(Charsets.UTF_8))));
 
         assertThat(attachments).isEmpty();
     }
 
-    @ContractTest
+    @Test
     public void getAttachmentsShouldReturnTheAttachmentsWhenSome() throws Exception {
         //Given
         Attachment expected = Attachment.builder()

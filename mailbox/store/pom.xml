@@ -119,11 +119,6 @@
             <version>0.7.0-p9</version>
         </dependency>
         <dependency>
-            <groupId>org.xenei</groupId>
-            <artifactId>junit-contracts</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.james</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
             <type>test-jar</type>
