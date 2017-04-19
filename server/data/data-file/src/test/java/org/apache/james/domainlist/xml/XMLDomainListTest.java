@@ -29,11 +29,17 @@ import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
+import org.apache.james.domainlist.api.DomainListException;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.slf4j.LoggerFactory;
 
 public class XMLDomainListTest {
 
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+    
     private HierarchicalConfiguration setUpConfiguration(boolean auto, boolean autoIP, List<String> names) {
         DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
 
@@ -116,5 +122,33 @@ public class XMLDomainListTest {
         dom.setDNSService(setUpDNSServer("localhost"));
 
         assertThat(dom.getDomains()).describedAs("One domain found").hasSize(1);
+    }
+
+    @Test
+    public void addDomainShouldFailWhenAlreadyConfigured() throws Exception {
+        expectedException.expect(DomainListException.class);
+
+        List<String> domains = new ArrayList<String>();
+        domains.add("domain1");
+
+        XMLDomainList testee = new XMLDomainList();
+        testee.setLog(LoggerFactory.getLogger("MockLog"));
+        testee.configure(setUpConfiguration(true, false, domains));
+
+        testee.addDomain("newDomain");
+    }
+
+    @Test
+    public void removeDomainShouldFailWhenAlreadyConfigured() throws Exception {
+        expectedException.expect(DomainListException.class);
+
+        List<String> domains = new ArrayList<String>();
+        domains.add("domain1");
+
+        XMLDomainList testee = new XMLDomainList();
+        testee.setLog(LoggerFactory.getLogger("MockLog"));
+        testee.configure(setUpConfiguration(true, false, domains));
+
+        testee.removeDomain("newDomain");
     }
 }
