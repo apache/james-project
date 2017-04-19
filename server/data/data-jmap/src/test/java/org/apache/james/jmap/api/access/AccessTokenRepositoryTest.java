@@ -25,46 +25,37 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.concurrent.CompletionException;
 
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
-import org.junit.After;
-import org.xenei.junit.contract.Contract;
-import org.xenei.junit.contract.ContractTest;
-import org.xenei.junit.contract.IProducer;
+import org.junit.Before;
+import org.junit.Test;
 
-@Contract(AccessTokenRepository.class)
-public class AccessTokenRepositoryTest<T extends AccessTokenRepository> {
+public abstract class AccessTokenRepositoryTest {
 
     private static final AccessToken TOKEN = AccessToken.generate();
     private static final String USERNAME = "username";
     public static final long TTL_IN_MS = 1000;
 
-    private IProducer<T> producer;
-
     private AccessTokenRepository accessTokenRepository;
 
-    @Contract.Inject
-    public final void setProducer(IProducer<T> producer) {
-        this.producer = producer;
-        this.accessTokenRepository = producer.newInstance();
+    protected abstract AccessTokenRepository provideAccessTokenRepository();
+
+    @Before
+    public final void setUp() {
+        this.accessTokenRepository = provideAccessTokenRepository();
     }
 
-    @After
-    public void tearDown() {
-        producer.cleanUp();
-    }
-
-    @ContractTest
+    @Test
     public void validTokenMustBeRetrieved() throws Throwable {
         accessTokenRepository.addToken(USERNAME, TOKEN).join();
         assertThat(accessTokenRepository.getUsernameFromToken(TOKEN).join()).isEqualTo(USERNAME);
     }
 
-    @ContractTest
+    @Test
     public void absentTokensMustBeInvalid() throws Exception {
         assertThatThrownBy(() -> accessTokenRepository.getUsernameFromToken(TOKEN).join()).isInstanceOf(CompletionException.class);
         assertThatThrownBy(() -> accessTokenRepository.getUsernameFromToken(TOKEN).join()).hasCauseInstanceOf(InvalidAccessToken.class);
     }
 
-    @ContractTest
+    @Test
     public void removedTokensMustBeInvalid() throws Exception {
         accessTokenRepository.addToken(USERNAME, TOKEN).join();
         accessTokenRepository.removeToken(TOKEN).join();
@@ -72,7 +63,7 @@ public class AccessTokenRepositoryTest<T extends AccessTokenRepository> {
         assertThatThrownBy(() -> accessTokenRepository.getUsernameFromToken(TOKEN).join()).hasCauseInstanceOf(InvalidAccessToken.class);
     }
 
-    @ContractTest
+    @Test
     public void outDatedTokenMustBeInvalid() throws Exception {
         accessTokenRepository.addToken(USERNAME, TOKEN).join();
         Thread.sleep(2 * TTL_IN_MS);
@@ -80,31 +71,31 @@ public class AccessTokenRepositoryTest<T extends AccessTokenRepository> {
         assertThatThrownBy(() -> accessTokenRepository.getUsernameFromToken(TOKEN).join()).hasCauseInstanceOf(InvalidAccessToken.class);
     }
 
-    @ContractTest
+    @Test
     public void addTokenMustThrowWhenUsernameIsNull() throws Exception {
         assertThatThrownBy(() -> accessTokenRepository.addToken(null, TOKEN))
             .isInstanceOf(NullPointerException.class);
     }
 
-    @ContractTest
+    @Test
     public void addTokenMustThrowWhenUsernameIsEmpty() throws Exception {
         assertThatThrownBy(() -> accessTokenRepository.addToken("", TOKEN))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
-    @ContractTest
+    @Test
     public void addTokenMustThrowWhenTokenIsNull() throws Exception {
         assertThatThrownBy(() -> accessTokenRepository.addToken(USERNAME, null))
             .isInstanceOf(NullPointerException.class);
     }
 
-    @ContractTest
+    @Test
     public void removeTokenTokenMustThrowWhenTokenIsNull() throws Exception {
         assertThatThrownBy(() -> accessTokenRepository.removeToken(null))
             .isInstanceOf(NullPointerException.class);
     }
 
-    @ContractTest
+    @Test
     public void getUsernameFromTokenMustThrowWhenTokenIsNull() throws Exception {
         assertThatThrownBy(() -> accessTokenRepository.getUsernameFromToken(null))
             .isInstanceOf(NullPointerException.class);

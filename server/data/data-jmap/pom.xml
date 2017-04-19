@@ -222,11 +222,6 @@
                     <artifactId>slf4j-simple</artifactId>
                     <scope>test</scope>
                 </dependency>
-                <dependency>
-                    <groupId>org.xenei</groupId>
-                    <artifactId>junit-contracts</artifactId>
-                    <scope>test</scope>
-                </dependency>
             </dependencies>
         </profile>
         <profile>
