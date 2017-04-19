@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxManagerTest;
+import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
@@ -36,9 +37,10 @@ import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.junit.After;
+import org.junit.Ignore;
 
-public class CassandraMailboxManagerTest extends MailboxManagerTest {
-
+@Ignore("https://issues.apache.org/jira/browse/JAMES-2009")
+public class CassandraMailboxManagerStressTest extends MailboxManagerStressTest {
     private static final CassandraCluster CASSANDRA = CassandraCluster.create(new CassandraModuleComposite(
         new CassandraAclModule(),
         new CassandraMailboxModule(),
@@ -55,14 +57,12 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest {
         new CassandraApplicableFlagsModule()));
 
     @Override
-    protected MailboxManager provideMailboxManager() {
+    protected MailboxManager provideManager() {
         return CassandraMailboxManagerProvider.provideMailboxManager(CASSANDRA.getConf(), CASSANDRA.getTypesProvider());
     }
 
     @After
-    public void tearDown() throws Exception {
-        super.tearDown();
+    public void tearDown() {
         CASSANDRA.clearAllTables();
     }
-
 }

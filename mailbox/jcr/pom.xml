@@ -109,10 +109,5 @@
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.xenei</groupId>
-            <artifactId>junit-contracts</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 </project>

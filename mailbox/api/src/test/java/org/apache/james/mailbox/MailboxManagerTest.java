@@ -41,19 +41,18 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.junit.After;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.slf4j.LoggerFactory;
-import org.xenei.junit.contract.Contract;
-import org.xenei.junit.contract.ContractTest;
-import org.xenei.junit.contract.IProducer;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * Test the {@link StoreMailboxManager} methods that
+ * Test the {@link MailboxManager} methods that
  * are not covered by the protocol-tester suite.
  * 
  * This class needs to be extended by the different mailbox 
@@ -61,8 +60,7 @@ import com.google.common.collect.ImmutableSet;
  * implement the test methods.
  * 
  */
-@Contract(MailboxManager.class)
-public class MailboxManagerTest<T extends MailboxManager> {
+public abstract class MailboxManagerTest {
     
     public final static String USER_1 = "USER_1";
     public final static String USER_2 = "USER_2";
@@ -83,32 +81,30 @@ public class MailboxManagerTest<T extends MailboxManager> {
     @Rule
     public ExpectedException expected = ExpectedException.none();
 
-    private IProducer<T> producer;
     private MailboxManager mailboxManager;
     private MailboxSession session;
 
-    @Contract.Inject
-    public final void setProducer(IProducer<T> producer) throws Exception {
-        this.producer = producer;
-        this.mailboxManager = new MockMailboxManager(producer.newInstance()).getMockMailboxManager();
+    protected abstract MailboxManager provideMailboxManager();
+
+    @Before
+    public final void setUp() throws Exception {
+        this.mailboxManager = new MockMailboxManager(provideMailboxManager()).getMockMailboxManager();
     }
 
     @After
     public void tearDown() throws Exception {
         mailboxManager.logout(session, false);
         mailboxManager.endProcessingRequest(session);
-
-        producer.cleanUp();
     }
     
-    @ContractTest
+    @Test
     public void createUser1SystemSessionShouldReturnValidSession() throws UnsupportedEncodingException, MailboxException {
         session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));
         
         assertThat(session.getUser().getUserName()).isEqualTo(USER_1);
     }
 
-    @ContractTest
+    @Test
     public void user1ShouldNotHaveAnInbox() throws UnsupportedEncodingException, MailboxException {
         session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));
         mailboxManager.startProcessingRequest(session);
@@ -117,7 +113,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(mailboxManager.mailboxExists(inbox, session)).isFalse();
     }
 
-    @ContractTest
+    @Test
     public void createMailboxShouldReturnRightId() throws MailboxException, UnsupportedEncodingException {
         session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));
         mailboxManager.startProcessingRequest(session);
@@ -130,7 +126,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(mailboxId.get()).isEqualTo(retrievedMailbox.getId());
     }
 
-    @ContractTest
+    @Test
     public void user1ShouldBeAbleToCreateInbox() throws MailboxException, UnsupportedEncodingException {
         session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));
         mailboxManager.startProcessingRequest(session);
@@ -141,7 +137,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(mailboxManager.mailboxExists(inbox, session)).isTrue();
     }
 
-    @ContractTest
+    @Test
     public void user1ShouldNotBeAbleToCreateInboxTwice() throws MailboxException, UnsupportedEncodingException {
         expected.expect(MailboxException.class);
         session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));
@@ -151,7 +147,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         mailboxManager.createMailbox(inbox, session);
     }
 
-    @ContractTest
+    @Test
     public void user1ShouldNotHaveTestSubmailbox() throws MailboxException, UnsupportedEncodingException {
         session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));
         mailboxManager.startProcessingRequest(session);
@@ -162,7 +158,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(mailboxManager.mailboxExists(new MailboxPath(inbox, "INBOX.Test"), session)).isFalse();
     }
     
-    @ContractTest
+    @Test
     public void user1ShouldBeAbleToCreateTestSubmailbox() throws MailboxException, UnsupportedEncodingException {
         session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));
         mailboxManager.startProcessingRequest(session);
@@ -175,7 +171,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(mailboxManager.mailboxExists(inboxSubMailbox, session)).isTrue();
     }
     
-    @ContractTest
+    @Test
     public void user1ShouldBeAbleToDeleteInbox() throws MailboxException, UnsupportedEncodingException {
         session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));
         mailboxManager.startProcessingRequest(session);
@@ -191,7 +187,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(mailboxManager.mailboxExists(inboxSubMailbox, session)).isTrue();
     }
     
-    @ContractTest
+    @Test
     public void user1ShouldBeAbleToDeleteSubmailbox() throws MailboxException, UnsupportedEncodingException {
         session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));
         mailboxManager.startProcessingRequest(session);
@@ -207,7 +203,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(mailboxManager.mailboxExists(inboxSubMailbox, session)).isFalse();
     }
 
-    @ContractTest
+    @Test
     public void closingSessionShouldWork() throws BadCredentialsException, MailboxException, UnsupportedEncodingException {
         session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));
         mailboxManager.startProcessingRequest(session);
@@ -218,7 +214,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(session.isOpen()).isFalse();
     }
 
-    @ContractTest
+    @Test
     public void listShouldReturnMailboxes() throws MailboxException, UnsupportedEncodingException {
         session = mailboxManager.createSystemSession("manager", LoggerFactory.getLogger("testList"));
         mailboxManager.startProcessingRequest(session);
@@ -226,7 +222,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(mailboxManager.list(session)).hasSize(MockMailboxManager.EXPECTED_MAILBOXES_COUNT);
     }
 
-    @ContractTest
+    @Test
     public void user2ShouldBeAbleToCreateRootlessFolder() throws BadCredentialsException, MailboxException {
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
         MailboxPath trash = new MailboxPath(MailboxConstants.USER_NAMESPACE, USER_2, "Trash");
@@ -235,7 +231,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(mailboxManager.mailboxExists(trash, session)).isTrue();
     }
     
-    @ContractTest
+    @Test
     public void user2ShouldBeAbleToCreateNestedFoldersWithoutTheirParents() throws BadCredentialsException, MailboxException {
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
         MailboxPath nestedFolder = new MailboxPath(MailboxConstants.USER_NAMESPACE, USER_2, "INBOX.testfolder");
@@ -245,7 +241,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         mailboxManager.getMailbox(MailboxPath.inbox(session), session).appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), session, false, new Flags());
     }
 
-    @ContractTest
+    @Test
     public void searchShouldNotReturnResultsFromOtherNamespaces() throws Exception {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Namespace));
         session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));
@@ -256,7 +252,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(metaDatas.get(0).getPath()).isEqualTo(MailboxPath.inbox(session));
     }
 
-    @ContractTest
+    @Test
     public void searchShouldNotReturnResultsFromOtherUsers() throws Exception {
         session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));
         mailboxManager.createMailbox(new MailboxPath("#namespace", USER_2, "Other"), session);
@@ -266,7 +262,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(metaDatas.get(0).getPath()).isEqualTo(MailboxPath.inbox(session));
     }
 
-    @ContractTest
+    @Test
     public void updateAnnotationsShouldUpdateStoredAnnotation() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
@@ -279,7 +275,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(mailboxManager.getAllAnnotations(inbox, session)).containsOnly(PRIVATE_ANNOTATION_UPDATE);
     }
 
-    @ContractTest
+    @Test
     public void updateAnnotationsShouldDeleteAnnotationWithNilValue() throws BadCredentialsException, MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
@@ -292,7 +288,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(mailboxManager.getAllAnnotations(inbox, session)).isEmpty();
     }
 
-    @ContractTest
+    @Test
     public void updateAnnotationsShouldThrowExceptionIfMailboxDoesNotExist() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         expected.expect(MailboxException.class);
@@ -302,7 +298,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(PRIVATE_ANNOTATION));
     }
 
-    @ContractTest
+    @Test
     public void getAnnotationsShouldReturnEmptyForNonStoredAnnotation() throws BadCredentialsException, MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
@@ -312,7 +308,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(mailboxManager.getAllAnnotations(inbox, session)).isEmpty();
     }
 
-    @ContractTest
+    @Test
     public void getAllAnnotationsShouldRetrieveStoredAnnotations() throws BadCredentialsException, MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
@@ -324,7 +320,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         assertThat(mailboxManager.getAllAnnotations(inbox, session)).isEqualTo(ANNOTATIONS);
     }
 
-    @ContractTest
+    @Test
     public void getAllAnnotationsShouldThrowExceptionIfMailboxDoesNotExist() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         expected.expect(MailboxException.class);
@@ -334,7 +330,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         mailboxManager.getAllAnnotations(inbox, session);
     }
 
-    @ContractTest
+    @Test
     public void getAnnotationsByKeysShouldRetrieveStoresAnnotationsByKeys() throws BadCredentialsException, MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
@@ -347,7 +343,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
             .containsOnly(PRIVATE_ANNOTATION);
     }
 
-    @ContractTest
+    @Test
     public void getAnnotationsByKeysShouldThrowExceptionIfMailboxDoesNotExist() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         expected.expect(MailboxException.class);
@@ -357,7 +353,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         mailboxManager.getAnnotationsByKeys(inbox, session, ImmutableSet.of(PRIVATE_KEY));
     }
 
-    @ContractTest
+    @Test
     public void getAnnotationsByKeysWithOneDepthShouldRetriveAnnotationsWithOneDepth() throws BadCredentialsException, MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
@@ -370,7 +366,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
             .contains(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION);
     }
 
-    @ContractTest
+    @Test
     public void getAnnotationsByKeysWithAllDepthShouldThrowExceptionWhenMailboxDoesNotExist() throws BadCredentialsException, MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         expected.expect(MailboxException.class);
@@ -380,7 +376,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         mailboxManager.getAnnotationsByKeysWithAllDepth(inbox, session, ImmutableSet.of(PRIVATE_KEY));
     }
 
-    @ContractTest
+    @Test
     public void getAnnotationsByKeysWithAllDepthShouldRetriveAnnotationsWithAllDepth() throws BadCredentialsException, MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
@@ -393,7 +389,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
             .contains(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION);
     }
 
-    @ContractTest
+    @Test
     public void updateAnnotationsShouldThrowExceptionIfAnnotationDataIsOverLimitation() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         expected.expect(AnnotationException.class);
@@ -404,7 +400,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(MailboxAnnotation.newInstance(PRIVATE_KEY, "The limitation of data is less than 30")));
     }
 
-    @ContractTest
+    @Test
     public void shouldUpdateAnnotationWhenRequestCreatesNewAndMailboxIsNotOverLimit() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
@@ -419,7 +415,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
         mailboxManager.updateAnnotations(inbox, session, builder.build());
     }
 
-    @ContractTest
+    @Test
     public void updateAnnotationsShouldThrowExceptionIfRequestCreateNewButMailboxIsOverLimit() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         expected.expect(MailboxException.class);

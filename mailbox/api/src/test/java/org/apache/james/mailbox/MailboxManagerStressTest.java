@@ -37,34 +37,26 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.LoggerFactory;
-import org.xenei.junit.contract.Contract;
-import org.xenei.junit.contract.ContractTest;
-import org.xenei.junit.contract.IProducer;
 
 import com.google.common.collect.ImmutableSet;
 
-@Contract(MailboxManager.class)
-public class MailboxManagerStressTest<T extends MailboxManager> {
+public abstract class MailboxManagerStressTest {
 
     private final static int APPEND_OPERATIONS = 200;
 
-    private IProducer<T> producer;
     private MailboxManager mailboxManager;
 
-    @Contract.Inject
-    public final void setProducer(IProducer<T> producer) throws MailboxException {
-        this.producer = producer;
-        this.mailboxManager = producer.newInstance();
+    protected abstract MailboxManager provideManager();
+
+    @Before
+    public final void setUp() throws MailboxException {
+        this.mailboxManager = provideManager();
     }
 
-    @After
-    public void tearDown() {
-        producer.cleanUp();
-    }
-
-    @ContractTest
+    @Test
     public void testStressTest() throws InterruptedException, MailboxException {
 
         final CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);
@@ -123,7 +115,7 @@ public class MailboxManagerStressTest<T extends MailboxManager> {
                         }
                         mailboxManager.endProcessingRequest(session);
                         mailboxManager.logout(session, false);
-                    } catch (MailboxException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                         fail.set(true);
                     } finally {

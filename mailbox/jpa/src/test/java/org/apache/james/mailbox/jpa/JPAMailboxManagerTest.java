@@ -18,86 +18,35 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa;
 
-import javax.persistence.EntityManagerFactory;
-
 import org.apache.james.backends.jpa.JpaTestCluster;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
-import org.apache.james.mailbox.acl.MailboxACLResolver;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
-import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
-import org.apache.james.mailbox.store.Authenticator;
-import org.apache.james.mailbox.store.Authorizator;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.junit.runner.RunWith;
-import org.slf4j.LoggerFactory;
-import org.xenei.junit.contract.Contract;
-import org.xenei.junit.contract.ContractImpl;
-import org.xenei.junit.contract.ContractSuite;
-import org.xenei.junit.contract.IProducer;
+import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.junit.After;
 
-import com.google.common.base.Throwables;
+import com.google.common.base.Optional;
 
-@RunWith(ContractSuite.class)
-@ContractImpl(OpenJPAMailboxManager.class)
-public class JPAMailboxManagerTest {
+public class JPAMailboxManagerTest extends MailboxManagerTest {
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
+    private Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.absent();
 
-    /**
-     * The entity manager factory.
-     */
-    private static EntityManagerFactory entityManagerFactory;
-
-    private IProducer<OpenJPAMailboxManager> producer = new IProducer<OpenJPAMailboxManager>() {
-
-        private OpenJPAMailboxManager openJPAMailboxManager;
-
-        @Override
-        public OpenJPAMailboxManager newInstance() {
-            entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
-            JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
-            JPAMailboxSessionMapperFactory mf = new JPAMailboxSessionMapperFactory(entityManagerFactory, new JPAUidProvider(locker, entityManagerFactory), new JPAModSeqProvider(locker, entityManagerFactory));
-
-            MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-            GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-            MessageParser messageParser = new MessageParser();
-
-            Authenticator noAuthenticator = null;
-            Authorizator noAuthorizator = null;
-            openJPAMailboxManager = new OpenJPAMailboxManager(mf, noAuthenticator, noAuthorizator, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
-
-            try {
-                openJPAMailboxManager.init();
-            } catch (MailboxException e) {
-                throw Throwables.propagate(e);
-            }
-
-            return openJPAMailboxManager;
+    @Override
+    protected MailboxManager provideMailboxManager() {
+        if (!openJPAMailboxManager.isPresent()) {
+            openJPAMailboxManager = Optional.of(JpaMailboxManagerProvider.provideMailboxManager(JPA_TEST_CLUSTER));
         }
+        return openJPAMailboxManager.get();
+    }
 
-        @Override
-        public void cleanUp() {
-            MailboxSession session = openJPAMailboxManager.createSystemSession("test", LoggerFactory.getLogger("Test"));
-            try {
-                openJPAMailboxManager.deleteEverything(session);
-            } catch (MailboxException e) {
-                e.printStackTrace();
-            }
-            session.close();
-            entityManagerFactory.close();
+    @After
+    public void tearDown() throws MailboxException {
+        if (openJPAMailboxManager.isPresent()) {
+            openJPAMailboxManager.get()
+                .deleteEverything(new MockMailboxSession("Any name"));
         }
-    };
-
-    @Contract.Inject
-    public IProducer<OpenJPAMailboxManager> getProducer() {
-        return producer;
     }
 
 }

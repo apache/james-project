@@ -133,11 +133,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>org.xenei</groupId>
-            <artifactId>junit-contracts</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <profiles>

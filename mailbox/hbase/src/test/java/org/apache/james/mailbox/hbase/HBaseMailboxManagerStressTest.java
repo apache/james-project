@@ -31,7 +31,7 @@ import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
 
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxManagerTest;
+import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -48,12 +48,12 @@ import org.junit.Ignore;
 import com.google.common.base.Throwables;
 
 @Ignore("https://issues.apache.org/jira/browse/MAILBOX-293")
-public class HBaseMailboxManagerTest extends MailboxManagerTest {
+public class HBaseMailboxManagerStressTest extends MailboxManagerStressTest {
 
     private static final HBaseClusterSingleton CLUSTER = HBaseClusterSingleton.build();
 
     @Override
-    protected MailboxManager provideMailboxManager() {
+    protected MailboxManager provideManager() {
         ensureTables();
 
         HBaseUidProvider uidProvider = new HBaseUidProvider(CLUSTER.getConf());
