@@ -19,17 +19,17 @@
 
 package org.apache.james.domainlist.xml;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.domainlist.lib.AbstractDomainList;
-import org.apache.james.lifecycle.api.Configurable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import javax.inject.Singleton;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.apache.james.lifecycle.api.Configurable;
 
 /**
  * Mimic the old behavior of JAMES
@@ -38,6 +38,7 @@ import javax.inject.Singleton;
 public class XMLDomainList extends AbstractDomainList implements Configurable {
 
     private final List<String> domainNames = new ArrayList<String>();
+    private boolean isConfigured = false;
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
@@ -49,6 +50,7 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
                 throw new ConfigurationException("Unable to add domain to memory", e);
             }
         }
+        isConfigured = true;
     }
 
     @Override
@@ -63,12 +65,18 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
 
     @Override
     public void addDomain(String domain) throws DomainListException {
-        throw new DomainListException("Read-Only DomainList implementation");
+        if (isConfigured) {
+            throw new DomainListException("Read-Only DomainList implementation");
+        }
+        domainNames.add(domain);
     }
 
     @Override
     public void removeDomain(String domain) throws DomainListException {
-        throw new DomainListException("Read-Only DomainList implementation");
+        if (isConfigured) {
+            throw new DomainListException("Read-Only DomainList implementation");
+        }
+        domainNames.remove(domain);
     }
 
     private void addToServedDomains(String domain) throws DomainListException {

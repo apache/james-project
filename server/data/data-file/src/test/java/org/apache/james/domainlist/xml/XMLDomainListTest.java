@@ -48,6 +48,7 @@ public class XMLDomainListTest {
         for (String name : names) {
             configuration.addProperty("domainnames.domainname", name);
         }
+        configuration.addProperty("defaultDomain", "default.domain");
         return configuration;
     }
 
@@ -150,5 +151,21 @@ public class XMLDomainListTest {
         testee.configure(setUpConfiguration(true, false, domains));
 
         testee.removeDomain("newDomain");
+    }
+
+    @Test
+    public void configureShouldNotFailWhenConfiguringDefaultDomain() throws Exception {
+        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+
+        configuration.addProperty("autodetect", true);
+        configuration.addProperty("autodetectIP", false);
+        configuration.addProperty("domainnames.domainname", "domain1");
+        configuration.addProperty("defaultDomain", "localhost");
+
+        XMLDomainList testee = new XMLDomainList();
+        testee.setLog(LoggerFactory.getLogger("MockLog"));
+        testee.configure(configuration);
+
+        assertThat(testee.getDomainListInternal()).hasSize(2);
     }
 }
