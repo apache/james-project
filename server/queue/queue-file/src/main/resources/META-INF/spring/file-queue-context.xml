@@ -23,5 +23,5 @@
        http://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <bean id="mailqueuefactory" class="org.apache.james.queue.file.FileMailQueueFactory"/>
-
+    <bean id="rawMailQueueItemDecoratorFactory" class="org.apache.james.queue.api.RawMailQueueItemDecoratorFactory"/>
 </beans>
