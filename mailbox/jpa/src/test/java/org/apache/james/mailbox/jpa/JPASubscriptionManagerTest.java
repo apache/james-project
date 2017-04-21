@@ -47,6 +47,6 @@ public class JPASubscriptionManagerTest extends AbstractSubscriptionManagerTest{
 
     @After
     public void teardown() throws SubscriptionException {
-        super.teardown();
+        JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
 }

@@ -19,12 +19,17 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
+import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.mailbox.jpa.JPAMailboxFixture;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperTest;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 
 public class JpaMailboxMapperTest extends MailboxMapperTest {
+
+    public static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
+
     @Override
     protected MapperProvider createMapperProvider() {
-        return new JPAMapperProvider();
+        return new JPAMapperProvider(JPA_TEST_CLUSTER);
     }
 }

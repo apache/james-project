@@ -24,7 +24,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.junit.After;
 
 import com.google.common.base.Optional;
@@ -44,9 +43,6 @@ public class JpaMailboxManagerStressTest extends MailboxManagerStressTest {
 
     @After
     public void tearDown() throws MailboxException {
-        if (openJPAMailboxManager.isPresent()) {
-            openJPAMailboxManager.get()
-                .deleteEverything(new MockMailboxSession("Any name"));
-        }
+        JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
 }

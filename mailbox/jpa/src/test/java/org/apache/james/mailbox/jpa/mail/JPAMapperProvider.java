@@ -22,10 +22,8 @@ package org.apache.james.mailbox.jpa.mail;
 import java.util.List;
 import java.util.Random;
 
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailbox.MessageUid;
@@ -49,7 +47,11 @@ import com.google.common.collect.ImmutableList;
 
 public class JPAMapperProvider implements MapperProvider {
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
+    private final JpaTestCluster JPA_TEST_CLUSTER;
+
+    public JPAMapperProvider(JpaTestCluster JPA_TEST_CLUSTER) {
+        this.JPA_TEST_CLUSTER = JPA_TEST_CLUSTER;
+    }
 
     @Override
     public MailboxMapper createMailboxMapper() throws MailboxException {
