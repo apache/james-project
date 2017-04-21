@@ -39,6 +39,10 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import com.google.common.base.Throwables;
 
 public class JpaMailboxManagerProvider {
+
+    private static final int LIMIT_ANNOTATIONS = 3;
+    private static final int LIMIT_ANNOTATION_SIZE = 30;
+
     public static OpenJPAMailboxManager provideMailboxManager(JpaTestCluster jpaTestCluster) {
         EntityManagerFactory entityManagerFactory = jpaTestCluster.getEntityManagerFactory();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
@@ -50,7 +54,9 @@ public class JpaMailboxManagerProvider {
 
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
-        OpenJPAMailboxManager openJPAMailboxManager = new OpenJPAMailboxManager(mf, noAuthenticator, noAuthorizator, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
+        OpenJPAMailboxManager openJPAMailboxManager = new OpenJPAMailboxManager(mf, noAuthenticator, noAuthorizator,
+            aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory(), LIMIT_ANNOTATIONS,
+            LIMIT_ANNOTATION_SIZE);
 
         try {
             openJPAMailboxManager.init();

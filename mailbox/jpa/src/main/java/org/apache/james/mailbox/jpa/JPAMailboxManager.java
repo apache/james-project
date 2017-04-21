@@ -44,7 +44,16 @@ public abstract class JPAMailboxManager extends StoreMailboxManager {
     public JPAMailboxManager(JPAMailboxSessionMapperFactory mailboxSessionMapperFactory,
             Authenticator authenticator, Authorizator authorizator, MailboxPathLocker locker, MailboxACLResolver aclResolver, 
             GroupMembershipResolver groupMembershipResolver, MessageParser messageParser, MessageId.Factory messageIdFactory) {
-        super(mailboxSessionMapperFactory, authenticator, authorizator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
+        super(mailboxSessionMapperFactory, authenticator, authorizator, locker, aclResolver, groupMembershipResolver,
+            messageParser, messageIdFactory);
+    }
+
+    public JPAMailboxManager(JPAMailboxSessionMapperFactory mailboxSessionMapperFactory,
+                             Authenticator authenticator, Authorizator authorizator, MailboxPathLocker locker, MailboxACLResolver aclResolver,
+                             GroupMembershipResolver groupMembershipResolver, MessageParser messageParser, MessageId.Factory messageIdFactory,
+                             int limitAnnotation, int limitAnnotationSize) {
+        super(mailboxSessionMapperFactory, authenticator, authorizator, locker, aclResolver, groupMembershipResolver,
+            messageParser, messageIdFactory, limitAnnotation, limitAnnotationSize);
     }
     
     @Override
