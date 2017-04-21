@@ -328,7 +328,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
                 return new SimpleMessageMetaData(message);
             } else {
                 JPAMailboxMessage persistData = new JPAMailboxMessage(currentMailbox, message.getUid(), message.getModSeq(), message);
-                persistData.setFlags(new Flags());
+                persistData.setFlags(message.createFlags());
                 getEntityManager().persist(persistData);
                 return new SimpleMessageMetaData(persistData);
             }
