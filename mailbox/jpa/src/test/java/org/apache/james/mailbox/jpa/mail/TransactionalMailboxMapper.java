@@ -30,8 +30,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
-import com.google.common.base.Throwables;
-
 public class TransactionalMailboxMapper implements MailboxMapper {
     private final JPAMailboxMapper wrapped;
 
@@ -51,30 +49,22 @@ public class TransactionalMailboxMapper implements MailboxMapper {
 
     @Override
     public MailboxId save(final Mailbox mailbox) throws MailboxException {
-        try {
-            return wrapped.execute(new Transaction<MailboxId>() {
+        return wrapped.execute(new Transaction<MailboxId>() {
                 @Override
                 public MailboxId run() throws MailboxException {
                     return wrapped.save(mailbox);
                 }
             });
-        } catch (MailboxException e) {
-            throw Throwables.propagate(e);
-        }
     }
 
     @Override
     public void delete(final Mailbox mailbox) throws MailboxException {
-        try {
-            wrapped.execute(new VoidTransaction() {
+        wrapped.execute(new VoidTransaction() {
                 @Override
                 public void runVoid() throws MailboxException {
                     wrapped.delete(mailbox);
                 }
             });
-        } catch (MailboxException e) {
-            Throwables.propagate(e);
-        }
     }
 
     @Override

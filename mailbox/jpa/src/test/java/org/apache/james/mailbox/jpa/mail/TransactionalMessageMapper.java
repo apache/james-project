@@ -38,7 +38,6 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 
 public class TransactionalMessageMapper implements MessageMapper {
     private final JPAMessageMapper messageMapper;
@@ -94,16 +93,12 @@ public class TransactionalMessageMapper implements MessageMapper {
 
     @Override
     public void delete(final Mailbox mailbox, final MailboxMessage message) throws MailboxException {
-        try {
-            messageMapper.execute(new VoidTransaction() {
-                @Override
-                public void runVoid() throws MailboxException {
-                    messageMapper.delete(mailbox, message);
-                }
-            });
-        } catch (MailboxException e) {
-            Throwables.propagate(e);
-        }
+        messageMapper.execute(new VoidTransaction() {
+            @Override
+            public void runVoid() throws MailboxException {
+                messageMapper.delete(mailbox, message);
+            }
+        });
     }
 
     @Override
