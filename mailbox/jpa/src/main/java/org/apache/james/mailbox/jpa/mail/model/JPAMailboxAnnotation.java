@@ -37,43 +37,8 @@ import com.google.common.base.Objects;
     @NamedQuery(name = "retrieveByKey", query = "SELECT annotation FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam AND annotation.key = :keyParam"),
     @NamedQuery(name= "countAnnotationsInMailbox", query = "SELECT COUNT(annotation) FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam"),
     @NamedQuery(name = "retrieveByKeyLike", query = "SELECT annotation FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam AND annotation.key LIKE :keyParam")})
-@IdClass(JPAMailboxAnnotation.JPAMailboxAnnotationId.class)
+@IdClass(JPAMailboxAnnotationId.class)
 public class JPAMailboxAnnotation {
-
-    public static final class JPAMailboxAnnotationId {
-        private long mailboxId;
-        private String key;
-
-        public JPAMailboxAnnotationId(long mailboxId, String key) {
-            this.mailboxId = mailboxId;
-            this.key = key;
-        }
-
-        public JPAMailboxAnnotationId() {
-        }
-
-        public long getMailboxId() {
-            return mailboxId;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o instanceof JPAMailboxAnnotationId) {
-                JPAMailboxAnnotationId that = (JPAMailboxAnnotationId) o;
-                return Objects.equal(this.mailboxId, that.mailboxId) && Objects.equal(this.key, that.key);
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(mailboxId, key);
-        }
-    }
 
     public static final String MAILBOX_ID = "MAILBOX_ID";
     public static final String KEY = "KEY";

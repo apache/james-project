@@ -38,7 +38,8 @@ import com.google.common.collect.ImmutableList;
 
 public interface JPAMailboxFixture {
 
-    List<Class<?>> MAILBOX_PERSISTANCE_CLASSES = ImmutableList.<Class<?>>of(JPAMailbox.class,
+    List<Class<?>> MAILBOX_PERSISTANCE_CLASSES = ImmutableList.<Class<?>>of(
+        JPAMailbox.class,
         AbstractJPAMailboxMessage.class,
         JPAMailboxMessage.class,
         JPAProperty.class,
@@ -55,11 +56,13 @@ public interface JPAMailboxFixture {
         JpaCurrentQuota.class
     );
 
-    List<String> MAILBOX_TABLE_NAMES = ImmutableList.<String>of("JAMES_MAIL_USERFLAG",
+    List<String> MAILBOX_TABLE_NAMES = ImmutableList.<String>of(
+        "JAMES_MAIL_USERFLAG",
         "JAMES_MAIL_PROPERTY",
         "JAMES_MAILBOX_ANNOTATION",
         "JAMES_MAILBOX",
-        "JAMES_MAIL");
+        "JAMES_MAIL",
+        "JAMES_SUBSCRIPTION");
 
     List<String> QUOTA_TABLES_NAMES = ImmutableList.<String>of(
         "JAMES_MAX_DEFAULT_MESSAGE_COUNT",

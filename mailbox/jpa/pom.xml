@@ -112,36 +112,12 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>openjpa-maven-plugin</artifactId>
-                <version>1.1</version>
+                <version>1.2</version>
                 <configuration>
                     <includes>org/apache/james/mailbox/jpa/*/model/**/*.class</includes>
                     <excludes>org/apache/james/mailbox/jpa/mail/model/openjpa/EncryptDecryptHelper.class</excludes>
                     <addDefaultConstructor>true</addDefaultConstructor>
                     <enforcePropertyRestrictions>true</enforcePropertyRestrictions>
-                    <toolProperties>
-                        <property>
-                            <name>log</name>
-                            <value>TOOL=TRACE</value>
-                        </property>
-                        <property>
-                            <name>metaDataFactory</name>
-                            <value>
-                                jpa(Types=org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
-                                org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
-                                org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMessage;
-                                org.apache.james.mailbox.jpa.mail.model.openjpa.JPAEncryptedMessage;
-                                org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMessage;
-                                org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMessage;
-                                org.apache.james.mailbox.jpa.mail.model.JPAProperty;
-                                org.apache.james.mailbox.jpa.user.model.JPASubscription;
-                                org.apache.james.mailbox.jpa.quota.model.MaxDefaultMessageCount;
-                                org.apache.james.mailbox.jpa.quota.model.MaxDefaultStorage
-                                org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount
-                                org.apache.james.mailbox.jpa.quota.model.MaxUserStorage
-                                org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota)
-                            </value>
-                        </property>
-                    </toolProperties>
                 </configuration>
                 <executions>
                     <execution>

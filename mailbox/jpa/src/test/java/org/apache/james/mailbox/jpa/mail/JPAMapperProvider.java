@@ -22,8 +22,10 @@ package org.apache.james.mailbox.jpa.mail;
 import java.util.List;
 import java.util.Random;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailbox.MessageUid;

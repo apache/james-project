@@ -32,6 +32,7 @@ import com.google.common.base.Throwables;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPATransactionalMapper;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailboxAnnotation;
+import org.apache.james.mailbox.jpa.mail.model.JPAMailboxAnnotationId;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
@@ -159,7 +160,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
         try {
             JPAId jpaId = (JPAId) mailboxId;
             JPAMailboxAnnotation jpaMailboxAnnotation = getEntityManager()
-                .find(JPAMailboxAnnotation.class, new JPAMailboxAnnotation.JPAMailboxAnnotationId(jpaId.getRawId(), key.asString()));
+                .find(JPAMailboxAnnotation.class, new JPAMailboxAnnotationId(jpaId.getRawId(), key.asString()));
             getEntityManager().remove(jpaMailboxAnnotation);
         } catch (NoResultException e) {
             LOGGER.debug("Mailbox annotation not found for ID {} and key {}", mailboxId.serialize(), key.asString());
@@ -179,7 +180,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
                     mailboxAnnotation.getValue().orNull()));
         } else {
             getEntityManager().find(JPAMailboxAnnotation.class,
-                new JPAMailboxAnnotation.JPAMailboxAnnotationId(jpaId.getRawId(), mailboxAnnotation.getKey().asString()))
+                new JPAMailboxAnnotationId(jpaId.getRawId(), mailboxAnnotation.getKey().asString()))
                 .setValue(mailboxAnnotation.getValue().orNull());
         }
     }
@@ -188,7 +189,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
     public boolean exist(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
         JPAId jpaId = (JPAId) mailboxId;
         Optional<JPAMailboxAnnotation> row = Optional.fromNullable(getEntityManager().find(JPAMailboxAnnotation.class,
-            new JPAMailboxAnnotation.JPAMailboxAnnotationId(jpaId.getRawId(), mailboxAnnotation.getKey().asString())));
+            new JPAMailboxAnnotationId(jpaId.getRawId(), mailboxAnnotation.getKey().asString())));
         return row.isPresent();
     }
 

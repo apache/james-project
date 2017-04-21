@@ -31,6 +31,7 @@ import javax.mail.Flags;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
@@ -98,6 +99,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     private static final String TOSTRING_SEPARATOR = " ";
 
     /** Identifies composite key */
+    @Embeddable
     public static class MailboxIdUidKey implements Serializable {
 
         private static final long serialVersionUID = 7847632032426660997L;
