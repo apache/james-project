@@ -628,6 +628,16 @@ public class MessageMapperTest<T extends MapperProvider> {
     }
 
     @ContractTest
+    public void flagsAdditionShouldHaveNoEffectOnStoredFlagsWhenNoop() throws MailboxException {
+        saveMessages();
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
+
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flag.FLAGGED), FlagsUpdateMode.ADD), MessageRange.one(message1.getUid()));
+        assertThat(retrieveMessageFromStorage(message1))
+            .hasFlags(new FlagsBuilder().add(Flags.Flag.FLAGGED).build());
+    }
+
+    @ContractTest
     public void flagsRemovalShouldReturnAnUpdatedFlagHighlightingTheRemoval() throws MailboxException {
         saveMessages();
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new FlagsBuilder().add(Flags.Flag.FLAGGED, Flags.Flag.SEEN).build(), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
@@ -760,6 +770,23 @@ public class MessageMapperTest<T extends MapperProvider> {
                     .modSeq(modSeq + 1)
                     .oldFlags(new Flags())
                     .newFlags(new Flags(USER_FLAG))
+                    .build());
+    }
+
+    @ContractTest
+    public void userFlagsUpdateShouldReturnCorrectUpdatedFlagsWhenNoop() throws Exception {
+        saveMessages();
+
+        assertThat(
+            messageMapper.updateFlags(benwaInboxMailbox,
+                new FlagsUpdateCalculator(new Flags(USER_FLAG), FlagsUpdateMode.REMOVE),
+                MessageRange.one(message1.getUid())))
+            .containsOnly(
+                UpdatedFlags.builder()
+                    .uid(message1.getUid())
+                    .modSeq(message1.getModSeq())
+                    .oldFlags(new Flags())
+                    .newFlags(new Flags())
                     .build());
     }
 

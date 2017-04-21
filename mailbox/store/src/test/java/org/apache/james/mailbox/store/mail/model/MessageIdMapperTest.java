@@ -773,6 +773,67 @@ public class MessageIdMapperTest<T extends MapperProvider> {
     }
 
     @ContractTest
+    public void setFlagsShouldNotUpdateModSeqWhenNoop() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        long modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
+        message1.setModSeq(modSeq);
+        message1.setFlags(new Flags(Flag.SEEN));
+        sut.save(message1);
+
+        sut.setFlags(message1.getMessageId(),
+            ImmutableList.of(message1.getMailboxId()),
+            new Flags(Flag.SEEN),
+            FlagsUpdateMode.ADD);
+
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
+        assertThat(messages).hasSize(1);
+        assertThat(messages.get(0).getModSeq()).isEqualTo(modSeq);
+    }
+
+    @ContractTest
+    public void addingFlagToAMessageThatAlreadyHasThisFlagShouldResultInNoChange() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        long modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
+        message1.setModSeq(modSeq);
+        Flags flags = new Flags(Flag.SEEN);
+        message1.setFlags(flags);
+        sut.save(message1);
+
+        sut.setFlags(message1.getMessageId(),
+            ImmutableList.of(message1.getMailboxId()),
+            flags,
+            FlagsUpdateMode.ADD);
+
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
+        assertThat(messages).hasSize(1);
+        assertThat(messages.get(0).createFlags()).isEqualTo(flags);
+    }
+
+    @ContractTest
+    public void setFlagsShouldReturnUpdatedFlagsWhenNoop() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        long modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
+        message1.setModSeq(modSeq);
+        Flags flags = new Flags(Flag.SEEN);
+        message1.setFlags(flags);
+        sut.save(message1);
+
+        Map<MailboxId, UpdatedFlags> mailboxIdUpdatedFlagsMap = sut.setFlags(message1.getMessageId(),
+            ImmutableList.of(message1.getMailboxId()),
+            flags,
+            FlagsUpdateMode.ADD);
+
+        assertThat(mailboxIdUpdatedFlagsMap)
+            .containsOnly(MapEntry.entry(message1.getMailboxId(),
+                UpdatedFlags.builder()
+                    .modSeq(modSeq)
+                    .uid(message1.getUid())
+                    .newFlags(flags)
+                    .oldFlags(flags)
+                    .build()));
+    }
+
+    @ContractTest
     public void countUnseenMessageShouldNotTakeCareOfOtherFlagsUpdates() throws Exception {
         message1.setUid(mapperProvider.generateMessageUid());
         message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));

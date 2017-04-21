@@ -333,12 +333,16 @@ public class CassandraMessageMapper implements MessageMapper {
             long oldModSeq = message.getModSeq();
             Flags oldFlags = message.createFlags();
             Flags newFlags = flagUpdateCalculator.buildNewFlags(oldFlags);
+
+            boolean involveFlagsChanges = !identicalFlags(oldFlags, newFlags);
+            long newModSeq = generateNewModSeqIfNeeded(mailbox, oldModSeq, involveFlagsChanges);
+
             message.setFlags(newFlags);
-            message.setModSeq(modSeqProvider.nextModSeq(mailboxSession, mailbox));
+            message.setModSeq(newModSeq);
             if (updateFlags(message, oldModSeq)) {
                 return Optional.of(UpdatedFlags.builder()
                     .uid(message.getUid())
-                    .modSeq(message.getModSeq())
+                    .modSeq(newModSeq)
                     .oldFlags(oldFlags)
                     .newFlags(newFlags)
                     .build());
@@ -348,6 +352,17 @@ public class CassandraMessageMapper implements MessageMapper {
         } catch (MailboxException e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    private long generateNewModSeqIfNeeded(Mailbox mailbox, long oldModSeq, boolean involveFlagsChanges) throws MailboxException {
+        if (involveFlagsChanges) {
+            return modSeqProvider.nextModSeq(mailboxSession, mailbox);
+        }
+        return oldModSeq;
+    }
+
+    private boolean identicalFlags(Flags oldFlags, Flags newFlags) {
+        return oldFlags.equals(newFlags);
     }
 
     private boolean updateFlags(MailboxMessage message, long oldModSeq) {

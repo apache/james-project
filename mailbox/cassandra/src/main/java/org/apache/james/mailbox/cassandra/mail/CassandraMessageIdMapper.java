@@ -263,12 +263,20 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .join()
             .findFirst()
             .orElseThrow(MailboxDeleteDuringUpdateException::new);
+        Flags newFlags = new FlagsUpdateCalculator(newState, updateMode).buildNewFlags(oldComposedId.getFlags());
+        if (identicalFlags(oldComposedId, newFlags)) {
+            return Optional.of(Pair.of(oldComposedId.getFlags(), oldComposedId));
+        }
         ComposedMessageIdWithMetaData newComposedId = new ComposedMessageIdWithMetaData(
             oldComposedId.getComposedMessageId(),
-            new FlagsUpdateCalculator(newState, updateMode).buildNewFlags(oldComposedId.getFlags()),
+            newFlags,
             modSeqProvider.nextModSeq(mailboxSession, cassandraId));
 
         return updateFlags(oldComposedId, newComposedId);
+    }
+
+    private boolean identicalFlags(ComposedMessageIdWithMetaData oldComposedId, Flags newFlags) {
+        return oldComposedId.getFlags().equals(newFlags);
     }
 
     private Optional<Pair<Flags, ComposedMessageIdWithMetaData>> updateFlags(ComposedMessageIdWithMetaData oldComposedId, ComposedMessageIdWithMetaData newComposedId) {
