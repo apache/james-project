@@ -120,7 +120,7 @@ public class JPAMailbox implements Mailbox {
     }
 
     public JPAMailbox(Mailbox mailbox) {
-        this(new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName()), mailbox.getUidValidity());
+        this(mailbox.generateAssociatedPath(), mailbox.getUidValidity());
     }
 
     /**
