@@ -21,40 +21,92 @@ package org.apache.james.util.streams;
 
 import java.util.List;
 
+import com.google.common.base.Strings;
+import org.junit.Assume;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
+import org.testcontainers.shaded.com.github.dockerjava.api.command.InspectContainerResponse;
 
-import com.google.common.base.Strings;
-
-public class SwarmGenericContainer extends GenericContainer<SwarmGenericContainer> {
-
+public class SwarmGenericContainer implements TestRule {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwarmGenericContainer.class);
     private static final String DOCKER_CONTAINER = "DOCKER_CONTAINER";
+    private static final String NO_DOCKER_ENVIRONMENT = "Could not find a valid Docker environment.";
+    private static final String SKIPPING_TEST_CAUTION = "Skipping all docker tests as no Docker environment was found";
+
+    private GenericContainer container;
 
     public SwarmGenericContainer(String dockerImageName) {
-        super(dockerImageName);
+        try {
+            this.container = new GenericContainer(dockerImageName);
+        } catch (IllegalStateException e) {
+            logAndCheckSkipTest(e);
+        }
     }
 
     public SwarmGenericContainer(ImageFromDockerfile imageFromDockerfile) {
-        super(imageFromDockerfile);
+        try {
+            this.container = new GenericContainer(imageFromDockerfile);
+        } catch (IllegalStateException e) {
+            logAndCheckSkipTest(e);
+        }
+    }
+
+    private void logAndCheckSkipTest(IllegalStateException e) {
+        LOGGER.error("Cannot initial a docker container because: " + e);
+        if (e.getMessage().startsWith(NO_DOCKER_ENVIRONMENT)) {
+            Assume.assumeTrue(SKIPPING_TEST_CAUTION, false);
+        }
     }
 
     public SwarmGenericContainer withAffinityToContainer() {
-        String container = System.getenv(DOCKER_CONTAINER);
-        if (Strings.isNullOrEmpty(container)) {
+        String containerEnv = System.getenv(DOCKER_CONTAINER);
+        if (Strings.isNullOrEmpty(containerEnv)) {
             LOGGER.warn("'DOCKER_CONTAINER' environment variable not found, dockering without affinity");
-            return self();
+            return this;
         }
-        List<String> envVariables = getEnv();
+        List<String> envVariables = container.getEnv();
         envVariables.add("affinity:container==" + container);
-        setEnv(envVariables);
-        return self();
+        container.setEnv(envVariables);
+        return this;
+    }
+
+    public SwarmGenericContainer withEnv(String key, String value) {
+        container.addEnv(key, value);
+        return this;
+    }
+
+    public void start() {
+        container.start();
+    }
+
+    public void stop() {
+        container.stop();
+    }
+
+    public String getContainerIpAddress() {
+        return container.getContainerIpAddress();
+    }
+
+    public Integer getMappedPort(int originalPort) {
+        return container.getMappedPort(originalPort);
     }
 
     @SuppressWarnings("deprecation")
     public String getIp() {
         return getContainerInfo().getNetworkSettings().getIpAddress();
     }
+
+    public InspectContainerResponse getContainerInfo() {
+        return container.getContainerInfo();
+    }
+    @Override
+    public Statement apply(Statement statement, Description description) {
+        return container.apply(statement, description);
+    }
+
 }
