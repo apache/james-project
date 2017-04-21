@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.fail;
 import java.util.List;
 
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -110,6 +111,18 @@ public abstract class MailboxMapperTest {
     public void saveShouldPersistTheMailbox() throws MailboxException{
         mailboxMapper.save(benwaInboxMailbox);
         MailboxAssert.assertThat(mailboxMapper.findMailboxByPath(benwaInboxPath)).isEqualTo(benwaInboxMailbox);
+    }
+
+    @Test
+    public void saveShouldThrowWhenMailboxAlreadyExist() throws MailboxException{
+        expected.expect(MailboxExistsException.class);
+
+        mailboxMapper.save(benwaInboxMailbox);
+
+        SimpleMailbox mailbox = new SimpleMailbox(benwaInboxMailbox);
+        mailbox.setMailboxId(null);
+
+        mailboxMapper.save(mailbox);
     }
 
     @Test

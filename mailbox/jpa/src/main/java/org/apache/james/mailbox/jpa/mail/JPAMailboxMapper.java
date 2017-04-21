@@ -39,6 +39,8 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
+import com.google.common.base.Objects;
+
 /**
  * Data access management for mailbox.
  */
@@ -76,8 +78,13 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
      */
     public MailboxId save(Mailbox mailbox) throws MailboxException {
         try {
+            if (isPathAlreadyUsedByAnotherMailbox(mailbox)) {
+                throw new MailboxExistsException(mailbox.getName());
+            }
+
             this.lastMailboxName = mailbox.getName();
             JPAMailbox persistedMailbox = JPAMailbox.from(mailbox);
+
             getEntityManager().persist(persistedMailbox);
             if (!(mailbox instanceof JPAMailbox)) {
                 mailbox.setMailboxId(persistedMailbox.getMailboxId());
@@ -86,6 +93,15 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         } catch (PersistenceException e) {
             throw new MailboxException("Save of mailbox " + mailbox.getName() +" failed", e);
         } 
+    }
+
+    private boolean isPathAlreadyUsedByAnotherMailbox(Mailbox mailbox) throws MailboxException {
+        try {
+            Mailbox storedMailbox = findMailboxByPath(mailbox.generateAssociatedPath());
+            return !Objects.equal(storedMailbox.getMailboxId(), mailbox.getMailboxId());
+        } catch (MailboxNotFoundException e) {
+            return false;
+        }
     }
 
     /**

@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -115,8 +116,20 @@ public class InMemoryMailboxMapper implements MailboxMapper {
             id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());
             ((SimpleMailbox) mailbox).setMailboxId(id);
         }
+        if (isPathAlreadyUsedByAnotherMailbox(mailbox)) {
+            throw new MailboxExistsException(mailbox.getName());
+        }
         mailboxesById.put(id, mailbox);
         return mailbox.getMailboxId();
+    }
+
+    private boolean isPathAlreadyUsedByAnotherMailbox(Mailbox mailbox) throws MailboxException {
+        try {
+            Mailbox storedMailbox = findMailboxByPath(mailbox.generateAssociatedPath());
+            return !Objects.equal(storedMailbox.getMailboxId(), mailbox.getMailboxId());
+        } catch (MailboxNotFoundException e) {
+            return false;
+        }
     }
 
     /**
