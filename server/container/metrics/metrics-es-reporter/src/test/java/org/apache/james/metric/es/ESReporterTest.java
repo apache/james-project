@@ -62,7 +62,7 @@ public class ESReporterTest {
 
     @Before
     public void setUp() {
-        clientProvider = ClientProviderImpl.forHost(getContainerIp(), ES_APPLICATIVE_PORT);
+        clientProvider = ClientProviderImpl.forHost(esContainer.getIp(), ES_APPLICATIVE_PORT);
         await().atMost(Duration.ONE_MINUTE)
             .until(() -> elasticSearchStarted(clientProvider));
 
@@ -71,7 +71,7 @@ public class ESReporterTest {
         esMetricReporter = new ESMetricReporter(
             ESReporterConfiguration.builder()
                 .enabled()
-                .onHost(getContainerIp(), ES_HTTP_PORT)
+                .onHost(esContainer.getIp(), ES_HTTP_PORT)
                 .onIndex(INDEX)
                 .periodInSecond(PERIOD_IN_SECOND)
                 .build(),
@@ -132,11 +132,6 @@ public class ESReporterTest {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    @SuppressWarnings("deprecation")
-    private String getContainerIp() {
-        return esContainer.getContainerInfo().getNetworkSettings().getIpAddress();
     }
 
 }
