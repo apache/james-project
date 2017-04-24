@@ -26,7 +26,7 @@ public class RetryExecutorUtil {
     public static final int INITIAL_DELAY_MILLIS = 500;
     public static final int MULTIPLIER = 2;
 
-    public static AsyncRetryExecutor retryOnExceptions(AsyncRetryExecutor executor, int maxRetries, int minDelay, Class<? extends Throwable>... clazz) {
+    public static AsyncRetryExecutor retryOnExceptions(AsyncRetryExecutor executor, int maxRetries, int minDelay, Class<? extends Throwable> clazz) {
         return executor
             .retryOn(clazz)
             .withExponentialBackoff(INITIAL_DELAY_MILLIS, MULTIPLIER)

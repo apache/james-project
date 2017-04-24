@@ -19,13 +19,7 @@
 
 package org.apache.james;
 
-import org.apache.james.util.streams.SwarmGenericContainer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.shaded.com.google.common.base.Throwables;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -36,15 +30,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.apache.james.util.streams.SwarmGenericContainer;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.testcontainers.shaded.com.google.common.base.Throwables;
 
 public class JamesServerWithRetryConnectionTest {
     private static final int IMAP_PORT = 1143;
     private static final long WAITING_TIME = TimeUnit.MILLISECONDS.convert(10, TimeUnit.SECONDS);
-
-    private static String getDockerHostIp() {
-        return DockerClientFactory.instance().dockerHostIpAddress();
-    }
 
     private final DockerCassandraRule dockerCassandraRule = new DockerCassandraRule();
     private final DockerElasticSearchRule dockerElasticSearchRule = new DockerElasticSearchRule();

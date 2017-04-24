@@ -19,22 +19,23 @@
 
 package org.apache.james.utils;
 
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
-import com.nurkiewicz.asyncretry.RetryExecutor;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
+import com.nurkiewicz.asyncretry.RetryExecutor;
 
 public class RetryExecutorUtilTest {
     private static final int MAX_RETRIES = 3;
@@ -57,6 +58,7 @@ public class RetryExecutorUtilTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void retryOnExceptionsAndExecuteShouldRethrowWhenScheduledServiceAlwaysThrowException() throws Exception {
         given(serviceMock.faultyService())
                 .willThrow(IllegalArgumentException.class)
@@ -72,6 +74,7 @@ public class RetryExecutorUtilTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void retryOnExceptionsAndExecuteShouldRetryWhenMatchExceptionAndSuccess() throws Exception {
         given(serviceMock.faultyService())
                 .willThrow(IllegalArgumentException.class)
@@ -84,6 +87,7 @@ public class RetryExecutorUtilTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void retryOnExceptionsAndExecuteShouldNotRetryWhenDoesNotMatchException() throws Exception {
         given(serviceMock.faultyService())
                 .willThrow(IllegalStateException.class)
@@ -97,6 +101,7 @@ public class RetryExecutorUtilTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void retryOnExceptionsAndExecuteShouldRetryWithMaxTimesAndReturnValue() throws Exception {
         given(serviceMock.faultyService())
                 .willThrow(IllegalStateException.class, IllegalStateException.class, IllegalStateException.class)
@@ -110,6 +115,7 @@ public class RetryExecutorUtilTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void retryOnExceptionsAndExecuteShouldFailIfFailMoreThanMaxRetry() throws Exception {
         given(serviceMock.faultyService()).
             willThrow(IllegalStateException.class, IllegalStateException.class, IllegalStateException.class, IllegalStateException.class).

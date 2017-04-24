@@ -19,9 +19,9 @@
 
 package org.apache.james;
 
-import com.google.inject.Module;
+import java.util.Arrays;
+
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.modules.mailbox.CassandraSessionConfiguration;
 import org.apache.james.modules.mailbox.ElasticSearchConfiguration;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.junit.runner.Description;
@@ -29,7 +29,7 @@ import org.junit.runners.model.Statement;
 import org.testcontainers.shaded.com.github.dockerjava.api.model.ExposedPort;
 import org.testcontainers.shaded.com.github.dockerjava.api.model.Ports.Binding;
 
-import java.util.Arrays;
+import com.google.inject.Module;
 
 
 public class DockerElasticSearchRule implements GuiceModuleTestRule {

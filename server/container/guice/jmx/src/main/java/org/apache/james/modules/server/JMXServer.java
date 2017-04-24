@@ -37,7 +37,6 @@ import javax.management.remote.JMXServiceURL;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.util.RestrictingRMISocketFactory;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;

@@ -21,7 +21,6 @@ package org.apache.james.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.JamesServerResourceLoader;
 import org.apache.james.core.filesystem.FileSystemImpl;
