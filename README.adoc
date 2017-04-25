@@ -344,3 +344,24 @@ Where :
 
 - SHA1: is the given git SHA1 of the james-project repository to merge.
 - RESULTING_BRANCH: is the branch created when merging.
+
+=== Generating a debian package for James
+
+You can generate a debian package for James by using the following process.
+
+First step, you have to build the Docker image used to generate the package
+
+    $ docker build -t build-james-deb --build-arg RELEASE=3.0-beta6 --build-arg ITERATION=1 dockerfiles/packaging/debian/
+
+Where:
+
+- ITERATION is the release number used after the last hyphen (e.g. 3.0-beta6-1, 3.0-beta6-2, 3.0-beta6-3...)
+
+Then, you have to run the container:
+
+    $ docker run --name james-deb -v $PWD/jars:/jars -v $PWD/result:/result build-james-deb
+
+Where:
+
+- $PWD/jars is the path to the folder containing the maven result (main jar and lib folder)
+- $PWD/result is the folder where the debian package will be copied
