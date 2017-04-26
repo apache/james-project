@@ -26,6 +26,7 @@ import org.apache.james.util.Host;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.QueryOptions;
+import com.datastax.driver.core.SocketOptions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -49,6 +50,7 @@ public class ClusterBuilder {
     private boolean forTest;
 
     private Optional<QueryLoggerConfiguration> queryLogger;
+    private Optional<Integer> readTimeoutMillis;
 
     private ClusterBuilder() {
         username = Optional.empty();
@@ -62,6 +64,7 @@ public class ClusterBuilder {
         forTest = false;
 
         queryLogger = Optional.empty();
+        readTimeoutMillis = Optional.empty();
     }
 
     public ClusterBuilder username(String username) {
@@ -118,6 +121,11 @@ public class ClusterBuilder {
         return this;
     }
 
+    public ClusterBuilder readTimeoutMillis(int readTimeoutMillis) {
+        this.readTimeoutMillis = Optional.of(readTimeoutMillis);
+        return this;
+    }
+
     public Cluster build() {
         Preconditions.checkState(!(servers.isPresent() && host.isPresent()), "You can't specify a list of servers and a host at the same time");
         Preconditions.checkState(!(servers.isPresent() && port.isPresent()), "You can't specify a list of servers and a port at the same time");
@@ -137,6 +145,10 @@ public class ClusterBuilder {
             clusterBuilder.withQueryOptions(
                 new QueryOptions()
                     .setRefreshSchemaIntervalMillis(refreshSchemaIntervalMillis)));
+
+        readTimeoutMillis.map(timeout ->
+            clusterBuilder.withSocketOptions(
+                    new SocketOptions().setReadTimeoutMillis(timeout)));
 
         Cluster cluster = clusterBuilder.build();
 

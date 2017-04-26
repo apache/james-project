@@ -60,6 +60,10 @@
         <dt><strong>cassandra.query.logger.max.parameter.value.length</strong></dt>
         <dd>Default is com.datastax.driver.core.QueryLogger.DEFAULT_MAX_PARAMETER_VALUE_LENGTH.
           The maximum length of query parameter value that can be logged by the cassandra driver</dd>
+
+        <dt><strong>cassandra.readTimeoutMillis</strong></dt>
+        <dd>Optional.
+          If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/socket_options/"">driver read timeout</a></dd>
       </dl>
 
 
