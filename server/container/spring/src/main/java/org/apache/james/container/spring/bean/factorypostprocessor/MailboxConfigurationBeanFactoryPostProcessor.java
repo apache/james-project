@@ -22,6 +22,8 @@ package org.apache.james.container.spring.bean.factorypostprocessor;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.container.spring.lifecycle.ConfigurationProvider;
+
+import com.google.common.collect.ImmutableSet;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
@@ -36,11 +38,21 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
  * It will register it with the alias mailboxmanager
  */
 public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
-
     /**
      * @see org.springframework.beans.factory.config.BeanFactoryPostProcessor#postProcessBeanFactory
      * (org.springframework.beans.factory.config.ConfigurableListableBeanFactory)
      */
+
+    private static final String JPA_MAILBOXMANAGER = "jpa-mailboxmanager";
+    private static final String MEMORY_MAILBOX_MANAGER = "memory-mailboxManager";
+    private static final String JCR_MAILBOXMANAGER = "jcr-mailboxmanager";
+    private static final String MAILDIR_MAILBOXMANAGER = "maildir-mailboxmanager";
+    private static final String HBASE_MAILBOXMANAGER = "hbase-mailboxmanager";
+    private static final String CASSANDRA_MAILBOXMANAGER = "cassandra-mailboxmanager";
+    private static final ImmutableSet<String> MAILBOX_MANAGER_IDS = ImmutableSet.of(JPA_MAILBOXMANAGER, MEMORY_MAILBOX_MANAGER,
+            JCR_MAILBOXMANAGER, MAILDIR_MAILBOXMANAGER,
+            HBASE_MAILBOXMANAGER, CASSANDRA_MAILBOXMANAGER);
+
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
         ConfigurationProvider confProvider = beanFactory.getBean(ConfigurationProvider.class);
         try {
@@ -54,34 +66,35 @@ public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactory
             String mailboxIdDeserializer = null;
             String mailboxIdFactory = null;
             if (provider.equalsIgnoreCase("jpa")) {
-                mailbox = "jpa-mailboxmanager";
+                mailbox = JPA_MAILBOXMANAGER;
                 subscription = "jpa-subscriptionManager";
                 messageMapperFactory = "jpa-sessionMapperFactory";
                 mailboxIdDeserializer = "jpa-mailbox-id-deserializer";
                 mailboxIdFactory = "jpa-mailboxIdFactory";
             } else if (provider.equalsIgnoreCase("memory")) {
-                mailbox = "memory-mailboxmanager";
+                mailbox = MEMORY_MAILBOX_MANAGER;
                 subscription = "memory-subscriptionManager";
                 messageMapperFactory = "memory-sessionMapperFactory";
                 mailboxIdDeserializer = "memory-mailbox-id-deserializer";
                 mailboxIdFactory = "memory-mailboxIdFactory";
             } else if (provider.equalsIgnoreCase("jcr")) {
-                mailbox = "jcr-mailboxmanager";
+                mailbox = JCR_MAILBOXMANAGER;
                 subscription = "jcr-subscriptionManager";
                 messageMapperFactory = "jcr-sessionMapperFactory";
                 mailboxIdDeserializer = "jcr-mailbox-id-deserializer";
             } else if (provider.equalsIgnoreCase("maildir")) {
-                mailbox = "maildir-mailboxmanager";
+                mailbox = MAILDIR_MAILBOXMANAGER;
                 subscription = "maildir-subscriptionManager";
                 messageMapperFactory = "maildir-sessionMapperFactory";
                 mailboxIdDeserializer = "maildir-mailbox-id-deserializer";
+                mailboxIdFactory = "maildir-mailboxIdFactory";
             } else if (provider.equalsIgnoreCase("hbase")) {
-                mailbox = "hbase-mailboxmanager";
+                mailbox = HBASE_MAILBOXMANAGER;
                 subscription = "hbase-subscriptionManager";
                 messageMapperFactory = "hbase-sessionMapperFactory";
                 mailboxIdDeserializer = "hbase-mailbox-id-deserializer";
             } else if (provider.equalsIgnoreCase("cassandra")) {
-                mailbox = "cassandra-mailboxmanager";
+                mailbox = CASSANDRA_MAILBOXMANAGER;
                 subscription = "cassandra-subscriptionManager";
                 messageMapperFactory = "cassandra-sessionMapperFactory";
                 mailboxIdDeserializer = "cassandra-mailbox-id-deserializer";
@@ -96,10 +109,24 @@ public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactory
             registry.registerAlias(mailboxIdDeserializer, "mailbox-id-deserializer");
             registry.registerAlias(mailboxIdFactory, "mailboxIdFactory");
 
+            removeMailboxManagersExceptRightSelectedOne(registry, mailbox);
+
         } catch (ConfigurationException e) {
             throw new FatalBeanException("Unable to config the mailboxmanager", e);
         }
 
+    }
+
+    private void removeMailboxManagersExceptRightSelectedOne(BeanDefinitionRegistry registry, String selectedMailboxManager) {
+        for (String mailboxManagerId : MAILBOX_MANAGER_IDS) {
+            if (registeredAndNotSelected(registry, selectedMailboxManager, mailboxManagerId)) {
+                registry.removeBeanDefinition(mailboxManagerId);
+            }
+        }
+    }
+
+    private boolean registeredAndNotSelected(BeanDefinitionRegistry registry, String selectedMailboxManager, String otherMailboxManager) {
+        return !otherMailboxManager.equals(selectedMailboxManager) && registry.containsBeanDefinition(otherMailboxManager);
     }
 
 }
