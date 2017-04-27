@@ -25,8 +25,8 @@
 
 <mailbox>
     <!-- supported providers are: -->
-    <!-- jpa, jcr, maildir, hbase, memory -->
+    <!-- jpa, jcr, maildir, hbase, memory, maildir, jpa -->
     <!--  -->
     <!-- Be aware that maildir will only work on unix like operation systems! -->
-    <provider>maildir</provider>
+    <provider>jpa</provider>
 </mailbox>
