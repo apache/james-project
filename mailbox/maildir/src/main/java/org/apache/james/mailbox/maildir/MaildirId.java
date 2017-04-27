@@ -22,6 +22,13 @@ import org.apache.james.mailbox.model.MailboxId;
 
 public class MaildirId implements MailboxId {
 
+    public static class Factory implements MailboxId.Factory {
+        @Override
+        public MaildirId fromString(String serialized) {
+            return of(Integer.valueOf(serialized));
+        }
+    }
+
     public static MaildirId of(int id) {
         return new MaildirId(id);
     }

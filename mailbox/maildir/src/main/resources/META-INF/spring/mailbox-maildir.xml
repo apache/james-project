@@ -27,6 +27,7 @@
       Mailbox Maildir
       WARNING: Maildir does only work on UNIX like operation systems
      -->
+    <bean id="maildir-mailboxIdFactory" class="org.apache.james.mailbox.maildir.MaildirId.Factory" />
 
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="ignoreUnresolvablePlaceholders" value="true"/>
