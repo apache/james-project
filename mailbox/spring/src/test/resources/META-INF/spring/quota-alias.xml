@@ -22,9 +22,9 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <alias name="noMaxQuotaManager" alias="maxQuotaManager"/>
-    <alias name="noQuotaManager" alias="quotaManager"/>
-    <alias name="noQuotaUpdater" alias="quotaUpdater"/>
+    <alias name="fixedMaxQuotaManager" alias="maxQuotaManager"/>
+    <alias name="storeQuotaManager" alias="quotaManager"/>
+    <alias name="eventQuotaUpdater" alias="quotaUpdater"/>
     <alias name="defaultQuotaRootResolver" alias="quotaRootResolver"/>
     <alias name="jpa-sessionMapperFactory" alias="messageMapperFactory"/>
 

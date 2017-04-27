@@ -19,14 +19,13 @@
 
 package org.apache.james.mailbox.store.event;
 
-import java.util.Collection;
-
-import javax.inject.Inject;
-
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+
+import javax.inject.Inject;
+import java.util.Collection;
 
 /**
  * Receive a {@link org.apache.james.mailbox.MailboxListener.Event} and delegate it to an other
@@ -110,4 +109,7 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
         }
     }
 
+    public MailboxListenerRegistry getRegistry() {
+        return registry;
+    }
 }
