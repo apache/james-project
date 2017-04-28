@@ -18,15 +18,12 @@
  ****************************************************************/
 package org.apache.james.app.spring;
 
-import org.hamcrest.CoreMatchers;
-import org.junit.Assume;
 import org.junit.Test;
 
 public class JamesAppSpringMainTest {
 
     @Test
     public void testServer() throws Exception {
-        Assume.assumeThat(System.getProperty("java.version"), CoreMatchers.startsWith("1.6"));
         JamesAppSpringMain.main(null);
     }
 
