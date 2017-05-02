@@ -228,6 +228,12 @@
                     <scope>test</scope>
                 </dependency>
                 <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>apache-james-mailbox-tika</artifactId>
+                    <type>test-jar</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
                     <groupId>org.apache.james</groupId>
                     <artifactId>apache-mailet-icalendar</artifactId>
                     <version>${project.version}</version>

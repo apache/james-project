@@ -17,25 +17,55 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.tika.extractor;
+package org.apache.james.mailbox.tika;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.tika.TikaTextExtractor.ContentAndMetadataDeserializer;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 
 public class TikaTextExtractorTest {
-    
+
     private TextExtractor textExtractor;
-    
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
+    @ClassRule
+    public static TikaContainer tika = new TikaContainer();
+
     @Before
-    public void setUp() {
-        textExtractor = new TikaTextExtractor();
+    public void setUp() throws Exception {
+        textExtractor = new TikaTextExtractor(new TikaHttpClientImpl(TikaConfiguration.builder()
+                .host(tika.getIp())
+                .port(tika.getPort())
+                .timeoutInMillis(tika.getTimeoutInMillis())
+                .build()));
     }
-    
+
+    @Test
+    public void textualContentShouldReturnNullWhenInputStreamIsEmpty() throws Exception {
+        assertThat(textExtractor.extractContent(IOUtils.toInputStream(""), "text/plain", "Text.txt").getTextualContent())
+            .isNull();
+    }
+
     @Test
     public void textTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/Text.txt");
@@ -89,7 +119,7 @@ public class TikaTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/PDF.pdf");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/pdf", "PDF.pdf").getTextualContent())
-            .isEqualTo("\nThis is an awesome document on libroffice writter !\n\n\n");
+            .isEqualTo("This is an awesome document on libroffice writter !\n\n\n");
     }
     
     @Test
@@ -97,7 +127,7 @@ public class TikaTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/calc.ods");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.oasis.opendocument.spreadsheet", "calc.ods").getTextualContent())
-            .isEqualTo("\tThis is an aesome LibreOffice document !\n" +
+            .isEqualTo("This is an aesome LibreOffice document !\n" +
                 "\n" +
                 "\n" +
                 "???\n" +
@@ -121,5 +151,76 @@ public class TikaTextExtractorTest {
                 "\n" +
                 "\n");
     }
-    
+
+    @Test
+    public void deserializerShouldThrowWhenMoreThanOneNode() throws Exception {
+        expectedException.expect(IllegalStateException.class);
+        expectedException.expectMessage("The response should have only one element");
+
+        TikaTextExtractor textExtractor = new TikaTextExtractor(new TikaHttpClient() {
+            
+            @Override
+            public InputStream rmetaAsJson(InputStream inputStream, String contentType) throws TikaException {
+                return new ByteArrayInputStream("[{\"key1\":\"value1\"},{\"key2\":\"value2\"}]".getBytes(Charsets.UTF_8));
+            }
+        });
+
+        InputStream inputStream = null;
+        textExtractor.extractContent(inputStream, "text/plain", "fake.txt");
+    }
+
+    @Test
+    public void deserializerShouldThrowWhenNodeIsNotAnObject() throws Exception {
+        expectedException.expect(IllegalStateException.class);
+        expectedException.expectMessage("The element should be a Json object");
+
+        TikaTextExtractor textExtractor = new TikaTextExtractor(new TikaHttpClient() {
+            
+            @Override
+            public InputStream rmetaAsJson(InputStream inputStream, String contentType) throws TikaException {
+                return new ByteArrayInputStream("[\"value1\"]".getBytes(Charsets.UTF_8));
+            }
+        });
+
+        InputStream inputStream = null;
+        textExtractor.extractContent(inputStream, "text/plain", "fake.txt");
+    }
+
+    @Test
+    public void asListOfStringShouldReturnASingletonWhenOneElement() {
+        JsonNode jsonNode = mock(JsonNode.class);
+        when(jsonNode.getNodeType())
+            .thenReturn(JsonNodeType.STRING);
+        String expectedContent = "text";
+        when(jsonNode.asText())
+            .thenReturn(expectedContent);
+        
+        ContentAndMetadataDeserializer deserializer = new TikaTextExtractor.ContentAndMetadataDeserializer();
+        List<String> listOfString = deserializer.asListOfString(jsonNode);
+        
+        assertThat(listOfString).containsOnly(expectedContent);
+    }
+
+    @Test
+    public void asListOfStringShouldReturnAListWhenMultipleElements() {
+        JsonNode mainNode = mock(JsonNode.class);
+        when(mainNode.getNodeType())
+            .thenReturn(JsonNodeType.ARRAY);
+        JsonNode firstNode = mock(JsonNode.class);
+        when(firstNode.asText())
+            .thenReturn("first");
+        JsonNode secondNode = mock(JsonNode.class);
+        when(secondNode.asText())
+            .thenReturn("second");
+        JsonNode thirdNode = mock(JsonNode.class);
+        when(thirdNode.asText())
+            .thenReturn("third");
+        when(mainNode.elements())
+            .thenReturn(ImmutableList.of(firstNode, secondNode, thirdNode).iterator());
+        
+        ContentAndMetadataDeserializer deserializer = new TikaTextExtractor.ContentAndMetadataDeserializer();
+        List<String> listOfString = deserializer.asListOfString(mainNode);
+        
+        assertThat(listOfString).containsOnly("first", "second", "third");
+    }
 }

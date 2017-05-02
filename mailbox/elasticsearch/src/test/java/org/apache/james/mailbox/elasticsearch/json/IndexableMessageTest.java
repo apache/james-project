@@ -43,7 +43,12 @@ import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
-import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
+import org.apache.james.mailbox.tika.TikaConfiguration;
+import org.apache.james.mailbox.tika.TikaContainer;
+import org.apache.james.mailbox.tika.TikaHttpClientImpl;
+import org.apache.james.mailbox.tika.TikaTextExtractor;
+import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -52,6 +57,20 @@ import com.google.common.collect.ImmutableMap;
 public class IndexableMessageTest {
 
     public static final MessageUid MESSAGE_UID = MessageUid.of(154);
+
+    @ClassRule
+    public static TikaContainer tika = new TikaContainer();
+
+    private TikaTextExtractor textExtractor;
+
+    @Before
+    public void setUp() throws Exception {
+        textExtractor = new TikaTextExtractor(new TikaHttpClientImpl(TikaConfiguration.builder()
+                .host(tika.getIp())
+                .port(tika.getPort())
+                .timeoutInMillis(tika.getTimeoutInMillis())
+                .build()));
+    }
 
     @Test
     public void textShouldBeEmptyWhenNoMatchingHeaders() throws Exception {
@@ -475,7 +494,7 @@ public class IndexableMessageTest {
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
                 .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
-                .extractor(new TikaTextExtractor())
+                .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
                 .build();
@@ -507,7 +526,7 @@ public class IndexableMessageTest {
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
                 .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
-                .extractor(new TikaTextExtractor())
+                .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
                 .build();
@@ -539,7 +558,7 @@ public class IndexableMessageTest {
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
                 .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
-                .extractor(new TikaTextExtractor())
+                .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
                 .build();
@@ -568,7 +587,7 @@ public class IndexableMessageTest {
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
                 .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
-                .extractor(new TikaTextExtractor())
+                .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
                 .build();

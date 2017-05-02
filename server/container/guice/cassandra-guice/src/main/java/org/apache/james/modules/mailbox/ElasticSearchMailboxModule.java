@@ -37,10 +37,8 @@ import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
 import org.apache.james.mailbox.elasticsearch.MailboxMappingFactory;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
-import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.utils.RetryExecutorUtil;
 import org.elasticsearch.client.Client;
@@ -75,9 +73,6 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         bind(ElasticSearchListeningMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
         bind(ListeningMessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
-
-        bind(TikaTextExtractor.class).in(Scopes.SINGLETON);
-        bind(TextExtractor.class).to(TikaTextExtractor.class);
     }
 
     @Provides

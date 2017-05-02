@@ -27,6 +27,8 @@ import javax.inject.Singleton;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.junit.rules.TemporaryFolder;
 
 import com.datastax.driver.core.Session;
@@ -56,6 +58,7 @@ public class CassandraJmapServerModule extends AbstractModule {
         install(new TestElasticSearchModule(embeddedElasticSearch));
         install(new TestFilesystemModule(fileSupplier));
         install(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES));
+        install(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class));
         bind(EmbeddedCassandra.class).toInstance(cassandra);
     }
     

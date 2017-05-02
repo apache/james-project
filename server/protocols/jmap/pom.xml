@@ -175,6 +175,12 @@
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-mailbox-tika</artifactId>
+                    <type>test-jar</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
                     <artifactId>apache-mailet-base</artifactId>
                     <scope>test</scope>
                     <type>test-jar</type>
@@ -237,6 +243,12 @@
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-util-java8</artifactId>
+                    <type>test-jar</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
                     <artifactId>metrics-api</artifactId>
                 </dependency>
                 <dependency>
@@ -272,6 +284,11 @@
                     <groupId>com.googlecode.thread-weaver</groupId>
                     <artifactId>threadweaver</artifactId>
                     <version>0.2</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.jayway.awaitility</groupId>
+                    <artifactId>awaitility</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>

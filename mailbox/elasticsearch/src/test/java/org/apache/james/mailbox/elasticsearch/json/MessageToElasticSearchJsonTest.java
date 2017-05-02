@@ -37,6 +37,7 @@ import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
@@ -45,8 +46,12 @@ import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
+import org.apache.james.mailbox.tika.TikaConfiguration;
+import org.apache.james.mailbox.tika.TikaContainer;
+import org.apache.james.mailbox.tika.TikaHttpClientImpl;
+import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -63,11 +68,21 @@ public class MessageToElasticSearchJsonTest {
     public static final MessageUid UID = MessageUid.of(25);
     public static final Charset CHARSET = Charsets.UTF_8;
 
+    private TextExtractor textExtractor;
+
     private Date date;
     private PropertyBuilder propertyBuilder;
 
+    @ClassRule
+    public static TikaContainer tika = new TikaContainer();
+
     @Before
     public void setUp() throws Exception {
+        textExtractor = new TikaTextExtractor(new TikaHttpClientImpl(TikaConfiguration.builder()
+                .host(tika.getIp())
+                .port(tika.getPort())
+                .timeoutInMillis(tika.getTimeoutInMillis())
+                .build()));
         // 2015/06/07 00:00:00 0200 (Paris time zone)
         date = new Date(1433628000000L);
         propertyBuilder = new PropertyBuilder();
@@ -328,7 +343,7 @@ public class MessageToElasticSearchJsonTest {
     @Test
     public void spamEmailShouldBeWellConvertedToJsonWithApacheTika() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
-            new TikaTextExtractor(),
+            textExtractor,
             ZoneId.of("Europe/Paris"),
             IndexAttachments.YES);
         MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID, date,
