@@ -63,7 +63,12 @@
 
         <dt><strong>cassandra.readTimeoutMillis</strong></dt>
         <dd>Optional.
-          If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/socket_options/"">driver read timeout</a></dd>
+          If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/socket_options/">driver read timeout</a></dd>
+          
+        <dt><strong>cassandra.conectTimeoutMillis</strong></dt>
+        <dd>Optional.
+          If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/socket_options/">TCP connect timeout</a></dd>
+          
       </dl>
 
 

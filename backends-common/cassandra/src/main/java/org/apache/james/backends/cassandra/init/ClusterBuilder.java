@@ -51,6 +51,7 @@ public class ClusterBuilder {
 
     private Optional<QueryLoggerConfiguration> queryLogger;
     private Optional<Integer> readTimeoutMillis;
+    private Optional<Integer> connectTimeoutMillis;
 
     private ClusterBuilder() {
         username = Optional.empty();
@@ -65,6 +66,7 @@ public class ClusterBuilder {
 
         queryLogger = Optional.empty();
         readTimeoutMillis = Optional.empty();
+        connectTimeoutMillis = Optional.empty();
     }
 
     public ClusterBuilder username(String username) {
@@ -126,6 +128,11 @@ public class ClusterBuilder {
         return this;
     }
 
+    public ClusterBuilder connectTimeoutMillis(int connectTimeoutMillis) {
+        this.connectTimeoutMillis = Optional.of(connectTimeoutMillis);
+        return this;
+    }
+
     public Cluster build() {
         Preconditions.checkState(!(servers.isPresent() && host.isPresent()), "You can't specify a list of servers and a host at the same time");
         Preconditions.checkState(!(servers.isPresent() && port.isPresent()), "You can't specify a list of servers and a port at the same time");
@@ -146,9 +153,10 @@ public class ClusterBuilder {
                 new QueryOptions()
                     .setRefreshSchemaIntervalMillis(refreshSchemaIntervalMillis)));
 
-        readTimeoutMillis.map(timeout ->
-            clusterBuilder.withSocketOptions(
-                    new SocketOptions().setReadTimeoutMillis(timeout)));
+        SocketOptions socketOptions = new SocketOptions();
+        readTimeoutMillis.ifPresent(socketOptions::setReadTimeoutMillis);
+        connectTimeoutMillis.ifPresent(socketOptions::setConnectTimeoutMillis);
+        clusterBuilder.withSocketOptions(socketOptions);
 
         Cluster cluster = clusterBuilder.build();
 
