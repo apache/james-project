@@ -23,6 +23,6 @@ import java.io.InputStream;
 
 public interface TextExtractor {
 
-    ParsedContent extractContent(InputStream inputStream, String contentType, String fileName) throws Exception;
+    ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception;
 
 }

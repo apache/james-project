@@ -455,7 +455,7 @@ public class IndexableMessageTest {
             .thenReturn(MESSAGE_UID);
 
         TextExtractor textExtractor = mock(TextExtractor.class);
-        when(textExtractor.extractContent(any(), any(), any()))
+        when(textExtractor.extractContent(any(), any()))
             .thenReturn(new ParsedContent("first attachment content", ImmutableMap.of()))
             .thenThrow(new RuntimeException("second cannot be parsed"))
             .thenReturn(new ParsedContent("third attachment content", ImmutableMap.of()));

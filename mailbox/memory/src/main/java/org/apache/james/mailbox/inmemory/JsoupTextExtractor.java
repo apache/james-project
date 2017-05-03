@@ -38,7 +38,7 @@ public class JsoupTextExtractor implements TextExtractor {
     private static final String TITLE_HTML_TAG = "title";
 
     @Override
-    public ParsedContent extractContent(InputStream inputStream, String contentType, String fileName) throws Exception {
+    public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
         Map<String, List<String>> emptyMetadata = Maps.newHashMap();
         if (contentType != null) {
            if (contentType.equals("text/plain")) {

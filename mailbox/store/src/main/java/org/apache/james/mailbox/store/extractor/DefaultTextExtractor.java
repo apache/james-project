@@ -35,7 +35,7 @@ import org.apache.james.mailbox.extractor.TextExtractor;
 public class DefaultTextExtractor implements TextExtractor {
 
     @Override
-    public ParsedContent extractContent(InputStream inputStream, String contentType, String fileName) throws Exception {
+    public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
         if(contentType != null && contentType.startsWith("text/") ) {
             return new ParsedContent(IOUtils.toString(inputStream), new HashMap<String, List<String>>());
         } else {

@@ -39,7 +39,7 @@ public class DefaultTextExtractorTest {
     public void textTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/Text.txt");
         assertThat(inputStream).isNotNull();
-        assertThat(textExtractor.extractContent(inputStream, "text/plain", "Text.txt")
+        assertThat(textExtractor.extractContent(inputStream, "text/plain")
             .getTextualContent())
             .isEqualTo("This is some awesome text text.\n\n");
     }
@@ -50,8 +50,7 @@ public class DefaultTextExtractorTest {
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(
             inputStream,
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "writter.docx")
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
             .getTextualContent())
             .isNull();
     }

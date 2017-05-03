@@ -39,7 +39,7 @@ public class JsoupTextExtractorTest {
     public void extractedTextFromHtmlShouldNotContainTheContentOfTitleTag() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/html.txt");
 
-        assertThat(textExtractor.extractContent(inputStream, "text/html", null).getTextualContent())
+        assertThat(textExtractor.extractContent(inputStream, "text/html").getTextualContent())
                 .doesNotContain("*|MC:SUBJECT|*");
     }
 
