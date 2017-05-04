@@ -86,6 +86,16 @@ public class HeaderCollectionTest {
     }
 
     @Test
+    public void getHeadersShouldDecodeValues() {
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("From", "=?UTF-8?B?RnLDqWTDqXJpYyBNQVJUSU4=?= <fmartin@linagora.com>, Graham CROSMARIE <gcrosmarie@linagora.com>"))
+            .build();
+
+        assertThat(headerCollection.getHeaders().get("from"))
+            .containsExactly("Frédéric MARTIN <fmartin@linagora.com>, Graham CROSMARIE <gcrosmarie@linagora.com>");
+    }
+
+    @Test
     public void addressWithTwoDisplayNamesOnTheSameFieldShouldBeRetrieved() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("From", "Christophe Hamerling <chri.hamerling@linagora.com>, Graham CROSMARIE <grah.crosmarie@linagora.com>"))
@@ -94,7 +104,29 @@ public class HeaderCollectionTest {
         assertThat(headerCollection.getFromAddressSet())
             .containsOnly(new EMailer("Christophe Hamerling", "chri.hamerling@linagora.com"),
                 new EMailer("Graham CROSMARIE", "grah.crosmarie@linagora.com"));
+    }
 
+    @Test
+    public void foldedFromHeaderShouldBeSupported() {
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("From", "Christophe Hamerling <chri.hamerling@linagora.com>,\r\n" +
+                " Graham CROSMARIE <grah.crosmarie@linagora.com>"))
+            .build();
+
+        assertThat(headerCollection.getFromAddressSet())
+            .containsOnly(new EMailer("Christophe Hamerling", "chri.hamerling@linagora.com"),
+                new EMailer("Graham CROSMARIE", "grah.crosmarie@linagora.com"));
+    }
+
+    @Test
+    public void foldedHeaderShouldBeSupported() {
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("From", "Christophe Hamerling <chri.hamerling@linagora.com>,\r\n" +
+                " Graham CROSMARIE <grah.crosmarie@linagora.com>"))
+            .build();
+
+        assertThat(headerCollection.getHeaders().get("from"))
+            .containsOnly("Christophe Hamerling <chri.hamerling@linagora.com>, Graham CROSMARIE <grah.crosmarie@linagora.com>");
     }
 
     @Test

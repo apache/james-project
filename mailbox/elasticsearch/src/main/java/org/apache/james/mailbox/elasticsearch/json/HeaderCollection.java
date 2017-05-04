@@ -19,12 +19,17 @@
 
 package org.apache.james.mailbox.elasticsearch.json;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.DecoderUtil;
@@ -37,18 +42,20 @@ import org.apache.james.mime4j.util.MimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 
 public class HeaderCollection {
+
+    private static String sanitizeHeaderField(String headerName) {
+        return DecoderUtil.decodeEncodedWords(
+            MimeUtil.unfold(headerName),
+            DecodeMonitor.SILENT);
+    }
 
     public static class Builder {
 
@@ -83,9 +90,10 @@ public class HeaderCollection {
         public Builder add(Field field) {
             Preconditions.checkNotNull(field);
             String headerName = field.getName().toLowerCase(Locale.US);
-            String headerValue = field.getBody();
-            headers.put(headerName, DecoderUtil.decodeEncodedWords(headerValue, DecodeMonitor.SILENT));
-            handleSpecificHeader(headerName, headerValue);
+            String sanitizedValue = sanitizeHeaderField(field.getBody());
+
+            headers.put(headerName, sanitizedValue);
+            handleSpecificHeader(headerName, sanitizedValue);
             return this;
         }
 
@@ -121,7 +129,7 @@ public class HeaderCollection {
 
         private void manageAddressField(String headerName, String headerValue) {
             LenientAddressParser.DEFAULT
-                .parseAddressList(MimeUtil.unfold(headerValue))
+                .parseAddressList(headerValue)
                 .stream()
                 .flatMap(this::convertAddressToMailboxStream)
                 .map((mailbox) -> new EMailer(SearchUtil.getDisplayAddress(mailbox) , mailbox.getAddress()))
