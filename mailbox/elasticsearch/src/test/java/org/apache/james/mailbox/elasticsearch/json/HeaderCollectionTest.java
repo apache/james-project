@@ -31,14 +31,20 @@ public class HeaderCollectionTest {
 
     @Test
     public void simpleValueAddressHeaderShouldBeAddedToTheAddressSet() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("To", "btellier@linagora.com")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("To", "btellier@linagora.com"))
+            .build();
+
         assertThat(headerCollection.getToAddressSet())
             .containsOnly(new EMailer("btellier@linagora.com", "btellier@linagora.com"));
     }
 
     @Test
     public void comaSeparatedAddressShouldBeBothAddedToTheAddressSet() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("To", "btellier@linagora.com, benwa@minet.net")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("To", "btellier@linagora.com, benwa@minet.net"))
+            .build();
+
         assertThat(headerCollection.getToAddressSet())
             .containsOnly(
                 new EMailer("btellier@linagora.com", "btellier@linagora.com"),
@@ -47,7 +53,11 @@ public class HeaderCollectionTest {
 
     @Test
     public void addressesOfTwoFieldsHavingTheSameNameShouldBeMerged() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("To", "btellier@linagora.com")).add(new FieldImpl("To", "btellier@linagora.com, benwa@minet.net")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("To", "btellier@linagora.com"))
+            .add(new FieldImpl("To", "btellier@linagora.com, benwa@minet.net"))
+            .build();
+
         assertThat(headerCollection.getToAddressSet())
             .containsOnly(
                 new EMailer("btellier@linagora.com", "btellier@linagora.com"),
@@ -56,14 +66,20 @@ public class HeaderCollectionTest {
 
     @Test
     public void displayNamesShouldBeRetreived() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("To", "Christophe Hamerling <chamerling@linagora.com>")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("To", "Christophe Hamerling <chamerling@linagora.com>"))
+            .build();
+
         assertThat(headerCollection.getToAddressSet())
             .containsOnly(new EMailer("Christophe Hamerling", "chamerling@linagora.com"));
     }
 
     @Test
     public void displayNamesShouldBeRetrievedWhenEncodedWord() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("From", "=?UTF-8?B?RnLDqWTDqXJpYyBNQVJUSU4=?= <fmartin@linagora.com>, Graham CROSMARIE <gcrosmarie@linagora.com>")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("From", "=?UTF-8?B?RnLDqWTDqXJpYyBNQVJUSU4=?= <fmartin@linagora.com>, Graham CROSMARIE <gcrosmarie@linagora.com>"))
+            .build();
+
         assertThat(headerCollection.getFromAddressSet())
             .extracting(EMailer::getName)
             .contains("Frédéric MARTIN");
@@ -71,7 +87,10 @@ public class HeaderCollectionTest {
 
     @Test
     public void addressWithTwoDisplayNamesOnTheSameFieldShouldBeRetrieved() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("From", "Christophe Hamerling <chamerling@linagora.com>, Graham CROSMARIE <gcrosmarie@linagora.com>")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("From", "Christophe Hamerling <chamerling@linagora.com>, Graham CROSMARIE <gcrosmarie@linagora.com>"))
+            .build();
+
         assertThat(headerCollection.getFromAddressSet())
             .containsOnly(new EMailer("Christophe Hamerling", "chamerling@linagora.com"),
                 new EMailer("Graham CROSMARIE", "gcrosmarie@linagora.com"));
@@ -80,7 +99,10 @@ public class HeaderCollectionTest {
 
     @Test
     public void mixingAddressWithDisplayNamesWithOthersShouldBeAllowed() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("To", "Christophe Hamerling <chamerling@linagora.com>, gcrosmarie@linagora.com")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("To", "Christophe Hamerling <chamerling@linagora.com>, gcrosmarie@linagora.com"))
+            .build();
+
         assertThat(headerCollection.getToAddressSet())
             .containsOnly(new EMailer("Christophe Hamerling", "chamerling@linagora.com"),
                 new EMailer("gcrosmarie@linagora.com", "gcrosmarie@linagora.com"));
@@ -88,50 +110,71 @@ public class HeaderCollectionTest {
 
     @Test
     public void displayNamesShouldBeRetreivedOnCc() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("Cc", "Christophe Hamerling <chamerling@linagora.com>")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Cc", "Christophe Hamerling <chamerling@linagora.com>"))
+            .build();
+
         assertThat(headerCollection.getCcAddressSet())
             .containsOnly(new EMailer("Christophe Hamerling", "chamerling@linagora.com"));
     }
 
     @Test
     public void displayNamesShouldBeRetreivedOnReplyTo() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("Reply-To", "Christophe Hamerling <chamerling@linagora.com>")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Reply-To", "Christophe Hamerling <chamerling@linagora.com>"))
+            .build();
+
         assertThat(headerCollection.getReplyToAddressSet())
             .containsOnly(new EMailer("Christophe Hamerling", "chamerling@linagora.com"));
     }
 
     @Test
     public void displayNamesShouldBeRetreivedOnBcc() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("Bcc", "Christophe Hamerling <chamerling@linagora.com>")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Bcc", "Christophe Hamerling <chamerling@linagora.com>"))
+            .build();
+
         assertThat(headerCollection.getBccAddressSet())
             .containsOnly(new EMailer("Christophe Hamerling", "chamerling@linagora.com"));
     }
 
     @Test
     public void headerContaingNoAddressShouldBeConsideredBothAsNameAndAddress() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("Bcc", "Not an address")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Bcc", "Not an address"))
+            .build();
+
         assertThat(headerCollection.getBccAddressSet())
             .containsOnly(new EMailer("Not an address", "Not an address"));
     }
 
     @Test
     public void unclosedAddressSubpartShouldBeWellHandled() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("Bcc", "Mickey <tricky@mouse.com")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Bcc", "Mickey <tricky@mouse.com"))
+            .build();
+
         assertThat(headerCollection.getBccAddressSet())
             .containsOnly(new EMailer("Mickey", "tricky@mouse.com"));
     }
 
     @Test
     public void notComaSeparatedAddressSubpartShouldBeWellHandled() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("Bcc", "Mickey <tricky@mouse.com> Miny<hello@polo.com>")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Bcc", "Mickey <tricky@mouse.com> Miny<hello@polo.com>"))
+            .build();
+
         assertThat(headerCollection.getBccAddressSet())
             .containsOnly(new EMailer("Mickey", "tricky@mouse.com"),
                 new EMailer("Miny", "hello@polo.com"));
     }
 
     @Test
-    public void notSeparatedAddressSubpartShouldBeWellHandled1() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("Bcc", "Mickey <tricky@mouse.com>Miny<hello@polo.com>")).build();
+    public void notSeparatedAddressSubpartShouldBeWellHandled() {
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Bcc", "Mickey <tricky@mouse.com>Miny<hello@polo.com>"))
+            .build();
+
         assertThat(headerCollection.getBccAddressSet())
             .containsOnly(new EMailer("Mickey", "tricky@mouse.com"),
                 new EMailer("Miny", "hello@polo.com"));
@@ -139,21 +182,30 @@ public class HeaderCollectionTest {
 
     @Test
     public void dateShouldBeRetreived() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("Date", "Thu, 4 Jun 2015 06:08:41 +0200")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Date", "Thu, 4 Jun 2015 06:08:41 +0200"))
+            .build();
+
         assertThat(DATE_TIME_FORMATTER.format(headerCollection.getSentDate().get()))
             .isEqualTo("2015/06/04 06:08:41");
     }
 
     @Test
     public void nonStandardDatesShouldBeRetreived() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("Date", "Thu, 4 Jun 2015 06:08:41 +0200 (UTC)")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Date", "Thu, 4 Jun 2015 06:08:41 +0200 (UTC)"))
+            .build();
+
         assertThat(DATE_TIME_FORMATTER.format(headerCollection.getSentDate().get()))
             .isEqualTo("2015/06/04 06:08:41");
     }
 
     @Test
     public void dateShouldBeAbsentOnInvalidHeader() {
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("Date", "Not a date")).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Date", "Not a date"))
+            .build();
+
         assertThat(headerCollection.getSentDate().isPresent())
             .isFalse();
     }
@@ -161,7 +213,10 @@ public class HeaderCollectionTest {
     @Test
     public void subjectsShouldBeWellRetrieved() {
         String subject = "A fantastic ElasticSearch module will be available soon for JAMES";
-        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("Subject", subject)).build();
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Subject", subject))
+            .build();
+
         assertThat(headerCollection.getSubjectSet()).containsOnly("A fantastic ElasticSearch module will be available soon for JAMES");
     }
 
