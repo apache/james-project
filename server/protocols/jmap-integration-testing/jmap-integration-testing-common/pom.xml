@@ -181,7 +181,6 @@
                 <dependency>
                     <groupId>org.apache.james</groupId>
                     <artifactId>james-server-util-java8</artifactId>
-                    <scope>test</scope>
                     <type>test-jar</type>
                 </dependency>
                 <dependency>
