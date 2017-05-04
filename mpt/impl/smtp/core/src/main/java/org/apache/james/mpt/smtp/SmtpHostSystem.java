@@ -20,7 +20,7 @@
 package org.apache.james.mpt.smtp;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.smtp.dns.InMemoryDNSService;
+import org.apache.james.dnsservice.api.InMemoryDNSService;
 
 public interface SmtpHostSystem extends HostSystem {
 

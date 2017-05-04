@@ -33,7 +33,7 @@ import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.mpt.monitor.SystemLoggingMonitor;
 import org.apache.james.mpt.session.ExternalSessionFactory;
 import org.apache.james.mpt.smtp.SmtpHostSystem;
-import org.apache.james.mpt.smtp.dns.InMemoryDNSService;
+import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.rules.TemporaryFolder;
 
