@@ -24,10 +24,8 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.jmap.VacationRelayIntegrationTest;
-import org.junit.Ignore;
 import org.junit.Rule;
 
-@Ignore
 public class CassandraVacationRelayIntegrationTest extends VacationRelayIntegrationTest {
 
     private final InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();

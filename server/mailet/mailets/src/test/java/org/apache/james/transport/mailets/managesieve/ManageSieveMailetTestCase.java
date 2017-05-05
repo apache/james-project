@@ -533,6 +533,7 @@ public class ManageSieveMailetTestCase {
         FakeMailContext.SentMail sentMail = FakeMailContext.sentMailBuilder()
             .recipient(new MailAddress(USER))
             .sender(new MailAddress(SIEVE_LOCALHOST))
+            .fromMailet()
             .build();
         assertThat(fakeMailContext.getSentMails()).containsOnly(sentMail);
         MimeMessage result = fakeMailContext.getSentMails().get(0).getMsg();

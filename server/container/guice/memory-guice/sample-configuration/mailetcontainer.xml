@@ -50,6 +50,9 @@
                 <name>X-UserIsAuth</name>
                 <value>true</value>
             </mailet>
+            <mailet match="org.apache.james.jmap.mailet.SentByJmap" class="SetMailAttribute">
+                <RelayAllowed>true</RelayAllowed>
+            </mailet>
             <mailet match="HasMailAttribute=org.apache.james.SMIMECheckSignature" class="SetMimeHeader">
                 <name>X-WasSigned</name>
                 <value>true</value>
@@ -61,7 +64,14 @@
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
             <mailet match="RecipientIsLocal" class="Sieve"/>
             <mailet match="RecipientIsLocal" class="LocalDelivery"/>
-            <mailet match="SMTPAuthSuccessful" class="RemoteDelivery">
+
+            <mailet match="SMTPAuthSuccessful" class="SetMailAttribute">
+                <RelayAllowed>true</RelayAllowed>
+            </mailet>
+            <mailet match="SentByMailet" class="SetMailAttribute">
+                <RelayAllowed>true</RelayAllowed>
+            </mailet>
+            <mailet match="HasMailAttribute=RelayAllowed" class="RemoteDelivery">
                 <outgoingQueue>outgoing</outgoingQueue>
                 <delayTime>5000, 100000, 500000</delayTime>
                 <maxRetries>25</maxRetries>

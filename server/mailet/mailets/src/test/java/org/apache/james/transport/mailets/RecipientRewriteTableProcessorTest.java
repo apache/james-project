@@ -164,6 +164,7 @@ public class RecipientRewriteTableProcessorTest {
         FakeMailContext.SentMail expected = FakeMailContext.sentMailBuilder()
                 .sender(MailAddressFixture.ANY_AT_JAMES)
                 .recipients(ImmutableList.of(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES))
+                .fromMailet()
                 .message(message)
                 .build();
 
@@ -213,6 +214,7 @@ public class RecipientRewriteTableProcessorTest {
         FakeMailContext.SentMail expected = FakeMailContext.sentMailBuilder()
                 .sender(MailAddressFixture.ANY_AT_JAMES)
                 .recipients(ImmutableList.of(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES))
+                .fromMailet()
                 .message(message)
                 .build();
 
@@ -251,6 +253,7 @@ public class RecipientRewriteTableProcessorTest {
                 .sender(MailAddressFixture.ANY_AT_JAMES)
                 .recipient(MailAddressFixture.OTHER_AT_LOCAL)
                 .message(message)
+                .fromMailet()
                 .state(Mail.ERROR)
                 .build();
 
@@ -276,6 +279,7 @@ public class RecipientRewriteTableProcessorTest {
                 .recipient(MailAddressFixture.OTHER_AT_LOCAL)
                 .message(message)
                 .state(Mail.ERROR)
+                .fromMailet()
                 .build();
 
         assertThat(mailetContext.getSentMails()).containsOnly(expected);
@@ -299,6 +303,7 @@ public class RecipientRewriteTableProcessorTest {
                 .sender(MailAddressFixture.ANY_AT_JAMES)
                 .recipient(MailAddressFixture.OTHER_AT_LOCAL)
                 .message(message)
+                .fromMailet()
                 .state(Mail.ERROR)
                 .build();
 

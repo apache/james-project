@@ -56,13 +56,14 @@ public class FakeMailContext implements MailetContext {
         return new SentMail.Builder();
     }
 
-    public static SentMail fromMail(Mail mail ) throws MessagingException {
+    public static SentMail fromMail(Mail mail) throws MessagingException {
         return sentMailBuilder()
             .sender(mail.getSender())
             .recipients(mail.getRecipients())
             .message(mail.getMessage())
             .state(mail.getState())
             .attributes(buildAttributesMap(mail))
+            .fromMailet()
             .build();
     }
 
@@ -111,6 +112,7 @@ public class FakeMailContext implements MailetContext {
             private MimeMessage msg;
             private Map<String, Serializable> attributes = new HashMap<String, Serializable>();
             private Optional<String> state = Optional.absent();
+            private Optional<Boolean> fromMailet = Optional.absent();
 
             public Builder sender(MailAddress sender) {
                 this.sender = sender;
@@ -119,6 +121,11 @@ public class FakeMailContext implements MailetContext {
 
             public Builder recipients(Collection<MailAddress> recipients) {
                 this.recipients = Optional.of(recipients);
+                return this;
+            }
+
+            public Builder fromMailet() {
+                this.fromMailet = Optional.of(true);
                 return this;
             }
 
@@ -153,6 +160,9 @@ public class FakeMailContext implements MailetContext {
             }
 
             public SentMail build() {
+                if (fromMailet.or(false)) {
+                    this.attribute(Mail.SENT_BY_MAILET, "true");
+                }
                 return new SentMail(sender, recipients.or(ImmutableList.<MailAddress>of()), msg,
                     ImmutableMap.copyOf(attributes), state.or(Mail.DEFAULT));
             }
@@ -371,6 +381,7 @@ public class FakeMailContext implements MailetContext {
     public void sendMail(MimeMessage mimemessage) throws MessagingException {
         sentMails.add(sentMailBuilder()
             .message(mimemessage)
+            .fromMailet()
             .build());
     }
 
@@ -379,6 +390,7 @@ public class FakeMailContext implements MailetContext {
             .recipients(recipients)
             .sender(sender)
             .message(msg)
+            .fromMailet()
             .build());
     }
 
@@ -388,6 +400,7 @@ public class FakeMailContext implements MailetContext {
             .message(msg)
             .state(state)
             .sender(sender)
+            .fromMailet()
             .build());
     }
 

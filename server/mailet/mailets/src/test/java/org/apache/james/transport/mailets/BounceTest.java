@@ -122,6 +122,7 @@ public class BounceTest {
 
         FakeMailContext.SentMail expected = FakeMailContext.sentMailBuilder()
             .recipient(senderMailAddress)
+            .fromMailet()
             .build();
         assertThat(fakeMailContext.getSentMails()).containsOnly(expected);
     }

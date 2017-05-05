@@ -135,6 +135,7 @@ public class UseHeaderRecipientsTest {
         assertThat(mailetContext.getSentMails())
             .containsOnly(FakeMailContext.sentMailBuilder()
                 .recipients(mailAddress1, mailAddress2, mailAddress3)
+                .fromMailet()
                 .build());
     }
 

@@ -72,7 +72,7 @@
             <mailet match="SMTPAuthSuccessful" class="ToProcessor">
                 <processor>relay</processor>
             </mailet>
-            <mailet match="HasMailAttribute=org.apache.james.jmap.send.MailMetaData.messageId" class="ToProcessor">
+            <mailet match="SentByMailet" class="ToProcessor">
                 <processor>relay</processor>
             </mailet>
 

@@ -17,32 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory;
 
-import org.apache.james.GuiceJamesServer;
-import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.dnsservice.api.InMemoryDNSService;
-import org.apache.james.jmap.VacationRelayIntegrationTest;
-import org.junit.Rule;
 
-public class MemoryVacationRelayIntegrationTest extends VacationRelayIntegrationTest {
+package org.apache.james.jmap.mailet;
 
-    @Rule
-    public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
+import java.util.Collection;
 
-    private final InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
+import org.apache.james.jmap.send.MailMetadata;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMatcher;
 
-    @Override
-    protected void await() {}
+import com.google.common.collect.ImmutableList;
 
-    @Override
-    protected GuiceJamesServer getJmapServer() {
-        return memoryJmap.jmapServer((binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
-    }
-
-    @Override
-    protected InMemoryDNSService getInMemoryDns() {
-        return inMemoryDNSService;
+public class SentByJmap extends GenericMatcher {
+    public Collection<MailAddress> match(Mail mail) {
+        String authUser = (String) mail.getAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE);
+        if (authUser != null) {
+            return mail.getRecipients();
+        } else {
+            return ImmutableList.of();
+        }
     }
 }

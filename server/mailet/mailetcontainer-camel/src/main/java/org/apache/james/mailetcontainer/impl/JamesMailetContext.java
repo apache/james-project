@@ -400,6 +400,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
 
     @Override
     public void sendMail(Mail mail) throws MessagingException {
+        mail.setAttribute(Mail.SENT_BY_MAILET, "true");
         rootMailQueue.enQueue(mail);
     }
 

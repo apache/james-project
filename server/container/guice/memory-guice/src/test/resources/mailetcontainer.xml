@@ -61,7 +61,16 @@
                 <processor>local-address-error</processor>
                 <notice>550 - Requested action not taken: no such user here</notice>
             </mailet>
-            <mailet match="SMTPAuthSuccessful" class="RemoteDelivery">
+            <mailet match="SMTPAuthSuccessful" class="SetMailAttribute">
+                <RelayAllowed>true</RelayAllowed>
+            </mailet>
+            <mailet match="SentByMailet" class="SetMailAttribute">
+                <RelayAllowed>true</RelayAllowed>
+            </mailet>
+            <mailet match="org.apache.james.jmap.mailet.SentByJmap" class="SetMailAttribute">
+                <RelayAllowed>true</RelayAllowed>
+            </mailet>
+            <mailet match="HasMailAttribute=RelayAllowed" class="RemoteDelivery">
                 <outgoingQueue>outgoing</outgoingQueue>
                 <delayTime>5000, 100000, 500000</delayTime>
                 <maxRetries>25</maxRetries>
