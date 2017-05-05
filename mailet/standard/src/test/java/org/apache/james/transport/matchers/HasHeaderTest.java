@@ -33,6 +33,7 @@ import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -128,6 +129,34 @@ public class HasHeaderTest {
         Mail mail = MailUtil.createMockMail2Recipients(MailUtil.createMimeMessage());
 
         assertThat(matcher.match(mail)).isNull();
+    }
+
+    @Test
+    public void matchShouldSupportFoldedHeaders() throws Exception {
+        matcher.init(FakeMatcherConfig.builder()
+            .matcherName("HasHeader")
+            .condition("From=aduprat <duprat@linagora.com>")
+            .build());
+
+        Mail mail = MailUtil.createMockMail2Recipients(
+            MimeMessageBuilder.mimeMessageFromStream(
+                ClassLoader.getSystemResourceAsStream("mime/headerFolded.mime")));
+
+        assertThat(matcher.match(mail)).containsAll(mail.getRecipients());
+    }
+
+    @Test
+    public void matchShouldSupportEncodedHeaders() throws Exception {
+        matcher.init(FakeMatcherConfig.builder()
+            .matcherName("HasHeader")
+            .condition("To=Benoît TELLIER <tellier@linagora.com>")
+            .build());
+
+        Mail mail = MailUtil.createMockMail2Recipients(
+            MimeMessageBuilder.mimeMessageFromStream(
+                ClassLoader.getSystemResourceAsStream("mime/gmail.mime")));
+
+        assertThat(matcher.match(mail)).containsAll(mail.getRecipients());
     }
 
     @Test

@@ -20,6 +20,9 @@
 
 package org.apache.james.transport.matchers;
 
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.codec.DecoderUtil;
+import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
@@ -39,6 +42,12 @@ import java.util.StringTokenizer;
  * AddHeader mailet.</p>
  */
 public class HasHeader extends GenericMatcher {
+
+    private static String sanitizeHeaderField(String headerName) {
+        return DecoderUtil.decodeEncodedWords(
+            MimeUtil.unfold(headerName),
+            DecodeMonitor.SILENT);
+    }
 
     private static final String CONDITION_SEPARATOR = "+";
     private static final String HEADER_VALUE_SEPARATOR = "=";
@@ -75,7 +84,7 @@ public class HasHeader extends GenericMatcher {
             String[] headerArray = mimeMessage.getHeader(headerName);
             if (headerArray != null && headerArray.length > 0) {
                 for (String value : headerArray) {
-                    if (headerValue.equals(value)) {
+                    if (headerValue.equals(sanitizeHeaderField(value))) {
                         return true;
                     }
                 }
