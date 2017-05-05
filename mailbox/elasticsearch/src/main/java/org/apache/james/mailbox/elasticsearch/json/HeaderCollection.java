@@ -31,8 +31,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.james.mailbox.store.search.SearchUtil;
-import org.apache.james.mime4j.codec.DecodeMonitor;
-import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.Group;
 import org.apache.james.mime4j.dom.address.Mailbox;
@@ -50,12 +48,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
 public class HeaderCollection {
-
-    private static String sanitizeHeaderField(String headerName) {
-        return DecoderUtil.decodeEncodedWords(
-            MimeUtil.unfold(headerName),
-            DecodeMonitor.SILENT);
-    }
 
     public static class Builder {
 
@@ -90,7 +82,7 @@ public class HeaderCollection {
         public Builder add(Field field) {
             Preconditions.checkNotNull(field);
             String headerName = field.getName().toLowerCase(Locale.US);
-            String sanitizedValue = sanitizeHeaderField(field.getBody());
+            String sanitizedValue = MimeUtil.unscrambleHeaderValue(field.getBody());
 
             headers.put(headerName, sanitizedValue);
             handleSpecificHeader(headerName, sanitizedValue);

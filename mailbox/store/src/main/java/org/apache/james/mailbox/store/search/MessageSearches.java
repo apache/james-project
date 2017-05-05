@@ -51,8 +51,6 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.comparator.CombinedComparator;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.MimeIOException;
-import org.apache.james.mime4j.codec.DecodeMonitor;
-import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.AddressList;
@@ -90,12 +88,6 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         .setMaxHeaderCount(-1)
         .setMaxLineLen(-1)
         .build();
-
-    private static String sanitizeHeaderField(String headerValue) {
-        return DecoderUtil.decodeEncodedWords(
-            MimeUtil.unfold(headerValue),
-            DecodeMonitor.SILENT);
-    }
 
     private Iterator<MailboxMessage> messages;
     private SearchQuery query;
@@ -479,7 +471,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         for (Header header : headers) {
             String name = header.getName();
             if (headerName.equalsIgnoreCase(name)) {
-                String value = sanitizeHeaderField(header.getValue());
+                String value = MimeUtil.unscrambleHeaderValue(header.getValue());
                 if (value != null) {
                     if (value.toUpperCase(Locale.US).contains(text)) {
                         result = true;
@@ -529,7 +521,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         for (Header header : headers) {
             String name = header.getName();
             if (headerName.equalsIgnoreCase(name)) {
-                value = sanitizeHeaderField(header.getValue());
+                value = MimeUtil.unscrambleHeaderValue(header.getValue());
                 break;
             }
         }

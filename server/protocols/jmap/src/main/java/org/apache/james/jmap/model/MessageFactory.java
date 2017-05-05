@@ -44,8 +44,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mime4j.codec.DecodeMonitor;
-import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
@@ -72,12 +70,6 @@ public class MessageFactory {
         .setMaxHeaderCount(-1)
         .setMaxLineLen(-1)
         .build();
-
-    private static String sanitizeHeaderField(String headerValue) {
-        return DecoderUtil.decodeEncodedWords(
-            MimeUtil.unfold(headerValue),
-            DecodeMonitor.SILENT);
-    }
 
     private static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
 
@@ -204,7 +196,7 @@ public class MessageFactory {
         Function<Entry<String, Collection<Field>>, String> bodyConcatenator = fieldListEntry -> fieldListEntry.getValue()
                 .stream()
                 .map(Field::getBody)
-                .map(MessageFactory::sanitizeHeaderField)
+                .map(MimeUtil::unscrambleHeaderValue)
                 .collect(Collectors.toList())
                 .stream()
                 .collect(Collectors.joining(","));
