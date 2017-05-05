@@ -21,6 +21,7 @@ package org.apache.james.jmap.model;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -43,11 +44,14 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.MimeConfig;
+import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
 
@@ -68,6 +72,14 @@ public class MessageFactory {
         .setMaxHeaderCount(-1)
         .setMaxLineLen(-1)
         .build();
+
+    private static String sanitizeHeaderField(String headerValue) {
+        return DecoderUtil.decodeEncodedWords(
+            MimeUtil.unfold(headerValue),
+            DecodeMonitor.SILENT);
+    }
+
+    private static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
 
     private final MessagePreviewGenerator messagePreview;
     private final MessageContentExtractor messageContentExtractor;
@@ -192,6 +204,7 @@ public class MessageFactory {
         Function<Entry<String, Collection<Field>>, String> bodyConcatenator = fieldListEntry -> fieldListEntry.getValue()
                 .stream()
                 .map(Field::getBody)
+                .map(MessageFactory::sanitizeHeaderField)
                 .collect(Collectors.toList())
                 .stream()
                 .collect(Collectors.joining(","));

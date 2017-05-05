@@ -169,6 +169,56 @@ public class MessageFactoryTest {
     }
 
     @Test
+    public void headersShouldBeUnfoldedAndDecoded() throws Exception {
+        String headers = "From: user <user@domain>\n"
+            + "Subject: test subject\n"
+            + "To: user1 <user1@domain>,\r\n"
+            + " user2 <user2@domain>\n"
+            + "Cc: =?UTF-8?Q?Beno=c3=aet_TELLIER?= <tellier@linagora.com>";
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(new Flags(Flag.SEEN))
+            .size(headers.length())
+            .internalDate(INTERNAL_DATE)
+            .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(TestMessageId.of(2))
+            .build();
+
+        Emailer user = Emailer.builder().name("user").email("user@domain").build();
+        Emailer user1 = Emailer.builder().name("user1").email("user1@domain").build();
+        Emailer user2 = Emailer.builder().name("user2").email("user2@domain").build();
+        Emailer usercc = Emailer.builder().name("Benoît TELLIER").email("tellier@linagora.com").build();
+        ImmutableMap<String, String> headersMap = ImmutableMap.<String, String>builder()
+            .put("Cc", "Benoît TELLIER <tellier@linagora.com>")
+            .put("Subject", "test subject")
+            .put("From", "user <user@domain>")
+            .put("To", "user1 <user1@domain>, user2 <user2@domain>")
+            .put("Date", "Tue, 14 Jul 2015 12:30:42 +0000")
+            .put("MIME-Version", "1.0")
+            .build();
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+        Message expected = Message.builder()
+            .id(TestMessageId.of(2))
+            .blobId(BlobId.of("2"))
+            .threadId("2")
+            .mailboxId(MAILBOX_ID)
+            .headers(headersMap)
+            .from(user)
+            .to(ImmutableList.of(user1, user2))
+            .cc(ImmutableList.of(usercc))
+            .subject("test subject")
+            .date(ZONED_DATE)
+            .size(headers.length())
+            .preview("(Empty)")
+            .textBody(Optional.of(""))
+            .htmlBody(Optional.empty())
+            .build();
+        assertThat(testee).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
     public void textBodyShouldBeSetIntoMessage() throws Exception {
         String headers = "Subject: test subject\n";
         String body = "Mail body";
