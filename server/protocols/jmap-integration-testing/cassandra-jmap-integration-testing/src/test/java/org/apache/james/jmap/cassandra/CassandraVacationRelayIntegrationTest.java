@@ -31,16 +31,16 @@ public class CassandraVacationRelayIntegrationTest extends VacationRelayIntegrat
     private final InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
 
     @Rule
-    public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
+    public CassandraJmapTestRule jamesServerRule = CassandraJmapTestRule.defaultTestRule();
 
     @Override
     protected GuiceJamesServer getJmapServer() {
-        return rule.jmapServer((binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
+        return jamesServerRule.jmapServer((binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
     }
 
     @Override
     protected void await() {
-        rule.await();
+        jamesServerRule.await();
     }
 
     @Override

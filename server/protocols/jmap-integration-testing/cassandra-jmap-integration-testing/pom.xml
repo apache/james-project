@@ -197,6 +197,12 @@
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-dnsservice-api</artifactId>
+                    <type>test-jar</type>
+                    <version>${project.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
                     <artifactId>james-server-testing</artifactId>
                     <scope>test</scope>
                 </dependency>
@@ -240,6 +246,12 @@
                 <dependency>
                     <groupId>org.hamcrest</groupId>
                     <artifactId>java-hamcrest</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-util-java8</artifactId>
+                    <type>test-jar</type>
                     <scope>test</scope>
                 </dependency>
             </dependencies>

@@ -94,15 +94,21 @@ public abstract class VacationIntegrationTest {
 
         jmapGuiceProbe = guiceJamesServer.getProbe(JmapGuiceProbe.class);
         RestAssured.requestSpecification = new RequestSpecBuilder()
-        		.setContentType(ContentType.JSON)
-        		.setAccept(ContentType.JSON)
-        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(jmapGuiceProbe
-                    .getJmapPort())
-        		.build();
+            .setContentType(ContentType.JSON)
+            .setAccept(ContentType.JSON)
+            .setConfig(newConfig()
+                .encoderConfig(
+                    encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+            .setPort(jmapGuiceProbe
+                .getJmapPort())
+            .build();
 
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
+        calmlyAwait = Awaitility
+            .with()
+            .pollInterval(slowPacedPollInterval)
+            .and()
+            .pollDelay(slowPacedPollInterval).await();
     }
 
     private URIBuilder baseUri() {

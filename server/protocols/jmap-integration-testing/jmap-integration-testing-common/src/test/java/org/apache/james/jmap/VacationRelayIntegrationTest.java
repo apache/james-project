@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap;
 
-import static com.jayway.restassured.RestAssured.given;
+import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.equalTo;
@@ -27,12 +27,13 @@ import static org.hamcrest.Matchers.equalTo;
 import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
+import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.specification.RequestSpecification;
 import org.apache.commons.net.smtp.SMTPClient;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
-import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.api.vacation.AccountId;
+import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -55,7 +56,6 @@ import org.testcontainers.shaded.com.google.common.net.InetAddresses;
 
 public abstract class VacationRelayIntegrationTest {
 
-
     @Rule
     public final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest");
 
@@ -71,9 +71,6 @@ public abstract class VacationRelayIntegrationTest {
     private ConditionFactory calmlyAwait;
     private GuiceJamesServer guiceJamesServer;
     private JmapGuiceProbe jmapGuiceProbe;
-
-    private RequestSpecification jmapRequestSpecification;
-    private RequestSpecification restSmtpSinkSpec;
 
     protected abstract void await();
 
@@ -100,15 +97,8 @@ public abstract class VacationRelayIntegrationTest {
         await();
 
         jmapGuiceProbe = guiceJamesServer.getProbe(JmapGuiceProbe.class);
-        jmapRequestSpecification = new RequestSpecBuilder()
-        		.setContentType(ContentType.JSON)
-        		.setAccept(ContentType.JSON)
-        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(jmapGuiceProbe
-                    .getJmapPort())
-        		.build();
 
-        restSmtpSinkSpec = new RequestSpecBuilder()
+        RestAssured.requestSpecification = new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
@@ -117,7 +107,11 @@ public abstract class VacationRelayIntegrationTest {
             .build();
 
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
+        calmlyAwait = Awaitility
+            .with()
+            .pollInterval(slowPacedPollInterval)
+            .and()
+            .pollDelay(slowPacedPollInterval).await();
     }
 
     @After
@@ -125,33 +119,14 @@ public abstract class VacationRelayIntegrationTest {
         guiceJamesServer.stop();
     }
 
-    private void setVacationResponse(AccessToken accessToken) {
-        String bodyRequest = "[[" +
-            "\"setVacationResponse\", " +
-            "{" +
-            "  \"update\":{" +
-            "    \"singleton\" : {" +
-            "      \"id\": \"singleton\"," +
-            "      \"isEnabled\": \"true\"," +
-            "      \"textBody\": \"" + REASON + "\"" +
-            "    }" +
-            "  }" +
-            "}, \"#0\"" +
-            "]]";
-        given()
-            .spec(jmapRequestSpecification)
-            .header("Authorization", accessToken.serialize())
-            .body(bodyRequest)
-        .when()
-            .post("/jmap")
-        .then()
-            .statusCode(200);
-    }
-
     @Test
     public void forwardingAnEmailShouldWork() throws Exception {
-        AccessToken accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER_WITH_DOMAIN, PASSWORD);
-        setVacationResponse(accessToken);
+        jmapGuiceProbe.modifyVacation(AccountId.fromString(USER_WITH_DOMAIN), VacationPatch
+            .builder()
+            .isEnabled(true)
+            .textBody(REASON)
+            .build());
+
         String externalMail = "ray@yopmail.com";
 
         SMTPClient smtpClient = new SMTPClient();
@@ -164,9 +139,7 @@ public abstract class VacationRelayIntegrationTest {
         calmlyAwait.atMost(1, TimeUnit.MINUTES)
             .until(() -> {
                 try {
-                    given()
-                        .spec(restSmtpSinkSpec)
-                    .when()
+                    when()
                         .get("/api/email")
                     .then()
                         .statusCode(200)
@@ -179,14 +152,5 @@ public abstract class VacationRelayIntegrationTest {
                     return false;
                 }
             });
-    }
-
-    private URIBuilder baseUri() {
-        return new URIBuilder()
-            .setScheme("http")
-            .setHost("localhost")
-            .setPort(guiceJamesServer.getProbe(JmapGuiceProbe.class)
-                .getJmapPort())
-            .setCharset(Charsets.UTF_8);
     }
 }
