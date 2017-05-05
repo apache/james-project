@@ -51,6 +51,8 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.comparator.CombinedComparator;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.MimeIOException;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.AddressList;
@@ -67,6 +69,7 @@ import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.stream.MimeConfig;
+import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.mime4j.utils.search.MessageMatcher;
 
 import com.google.common.base.Function;
@@ -87,6 +90,12 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         .setMaxHeaderCount(-1)
         .setMaxLineLen(-1)
         .build();
+
+    private static String sanitizeHeaderField(String headerValue) {
+        return DecoderUtil.decodeEncodedWords(
+            MimeUtil.unfold(headerValue),
+            DecodeMonitor.SILENT);
+    }
 
     private Iterator<MailboxMessage> messages;
     private SearchQuery query;
@@ -470,7 +479,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         for (Header header : headers) {
             String name = header.getName();
             if (headerName.equalsIgnoreCase(name)) {
-                String value = header.getValue();
+                String value = sanitizeHeaderField(header.getValue());
                 if (value != null) {
                     if (value.toUpperCase(Locale.US).contains(text)) {
                         result = true;
@@ -520,7 +529,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         for (Header header : headers) {
             String name = header.getName();
             if (headerName.equalsIgnoreCase(name)) {
-                value = header.getValue();
+                value = sanitizeHeaderField(header.getValue());
                 break;
             }
         }
