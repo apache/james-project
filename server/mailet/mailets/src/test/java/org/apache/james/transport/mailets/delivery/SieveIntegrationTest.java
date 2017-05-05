@@ -44,6 +44,7 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -263,6 +264,25 @@ public class SieveIntegrationTest {
 
         assertThat(mail.getAttribute(MailStore.DELIVERY_PATH_PREFIX + LOCAL_PART)).isEqualTo(expressMailboxNameWithSlash(NOT_SELECTED_MAILBOX.getName()));
     }
+
+    @Ignore("Waiting for JAMES-1900 JSieve part to be merged")
+    @Test
+    public void headerInstructionShouldSupportFoldedEncodedHeaders() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/headerEncodedFolded.script");
+
+        FakeMail mail = FakeMail.builder()
+            .mimeMessage(MimeMessageBuilder.mimeMessageFromStream(
+                ClassLoader.getSystemResourceAsStream("eml/gmail.eml")))
+            .state(Mail.DEFAULT)
+            .recipient(new MailAddress(RECEIVER_DOMAIN_COM))
+            .sender(new MailAddress("sender@any.com"))
+            .build();
+        testee.service(mail);
+
+        assertThat(mail.getAttribute(MailStore.DELIVERY_PATH_PREFIX + LOCAL_PART))
+            .isEqualTo(expressMailboxNameWithSlash(SELECTED_MAILBOX.getName()));
+    }
+
 
     @Test
     public void headerScriptShouldWorkIfHeaderIsPresent() throws Exception {
