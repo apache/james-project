@@ -71,8 +71,6 @@ public class MessageFactory {
         .setMaxLineLen(-1)
         .build();
 
-    private static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
-
     private final MessagePreviewGenerator messagePreview;
     private final MessageContentExtractor messageContentExtractor;
     private final HtmlTextExtractor htmlTextExtractor;

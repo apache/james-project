@@ -195,7 +195,6 @@ public class MessageFactoryTest {
             .put("Subject", "test subject")
             .put("From", "user <user@domain>")
             .put("To", "user1 <user1@domain>, user2 <user2@domain>")
-            .put("Date", "Tue, 14 Jul 2015 12:30:42 +0000")
             .put("MIME-Version", "1.0")
             .build();
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
@@ -209,7 +208,7 @@ public class MessageFactoryTest {
             .to(ImmutableList.of(user1, user2))
             .cc(ImmutableList.of(usercc))
             .subject("test subject")
-            .date(ZONED_DATE)
+            .date(Instant.parse("2012-02-03T14:30:42.000Z"))
             .size(headers.length())
             .preview("(Empty)")
             .textBody(Optional.of(""))

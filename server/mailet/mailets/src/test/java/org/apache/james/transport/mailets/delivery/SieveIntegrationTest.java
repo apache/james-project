@@ -44,7 +44,6 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -265,7 +264,6 @@ public class SieveIntegrationTest {
         assertThat(mail.getAttribute(MailStore.DELIVERY_PATH_PREFIX + LOCAL_PART)).isEqualTo(expressMailboxNameWithSlash(NOT_SELECTED_MAILBOX.getName()));
     }
 
-    @Ignore("Waiting for JAMES-1900 JSieve part to be merged")
     @Test
     public void headerInstructionShouldSupportFoldedEncodedHeaders() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/headerEncodedFolded.script");
