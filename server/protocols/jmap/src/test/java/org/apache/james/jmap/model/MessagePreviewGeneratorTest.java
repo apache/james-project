@@ -47,9 +47,18 @@ public class MessagePreviewGeneratorTest {
     }
 
     @Test
+    public void computeShouldReturnStringWithoutTruncation() throws Exception {
+        String body = StringUtils.leftPad("a", 100, "b");
+
+        assertThat(testee.compute(Optional.of(body)))
+                .hasSize(100)
+                .isEqualTo(body);
+    }
+
+    @Test
     public void computeShouldReturnStringIsLimitedTo256Length() throws Exception {
         String body = StringUtils.leftPad("a", 300, "b");
-        String expected = StringUtils.leftPad("b", MessagePreviewGenerator.MAX_PREVIEW_LENGTH - 3, "b") + "...";
+        String expected = StringUtils.leftPad("b", MessagePreviewGenerator.MAX_PREVIEW_LENGTH, "b");
 
         assertThat(testee.compute(Optional.of(body)))
             .hasSize(MessagePreviewGenerator.MAX_PREVIEW_LENGTH)

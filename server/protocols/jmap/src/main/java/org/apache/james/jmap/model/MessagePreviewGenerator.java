@@ -30,11 +30,11 @@ public class MessagePreviewGenerator {
 
     public String compute(Optional<String> textBody) {
         return textBody.filter(text -> !text.isEmpty())
-                .map(this::abbreviate)
+                .map(this::truncateToMaxLength)
                 .orElse(NO_BODY);
     }
 
-    private String abbreviate(String body) {
-        return StringUtils.abbreviate(body, MAX_PREVIEW_LENGTH);
+    private String truncateToMaxLength(String body) {
+        return StringUtils.left(body, MAX_PREVIEW_LENGTH);
     }
 }
