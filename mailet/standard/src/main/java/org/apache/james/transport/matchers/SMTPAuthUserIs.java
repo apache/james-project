@@ -44,8 +44,6 @@ public class SMTPAuthUserIs extends GenericMatcher {
     /**
      * The mail attribute holding the SMTP AUTH user name, if any.
      */
-    private final static String SMTP_AUTH_USER_ATTRIBUTE_NAME = "org.apache.james.SMTPAuthUser";
-    
     private Collection<String> users;
 
     public void init() throws javax.mail.MessagingException {
@@ -57,7 +55,7 @@ public class SMTPAuthUserIs extends GenericMatcher {
     }
 
     public Collection<MailAddress> match(Mail mail) {
-        String authUser = (String) mail.getAttribute(SMTP_AUTH_USER_ATTRIBUTE_NAME);
+        String authUser = (String) mail.getAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME);
         if (authUser != null && users.contains(authUser)) {
             return mail.getRecipients();
         } else {

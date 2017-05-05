@@ -20,6 +20,8 @@
 
 package org.apache.james.mailets.configuration;
 
+import org.apache.mailet.Mail;
+
 public class CommonProcessors {
 
     public static ProcessorConfiguration root() {
@@ -240,7 +242,7 @@ public class CommonProcessors {
                 .addMailet(MailetConfiguration.builder()
                         .match("All")
                         .clazz("SetMailAttribute")
-                        .addProperty("org.apache.james.SMTPAuthUser", "true")
+                        .addProperty(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, "true")
                         .build())
                 .addMailet(MailetConfiguration.builder()
                         .match("All")

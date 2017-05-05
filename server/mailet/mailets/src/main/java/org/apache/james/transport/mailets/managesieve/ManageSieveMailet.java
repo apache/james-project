@@ -91,8 +91,6 @@ import com.google.common.collect.Lists;
 @Experimental
 public class ManageSieveMailet extends GenericMailet implements MessageToCoreToMessage.HelpProvider {
 
-    public final static String SMTP_AUTH_USER_ATTRIBUTE_NAME = "org.apache.james.SMTPAuthUser";
-
     // Injected
     private SieveRepository sieveRepository = null;
     // Injected
@@ -135,7 +133,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
 
         // Update the Session for the current mail and execute
         SettableSession session = new SettableSession();
-        if (mail.getAttribute(SMTP_AUTH_USER_ATTRIBUTE_NAME) != null) {
+        if (mail.getAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME) != null) {
             session.setState(Session.State.AUTHENTICATED);
         } else {
             session.setState(Session.State.UNAUTHENTICATED);

@@ -42,10 +42,9 @@ public class SMTPAuthSuccessful extends GenericMatcher {
     /**
      * The mail attribute holding the SMTP AUTH user name, if any.
      */
-    private final static String SMTP_AUTH_USER_ATTRIBUTE_NAME = "org.apache.james.SMTPAuthUser";
-    
+
     public Collection<MailAddress> match(Mail mail) {
-        String authUser = (String) mail.getAttribute(SMTP_AUTH_USER_ATTRIBUTE_NAME);
+        String authUser = (String) mail.getAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME);
         if (authUser != null) {
             return mail.getRecipients();
         } else {

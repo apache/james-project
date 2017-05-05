@@ -32,11 +32,6 @@ import org.apache.mailet.Mail;
 public class AddDefaultAttributesMessageHook implements JamesMessageHook {
 
     /**
-     * The mail attribute holding the SMTP AUTH user name, if any.
-     */
-    private final static String SMTP_AUTH_USER_ATTRIBUTE_NAME = "org.apache.james.SMTPAuthUser";
-
-    /**
      * The mail attribute which get set if the client is allowed to relay
      */
     private final static String SMTP_AUTH_NETWORK_NAME = "org.apache.james.SMTPIsAuthNetwork";
@@ -58,7 +53,7 @@ public class AddDefaultAttributesMessageHook implements JamesMessageHook {
             mailImpl.setRemoteHost(session.getRemoteAddress().getHostName());
             mailImpl.setRemoteAddr(session.getRemoteAddress().getAddress().getHostAddress());
             if (session.getUser() != null) {
-                mail.setAttribute(SMTP_AUTH_USER_ATTRIBUTE_NAME, session.getUser());
+                mail.setAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, session.getUser());
             }
 
             if (session.isRelayingAllowed()) {

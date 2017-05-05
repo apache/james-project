@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collection;
 
+import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -47,7 +48,7 @@ public class SMTPAuthSuccessfulTest {
         MailAddress recipient = new MailAddress("cuong.trnn@gmail.com");
         FakeMail fakeMail = FakeMail.builder()
             .recipient(recipient)
-            .attribute("org.apache.james.SMTPAuthUser", "cuong")
+            .attribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, "cuong")
             .build();
 
         Collection<MailAddress> results =  testee.match(fakeMail);

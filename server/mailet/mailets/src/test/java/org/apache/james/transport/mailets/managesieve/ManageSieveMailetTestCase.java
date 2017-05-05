@@ -100,7 +100,7 @@ public class ManageSieveMailetTestCase {
         Mail mail = createUnauthenticatedMail(message);
         when(sieveParser.getExtensions()).thenReturn(Lists.newArrayList("a", "b", "c"));
         initializeMailet();
-        mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, "test");
+        mail.setAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, "test");
         mailet.service(mail);
         ensureResponseContains("Re: CAPABILITY", "\"SIEVE\" \"a b c\"",
             "\"IMPLEMENTATION\" \"Apache ManageSieve v1.0\"",
@@ -192,7 +192,7 @@ public class ManageSieveMailetTestCase {
         when(sieveRepository.getScript(USER, SCRIPT_NAME)).thenReturn(new ByteArrayInputStream(SCRIPT_CONTENT.getBytes()));
         MimeMessage message = prepareMimeMessage("GETSCRIPT \"" + SCRIPT_NAME + "\"");
         Mail mail = createUnauthenticatedMail(message);
-        mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER);
+        mail.setAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER);
         mailet.service(mail);
         ensureResponse("Re: GETSCRIPT \"" + SCRIPT_NAME + "\"", "{13}\r\n" + SCRIPT_CONTENT + "\r\nOK");
     }
@@ -210,7 +210,7 @@ public class ManageSieveMailetTestCase {
         doThrow(new ScriptNotFoundException()).when(sieveRepository).getScript(USER, SCRIPT_NAME);
         MimeMessage message = prepareMimeMessage("GETSCRIPT \"" + SCRIPT_NAME + "\"");
         Mail mail = createUnauthenticatedMail(message);
-        mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER);
+        mail.setAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER);
         mailet.service(mail);
         ensureResponse("Re: GETSCRIPT \"" + SCRIPT_NAME + "\"", "NO (NONEXISTENT) \"There is no script by that name\"");
     }
@@ -222,7 +222,7 @@ public class ManageSieveMailetTestCase {
         MimeMessage message = prepareMimeMessage("GETSCRIPT");
         Mail mail = createUnauthenticatedMail(message);
 
-        mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER);
+        mail.setAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER);
         mailet.service(mail);
         ensureResponse("Re: GETSCRIPT", "NO \"Missing argument: script name\"");
     }
@@ -483,7 +483,7 @@ public class ManageSieveMailetTestCase {
 
     private Mail createAuthentificatedMail(MimeMessage message) throws Exception {
         Mail mail = createUnauthenticatedMail(message);
-        mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, message.getSender().toString());
+        mail.setAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, message.getSender().toString());
         return mail;
     }
 

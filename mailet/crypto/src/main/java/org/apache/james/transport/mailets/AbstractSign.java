@@ -577,7 +577,7 @@ public abstract class AbstractSign extends GenericMailet {
             return false;
         }
         
-        String authUser = (String) mail.getAttribute("org.apache.james.SMTPAuthUser");
+        String authUser = (String) mail.getAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME);
         // was the sender user SMTP authorized?
         if (authUser == null) {
             log("Can not sign mail for sender <" + mail.getSender() + "> as he is not a SMTP authenticated user");
