@@ -22,6 +22,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collection;
+
+import com.google.common.collect.ImmutableList;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
 import static org.junit.Assert.*;
@@ -56,9 +58,9 @@ public class MXHostAddressIteratorTest {
              * Every time this method is called it will return two InetAddress instances
              */
             @Override
-            public InetAddress[] getAllByName(String host) throws UnknownHostException {
+            public Collection<InetAddress> getAllByName(String host) throws UnknownHostException {
                 InetAddress addr = InetAddress.getLocalHost();
-                return new InetAddress[]{addr, addr};
+                return ImmutableList.of(addr, addr);
             }
 
             @Override
@@ -111,7 +113,7 @@ public class MXHostAddressIteratorTest {
              * Every time this method is called it will return two InetAddress instances
              */
             @Override
-            public InetAddress[] getAllByName(String host) throws UnknownHostException {
+            public Collection<InetAddress> getAllByName(String host) throws UnknownHostException {
                 throw new UnknownHostException();
             }
 

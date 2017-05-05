@@ -22,6 +22,7 @@ package org.apache.james.domainlist.lib;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
@@ -178,7 +179,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     private static List<String> getDomainIP(String domain, DNSService dns, Logger log) {
         List<String> domainIP = new ArrayList<String>();
         try {
-            InetAddress[] addrs = dns.getAllByName(domain);
+            Collection<InetAddress> addrs = dns.getAllByName(domain);
             for (InetAddress addr : addrs) {
                 String ip = addr.getHostAddress();
                 if (!domainIP.contains(ip)) {

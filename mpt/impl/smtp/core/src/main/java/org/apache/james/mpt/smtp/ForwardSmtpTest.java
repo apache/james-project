@@ -69,7 +69,7 @@ public class ForwardSmtpTest extends AbstractSimpleScriptedTestProtocol {
         super.setUp();
         InetAddress containerIp = InetAddresses.forString(fakeSmtp.getIp());
         hostSystem.getInMemoryDnsService()
-            .registerRecord("yopmail.com", new InetAddress[]{containerIp}, ImmutableList.of("yopmail.com"), ImmutableList.of());
+            .registerRecord("yopmail.com", containerIp, "yopmail.com");
         hostSystem.addAddressMapping(USER, DOMAIN, "ray@yopmail.com");
 
         RestAssured.requestSpecification = new RequestSpecBuilder()

@@ -66,7 +66,7 @@ public interface DNSService {
      * 
      * @return An array of InetAddress
      */
-    InetAddress[] getAllByName(String host) throws UnknownHostException;
+    Collection<InetAddress> getAllByName(String host) throws UnknownHostException;
 
     /**
      * Resolve the given hostname to an InetAddress based on the DNS Server. It

@@ -22,10 +22,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.mailet.HostAddress;
 import org.slf4j.Logger;
@@ -42,7 +44,7 @@ import com.google.common.collect.Maps;
 public class MXHostAddressIterator implements Iterator<HostAddress> {
 
     private final Iterator<HostAddress> addresses;
-    
+
     public MXHostAddressIterator(Iterator<String> hosts, DNSService dns, boolean useSingleIP, Logger logger) {
         this(hosts, 25, dns, useSingleIP, logger);
     }
@@ -57,15 +59,15 @@ public class MXHostAddressIterator implements Iterator<HostAddress> {
             Map.Entry<String, String> hostAndPort = extractHostAndPort(nextHostname, defaultPort);
 
             try {
-                final InetAddress[] addrs;
+                final Collection<InetAddress> addrs;
                 if (useSingleIP) {
-                    addrs = new InetAddress[]{dns.getByName(hostAndPort.getKey())};
+                    addrs = ImmutableList.of(dns.getByName(hostAndPort.getKey()));
                 } else {
                     addrs = dns.getAllByName(hostAndPort.getKey());
                 }
                 for (InetAddress addr : addrs) {
                     hAddresses.add(new HostAddress(hostAndPort.getKey(),
-                            "smtp://" + addr.getHostAddress() + ":" + hostAndPort.getValue()));
+                        "smtp://" + addr.getHostAddress() + ":" + hostAndPort.getValue()));
                 }
             } catch (UnknownHostException uhe) {
                 // this should never happen, since we just got

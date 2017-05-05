@@ -42,6 +42,7 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.net.ProtocolCommandEvent;
 import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.smtp.SMTPClient;
@@ -101,8 +102,8 @@ public class SMTPServerTest {
         }
 
         @Override
-        public InetAddress[] getAllByName(String host) throws UnknownHostException {
-            return new InetAddress[]{getByName(host)};
+        public Collection<InetAddress> getAllByName(String host) throws UnknownHostException {
+            return ImmutableList.of(getByName(host));
         }
 
         @Override

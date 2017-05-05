@@ -44,14 +44,19 @@ public class InMemoryDNSService implements DNSService {
 
     private DNSRecord dnsRecordFor(InetAddress addresses) {
         Collection<String> emptyList = ImmutableList.of();
-        return dnsRecordFor(emptyList, emptyList, addresses);
+        return dnsRecordFor(emptyList, emptyList, ImmutableList.of(addresses));
     }
 
-    private DNSRecord dnsRecordFor(Collection<String> mxRecords, Collection<String> txtRecords, InetAddress... addresses) {
+    private DNSRecord dnsRecordFor(Collection<String> mxRecords, Collection<String> txtRecords, List<InetAddress> addresses) {
         return new DNSRecord(addresses, mxRecords, txtRecords);
     }
 
-    public void registerRecord(String hostname, InetAddress[] addresses,Collection<String> mxRecords, Collection<String> txtRecords ){
+    public void registerRecord(String hostname, InetAddress address, String mxRecord) {
+        Collection<String> emptyTxtRecords = ImmutableList.of();
+        registerRecord(hostname, ImmutableList.of(address), ImmutableList.of(mxRecord), emptyTxtRecords);
+    }
+
+    public void registerRecord(String hostname, List<InetAddress> addresses, Collection<String> mxRecords, Collection<String> txtRecords ){
         records.put(hostname, dnsRecordFor(mxRecords, txtRecords, addresses));
     }
 
@@ -70,13 +75,13 @@ public class InMemoryDNSService implements DNSService {
     }
 
     @Override
-    public InetAddress[] getAllByName(String host) throws UnknownHostException {
+    public List<InetAddress> getAllByName(String host) throws UnknownHostException {
         return hostRecord(host).addresses;
     }
 
     @Override
     public InetAddress getByName(String host) throws UnknownHostException {
-        return hostRecord(host).addresses[0];
+        return hostRecord(host).addresses.get(0);
     }
 
     private DNSRecord hostRecord(final String host) {
@@ -115,20 +120,18 @@ public class InMemoryDNSService implements DNSService {
 
     private static class DNSRecord {
 
-        final InetAddress[] addresses;
         final Collection<String> mxRecords;
         final Collection<String> txtRecords;
-        private final List<InetAddress> addressList;
+        private final List<InetAddress> addresses;
 
-        public DNSRecord(InetAddress[] adresses, Collection<String> mxRecords, Collection<String> txtRecords) {
-            this.addresses = adresses;
+        public DNSRecord(List<InetAddress> addresses, Collection<String> mxRecords, Collection<String> txtRecords) {
+            this.addresses = addresses;
             this.mxRecords = mxRecords;
             this.txtRecords = txtRecords;
-            this.addressList = ImmutableList.copyOf(addresses);
         }
 
         public boolean contains(InetAddress address){
-            return addressList.contains(address);
+            return addresses.contains(address);
         }
     }
 }

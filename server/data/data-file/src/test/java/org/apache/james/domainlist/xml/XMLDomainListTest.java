@@ -23,8 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
@@ -61,8 +63,8 @@ public class XMLDomainListTest {
             }
 
             @Override
-            public InetAddress[] getAllByName(String name) throws UnknownHostException {
-                return new InetAddress[]{InetAddress.getByName("127.0.0.1")};
+            public Collection<InetAddress> getAllByName(String name) throws UnknownHostException {
+                return ImmutableList.of(InetAddress.getByName("127.0.0.1"));
             }
 
             @Override

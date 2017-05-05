@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.dnsservice.dnsjava;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
@@ -461,17 +462,17 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
     }
 
     @Override
-    public InetAddress[] getAllByName(String host) throws UnknownHostException {
+    public Collection<InetAddress> getAllByName(String host) throws UnknownHostException {
         TimeMetric timeMetric = metricFactory.timer("getAllByName");
         String name = allowIPLiteral(host);
         try {
             // Check if its local
             if (name.equalsIgnoreCase(localHostName) || name.equalsIgnoreCase(localCanonicalHostName) || name.equals(localAddress)) {
-                return new InetAddress[]{getLocalHost()};
+                return ImmutableList.of(getLocalHost());
             }
 
             InetAddress addr = org.xbill.DNS.Address.getByAddress(name);
-            return new InetAddress[]{addr};
+            return ImmutableList.of(addr);
         } catch (UnknownHostException e) {
             Record[] records = lookupNoException(name, Type.A, "A");
 
@@ -481,7 +482,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
                     ARecord a = (ARecord) records[i];
                     addrs[i] = InetAddress.getByAddress(name, a.getAddress().getAddress());
                 }
-                return addrs;
+                return ImmutableList.copyOf(addrs);
             } else
                 throw e;
         } finally {

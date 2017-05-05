@@ -23,6 +23,9 @@ import static org.junit.Assert.fail;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collection;
+
+import com.google.common.collect.ImmutableList;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -30,6 +33,8 @@ import org.apache.james.domainlist.api.DomainListException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import javax.management.ImmutableDescriptor;
 
 public abstract class AbstractDomainListTest {
 
@@ -181,8 +186,8 @@ public abstract class AbstractDomainListTest {
             }
 
             @Override
-            public InetAddress[] getAllByName(String name) throws UnknownHostException {
-                return new InetAddress[]{InetAddress.getByName("127.0.0.1")};
+            public Collection<InetAddress> getAllByName(String name) throws UnknownHostException {
+                return ImmutableList.of(InetAddress.getByName("127.0.0.1"));
             }
 
             @Override

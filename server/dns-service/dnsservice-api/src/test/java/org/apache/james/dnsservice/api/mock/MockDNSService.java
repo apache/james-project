@@ -49,7 +49,7 @@ public class MockDNSService implements DNSService {
      * @see org.apache.james.dnsservice.api.DNSService#getAllByName(String)
      */
     @Override
-    public InetAddress[] getAllByName(String host) throws UnknownHostException {
+    public Collection<InetAddress> getAllByName(String host) throws UnknownHostException {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
