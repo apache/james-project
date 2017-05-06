@@ -84,56 +84,8 @@ public class Sieve extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        List<MailAddress> recipientsWithSuccessfulSieveExecution = executeRetrieveSuccess(mail);
-        mail.setRecipients(keepNonDiscardedRecipients(mail, recipientsWithSuccessfulSieveExecution));
-    }
-
-    private List<MailAddress> executeRetrieveSuccess(Mail mail) throws MessagingException {
-        ImmutableList.Builder<MailAddress> recipientsWithSuccessfulSieveExecution = ImmutableList.builder();
         for(MailAddress recipient: mail.getRecipients()) {
-            if (sieveExecutor.execute(recipient, mail)) {
-                recipientsWithSuccessfulSieveExecution.add(recipient);
-            }
-        }
-        return recipientsWithSuccessfulSieveExecution.build();
-    }
-
-    private ImmutableList<MailAddress> keepNonDiscardedRecipients(Mail mail, final List<MailAddress> recipientsWithSuccessfulSieveExecution) {
-        final List<MailAddress> discardedRecipients = retrieveDiscardedRecipients(mail);
-        return FluentIterable.from(mail.getRecipients())
-            .filter(discardPredicate(discardedRecipients, recipientsWithSuccessfulSieveExecution))
-            .toList();
-    }
-
-    private Predicate<MailAddress> discardPredicate(final List<MailAddress> discardedAddressList, final List<MailAddress> discardeableAddressList) {
-        return new Predicate<MailAddress>() {
-            @Override
-            public boolean apply(MailAddress input) {
-                return !discardeableAddressList.contains(input) || !discardedAddressList.contains(input);
-            }
-        };
-    }
-
-    private List<MailAddress> retrieveDiscardedRecipients(Mail mail) {
-        final List<MailAddress> discardedRecipients = new ArrayList<MailAddress>();
-        for(MailAddress recipient: mail.getRecipients()) {
-            if (isDiscarded(mail, recipient)) {
-                discardedRecipients.add(recipient);
-            }
-        }
-        return discardedRecipients;
-    }
-
-    private boolean isDiscarded(Mail mail, MailAddress recipient) {
-        return !(mail.getAttribute(MailStore.DELIVERY_PATH_PREFIX + retrieveUser(recipient)) instanceof String);
-    }
-
-    private String retrieveUser(MailAddress recipient) {
-        try {
-            return usersRepository.getUser(recipient);
-        } catch (UsersRepositoryException e) {
-            log("Can not retrieve username for mail address " + recipient.asPrettyString(), e);
-            return recipient.asString();
+            sieveExecutor.execute(recipient, mail);
         }
     }
 }

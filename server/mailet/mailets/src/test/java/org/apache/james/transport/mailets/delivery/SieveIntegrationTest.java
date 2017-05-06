@@ -130,7 +130,6 @@ public class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-
         assertThat(mail.getRecipients()).isEmpty();
     }
 

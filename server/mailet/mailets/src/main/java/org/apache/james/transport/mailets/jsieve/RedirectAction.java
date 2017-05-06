@@ -67,5 +67,6 @@ public class RedirectAction implements MailAction {
                 + aMail.getMessage().getMessageID() + " to \""
                 + anAction.getAddress() + "\"");
         }
+        DiscardAction.removeRecipient(aMail, context);
     }
 }

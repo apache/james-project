@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets.jsieve;
 
 import org.apache.jsieve.mail.Action;
+import org.apache.jsieve.mail.ActionDiscard;
 import org.apache.jsieve.mail.ActionFileInto;
 import org.apache.jsieve.mail.ActionKeep;
 import org.apache.jsieve.mail.ActionRedirect;
@@ -89,6 +90,7 @@ public class ActionDispatcher {
         actionMap.put(ActionRedirect.class, new RedirectAction());
         actionMap.put(ActionReject.class, new RejectAction());
         actionMap.put(ActionVacation.class, new VacationAction());
+        actionMap.put(ActionDiscard.class, new DiscardAction());
         return actionMap;
     }
 
