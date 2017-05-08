@@ -19,37 +19,28 @@
 
 package org.apache.james.mailbox.inmemory;
 
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.james.mailbox.extractor.ParsedContent;
+import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.mailbox.extractor.TextExtractor;
 
-import com.google.common.base.Charsets;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
+import java.io.InputStream;
 
-import com.google.common.collect.Maps;
+import org.junit.Before;
+import org.junit.Test;
 
+public class JsoupTextExtractorTest {
+    private TextExtractor textExtractor;
 
-public class JsoupTextExtractor implements TextExtractor {
-    private static final String TITLE_HTML_TAG = "title";
-
-    @Override
-    public ParsedContent extractContent(InputStream inputStream, String contentType, String fileName) throws Exception {
-        Map<String, List<String>> emptyMetadata = Maps.newHashMap();
-        if (contentType != null) {
-           if (contentType.equals("text/plain")) {
-            return new ParsedContent(IOUtils.toString(inputStream, Charsets.UTF_8), emptyMetadata);
-           }
-           if (contentType.equals("text/html")) {
-               Document doc = Jsoup.parse(IOUtils.toString(inputStream, Charsets.UTF_8));
-               doc.select(TITLE_HTML_TAG).remove();
-               return new ParsedContent(doc.text(), emptyMetadata);
-           }
-        }
-        return new ParsedContent(null, emptyMetadata);
+    @Before
+    public void setUp() {
+        textExtractor = new JsoupTextExtractor();
     }
+
+    @Test
+    public void extractedTextFromHtmlShouldNotContainTheContentOfTitleTag() throws Exception {
+        InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/html.txt");
+
+        assertThat(textExtractor.extractContent(inputStream, "text/html", null).getTextualContent())
+                .doesNotContain("*|MC:SUBJECT|*");
+    }
+
 }

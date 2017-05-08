@@ -1,0 +1,1128 @@
+<!--
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+-->
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+    <head>
+    	<!-- NAME: ELEGANT -->
+        <!--[if gte mso 15]>
+		<xml>
+			<o:OfficeDocumentSettings>
+			<o:AllowPNG/>
+			<o:PixelsPerInch>96</o:PixelsPerInch>
+			</o:OfficeDocumentSettings>
+		</xml>
+		<![endif]-->
+		<meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>*|MC:SUBJECT|*</title>
+
+    <style type="text/css">
+		p{
+			margin:10px 0;
+			padding:0;
+		}
+		table{
+			border-collapse:collapse;
+		}
+		h1,h2,h3,h4,h5,h6{
+			display:block;
+			margin:0;
+			padding:0;
+		}
+		img,a img{
+			border:0;
+			height:auto;
+			outline:none;
+			text-decoration:none;
+		}
+		body,#bodyTable,#bodyCell{
+			height:100%;
+			margin:0;
+			padding:0;
+			width:100%;
+		}
+		#outlook a{
+			padding:0;
+		}
+		img{
+			-ms-interpolation-mode:bicubic;
+		}
+		table{
+			mso-table-lspace:0pt;
+			mso-table-rspace:0pt;
+		}
+		.ReadMsgBody{
+			width:100%;
+		}
+		.ExternalClass{
+			width:100%;
+		}
+		p,a,li,td,blockquote{
+			mso-line-height-rule:exactly;
+		}
+		a[href^=tel],a[href^=sms]{
+			color:inherit;
+			cursor:default;
+			text-decoration:none;
+		}
+		p,a,li,td,body,table,blockquote{
+			-ms-text-size-adjust:100%;
+			-webkit-text-size-adjust:100%;
+		}
+		.ExternalClass,.ExternalClass p,.ExternalClass td,.ExternalClass div,.ExternalClass span,.ExternalClass font{
+			line-height:100%;
+		}
+		a[x-apple-data-detectors]{
+			color:inherit !important;
+			text-decoration:none !important;
+			font-size:inherit !important;
+			font-family:inherit !important;
+			font-weight:inherit !important;
+			line-height:inherit !important;
+		}
+		a.mcnButton{
+			display:block;
+		}
+		.mcnImage{
+			vertical-align:bottom;
+		}
+		.mcnTextContent{
+			word-break:break-word;
+		}
+		.mcnTextContent img{
+			height:auto !important;
+		}
+		.mcnDividerBlock{
+			table-layout:fixed !important;
+		}
+		body,#bodyTable{
+			background-color:#fffff0;
+		}
+		#bodyCell{
+			border-top:0;
+		}
+		#templateContainer{
+			border:0;
+		}
+		h1{
+			color:#c61e42 !important;
+			font-family:Georgia;
+			font-size:30px;
+			font-style:normal;
+			font-weight:normal;
+			line-height:125%;
+			letter-spacing:0;
+			text-align:center;
+		}
+		h2{
+			color:#202020 !important;
+			font-family:Georgia;
+			font-size:26px;
+			font-style:normal;
+			font-weight:normal;
+			line-height:125%;
+			letter-spacing:normal;
+			text-align:left;
+		}
+		h3{
+			color:#202020 !important;
+			font-family:Georgia;
+			font-size:14px;
+			font-style:normal;
+			font-weight:normal;
+			line-height:125%;
+			letter-spacing:normal;
+			text-align:center;
+		}
+		h4{
+			color:#c61e42 !important;
+			font-family:Verdana;
+			font-size:14px;
+			font-style:normal;
+			font-weight:normal;
+			line-height:125%;
+			letter-spacing:normal;
+			text-align:left;
+		}
+		#templatePreheader{
+			background-color:#c61e42;
+			border-top:0;
+			border-bottom:0;
+		}
+		.preheaderContainer .mcnTextContent,.preheaderContainer .mcnTextContent p{
+			color:#FFFFFF;
+			font-family:Verdana;
+			font-size:10px;
+			line-height:125%;
+			text-align:left;
+		}
+		.preheaderContainer .mcnTextContent a{
+			color:#FFFFFF;
+			font-weight:normal;
+			text-decoration:underline;
+		}
+		#templateHeader{
+			background-color:#FFFFFF;
+			border-top:0;
+			border-bottom:0;
+		}
+		.headerContainer .mcnTextContent,.headerContainer .mcnTextContent p{
+			color:#404040;
+			font-family:Georgia;
+			font-size:16px;
+			line-height:150%;
+			text-align:center;
+		}
+		.headerContainer .mcnTextContent a{
+			color:#C52E26;
+			font-weight:normal;
+			text-decoration:none;
+		}
+		#templateBody{
+			background-color:#FFFFFF;
+			border-top:0;
+			border-bottom:0;
+		}
+		.bodyContainer .mcnTextContent,.bodyContainer .mcnTextContent p{
+			color:#404040;
+			font-family:Verdana;
+			font-size:14px;
+			line-height:150%;
+			text-align:left;
+		}
+		.bodyContainer .mcnTextContent a{
+			color:#C52E26;
+			font-weight:normal;
+			text-decoration:none;
+		}
+		#templateColumns{
+			background-color:#FFFFFF;
+			border-top:0;
+			border-bottom:0;
+		}
+		.leftColumnContainer .mcnTextContent,.leftColumnContainer .mcnTextContent p{
+			color:#404040;
+			font-family:Verdana;
+			font-size:12px;
+			line-height:150%;
+			text-align:left;
+		}
+		.leftColumnContainer .mcnTextContent a{
+			color:#C52E26;
+			font-weight:normal;
+			text-decoration:none;
+		}
+		.rightColumnContainer .mcnTextContent,.rightColumnContainer .mcnTextContent p{
+			color:#404040;
+			font-family:Verdana;
+			font-size:12px;
+			line-height:150%;
+			text-align:left;
+		}
+		.rightColumnContainer .mcnTextContent a{
+			color:#C52E26;
+			font-weight:normal;
+			text-decoration:none;
+		}
+		#templateFooter{
+			background-color:#ECEAD4;
+			border-top:0;
+			border-bottom:0;
+		}
+		.footerContainer .mcnTextContent,.footerContainer .mcnTextContent p{
+			color:#202020;
+			font-family:Verdana;
+			font-size:10px;
+			line-height:125%;
+			text-align:center;
+		}
+		.footerContainer .mcnTextContent a{
+			color:#C52E26;
+			font-weight:bold;
+			text-decoration:none;
+		}
+	@media only screen and (max-width: 480px){
+		body,table,td,p,a,li,blockquote{
+			-webkit-text-size-adjust:none !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		body{
+			width:100% !important;
+			min-width:100% !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.templateContainer,#templatePreheader,#templateHeader,#templateBody,#templateFooter{
+			max-width:600px !important;
+			width:100% !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.columnsContainer{
+			display:block!important;
+			max-width:600px !important;
+			padding-bottom:18px !important;
+			padding-left:0 !important;
+			width:100%!important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.mcnImage{
+			height:auto !important;
+			width:100% !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.mcnCartContainer,.mcnCaptionTopContent,.mcnRecContentContainer,.mcnCaptionBottomContent,.mcnTextContentContainer,.mcnBoxedTextContentContainer,.mcnImageGroupContentContainer,.mcnCaptionLeftTextContentContainer,.mcnCaptionRightTextContentContainer,.mcnCaptionLeftImageContentContainer,.mcnCaptionRightImageContentContainer,.mcnImageCardLeftTextContentContainer,.mcnImageCardRightTextContentContainer{
+			max-width:100% !important;
+			width:100% !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.mcnBoxedTextContentContainer{
+			min-width:100% !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.mcnImageGroupContent{
+			padding:9px !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.mcnCaptionLeftContentOuter .mcnTextContent,.mcnCaptionRightContentOuter .mcnTextContent{
+			padding-top:9px !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.mcnImageCardTopImageContent,.mcnCaptionBlockInner .mcnCaptionTopContent:last-child .mcnTextContent{
+			padding-top:18px !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.mcnImageCardBottomImageContent{
+			padding-bottom:9px !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.mcnImageGroupBlockInner{
+			padding-top:0 !important;
+			padding-bottom:0 !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.mcnImageGroupBlockOuter{
+			padding-top:9px !important;
+			padding-bottom:9px !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.mcnTextContent,.mcnBoxedTextContentColumn{
+			padding-right:18px !important;
+			padding-left:18px !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.mcnImageCardLeftImageContent,.mcnImageCardRightImageContent{
+			padding-right:18px !important;
+			padding-bottom:0 !important;
+			padding-left:18px !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.mcpreview-image-uploader{
+			display:none !important;
+			width:100% !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		h1{
+			font-size:24px !important;
+			line-height:125% !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		h2{
+			font-size:20px !important;
+			line-height:125% !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		h3{
+			font-size:18px !important;
+			line-height:125% !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		h4{
+			font-size:16px !important;
+			line-height:125% !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.mcnBoxedTextContentContainer .mcnTextContent,.mcnBoxedTextContentContainer .mcnTextContent p{
+			font-size:18px !important;
+			line-height:125% !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		#templatePreheader{
+			display:block !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.preheaderContainer .mcnTextContent,.preheaderContainer .mcnTextContent p{
+			font-size:14px !important;
+			line-height:115% !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.headerContainer .mcnTextContent,.headerContainer .mcnTextContent p{
+			font-size:18px !important;
+			line-height:125% !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.bodyContainer .mcnTextContent,.bodyContainer .mcnTextContent p{
+			font-size:18px !important;
+			line-height:125% !important;
+		}
+
+}	@media only screen and (max-width: 480px){
+		.footerContainer .mcnTextContent,.footerContainer .mcnTextContent p{
+			font-size:14px !important;
+			line-height:115% !important;
+		}
+
+}</style><!--[if !mso]><!--><link href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700,700i" rel="stylesheet"><!--<![endif]--></head>
+    <body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0" offset="0" style="height: 100%;margin: 0;padding: 0;width: 100%;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;background-color: #fffff0;">
+        <center>
+            <table align="center" border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="bodyTable" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;height: 100%;margin: 0;padding: 0;width: 100%;background-color: #fffff0;">
+                <tr>
+                    <td align="center" valign="top" id="bodyCell" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;height: 100%;margin: 0;padding: 0;width: 100%;border-top: 0;">
+                        <!-- BEGIN TEMPLATE // -->
+                        <table border="0" cellpadding="0" cellspacing="0" width="600" class="templateContainer" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                            <tr>
+                                <td align="center" valign="top" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                    <!-- BEGIN PREHEADER // -->
+                                    <table border="0" cellpadding="0" cellspacing="0" width="600" id="templatePreheader" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;background-color: #c61e42;border-top: 0;border-bottom: 0;">
+                                        <tr>
+                                        	<td valign="top" class="preheaderContainer" style="padding-top: 9px;padding-bottom: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><table class="mcnTextBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tbody class="mcnTextBlockOuter">
+        <tr>
+            <td class="mcnTextBlockInner" style="padding-top: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="top">
+              	<!--[if mso]>
+				<table align="left" border="0" cellspacing="0" cellpadding="0" width="100%" style="width:100%;">
+				<tr>
+				<![endif]-->
+
+				<!--[if mso]>
+				<td valign="top" width="300" style="width:300px;">
+				<![endif]-->
+                <table style="max-width: 300px;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnTextContentContainer" width="100%" cellspacing="0" cellpadding="0" border="0" align="left">
+                    <tbody><tr>
+
+                        <td class="mcnTextContent" style="padding-top: 0;padding-left: 18px;padding-bottom: 9px;padding-right: 18px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;word-break: break-word;color: #FFFFFF;font-family: Verdana;font-size: 10px;line-height: 125%;text-align: left;" valign="top">
+
+                            <a href="https://www.linagora.fr/" target="_blank" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #FFFFFF;font-weight: normal;text-decoration: underline;"><img alt="Logo Linagora" data-file-id="1814717" src="https://gallery.mailchimp.com/78e6559c68d5c9aec7650a2a6/images/a78496cb-77b1-4709-b4e1-2ec88b4112f0.png" style="border: 0px;width: 100px;height: 21px;margin: 0px;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" width="100" height="21"></a>
+                        </td>
+                    </tr>
+                </tbody></table>
+				<!--[if mso]>
+				</td>
+				<![endif]-->
+
+				<!--[if mso]>
+				<td valign="top" width="300" style="width:300px;">
+				<![endif]-->
+                <table style="max-width: 300px;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnTextContentContainer" width="100%" cellspacing="0" cellpadding="0" border="0" align="left">
+                    <tbody><tr>
+
+                        <td class="mcnTextContent" style="padding-top: 0;padding-left: 18px;padding-bottom: 9px;padding-right: 18px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;word-break: break-word;color: #FFFFFF;font-family: Verdana;font-size: 10px;line-height: 125%;text-align: left;" valign="top">
+
+                            <div style="text-align: right;"><a href="*|ARCHIVE|*" target="_blank" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #FFFFFF;font-weight: normal;text-decoration: underline;">Afficher l'email dans le navigateur. </a></div>
+
+                        </td>
+                    </tr>
+                </tbody></table>
+				<!--[if mso]>
+				</td>
+				<![endif]-->
+
+				<!--[if mso]>
+				</tr>
+				</table>
+				<![endif]-->
+            </td>
+        </tr>
+    </tbody>
+</table></td>
+                                        </tr>
+                                    </table>
+                                    <!-- // END PREHEADER -->
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" valign="top" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                    <!-- BEGIN HEADER // -->
+                                    <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateHeader" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;background-color: #FFFFFF;border-top: 0;border-bottom: 0;">
+                                        <tr>
+                                            <td valign="top" class="headerContainer" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><table class="mcnTextBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" border="0" cellspacing="0" cellpadding="0" width="100%">
+    <tbody class="mcnTextBlockOuter">
+        <tr>
+            <td class="mcnTextBlockInner" style="padding-top: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="top">
+              	<!--[if mso]>
+				<table align="left" border="0" cellspacing="0" cellpadding="0" width="100%" style="width:100%;">
+				<tr>
+				<![endif]-->
+
+				<!--[if mso]>
+				<td valign="top" width="600" style="width:600px;">
+				<![endif]-->
+                <table style="max-width: 100%;min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnTextContentContainer" border="0" cellspacing="0" cellpadding="0" align="left" width="100%">
+                    <tbody><tr>
+
+                        <td class="mcnTextContent" style="padding-top: 0;padding-right: 18px;padding-bottom: 9px;padding-left: 18px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;word-break: break-word;color: #404040;font-family: Georgia;font-size: 16px;line-height: 150%;text-align: center;" valign="top">
+
+                            <div style="text-align: center;"><br>
+<span style="font-size:23px"><span style="font-family:open sans,helvetica neue,helvetica,arial,sans-serif"><strong>Hackathon sur les technologies Open Source avec Passerelles Numériques à Danang<br>
+<br>
+<a href="https://www.passerellesnumeriques.org/fr/nos-actions/vietnam/" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #C52E26;font-weight: normal;text-decoration: none;"><img data-file-id="1886169" src="https://gallery.mailchimp.com/78e6559c68d5c9aec7650a2a6/images/d989e2dd-b531-4a98-a71d-9b3f5625d001.png" style="border: 0px none;margin: 0px;height: auto !important;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" width="281" height="85"></a></strong></span></span></div>
+
+                        </td>
+                    </tr>
+                </tbody></table>
+				<!--[if mso]>
+				</td>
+				<![endif]-->
+
+				<!--[if mso]>
+				</tr>
+				</table>
+				<![endif]-->
+            </td>
+        </tr>
+    </tbody>
+</table><table class="mcnDividerBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;table-layout: fixed !important;" border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tbody class="mcnDividerBlockOuter">
+        <tr>
+            <td class="mcnDividerBlockInner" style="min-width: 100%;padding: 18px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                <table class="mcnDividerContent" style="min-width: 100%;border-top: 2px solid #EAEAEA;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" border="0" cellpadding="0" cellspacing="0" width="100%">
+                    <tbody><tr>
+                        <td style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                            <span></span>
+                        </td>
+                    </tr>
+                </tbody></table>
+<!--
+                <td class="mcnDividerBlockInner" style="padding: 18px;">
+                <hr class="mcnDividerContent" style="border-bottom-color:none; border-left-color:none; border-right-color:none; border-bottom-width:0; border-left-width:0; border-right-width:0; margin-top:0; margin-right:0; margin-bottom:0; margin-left:0;" />
+-->
+            </td>
+        </tr>
+    </tbody>
+</table></td>
+                                        </tr>
+                                    </table>
+                                    <!-- // END HEADER -->
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" valign="top" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                    <!-- BEGIN BODY // -->
+                                    <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateBody" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;background-color: #FFFFFF;border-top: 0;border-bottom: 0;">
+                                        <tr>
+                                            <td valign="top" class="bodyContainer" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><table class="mcnTextBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" border="0" cellspacing="0" cellpadding="0" width="100%">
+    <tbody class="mcnTextBlockOuter">
+        <tr>
+            <td class="mcnTextBlockInner" style="padding-top: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="top">
+              	<!--[if mso]>
+				<table align="left" border="0" cellspacing="0" cellpadding="0" width="100%" style="width:100%;">
+				<tr>
+				<![endif]-->
+
+				<!--[if mso]>
+				<td valign="top" width="600" style="width:600px;">
+				<![endif]-->
+                <table style="max-width: 100%;min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnTextContentContainer" border="0" cellspacing="0" cellpadding="0" align="left" width="100%">
+                    <tbody><tr>
+
+                        <td class="mcnTextContent" style="padding-top: 0;padding-right: 18px;padding-bottom: 9px;padding-left: 18px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;word-break: break-word;color: #404040;font-family: Verdana;font-size: 14px;line-height: 150%;text-align: left;" valign="top">
+
+                            <p align="justify" style="margin: 10px 0;padding: 0;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #404040;font-family: Verdana;font-size: 14px;line-height: 150%;text-align: left;"><font face="Liberation Sans, sans-serif"><font style="font-size: 11pt" size="2"><strong>LINAGORA</strong><strong> </strong><strong>est</strong><strong> fière d'être partenaire de Passerelles Numériques </strong><strong>pour </strong><strong>anim</strong><strong>er</strong><strong> </strong><strong>un</strong><strong> </strong><strong>Hackathon</strong><strong> avec des </strong><strong>jeunes</strong><strong> étudiants dynamiques et prometteurs.</strong></font></font></p>
+
+<p align="justify" style="margin: 10px 0;padding: 0;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #404040;font-family: Verdana;font-size: 14px;line-height: 150%;text-align: left;"><br>
+<font face="Liberation Sans, sans-serif"><font style="font-size: 11pt" size="2">Du lundi 20 mars au 31 mars, l'équipe <strong>LINAGORA Vietnam</strong>, et en particulier notre expert <a href="http://open-paas.org/" target="_blank" title="Site web OpenPaaS" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #C52E26;font-weight: normal;text-decoration: none;"><span style="color:#0000FF"><strong>OpenPaaS</strong></span></a> Benoît Tellier, effectue un <strong>Hackathon</strong> sur les technologies <strong>Open Source</strong> et l'environnement Linux avec une vingtaine d'étudiants vietnamiens évoluant au sein de l'ONG d'éducation <strong>Passerelles Numérique</strong> à Danang.</font></font></p>
+
+<p align="justify" style="margin: 10px 0;padding: 0;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #404040;font-family: Verdana;font-size: 14px;line-height: 150%;text-align: left;"><font face="Liberation Sans, sans-serif"><font style="font-size: 11pt" size="2">Cette intervention se fait dans le cadre de la coopération stratégique et technologique entre la ville de Danang et LINAGORA Vietnam. Depuis 2015, les deux entités coopèrent et collaborent pour le développement de solutions d'<strong>e-Gouvernance </strong>basées sur des technologies Open Source. Fin 2016, les logiciels <strong>OBM</strong> (messagerie collaborative) et <strong>LinShare</strong> (partage de fichiers) de LINAGORA ont été déployé pour 20 000 administrés de la ville Danang.</font></font></p>
+
+<p align="justify" style="margin: 10px 0;padding: 0;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #404040;font-family: Verdana;font-size: 14px;line-height: 150%;text-align: left;"><font style="font-size: 11pt" size="2"><font face="Liberation Sans, sans-serif">Ce </font><font face="Liberation Sans, sans-serif"><strong>Hackathon</strong></font><font face="Liberation Sans, sans-serif"> </font><font face="Liberation Sans, sans-serif">unique en son genre </font><font face="Liberation Sans, sans-serif">s'</font><font face="Liberation Sans, sans-serif">est</font><font face="Liberation Sans, sans-serif"> donné</font><font face="Liberation Sans, sans-serif"> trois objectifs : </font></font></p>
+
+<ol>
+	<li align="justify" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><font style="font-size: 11pt" size="2"><font face="Liberation Sans, sans-serif">Présenter </font><font face="Liberation Sans, sans-serif">d'une </font><font face="Liberation Sans, sans-serif">part</font><font face="Liberation Sans, sans-serif"> </font><font face="Liberation Sans, sans-serif">le</font><font face="Liberation Sans, sans-serif"> logiciel </font><font face="Liberation Sans, sans-serif">phare</font><font face="Liberation Sans, sans-serif"> </font><font face="Liberation Sans, sans-serif">que</font><font face="Liberation Sans, sans-serif"> </font><font face="Liberation Sans, sans-serif">nous</font><font face="Liberation Sans, sans-serif"> </font><font face="Liberation Sans, sans-serif">développons : </font><font face="Liberation Sans, sans-serif"><strong>OpenPaaS</strong></font><font face="Liberation Sans, sans-serif"> </font><font face="Liberation Sans, sans-serif">(</font><font face="Liberation Sans, sans-serif">plate-forme </font><font face="Liberation Sans, sans-serif">de travail collaboratif de nouvelle génération</font><font face="Liberation Sans, sans-serif">)</font><font face="Liberation Sans, sans-serif">, </font></font></li>
+	<li align="justify" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><font style="font-size: 11pt" size="2"><font face="Liberation Sans, sans-serif">Présenter d'autre part</font><font face="Liberation Sans, sans-serif"> le projet </font><font face="Liberation Sans, sans-serif"><strong>James</strong></font><font face="Liberation Sans, sans-serif"> </font><font face="Liberation Sans, sans-serif">(</font><font face="Liberation Sans, sans-serif">mail serveur</font><font face="Liberation Sans, sans-serif">)</font><font face="Liberation Sans, sans-serif"> de la fondation Apache, pour lequel nous contribuons et </font><font face="Liberation Sans, sans-serif">faire contribuer les étudiants </font><font face="Liberation Sans, sans-serif">sur ces </font><font face="Liberation Sans, sans-serif">deux</font><font face="Liberation Sans, sans-serif"> logiciels.</font></font></li>
+	<li align="justify" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><font style="font-size: 11pt" size="2"><font face="Liberation Sans, sans-serif">Enfin, </font><font face="Liberation Sans, sans-serif">faire découvrir le métier de développeur dans une entreprise </font><font face="Liberation Sans, sans-serif">internationale</font><font face="Liberation Sans, sans-serif">.</font></font></li>
+</ol>
+
+<p align="justify" style="margin: 10px 0;padding: 0;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #404040;font-family: Verdana;font-size: 14px;line-height: 150%;text-align: left;"><font face="Liberation Sans, sans-serif"><font style="font-size: 11pt" size="2">Ce programme s'organise autour de diverses formations, de travaux pratiques (10 heures par semaine) autour des thèmes de James et d'OpenPaaS : écrire des tests, écrire du code lisible, utiliser Java 8, utiliser JPA, créer une interface REST, etc. La «méthode agile» est utilisé et mise en avant pour structurer le travail, pratiquer du «pair programming» ainsi que de la revue de code, installer la plate-forme OpenPaaS sur leurs ordinateurs, etc.</font></font></p>
+
+<p align="justify" style="margin: 10px 0;padding: 0;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #404040;font-family: Verdana;font-size: 14px;line-height: 150%;text-align: left;"><font face="Liberation Sans, sans-serif"><font style="font-size: 11pt" size="2">À travers cette expérience, les étudiants peuvent découvrir le monde Open Source et les méthodes et exigences de développeurs professionnels.</font></font><br>
+&nbsp;</p>
+
+<p style="text-align: center;margin: 10px 0;padding: 0;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #404040;font-family: Verdana;font-size: 14px;line-height: 150%;"><font face="Liberation Sans, sans-serif"><font style="font-size: 11pt" size="2"><a href="https://twitter.com/passerellesNume/status/844221561649483776" target="_blank" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #C52E26;font-weight: normal;text-decoration: none;"><img data-file-id="1911553" src="https://gallery.mailchimp.com/78e6559c68d5c9aec7650a2a6/images/fbb0d956-f957-4869-88ad-3d0a2eeadb0c.jpg" style="border: 0px;width: 550px;height: 367px;margin: 0px;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" width="550" height="367"></a></font></font><br>
+<font face="Liberation Sans, sans-serif"><font style="font-size: 11pt" size="2"><em>Benoît Tellier, expert OpenPaaS et des étudiants suivant la formation.</em></font></font></p>
+
+<p align="justify" style="margin: 10px 0;padding: 0;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #404040;font-family: Verdana;font-size: 14px;line-height: 150%;text-align: left;"><font face="Liberation Sans, sans-serif"><font style="font-size: 11pt" size="2">Au terme de ces 15 jours de formation, LINAGORA est à la fois fière d'être partenaire de <strong>Passerelles Numériques</strong> et surtout d'animer ce <strong>Hackathon</strong> avec des étudiants si dynamiques et prometteurs. <strong>Passerelles Numériques</strong> est une formidable association qui fait un excellent travail auprès des plus jeunes. Elle a un vrai impact sur la société grâce à son travail et ses valeurs.</font></font></p>
+
+<p align="justify" style="margin: 10px 0;padding: 0;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #404040;font-family: Verdana;font-size: 14px;line-height: 150%;text-align: left;"><font face="Liberation Sans, sans-serif"><font style="font-size: 11pt" size="2">Ce partenariat et cette initiative vont dans le sens de no</font><font style="font-size: 11pt" size="2">tre</font><font style="font-size: 11pt" size="2"> objectif </font><font style="font-size: 11pt" size="2">principal</font><font style="font-size: 11pt" size="2"> </font><font style="font-size: 11pt" size="2">de LINAGORA</font><font style="font-size: 11pt" size="2"> Vietnam</font><font style="font-size: 11pt" size="2"> : contribuer à l'<strong>indépendance numérique</strong> du Vietnam </font><font style="font-size: 11pt" size="2">via la fourniture</font><font style="font-size: 11pt" size="2"> des solutions d'</font><font style="font-size: 11pt" size="2">e-Gouvernance<strong> </strong></font><font style="font-size: 11pt" size="2">Open Source</font><font style="font-size: 11pt" size="2"> aux </font><font style="font-size: 11pt" size="2">administrations</font><font style="font-size: 11pt" size="2"> vietnamiennes </font><font style="font-size: 11pt" size="2">et le développement</font><font style="font-size: 11pt" size="2"> des </font><font style="font-size: 11pt" size="2">programmes de</font><font style="font-size: 11pt" size="2"> formation de qualité sur </font><font style="font-size: 11pt" size="2">l'informatique et</font><font style="font-size: 11pt" size="2"> l</font><font style="font-size: 11pt" size="2">es</font><font style="font-size: 11pt" size="2"> technologie</font><font style="font-size: 11pt" size="2">s</font><font style="font-size: 11pt" size="2"> </font><font style="font-size: 11pt" size="2">O</font><font style="font-size: 11pt" size="2">pen </font><font style="font-size: 11pt" size="2">S</font><font style="font-size: 11pt" size="2">ource</font><font style="font-size: 11pt" size="2">.</font></font></p>
+
+                        </td>
+                    </tr>
+                </tbody></table>
+				<!--[if mso]>
+				</td>
+				<![endif]-->
+
+				<!--[if mso]>
+				</tr>
+				</table>
+				<![endif]-->
+            </td>
+        </tr>
+    </tbody>
+</table><table class="mcnShareBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" border="0" cellspacing="0" cellpadding="0" width="100%">
+    <tbody class="mcnShareBlockOuter">
+            <tr>
+                <td style="padding: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnShareBlockInner" valign="top">
+                    <table class="mcnShareContentContainer" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" border="0" cellspacing="0" cellpadding="0" width="100%">
+    <tbody><tr>
+        <td style="padding-top: 0;padding-left: 9px;padding-bottom: 0;padding-right: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" align="center">
+            <table style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnShareContent" border="0" cellspacing="0" cellpadding="0" align="center" width="100%">
+                <tbody><tr>
+                    <td class="mcnShareContentItemContainer" style="padding-top: 9px;padding-right: 9px;padding-left: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="top" align="center">
+                        <table border="0" cellspacing="0" cellpadding="0" align="center" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                            <tbody><tr>
+                                <td valign="top" align="left" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                    <!--[if mso]>
+                                    <table align="center" border="0" cellspacing="0" cellpadding="0">
+                                    <tr>
+                                    <![endif]-->
+
+                                        <!--[if mso]>
+                                        <td align="center" valign="top">
+                                        <![endif]-->
+                                        <table border="0" cellspacing="0" cellpadding="0" align="left" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                            <tbody><tr>
+                                                <td style="padding-right: 9px;padding-bottom: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnShareContentItemContainer" valign="top">
+                                                    <table class="mcnShareContentItem" style="border-collapse: separate;border-radius: 3px;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" border="0" cellspacing="0" cellpadding="0" width="">
+                                                        <tbody><tr>
+                                                            <td style="padding-top: 5px;padding-right: 9px;padding-bottom: 5px;padding-left: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="middle" align="left">
+                                                                <table border="0" cellspacing="0" cellpadding="0" align="left" width="" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                    <tbody><tr>
+                                                                        <td class="mcnShareIconContent" valign="middle" align="center" width="24" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                            <a href="http://www.facebook.com/sharer/sharer.php?u=*|URL:ARCHIVE_LINK_SHORT|*" target="_blank" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><img src="https://cdn-images.mailchimp.com/icons/social-block-v2/color-facebook-48.png" style="display: block;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" class="" width="24" height="24"></a>
+                                                                        </td>
+                                                                        <td class="mcnShareTextContent" style="padding-left: 5px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="middle" align="left">
+                                                                            <a href="http://www.facebook.com/sharer/sharer.php?u=*|URL:ARCHIVE_LINK_SHORT|*" target="" style="color: #202020;font-family: Arial;font-size: 12px;font-weight: normal;line-height: normal;text-align: center;text-decoration: none;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">Share</a>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody></table>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody></table>
+                                                </td>
+                                            </tr>
+                                        </tbody></table>
+                                        <!--[if mso]>
+                                        </td>
+                                        <![endif]-->
+
+                                        <!--[if mso]>
+                                        <td align="center" valign="top">
+                                        <![endif]-->
+                                        <table border="0" cellspacing="0" cellpadding="0" align="left" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                            <tbody><tr>
+                                                <td style="padding-right: 9px;padding-bottom: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnShareContentItemContainer" valign="top">
+                                                    <table class="mcnShareContentItem" style="border-collapse: separate;border-radius: 3px;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" border="0" cellspacing="0" cellpadding="0" width="">
+                                                        <tbody><tr>
+                                                            <td style="padding-top: 5px;padding-right: 9px;padding-bottom: 5px;padding-left: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="middle" align="left">
+                                                                <table border="0" cellspacing="0" cellpadding="0" align="left" width="" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                    <tbody><tr>
+                                                                        <td class="mcnShareIconContent" valign="middle" align="center" width="24" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                            <a href="http://twitter.com/intent/tweet?text=*|URL:MC_SUBJECT|*: *|URL:ARCHIVE_LINK_SHORT|*" target="_blank" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><img src="https://cdn-images.mailchimp.com/icons/social-block-v2/color-twitter-48.png" style="display: block;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" class="" width="24" height="24"></a>
+                                                                        </td>
+                                                                        <td class="mcnShareTextContent" style="padding-left: 5px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="middle" align="left">
+                                                                            <a href="http://twitter.com/intent/tweet?text=*|URL:MC_SUBJECT|*: *|URL:ARCHIVE_LINK_SHORT|*" target="" style="color: #202020;font-family: Arial;font-size: 12px;font-weight: normal;line-height: normal;text-align: center;text-decoration: none;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">Tweet</a>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody></table>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody></table>
+                                                </td>
+                                            </tr>
+                                        </tbody></table>
+                                        <!--[if mso]>
+                                        </td>
+                                        <![endif]-->
+
+                                        <!--[if mso]>
+                                        <td align="center" valign="top">
+                                        <![endif]-->
+                                        <table border="0" cellspacing="0" cellpadding="0" align="left" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                            <tbody><tr>
+                                                <td style="padding-right: 0;padding-bottom: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnShareContentItemContainer" valign="top">
+                                                    <table class="mcnShareContentItem" style="border-collapse: separate;border-radius: 3px;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" border="0" cellspacing="0" cellpadding="0" width="">
+                                                        <tbody><tr>
+                                                            <td style="padding-top: 5px;padding-right: 9px;padding-bottom: 5px;padding-left: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="middle" align="left">
+                                                                <table border="0" cellspacing="0" cellpadding="0" align="left" width="" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                    <tbody><tr>
+                                                                        <td class="mcnShareIconContent" valign="middle" align="center" width="24" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                            <a href="http://www.linkedin.com/shareArticle?url=*|URL:ARCHIVE_LINK_SHORT|*&amp;mini=true&amp;title=*|URL:MC_SUBJECT|*" target="_blank" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><img src="https://cdn-images.mailchimp.com/icons/social-block-v2/color-linkedin-48.png" style="display: block;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" class="" width="24" height="24"></a>
+                                                                        </td>
+                                                                        <td class="mcnShareTextContent" style="padding-left: 5px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="middle" align="left">
+                                                                            <a href="http://www.linkedin.com/shareArticle?url=*|URL:ARCHIVE_LINK_SHORT|*&amp;mini=true&amp;title=*|URL:MC_SUBJECT|*" target="" style="color: #202020;font-family: Arial;font-size: 12px;font-weight: normal;line-height: normal;text-align: center;text-decoration: none;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">Share</a>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody></table>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody></table>
+                                                </td>
+                                            </tr>
+                                        </tbody></table>
+                                        <!--[if mso]>
+                                        </td>
+                                        <![endif]-->
+
+                                    <!--[if mso]>
+                                    </tr>
+                                    </table>
+                                    <![endif]-->
+                                </td>
+                            </tr>
+                        </tbody></table>
+                    </td>
+                </tr>
+            </tbody></table>
+        </td>
+    </tr>
+</tbody></table>
+
+                </td>
+            </tr>
+    </tbody>
+</table><table class="mcnDividerBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;table-layout: fixed !important;" border="0" cellspacing="0" cellpadding="0" width="100%">
+    <tbody class="mcnDividerBlockOuter">
+        <tr>
+            <td class="mcnDividerBlockInner" style="min-width: 100%;padding: 18px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                <table class="mcnDividerContent" style="min-width: 100%;border-top: 2px solid #EAEAEA;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" border="0" cellspacing="0" cellpadding="0" width="100%">
+                    <tbody><tr>
+                        <td style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                            <span></span>
+                        </td>
+                    </tr>
+                </tbody></table>
+<!--
+                <td class="mcnDividerBlockInner" style="padding: 18px;">
+                <hr class="mcnDividerContent" style="border-bottom-color:none; border-left-color:none; border-right-color:none; border-bottom-width:0; border-left-width:0; border-right-width:0; margin-top:0; margin-right:0; margin-bottom:0; margin-left:0;" />
+-->
+            </td>
+        </tr>
+    </tbody>
+</table><table class="mcnTextBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" border="0" cellspacing="0" cellpadding="0" width="100%">
+    <tbody class="mcnTextBlockOuter">
+        <tr>
+            <td class="mcnTextBlockInner" style="padding-top: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="top">
+              	<!--[if mso]>
+				<table align="left" border="0" cellspacing="0" cellpadding="0" width="100%" style="width:100%;">
+				<tr>
+				<![endif]-->
+
+				<!--[if mso]>
+				<td valign="top" width="600" style="width:600px;">
+				<![endif]-->
+                <table style="max-width: 100%;min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnTextContentContainer" border="0" cellspacing="0" cellpadding="0" align="left" width="100%">
+                    <tbody><tr>
+
+                        <td class="mcnTextContent" style="padding-top: 0;padding-right: 18px;padding-bottom: 9px;padding-left: 18px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;word-break: break-word;color: #404040;font-family: Verdana;font-size: 14px;line-height: 150%;text-align: left;" valign="top">
+
+                            <span style="font-size:14px"><span style="font-family:tahoma,verdana,segoe,sans-serif"><strong>En savoir plus sur Passerelles Numériques :</strong></span></span><br>
+<span style="font-size:12px"><span style="font-family:tahoma,verdana,segoe,sans-serif"><a href="https://www.passerellesnumeriques.org/fr/" target="_blank" title="Site web Passerelles Numériques" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #C52E26;font-weight: normal;text-decoration: none;">Passerelles Numériques</a> est une ONG française. Ils opèrent au Cambodge, aux Philippines et au Vietnam. Leur mission est de permettre à des jeunes très défavorisés d’accéder à une éducation et à une formation technique et professionnelle, dans le secteur du numérique. Cela leur permettra d’échapper durablement à la pauvreté, et de contribuer au développement socio-économique de leur pays.</span></span>
+                        </td>
+                    </tr>
+                </tbody></table>
+				<!--[if mso]>
+				</td>
+				<![endif]-->
+
+				<!--[if mso]>
+				</tr>
+				</table>
+				<![endif]-->
+            </td>
+        </tr>
+    </tbody>
+</table><table class="mcnTextBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tbody class="mcnTextBlockOuter">
+        <tr>
+            <td class="mcnTextBlockInner" style="padding-top: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="top">
+              	<!--[if mso]>
+				<table align="left" border="0" cellspacing="0" cellpadding="0" width="100%" style="width:100%;">
+				<tr>
+				<![endif]-->
+
+				<!--[if mso]>
+				<td valign="top" width="600" style="width:600px;">
+				<![endif]-->
+                <table style="max-width: 100%;min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnTextContentContainer" width="100%" cellspacing="0" cellpadding="0" border="0" align="left">
+                    <tbody><tr>
+
+                        <td class="mcnTextContent" style="padding-top: 0;padding-right: 18px;padding-bottom: 9px;padding-left: 18px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;word-break: break-word;color: #404040;font-family: Verdana;font-size: 14px;line-height: 150%;text-align: left;" valign="top">
+
+                            <u><span style="font-family:tahoma,verdana,segoe,sans-serif"><strong>Contact presse :</strong></span></u><br>
+<br>
+<span style="font-family:tahoma,verdana,segoe,sans-serif"><strong>Robin Ledru</strong> : communication@linagora.com et 06 33 87 88 64</span>
+                        </td>
+                    </tr>
+                </tbody></table>
+				<!--[if mso]>
+				</td>
+				<![endif]-->
+
+				<!--[if mso]>
+				</tr>
+				</table>
+				<![endif]-->
+            </td>
+        </tr>
+    </tbody>
+</table><table class="mcnDividerBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;table-layout: fixed !important;" border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tbody class="mcnDividerBlockOuter">
+        <tr>
+            <td class="mcnDividerBlockInner" style="min-width: 100%;padding: 9px 18px 0px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                <table class="mcnDividerContent" style="min-width: 100%;border-top: 1px solid #CCCCCC;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" border="0" cellpadding="0" cellspacing="0" width="100%">
+                    <tbody><tr>
+                        <td style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                            <span></span>
+                        </td>
+                    </tr>
+                </tbody></table>
+<!--
+                <td class="mcnDividerBlockInner" style="padding: 18px;">
+                <hr class="mcnDividerContent" style="border-bottom-color:none; border-left-color:none; border-right-color:none; border-bottom-width:0; border-left-width:0; border-right-width:0; margin-top:0; margin-right:0; margin-bottom:0; margin-left:0;" />
+-->
+            </td>
+        </tr>
+    </tbody>
+</table><table class="mcnBoxedTextBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <!--[if gte mso 9]>
+	<table align="center" border="0" cellspacing="0" cellpadding="0" width="100%">
+	<![endif]-->
+	<tbody class="mcnBoxedTextBlockOuter">
+        <tr>
+            <td class="mcnBoxedTextBlockInner" valign="top" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+
+				<!--[if gte mso 9]>
+				<td align="center" valign="top" ">
+				<![endif]-->
+                <table style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnBoxedTextContentContainer" width="100%" cellspacing="0" cellpadding="0" border="0" align="left">
+                    <tbody><tr>
+
+                        <td style="padding-top: 9px;padding-left: 18px;padding-bottom: 9px;padding-right: 18px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+
+                            <table class="mcnTextContentContainer" style="min-width: 100% ! important;background-color: #404040;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" width="100%" cellspacing="0" cellpadding="18" border="0">
+                                <tbody><tr>
+                                    <td class="mcnTextContent" style="color: #F2F2F2;font-family: &quot;Open Sans&quot;,&quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif;font-size: 16px;font-weight: normal;text-align: center;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;word-break: break-word;line-height: 150%;" valign="top">
+                                        <strong>Suivez nous sur nos différents réseaux sociaux</strong>
+                                    </td>
+                                </tr>
+                            </tbody></table>
+                        </td>
+                    </tr>
+                </tbody></table>
+				<!--[if gte mso 9]>
+				</td>
+				<![endif]-->
+
+				<!--[if gte mso 9]>
+                </tr>
+                </table>
+				<![endif]-->
+            </td>
+        </tr>
+    </tbody>
+</table><table class="mcnFollowBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tbody class="mcnFollowBlockOuter">
+        <tr>
+            <td style="padding: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnFollowBlockInner" valign="top" align="center">
+                <table class="mcnFollowContentContainer" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tbody><tr>
+        <td style="padding-left: 9px;padding-right: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" align="center">
+            <table style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnFollowContent" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tbody><tr>
+                    <td style="padding-top: 9px;padding-right: 9px;padding-left: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="top" align="center">
+                        <table cellspacing="0" cellpadding="0" border="0" align="center" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                            <tbody><tr>
+                                <td valign="top" align="center" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                    <!--[if mso]>
+                                    <table align="center" border="0" cellspacing="0" cellpadding="0">
+                                    <tr>
+                                    <![endif]-->
+
+                                        <!--[if mso]>
+                                        <td align="center" valign="top">
+                                        <![endif]-->
+
+                                            <table class="mcnFollowStacked" style="display: inline;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" cellspacing="0" cellpadding="0" border="0" align="left">
+
+                                                <tbody><tr>
+                                                    <td class="mcnFollowIconContent" style="padding-right: 10px;padding-bottom: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="top" align="center">
+                                                        <a href="https://www.facebook.com/Linagora/" target="_blank" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><img src="https://cdn-images.mailchimp.com/icons/social-block-v2/light-facebook-96.png" alt="Linagora's Facebook" class="mcnFollowBlockIcon" style="width: 48px;max-width: 48px;display: block;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" width="48"></a>
+                                                    </td>
+                                                </tr>
+
+
+                                            </tbody></table>
+
+
+                                        <!--[if mso]>
+                                        </td>
+                                        <![endif]-->
+
+                                        <!--[if mso]>
+                                        <td align="center" valign="top">
+                                        <![endif]-->
+
+                                            <table class="mcnFollowStacked" style="display: inline;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" cellspacing="0" cellpadding="0" border="0" align="left">
+
+                                                <tbody><tr>
+                                                    <td class="mcnFollowIconContent" style="padding-right: 10px;padding-bottom: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="top" align="center">
+                                                        <a href="https://twitter.com/linagora" target="_blank" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><img src="https://cdn-images.mailchimp.com/icons/social-block-v2/light-twitter-96.png" alt="Linagora's Twitter" class="mcnFollowBlockIcon" style="width: 48px;max-width: 48px;display: block;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" width="48"></a>
+                                                    </td>
+                                                </tr>
+
+
+                                            </tbody></table>
+
+
+                                        <!--[if mso]>
+                                        </td>
+                                        <![endif]-->
+
+                                        <!--[if mso]>
+                                        <td align="center" valign="top">
+                                        <![endif]-->
+
+                                            <table class="mcnFollowStacked" style="display: inline;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" cellspacing="0" cellpadding="0" border="0" align="left">
+
+                                                <tbody><tr>
+                                                    <td class="mcnFollowIconContent" style="padding-right: 10px;padding-bottom: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="top" align="center">
+                                                        <a href="https://www.linkedin.com/company/linagora" target="_blank" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><img src="https://cdn-images.mailchimp.com/icons/social-block-v2/light-linkedin-96.png" alt="Linagora's LinkedIn" class="mcnFollowBlockIcon" style="width: 48px;max-width: 48px;display: block;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" width="48"></a>
+                                                    </td>
+                                                </tr>
+
+
+                                            </tbody></table>
+
+
+                                        <!--[if mso]>
+                                        </td>
+                                        <![endif]-->
+
+                                        <!--[if mso]>
+                                        <td align="center" valign="top">
+                                        <![endif]-->
+
+                                            <table class="mcnFollowStacked" style="display: inline;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" cellspacing="0" cellpadding="0" border="0" align="left">
+
+                                                <tbody><tr>
+                                                    <td class="mcnFollowIconContent" style="padding-right: 10px;padding-bottom: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="top" align="center">
+                                                        <a href="https://plus.google.com/108425659490539786266" target="_blank" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><img src="https://cdn-images.mailchimp.com/icons/social-block-v2/light-googleplus-96.png" alt="Linagora's G+" class="mcnFollowBlockIcon" style="width: 48px;max-width: 48px;display: block;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" width="48"></a>
+                                                    </td>
+                                                </tr>
+
+
+                                            </tbody></table>
+
+
+                                        <!--[if mso]>
+                                        </td>
+                                        <![endif]-->
+
+                                        <!--[if mso]>
+                                        <td align="center" valign="top">
+                                        <![endif]-->
+
+                                            <table class="mcnFollowStacked" style="display: inline;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" cellspacing="0" cellpadding="0" border="0" align="left">
+
+                                                <tbody><tr>
+                                                    <td class="mcnFollowIconContent" style="padding-right: 10px;padding-bottom: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="top" align="center">
+                                                        <a href="https://github.com/linagora" target="_blank" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><img src="https://cdn-images.mailchimp.com/icons/social-block-v2/light-github-96.png" alt="Linagora's GitHub" class="mcnFollowBlockIcon" style="width: 48px;max-width: 48px;display: block;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" width="48"></a>
+                                                    </td>
+                                                </tr>
+
+
+                                            </tbody></table>
+
+
+                                        <!--[if mso]>
+                                        </td>
+                                        <![endif]-->
+
+                                        <!--[if mso]>
+                                        <td align="center" valign="top">
+                                        <![endif]-->
+
+                                            <table class="mcnFollowStacked" style="display: inline;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" cellspacing="0" cellpadding="0" border="0" align="left">
+
+                                                <tbody><tr>
+                                                    <td class="mcnFollowIconContent" style="padding-right: 10px;padding-bottom: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="top" align="center">
+                                                        <a href="https://www.linagora.com" target="_blank" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><img src="https://cdn-images.mailchimp.com/icons/social-block-v2/light-link-96.png" alt="Linagora's website" class="mcnFollowBlockIcon" style="width: 48px;max-width: 48px;display: block;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" width="48"></a>
+                                                    </td>
+                                                </tr>
+
+
+                                            </tbody></table>
+
+
+                                        <!--[if mso]>
+                                        </td>
+                                        <![endif]-->
+
+                                        <!--[if mso]>
+                                        <td align="center" valign="top">
+                                        <![endif]-->
+
+                                            <table class="mcnFollowStacked" style="display: inline;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" cellspacing="0" cellpadding="0" border="0" align="left">
+
+                                                <tbody><tr>
+                                                    <td class="mcnFollowIconContent" style="padding-right: 0;padding-bottom: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" valign="top" align="center">
+                                                        <a href="mailto:communication@linagora.com" target="_blank" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><img src="https://cdn-images.mailchimp.com/icons/social-block-v2/light-forwardtofriend-96.png" alt="Linagora's email" class="mcnFollowBlockIcon" style="width: 48px;max-width: 48px;display: block;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" width="48"></a>
+                                                    </td>
+                                                </tr>
+
+
+                                            </tbody></table>
+
+
+                                        <!--[if mso]>
+                                        </td>
+                                        <![endif]-->
+
+                                    <!--[if mso]>
+                                    </tr>
+                                    </table>
+                                    <![endif]-->
+                                </td>
+                            </tr>
+                        </tbody></table>
+                    </td>
+                </tr>
+            </tbody></table>
+        </td>
+    </tr>
+</tbody></table>
+
+            </td>
+        </tr>
+    </tbody>
+</table></td>
+                                        </tr>
+                                    </table>
+                                    <!-- // END BODY -->
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" valign="top" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                    <!-- BEGIN COLUMNS // -->
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%" id="templateColumns" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;background-color: #FFFFFF;border-top: 0;border-bottom: 0;">
+                                        <tr>
+                                            <td align="center" valign="top" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                <table border="0" cellpadding="0" cellspacing="0" width="600" class="templateContainer" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                    <tr>
+                                                        <td align="left" valign="top" class="columnsContainer" width="50%" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                            <table align="left" border="0" cellpadding="0" cellspacing="0" width="100%" class="templateColumn" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                <tr>
+                                                                    <td valign="top" class="leftColumnContainer" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"></td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        <td align="left" valign="top" class="columnsContainer" width="50%" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                            <table align="right" border="0" cellpadding="0" cellspacing="0" width="100%" class="templateColumn" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                <tr>
+                                                                    <td valign="top" class="rightColumnContainer" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"></td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <!-- // END COLUMNS -->
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" valign="top" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                    <!-- BEGIN FOOTER // -->
+                                    <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateFooter" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;background-color: #ECEAD4;border-top: 0;border-bottom: 0;">
+                                        <tr>
+                                            <td valign="top" class="footerContainer" style="padding-top: 9px;padding-bottom: 9px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;"><table class="mcnTextBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tbody class="mcnTextBlockOuter">
+        <tr>
+            <td class="mcnTextBlockInner" valign="top" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+
+                <table style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnTextContentContainer" border="0" cellpadding="0" cellspacing="0" align="left" width="100%">
+                    <tbody><tr>
+
+                        <td class="mcnTextContent" style="padding-top: 9px;padding-right: 18px;padding-bottom: 9px;padding-left: 18px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;word-break: break-word;color: #202020;font-family: Verdana;font-size: 10px;line-height: 125%;text-align: center;" valign="top">
+
+                            <em>Copyright © 2017 *|LIST:COMPANY|*, All rights reserved.</em><br>
+ *|LIST:DESCRIPTION|*<br>
+<br>
+<strong>Our mailing address is:</strong><br>
+*|HTML:LIST_ADDRESS_HTML|* <br>
+<br>
+Want to change how you receive these emails?<br>
+You can <a href="*|UPDATE_PROFILE|*" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #C52E26;font-weight: bold;text-decoration: none;">update your preferences</a> or <a href="*|UNSUB|*" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #C52E26;font-weight: bold;text-decoration: none;">unsubscribe from this list</a><br>
+<br>
+
+                        </td>
+                    </tr>
+                </tbody></table>
+
+            </td>
+        </tr>
+    </tbody>
+</table></td>
+                                        </tr>
+                                    </table>
+                                    <!-- // END FOOTER -->
+                                </td>
+                            </tr>
+                        </table>
+                        <!-- // END TEMPLATE -->
+                    </td>
+                </tr>
+            </table>
+        </center>
+    </body>
+</html>
