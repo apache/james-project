@@ -35,6 +35,6 @@ public class MessagePreviewGenerator {
     }
 
     private String truncateToMaxLength(String body) {
-        return StringUtils.left(body, MAX_PREVIEW_LENGTH);
+        return StringUtils.left(StringUtils.normalizeSpace(body), MAX_PREVIEW_LENGTH);
     }
 }
