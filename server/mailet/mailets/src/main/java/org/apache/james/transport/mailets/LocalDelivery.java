@@ -23,15 +23,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.mail.MessagingException;
 
-import org.apache.commons.logging.Log;
 import org.apache.james.mailbox.MailboxManager;
-
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.transport.mailets.delivery.MailDispatcher;
 import org.apache.james.transport.mailets.delivery.MailboxAppender;
 import org.apache.james.transport.mailets.delivery.SimpleMailStore;
-import org.apache.james.transport.mailets.jsieve.CommonsLoggingAdapter;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -69,23 +66,15 @@ public class LocalDelivery extends GenericMailet {
     }
 
     public void init() throws MessagingException {
-        Log log = CommonsLoggingAdapter.builder()
-            .wrappedLogger(getMailetContext().getLogger())
-            .quiet(getInitParameter("quiet", false))
-            .verbose(getInitParameter("verbose", false))
-            .build();
-
         mailDispatcher = MailDispatcher.builder()
             .mailStore(SimpleMailStore.builder()
                 .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext().getLogger()))
                 .usersRepository(usersRepository)
                 .folder(MailboxConstants.INBOX)
                 .metric(metricFactory.generate(LOCAL_DELIVERED_MAILS_METRIC_NAME))
-                .log(log)
                 .build())
             .consume(getInitParameter("consume", true))
             .mailetContext(getMailetContext())
-            .log(log)
             .build();
     }
 

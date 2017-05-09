@@ -27,10 +27,14 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
 public class SimpleMailStore implements MailStore {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleMailStore.class);
 
     public static Builder builder() {
         return new Builder();
@@ -41,7 +45,6 @@ public class SimpleMailStore implements MailStore {
         private MailboxAppender mailboxAppender;
         private String folder;
         private Metric metric;
-        private Log log;
 
         public Builder folder(String folder) {
             this.folder = folder;
@@ -58,11 +61,6 @@ public class SimpleMailStore implements MailStore {
             return this;
         }
 
-        public Builder log(Log log) {
-            this.log = log;
-            return this;
-        }
-
         public Builder metric(Metric metric) {
             this.metric = metric;
             return this;
@@ -71,24 +69,21 @@ public class SimpleMailStore implements MailStore {
         public SimpleMailStore build() throws MessagingException {
             Preconditions.checkNotNull(usersRepos);
             Preconditions.checkNotNull(folder);
-            Preconditions.checkNotNull(log);
             Preconditions.checkNotNull(mailboxAppender);
             Preconditions.checkNotNull(metric);
-            return new SimpleMailStore(mailboxAppender, usersRepos, metric, log, folder);
+            return new SimpleMailStore(mailboxAppender, usersRepos, metric, folder);
         }
     }
 
     private final MailboxAppender mailboxAppender;
     private final UsersRepository usersRepository;
     private final Metric metric;
-    private final Log log;
     private final String folder;
 
-    private SimpleMailStore(MailboxAppender mailboxAppender, UsersRepository usersRepository, Metric metric, Log log, String folder) {
+    private SimpleMailStore(MailboxAppender mailboxAppender, UsersRepository usersRepository, Metric metric, String folder) {
         this.mailboxAppender = mailboxAppender;
         this.usersRepository = usersRepository;
         this.metric = metric;
-        this.log = log;
         this.folder = folder;
     }
 
@@ -100,8 +95,8 @@ public class SimpleMailStore implements MailStore {
         mailboxAppender.append(mail.getMessage(), username, locatedFolder);
 
         metric.increment();
-        log.info("Local delivered mail " + mail.getName() + " successfully from " + DeliveryUtils.prettyPrint(mail.getSender())
-            + " to " + DeliveryUtils.prettyPrint(recipient) + " in folder " + locatedFolder);
+        LOGGER.info("Local delivered mail {} successfully from {} to {} in folder {}", mail.getName(),
+            DeliveryUtils.prettyPrint(mail.getSender()), DeliveryUtils.prettyPrint(recipient), locatedFolder);
     }
 
     private String locateFolder(String username, Mail mail) {
@@ -115,7 +110,7 @@ public class SimpleMailStore implements MailStore {
         try {
             return usersRepository.getUser(recipient);
         } catch (UsersRepositoryException e) {
-            log.warn("Unable to retrieve username for " + recipient.asPrettyString(), e);
+            LOGGER.warn("Unable to retrieve username for " + recipient.asPrettyString(), e);
             return recipient.toString();
         }
     }

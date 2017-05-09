@@ -26,12 +26,13 @@ import java.util.Vector;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.logging.Log;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.RFC2822Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -39,7 +40,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class MailDispatcher {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailDispatcher.class);
     public static final String[] NO_HEADERS = {};
 
     public static Builder builder() {
@@ -51,7 +52,6 @@ public class MailDispatcher {
         private MailStore mailStore;
         private Optional<Boolean> consume = Optional.absent();
         private MailetContext mailetContext;
-        private Log log;
 
         public Builder consume(boolean consume) {
             this.consume = Optional.of(consume);
@@ -63,11 +63,6 @@ public class MailDispatcher {
             return this;
         }
 
-        public Builder log(Log log) {
-            this.log = log;
-            return this;
-        }
-
         public Builder mailetContext(MailetContext mailetContext) {
             this.mailetContext = mailetContext;
             return this;
@@ -75,9 +70,8 @@ public class MailDispatcher {
 
         public MailDispatcher build() throws MessagingException {
             Preconditions.checkNotNull(mailStore);
-            Preconditions.checkNotNull(log);
             Preconditions.checkNotNull(mailetContext);
-            return new MailDispatcher(mailStore, consume.or(CONSUME), log, mailetContext);
+            return new MailDispatcher(mailStore, consume.or(CONSUME), mailetContext);
         }
 
     }
@@ -85,12 +79,10 @@ public class MailDispatcher {
     private final MailStore mailStore;
     private final boolean consume;
     private final MailetContext mailetContext;
-    private final Log log;
 
-    private MailDispatcher(MailStore mailStore, boolean consume, Log log, MailetContext mailetContext) {
+    private MailDispatcher(MailStore mailStore, boolean consume, MailetContext mailetContext) {
         this.mailStore = mailStore;
         this.consume = consume;
-        this.log = log;
         this.mailetContext = mailetContext;
     }
 
@@ -134,7 +126,7 @@ public class MailDispatcher {
                 
                 restoreHeaders(mail.getMessage(), savedHeaders);
             } catch (Exception ex) {
-                log.error("Error while storing mail.", ex);
+                LOGGER.error("Error while storing mail.", ex);
                 errors.add(recipient);
             }
         }

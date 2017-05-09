@@ -55,7 +55,6 @@ public class SimpleMailStoreTest {
             .mailboxAppender(mailboxAppender)
             .folder(FOLDER)
             .metric(mock(Metric.class))
-            .log(mock(Log.class))
             .build();
 
         mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
