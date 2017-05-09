@@ -25,6 +25,7 @@ import java.util.Optional;
 import org.apache.james.util.Host;
 
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.PoolingOptions;
 import com.datastax.driver.core.QueryOptions;
 import com.datastax.driver.core.SocketOptions;
 import com.google.common.base.Preconditions;
@@ -52,6 +53,7 @@ public class ClusterBuilder {
     private Optional<QueryLoggerConfiguration> queryLogger;
     private Optional<Integer> readTimeoutMillis;
     private Optional<Integer> connectTimeoutMillis;
+    private Optional<PoolingOptions> poolingOptions;
 
     private ClusterBuilder() {
         username = Optional.empty();
@@ -67,6 +69,7 @@ public class ClusterBuilder {
         queryLogger = Optional.empty();
         readTimeoutMillis = Optional.empty();
         connectTimeoutMillis = Optional.empty();
+        poolingOptions = Optional.empty();
     }
 
     public ClusterBuilder username(String username) {
@@ -90,6 +93,16 @@ public class ClusterBuilder {
     public ClusterBuilder port(int port) {
         this.port = Optional.of(port);
 
+        return this;
+    }
+
+    public ClusterBuilder poolingOptions(PoolingOptions poolingOptions) {
+        this.poolingOptions = Optional.of(poolingOptions);
+        return this;
+    }
+
+    public ClusterBuilder poolingOptions(Optional<PoolingOptions> poolingOptions) {
+        this.poolingOptions = poolingOptions;
         return this;
     }
 
@@ -157,6 +170,7 @@ public class ClusterBuilder {
         readTimeoutMillis.ifPresent(socketOptions::setReadTimeoutMillis);
         connectTimeoutMillis.ifPresent(socketOptions::setConnectTimeoutMillis);
         clusterBuilder.withSocketOptions(socketOptions);
+        poolingOptions.ifPresent(clusterBuilder::withPoolingOptions);
 
         Cluster cluster = clusterBuilder.build();
 

@@ -43,7 +43,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.HostDistance;
 import com.datastax.driver.core.PerHostPercentileTracker;
+import com.datastax.driver.core.PoolingOptions;
 import com.datastax.driver.core.QueryLogger;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.exceptions.NoHostAvailableException;
@@ -125,6 +127,35 @@ public class CassandraSessionModule extends AbstractModule {
                     configuration.getString("cassandra.keyspace", DEFAULT_KEYSPACE))
             .replicationFactor(configuration.getInt("cassandra.replication.factor", DEFAULT_REPLICATION_FACTOR))
             .clusterWithInitializedKeyspace();
+    }
+
+    private Optional<PoolingOptions> readPoolingOptions(PropertiesConfiguration configuration) {
+
+        Optional<Integer> maxConnections = Optional.ofNullable(configuration.getInteger("cassandra.pooling.local.max.connections", null));
+        Optional<Integer> maxRequests = Optional.ofNullable(configuration.getInteger("cassandra.pooling.local.max.requests", null));
+        Optional<Integer> poolingTimeout = Optional.ofNullable(configuration.getInteger("cassandra.pooling.timeout", null));
+        Optional<Integer> heartbeatTimeout = Optional.ofNullable(configuration.getInteger("cassandra.pooling.heartbeat.timeout", null));
+
+        if (!maxConnections.isPresent()
+            && !maxRequests.isPresent()
+            && !poolingTimeout.isPresent()
+            && !heartbeatTimeout.isPresent()) {
+            return Optional.empty();
+        }
+        PoolingOptions result = new PoolingOptions();
+
+        maxConnections.ifPresent(value -> {
+            result.setMaxConnectionsPerHost(HostDistance.LOCAL, value);
+            result.setMaxConnectionsPerHost(HostDistance.REMOTE, value);
+        });
+        maxRequests.ifPresent(value -> {
+            result.setMaxRequestsPerConnection(HostDistance.LOCAL, value);
+            result.setMaxRequestsPerConnection(HostDistance.REMOTE, value);
+        });
+        poolingTimeout.ifPresent(result::setPoolTimeoutMillis);
+        heartbeatTimeout.ifPresent(result::setHeartbeatIntervalSeconds);
+
+        return Optional.of(result);
     }
 
     private List<Host> listCassandraServers(PropertiesConfiguration configuration) {

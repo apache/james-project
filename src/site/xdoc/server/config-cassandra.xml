@@ -64,11 +64,33 @@
         <dt><strong>cassandra.readTimeoutMillis</strong></dt>
         <dd>Optional.
           If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/socket_options/">driver read timeout</a></dd>
-          
-        <dt><strong>cassandra.conectTimeoutMillis</strong></dt>
+
+        # Read com.datastax.driver.core.PoolingOptions for knowing defaults value
+        # No value here will default to driver's default value
+
+        # cassandra.pooling.local.max.connections=8
+        # cassandra.pooling.local.max.requests=128
+        ## In ms. Should be higher than socket read timeout
+        # cassandra.pooling.timeout=5000
+        ## In seconds.
+        # cassandra.pooling.heartbeat.timeout=30
+
+        <dt><strong>cassandra.pooling.local.max.connections</strong></dt>
         <dd>Optional.
-          If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/socket_options/">TCP connect timeout</a></dd>
-          
+          If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/pooling/">maximum number of connections to hosts</a> (remote and local)</dd>
+
+        <dt><strong>cassandra.pooling.local.max.requests</strong></dt>
+        <dd>Optional.
+          If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/pooling/">maximum number of concurrent requests per connection</a></dd>
+
+        <dt><strong>cassandra.pooling.timeout</strong></dt>
+        <dd>Optional.
+          If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/pooling/">Specify timeout while not locationg pool</a>. Should be higher than sockets timeout.</dd>
+
+        <dt><strong>cassandra.pooling.heartbeat.timeout</strong></dt>
+        <dd>Optional.
+          If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/pooling/">Specify heartbeat timeout</a></dd>
+
       </dl>
 
 
