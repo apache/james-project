@@ -25,6 +25,7 @@ import java.util.Collection;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
@@ -45,7 +46,7 @@ public class SentByMailetTest {
 
     @Test
     public void matchShouldReturnRecipientsWhenAuthUserAttributeIsPresent() throws Exception{
-        MailAddress recipient = new MailAddress("cuong.trnn@gmail.com");
+        MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         FakeMail fakeMail = FakeMail.builder()
             .recipient(recipient)
             .attribute(Mail.SENT_BY_MAILET, "true")
@@ -59,7 +60,7 @@ public class SentByMailetTest {
     @Test
     public void matchShouldReturnEmptyCollectionWhenAuthUserAttributeIsAbsent() throws Exception{
         FakeMail fakeMail = FakeMail.builder()
-            .recipients(new MailAddress("cuong.trnn@gmail.com"))
+            .recipients(MailAddressFixture.ANY_AT_JAMES)
             .build();
 
         Collection<MailAddress> results =  testee.match(fakeMail);
