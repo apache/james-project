@@ -23,7 +23,7 @@
     <parent>
         <artifactId>james-project</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-RC1-SNAPSHOT</version>
+        <version>3.0.0-RC1</version>
     </parent>
 
     <artifactId>apache-james-mpt</artifactId>
