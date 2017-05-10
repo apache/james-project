@@ -65,7 +65,7 @@ public class SMTPAuthSuccessfulTest {
 
         Collection<MailAddress> results =  testee.match(fakeMail);
 
-        assertThat(results).isNull();
+        assertThat(results).isEmpty();
     }
 
 }

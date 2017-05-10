@@ -21,6 +21,7 @@
 
 package org.apache.james.transport.matchers;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.mailet.base.GenericMatcher;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -48,7 +49,7 @@ public class SMTPAuthSuccessful extends GenericMatcher {
         if (authUser != null) {
             return mail.getRecipients();
         } else {
-            return null;
+            return ImmutableList.of();
         }
     }
 }
