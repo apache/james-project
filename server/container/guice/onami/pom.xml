@@ -24,7 +24,7 @@
     <parent>
         <artifactId>james-server-guice</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-RC1</version>
+        <version>3.0.0-RC2-SNAPSHOT</version>
     </parent>
 
     <artifactId>james-server-onami</artifactId>
