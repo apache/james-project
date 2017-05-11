@@ -120,6 +120,7 @@ public class CassandraSessionModule extends AbstractModule {
         return context -> ClusterWithKeyspaceCreatedFactory
             .config(ClusterBuilder.builder()
                     .servers(servers)
+                    .poolingOptions(readPoolingOptions(configuration))
                     .queryLoggerConfiguration(queryLoggerConfiguration)
                     .readTimeoutMillis(configuration.getInt("cassandra.readTimeoutMillis", DEFAULT_READ_TIMEOUT_MILLIS))
                     .connectTimeoutMillis(configuration.getInt("cassandra.connectTimeoutMillis", DEFAULT_CONNECT_TIMEOUT_MILLIS))
