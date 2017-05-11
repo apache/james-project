@@ -37,16 +37,14 @@
 
     <name>Apache James Project</name>
     <description>
-        The Apache Java Enterprise Mail Server (a.k.a. Apache James) is a 100% pure Java SMTP, IMAP and POP3 Mail
+        The Apache Java Enterprise Mail Server (a.k.a. Apache James) is a 100% pure Java SMTP, IMAP, JMAP and POP3 Mail
         server.
         We have designed James to be a complete and portable enterprise mail engine solution based on currently
-        available
-        open protocols. James is also a mail application platform. We have developed a Java API to let you write Java
-        code to process emails that we call the mailet API. A mailet can generate an automatic reply, update a database,
-        prevent spam, build a message archive, or whatever you can imagine. A matcher determines whether your mailet
-        should process an email in the server. The James project hosts the Mailet API, and James provides an
-        implementation
-        of this mail application platform API.
+        available open protocols. James is also a mail application platform. We have developed a Java API to let
+        you write Java code to process emails that we call the mailet API. A mailet can generate an automatic reply,
+        update a database, prevent spam, build a message archive, or whatever you can imagine. A matcher determines
+        whether your mailet should process an email in the server. The James project hosts the Mailet API, and James
+        provides an implementation of this mail application platform API.
     </description>
     <url>http://james.apache.org/</url>
     <inceptionYear>2006</inceptionYear>
@@ -285,25 +283,33 @@
         <developer>
             <id>btellier</id>
             <name>Benoit Tellier</name>
-            <email>btellier@apache.org</email>
+            <email>btellier@linagora.com</email>
+            <organization>Linagora</organization>
+            <organizationUrl>https://linagora.com</organizationUrl>
             <timezone />
             <roles>
+                <role>PMC Member</role>
                 <role>Developer</role>
             </roles>
         </developer>
         <developer>
             <id>aduprat</id>
             <name>Antoine Duprat</name>
-            <email>aduprat@apache.org</email>
+            <email>aduprat@linagora.com</email>
+            <organization>Linagora</organization>
+            <organizationUrl>https://linagora.com</organizationUrl>
             <timezone />
             <roles>
+                <role>PMC Member</role>
                 <role>Developer</role>
             </roles>
         </developer>
         <developer>
             <id>rouazana</id>
             <name>Raphael Ouazana</name>
-            <email>rouazana@apache.org</email>
+            <email>rouazana@linagora.com</email>
+            <organization>Linagora</organization>
+            <organizationUrl>https://linagora.com</organizationUrl>
             <timezone />
             <roles>
                 <role>Developer</role>
@@ -473,6 +479,14 @@
             <name>Richard O. Hammer [ROH]</name>
             <email>rohammer@earthlink.net</email>
         </contributor>
+        <contributor>
+            <name>Luc Duzan</name>
+            <email>lduzan@linagora.com</email>
+        </contributor>
+        <contributor>
+            <name>Quynh Nguyen</name>
+            <email>qnguyen@linagora.com</email>
+        </contributor>
     </contributors>
 
     <mailingLists>
@@ -522,7 +536,7 @@
         <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/james-project.git</developerConnection>
         <url>http://git-wip-us.apache.org/repos/asf/james-project.git</url>
       <tag>HEAD</tag>
-  </scm>
+    </scm>
 
     <issueManagement>
         <system>JIRA</system>
