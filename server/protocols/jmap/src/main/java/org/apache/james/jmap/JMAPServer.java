@@ -20,6 +20,7 @@
 package org.apache.james.jmap;
 
 import static org.apache.james.jmap.BypassAuthOnRequestMethod.bypass;
+import static org.zalando.logbook.HeaderFilters.authorization;
 
 import java.util.Optional;
 
@@ -32,11 +33,18 @@ import org.apache.james.http.jetty.Configuration;
 import org.apache.james.http.jetty.Configuration.Builder;
 import org.apache.james.http.jetty.JettyHttpServer;
 import org.apache.james.lifecycle.api.Configurable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zalando.logbook.DefaultHttpLogWriter;
+import org.zalando.logbook.DefaultHttpLogWriter.Level;
+import org.zalando.logbook.Logbook;
+import org.zalando.logbook.servlet.LogbookFilter;
 
 import com.github.fge.lambdas.Throwing;
 
 public class JMAPServer implements Configurable {
 
+    private static final Logger HTTP_JMAP_LOGGER = LoggerFactory.getLogger("http.jmap");
     private final Optional<JettyHttpServer> server;
 
     @Inject
@@ -55,6 +63,7 @@ public class JMAPServer implements Configurable {
                         .with(jmapServlet)
                     .filter(JMAPUrls.JMAP)
                         .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("OPTIONS").only()))
+                        .and(new LogbookFilter(logbook()))
                         .and(userProvisioningFilter)
                         .and(defaultMailboxesProvisioningFilter)
                         .only()
@@ -82,6 +91,13 @@ public class JMAPServer implements Configurable {
             builder.randomPort();
         }
         return builder;
+    }
+
+    private Logbook logbook() {
+        return Logbook.builder()
+                .headerFilter(authorization())
+                .writer(new DefaultHttpLogWriter(HTTP_JMAP_LOGGER, Level.DEBUG))
+                .build();
     }
 
     @Override

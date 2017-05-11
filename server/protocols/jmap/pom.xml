@@ -372,6 +372,16 @@
                     <artifactId>slf4j-simple</artifactId>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <groupId>org.zalando</groupId>
+                    <artifactId>logbook-core</artifactId>
+                    <version>1.2.1</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.zalando</groupId>
+                    <artifactId>logbook-servlet</artifactId>
+                    <version>1.2.1</version>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
