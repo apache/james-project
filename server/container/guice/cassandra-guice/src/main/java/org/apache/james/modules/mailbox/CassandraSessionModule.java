@@ -19,6 +19,7 @@
 package org.apache.james.modules.mailbox;
 
 import java.io.FileNotFoundException;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -115,7 +116,7 @@ public class CassandraSessionModule extends AbstractModule {
     }
 
     private RetryCallable<Cluster> getClusterRetryCallable(PropertiesConfiguration configuration, List<Host> servers, QueryLoggerConfiguration queryLoggerConfiguration) {
-        LOGGER.info("Trying to connect to Cassandra service");
+        LOGGER.info("Trying to connect to Cassandra service at {}", LocalDateTime.now());
 
         return context -> ClusterWithKeyspaceCreatedFactory
             .config(ClusterBuilder.builder()

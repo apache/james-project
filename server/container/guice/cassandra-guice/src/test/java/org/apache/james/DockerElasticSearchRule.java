@@ -51,7 +51,7 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
         configuration.addProperty("elasticsearch.nb.shards", 1);
         configuration.addProperty("elasticsearch.nb.replica", 0);
         configuration.addProperty("elasticsearch.retryConnection.maxRetries", 7);
-        configuration.addProperty("elasticsearch.retryConnection.minDelay", 30);
+        configuration.addProperty("elasticsearch.retryConnection.minDelay", 3000);
         configuration.addProperty("elasticsearch.indexAttachments", false);
         configuration.addProperty("elasticsearch.http.host", getIp());
         configuration.addProperty("elasticsearch.http.port", ELASTIC_SEARCH_HTTP_PORT);

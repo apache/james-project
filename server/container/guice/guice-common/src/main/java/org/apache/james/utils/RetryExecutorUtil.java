@@ -20,17 +20,21 @@
 package org.apache.james.utils;
 
 import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RetryExecutorUtil {
+    private static final Logger LOG = LoggerFactory.getLogger(RetryExecutorUtil.class);
 
-    public static final int INITIAL_DELAY_MILLIS = 500;
-    public static final int MULTIPLIER = 2;
+    private static final int INITIAL_DELAY_MILLIS = 500;
+    private static final int MULTIPLIER = 2;
 
-    public static AsyncRetryExecutor retryOnExceptions(AsyncRetryExecutor executor, int maxRetries, int minDelay, Class<? extends Throwable> clazz) {
+    public static AsyncRetryExecutor retryOnExceptions(AsyncRetryExecutor executor, int maxRetries, int minDelay, Class<? extends Throwable>... clazz) {
+        LOG.info("The action should retry when {} and retry to {} times if needed", clazz, maxRetries);
         return executor
-            .retryOn(clazz)
             .withExponentialBackoff(INITIAL_DELAY_MILLIS, MULTIPLIER)
             .withProportionalJitter()
+            .retryOn(clazz)
             .withMaxRetries(maxRetries)
             .withMinDelay(minDelay);
     }

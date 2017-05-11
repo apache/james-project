@@ -20,6 +20,7 @@
 package org.apache.james.modules.mailbox;
 
 import java.io.FileNotFoundException;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -104,7 +105,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     }
 
     private Client connectToCluster(PropertiesConfiguration propertiesReader) throws ConfigurationException {
-        LOGGER.info("Trying to connect to ElasticSearch service");
+        LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
 
         return createIndexAndMapping(createClient(propertiesReader), propertiesReader);
     }

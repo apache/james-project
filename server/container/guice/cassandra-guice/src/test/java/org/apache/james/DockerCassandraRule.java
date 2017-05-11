@@ -47,7 +47,7 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
         configuration.addProperty("cassandra.nodes", getIp() + ":" + CASSANDRA_PORT);
         configuration.addProperty("cassandra.keyspace", "apache_james");
         configuration.addProperty("cassandra.replication.factor", 1);
-        configuration.addProperty("cassandra.retryConnection.maxRetries", 10);
+        configuration.addProperty("cassandra.retryConnection.maxRetries", 20);
         configuration.addProperty("cassandra.retryConnection.minDelay", 5000);
 
         return configuration;
