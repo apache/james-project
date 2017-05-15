@@ -326,6 +326,12 @@
                     <groupId>com.internetitem</groupId>
                     <artifactId>logback-elasticsearch-appender</artifactId>
                     <version>1.5</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>com.fasterxml.jackson.core</groupId>
+                            <artifactId>jackson-core</artifactId>
+                        </exclusion>
+                    </exclusions>
                 </dependency>
                 <dependency>
                     <groupId>com.jayway.awaitility</groupId>
