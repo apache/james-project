@@ -35,6 +35,31 @@
             </div>
         </div>
 
+        <section name="Version 3.0-RC1">
+
+            <p>Released May 2017</p>
+
+            <p>The Apache James project is happy to announce the release
+                of version 3.0.0-RC1 of its modular mail server.</p>
+
+            <p>We thank all Users for their feedback and tests and we encourage anyone to
+                <a href="http://james.apache.org/download.cgi#Apache_James_Server">download</a>
+                and discover our RC1 release.</p>
+
+            <ul>What have been done in James 3.0.0-RC1 :
+                <li>Add metrics in multiple components</li>
+                <li>Improve the Cassandra backend (still experimental)</li>
+                <li>Improve the ElasticSearch search index</li>
+                <li>Add more support of the JMAP protocol</li>
+                <li>Refactor some old mailets</li>
+                <li>Enhance Mailbox and Message API</li>
+            </ul>
+
+            <p>If you're interested in contributing to the James project, please subscribe to the James
+                <a href="http://james.apache.org/mail.html">mailing lists</a>.</p>
+
+        </section>
+
         <section name="Version 3.0-beta5">
 
             <p>Released October 2016</p>
