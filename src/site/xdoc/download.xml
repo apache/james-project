@@ -163,7 +163,7 @@ Do not promote snapshots, See JAMES-1558
 
   <section name='Apache James Server'>
 
-    <subsection name="Apache James 3.0-beta5 is for early adopters">
+    <subsection name="Apache James 3.0-RC1 is for early adopters">
 
       <div class="ui-widget">
         <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
@@ -182,11 +182,11 @@ Do not promote snapshots, See JAMES-1558
       </div>
 
       <ul>
-        <li>Source code <a href="https://github.com/apache/james-project/releases/tag/james-project-3.0-beta5">on GitHub</a></li>
+        <li>Source code <a href="https://github.com/apache/james-project/releases/tag/james-project-3.0.0-RC1">on GitHub</a></li>
 
         <li>Binary (ZIP Format): <a
-                href="http://www.apache.org/dist/james/server/james-server-app-3.0.0-beta5-app.zip">apache-james-3.0-beta5-app.zip</a> [<a
-                href="http://www.apache.org/dist/james/server/james-server-app-3.0.0-beta5-app.zip.asc">PGP</a>]</li>
+                href="http://www.apache.org/dist/james/server/james-server-app-3.0.0-RC1-app.zip">apache-james-3.0.0-RC1-app.zip</a> [<a
+                href="http://www.apache.org/dist/james/server/james-server-app-3.0.0-RC1-app.zip.asc">PGP</a>]</li>
 
       </ul>
 
