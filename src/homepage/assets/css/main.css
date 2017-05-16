@@ -3700,6 +3700,41 @@
 			transition: all 0.5s ease-in-out;
 		}
 
+		.james-use-case-link {
+        	display: inline-block;
+        	width: 220px;
+        	height: 220px;
+        	padding:25px 0;
+        	text-align: center;
+        	vertical-align: middle;
+        	margin: 4%;
+        	margin-top: 2%;
+        	border-radius: 50%;
+        	background:url('images/overlay.png') #FF6D03;
+        	color: #fff;
+        	font-size: 18pt;
+        	-moz-transition: all 0.5s ease-in-out;
+        	-webkit-transition: all 0.5s ease-in-out;
+        	-ms-transition: all 0.5s ease-in-out;
+        	transition: all 0.5s ease-in-out;
+        }
+
+        .james-use-case-link:hover {
+        	color: #FF6D03;
+        	text-decoration: none;
+        	background-color: #2A0D07;
+        }
+
+        .james-use-case-content {
+            font-family: "Poppins", Helvetica, sans-serif;
+        	color: #636363;
+        }
+
+        .james-use-case-li {
+        	display: flex;
+        	margin-bottom: 1em;
+        }
+
 		.james-schema:hover {
 			color: #FF6D03;
 			text-decoration: none;

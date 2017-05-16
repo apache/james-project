@@ -20,6 +20,7 @@ layout: default
     under the License.
 -->
 <link href="assets/css/lightbox.css" rel="stylesheet">
+<link href="assets/css/lity.min.css" rel="stylesheet" />
 <div id="wrapper">
   <div class="apache_ref">
     <a href="https://www.apache.org" alt="apache foundation link"><img src="https://www.apache.org/foundation/press/kit/asf_logo.svg" title="apache foundation logo"/></a>
@@ -43,6 +44,7 @@ layout: default
         <li><a href="#first">Get Started</a></li>
         <li><a href="#posts">Last Posts</a></li>
         <li><a href="#second">Community</a></li>
+        <li><a href="#use-cases">Use-cases</a></li>
         <li><a href="documentation.html"><span class="fa fa-external-link"></span> Documentation</a></li>
       </ul>
     </nav>
@@ -195,6 +197,39 @@ WHAT WILL YOU TRY:</b><br>
           </section>
         </section>
 
+      <section id="use-cases" class="main">
+        <header class="major">
+          <h2>James use-cases</h2>
+        </header>
+        <section>
+          <div class="content">
+            <a href="#openpaas" data-lity class="james-use-case-link">
+              <span class="fa fa-server"></span><br/>
+              Linagora<br/>
+              OpenPaaS<br/>
+              <span class="fa fa-long-arrow-right"></span></a>
+          </div>
+
+          <div id="openpaas" style="background:#fff" class="lity-hide">
+            <div class="padding about-table james-use-case-content">
+              <header class="major">
+                <h2><a href="http://open-paas.org/"><img src="/images/openpaas.png"></a></h2>
+              </header>
+              <p >
+                At <a href="https://linagora.com/">Linagora</a>, we chose JAMES as the Mail Delivery Agent of our
+                <a href="http://open-paas.org/">OpenPaaS</a> product:</p>
+              <ul class="james-ul">
+                <li class="james-use-case-li center-icon"><span class="icon fa-arrow-right"></span>For easy administration of email load balancing and high availability</li>
+                <li class="james-use-case-li center-icon"><span class="icon fa-arrow-right"></span>To allow email interactions with the platform</li>
+                <li class="james-use-case-li center-icon"><span class="icon fa-arrow-right"></span>To use the &nbsp;<a href="http://jmap.io/">JMAP</a>&nbsp; protocol (the browser interacts directly with the mail server)</li>
+              </ul>
+              <p>Our deployment currently allows serving a hundred user over JMAP, SMTP and IMAP.</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+
         <section id="stats" class="main">
           <header class="major">
             <h2>Some statistics...</h2>
@@ -263,6 +298,7 @@ WHAT WILL YOU TRY:</b><br>
 <script src="assets/js/util.js"></script>
 <script src="assets/js/lightbox.js"></script>
 <script src="assets/js/github-fetch.js"></script>
+<script src="assets/js/lity.min.js"></script>
 <!--[if lte IE 8]><script src="assets/js/ie/respond.min.js"></script><![endif]-->
 <script src="assets/js/main.js"></script>
 
