@@ -45,6 +45,7 @@ public class CassandraRecipientRewriteTableTest extends AbstractRecipientRewrite
     public void tearDown() throws Exception {
         super.tearDown();
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Override

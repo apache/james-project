@@ -147,7 +147,7 @@ public class CassandraMessageDAO {
             CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
             BoundStatement boundStatement = insert.bind()
                 .setUUID(MESSAGE_ID, messageId.get())
-                .setDate(INTERNAL_DATE, message.getInternalDate())
+                .setTimestamp(INTERNAL_DATE, message.getInternalDate())
                 .setInt(BODY_START_OCTET, (int) (message.getFullContentOctets() - message.getBodyOctets()))
                 .setLong(FULL_CONTENT_OCTETS, message.getFullContentOctets())
                 .setLong(BODY_OCTECTS, message.getBodyOctets())
@@ -224,7 +224,7 @@ public class CassandraMessageDAO {
         MessageWithoutAttachment messageWithoutAttachment =
             new MessageWithoutAttachment(
                 messageId.getMessageId(),
-                row.getDate(INTERNAL_DATE),
+                row.getTimestamp(INTERNAL_DATE),
                 row.getLong(FULL_CONTENT_OCTETS),
                 row.getInt(BODY_START_OCTET),
                 buildContent(row, fetchType),

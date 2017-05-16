@@ -59,6 +59,7 @@ public class CassandraMailboxMapperConcurrencyTest {
     @After
     public void tearDown() {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test

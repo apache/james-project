@@ -60,6 +60,7 @@ public class CassandraMessageIdDAOTest {
     @After
     public void tearDown() {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test

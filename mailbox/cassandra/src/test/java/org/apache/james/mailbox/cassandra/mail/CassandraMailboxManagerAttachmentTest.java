@@ -45,20 +45,35 @@ import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
-    private static final CassandraCluster cassandra = CassandraCluster.create(new CassandraModuleComposite(
-            new CassandraAclModule(),
-            new CassandraMailboxModule(),
-            new CassandraMessageModule(),
-            new CassandraMailboxCounterModule(),
-            new CassandraMailboxRecentsModule(),
-            new CassandraFirstUnseenModule(),
-            new CassandraDeletedMessageModule(),
-            new CassandraModSeqModule(),
-            new CassandraUidModule(),
-            new CassandraAttachmentModule(),
-            new CassandraApplicableFlagsModule()));
+
+    private static CassandraCluster cassandra;
+
+    @BeforeClass
+    public static void init() {
+        cassandra = CassandraCluster.create(
+                new CassandraModuleComposite(
+                    new CassandraAclModule(),
+                    new CassandraMailboxModule(),
+                    new CassandraMessageModule(),
+                    new CassandraMailboxCounterModule(),
+                    new CassandraMailboxRecentsModule(),
+                    new CassandraFirstUnseenModule(),
+                    new CassandraDeletedMessageModule(),
+                    new CassandraModSeqModule(),
+                    new CassandraUidModule(),
+                    new CassandraAttachmentModule(),
+                    new CassandraApplicableFlagsModule()));
+    }
+
+    @AfterClass
+    public static void close() {
+        cassandra.close();
+    }
+
     public static final int MAX_ACL_RETRY = 10;
 
     private CassandraMailboxSessionMapperFactory mailboxSessionMapperFactory;

@@ -56,6 +56,7 @@ public class CassandraApplicableFlagDAOTest {
     @After
     public void tearDown() throws Exception {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test

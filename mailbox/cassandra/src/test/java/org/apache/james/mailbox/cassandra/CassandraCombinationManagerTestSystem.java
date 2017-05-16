@@ -64,4 +64,12 @@ public class CassandraCombinationManagerTestSystem extends CombinationManagerTes
     public void clean() {
         CassandraTestSystemFixture.clean();
     }
+
+    public static void init() {
+        CassandraTestSystemFixture.init();
+    }
+
+    public static void stop() {
+        CassandraTestSystemFixture.stop();
+    }
 }

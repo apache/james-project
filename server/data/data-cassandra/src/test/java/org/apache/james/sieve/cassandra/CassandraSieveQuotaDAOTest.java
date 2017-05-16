@@ -31,11 +31,12 @@ import org.junit.Test;
 public class CassandraSieveQuotaDAOTest {
 
     public static final String USER = "user";
-    private static CassandraCluster cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule());
+    private CassandraCluster cassandra;
     private CassandraSieveQuotaDAO sieveQuotaDAO;
 
     @Before
     public void setUp() {
+        cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule());
         cassandra.ensureAllTables();
         sieveQuotaDAO = new CassandraSieveQuotaDAO(cassandra.getConf());
     }
@@ -43,6 +44,7 @@ public class CassandraSieveQuotaDAOTest {
     @After
     public void tearDown() {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test

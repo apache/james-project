@@ -175,7 +175,7 @@ public class ClusterBuilder {
         Cluster cluster = clusterBuilder.build();
 
         queryLogger.map(queryLoggerConfiguration ->
-            cluster.register(queryLoggerConfiguration.getQueryLogger(cluster)));
+            cluster.register(queryLoggerConfiguration.getQueryLogger()));
 
         return cluster;
     }

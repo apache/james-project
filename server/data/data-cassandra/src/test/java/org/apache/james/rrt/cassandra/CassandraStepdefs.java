@@ -47,6 +47,7 @@ public class CassandraStepdefs {
     @After
     public void tearDown() {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {

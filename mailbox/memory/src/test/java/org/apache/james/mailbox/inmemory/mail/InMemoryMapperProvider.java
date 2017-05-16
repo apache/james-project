@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.inmemory.mail;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
@@ -131,5 +132,10 @@ public class InMemoryMapperProvider implements MapperProvider {
     public long highestModSeq(Mailbox mailbox) throws MailboxException {
         return inMemoryMailboxSessionMapperFactory.getModSeqProvider()
             .highestModSeq(new MockMailboxSession("user"), mailbox);
+    }
+
+    @Override
+    public void close() throws IOException {
+
     }
 }

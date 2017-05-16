@@ -110,4 +110,13 @@ public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSys
         return mailboxMessage;
     }
 
+    public static void init() {
+        CassandraTestSystemFixture.init();
+    }
+
+    public static void stop() {
+        CassandraTestSystemFixture.stop();
+    }
+
+
 }

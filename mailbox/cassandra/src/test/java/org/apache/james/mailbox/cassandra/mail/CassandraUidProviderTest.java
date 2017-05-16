@@ -40,7 +40,7 @@ import com.google.common.base.Optional;
 
 public class CassandraUidProviderTest {
 
-    private static final CassandraCluster CASSANDRA = CassandraCluster.create(new CassandraModuleComposite(
+    private final CassandraCluster cassandra = CassandraCluster.create(new CassandraModuleComposite(
         new CassandraAclModule(),
         new CassandraMailboxModule(),
         new CassandraUidModule()));
@@ -53,11 +53,11 @@ public class CassandraUidProviderTest {
 
     @Before
     public void setUpClass() throws Exception {
-        CASSANDRA.ensureAllTables();
-        uidProvider = new CassandraUidProvider(CASSANDRA.getConf());
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider(), MAX_RETRY);
-        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider());
-        mapper = new CassandraMailboxMapper(CASSANDRA.getConf(), mailboxDAO, mailboxPathDAO, MAX_RETRY);
+        cassandra.ensureAllTables();
+        uidProvider = new CassandraUidProvider(cassandra.getConf());
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), MAX_RETRY);
+        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        mapper = new CassandraMailboxMapper(cassandra.getConf(), mailboxDAO, mailboxPathDAO, MAX_RETRY);
         MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
         mailbox = new SimpleMailbox(path, 1234);
         mapper.save(mailbox);
@@ -65,7 +65,8 @@ public class CassandraUidProviderTest {
     
     @After
     public void cleanUp() {
-        CASSANDRA.clearAllTables();
+        cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test

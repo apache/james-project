@@ -92,6 +92,7 @@ public class CassandraMessageDAOTest {
     @After
     public void tearDown() {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test

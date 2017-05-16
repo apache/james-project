@@ -106,7 +106,6 @@
         <guava.version>18.0</guava.version>
         <assertj.version>1.7.1</assertj.version>
         <jackson-databinding.version>2.6.3</jackson-databinding.version>
-        <cassandra-driver-core.version>2.1.8</cassandra-driver-core.version>
         <cassandra-unit.version>2.1.9.2</cassandra-unit.version>
         <assertj-1.version>1.7.1</assertj-1.version>
         <assertj-3.version>3.2.0</assertj-3.version>

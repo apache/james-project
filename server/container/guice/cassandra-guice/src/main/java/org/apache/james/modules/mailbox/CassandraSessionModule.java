@@ -224,7 +224,7 @@ public class CassandraSessionModule extends AbstractModule {
 
         percentileLatencyConf.ifPresent(slowQueryLatencyThresholdPercentile -> {
             PerHostPercentileTracker tracker = PerHostPercentileTracker
-                .builderWithHighestTrackableLatencyMillis(CASSANDRA_HIGHEST_TRACKABLE_LATENCY_MILLIS)
+                .builder(CASSANDRA_HIGHEST_TRACKABLE_LATENCY_MILLIS)
                 .build();
 
             builder.withDynamicThreshold(tracker, slowQueryLatencyThresholdPercentile);

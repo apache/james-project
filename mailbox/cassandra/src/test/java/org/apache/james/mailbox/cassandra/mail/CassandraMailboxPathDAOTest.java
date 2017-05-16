@@ -66,6 +66,7 @@ public class CassandraMailboxPathDAOTest {
     @After
     public void tearDown() throws Exception {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test

@@ -57,28 +57,31 @@ import com.google.common.collect.ImmutableList;
 public class CassandraMapperProvider implements MapperProvider {
 
     private static final Factory MESSAGE_ID_FACTORY = new CassandraMessageId.Factory();
-    private static final MockMailboxSession MAILBOX_SESSION = new MockMailboxSession("benwa");
-    private static final CassandraCluster cassandra = CassandraCluster.create(new CassandraModuleComposite(
-        new CassandraAclModule(),
-        new CassandraMailboxModule(),
-        new CassandraMessageModule(),
-        new CassandraMailboxCounterModule(),
-        new CassandraMailboxRecentsModule(),
-        new CassandraModSeqModule(),
-        new CassandraUidModule(),
-        new CassandraAttachmentModule(),
-        new CassandraAnnotationModule(),
-        new CassandraFirstUnseenModule(),
-        new CassandraApplicableFlagsModule(),
-        new CassandraDeletedMessageModule()));
     public static final int MAX_ACL_RETRY = 10;
 
+    private final CassandraCluster cassandra;
     private final MessageUidProvider messageUidProvider;
     private final CassandraModSeqProvider cassandraModSeqProvider;
+    private final MockMailboxSession mailboxSession = new MockMailboxSession("benwa");
+
 
     public CassandraMapperProvider() {
+        this.cassandra = CassandraCluster.create(
+                new CassandraModuleComposite(
+                    new CassandraAclModule(),
+                    new CassandraMailboxModule(),
+                    new CassandraMessageModule(),
+                    new CassandraMailboxCounterModule(),
+                    new CassandraMailboxRecentsModule(),
+                    new CassandraModSeqModule(),
+                    new CassandraUidModule(),
+                    new CassandraAttachmentModule(),
+                    new CassandraAnnotationModule(),
+                    new CassandraFirstUnseenModule(),
+                    new CassandraApplicableFlagsModule(),
+                    new CassandraDeletedMessageModule()));
         messageUidProvider = new MessageUidProvider();
-        cassandraModSeqProvider = new CassandraModSeqProvider(cassandra.getConf());
+        cassandraModSeqProvider = new CassandraModSeqProvider(this.cassandra.getConf());
     }
 
     @Override
@@ -88,17 +91,17 @@ public class CassandraMapperProvider implements MapperProvider {
     
     @Override
     public MailboxMapper createMailboxMapper() throws MailboxException {
-        return createMapperFactory().getMailboxMapper(MAILBOX_SESSION);
+        return createMapperFactory().getMailboxMapper(mailboxSession);
     }
 
     @Override
     public MessageMapper createMessageMapper() throws MailboxException {
-        return createMapperFactory().getMessageMapper(MAILBOX_SESSION);
+        return createMapperFactory().getMessageMapper(mailboxSession);
     }
 
     @Override
     public MessageIdMapper createMessageIdMapper() throws MailboxException {
-        return createMapperFactory().getMessageIdMapper(MAILBOX_SESSION);
+        return createMapperFactory().getMessageIdMapper(mailboxSession);
     }
 
     private CassandraMailboxSessionMapperFactory createMapperFactory() {
@@ -124,7 +127,7 @@ public class CassandraMapperProvider implements MapperProvider {
 
     @Override
     public AttachmentMapper createAttachmentMapper() throws MailboxException {
-        return createMapperFactory().getAttachmentMapper(MAILBOX_SESSION);
+        return createMapperFactory().getAttachmentMapper(mailboxSession);
     }
 
     @Override
@@ -149,7 +152,7 @@ public class CassandraMapperProvider implements MapperProvider {
 
     @Override
     public AnnotationMapper createAnnotationMapper() throws MailboxException {
-        return createMapperFactory().getAnnotationMapper(MAILBOX_SESSION);
+        return createMapperFactory().getAnnotationMapper(mailboxSession);
     }
 
     @Override
@@ -172,5 +175,10 @@ public class CassandraMapperProvider implements MapperProvider {
     public long highestModSeq(Mailbox mailbox) throws MailboxException {
         MailboxSession mailboxSession = null;
         return cassandraModSeqProvider.highestModSeq(mailboxSession, mailbox);
+    }
+
+    @Override
+    public void close() {
+        cassandra.close();
     }
 }

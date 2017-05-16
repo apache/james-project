@@ -66,6 +66,7 @@ public class CassandraACLMapperTest {
     public void tearDown() {
         cassandra.clearAllTables();
         executor.shutdownNow();
+        cassandra.close();
     }
 
     @Test(expected = IllegalArgumentException.class)

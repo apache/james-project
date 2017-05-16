@@ -54,11 +54,13 @@ public class CassandraSieveDAOTest {
         .copyOf(SCRIPT)
         .content("newContent")
         .build();
-    private static CassandraCluster cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule());
+    
+    private CassandraCluster cassandra;
     private CassandraSieveDAO sieveDAO;
 
     @Before
     public void setUp() {
+        cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule());
         cassandra.ensureAllTables();
         sieveDAO = new CassandraSieveDAO(cassandra.getConf());
     }
@@ -66,6 +68,7 @@ public class CassandraSieveDAOTest {
     @After
     public void tearDown() {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test

@@ -24,6 +24,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraRegistrationModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.publisher.Topic;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,6 +51,11 @@ public class CassandraMailboxPathRegistrerMapperTest {
     @After
     public void tearDown() {
         cassandra.clearAllTables();
+    }
+
+    @AfterClass
+    public static void stop() {
+        cassandra.close();
     }
 
     @Test

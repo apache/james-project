@@ -32,8 +32,8 @@ import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.rules.ExpectedException;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -56,8 +56,9 @@ public abstract class AttachmentMapperTest {
     }
 
     @After
-    public void tearDown() throws MailboxException {
+    public void tearDown() throws Exception {
         mapperProvider.clearMapper();
+        mapperProvider.close();
     }
 
     @Test

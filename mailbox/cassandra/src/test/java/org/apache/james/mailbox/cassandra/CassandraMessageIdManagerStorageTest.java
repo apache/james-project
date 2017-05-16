@@ -26,8 +26,20 @@ import org.apache.james.mailbox.store.AbstractMessageIdManagerStorageTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 public class CassandraMessageIdManagerStorageTest extends AbstractMessageIdManagerStorageTest {
+
+    @BeforeClass
+    public static void init() {
+        CassandraMessageIdManagerTestSystem.init();
+    }
+
+    @AfterClass
+    public static void close() {
+        CassandraMessageIdManagerTestSystem.stop();
+    }
 
     @Override
     protected MessageIdManagerTestSystem createTestingData() throws Exception {

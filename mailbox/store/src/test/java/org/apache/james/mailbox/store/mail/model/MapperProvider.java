@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.mailbox.MessageUid;
@@ -31,7 +32,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 
-public interface MapperProvider {
+public interface MapperProvider extends Closeable {
     enum Capabilities {
         MESSAGE,
         MAILBOX,

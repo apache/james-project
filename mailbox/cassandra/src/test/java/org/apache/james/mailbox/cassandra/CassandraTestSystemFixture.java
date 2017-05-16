@@ -57,41 +57,30 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 
 public class CassandraTestSystemFixture {
-    public static final CassandraCluster CASSANDRA = CassandraCluster.create(new CassandraModuleComposite(
-        new CassandraAclModule(),
-        new CassandraMailboxModule(),
-        new CassandraMessageModule(),
-        new CassandraMailboxCounterModule(),
-        new CassandraMailboxRecentsModule(),
-        new CassandraFirstUnseenModule(),
-        new CassandraDeletedMessageModule(),
-        new CassandraUidModule(),
-        new CassandraModSeqModule(),
-        new CassandraAttachmentModule(),
-        new CassandraAnnotationModule(),
-        new CassandraApplicableFlagsModule()));
+    
     public static final int MOD_SEQ = 452;
     public static final int MAX_ACL_RETRY = 10;
-
+    private static CassandraCluster cassandra;
+    
     public static CassandraMailboxSessionMapperFactory createMapperFactory() {
-        CASSANDRA.ensureAllTables();
-        CassandraUidProvider uidProvider = new CassandraUidProvider(CASSANDRA.getConf());
-        CassandraModSeqProvider modSeqProvider = new CassandraModSeqProvider(CASSANDRA.getConf());
+        cassandra.ensureAllTables();
+        CassandraUidProvider uidProvider = new CassandraUidProvider(cassandra.getConf());
+        CassandraModSeqProvider modSeqProvider = new CassandraModSeqProvider(cassandra.getConf());
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
-        CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(CASSANDRA.getConf(), messageIdFactory);
-        CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(CASSANDRA.getConf(), messageIdFactory);
-        CassandraMessageDAO messageDAO = new CassandraMessageDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider());
-        CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(CASSANDRA.getConf());
-        CassandraMailboxRecentsDAO mailboxRecentsDAO = new CassandraMailboxRecentsDAO(CASSANDRA.getConf());
-        CassandraApplicableFlagDAO applicableFlagDAO = new CassandraApplicableFlagDAO(CASSANDRA.getConf());
+        CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), messageIdFactory);
+        CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(cassandra.getConf(), messageIdFactory);
+        CassandraMessageDAO messageDAO = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(cassandra.getConf());
+        CassandraMailboxRecentsDAO mailboxRecentsDAO = new CassandraMailboxRecentsDAO(cassandra.getConf());
+        CassandraApplicableFlagDAO applicableFlagDAO = new CassandraApplicableFlagDAO(cassandra.getConf());
 
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider(), MAX_ACL_RETRY);
-        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider());
-        CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(CASSANDRA.getConf());
-        CassandraDeletedMessageDAO deletedMessageDAO = new CassandraDeletedMessageDAO(CASSANDRA.getConf());
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), MAX_ACL_RETRY);
+        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(cassandra.getConf());
+        CassandraDeletedMessageDAO deletedMessageDAO = new CassandraDeletedMessageDAO(cassandra.getConf());
         return new CassandraMailboxSessionMapperFactory(uidProvider,
             modSeqProvider,
-            CASSANDRA.getConf(),
+            cassandra.getConf(),
             messageDAO,
             messageIdDAO,
             imapUidDAO,
@@ -121,6 +110,27 @@ public class CassandraTestSystemFixture {
     }
 
     public static void clean() {
-        CASSANDRA.clearAllTables();
+        cassandra.clearAllTables();
+    }
+
+    public static void init() {
+        cassandra = CassandraCluster.create(
+                new CassandraModuleComposite(
+                    new CassandraAclModule(),
+                    new CassandraMailboxModule(),
+                    new CassandraMessageModule(),
+                    new CassandraMailboxCounterModule(),
+                    new CassandraMailboxRecentsModule(),
+                    new CassandraFirstUnseenModule(),
+                    new CassandraDeletedMessageModule(),
+                    new CassandraUidModule(),
+                    new CassandraModSeqModule(),
+                    new CassandraAttachmentModule(),
+                    new CassandraAnnotationModule(),
+                    new CassandraApplicableFlagsModule()));
+    }
+
+    public static void stop() {
+        cassandra.close();
     }
 }
