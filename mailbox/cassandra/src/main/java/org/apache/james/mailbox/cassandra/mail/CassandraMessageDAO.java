@@ -85,7 +85,6 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.querybuilder.Select.Where;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -100,6 +99,10 @@ public class CassandraMessageDAO {
     private final CassandraTypesProvider typesProvider;
     private final PreparedStatement insert;
     private final PreparedStatement delete;
+    private final PreparedStatement selectMetadata;
+    private final PreparedStatement selectHeaders;
+    private final PreparedStatement selectFields;
+    private final PreparedStatement selectBody;
 
     @Inject
     public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider) {
@@ -107,6 +110,16 @@ public class CassandraMessageDAO {
         this.typesProvider = typesProvider;
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
+        this.selectMetadata = prepareSelect(session, METADATA);
+        this.selectHeaders = prepareSelect(session, HEADERS);
+        this.selectFields = prepareSelect(session, FIELDS);
+        this.selectBody = prepareSelect(session, BODY);
+    }
+
+    private PreparedStatement prepareSelect(Session session, String[] fields) {
+        return session.prepare(select(fields)
+            .from(TABLE_NAME)
+            .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -200,15 +213,11 @@ public class CassandraMessageDAO {
     }
 
     private CompletableFuture<ResultSet> retrieveRow(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
-        return cassandraAsyncExecutor.execute(
-                buildQuery(messageId, fetchType));
-    }
-    
-    private Where buildQuery(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId.getComposedMessageId().getMessageId();
-        return select(retrieveFields(fetchType))
-                .from(TABLE_NAME)
-                .where(eq(MESSAGE_ID, cassandraMessageId.get()));
+
+        return cassandraAsyncExecutor.execute(retrieveSelect(fetchType)
+            .bind()
+            .setUUID(MESSAGE_ID, cassandraMessageId.get()));
     }
 
     private Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> message(Row row,ComposedMessageIdWithMetaData messageIdWithMetaData, FetchType fetchType) {
@@ -264,16 +273,16 @@ public class CassandraMessageDAO {
                 .build();
     }
 
-    private String[] retrieveFields(FetchType fetchType) {
+    private PreparedStatement retrieveSelect(FetchType fetchType) {
         switch (fetchType) {
             case Body:
-                return BODY;
+                return selectBody;
             case Full:
-                return FIELDS;
+                return selectFields;
             case Headers:
-                return HEADERS;
+                return selectHeaders;
             case Metadata:
-                return METADATA;
+                return selectMetadata;
             default:
                 throw new RuntimeException("Unknown FetchType " + fetchType);
         }
