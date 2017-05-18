@@ -22,16 +22,34 @@ package org.apache.james.util;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.testcontainers.shaded.com.google.common.base.Throwables;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class CompletableFutureUtilTest {
+    private ExecutorService executorService;
+
+    @Before
+    public void setUp() {
+        executorService = Executors.newFixedThreadPool(4);
+    }
+
+    @After
+    public void tearDown() {
+        executorService.shutdownNow();
+    }
 
     @Test
     public void allOfShouldUnboxEmptyStream() {
@@ -40,6 +58,56 @@ public class CompletableFutureUtilTest {
                 .join()
                 .collect(Guavate.toImmutableList()))
             .isEmpty();
+    }
+
+    @Test
+    public void chainAllShouldPreserveExecutionOrder() {
+        int itemCount = 10;
+        ImmutableList<Integer> ints = IntStream.range(0, itemCount)
+            .boxed()
+            .collect(Guavate.toImmutableList());
+
+        ConcurrentLinkedDeque<Integer> queue = new ConcurrentLinkedDeque<>();
+
+        CompletableFutureUtil.chainAll(ints.stream(),
+            i -> CompletableFuture.supplyAsync(() -> {
+                try {
+                    Thread.sleep(itemCount - i);
+                } catch (InterruptedException e) {
+                    throw Throwables.propagate(e);
+                }
+                queue.add(i);
+                return i;
+            }, executorService))
+            .join();
+
+        assertThat(queue)
+            .containsExactlyElementsOf(ints);
+    }
+
+    @Test
+    public void chainAllShouldNotThrowOnEmptyStream() {
+        Stream<Integer> result = CompletableFutureUtil.chainAll(Stream.<Integer>of(),
+            i -> CompletableFuture.supplyAsync(() -> i, executorService))
+            .join();
+
+        assertThat(result.collect(Guavate.toImmutableList()))
+            .isEmpty();
+    }
+
+    @Test
+    public void chainAllShouldPreserveOrder() {
+        int itemCount = 10;
+        ImmutableList<Integer> ints = IntStream.range(0, itemCount)
+            .boxed()
+            .collect(Guavate.toImmutableList());
+
+        Stream<Integer> result = CompletableFutureUtil.chainAll(ints.stream(),
+            i -> CompletableFuture.supplyAsync(() -> i, executorService))
+            .join();
+
+        assertThat(result.collect(Guavate.toImmutableList()))
+            .containsExactlyElementsOf(ints);
     }
 
     @Test

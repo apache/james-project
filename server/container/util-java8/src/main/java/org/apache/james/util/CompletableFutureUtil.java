@@ -47,6 +47,28 @@ public class CompletableFutureUtil {
             .orElse(CompletableFuture.completedFuture(Stream.of()));
     }
 
+    public static <R, T> CompletableFuture<Stream<R>> chainAll(Stream<T> futureStream,
+        Function<T, CompletableFuture<R>> transformationToChain) {
+        return futureStream
+            .map(t -> (Supplier<CompletableFuture<R>>) (() -> transformationToChain.apply(t)))
+            .reduce(CompletableFuture.<Stream<R>>completedFuture(Stream.of()),
+                (accumulator, supplier) ->
+                    accumulator.thenCompose(
+                        accumulatedStream ->
+                            supplier.get()
+                                .thenCompose(r ->
+                                    CompletableFuture.completedFuture(Stream.<R>concat(accumulatedStream, Stream.of(r))))
+                    ),
+                getCompletableFutureBinaryOperator());
+    }
+
+    private static <R> BinaryOperator<CompletableFuture<Stream<R>>> getCompletableFutureBinaryOperator() {
+        return (future1, future2) ->
+            future1.thenCompose(stream1 ->
+                future2.<Stream<R>>thenCompose(stream2 ->
+                    CompletableFuture.completedFuture(Stream.concat(stream1, stream2))));
+    }
+
     public static <T> CompletableFuture<Stream<T>> performOnAll(CompletableFuture<Stream<T>> futurStream, Function<T, CompletableFuture<Void>> action) {
         return thenComposeOnAll(futurStream, value ->
             keepValue(() ->
