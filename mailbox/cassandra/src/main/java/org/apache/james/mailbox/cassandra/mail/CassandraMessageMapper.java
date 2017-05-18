@@ -53,8 +53,10 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.OptionalConverter;
+import org.apache.james.util.streams.JamesCollectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +70,7 @@ public class CassandraMessageMapper implements MessageMapper {
         .count(0L)
         .unseen(0L)
         .build();
+    public static final int EXPUNGE_BATCH_SIZE = 100;
 
     private final CassandraModSeqProvider modSeqProvider;
     private final MailboxSession mailboxSession;
@@ -212,23 +215,30 @@ public class CassandraMessageMapper implements MessageMapper {
             .orElse(null);
     }
 
+    @Override
     public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return FluentFutureStream.of(deletedMessageDAO.retrieveDeletedMessage(mailboxId, messageRange))
-            .thenComposeOnAll(
-                messageId ->
-                    messageIdDAO.retrieve(mailboxId, messageId))
-            .flatMap(OptionalConverter::toStream)
-            .thenCompose(ids ->
-                retrieveMessages(
-                    ids.collect(Guavate.toImmutableList()),
-                    FetchType.Metadata,
-                    Optional.empty())
-            )
-            .performOnAll(message -> deleteAsFuture(message, mailboxId))
+            .completableFuture()
+            .thenApply(JamesCollectors.chunk(EXPUNGE_BATCH_SIZE))
+            .thenCompose(chunkedExpungedUids ->
+                CompletableFutureUtil.chainAll(chunkedExpungedUids,
+                    uidChunk ->  expungeUidChunk(mailboxId, uidChunk)))
+            .thenApply(s -> s.flatMap(i -> i))
             .join()
             .collect(Guavate.toImmutableMap(MailboxMessage::getUid, SimpleMessageMetaData::new));
+    }
+
+    private CompletableFuture<Stream<SimpleMailboxMessage>> expungeUidChunk(CassandraId mailboxId, List<MessageUid> uidChunk) {
+        return FluentFutureStream.of(uidChunk.stream()
+            .map(uid -> messageIdDAO.retrieve(mailboxId, uid)))
+            .flatMap(OptionalConverter::toStream)
+            .performOnAll(this::deleteUsingMailboxId)
+            .thenComposeOnAll(idWithMetadata -> messageDAO.retrieveMessages(ImmutableList.of(idWithMetadata), FetchType.Metadata, Optional.empty()))
+            .flatMap(s -> s)
+            .map(pair -> pair.getKey().toMailboxMessage(ImmutableList.of()))
+            .completableFuture();
     }
 
     @Override

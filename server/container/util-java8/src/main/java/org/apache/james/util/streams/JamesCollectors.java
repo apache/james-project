@@ -22,8 +22,10 @@ package org.apache.james.util.streams;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
@@ -32,5 +34,11 @@ public class JamesCollectors {
         Preconditions.checkArgument(chunkSize > 0, "ChunkSize should be strictly positive");
         AtomicInteger counter = new AtomicInteger(-1);
         return Collectors.groupingBy(x -> counter.incrementAndGet() / chunkSize);
+    }
+
+    public static <D> Function<Stream<D>, Stream<List<D>>> chunk(int chunkSize) {
+        return stream -> stream.collect(chunker(chunkSize))
+            .values()
+            .stream();
     }
 }
