@@ -107,7 +107,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         CassandraUidProvider uidProvider = new CassandraUidProvider(session);
         CassandraTypesProvider typesProvider = new CassandraTypesProvider(mailboxModule, session);
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
-        CassandraMessageDAO messageDAO = new CassandraMessageDAO(session, typesProvider, messageIdFactory);
+        CassandraMessageDAO messageDAO = new CassandraMessageDAO(session, typesProvider);
         CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(session, messageIdFactory);
         CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(session, messageIdFactory);
         CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(session);

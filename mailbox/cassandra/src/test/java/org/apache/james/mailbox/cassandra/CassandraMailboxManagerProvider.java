@@ -56,7 +56,7 @@ public class CassandraMailboxManagerProvider {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(session, messageIdFactory);
         CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(session, messageIdFactory);
-        CassandraMessageDAO messageDAO = new CassandraMessageDAO(session, cassandraTypesProvider, messageIdFactory);
+        CassandraMessageDAO messageDAO = new CassandraMessageDAO(session, cassandraTypesProvider);
         CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(session);
         CassandraMailboxRecentsDAO mailboxRecentsDAO = new CassandraMailboxRecentsDAO(session);
         CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(session, cassandraTypesProvider, MAX_ACL_RETRY);

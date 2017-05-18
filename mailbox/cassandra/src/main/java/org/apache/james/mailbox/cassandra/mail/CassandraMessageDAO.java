@@ -21,7 +21,6 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.in;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
@@ -58,10 +57,8 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.CassandraMessageId.Factory;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageTable.Attachments;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageTable.Properties;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -78,6 +75,7 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.util.CompletableFutureUtil;
+import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.streams.JamesCollectors;
 
 import com.datastax.driver.core.BoundStatement;
@@ -85,34 +83,28 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Where;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Bytes;
 
 public class CassandraMessageDAO {
 
-    public static final int CHUNK_SIZE_ON_READ = 5000;
+    public static final int CHUNK_SIZE_ON_READ = 100;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraTypesProvider typesProvider;
-    private final Factory messageIdFactory;
     private final PreparedStatement insert;
     private final PreparedStatement delete;
 
     @Inject
-    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraMessageId.Factory messageIdFactory) {
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.typesProvider = typesProvider;
-        this.messageIdFactory = messageIdFactory;
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
     }
@@ -186,40 +178,37 @@ public class CassandraMessageDAO {
     }
 
     public CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
-        return CompletableFutureUtil.allOf(
-            messageIds.stream()
+        return CompletableFutureUtil.chainAll(
+            getLimitedIdStream(messageIds.stream().distinct(), limit)
                 .collect(JamesCollectors.chunker(CHUNK_SIZE_ON_READ))
                 .values()
-                .stream()
-                .map((List<ComposedMessageIdWithMetaData> ids) -> retrieveRows(ids, fetchType, limit)
-                    .thenApply(resultSet -> toMessagesWithAttachmentRepresentation(messageIds, fetchType, resultSet))))
+                .stream(),
+            ids -> FluentFutureStream.of(
+                ids.stream()
+                    .map(id -> retrieveRow(id, fetchType)
+                        .thenApply(resultSet ->
+                            message(resultSet.one(), id, fetchType))))
+                .completableFuture())
             .thenApply(stream -> stream.flatMap(Function.identity()));
     }
 
-    private Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> toMessagesWithAttachmentRepresentation(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, ResultSet resultSet) {
-        ImmutableListMultimap<MessageId, Row> messagesById = CassandraUtils.convertToStream(resultSet)
-            .collect(Guavate.toImmutableListMultimap(row -> messageIdFactory.of(row.getUUID(MESSAGE_ID)), row -> row));
-        return messageIds.stream()
-            .filter(composedId -> !messagesById.get(composedId.getComposedMessageId().getMessageId()).isEmpty())
-            .map(composedId -> message(messagesById.get(composedId.getComposedMessageId().getMessageId()).get(0), composedId, fetchType));
+    private Stream<ComposedMessageIdWithMetaData> getLimitedIdStream(Stream<ComposedMessageIdWithMetaData> messageIds, Optional<Integer> limit) {
+        return limit
+            .filter(value -> value > 0)
+            .map(messageIds::limit)
+            .orElse(messageIds);
     }
 
-    private CompletableFuture<ResultSet> retrieveRows(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
+    private CompletableFuture<ResultSet> retrieveRow(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
         return cassandraAsyncExecutor.execute(
-                buildSelectQueryWithLimit(
-                        buildQuery(messageIds, fetchType),
-                        limit));
+                buildQuery(messageId, fetchType));
     }
     
-    private Where buildQuery(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType) {
+    private Where buildQuery(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
+        CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId.getComposedMessageId().getMessageId();
         return select(retrieveFields(fetchType))
                 .from(TABLE_NAME)
-                .where(in(MESSAGE_ID, messageIds.stream()
-                        .map(ComposedMessageIdWithMetaData::getComposedMessageId)
-                        .map(ComposedMessageId::getMessageId)
-                        .map(messageId -> (CassandraMessageId) messageId)
-                        .map(CassandraMessageId::get)
-                        .collect(Collectors.toList())));
+                .where(eq(MESSAGE_ID, cassandraMessageId.get()));
     }
 
     private Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> message(Row row,ComposedMessageIdWithMetaData messageIdWithMetaData, FetchType fetchType) {
@@ -288,13 +277,6 @@ public class CassandraMessageDAO {
             default:
                 throw new RuntimeException("Unknown FetchType " + fetchType);
         }
-    }
-
-    private Statement buildSelectQueryWithLimit(Select.Where selectStatement, Optional<Integer> limit) {
-        if (!limit.isPresent() || limit.get() <= 0) {
-            return selectStatement;
-        }
-        return selectStatement.limit(limit.get());
     }
 
     public CompletableFuture<Void> delete(CassandraMessageId messageId) {
