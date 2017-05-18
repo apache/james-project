@@ -21,4 +21,7 @@ package org.apache.james.backends.cassandra.utils;
 
 public interface CassandraConstants {
     int LIGHTWEIGHT_TRANSACTION_APPLIED = 0;
+
+
+    int DEFAULT_CACHED_ROW_PER_PARTITION = 10;
 }

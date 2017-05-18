@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraSubscriptionTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
@@ -33,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 
 public class CassandraSubscriptionModule implements CassandraModule {
 
+    public static final int PER_USER_CACHED_SUBSCRIPTIONS = 100;
     private final List<CassandraTable> tables;
     private final List<CassandraType> types;
 
@@ -42,7 +44,10 @@ public class CassandraSubscriptionModule implements CassandraModule {
                 SchemaBuilder.createTable(CassandraSubscriptionTable.TABLE_NAME)
                     .ifNotExists()
                     .addPartitionKey(CassandraSubscriptionTable.USER, text())
-                    .addClusteringColumn(CassandraSubscriptionTable.MAILBOX, text())));
+                    .addClusteringColumn(CassandraSubscriptionTable.MAILBOX, text())
+                    .withOptions()
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(PER_USER_CACHED_SUBSCRIPTIONS))));
         types = ImmutableList.of();
     }
 

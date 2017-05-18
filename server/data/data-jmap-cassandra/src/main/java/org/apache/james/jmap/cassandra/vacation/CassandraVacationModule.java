@@ -28,6 +28,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.jmap.cassandra.vacation.tables.CassandraVacationTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
@@ -49,7 +50,10 @@ public class CassandraVacationModule implements CassandraModule {
                     .addUDTColumn(CassandraVacationTable.TO_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
                     .addColumn(CassandraVacationTable.TEXT, text())
                     .addColumn(CassandraVacationTable.SUBJECT, text())
-                    .addColumn(CassandraVacationTable.HTML, text())));
+                    .addColumn(CassandraVacationTable.HTML, text())
+                    .withOptions()
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
         types = ImmutableList.of();
     }
 

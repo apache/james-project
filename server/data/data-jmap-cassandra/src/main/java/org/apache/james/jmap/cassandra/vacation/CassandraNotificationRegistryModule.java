@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.jmap.cassandra.vacation.tables.CassandraNotificationTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
@@ -42,7 +43,11 @@ public class CassandraNotificationRegistryModule implements CassandraModule {
                 SchemaBuilder.createTable(CassandraNotificationTable.TABLE_NAME)
                     .ifNotExists()
                     .addPartitionKey(CassandraNotificationTable.ACCOUNT_ID, text())
-                    .addClusteringColumn(CassandraNotificationTable.RECIPIENT_ID, text())));
+                    .addClusteringColumn(CassandraNotificationTable.RECIPIENT_ID, text())
+                    .withOptions()
+                    .compactionOptions(SchemaBuilder.dateTieredStrategy())
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
         types = ImmutableList.of();
     }
 

@@ -42,7 +42,10 @@ public class CassandraRegistrationModule implements CassandraModule {
                 SchemaBuilder.createTable(CassandraMailboxPathRegisterTable.TABLE_NAME)
                     .ifNotExists()
                     .addUDTPartitionKey(CassandraMailboxPathRegisterTable.MAILBOX_PATH, SchemaBuilder.frozen(CassandraMailboxPathRegisterTable.MAILBOX_PATH))
-                    .addClusteringColumn(CassandraMailboxPathRegisterTable.TOPIC, text())));types = Collections.singletonList(
+                    .addClusteringColumn(CassandraMailboxPathRegisterTable.TOPIC, text())
+                    .withOptions()
+                    .compactionOptions(SchemaBuilder.dateTieredStrategy())));
+        types = Collections.singletonList(
             new CassandraType(CassandraMailboxPathRegisterTable.MAILBOX_PATH,
                 SchemaBuilder.createType(CassandraMailboxPathRegisterTable.MAILBOX_PATH)
                     .ifNotExists()

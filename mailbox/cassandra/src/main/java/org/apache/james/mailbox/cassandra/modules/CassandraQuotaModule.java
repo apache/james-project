@@ -28,6 +28,7 @@ import java.util.List;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraDefaultMaxQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraMaxQuota;
@@ -43,22 +44,31 @@ public class CassandraQuotaModule implements CassandraModule {
     public CassandraQuotaModule() {
         tables = ImmutableList.of(
             new CassandraTable(CassandraCurrentQuota.TABLE_NAME,
-                    SchemaBuilder.createTable(CassandraCurrentQuota.TABLE_NAME)
+                SchemaBuilder.createTable(CassandraCurrentQuota.TABLE_NAME)
                     .ifNotExists()
                     .addPartitionKey(CassandraCurrentQuota.QUOTA_ROOT, text())
                     .addColumn(CassandraCurrentQuota.MESSAGE_COUNT, counter())
-                    .addColumn(CassandraCurrentQuota.STORAGE, counter())),
+                    .addColumn(CassandraCurrentQuota.STORAGE, counter())
+                    .withOptions()
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))),
             new CassandraTable(CassandraMaxQuota.TABLE_NAME,
-                    SchemaBuilder.createTable(CassandraMaxQuota.TABLE_NAME)
+                SchemaBuilder.createTable(CassandraMaxQuota.TABLE_NAME)
                     .ifNotExists()
                     .addPartitionKey(CassandraMaxQuota.QUOTA_ROOT, text())
                     .addColumn(CassandraMaxQuota.MESSAGE_COUNT, bigint())
-                    .addColumn(CassandraMaxQuota.STORAGE, bigint())),
+                    .addColumn(CassandraMaxQuota.STORAGE, bigint())
+                    .withOptions()
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))),
             new CassandraTable(CassandraDefaultMaxQuota.TABLE_NAME,
-                    SchemaBuilder.createTable(CassandraDefaultMaxQuota.TABLE_NAME)
+                SchemaBuilder.createTable(CassandraDefaultMaxQuota.TABLE_NAME)
                     .ifNotExists()
                     .addPartitionKey(CassandraDefaultMaxQuota.TYPE, text())
-                    .addColumn(CassandraDefaultMaxQuota.VALUE, bigint())));
+                    .addColumn(CassandraDefaultMaxQuota.VALUE, bigint())
+                    .withOptions()
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
         types = ImmutableList.of();
     }
 

@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
@@ -38,12 +39,15 @@ public class CassandraRRTModule implements CassandraModule {
 
     public CassandraRRTModule() {
         tables = ImmutableList.of(
-                new CassandraTable(CassandraRecipientRewriteTableTable.TABLE_NAME,
-                    SchemaBuilder.createTable(CassandraRecipientRewriteTableTable.TABLE_NAME)
-                        .ifNotExists()
-                        .addPartitionKey(CassandraRecipientRewriteTableTable.USER, text())
-                        .addClusteringColumn(CassandraRecipientRewriteTableTable.DOMAIN, text())
-                        .addClusteringColumn(CassandraRecipientRewriteTableTable.MAPPING, text())));
+            new CassandraTable(CassandraRecipientRewriteTableTable.TABLE_NAME,
+                SchemaBuilder.createTable(CassandraRecipientRewriteTableTable.TABLE_NAME)
+                    .ifNotExists()
+                    .addPartitionKey(CassandraRecipientRewriteTableTable.USER, text())
+                    .addClusteringColumn(CassandraRecipientRewriteTableTable.DOMAIN, text())
+                    .addClusteringColumn(CassandraRecipientRewriteTableTable.MAPPING, text())
+                    .withOptions()
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
         types = ImmutableList.of();
     }
 

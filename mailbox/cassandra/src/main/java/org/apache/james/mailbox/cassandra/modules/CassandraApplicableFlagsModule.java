@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraApplicableFlagTable;
 import org.apache.james.mailbox.cassandra.table.Flag;
 
@@ -51,7 +52,11 @@ public class CassandraApplicableFlagsModule implements CassandraModule {
                     .addColumn(Flag.DRAFT, cboolean())
                     .addColumn(Flag.FLAGGED, cboolean())
                     .addColumn(Flag.SEEN, cboolean())
-                    .addColumn(Flag.USER_FLAGS, set(text()))));
+                    .addColumn(Flag.USER_FLAGS, set(text()))
+                    .withOptions()
+                    .compactionOptions(SchemaBuilder.leveledStrategy())
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
         types = Collections.emptyList();
     }
 

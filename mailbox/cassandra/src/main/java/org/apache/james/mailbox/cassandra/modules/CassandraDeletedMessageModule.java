@@ -28,6 +28,7 @@ import java.util.List;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
@@ -43,7 +44,11 @@ public class CassandraDeletedMessageModule implements CassandraModule {
             SchemaBuilder.createTable(TABLE_NAME)
                 .ifNotExists()
                 .addPartitionKey(MAILBOX_ID, DataType.timeuuid())
-                .addClusteringColumn(UID, DataType.bigint())));
+                .addClusteringColumn(UID, DataType.bigint())
+                .withOptions()
+                .compactionOptions(SchemaBuilder.leveledStrategy())
+                .caching(SchemaBuilder.KeyCaching.ALL,
+                    SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
         types = ImmutableList.of();
     }
 

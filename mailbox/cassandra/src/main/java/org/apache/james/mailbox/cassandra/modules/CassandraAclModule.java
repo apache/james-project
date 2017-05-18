@@ -29,6 +29,7 @@ import java.util.List;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
@@ -45,7 +46,10 @@ public class CassandraAclModule implements CassandraModule {
                     .ifNotExists()
                     .addPartitionKey(CassandraACLTable.ID, timeuuid())
                     .addColumn(CassandraACLTable.ACL, text())
-                    .addColumn(CassandraACLTable.VERSION, bigint())));
+                    .addColumn(CassandraACLTable.VERSION, bigint())
+                    .withOptions()
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
         types = Collections.emptyList();
     }
 

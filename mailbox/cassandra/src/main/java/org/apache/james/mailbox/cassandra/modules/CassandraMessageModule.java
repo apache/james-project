@@ -33,6 +33,7 @@ import java.util.List;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageIds;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageTable;
@@ -40,10 +41,13 @@ import org.apache.james.mailbox.cassandra.table.Flag;
 import org.apache.james.mailbox.cassandra.table.MessageIdToImapUid;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.driver.core.schemabuilder.TableOptions;
 import com.google.common.collect.ImmutableList;
 
 public class CassandraMessageModule implements CassandraModule {
 
+    public static final int CACHED_MESSAGE_ID_ROWS = 1000;
+    public static final int CACHED_IMAP_UID_ROWS = 100;
     private final List<CassandraTable> tables;
     private final List<CassandraType> types;
 
@@ -63,7 +67,11 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(Flag.RECENT, cboolean())
                     .addColumn(Flag.SEEN, cboolean())
                     .addColumn(Flag.USER, cboolean())
-                    .addColumn(Flag.USER_FLAGS, set(text()))),
+                    .addColumn(Flag.USER_FLAGS, set(text()))
+                    .withOptions()
+                    .compactionOptions(SchemaBuilder.leveledStrategy())
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CACHED_IMAP_UID_ROWS))),
             new CassandraTable(CassandraMessageIdTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraMessageIdTable.TABLE_NAME)
                     .ifNotExists()
@@ -78,7 +86,11 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(Flag.RECENT, cboolean())
                     .addColumn(Flag.SEEN, cboolean())
                     .addColumn(Flag.USER, cboolean())
-                    .addColumn(Flag.USER_FLAGS, set(text()))),
+                    .addColumn(Flag.USER_FLAGS, set(text()))
+                    .withOptions()
+                    .compactionOptions(SchemaBuilder.leveledStrategy())
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CACHED_MESSAGE_ID_ROWS))),
             new CassandraTable(CassandraMessageTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraMessageTable.TABLE_NAME)
                     .ifNotExists()

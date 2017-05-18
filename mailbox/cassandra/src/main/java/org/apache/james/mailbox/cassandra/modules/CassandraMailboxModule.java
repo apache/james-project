@@ -28,6 +28,7 @@ import java.util.List;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
 
@@ -47,13 +48,19 @@ public class CassandraMailboxModule implements CassandraModule {
                     .addPartitionKey(CassandraMailboxTable.ID, timeuuid())
                     .addUDTColumn(CassandraMailboxTable.MAILBOX_BASE, SchemaBuilder.frozen(CassandraMailboxTable.MAILBOX_BASE))
                     .addColumn(CassandraMailboxTable.NAME, text())
-                    .addColumn(CassandraMailboxTable.UIDVALIDITY, bigint())),
+                    .addColumn(CassandraMailboxTable.UIDVALIDITY, bigint())
+                    .withOptions()
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))),
             new CassandraTable(CassandraMailboxPathTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraMailboxPathTable.TABLE_NAME)
                     .ifNotExists()
                     .addUDTPartitionKey(CassandraMailboxPathTable.NAMESPACE_AND_USER, SchemaBuilder.frozen(CassandraMailboxTable.MAILBOX_BASE))
                     .addClusteringColumn(CassandraMailboxPathTable.MAILBOX_NAME, text())
-                    .addColumn(CassandraMailboxPathTable.MAILBOX_ID, timeuuid())));
+                    .addColumn(CassandraMailboxPathTable.MAILBOX_ID, timeuuid())
+                    .withOptions()
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
         types = ImmutableList.of(
             new CassandraType(CassandraMailboxTable.MAILBOX_BASE,
                 SchemaBuilder.createType(CassandraMailboxTable.MAILBOX_BASE)
