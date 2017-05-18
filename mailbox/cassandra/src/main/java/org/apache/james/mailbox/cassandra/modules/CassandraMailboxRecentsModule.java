@@ -22,7 +22,6 @@ package org.apache.james.mailbox.cassandra.modules;
 import static com.datastax.driver.core.DataType.bigint;
 import static com.datastax.driver.core.DataType.timeuuid;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -32,6 +31,7 @@ import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxRecentsTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.google.common.collect.ImmutableList;
 
 public class CassandraMailboxRecentsModule implements CassandraModule {
 
@@ -39,7 +39,7 @@ public class CassandraMailboxRecentsModule implements CassandraModule {
     private final List<CassandraType> types;
 
     public CassandraMailboxRecentsModule() {
-        tables = Collections.singletonList(
+        tables = ImmutableList.of(
             new CassandraTable(CassandraMailboxRecentsTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraMailboxRecentsTable.TABLE_NAME)
                     .ifNotExists()
@@ -49,7 +49,7 @@ public class CassandraMailboxRecentsModule implements CassandraModule {
                     .compactionOptions(SchemaBuilder.leveledStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
-        types = Collections.emptyList();
+        types = ImmutableList.of();
     }
 
     @Override

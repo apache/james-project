@@ -21,7 +21,6 @@ package org.apache.james.mailbox.cassandra.modules;
 
 import static com.datastax.driver.core.DataType.text;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -30,6 +29,7 @@ import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathRegisterTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.google.common.collect.ImmutableList;
 
 public class CassandraRegistrationModule implements CassandraModule {
 
@@ -37,7 +37,7 @@ public class CassandraRegistrationModule implements CassandraModule {
     private final List<CassandraType> types;
 
     public CassandraRegistrationModule() {
-        tables = Collections.singletonList(
+        tables = ImmutableList.of(
             new CassandraTable(CassandraMailboxPathRegisterTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraMailboxPathRegisterTable.TABLE_NAME)
                     .ifNotExists()
@@ -45,7 +45,7 @@ public class CassandraRegistrationModule implements CassandraModule {
                     .addClusteringColumn(CassandraMailboxPathRegisterTable.TOPIC, text())
                     .withOptions()
                     .compactionOptions(SchemaBuilder.dateTieredStrategy())));
-        types = Collections.singletonList(
+        types = ImmutableList.of(
             new CassandraType(CassandraMailboxPathRegisterTable.MAILBOX_PATH,
                 SchemaBuilder.createType(CassandraMailboxPathRegisterTable.MAILBOX_PATH)
                     .ifNotExists()

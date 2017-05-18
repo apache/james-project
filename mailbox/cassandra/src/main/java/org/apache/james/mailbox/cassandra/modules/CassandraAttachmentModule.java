@@ -23,7 +23,6 @@ import static com.datastax.driver.core.DataType.bigint;
 import static com.datastax.driver.core.DataType.blob;
 import static com.datastax.driver.core.DataType.text;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -32,6 +31,7 @@ import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.google.common.collect.ImmutableList;
 
 public class CassandraAttachmentModule implements CassandraModule {
 
@@ -39,7 +39,7 @@ public class CassandraAttachmentModule implements CassandraModule {
     private final List<CassandraType> types;
 
     public CassandraAttachmentModule() {
-        tables = Collections.singletonList(
+        tables = ImmutableList.of(
             new CassandraTable(CassandraAttachmentTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraAttachmentTable.TABLE_NAME)
                     .ifNotExists()
@@ -47,7 +47,7 @@ public class CassandraAttachmentModule implements CassandraModule {
                     .addColumn(CassandraAttachmentTable.PAYLOAD, blob())
                     .addColumn(CassandraAttachmentTable.TYPE, text())
                     .addColumn(CassandraAttachmentTable.SIZE, bigint())));
-        types = Collections.emptyList();
+        types = ImmutableList.of();
     }
 
     @Override

@@ -33,6 +33,7 @@ import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.google.common.collect.ImmutableList;
 
 public class CassandraAclModule implements CassandraModule {
 
@@ -40,7 +41,7 @@ public class CassandraAclModule implements CassandraModule {
     private final List<CassandraType> types;
 
     public CassandraAclModule() {
-        tables = Collections.singletonList(
+        tables = ImmutableList.of(
             new CassandraTable(CassandraACLTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraACLTable.TABLE_NAME)
                     .ifNotExists()
@@ -50,7 +51,7 @@ public class CassandraAclModule implements CassandraModule {
                     .withOptions()
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
-        types = Collections.emptyList();
+        types = ImmutableList.of();
     }
 
     @Override
