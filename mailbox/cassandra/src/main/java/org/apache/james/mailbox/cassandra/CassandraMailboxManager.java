@@ -132,7 +132,8 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             getQuotaManager(),
             getQuotaRootResolver(),
             getMessageParser(),
-            getMessageIdFactory());
+            getMessageIdFactory(),
+            getBatchSizes());
     }
 
 }

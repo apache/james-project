@@ -35,6 +35,7 @@ import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
@@ -55,10 +56,10 @@ public class JCRMessageManager extends StoreMessageManager {
     public JCRMessageManager(MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, 
             final MailboxEventDispatcher dispatcher, MailboxPathLocker locker, JCRMailbox mailbox, 
             MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, Logger log, 
-            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory)
+            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes)
                     throws MailboxException {
         super(mapperFactory, index, dispatcher, locker, mailbox, aclResolver, groupMembershipResolver, quotaManager, 
-                quotaRootResolver, messageParser, messageIdFactory);
+                quotaRootResolver, messageParser, messageIdFactory, batchSizes);
         this.log = log;
     }
 

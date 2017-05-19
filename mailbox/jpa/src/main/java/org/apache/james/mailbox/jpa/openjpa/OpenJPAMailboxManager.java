@@ -104,6 +104,7 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
             getQuotaManager(),
             getQuotaRootResolver(),
             getMessageParser(),
-            getMessageIdFactory());
+            getMessageIdFactory(),
+            getBatchSizes());
     }
 }

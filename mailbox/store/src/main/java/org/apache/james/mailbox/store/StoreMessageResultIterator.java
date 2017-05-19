@@ -58,22 +58,22 @@ public class StoreMessageResultIterator implements MessageResultIterator {
     private final MessageUid from;
     private MessageUid cursor;
     private final MessageUid to;
-    private final FetchBatchSizes fetchBatchSizes;
+    private final BatchSizes batchSizes;
     private final Type type;
     private final MessageMapper mapper;
     private final FetchType ftype;
 
-    public StoreMessageResultIterator(MessageMapper mapper, Mailbox mailbox, MessageRange range, FetchBatchSizes fetchBatchSizes, org.apache.james.mailbox.model.MessageResult.FetchGroup group) {
+    public StoreMessageResultIterator(MessageMapper mapper, Mailbox mailbox, MessageRange range, BatchSizes batchSizes, org.apache.james.mailbox.model.MessageResult.FetchGroup group) {
         this.mailbox = mailbox;
         this.group = group;
         this.mapper = mapper;
         this.from = range.getUidFrom();
         this.cursor = this.from;
         this.to = range.getUidTo();
-        this.fetchBatchSizes = fetchBatchSizes;
+        this.batchSizes = batchSizes;
         this.type = range.getType();
         this.ftype = getFetchType(group);
-        LOGGER.debug("fetchBatchSizes used: " + fetchBatchSizes);
+        LOGGER.debug("batchSizes used: " + batchSizes);
     }
 
     /**
@@ -165,13 +165,13 @@ public class StoreMessageResultIterator implements MessageResultIterator {
     private int batchSizeFromFetchType(FetchType fetchType) {
         switch (fetchType) {
         case Metadata:
-            return fetchBatchSizes.getMetadata();
+            return batchSizes.getFetchMetadata();
         case Headers:
-            return fetchBatchSizes.getHeaders();
+            return batchSizes.getFetchHeaders();
         case Body:
-            return fetchBatchSizes.getBody();
+            return batchSizes.getFetchBody();
         case Full:
-            return fetchBatchSizes.getFull();
+            return batchSizes.getFetchFull();
         }
         throw new RuntimeException("Unknown fetchTpe: " + fetchType);
     }

@@ -169,11 +169,12 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     private final Factory messageIdFactory;
     
-    private FetchBatchSizes fetchBatchSizes = FetchBatchSizes.defaultValues();
+    private BatchSizes batchSizes = BatchSizes.defaultValues();
 
     public StoreMessageManager(MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher, 
             MailboxPathLocker locker, Mailbox mailbox, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
-            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory) throws MailboxException {
+            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes) 
+                    throws MailboxException {
         this.mailbox = mailbox;
         this.dispatcher = dispatcher;
         this.mapperFactory = mapperFactory;
@@ -185,10 +186,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         this.quotaRootResolver = quotaRootResolver;
         this.messageParser = messageParser;
         this.messageIdFactory = messageIdFactory;
-    }
-
-    public void setFetchBatchSizes(FetchBatchSizes fetchBatchSizes) {
-        this.fetchBatchSizes = fetchBatchSizes;
+        this.batchSizes = batchSizes;
     }
 
     protected Factory getMessageIdFactory() {
@@ -699,7 +697,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      */
     public MessageResultIterator getMessages(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
-        return new StoreMessageResultIterator(messageMapper, mailbox, set, fetchBatchSizes, fetchGroup);
+        return new StoreMessageResultIterator(messageMapper, mailbox, set, batchSizes, fetchGroup);
     }
 
     /**

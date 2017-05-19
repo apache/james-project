@@ -131,7 +131,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     private QuotaUpdater quotaUpdater;
 
-    private FetchBatchSizes fetchBatchSizes = FetchBatchSizes.defaultValues();
+    private BatchSizes batchSizes = BatchSizes.defaultValues();
 
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
@@ -207,18 +207,21 @@ public class StoreMailboxManager implements MailboxManager {
         this.quotaUpdater = quotaUpdater;
     }
 
-    public void setCopyBatchSize(int copyBatchSize) {
-        this.copyBatcher = new MessageBatcher(copyBatchSize);
+    public void setCopyBatchSize(BatchSizes batchSizes) {
+        this.copyBatcher = new MessageBatcher(batchSizes.getCopyBatchSize());
     }
 
-    public void setMoveBatchSize(int moveBatchSize) {
-        this.moveBatcher = new MessageBatcher(moveBatchSize);
+    public void setMoveBatchSize(BatchSizes batchSizes) {
+        this.moveBatcher = new MessageBatcher(batchSizes.getMoveBatchSize());
     }
 
-    public void setFetchBatchSizes(FetchBatchSizes fetchBatchSizes) {
-        this.fetchBatchSizes = fetchBatchSizes;
+    public void setBatchSizes(BatchSizes batchSizes) {
+        this.batchSizes = batchSizes;
     }
 
+    public BatchSizes getBatchSizes() {
+        return batchSizes;
+    }
 
     /**
      * Init the {@link MailboxManager}
@@ -461,7 +464,7 @@ public class StoreMailboxManager implements MailboxManager {
     protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) throws MailboxException {
         return new StoreMessageManager(getMapperFactory(), getMessageSearchIndex(), getEventDispatcher(), 
                 getLocker(), mailbox, getAclResolver(), getGroupMembershipResolver(), getQuotaManager(), 
-                getQuotaRootResolver(), getMessageParser(), getMessageIdFactory());
+                getQuotaRootResolver(), getMessageParser(), getMessageIdFactory(), getBatchSizes());
     }
 
     /**
@@ -490,9 +493,7 @@ public class StoreMailboxManager implements MailboxManager {
         } else {
             session.getLog().debug("Loaded mailbox " + mailboxPath);
 
-            StoreMessageManager messageManager = createMessageManager(mailboxRow, session);
-            messageManager.setFetchBatchSizes(fetchBatchSizes);
-            return messageManager;
+            return createMessageManager(mailboxRow, session);
         }
     }
 
@@ -514,9 +515,7 @@ public class StoreMailboxManager implements MailboxManager {
 
         session.getLog().debug("Loaded mailbox " + mailboxId.serialize());
 
-        StoreMessageManager messageManager = createMessageManager(mailboxRow, session);
-        messageManager.setFetchBatchSizes(fetchBatchSizes);
-        return messageManager;
+        return createMessageManager(mailboxRow, session);
     }
 
     private boolean belongsToCurrentUser(Mailbox mailbox, MailboxSession session) {

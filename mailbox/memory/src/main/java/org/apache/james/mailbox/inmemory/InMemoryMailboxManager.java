@@ -86,6 +86,7 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
             getQuotaManager(),
             getQuotaRootResolver(),
             getMessageParser(),
-            getMessageIdFactory());
+            getMessageIdFactory(),
+            getBatchSizes());
     }
 }

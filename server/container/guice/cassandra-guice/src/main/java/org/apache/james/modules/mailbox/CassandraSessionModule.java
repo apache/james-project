@@ -37,6 +37,7 @@ import org.apache.james.backends.cassandra.init.ClusterBuilder;
 import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
 import org.apache.james.backends.cassandra.init.QueryLoggerConfiguration;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
+import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.util.Host;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.utils.RetryExecutorUtil;
@@ -59,6 +60,7 @@ import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 import com.nurkiewicz.asyncretry.function.RetryCallable;
 
 public class CassandraSessionModule extends AbstractModule {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraSessionModule.class);
 
     private static final int DEFAULT_CONNECTION_MAX_RETRIES = 10;
@@ -70,7 +72,7 @@ public class CassandraSessionModule extends AbstractModule {
     private static final String LOCALHOST = "127.0.0.1";
     private static final int DEFAULT_READ_TIMEOUT_MILLIS = 5000;
     private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
-
+    private static final String BATCHSIZES_FILE_NAME = "batchsizes";
 
     @Override
     protected void configure() {
@@ -98,6 +100,27 @@ public class CassandraSessionModule extends AbstractModule {
     @Singleton
     CassandraSessionConfiguration getCassandraSessionConfiguration(PropertiesProvider propertiesProvider) {
         return () -> getConfiguration(propertiesProvider);
+    }
+
+    @Provides
+    @Singleton
+    BatchSizes getBatchSizesConfiguration(PropertiesProvider propertiesProvider) {
+        try {
+            PropertiesConfiguration configuration = propertiesProvider.getConfiguration(BATCHSIZES_FILE_NAME);
+            BatchSizes batchSizes = BatchSizes.builder()
+                    .fetchMetadata(configuration.getInt("fetch.metadata", BatchSizes.DEFAULT_BATCH_SIZE))
+                    .fetchHeaders(configuration.getInt("fetch.headers", BatchSizes.DEFAULT_BATCH_SIZE))
+                    .fetchBody(configuration.getInt("fetch.body", BatchSizes.DEFAULT_BATCH_SIZE))
+                    .fetchFull(configuration.getInt("fetch.full", BatchSizes.DEFAULT_BATCH_SIZE))
+                    .copyBatchSize(configuration.getInt("copy", BatchSizes.DEFAULT_BATCH_SIZE))
+                    .moveBatchSize(configuration.getInt("move", BatchSizes.DEFAULT_BATCH_SIZE))
+                    .build();
+            LOGGER.debug("BatchSize configuration: " + batchSizes);
+            return batchSizes;
+        } catch (FileNotFoundException | ConfigurationException e) {
+            LOGGER.warn("Could not locate batchsizes configuration file. Using default values.");
+            return BatchSizes.defaultValues();
+        }
     }
 
     @Provides

@@ -35,6 +35,7 @@ import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
@@ -53,10 +54,10 @@ public class JPAMessageManager extends StoreMessageManager {
     			final MailboxEventDispatcher dispatcher, MailboxPathLocker locker, 
     			final Mailbox mailbox, MailboxACLResolver aclResolver, 
     			GroupMembershipResolver groupMembershipResolver, QuotaManager quotaManager,
-                QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory) throws MailboxException {
+                QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes) throws MailboxException {
     	
         super(mapperFactory, index, dispatcher, locker, mailbox, aclResolver, groupMembershipResolver,
-            quotaManager, quotaRootResolver, messageParser, messageIdFactory);
+            quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes);
     }
     
     @Override
