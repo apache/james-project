@@ -100,7 +100,6 @@ import com.google.common.collect.Iterables;
 public class StoreMailboxManager implements MailboxManager {
 
     public static final char SQL_WILDCARD_CHAR = '%';
-    public static final int DEFAULT_FETCH_BATCH_SIZE = 200;
 
     private MailboxEventDispatcher dispatcher;
     private DelegatingMailboxListener delegatingListener;
@@ -132,7 +131,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     private QuotaUpdater quotaUpdater;
 
-    private int fetchBatchSize = DEFAULT_FETCH_BATCH_SIZE;
+    private FetchBatchSizes fetchBatchSizes = FetchBatchSizes.defaultValues();
 
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
@@ -216,8 +215,8 @@ public class StoreMailboxManager implements MailboxManager {
         this.moveBatcher = new MessageBatcher(moveBatchSize);
     }
 
-    public void setFetchBatchSize(int fetchBatchSize) {
-        this.fetchBatchSize = fetchBatchSize;
+    public void setFetchBatchSizes(FetchBatchSizes fetchBatchSizes) {
+        this.fetchBatchSizes = fetchBatchSizes;
     }
 
 
@@ -492,7 +491,7 @@ public class StoreMailboxManager implements MailboxManager {
             session.getLog().debug("Loaded mailbox " + mailboxPath);
 
             StoreMessageManager messageManager = createMessageManager(mailboxRow, session);
-            messageManager.setFetchBatchSize(fetchBatchSize);
+            messageManager.setFetchBatchSizes(fetchBatchSizes);
             return messageManager;
         }
     }
@@ -516,7 +515,7 @@ public class StoreMailboxManager implements MailboxManager {
         session.getLog().debug("Loaded mailbox " + mailboxId.serialize());
 
         StoreMessageManager messageManager = createMessageManager(mailboxRow, session);
-        messageManager.setFetchBatchSize(fetchBatchSize);
+        messageManager.setFetchBatchSizes(fetchBatchSizes);
         return messageManager;
     }
 

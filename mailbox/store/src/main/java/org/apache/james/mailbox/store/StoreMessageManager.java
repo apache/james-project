@@ -169,7 +169,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     private final Factory messageIdFactory;
     
-    private int fetchBatchSize;
+    private FetchBatchSizes fetchBatchSizes = FetchBatchSizes.defaultValues();
 
     public StoreMessageManager(MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher, 
             MailboxPathLocker locker, Mailbox mailbox, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
@@ -187,8 +187,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         this.messageIdFactory = messageIdFactory;
     }
 
-    public void setFetchBatchSize(int fetchBatchSize) {
-        this.fetchBatchSize = fetchBatchSize;
+    public void setFetchBatchSizes(FetchBatchSizes fetchBatchSizes) {
+        this.fetchBatchSizes = fetchBatchSizes;
     }
 
     protected Factory getMessageIdFactory() {
@@ -699,7 +699,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      */
     public MessageResultIterator getMessages(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
-        return new StoreMessageResultIterator(messageMapper, mailbox, set, fetchBatchSize, fetchGroup);
+        return new StoreMessageResultIterator(messageMapper, mailbox, set, fetchBatchSizes, fetchGroup);
     }
 
     /**

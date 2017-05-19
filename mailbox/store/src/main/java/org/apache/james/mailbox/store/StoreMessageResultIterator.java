@@ -42,10 +42,14 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects;
 
 public class StoreMessageResultIterator implements MessageResultIterator {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoreMessageResultIterator.class);
 
     private Iterator<MailboxMessage> next = null;
     private MailboxException exception;
@@ -54,21 +58,22 @@ public class StoreMessageResultIterator implements MessageResultIterator {
     private final MessageUid from;
     private MessageUid cursor;
     private final MessageUid to;
-    private final int batchSize;
+    private final FetchBatchSizes fetchBatchSizes;
     private final Type type;
     private final MessageMapper mapper;
     private final FetchType ftype;
 
-    public StoreMessageResultIterator(MessageMapper mapper, Mailbox mailbox, MessageRange range, int batchSize, org.apache.james.mailbox.model.MessageResult.FetchGroup group) {
+    public StoreMessageResultIterator(MessageMapper mapper, Mailbox mailbox, MessageRange range, FetchBatchSizes fetchBatchSizes, org.apache.james.mailbox.model.MessageResult.FetchGroup group) {
         this.mailbox = mailbox;
         this.group = group;
         this.mapper = mapper;
         this.from = range.getUidFrom();
         this.cursor = this.from;
         this.to = range.getUidTo();
-        this.batchSize = batchSize;
+        this.fetchBatchSizes = fetchBatchSizes;
         this.type = range.getType();
         this.ftype = getFetchType(group);
+        LOGGER.debug("fetchBatchSizes used: " + fetchBatchSizes);
     }
 
     /**
@@ -154,7 +159,21 @@ public class StoreMessageResultIterator implements MessageResultIterator {
             range = MessageRange.range(cursor, to);
             break;
         }
-        next = mapper.findInMailbox(mailbox, range, ftype, batchSize);
+        next = mapper.findInMailbox(mailbox, range, ftype, batchSizeFromFetchType(ftype));
+    }
+
+    private int batchSizeFromFetchType(FetchType fetchType) {
+        switch (fetchType) {
+        case Metadata:
+            return fetchBatchSizes.getMetadata();
+        case Headers:
+            return fetchBatchSizes.getHeaders();
+        case Body:
+            return fetchBatchSizes.getBody();
+        case Full:
+            return fetchBatchSizes.getFull();
+        }
+        throw new RuntimeException("Unknown fetchTpe: " + fetchType);
     }
 
     @Override
