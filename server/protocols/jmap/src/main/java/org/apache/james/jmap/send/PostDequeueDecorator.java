@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableList;
 
 public class PostDequeueDecorator extends MailQueueItemDecorator {
     private static final Logger LOG = LoggerFactory.getLogger(PostDequeueDecorator.class);
+    private static final String IS_DELIVERED = "DELIVERED";
 
     private final MailboxManager mailboxManager;
     private final Factory messageIdFactory;
@@ -74,11 +75,14 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
         if (success && mandatoryJmapMetaDataIsPresent()) {
             MessageId messageId = messageIdFactory.fromString((String) getMail().getAttribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE));
             String username = (String) getMail().getAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE);
-            try {
-                MailboxSession mailboxSession = mailboxManager.createSystemSession(username, LOG);
-                moveFromOutboxToSent(messageId, mailboxSession);
-            } catch (MailboxException e) {
-                throw new MailQueueException(e.getMessage(), e);
+            if (getMail().getAttribute(IS_DELIVERED) == null) {
+                try {
+                    MailboxSession mailboxSession = mailboxManager.createSystemSession(username, LOG);
+                    moveFromOutboxToSent(messageId, mailboxSession);
+                    getMail().setAttribute(IS_DELIVERED, IS_DELIVERED);
+                } catch (MailboxException e) {
+                    throw new MailQueueException(e.getMessage(), e);
+                }
             }
         }
     }
