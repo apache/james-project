@@ -19,26 +19,63 @@
 
 package org.apache.james.util.streams;
 
-import java.util.List;
-import java.util.Map;
+import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 public class JamesCollectors {
-    public static <D> Collector<D, ?, Map<Integer, List<D>>> chunker(int chunkSize) {
-        Preconditions.checkArgument(chunkSize > 0, "ChunkSize should be strictly positive");
-        AtomicInteger counter = new AtomicInteger(-1);
-        return Collectors.groupingBy(x -> counter.incrementAndGet() / chunkSize);
+    public static <D> Collector<D, ?, Stream<Collection<D>>> chunker(int chunkSize) {
+        return new ChunkCollector<>(chunkSize);
     }
 
-    public static <D> Function<Stream<D>, Stream<List<D>>> chunk(int chunkSize) {
-        return stream -> stream.collect(chunker(chunkSize))
-            .values()
-            .stream();
+    public static class ChunkCollector<D> implements Collector<D, Multimap<Integer, D>, Stream<Collection<D>>> {
+        private final int chunkSize;
+        private final AtomicInteger counter;
+
+        private ChunkCollector(int chunkSize) {
+            Preconditions.checkArgument(chunkSize > 0, "ChunkSize should be strictly positive");
+            this.chunkSize = chunkSize;
+            this.counter = new AtomicInteger(-1);
+        }
+
+        @Override
+        public Supplier<Multimap<Integer, D>> supplier() {
+            return () -> Multimaps.synchronizedListMultimap(ArrayListMultimap.<Integer, D>create());
+        }
+
+        @Override
+        public BiConsumer<Multimap<Integer, D>, D> accumulator() {
+            return (accumulator, value) -> accumulator.put(counter.incrementAndGet() / chunkSize, value);
+        }
+
+        @Override
+        public BinaryOperator<Multimap<Integer, D>> combiner() {
+            return (accumulator1, accumulator2) -> {
+                accumulator1.putAll(accumulator2);
+                return accumulator1;
+            };
+        }
+
+        @Override
+        public Function<Multimap<Integer, D>, Stream<Collection<D>>> finisher() {
+            return accumulator -> accumulator.asMap().values().stream();
+        }
+
+        @Override
+        public Set<Characteristics> characteristics() {
+            return ImmutableSet.of(Characteristics.CONCURRENT);
+        }
     }
 }

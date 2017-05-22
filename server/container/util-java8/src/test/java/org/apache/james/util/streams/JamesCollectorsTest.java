@@ -40,7 +40,8 @@ public class JamesCollectorsTest {
     public void chunkerShouldAcceptEmptyStrem() {
         Stream<Integer> emptyStream = Stream.of();
 
-        assertThat(emptyStream.collect(JamesCollectors.chunker(10)))
+        assertThat(emptyStream.collect(JamesCollectors.chunker(10))
+            .collect(Guavate.toImmutableList()))
             .isEmpty();
     }
 
@@ -63,8 +64,6 @@ public class JamesCollectorsTest {
         Stream<Integer> monoValueStream = Stream.of(1);
 
         List<List<Integer>> values = monoValueStream.collect(JamesCollectors.chunker(10))
-            .values()
-            .stream()
             .map(ImmutableList::copyOf)
             .collect(Guavate.toImmutableList());
         assertThat(values)
@@ -76,8 +75,6 @@ public class JamesCollectorsTest {
         Stream<Integer> stream = Stream.of(1, 2);
 
         List<List<Integer>> values = stream.collect(JamesCollectors.chunker(3))
-            .values()
-            .stream()
             .map(ImmutableList::copyOf)
             .collect(Guavate.toImmutableList());
         assertThat(values)
@@ -89,8 +86,6 @@ public class JamesCollectorsTest {
         Stream<Integer> stream = Stream.of(1, 2, 3);
 
         List<List<Integer>> values = stream.collect(JamesCollectors.chunker(3))
-            .values()
-            .stream()
             .map(ImmutableList::copyOf)
             .collect(Guavate.toImmutableList());
         assertThat(values)
@@ -102,8 +97,6 @@ public class JamesCollectorsTest {
         Stream<Integer> stream = Stream.of(1, 2, 3, 4);
 
         List<List<Integer>> values = stream.collect(JamesCollectors.chunker(3))
-            .values()
-            .stream()
             .map(ImmutableList::copyOf)
             .collect(Guavate.toImmutableList());
         assertThat(values)
@@ -117,8 +110,6 @@ public class JamesCollectorsTest {
         Stream<Integer> stream = Stream.of(1, 2, 3, 4, 5, 6, 7);
 
         List<List<Integer>> values = stream.collect(JamesCollectors.chunker(3))
-            .values()
-            .stream()
             .map(ImmutableList::copyOf)
             .collect(Guavate.toImmutableList());
         assertThat(values)

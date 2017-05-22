@@ -89,8 +89,12 @@ public class CompletableFutureUtil {
                 stream.map(action));
     }
 
-    public static <T, U> CompletableFuture<Optional<T>> reduce(BinaryOperator<T> binaryOperator, CompletableFuture<Stream<T>> futureStream) {
+    public static <T> CompletableFuture<Optional<T>> reduce(BinaryOperator<T> binaryOperator, CompletableFuture<Stream<T>> futureStream) {
         return futureStream.thenApply(stream -> stream.reduce(binaryOperator));
+    }
+
+    public static <T> CompletableFuture<T> reduce(BinaryOperator<T> binaryOperator, CompletableFuture<Stream<T>> futureStream, T emptyAccumulator) {
+        return futureStream.thenApply(stream -> stream.reduce(binaryOperator).orElse(emptyAccumulator));
     }
 
     public static <T> CompletableFuture<T> keepValue(Supplier<CompletableFuture<Void>> supplier, T value) {

@@ -193,9 +193,7 @@ public class CassandraMessageDAO {
     public CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
         return CompletableFutureUtil.chainAll(
             getLimitedIdStream(messageIds.stream().distinct(), limit)
-                .collect(JamesCollectors.chunker(CHUNK_SIZE_ON_READ))
-                .values()
-                .stream(),
+                .collect(JamesCollectors.chunker(CHUNK_SIZE_ON_READ)),
             ids -> FluentFutureStream.of(
                 ids.stream()
                     .map(id -> retrieveRow(id, fetchType)

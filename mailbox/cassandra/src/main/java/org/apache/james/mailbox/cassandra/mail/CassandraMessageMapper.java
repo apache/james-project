@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -36,6 +37,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.utils.FlagsUpdateStageResult;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
@@ -64,6 +66,7 @@ public class CassandraMessageMapper implements MessageMapper {
         .unseen(0L)
         .build();
     public static final int EXPUNGE_BATCH_SIZE = 100;
+    public static final int UPDATE_FLAGS_BATCH_SIZE = 20;
     public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageMapper.class);
 
     private final CassandraModSeqProvider modSeqProvider;
@@ -216,13 +219,12 @@ public class CassandraMessageMapper implements MessageMapper {
         return deletedMessageDAO.retrieveDeletedMessage(mailboxId, messageRange)
             .join()
             .collect(JamesCollectors.chunker(EXPUNGE_BATCH_SIZE))
-            .values().stream()
             .map(uidChunk -> expungeUidChunk(mailboxId, uidChunk))
             .flatMap(CompletableFuture::join)
             .collect(Guavate.toImmutableMap(MailboxMessage::getUid, SimpleMessageMetaData::new));
     }
 
-    private CompletableFuture<Stream<SimpleMailboxMessage>> expungeUidChunk(CassandraId mailboxId, List<MessageUid> uidChunk) {
+    private CompletableFuture<Stream<SimpleMailboxMessage>> expungeUidChunk(CassandraId mailboxId, Collection<MessageUid> uidChunk) {
         return FluentFutureStream.of(uidChunk.stream()
             .map(uid -> messageIdDAO.retrieve(mailboxId, uid)))
             .flatMap(OptionalConverter::toStream)
@@ -273,53 +275,63 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, MessageRange set) throws MailboxException {
+    public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, MessageRange range) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
-        return runUpdate(mailboxId, set, flagUpdateCalculator).iterator();
+        Stream<ComposedMessageIdWithMetaData> toBeUpdated = messageIdDAO.retrieveMessages(mailboxId, range).join();
+
+        FlagsUpdateStageResult firstResult = runUpdateStage(mailboxId, toBeUpdated, flagUpdateCalculator);
+        FlagsUpdateStageResult finalResult = handleUpdatesStagedRetry(mailboxId, flagUpdateCalculator, firstResult);
+        if (!finalResult.getFailed().isEmpty()) {
+            LOGGER.error("Can not update following UIDs {} for mailbox {}", finalResult.getFailed(), mailboxId.asUuid());
+        }
+        return finalResult.getSucceeded().iterator();
     }
 
-    private List<UpdatedFlags> runUpdate(CassandraId mailboxId, MessageRange set, FlagsUpdateCalculator flagsUpdateCalculator) throws MailboxException {
-        Stream<ComposedMessageIdWithMetaData> toBeUpdated = messageIdDAO.retrieveMessages(mailboxId, set).join();
-
-        FlagsUpdateStageResult globalResult = runUpdateStage(mailboxId, toBeUpdated, flagsUpdateCalculator);
-
+    private FlagsUpdateStageResult handleUpdatesStagedRetry(CassandraId mailboxId, FlagsUpdateCalculator flagUpdateCalculator, FlagsUpdateStageResult firstResult) {
+        FlagsUpdateStageResult globalResult = firstResult;
         int retryCount = 0;
-
         while (retryCount < maxRetries && !globalResult.getFailed().isEmpty()) {
             retryCount++;
-            FlagsUpdateStageResult stageResult = runUpdateStage(mailboxId,
-                FluentFutureStream.of(
-                    globalResult.getFailed().stream()
-                        .map(uid -> messageIdDAO.retrieve(mailboxId, uid)))
-                    .flatMap(OptionalConverter::toStream)
-                    .completableFuture().join(),
-                flagsUpdateCalculator);
-
-            globalResult = globalResult.keepSuccess().merge(stageResult);
+            FlagsUpdateStageResult stageResult = retryUpdatesStage(mailboxId, flagUpdateCalculator, globalResult.getFailed());
+            globalResult = globalResult.keepSucceded().merge(stageResult);
         }
+        return globalResult;
+    }
 
-        LOGGER.error("Can not update following UIDs {} for mailbox {}", globalResult.getFailed(), mailboxId.asUuid());
+    private FlagsUpdateStageResult retryUpdatesStage(CassandraId mailboxId, FlagsUpdateCalculator flagsUpdateCalculator, List<MessageUid> failed) {
+        Stream<ComposedMessageIdWithMetaData> idsFailed = FluentFutureStream.of(
+            failed.stream().map(uid -> messageIdDAO.retrieve(mailboxId, uid)))
+            .flatMap(OptionalConverter::toStream)
+            .join();
 
-        return globalResult.getSucceeded();
+        return runUpdateStage(mailboxId, idsFailed, flagsUpdateCalculator);
     }
 
     private FlagsUpdateStageResult runUpdateStage(CassandraId mailboxId, Stream<ComposedMessageIdWithMetaData> toBeUpdated, FlagsUpdateCalculator flagsUpdateCalculator) {
-        Long newModSeq = modSeqProvider.nextModSeq(mailboxId).join().orElseThrow(() -> new RuntimeException("ModSeq generation failed"));
+        Long newModSeq = modSeqProvider.nextModSeq(mailboxId).join().orElseThrow(() -> new RuntimeException("ModSeq generation failed for mailbox " + mailboxId.asUuid()));
 
-        FlagsUpdateStageResult result = toBeUpdated
-            .map(oldMetadata -> tryFlagsUpdate(flagsUpdateCalculator,
-                newModSeq,
-                oldMetadata))
-            .reduce(FlagsUpdateStageResult::merge)
-            .orElse(none());
+        return toBeUpdated.collect(JamesCollectors.chunker(UPDATE_FLAGS_BATCH_SIZE))
+            .map(uidChunk -> performUpdatesForChunk(mailboxId, flagsUpdateCalculator, newModSeq, uidChunk))
+            .map(CompletableFuture::join)
+            .reduce(FlagsUpdateStageResult.none(), FlagsUpdateStageResult::merge);
+    }
 
-        result.getSucceeded().stream()
-            .map((UpdatedFlags updatedFlags) -> indexTableHandler.updateIndexOnFlagsUpdate(mailboxId, updatedFlags)
-                .thenApply(voidValue -> updatedFlags))
-            .forEach(CompletableFuture::join);
+    private CompletableFuture<FlagsUpdateStageResult> performUpdatesForChunk(CassandraId mailboxId, FlagsUpdateCalculator flagsUpdateCalculator, Long newModSeq, Collection<ComposedMessageIdWithMetaData> uidChunk) {
+        Stream<CompletableFuture<FlagsUpdateStageResult>> updateMetaDataFuture =
+            uidChunk.stream().map(oldMetadata -> tryFlagsUpdate(flagsUpdateCalculator, newModSeq, oldMetadata));
 
-        return result;
+        return FluentFutureStream.of(updateMetaDataFuture)
+            .reduce(FlagsUpdateStageResult.none(), FlagsUpdateStageResult::merge)
+            .thenCompose(result -> updateIndexesForUpdatesResult(mailboxId, result));
+    }
+
+    private CompletableFuture<FlagsUpdateStageResult> updateIndexesForUpdatesResult(CassandraId mailboxId, FlagsUpdateStageResult result) {
+        return FluentFutureStream.of(
+            result.getSucceeded().stream()
+                .map((UpdatedFlags updatedFlags) -> indexTableHandler.updateIndexOnFlagsUpdate(mailboxId, updatedFlags)))
+            .completableFuture()
+            .thenApply(any -> result);
     }
 
     @Override
@@ -362,93 +374,49 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
 
-    private FlagsUpdateStageResult tryFlagsUpdate(FlagsUpdateCalculator flagUpdateCalculator, long newModSeq, ComposedMessageIdWithMetaData oldMetaData) {
+    private CompletableFuture<FlagsUpdateStageResult> tryFlagsUpdate(FlagsUpdateCalculator flagUpdateCalculator, long newModSeq, ComposedMessageIdWithMetaData oldMetaData) {
         Flags oldFlags = oldMetaData.getFlags();
         Flags newFlags = flagUpdateCalculator.buildNewFlags(oldFlags);
 
         if (identicalFlags(oldFlags, newFlags)) {
-            return success(UpdatedFlags.builder()
+            return CompletableFuture.completedFuture(FlagsUpdateStageResult.success(UpdatedFlags.builder()
                 .uid(oldMetaData.getComposedMessageId().getUid())
                 .modSeq(oldMetaData.getModSeq())
                 .oldFlags(oldFlags)
                 .newFlags(newFlags)
-                .build());
+                .build()));
         }
 
-        if (updateFlags(oldMetaData, newFlags, newModSeq)) {
-            return success(UpdatedFlags.builder()
-                .uid(oldMetaData.getComposedMessageId().getUid())
-                .modSeq(newModSeq)
-                .oldFlags(oldFlags)
-                .newFlags(newFlags)
-                .build());
-        } else {
-            return fail(oldMetaData.getComposedMessageId().getUid());
-        }
+        return updateFlags(oldMetaData, newFlags, newModSeq)
+            .thenApply(success -> {
+                if (success) {
+                    return FlagsUpdateStageResult.success(UpdatedFlags.builder()
+                        .uid(oldMetaData.getComposedMessageId().getUid())
+                        .modSeq(newModSeq)
+                        .oldFlags(oldFlags)
+                        .newFlags(newFlags)
+                        .build());
+                } else {
+                    return FlagsUpdateStageResult.fail(oldMetaData.getComposedMessageId().getUid());
+                }
+            });
     }
 
     private boolean identicalFlags(Flags oldFlags, Flags newFlags) {
         return oldFlags.equals(newFlags);
     }
 
-    private boolean updateFlags(ComposedMessageIdWithMetaData oldMetadata, Flags newFlags, long newModSeq) {
-        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
+    private CompletableFuture<Boolean> updateFlags(ComposedMessageIdWithMetaData oldMetadata, Flags newFlags, long newModSeq) {
+        ComposedMessageIdWithMetaData newMetadata = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(oldMetadata.getComposedMessageId())
                 .modSeq(newModSeq)
                 .flags(newFlags)
                 .build();
-        return imapUidDAO.updateMetadata(composedMessageIdWithMetaData, oldMetadata.getModSeq())
+        return imapUidDAO.updateMetadata(newMetadata, oldMetadata.getModSeq())
             .thenCompose(success -> Optional.of(success)
                 .filter(b -> b)
-                .map((Boolean any) -> messageIdDAO.updateMetadata(composedMessageIdWithMetaData)
+                .map((Boolean any) -> messageIdDAO.updateMetadata(newMetadata)
                     .thenApply(v -> success))
-                .orElse(CompletableFuture.completedFuture(success)))
-            .join();
-    }
-
-    private static FlagsUpdateStageResult success(UpdatedFlags updatedFlags) {
-        return new FlagsUpdateStageResult(ImmutableList.of(), ImmutableList.of(updatedFlags));
-    }
-
-    private static FlagsUpdateStageResult fail(MessageUid uid) {
-        return new FlagsUpdateStageResult(ImmutableList.of(uid), ImmutableList.of());
-    }
-
-    private static FlagsUpdateStageResult none() {
-        return new FlagsUpdateStageResult(ImmutableList.of(), ImmutableList.of());
-    }
-
-    private static class FlagsUpdateStageResult {
-        private final List<MessageUid> failed;
-        private final List<UpdatedFlags> succeeded;
-
-        public FlagsUpdateStageResult(List<MessageUid> failed, List<UpdatedFlags> succeeded) {
-            this.failed = failed;
-            this.succeeded = succeeded;
-        }
-
-        public List<MessageUid> getFailed() {
-            return failed;
-        }
-
-        public List<UpdatedFlags> getSucceeded() {
-            return succeeded;
-        }
-
-        public FlagsUpdateStageResult merge(FlagsUpdateStageResult other) {
-            return new FlagsUpdateStageResult(
-                ImmutableList.<MessageUid>builder()
-                    .addAll(this.failed)
-                    .addAll(other.failed)
-                    .build(),
-                ImmutableList.<UpdatedFlags>builder()
-                    .addAll(this.succeeded)
-                    .addAll(other.succeeded)
-                    .build());
-        }
-
-        public FlagsUpdateStageResult keepSuccess() {
-            return new FlagsUpdateStageResult(ImmutableList.of(), succeeded);
-        }
+                .orElse(CompletableFuture.completedFuture(success)));
     }
 }

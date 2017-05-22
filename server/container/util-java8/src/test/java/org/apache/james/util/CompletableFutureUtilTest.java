@@ -361,4 +361,31 @@ public class CompletableFutureUtilTest {
                 .join())
             .contains(6L);
     }
+
+    @Test
+    public void reduceShouldReturnIdentityAccumulatorWhenNoValue() {
+        long identityAccumulator = 0L;
+        assertThat(
+            CompletableFutureUtil.reduce(
+                (i, j) -> i + j,
+                CompletableFutureUtil.<Long>allOfArray(),
+                identityAccumulator)
+                .join())
+            .isEqualTo(identityAccumulator);
+    }
+
+    @Test
+    public void reduceShouldWorkWithIdentityAccumulator() {
+        assertThat(
+            CompletableFutureUtil.reduce(
+                (i, j) -> i + j,
+                CompletableFutureUtil.allOfArray(
+                    CompletableFuture.completedFuture(1L),
+                    CompletableFuture.completedFuture(2L),
+                    CompletableFuture.completedFuture(3L)
+                ),
+                0L)
+                .join())
+            .isEqualTo(6L);
+    }
 }

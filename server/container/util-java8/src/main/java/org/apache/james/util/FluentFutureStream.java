@@ -60,6 +60,10 @@ public class FluentFutureStream<T> {
         return CompletableFutureUtil.reduce(combiner, completableFuture);
     }
 
+    public CompletableFuture<T> reduce(T emptyAccumulator, BinaryOperator<T> combiner) {
+        return CompletableFutureUtil.reduce(combiner, completableFuture, emptyAccumulator);
+    }
+
     public <U> FluentFutureStream<U> thenComposeOnAll(Function<T, CompletableFuture<U>> function) {
         return FluentFutureStream.of(
             CompletableFutureUtil.thenComposeOnAll(completableFuture(), function));
