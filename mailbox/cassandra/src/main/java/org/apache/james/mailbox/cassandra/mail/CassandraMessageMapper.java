@@ -53,7 +53,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.OptionalConverter;
 import org.apache.james.util.streams.JamesCollectors;
@@ -219,14 +218,12 @@ public class CassandraMessageMapper implements MessageMapper {
     public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
-        return FluentFutureStream.of(deletedMessageDAO.retrieveDeletedMessage(mailboxId, messageRange))
-            .completableFuture()
-            .thenApply(JamesCollectors.chunk(EXPUNGE_BATCH_SIZE))
-            .thenCompose(chunkedExpungedUids ->
-                CompletableFutureUtil.chainAll(chunkedExpungedUids,
-                    uidChunk ->  expungeUidChunk(mailboxId, uidChunk)))
-            .thenApply(s -> s.flatMap(i -> i))
+        return deletedMessageDAO.retrieveDeletedMessage(mailboxId, messageRange)
             .join()
+            .collect(JamesCollectors.chunker(EXPUNGE_BATCH_SIZE))
+            .values().stream()
+            .map(uidChunk -> expungeUidChunk(mailboxId, uidChunk))
+            .flatMap(CompletableFuture::join)
             .collect(Guavate.toImmutableMap(MailboxMessage::getUid, SimpleMessageMetaData::new));
     }
 
