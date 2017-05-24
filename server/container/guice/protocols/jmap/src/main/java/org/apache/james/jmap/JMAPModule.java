@@ -32,7 +32,7 @@ import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.jmap.methods.RequestHandler;
 import org.apache.james.jmap.send.PostDequeueDecoratorFactory;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
-import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
+import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.jmap.utils.SystemMailboxesProviderImpl;
 import org.apache.james.jwt.JwtConfiguration;
@@ -84,10 +84,10 @@ public class JMAPModule extends AbstractModule {
         bind(JMAPServer.class).in(Scopes.SINGLETON);
         bind(RequestHandler.class).in(Scopes.SINGLETON);
         bind(UploadHandler.class).in(Scopes.SINGLETON);
-        bind(MailboxBasedHtmlTextExtractor.class).in(Scopes.SINGLETON);
+        bind(JsoupHtmlTextExtractor.class).in(Scopes.SINGLETON);
         bind(SystemMailboxesProviderImpl.class).in(Scopes.SINGLETON);
 
-        bind(HtmlTextExtractor.class).to(MailboxBasedHtmlTextExtractor.class);
+        bind(HtmlTextExtractor.class).to(JsoupHtmlTextExtractor.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(RequiredCapabilitiesPrecondition.class);
 
         Multibinder<CamelMailetContainerModule.TransportProcessorCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.TransportProcessorCheck.class);

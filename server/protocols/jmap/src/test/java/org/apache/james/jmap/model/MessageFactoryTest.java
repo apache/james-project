@@ -31,14 +31,13 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
-import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
+import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.TestMessageId;
-import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,7 +56,7 @@ public class MessageFactoryTest {
     
     @Before
     public void setUp() {
-        htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new TikaTextExtractor());
+        htmlTextExtractor = new JsoupHtmlTextExtractor();
 
         messagePreview = new MessagePreviewGenerator();
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();

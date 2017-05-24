@@ -41,7 +41,7 @@ import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
-import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
+import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -54,7 +54,6 @@ import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.assertj.core.api.Condition;
@@ -116,7 +115,7 @@ public class GetMessagesMethodTest {
     @Before
     public void setup() throws Exception {
         clientId = ClientId.of("#0");
-        HtmlTextExtractor htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new TikaTextExtractor());
+        HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
         MessagePreviewGenerator messagePreview = new MessagePreviewGenerator();
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         MessageFactory messageFactory = new MessageFactory(messagePreview, messageContentExtractor, htmlTextExtractor);

@@ -24,17 +24,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.junit.Before;
 import org.junit.Test;
 
-public class MailboxBasedHtmlTextExtractorTest {
+public class JsoupHtmlTextExtractorTest {
 
-    private MailboxBasedHtmlTextExtractor textExtractor;
+    private JsoupHtmlTextExtractor textExtractor;
 
     @Before
     public void setUp() {
-        textExtractor = new MailboxBasedHtmlTextExtractor(new TikaTextExtractor());
+        textExtractor = new JsoupHtmlTextExtractor();
     }
 
     @Test
@@ -53,14 +52,21 @@ public class MailboxBasedHtmlTextExtractorTest {
     @Test
     public void toPlainTextShouldReplaceSkipLine() {
         String html = "<p>This is an<br/>HTML text !</p>";
-        String expectedPlainText = "This is an\nHTML text !\n";
+        String expectedPlainText = "This is an\nHTML text !\n\n";
         assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
     }
 
     @Test
     public void toPlainTextShouldSkipLinesBetweenParagraph() {
         String html = "<p>para1</p><p>para2</p>";
-        String expectedPlainText = "para1\npara2\n";
+        String expectedPlainText = "para1\n\npara2\n\n";
+        assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
+    }
+
+    @Test
+    public void toPlainTextShouldConciderUpperCaseLabelsAsLowerCase() {
+        String html = "<P>para1</P><p>para2</p>";
+        String expectedPlainText = "para1\n\npara2\n\n";
         assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
     }
 
@@ -85,16 +91,17 @@ public class MailboxBasedHtmlTextExtractorTest {
             "    Why a new Logo?\n" +
             "\n" +
             "\n" +
-            "\n" +
             "    We are happy with our current logo, but for the\n" +
             "        upcoming James Server 3.0 release, we would like to\n" +
             "        give our community the opportunity to create a new image for James.\n" +
             "\n" +
             "\n" +
             "\n" +
+            "\n" +
             "    Don't be shy, take your inkscape and gimp, and send us on\n" +
             "        the James Server User mailing list\n" +
             "        your creations. We will publish them on this page.\n" +
+            "\n" +
             "\n" +
             "\n" +
             "\n" +
