@@ -57,6 +57,7 @@ import org.apache.james.util.streams.JamesCollectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
@@ -329,7 +330,12 @@ public class CassandraMessageMapper implements MessageMapper {
     private CompletableFuture<FlagsUpdateStageResult> updateIndexesForUpdatesResult(CassandraId mailboxId, FlagsUpdateStageResult result) {
         return FluentFutureStream.of(
             result.getSucceeded().stream()
-                .map((UpdatedFlags updatedFlags) -> indexTableHandler.updateIndexOnFlagsUpdate(mailboxId, updatedFlags)))
+                .map(Throwing
+                    .function((UpdatedFlags updatedFlags) -> indexTableHandler.updateIndexOnFlagsUpdate(mailboxId, updatedFlags))
+                    .fallbackTo(failedindex -> {
+                        LOGGER.error("Could not update flag indexes for mailboxId {} UID {}. This will lead to inconsistencies across Cassandra tables");
+                        return CompletableFuture.completedFuture(null);
+                    })))
             .completableFuture()
             .thenApply(any -> result);
     }
