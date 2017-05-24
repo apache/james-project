@@ -33,7 +33,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 
 public class JamesCollectors {
     public static <D> Collector<D, ?, Stream<Collection<D>>> chunker(int chunkSize) {
@@ -52,7 +51,7 @@ public class JamesCollectors {
 
         @Override
         public Supplier<Multimap<Integer, D>> supplier() {
-            return () -> Multimaps.synchronizedListMultimap(ArrayListMultimap.<Integer, D>create());
+            return ArrayListMultimap::create;
         }
 
         @Override
@@ -75,7 +74,7 @@ public class JamesCollectors {
 
         @Override
         public Set<Characteristics> characteristics() {
-            return ImmutableSet.of(Characteristics.CONCURRENT);
+            return ImmutableSet.of();
         }
     }
 }
