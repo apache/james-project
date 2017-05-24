@@ -138,7 +138,6 @@ public class MessageFactory {
                     .create()
                     .use(MIME_ENTITY_CONFIG)
                     .parse(message.getContent())
-                    .setDate(message.getInternalDate(), TimeZone.getTimeZone(UTC_ZONE_ID))
                     .build();
         } catch (IOException e) {
             throw new MailboxException("Unable to parse message: " + e.getMessage(), e);
