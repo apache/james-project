@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
+import javax.mail.internet.MimeMessage;
 import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.jmap.utils.HtmlTextExtractor;
@@ -110,12 +111,22 @@ public class MessageFactory {
                 .bcc(fromAddressList(mimeMessage.getBcc()))
                 .replyTo(fromAddressList(mimeMessage.getReplyTo()))
                 .size(message.getSize())
-                .date(message.getInternalDateAsZonedDateTime())
+                .date(getDateFromHeaderOrInternalDateOtherwise(mimeMessage, message))
                 .textBody(textBody)
                 .htmlBody(htmlBody)
                 .preview(preview)
                 .attachments(getAttachments(message.getAttachments()))
                 .build();
+    }
+
+    private ZonedDateTime dateToZonedDate(Date date) {
+        return ZonedDateTime.ofInstant(date.toInstant(), UTC_ZONE_ID);
+    }
+
+    private ZonedDateTime getDateFromHeaderOrInternalDateOtherwise(org.apache.james.mime4j.dom.Message mimeMessage, MetaDataWithContent message) {
+        return Optional.ofNullable(mimeMessage.getDate())
+            .map(this::dateToZonedDate)
+            .orElse(message.getInternalDateAsZonedDateTime());
     }
 
     private Optional<String> computeTextBodyIfNeeded(MessageContent messageContent, Optional<String> mainTextContent) {

@@ -120,6 +120,7 @@ public class MessageFactoryTest {
                 + "Bcc: userbcc <userbcc@domain>\n"
                 + "Reply-To: \"user to reply to\" <user.reply.to@domain>\n"
                 + "In-Reply-To: <SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>\n"
+                + "Date: Tue, 14 Jul 2015 12:30:42 +0000\n"
                 + "Other-header: other header value";
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
@@ -147,6 +148,7 @@ public class MessageFactoryTest {
                 .put("Reply-To", "\"user to reply to\" <user.reply.to@domain>")
                 .put("In-Reply-To", "<SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>")
                 .put("Other-header", "other header value")
+                .put("Date", "Tue, 14 Jul 2015 12:30:42 +0000")
                 .put("MIME-Version", "1.0")
                 .build();
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
@@ -336,6 +338,55 @@ public class MessageFactoryTest {
         assertThat(testee.getTo()).contains(user1, user2);
         assertThat(testee.getCc()).contains(usercc);
         assertThat(testee.getBcc()).contains(userbcc);
+    }
+
+    @Test
+    public void dateFromHeaderShouldBeUsedIfPresent() throws Exception {
+        String headers = "From: user <userdomain>\n"
+            + "To: user1 <user1domain>, user2 <user2domain>\n"
+            + "Cc: usercc <userccdomain>\n"
+            + "Bcc: userbcc <userbccdomain>\n"
+            + "Date: Wed, 17 May 2017 14:18:52 +0200\n"
+            + "Subject: test subject\n";
+
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(new Flags(Flag.SEEN))
+            .size(headers.length())
+            .internalDate(INTERNAL_DATE)
+            .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(new TestMessageId.Factory().generate())
+            .build();
+
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+
+        assertThat(testee.getDate()).isEqualTo(ZonedDateTime.of(2017, 05, 17, 14, 18, 52, 00, ZoneId.of("Europe/Paris")));
+    }
+
+    @Test
+    public void internalDateShouldBeUsedIfNoDateInHeaders() throws Exception {
+        String headers = "From: user <userdomain>\n"
+            + "To: user1 <user1domain>, user2 <user2domain>\n"
+            + "Cc: usercc <userccdomain>\n"
+            + "Bcc: userbcc <userbccdomain>\n"
+            + "Subject: test subject\n";
+
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(new Flags(Flag.SEEN))
+            .size(headers.length())
+            .internalDate(INTERNAL_DATE)
+            .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(new TestMessageId.Factory().generate())
+            .build();
+
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+
+        assertThat(testee.getDate()).isEqualTo(ZONED_DATE);
     }
 
     @Test
