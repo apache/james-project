@@ -131,4 +131,17 @@ public class FlagsUpdateStageResultTest {
             .isEqualTo(FlagsUpdateStageResult.success(UPDATED_FLAGS));
     }
 
+    @Test
+    public void containsFailedResultsShouldReturnTrueWhenFailed() {
+        assertThat(FlagsUpdateStageResult.fail(UID).containsFailedResults())
+            .isTrue();
+    }
+
+
+    @Test
+    public void containsFailedResultsShouldReturnFalseWhenSucceeded() {
+        assertThat(FlagsUpdateStageResult.success(UPDATED_FLAGS).containsFailedResults())
+            .isFalse();
+    }
+
 }

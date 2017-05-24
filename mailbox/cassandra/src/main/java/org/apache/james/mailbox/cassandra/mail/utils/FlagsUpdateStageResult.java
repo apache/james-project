@@ -70,6 +70,10 @@ public class FlagsUpdateStageResult {
                 .build());
     }
 
+    public boolean containsFailedResults() {
+        return !failed.isEmpty();
+    }
+
     public FlagsUpdateStageResult keepSucceded() {
         return new FlagsUpdateStageResult(ImmutableList.of(), succeeded);
     }
