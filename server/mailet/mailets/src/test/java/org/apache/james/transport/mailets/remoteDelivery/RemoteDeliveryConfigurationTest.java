@@ -639,6 +639,35 @@ public class RemoteDeliveryConfigurationTest {
     }
 
     @Test
+    public void getGatewayServerShouldReturnGatewayWithGatewayPort() {
+        String server = "127.0.0.1";
+        String port = "2525";
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
+            .setProperty(RemoteDeliveryConfiguration.GATEWAY, server)
+            .setProperty(RemoteDeliveryConfiguration.GATEWAY_PORT, port)
+            .build();
+
+        assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getGatewayServer())
+            .containsOnly(server + ':' + port);
+    }
+
+    @Test
+    public void getGatewayServerShouldOnlyOverridePortsNotInitiallySet() {
+        String server1 = "127.0.0.1:23432";
+        String server2 = "domain";
+        String port = "2525";
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
+            .setProperty(RemoteDeliveryConfiguration.GATEWAY, server1 + ',' + server2)
+            .setProperty(RemoteDeliveryConfiguration.GATEWAY_PORT, port)
+            .build();
+
+        assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getGatewayServer())
+            .containsOnly(server1, server2 + ':' + port);
+    }
+
+    @Test
     public void getAuthUserShouldBeNullByDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")

@@ -200,7 +200,7 @@ public class RemoteDeliveryConfiguration {
 
     private String parsePart(String gatewayPort, String gatewayPart) {
         String address = gatewayPart.trim();
-        if (address.contains(ADDRESS_PORT_SEPARATOR) && gatewayPort != null) {
+        if (!address.contains(ADDRESS_PORT_SEPARATOR) && gatewayPort != null) {
             return address + ADDRESS_PORT_SEPARATOR + gatewayPort;
         }
         return address;
