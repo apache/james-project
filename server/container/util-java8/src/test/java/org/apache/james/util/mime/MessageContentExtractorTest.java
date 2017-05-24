@@ -33,8 +33,8 @@ import org.apache.james.mime4j.message.BasicBodyFactory;
 import org.apache.james.mime4j.message.BodyPart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.HeaderImpl;
-import org.apache.james.mime4j.message.MessageBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
+import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.util.ByteSequence;
 import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
@@ -97,7 +97,7 @@ public class MessageContentExtractorTest {
 
     @Test
     public void extractShouldReturnEmptyWhenBinaryContentOnly() throws IOException {
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(BasicBodyFactory.INSTANCE.binaryBody(BINARY_CONTENT, Charsets.UTF_8))
                 .build();
         MessageContent actual = testee.extract(message);
@@ -107,7 +107,7 @@ public class MessageContentExtractorTest {
 
     @Test
     public void extractShouldReturnTextOnlyWhenTextOnlyBody() throws IOException {
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(TEXT_CONTENT, Charsets.UTF_8)
                 .build();
         MessageContent actual = testee.extract(message);
@@ -117,7 +117,7 @@ public class MessageContentExtractorTest {
 
     @Test
     public void extractShouldReturnHtmlOnlyWhenHtmlOnlyBody() throws IOException {
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(HTML_CONTENT, "html", Charsets.UTF_8)
                 .build();
         MessageContent actual = testee.extract(message);
@@ -131,7 +131,7 @@ public class MessageContentExtractorTest {
                 .addBodyPart(textPart)
                 .addBodyPart(htmlPart)
                 .build();
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(multipart)
                 .build();
         MessageContent actual = testee.extract(message);
@@ -144,7 +144,7 @@ public class MessageContentExtractorTest {
         Multipart multipart = MultipartBuilder.create("alternative")
                 .addBodyPart(htmlPart)
                 .build();
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(multipart)
                 .build();
         MessageContent actual = testee.extract(message);
@@ -157,7 +157,7 @@ public class MessageContentExtractorTest {
         Multipart multipart = MultipartBuilder.create("alternative")
                 .addBodyPart(textPart)
                 .build();
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(multipart)
                 .build();
         MessageContent actual = testee.extract(message);
@@ -172,7 +172,7 @@ public class MessageContentExtractorTest {
                 .addBodyPart(htmlPart)
                 .addBodyPart(textPart)
                 .build();
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(multipart)
                 .build();
         MessageContent actual = testee.extract(message);
@@ -193,7 +193,7 @@ public class MessageContentExtractorTest {
                 .setContentDisposition("inline")
                 .build())
             .build();
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
             .setBody(multipart)
             .build();
 
@@ -207,7 +207,7 @@ public class MessageContentExtractorTest {
         Multipart multipart = MultipartBuilder.create("mixed")
                 .addBodyPart(textAttachment)
                 .build();
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(multipart)
                 .build();
         MessageContent actual = testee.extract(message);
@@ -221,7 +221,7 @@ public class MessageContentExtractorTest {
                 .addBodyPart(htmlPart)
                 .addBodyPart(textPart)
                 .build();
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(multipart)
                 .build();
         MessageContent actual = testee.extract(message);
@@ -240,7 +240,7 @@ public class MessageContentExtractorTest {
         Multipart multipartMixed = MultipartBuilder.create("mixed")
                 .addBodyPart(multipartAlternative)
                 .build();
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(multipartMixed)
                 .build();
         MessageContent actual = testee.extract(message);
@@ -253,7 +253,7 @@ public class MessageContentExtractorTest {
         Multipart multipart = MultipartBuilder.create("related")
                 .addBodyPart(htmlPart)
                 .build();
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(multipart)
                 .build();
         MessageContent actual = testee.extract(message);
@@ -271,7 +271,7 @@ public class MessageContentExtractorTest {
         Multipart multipartAlternative = MultipartBuilder.create("alternative")
                 .addBodyPart(multipartRelated)
                 .build();
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(multipartAlternative)
                 .build();
         MessageContent actual = testee.extract(message);
@@ -291,7 +291,7 @@ public class MessageContentExtractorTest {
         Multipart multipartAlternative = MultipartBuilder.create("alternative")
             .addBodyPart(inlinedHTMLPart)
             .build();
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
             .setBody(multipartAlternative)
             .build();
 
@@ -316,7 +316,7 @@ public class MessageContentExtractorTest {
         Multipart multipartAlternative = MultipartBuilder.create("alternative")
             .addBodyPart(inlinedHTMLPart)
             .build();
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
             .setBody(multipartAlternative)
             .build();
 
@@ -341,7 +341,7 @@ public class MessageContentExtractorTest {
         Multipart multipartAlternative = MultipartBuilder.create("alternative")
             .addBodyPart(inlinedTextPart)
             .build();
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
             .setBody(multipartAlternative)
             .build();
 
@@ -366,7 +366,7 @@ public class MessageContentExtractorTest {
         Multipart multipartAlternative = MultipartBuilder.create("alternative")
             .addBodyPart(inlinedTextPart)
             .build();
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
             .setBody(multipartAlternative)
             .build();
 
@@ -391,7 +391,7 @@ public class MessageContentExtractorTest {
                 .addBodyPart(inlineText)
                 .build();
 
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(multipartMixed)
                 .build();
 
@@ -414,7 +414,7 @@ public class MessageContentExtractorTest {
                 .addBodyPart(multipartRelated)
                 .build();
 
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(multipartAlternative)
                 .build();
 
@@ -492,7 +492,7 @@ public class MessageContentExtractorTest {
     @Test
     public void extractShouldRespectCharsetWhenOtherThanUTF8() throws IOException {
         String text = "éééé\r\nèèèè\r\nàààà";
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(text, Charset.forName("windows-1252"))
                 .build();
         MessageContent actual = testee.extract(message);
@@ -502,7 +502,7 @@ public class MessageContentExtractorTest {
     @Test
     public void extractShouldRespectCharsetWhenUTF8() throws IOException {
         String text = "éééé\r\nèèèè\r\nàààà";
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(text, Charsets.UTF_8)
                 .build();
         MessageContent actual = testee.extract(message);
@@ -512,7 +512,7 @@ public class MessageContentExtractorTest {
     @Test
     public void extractShouldUseUSASCIIWhenNoCharset() throws IOException {
         String text = "éééé\r\nèèèè\r\nàààà";
-        Message message = MessageBuilder.create()
+        Message message = Message.Builder.of()
                 .setBody(text, null)
                 .build();
         MessageContent actual = testee.extract(message);

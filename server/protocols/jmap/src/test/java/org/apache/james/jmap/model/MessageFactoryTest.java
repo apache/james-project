@@ -71,7 +71,6 @@ public class MessageFactoryTest {
     }
 
     @Test
-    @Ignore
     public void emptyMailShouldBeLoadedIntoMessage() throws Exception {
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
@@ -113,7 +112,6 @@ public class MessageFactoryTest {
     }
 
     @Test
-    @Ignore
     public void headersShouldBeSetIntoMessage() throws Exception {
         String headers = "From: user <user@domain>\n"
                 + "Subject: test subject\n"
@@ -341,7 +339,6 @@ public class MessageFactoryTest {
     }
 
     @Test
-    @Ignore
     public void mailWithBigLinesShouldBeLoadedIntoMessage() throws Exception {
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))

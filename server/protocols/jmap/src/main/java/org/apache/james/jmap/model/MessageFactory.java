@@ -134,8 +134,8 @@ public class MessageFactory {
 
     private org.apache.james.mime4j.dom.Message parse(MetaDataWithContent message) throws MailboxException {
         try {
-            return MessageBuilder
-                    .create()
+            return org.apache.james.mime4j.dom.Message.Builder
+                    .of()
                     .use(MIME_ENTITY_CONFIG)
                     .parse(message.getContent())
                     .build();
