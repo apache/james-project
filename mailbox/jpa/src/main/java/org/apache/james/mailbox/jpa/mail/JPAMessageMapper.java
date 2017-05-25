@@ -55,14 +55,24 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 import org.apache.openjpa.persistence.ArgumentException;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 
 /**
  * JPA implementation of a {@link MessageMapper}. This class is not thread-safe!
  */
 public class JPAMessageMapper extends JPATransactionalMapper implements MessageMapper {
     private static final int UNLIMIT_MAX_SIZE = -1;
+    private static final int UNLIMITED = -1;
+    private static final Function<MailboxMessage, MessageUid> TO_UID = new Function<MailboxMessage, MessageUid>() {
+        @Override
+        public MessageUid apply(MailboxMessage mailboxMessage) {
+            return mailboxMessage.getUid();
+        }
+    };
+
     private final MessageUtils messageMetadataMapper;
 
     public JPAMessageMapper(MailboxSession mailboxSession, UidProvider uidProvider, ModSeqProvider modSeqProvider, EntityManagerFactory entityManagerFactory) {
@@ -76,6 +86,11 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
             .count(countMessagesInMailbox(mailbox))
             .unseen(countUnseenMessagesInMailbox(mailbox))
             .build();
+    }
+
+    @Override
+    public Iterator<MessageUid> listAllMessageUids(final Mailbox mailbox) throws MailboxException {
+        return Iterators.transform(findInMailbox(mailbox, MessageRange.all(), FetchType.Full, UNLIMITED), TO_UID);
     }
 
     /**

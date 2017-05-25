@@ -48,6 +48,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.mail.Flags;
 
 import org.apache.hadoop.conf.Configuration;
@@ -85,8 +86,10 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 
 /**
  * HBase implementation of a {@link MessageMapper}.
@@ -94,6 +97,14 @@ import com.google.common.collect.Iterables;
  *
  */
 public class HBaseMessageMapper extends NonTransactionalMapper implements MessageMapper {
+
+    private static final int UNLIMITED = -1;
+    private static final Function<MailboxMessage, MessageUid> TO_UID = new Function<MailboxMessage, MessageUid>() {
+        @Override
+        public MessageUid apply(MailboxMessage mailboxMessage) {
+            return mailboxMessage.getUid();
+        }
+    };
 
     private final Configuration conf;
     private final MailboxSession mailboxSession;
@@ -119,6 +130,11 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
             .count(countMessagesInMailbox(mailbox))
             .unseen(countUnseenMessagesInMailbox(mailbox))
             .build();
+    }
+
+    @Override
+    public Iterator<MessageUid> listAllMessageUids(final Mailbox mailbox) throws MailboxException {
+        return Iterators.transform(findInMailbox(mailbox, MessageRange.all(), FetchType.Full, UNLIMITED), TO_UID);
     }
 
     @Override

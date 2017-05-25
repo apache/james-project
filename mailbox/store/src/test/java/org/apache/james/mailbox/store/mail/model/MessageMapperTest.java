@@ -51,7 +51,6 @@ import org.apache.james.mailbox.store.mail.model.MapperProvider.Capabilities;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMessage;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.After;
 import org.junit.Assume;
@@ -1043,7 +1042,7 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    public void getApplicableFlagShouldShouldReturnDefaultApplicableFlagsWhenMailboxEmpty() throws Exception {
+    public void getApplicableFlagShouldReturnDefaultApplicableFlagsWhenMailboxEmpty() throws Exception {
         SimpleMailbox emptyMailbox = createMailbox(new MailboxPath("#private", "benwa", "EMPTY"));
 
         assertThat(messageMapper.getApplicableFlag(emptyMailbox))
@@ -1068,6 +1067,31 @@ public abstract class MessageMapperTest {
                 .add(Flag.DELETED, Flag.ANSWERED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN)
                 .add(customFlag2)
                 .build());
+    }
+
+    @Test
+    public void getUidsShouldReturnUidsOfMessagesInTheMailbox() throws Exception {
+        saveMessages();
+
+        assertThat(messageMapper.listAllMessageUids(benwaInboxMailbox))
+            .containsOnly(message1.getUid(),
+                message2.getUid(),
+                message3.getUid(),
+                message4.getUid(),
+                message5.getUid());
+    }
+
+    @Test
+    public void getUidsShouldNotReturnUidsOfExpungedMessages() throws Exception {
+        saveMessages();
+
+        messageMapper.updateFlags(benwaInboxMailbox,
+            new FlagsUpdateCalculator(new Flags(Flag.DELETED), FlagsUpdateMode.ADD),
+            MessageRange.range(message2.getUid(), message4.getUid()));
+        messageMapper.expungeMarkedForDeletionInMailbox(benwaInboxMailbox, MessageRange.all());
+
+        assertThat(messageMapper.listAllMessageUids(benwaInboxMailbox))
+            .containsOnly(message1.getUid(), message5.getUid());
     }
 
     private Map<MessageUid, MessageMetaData> markThenPerformExpunge(MessageRange range) throws MailboxException {

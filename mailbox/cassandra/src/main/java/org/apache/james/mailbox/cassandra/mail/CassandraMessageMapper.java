@@ -108,6 +108,15 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
+    public Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) throws MailboxException {
+        CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
+        return messageIdDAO.retrieveMessages(cassandraId, MessageRange.all())
+            .join()
+            .map(metaData -> metaData.getComposedMessageId().getUid())
+            .iterator();
+    }
+
+    @Override
     public long countMessagesInMailbox(Mailbox mailbox) throws MailboxException {
         return mailboxCounterDAO.countMessagesInMailbox(mailbox)
             .join()

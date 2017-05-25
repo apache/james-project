@@ -740,18 +740,6 @@ public class SearchQuery implements Serializable {
         return new CustomFlagCriterion(flag, BooleanOperator.unset());
     }
 
-    public SearchQuery() {
-        this(new ArrayList<Criterion>());
-    }
-
-    public SearchQuery(Criterion... criteria) {
-        this(ImmutableList.copyOf(criteria));
-    }
-
-    public SearchQuery(List<Criterion> criterias) {
-        this.criterias = criterias;
-    }
-
     /**
      * Creates a filter matching all messages.
      * 
@@ -766,6 +754,18 @@ public class SearchQuery implements Serializable {
     private final List<Criterion> criterias;
 
     private List<Sort> sorts = Collections.singletonList(new Sort(Sort.SortClause.Uid, Sort.Order.NATURAL));
+
+    public SearchQuery(Criterion... criterias) {
+        this(new ArrayList<Criterion>(Arrays.asList(criterias)));
+    }
+
+    public SearchQuery() {
+        this(new ArrayList<Criterion>());
+    }
+
+    private SearchQuery(List<Criterion> criterias) {
+        this.criterias = criterias;
+    }
 
     public void andCriteria(Criterion crit) {
         criterias.add(crit);
@@ -827,12 +827,12 @@ public class SearchQuery implements Serializable {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hashCode(criterias);
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public final boolean equals(Object obj) {
         if (obj instanceof SearchQuery) {
             SearchQuery that = (SearchQuery) obj;
 

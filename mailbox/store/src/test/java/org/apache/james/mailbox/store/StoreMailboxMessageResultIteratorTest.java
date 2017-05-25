@@ -76,7 +76,12 @@ public class StoreMailboxMessageResultIteratorTest {
         public TestMessageMapper(MessageRange messageRange) {
             this.messageRange = messageRange;
         }
-        
+
+        @Override
+        public Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) throws MailboxException {
+            return messageRange.iterator();
+        }
+
         @Override
         public void endRequest() {
             throw new UnsupportedOperationException();

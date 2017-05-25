@@ -84,8 +84,9 @@ import com.google.common.collect.ImmutableList;
 public class MailboxEventAnalyserTest {
 
     private static final long BASE_SESSION_ID = 99;
+    public static final MessageUid MESSAGE_UID = MessageUid.of(1);
 
-    
+
     private MailboxPath mailboxPath = new MailboxPath("namespace", "user", "name");
     private final MailboxManager mockManager = new MailboxManager() {
 
@@ -195,7 +196,7 @@ public class MailboxEventAnalyserTest {
 
                 @Override
                 public Iterator<MessageUid> search(SearchQuery searchQuery, MailboxSession mailboxSession) throws MailboxException {
-                    throw new UnsupportedOperationException("Not implemented");
+                    return ImmutableList.of(MESSAGE_UID).iterator();
                 }
 
                 @Override
@@ -235,7 +236,7 @@ public class MailboxEventAnalyserTest {
 
                                 @Override
                                 public MessageUid getUid() {
-                                    return MessageUid.of(1);
+                                    return MESSAGE_UID;
                                 }
 
                                 @Override

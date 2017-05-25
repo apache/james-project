@@ -36,7 +36,9 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.Iterators;
 
 /**
  * Abstract base class for {@link MessageMapper} implementation
@@ -44,6 +46,15 @@ import com.google.common.base.Optional;
  *
  */
 public abstract class AbstractMessageMapper extends TransactionalMapper implements MessageMapper {
+    private static final Function<MailboxMessage, MessageUid> TO_UID = new Function<MailboxMessage, MessageUid>() {
+        @Override
+        public MessageUid apply(MailboxMessage input) {
+            return input.getUid();
+        }
+    };
+
+    private static final int UNLIMITED = -1;
+
     protected final MailboxSession mailboxSession;
     private final UidProvider uidProvider;
     private final ModSeqProvider modSeqProvider;
@@ -145,5 +156,9 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
      * Copy the MailboxMessage to the Mailbox, using the given uid and modSeq for the new MailboxMessage
      */
     protected abstract MessageMetaData copy(Mailbox mailbox, MessageUid uid, long modSeq, MailboxMessage original) throws MailboxException;
-    
+
+    @Override
+    public Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) throws MailboxException {
+        return Iterators.transform(findInMailbox(mailbox, MessageRange.all(), FetchType.Metadata, UNLIMITED), TO_UID);
+    }
 }

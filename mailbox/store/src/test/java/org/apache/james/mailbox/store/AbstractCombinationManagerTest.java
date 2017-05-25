@@ -377,8 +377,7 @@ public abstract class AbstractCombinationManagerTest {
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
         Flags expected = ApplicableFlagBuilder
-            .builder()
-            .add(messageFlag)
+            .from(messageFlag)
             .build();
 
         assertThat(messageManager1.getApplicableFlags(session))
@@ -405,8 +404,8 @@ public abstract class AbstractCombinationManagerTest {
         messageIdManager.setFlags(deleted, FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
 
         assertThat(messageManager1.getApplicableFlags(session))
-            .isEqualTo(ApplicableFlagBuilder.builder()
-                .add(USER_FLAGS_VALUE, ANOTHER_USER_FLAGS_VALUE)
+            .isEqualTo(ApplicableFlagBuilder
+                .from(USER_FLAGS_VALUE, ANOTHER_USER_FLAGS_VALUE)
                 .build());
     }
 
@@ -422,9 +421,8 @@ public abstract class AbstractCombinationManagerTest {
         Flags applicableFlags = messageManager1.getApplicableFlags(session);
 
         assertThat(applicableFlags)
-            .isEqualTo(ApplicableFlagBuilder.builder()
-                .add(customFlag1)
-                .add(customFlag2)
+            .isEqualTo(ApplicableFlagBuilder
+                .from(customFlag1, customFlag2)
                 .build());
     }
 
@@ -437,13 +435,42 @@ public abstract class AbstractCombinationManagerTest {
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
         messageManager2.setFlags(custom2, FlagsUpdateMode.ADD, MessageRange.all(), session);
 
-        Flags expected = ApplicableFlagBuilder.builder()
-            .add(custom1)
-            .add(custom2)
+        Flags expected = ApplicableFlagBuilder
+            .from(custom1, custom2)
             .build();
 
         assertThat(messageManager2.getApplicableFlags(session))
             .isEqualTo(expected);
+    }
+
+    @Test
+    public void getUidsShouldInteractWellWithSetInMailboxes() throws Exception {
+        MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, new Flags())
+            .getMessageId();
+
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
+
+        List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
+        MessageUid uid2 = FluentIterable.from(listMessages)
+            .filter(messageInMailbox2())
+            .get(0)
+            .getUid();
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
+        assertThat(messageManager2.search(searchQuery, session))
+            .hasSize(1)
+            .containsOnly(uid2);
+    }
+
+    @Test
+    public void getUidsShouldInteractWellWithDelete() throws Exception {
+        MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, new Flags())
+            .getMessageId();
+
+        messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
+        assertThat(messageManager1.search(searchQuery, session)).isEmpty();
     }
 
     private Predicate<MessageResult> messageInMailbox2() {

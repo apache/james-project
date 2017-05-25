@@ -35,6 +35,11 @@ public class CachingMessageMapper implements MessageMapper {
     }
 
     @Override
+    public Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) throws MailboxException {
+        return underlying.listAllMessageUids(mailbox);
+    }
+
+    @Override
     public void endRequest() {
         underlying.endRequest();
     }
