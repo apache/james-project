@@ -33,6 +33,10 @@ import org.slf4j.LoggerFactory;
 public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JsoupHtmlTextExtractor.class);
+    public static final String BR_TAG = "br";
+    public static final String UL_TAG = "ul";
+    public static final String LI_TAG = "li";
+    public static final String P_TAG = "p";
 
     @Override
     public String toPlainText(String html) {
@@ -57,10 +61,16 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
         }
         if (node instanceof Element) {
             Element element = (Element) node;
-            if (element.tagName().equals("br")) {
+            if (element.tagName().equals(BR_TAG)) {
                 return "\n";
             }
-            if (element.tagName().equals("p")) {
+            if (element.tagName().equals(UL_TAG)) {
+                return "\n\n";
+            }
+            if (element.tagName().equals(LI_TAG)) {
+                return "\n - ";
+            }
+            if (element.tagName().equals(P_TAG)) {
                 return "\n\n";
             }
         }
@@ -68,11 +78,33 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
     }
 
     Stream<Node> flatten(Node base) {
-        return Stream.concat(
-            base.childNodes()
-                .stream()
-                .flatMap(this::flatten),
-            Stream.of(base));
+        Position position = getPosition(base);
+        Stream<Node> flatChildren = base.childNodes()
+            .stream()
+            .flatMap(this::flatten);
+        switch (position) {
+            case PREFIX:
+                return Stream.concat(Stream.of(base), flatChildren);
+            case SUFFIX:
+                return Stream.concat(flatChildren, Stream.of(base));
+            default:
+                throw new RuntimeException("Unexpected POSITION for node element: " + position);
+        }
+    }
+
+    private enum Position {
+        PREFIX,
+        SUFFIX
+    }
+
+    private Position getPosition(Node node) {
+        if (node instanceof Element) {
+            Element element = (Element) node;
+            if (element.tagName().equals(LI_TAG)) {
+                return Position.PREFIX;
+            }
+        }
+        return Position.SUFFIX;
     }
 
 }

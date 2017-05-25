@@ -71,6 +71,64 @@ public class JsoupHtmlTextExtractorTest {
     }
 
     @Test
+    public void toPlainTextShouldHandleListsWell() {
+        String html = "<ul>Here is my awesome list:" +
+            "  <li>JMAP</li>" +
+            "  <li>IMAP</li>" +
+            "</ul>" +
+            "<p>Followed with some text</p>" +
+            "<p>And some other text</p>";
+        String expectedPlainText = "Here is my awesome list:  \n" +
+            " - JMAP  \n" +
+            " - IMAP\n" +
+            "\n" +
+            "Followed with some text\n" +
+            "\n" +
+            "And some other text\n" +
+            "\n";
+        assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
+    }
+
+    @Test
+    public void tableShouldBeWellHandled() {
+        String html = " <table style=\"width:100%\">\n" +
+            "  <tr>\n" +
+            "    <th>Firstname</th>\n" +
+            "    <th>Lastname</th>\n" +
+            "    <th>Age</th>\n" +
+            "  </tr>\n" +
+            "  <tr>\n" +
+            "    <td>Jill</td>\n" +
+            "    <td>Smith</td>\n" +
+            "    <td>50</td>\n" +
+            "  </tr>\n" +
+            "  <tr>\n" +
+            "    <td>Eve</td>\n" +
+            "    <td>Jackson</td>\n" +
+            "    <td>94</td>\n" +
+            "  </tr>\n" +
+            "</table> ";
+        String expectedPlainText = "\n" +
+            "  \n" +
+            "    Firstname\n" +
+            "    Lastname\n" +
+            "    Age\n" +
+            "  \n" +
+            "  \n" +
+            "    Jill\n" +
+            "    Smith\n" +
+            "    50\n" +
+            "  \n" +
+            "  \n" +
+            "    Eve\n" +
+            "    Jackson\n" +
+            "    94\n" +
+            "  \n" +
+            " ";
+        assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
+    }
+
+    @Test
     public void nonClosedHtmlShouldBeTranslated() {
         String html = "This is an <b>HTML text !";
         String expectedPlainText = "This is an HTML text !";
