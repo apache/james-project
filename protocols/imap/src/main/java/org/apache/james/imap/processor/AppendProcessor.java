@@ -142,7 +142,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             }
 
             // get folder UIDVALIDITY
-            Long uidValidity = mailboxManager.getMailbox(mailboxPath, mailboxSession).getMetaData(false, mailboxSession, FetchGroup.NO_UNSEEN).getUidValidity();
+            Long uidValidity = mailboxManager.getMailbox(mailboxPath, mailboxSession).getMetaData(false, mailboxSession, FetchGroup.NO_COUNT).getUidValidity();
 
             unsolicitedResponses(session, responder, false);
 
