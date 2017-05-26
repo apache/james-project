@@ -30,6 +30,8 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
+import com.google.common.collect.ImmutableSet;
+
 public class CassandraIndexTableHandler {
 
     private final CassandraMailboxRecentsDAO mailboxRecentDAO;
@@ -70,14 +72,14 @@ public class CassandraIndexTableHandler {
             addRecentOnSave(mailboxId, message),
             incrementUnseenOnSave(mailboxId, flags),
             mailboxCounterDAO.incrementCount(mailboxId),
-            applicableFlagDAO.updateApplicableFlags(mailboxId, flags));
+            applicableFlagDAO.updateApplicableFlags(mailboxId, ImmutableSet.copyOf(flags.getUserFlags())));
     }
 
     public CompletableFuture<Void> updateIndexOnFlagsUpdate(CassandraId mailboxId, UpdatedFlags updatedFlags) {
         return CompletableFuture.allOf(manageUnseenMessageCountsOnFlagsUpdate(mailboxId, updatedFlags),
                                        manageRecentOnFlagsUpdate(mailboxId, updatedFlags),
                                        updateFirstUnseenOnFlagsUpdate(mailboxId, updatedFlags),
-                                       applicableFlagDAO.updateApplicableFlags(mailboxId, updatedFlags.getNewFlags()),
+                                       applicableFlagDAO.updateApplicableFlags(mailboxId, ImmutableSet.copyOf(updatedFlags.userFlagIterator())),
                                        updateDeletedOnFlagsUpdate(mailboxId, updatedFlags));
     }
 

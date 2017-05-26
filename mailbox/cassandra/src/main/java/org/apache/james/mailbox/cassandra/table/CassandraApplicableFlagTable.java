@@ -24,5 +24,5 @@ public interface CassandraApplicableFlagTable {
     String TABLE_NAME = "applicableFlag";
     String MAILBOX_ID = "mailboxId";
 
-    String[] FIELDS = { MAILBOX_ID, Flag.ANSWERED, Flag.DELETED, Flag.DRAFT, Flag.FLAGGED, Flag.SEEN, Flag.USER_FLAGS };
+    String[] FIELDS = { MAILBOX_ID, Flag.USER_FLAGS };
 }

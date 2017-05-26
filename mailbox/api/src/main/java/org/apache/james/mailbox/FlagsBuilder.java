@@ -34,21 +34,23 @@ public class FlagsBuilder {
     }
 
     public FlagsBuilder add(Flags.Flag... flags) {
-        for(Flags.Flag flag : flags) {
+        for (Flags.Flag flag : flags) {
             internalFlags.add(flag);
         }
         return this;
     }
 
     public FlagsBuilder add(String... flags) {
-        for(String userFlag : flags) {
+        for (String userFlag : flags) {
             internalFlags.add(userFlag);
         }
         return this;
     }
 
-    public FlagsBuilder add(Flags flags) {
-        internalFlags.add(flags);
+    public FlagsBuilder add(Flags... flagsArray) {
+        for (Flags flags: flagsArray) {
+            internalFlags.add(flags);
+        }
         return this;
     }
 

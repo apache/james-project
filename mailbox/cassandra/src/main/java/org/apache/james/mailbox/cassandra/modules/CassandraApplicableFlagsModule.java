@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import static com.datastax.driver.core.DataType.cboolean;
 import static com.datastax.driver.core.DataType.set;
 import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.DataType.timeuuid;
@@ -46,11 +45,6 @@ public class CassandraApplicableFlagsModule implements CassandraModule {
                 SchemaBuilder.createTable(CassandraApplicableFlagTable.TABLE_NAME)
                     .ifNotExists()
                     .addPartitionKey(CassandraApplicableFlagTable.MAILBOX_ID, timeuuid())
-                    .addColumn(Flag.ANSWERED, cboolean())
-                    .addColumn(Flag.DELETED, cboolean())
-                    .addColumn(Flag.DRAFT, cboolean())
-                    .addColumn(Flag.FLAGGED, cboolean())
-                    .addColumn(Flag.SEEN, cboolean())
                     .addColumn(Flag.USER_FLAGS, set(text()))
                     .withOptions()
                     .compactionOptions(SchemaBuilder.leveledStrategy())

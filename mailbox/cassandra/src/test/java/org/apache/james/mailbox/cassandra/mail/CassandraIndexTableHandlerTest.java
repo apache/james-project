@@ -26,9 +26,7 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 
 import javax.mail.Flags;
-import javax.mail.Flags.Flag;
 
-import com.github.steveash.guavate.Guavate;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.FlagsBuilder;
@@ -51,6 +49,8 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.github.steveash.guavate.Guavate;
 
 public class CassandraIndexTableHandlerTest {
 
@@ -650,42 +650,43 @@ public class CassandraIndexTableHandlerTest {
 
     @Test
     public void updateIndexOnAddShouldUpdateApplicableFlag() throws Exception {
-        Flags answeredFlag = new Flags(Flag.ANSWERED);
+        Flags customFlags = new Flags("custom");
         MailboxMessage message = mock(MailboxMessage.class);
-        when(message.createFlags()).thenReturn(answeredFlag);
+        when(message.createFlags()).thenReturn(customFlags);
         when(message.getUid()).thenReturn(MESSAGE_UID);
         testee.updateIndexOnAdd(message, MAILBOX_ID).join();
 
         Flags applicableFlag = applicableFlagDAO.retrieveApplicableFlag(MAILBOX_ID).join().get();
 
-        assertThat(applicableFlag).isEqualTo(answeredFlag);
+        assertThat(applicableFlag).isEqualTo(customFlags);
     }
 
     @Test
     public void updateIndexOnFlagsUpdateShouldUnionApplicableFlag() throws Exception {
-        Flags answeredFlag = new Flags(Flag.ANSWERED);
+        Flags customFlag = new Flags("custom");
         MailboxMessage message = mock(MailboxMessage.class);
-        when(message.createFlags()).thenReturn(answeredFlag);
+        when(message.createFlags()).thenReturn(customFlag);
         when(message.getUid()).thenReturn(MESSAGE_UID);
         testee.updateIndexOnAdd(message, MAILBOX_ID).join();
 
+        Flags customBis = new Flags("customBis");
         testee.updateIndexOnFlagsUpdate(MAILBOX_ID, UpdatedFlags.builder()
             .uid(MESSAGE_UID)
-            .newFlags(new Flags(Flag.DELETED))
-            .oldFlags(answeredFlag)
+            .newFlags(customBis)
+            .oldFlags(customFlag)
             .modSeq(MODSEQ)
             .build()).join();
 
         Flags applicableFlag = applicableFlagDAO.retrieveApplicableFlag(MAILBOX_ID).join().get();
 
-        assertThat(applicableFlag).isEqualTo(new FlagsBuilder().add(Flag.ANSWERED, Flag.DELETED).build());
+        assertThat(applicableFlag).isEqualTo(new FlagsBuilder().add(customFlag, customBis).build());
     }
 
     @Test
     public void applicableFlagShouldKeepAllFlagsEvenTheMessageRemovesFlag() throws Exception {
-        Flags messageFlags = new Flags(Flag.ANSWERED);
-        messageFlags.add(Flag.DELETED);
-        messageFlags.add(Flag.DRAFT);
+        Flags messageFlags = FlagsBuilder.builder()
+            .add("custom1", "custom2", "custom3")
+            .build();
 
         MailboxMessage message = mock(MailboxMessage.class);
         when(message.createFlags()).thenReturn(messageFlags);
@@ -701,6 +702,6 @@ public class CassandraIndexTableHandlerTest {
             .build()).join();
 
         Flags applicableFlag = applicableFlagDAO.retrieveApplicableFlag(MAILBOX_ID).join().get();
-        assertThat(applicableFlag).isEqualTo(new FlagsBuilder().add(Flag.ANSWERED, Flag.DRAFT, Flag.DELETED).build());
+        assertThat(applicableFlag).isEqualTo(messageFlags);
     }
 }
