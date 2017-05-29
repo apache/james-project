@@ -27,6 +27,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -78,12 +79,11 @@ public class CassandraMailboxRecentsDAO {
                 .value(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, bindMarker(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID)));
     }
 
-    public CompletableFuture<List<MessageUid>> getRecentMessageUidsInMailbox(CassandraId mailboxId) {
+    public CompletableFuture<Stream<MessageUid>> getRecentMessageUidsInMailbox(CassandraId mailboxId) {
         return cassandraAsyncExecutor.execute(bindWithMailbox(mailboxId, readStatement))
             .thenApply(CassandraUtils::convertToStream)
             .thenApply(stream -> stream.map(row -> row.getLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID)))
-            .thenApply(stream -> stream.map(MessageUid::of))
-            .thenApply(stream -> stream.collect(Guavate.toImmutableList()));
+            .thenApply(stream -> stream.map(MessageUid::of));
     }
 
     private BoundStatement bindWithMailbox(CassandraId mailboxId, PreparedStatement statement) {

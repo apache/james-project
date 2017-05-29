@@ -149,7 +149,8 @@ public class CassandraIndexTableHandlerTest {
 
         testee.updateIndexOnAdd(message, MAILBOX_ID).join();
 
-        assertThat(mailboxRecentsDAO.getRecentMessageUidsInMailbox(MAILBOX_ID).join())
+        assertThat(mailboxRecentsDAO.getRecentMessageUidsInMailbox(MAILBOX_ID).join()
+            .collect(Guavate.toImmutableList()))
             .isEmpty();
     }
 
@@ -161,7 +162,8 @@ public class CassandraIndexTableHandlerTest {
 
         testee.updateIndexOnAdd(message, MAILBOX_ID).join();
 
-        assertThat(mailboxRecentsDAO.getRecentMessageUidsInMailbox(MAILBOX_ID).join())
+        assertThat(mailboxRecentsDAO.getRecentMessageUidsInMailbox(MAILBOX_ID).join()
+            .collect(Guavate.toImmutableList()))
             .containsOnly(MESSAGE_UID);
     }
 
@@ -232,7 +234,8 @@ public class CassandraIndexTableHandlerTest {
                 MODSEQ),
             MAILBOX_ID).join();
 
-        assertThat(mailboxRecentsDAO.getRecentMessageUidsInMailbox(MAILBOX_ID).join())
+        assertThat(mailboxRecentsDAO.getRecentMessageUidsInMailbox(MAILBOX_ID).join()
+            .collect(Guavate.toImmutableList()))
             .isEmpty();
     }
 
@@ -250,7 +253,8 @@ public class CassandraIndexTableHandlerTest {
                 MODSEQ),
             MAILBOX_ID).join();
 
-        assertThat(mailboxRecentsDAO.getRecentMessageUidsInMailbox(MAILBOX_ID).join())
+        assertThat(mailboxRecentsDAO.getRecentMessageUidsInMailbox(MAILBOX_ID).join()
+            .collect(Guavate.toImmutableList()))
             .isEmpty();
     }
 
@@ -476,7 +480,8 @@ public class CassandraIndexTableHandlerTest {
             .modSeq(MODSEQ)
             .build()).join();
 
-        assertThat(mailboxRecentsDAO.getRecentMessageUidsInMailbox(MAILBOX_ID).join())
+        assertThat(mailboxRecentsDAO.getRecentMessageUidsInMailbox(MAILBOX_ID).join()
+            .collect(Guavate.toImmutableList()))
             .containsOnly(MESSAGE_UID);
     }
 
@@ -495,7 +500,8 @@ public class CassandraIndexTableHandlerTest {
             .modSeq(MODSEQ)
             .build()).join();
 
-        assertThat(mailboxRecentsDAO.getRecentMessageUidsInMailbox(MAILBOX_ID).join())
+        assertThat(mailboxRecentsDAO.getRecentMessageUidsInMailbox(MAILBOX_ID).join()
+            .collect(Guavate.toImmutableList()))
             .isEmpty();
     }
 

@@ -202,7 +202,8 @@ public class CassandraMessageMapper implements MessageMapper {
     public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return mailboxRecentDAO.getRecentMessageUidsInMailbox(mailboxId)
-                .join();
+                .join()
+                .collect(Guavate.toImmutableList());
     }
 
     @Override

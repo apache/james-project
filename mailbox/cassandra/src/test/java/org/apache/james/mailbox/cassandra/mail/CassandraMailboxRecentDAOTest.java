@@ -21,13 +21,18 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.stream.IntStream;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
+import org.apache.james.util.FluentFutureStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.github.steveash.guavate.Guavate;
 
 public class CassandraMailboxRecentDAOTest {
     public static final MessageUid UID1 = MessageUid.of(36L);
@@ -52,14 +57,16 @@ public class CassandraMailboxRecentDAOTest {
 
     @Test
     public void getRecentMessageUidsInMailboxShouldBeEmptyByDefault() throws Exception {
-        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()).isEmpty();
+        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()
+            .collect(Guavate.toImmutableList())).isEmpty();
     }
 
     @Test
     public void addToRecentShouldAddUidWhenEmpty() throws Exception {
         testee.addToRecent(CASSANDRA_ID, UID1).join();
 
-        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()).containsOnly(UID1);
+        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()
+            .collect(Guavate.toImmutableList())).containsOnly(UID1);
     }
 
     @Test
@@ -68,14 +75,16 @@ public class CassandraMailboxRecentDAOTest {
 
         testee.removeFromRecent(CASSANDRA_ID, UID1).join();
 
-        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()).isEmpty();
+        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()
+            .collect(Guavate.toImmutableList())).isEmpty();
     }
 
     @Test
     public void removeFromRecentShouldNotFailIfNotExisting() throws Exception {
         testee.removeFromRecent(CASSANDRA_ID, UID1).join();
 
-        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()).isEmpty();
+        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()
+            .collect(Guavate.toImmutableList())).isEmpty();
     }
 
     @Test
@@ -84,7 +93,8 @@ public class CassandraMailboxRecentDAOTest {
 
         testee.addToRecent(CASSANDRA_ID, UID2).join();
 
-        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()).containsOnly(UID1, UID2);
+        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()
+            .collect(Guavate.toImmutableList())).containsOnly(UID1, UID2);
     }
 
     @Test
@@ -94,7 +104,8 @@ public class CassandraMailboxRecentDAOTest {
 
         testee.removeFromRecent(CASSANDRA_ID, UID2).join();
 
-        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()).containsOnly(UID1);
+        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()
+            .collect(Guavate.toImmutableList())).containsOnly(UID1);
     }
 
     @Test
@@ -102,6 +113,19 @@ public class CassandraMailboxRecentDAOTest {
         testee.addToRecent(CASSANDRA_ID, UID1).join();
         testee.addToRecent(CASSANDRA_ID, UID1).join();
 
-        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()).containsOnly(UID1);
+        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()
+            .collect(Guavate.toImmutableList())).containsOnly(UID1);
+    }
+
+    @Test
+    public void getRecentMessageUidsInMailboxShouldNotTimeoutWhenOverPagingLimit() throws Exception {
+        int pageSize = 5000;
+        int size = pageSize + 1000;
+        FluentFutureStream.of(IntStream.range(0, size)
+            .mapToObj(i -> testee.addToRecent(CASSANDRA_ID, MessageUid.of(i + 1))))
+            .join();
+
+        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()
+            .collect(Guavate.toImmutableList())).hasSize(size);
     }
 }
