@@ -20,8 +20,7 @@ package org.apache.james.jmap.model;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -29,13 +28,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
-import javax.mail.internet.MimeMessage;
 import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.jmap.utils.HtmlTextExtractor;
@@ -49,7 +46,6 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
-import org.apache.james.mime4j.message.MessageBuilder;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.util.mime.MessageContentExtractor;
@@ -72,8 +68,6 @@ public class MessageFactory {
         .setMaxHeaderCount(-1)
         .setMaxLineLen(-1)
         .build();
-
-    private static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
 
     private final MessagePreviewGenerator messagePreview;
     private final MessageContentExtractor messageContentExtractor;
@@ -119,14 +113,10 @@ public class MessageFactory {
                 .build();
     }
 
-    private ZonedDateTime dateToZonedDate(Date date) {
-        return ZonedDateTime.ofInstant(date.toInstant(), UTC_ZONE_ID);
-    }
-
-    private ZonedDateTime getDateFromHeaderOrInternalDateOtherwise(org.apache.james.mime4j.dom.Message mimeMessage, MetaDataWithContent message) {
+    private Instant getDateFromHeaderOrInternalDateOtherwise(org.apache.james.mime4j.dom.Message mimeMessage, MetaDataWithContent message) {
         return Optional.ofNullable(mimeMessage.getDate())
-            .map(this::dateToZonedDate)
-            .orElse(message.getInternalDateAsZonedDateTime());
+            .map(Date::toInstant)
+            .orElse(message.getInternalDate());
     }
 
     private Optional<String> computeTextBodyIfNeeded(MessageContent messageContent, Optional<String> mainTextContent) {
@@ -248,7 +238,7 @@ public class MessageFactory {
                 .modSeq(messageResult.getModSeq())
                 .flags(messageResult.getFlags())
                 .size(messageResult.getSize())
-                .internalDate(messageResult.getInternalDate())
+                .internalDate(messageResult.getInternalDate().toInstant())
                 .attachments(messageResult.getAttachments())
                 .mailboxId(messageResult.getMailboxId());
             try {
@@ -263,7 +253,7 @@ public class MessageFactory {
             private Long modSeq;
             private Flags flags;
             private Long size;
-            private Date internalDate;
+            private Instant internalDate;
             private InputStream content;
             private SharedInputStream sharedContent;
             private List<MessageAttachment> attachments;
@@ -290,7 +280,7 @@ public class MessageFactory {
                 return this;
             }
             
-            public Builder internalDate(Date internalDate) {
+            public Builder internalDate(Instant internalDate) {
                 this.internalDate = internalDate;
                 return this;
             }
@@ -345,14 +335,23 @@ public class MessageFactory {
         private final long modSeq;
         private final Flags flags;
         private final long size;
-        private final Date internalDate;
+        private final Instant internalDate;
         private final InputStream content;
         private final SharedInputStream sharedContent;
         private final List<MessageAttachment> attachments;
         private final Set<MailboxId> mailboxIds;
         private final MessageId messageId;
 
-        private MetaDataWithContent(MessageUid uid, long modSeq, Flags flags, long size, Date internalDate, InputStream content, SharedInputStream sharedContent, List<MessageAttachment> attachments, Set<MailboxId> mailboxIds, MessageId messageId) {
+        private MetaDataWithContent(MessageUid uid,
+                                    long modSeq,
+                                    Flags flags,
+                                    long size,
+                                    Instant internalDate,
+                                    InputStream content,
+                                    SharedInputStream sharedContent,
+                                    List<MessageAttachment> attachments,
+                                    Set<MailboxId> mailboxIds,
+                                    MessageId messageId) {
             this.uid = uid;
             this.modSeq = modSeq;
             this.flags = flags;
@@ -381,12 +380,8 @@ public class MessageFactory {
             return size;
         }
 
-        public Date getInternalDate() {
+        public Instant getInternalDate() {
             return internalDate;
-        }
-
-        public ZonedDateTime getInternalDateAsZonedDateTime() {
-            return ZonedDateTime.ofInstant(internalDate.toInstant(), UTC_ZONE_ID);
         }
 
         public InputStream getContent() {

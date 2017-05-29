@@ -20,7 +20,7 @@ package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.Optional;
 
 import org.junit.Test;
@@ -55,7 +55,7 @@ public class SubMailboxMessageTest {
 
     @Test
     public void buildShouldWorkWhenMandatoryFieldsArePresent() {
-        ZonedDateTime currentDate = ZonedDateTime.now();
+        Instant currentDate = Instant.now();
         SubMessage expected = new SubMessage(ImmutableMap.of("key", "value"), Optional.empty(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of(),
                 "subject", currentDate, Optional.empty(), Optional.empty(), ImmutableList.of(), ImmutableMap.of());
         SubMessage tested = SubMessage.builder()
@@ -73,13 +73,13 @@ public class SubMailboxMessageTest {
         SubMessage simpleMessage = SubMessage.builder()
                 .headers(ImmutableMap.of("key", "value"))
                 .subject("subject")
-                .date(ZonedDateTime.now())
+                .date(Instant.now())
                 .build();
         ImmutableMap<BlobId, SubMessage> attachedMessages = ImmutableMap.of(BlobId.of("differentBlobId"), simpleMessage);
         SubMessage.builder()
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
-            .date(ZonedDateTime.now())
+            .date(Instant.now())
             .attachments(attachments)
             .attachedMessages(attachedMessages)
             .build();
@@ -92,7 +92,7 @@ public class SubMailboxMessageTest {
         ImmutableList<Emailer> cc = ImmutableList.of(Emailer.builder().name("cc").email("cc@domain").build());
         ImmutableList<Emailer> bcc = ImmutableList.of(Emailer.builder().name("bcc").email("bcc@domain").build());
         ImmutableList<Emailer> replyTo = ImmutableList.of(Emailer.builder().name("replyTo").email("replyTo@domain").build());
-        ZonedDateTime currentDate = ZonedDateTime.now();
+        Instant currentDate = Instant.now();
         Attachment simpleAttachment = Attachment.builder().blobId(BlobId.of("blobId")).type("type").name("name").size(123).build();
         ImmutableList<Attachment> attachments = ImmutableList.of(simpleAttachment);
         SubMessage simpleMessage = SubMessage.builder()

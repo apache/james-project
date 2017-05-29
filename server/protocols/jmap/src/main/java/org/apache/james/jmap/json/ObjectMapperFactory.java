@@ -20,10 +20,22 @@
 package org.apache.james.jmap.json;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Set;
+import java.util.TimeZone;
 
 import javax.inject.Inject;
 
+import com.fasterxml.jackson.databind.ser.SerializerFactory;
+import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
+import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.InstantSerializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 
@@ -47,9 +59,14 @@ import com.google.common.collect.ImmutableSet;
 
 public class ObjectMapperFactory {
 
-    private static final ImmutableSet.Builder<Module> JACKSON_BASE_MODULES = ImmutableSet.<Module>builder().add(new Jdk8Module(), new JavaTimeModule(), new GuavaModule());
+    private static final ImmutableSet.Builder<Module> JACKSON_BASE_MODULES = ImmutableSet.<Module>builder().add(
+            new Jdk8Module(),
+            new JavaTimeModule(),
+            new GuavaModule());
+
     private final Set<Module> jacksonModules;
-    
+    private static final TimeZone UTC_TIMEZONE = TimeZone.getTimeZone("UTC");
+
     @Inject
     public ObjectMapperFactory(MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory) {
         SimpleModule mailboxIdModule = new SimpleModule();
@@ -73,8 +90,8 @@ public class ObjectMapperFactory {
 
     public ObjectMapper forWriting() {
         return new ObjectMapper()
-                .registerModules(jacksonModules)
-                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .registerModules(jacksonModules);
     }
 
     public static class MailboxIdDeserializer extends JsonDeserializer<MailboxId> {

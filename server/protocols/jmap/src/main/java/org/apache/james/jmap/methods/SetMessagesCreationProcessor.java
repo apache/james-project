@@ -283,7 +283,9 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         return isAppendToMailboxWithRole(Role.OUTBOX, creationMessage, session);
     }
     
-    private MetaDataWithContent createMessageInOutbox(MessageWithId.CreationMessageEntry createdEntry, MessageManager outbox, MailboxSession session) throws MailboxException {
+    private MetaDataWithContent createMessageInOutbox(MessageWithId.CreationMessageEntry createdEntry,
+                                                      MessageManager outbox,
+                                                      MailboxSession session) throws MailboxException {
         ImmutableList<MessageAttachment> messageAttachments = getMessageAttachments(session, createdEntry.getValue().getAttachments());
         byte[] messageContent = mimeMessageConverter.convert(createdEntry, messageAttachments);
         SharedByteArrayInputStream content = new SharedByteArrayInputStream(messageContent);
@@ -296,7 +298,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                 .uid(message.getUid())
                 .flags(flags)
                 .size(messageContent.length)
-                .internalDate(internalDate)
+                .internalDate(internalDate.toInstant())
                 .sharedContent(content)
                 .attachments(messageAttachments)
                 .mailboxId(outbox.getId())

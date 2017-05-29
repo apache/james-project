@@ -19,8 +19,11 @@
 
 package org.apache.james.jmap.json;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.Optional;
 
 import org.apache.james.jmap.model.BlobId;
@@ -59,7 +62,7 @@ public interface ParsingWritingObjects {
         ImmutableList<Emailer> REPLY_TO = ImmutableList.of(Emailer.builder().name("replyTo1").email("replyTo1@james.org").build(),
                 Emailer.builder().name("replyTo2").email("replyTo2@james.org").build());
         String SUBJECT = "mySubject";
-        ZonedDateTime DATE = ZonedDateTime.parse("2014-10-30T14:12:00Z").withZoneSameLocal(ZoneId.of("GMT"));
+        Instant DATE = Instant.parse("2014-10-30T14:12:00Z");
         int SIZE = 1024;
         String PREVIEW = "myPreview";
         Optional<String> TEXT_BODY = Optional.of("myTextBody");

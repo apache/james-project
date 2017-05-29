@@ -20,7 +20,7 @@ package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -89,18 +89,18 @@ public class MessageTest {
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenPreviewIsNull() {
         Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
-            .subject("subject").size(123).date(ZonedDateTime.now()).build();
+            .subject("subject").size(123).date(Instant.now()).build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenPreviewIsEmpty() {
         Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
-            .subject("subject").size(123).date(ZonedDateTime.now()).preview("").build();
+            .subject("subject").size(123).date(Instant.now()).preview("").build();
     }
 
     @Test
     public void buildShouldWorkWhenMandatoryFieldsArePresent() {
-        ZonedDateTime currentDate = ZonedDateTime.now();
+        Instant currentDate = Instant.now();
         Message expected = new Message(TestMessageId.of(1), BlobId.of("blobId"), "threadId", ImmutableList.of(InMemoryId.of(456)), Optional.empty(), false, false, false, false, false, ImmutableMap.of("key", "value"), Optional.empty(),
                 ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), "subject", currentDate, 123, "preview", Optional.empty(), Optional.empty(), ImmutableList.of(), ImmutableMap.of());
         Message tested = Message.builder()
@@ -124,7 +124,7 @@ public class MessageTest {
         SubMessage simpleMessage = SubMessage.builder()
                 .headers(ImmutableMap.of("key", "value"))
                 .subject("subject")
-                .date(ZonedDateTime.now())
+                .date(Instant.now())
                 .build();
         ImmutableMap<BlobId, SubMessage> attachedMessages = ImmutableMap.of(BlobId.of("differentBlobId"), simpleMessage);
         Message.builder()
@@ -135,7 +135,7 @@ public class MessageTest {
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
             .size(123)
-            .date(ZonedDateTime.now())
+            .date(Instant.now())
             .preview("preview")
             .attachments(attachments)
             .attachedMessages(attachedMessages)
@@ -149,7 +149,7 @@ public class MessageTest {
         ImmutableList<Emailer> cc = ImmutableList.of(Emailer.builder().name("cc").email("cc@domain").build());
         ImmutableList<Emailer> bcc = ImmutableList.of(Emailer.builder().name("bcc").email("bcc@domain").build());
         ImmutableList<Emailer> replyTo = ImmutableList.of(Emailer.builder().name("replyTo").email("replyTo@domain").build());
-        ZonedDateTime currentDate = ZonedDateTime.now();
+        Instant currentDate = Instant.now();
         Attachment simpleAttachment = Attachment.builder().blobId(BlobId.of("blobId")).type("type").name("name").size(123).build();
         ImmutableList<Attachment> attachments = ImmutableList.of(simpleAttachment);
         SubMessage simpleMessage = SubMessage.builder()
@@ -221,12 +221,12 @@ public class MessageTest {
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
             .size(1)
-            .date(ZonedDateTime.now())
+            .date(Instant.now())
             .preview("preview")
             .attachedMessages(ImmutableMap.of(BlobId.of("key"), SubMessage.builder()
                     .headers(ImmutableMap.of("key", "value"))
                     .subject("subject")
-                    .date(ZonedDateTime.now())
+                    .date(Instant.now())
                     .build()))
             .build();
     }
@@ -241,7 +241,7 @@ public class MessageTest {
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
             .size(1)
-            .date(ZonedDateTime.now())
+            .date(Instant.now())
             .preview("preview")
             .attachments(ImmutableList.of(Attachment.builder()
                     .blobId(BlobId.of("key"))
@@ -251,7 +251,7 @@ public class MessageTest {
             .attachedMessages(ImmutableMap.of(BlobId.of("key"), SubMessage.builder()
                     .headers(ImmutableMap.of("key", "value"))
                     .subject("subject")
-                    .date(ZonedDateTime.now())
+                    .date(Instant.now())
                     .build()))
             .build();
     }
@@ -266,7 +266,7 @@ public class MessageTest {
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
             .size(1)
-            .date(ZonedDateTime.now())
+            .date(Instant.now())
             .preview("preview")
             .attachments(ImmutableList.of())
             .build();
@@ -284,7 +284,7 @@ public class MessageTest {
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
             .size(1)
-            .date(ZonedDateTime.now())
+            .date(Instant.now())
             .preview("preview")
             .attachments(ImmutableList.of(
                     Attachment.builder()
@@ -316,7 +316,7 @@ public class MessageTest {
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
             .size(1)
-            .date(ZonedDateTime.now())
+            .date(Instant.now())
             .preview("preview")
             .attachments(ImmutableList.of(
                     Attachment.builder()
@@ -354,7 +354,7 @@ public class MessageTest {
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
             .size(1)
-            .date(ZonedDateTime.now())
+            .date(Instant.now())
             .preview("preview")
             .attachments(ImmutableList.of(
                     Attachment.builder()

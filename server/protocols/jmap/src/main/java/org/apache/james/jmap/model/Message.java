@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.model;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -68,7 +68,7 @@ public class Message {
         private final ImmutableList.Builder<Emailer> bcc;
         private final ImmutableList.Builder<Emailer> replyTo;
         private String subject;
-        private ZonedDateTime date;
+        private Instant date;
         private Long size;
         private String preview;
         private Optional<String> textBody = Optional.empty();
@@ -175,7 +175,7 @@ public class Message {
             return this;
         }
 
-        public Builder date(ZonedDateTime date) {
+        public Builder date(Instant date) {
             this.date = date;
             return this;
         }
@@ -267,7 +267,7 @@ public class Message {
     private final ImmutableList<Emailer> bcc;
     private final ImmutableList<Emailer> replyTo;
     private final String subject;
-    private final ZonedDateTime date;
+    private final Instant date;
     private final long size;
     private final String preview;
     private final Optional<String> textBody;
@@ -275,9 +275,30 @@ public class Message {
     private final ImmutableList<Attachment> attachments;
     private final ImmutableMap<BlobId, SubMessage> attachedMessages;
 
-    @VisibleForTesting Message(MessageId id, BlobId blobId, String threadId, ImmutableList<MailboxId> mailboxIds, Optional<String> inReplyToMessageId, boolean isUnread, boolean isFlagged, boolean isAnswered, boolean isDraft, boolean hasAttachment, ImmutableMap<String, String> headers, Optional<Emailer> from,
-            ImmutableList<Emailer> to, ImmutableList<Emailer> cc, ImmutableList<Emailer> bcc, ImmutableList<Emailer> replyTo, String subject, ZonedDateTime date, long size, String preview, Optional<String> textBody, Optional<String> htmlBody, ImmutableList<Attachment> attachments,
-            ImmutableMap<BlobId, SubMessage> attachedMessages) {
+    @VisibleForTesting Message(MessageId id,
+                               BlobId blobId,
+                               String threadId,
+                               ImmutableList<MailboxId> mailboxIds,
+                               Optional<String> inReplyToMessageId,
+                               boolean isUnread,
+                               boolean isFlagged,
+                               boolean isAnswered,
+                               boolean isDraft,
+                               boolean hasAttachment,
+                               ImmutableMap<String, String> headers,
+                               Optional<Emailer> from,
+                               ImmutableList<Emailer> to,
+                               ImmutableList<Emailer> cc,
+                               ImmutableList<Emailer> bcc,
+                               ImmutableList<Emailer> replyTo,
+                               String subject,
+                               Instant date,
+                               long size,
+                               String preview,
+                               Optional<String> textBody,
+                               Optional<String> htmlBody,
+                               ImmutableList<Attachment> attachments,
+                               ImmutableMap<BlobId, SubMessage> attachedMessages) {
         this.id = id;
         this.blobId = blobId;
         this.threadId = threadId;
@@ -372,7 +393,7 @@ public class Message {
         return subject;
     }
 
-    public ZonedDateTime getDate() {
+    public Instant getDate() {
         return date;
     }
 

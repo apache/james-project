@@ -24,8 +24,8 @@ import static org.mockito.Mockito.when;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
 import java.util.Collection;
-import java.util.Date;
 
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
@@ -71,7 +71,7 @@ public class MailFactoryTest {
                 .uid(MessageUid.of(2))
                 .flags(new FlagsBuilder().add(Flags.Flag.SEEN).build())
                 .size(content.length())
-                .internalDate(new Date())
+                .internalDate(Instant.now())
                 .sharedContent(new SharedByteArrayInputStream(content.getBytes(Charsets.UTF_8)))
                 .attachments(ImmutableList.of())
                 .mailboxId(InMemoryId.of(3))

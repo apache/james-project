@@ -21,9 +21,7 @@ package org.apache.james.jmap.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.Date;
+import java.time.Instant;
 import java.util.Optional;
 
 import javax.mail.Flags;
@@ -43,7 +41,6 @@ import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -52,9 +49,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class MessageFactoryTest {
     private static final InMemoryId MAILBOX_ID = InMemoryId.of(18L);
-    private static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
-    private static final ZonedDateTime ZONED_DATE = ZonedDateTime.of(2015, 07, 14, 12, 30, 42, 0, UTC_ZONE_ID);
-    private static final Date INTERNAL_DATE = Date.from(ZONED_DATE.toInstant());
+    private static final Instant INTERNAL_DATE = Instant.parse("2012-02-03T14:30:42Z");
 
     private MessageFactory messageFactory;
     private MessagePreviewGenerator messagePreview ;
@@ -86,7 +81,7 @@ public class MessageFactoryTest {
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
         assertThat(testee)
             .extracting(Message::getPreview, Message::getSize, Message::getSubject, Message::getHeaders, Message::getDate)
-            .containsExactly("(Empty)", 0L, "", ImmutableMap.of("MIME-Version", "1.0"), ZONED_DATE);
+            .containsExactly("(Empty)", 0L, "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
     }
 
     @Test
@@ -165,7 +160,7 @@ public class MessageFactoryTest {
                 .bcc(ImmutableList.of(userbcc))
                 .replyTo(ImmutableList.of(userRT))
                 .subject("test subject")
-                .date(ZONED_DATE)
+                .date(Instant.parse("2015-07-14T12:30:42.000Z"))
                 .size(headers.length())
                 .preview("(Empty)")
                 .textBody(Optional.of(""))
@@ -346,7 +341,7 @@ public class MessageFactoryTest {
             + "To: user1 <user1domain>, user2 <user2domain>\n"
             + "Cc: usercc <userccdomain>\n"
             + "Bcc: userbcc <userbccdomain>\n"
-            + "Date: Wed, 17 May 2017 14:18:52 +0200\n"
+            + "Date: Wed, 17 May 2017 14:18:52 +0300\n"
             + "Subject: test subject\n";
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
@@ -362,7 +357,8 @@ public class MessageFactoryTest {
 
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
 
-        assertThat(testee.getDate()).isEqualTo(ZonedDateTime.of(2017, 05, 17, 14, 18, 52, 00, ZoneId.of("Europe/Paris")));
+        assertThat(testee.getDate())
+            .isEqualTo(Instant.parse("2017-05-17T11:18:52.000Z"));
     }
 
     @Test
@@ -386,7 +382,7 @@ public class MessageFactoryTest {
 
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
 
-        assertThat(testee.getDate()).isEqualTo(ZONED_DATE);
+        assertThat(testee.getDate()).isEqualTo(INTERNAL_DATE);
     }
 
     @Test
@@ -405,7 +401,7 @@ public class MessageFactoryTest {
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
         assertThat(testee)
             .extracting(Message::getPreview, Message::getSize, Message::getSubject, Message::getHeaders, Message::getDate)
-            .containsExactly("(Empty)", 1010L, "", ImmutableMap.of("MIME-Version", "1.0"), ZONED_DATE);
+            .containsExactly("(Empty)", 1010L, "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
     }
 
     @Test

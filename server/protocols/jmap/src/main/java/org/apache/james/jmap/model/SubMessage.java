@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.model;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,7 +48,7 @@ public class SubMessage {
         private final ImmutableList.Builder<Emailer> bcc;
         private final ImmutableList.Builder<Emailer> replyTo;
         private String subject;
-        private ZonedDateTime date;
+        private Instant date;
         private Optional<String> textBody = Optional.empty();
         private Optional<String> htmlBody = Optional.empty();
         private final ImmutableList.Builder<Attachment> attachments;
@@ -98,7 +98,7 @@ public class SubMessage {
             return this;
         }
 
-        public Builder date(ZonedDateTime date) {
+        public Builder date(Instant date) {
             this.date = date;
             return this;
         }
@@ -144,14 +144,24 @@ public class SubMessage {
     private final ImmutableList<Emailer> bcc;
     private final ImmutableList<Emailer> replyTo;
     private final String subject;
-    private final ZonedDateTime date;
+    private final Instant date;
     private final Optional<String> textBody;
     private final Optional<String> htmlBody;
     private final ImmutableList<Attachment> attachments;
     private final ImmutableMap<BlobId, SubMessage> attachedMessages;
 
-    @VisibleForTesting SubMessage(ImmutableMap<String, String> headers, Optional<Emailer> from, ImmutableList<Emailer> to, ImmutableList<Emailer> cc, ImmutableList<Emailer> bcc, ImmutableList<Emailer> replyTo, String subject, ZonedDateTime date, Optional<String> textBody,
-            Optional<String> htmlBody, ImmutableList<Attachment> attachments, ImmutableMap<BlobId, SubMessage> attachedMessages) {
+    @VisibleForTesting SubMessage(ImmutableMap<String, String> headers,
+                                  Optional<Emailer> from,
+                                  ImmutableList<Emailer> to,
+                                  ImmutableList<Emailer> cc,
+                                  ImmutableList<Emailer> bcc,
+                                  ImmutableList<Emailer> replyTo,
+                                  String subject,
+                                  Instant date,
+                                  Optional<String> textBody,
+                                  Optional<String> htmlBody,
+                                  ImmutableList<Attachment> attachments,
+                                  ImmutableMap<BlobId, SubMessage> attachedMessages) {
         super();
         this.headers = headers;
         this.from = from;
@@ -195,7 +205,7 @@ public class SubMessage {
         return subject;
     }
 
-    public ZonedDateTime getDate() {
+    public Instant getDate() {
         return date;
     }
 

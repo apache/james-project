@@ -22,7 +22,9 @@ package org.apache.james.jmap.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -55,7 +57,7 @@ public class SetMessagesResponseTest {
 
     @Test
     public void builderShouldWork() {
-        ZonedDateTime currentDate = ZonedDateTime.now();
+        Instant currentDate = Instant.now();
         ImmutableMap<CreationMessageId, Message> created = ImmutableMap.of(CreationMessageId.of("user|created|1"),
             Message.builder()
                 .id(TestMessageId.of(1))
@@ -115,7 +117,7 @@ public class SetMessagesResponseTest {
                 .headers(ImmutableMap.of())
                 .subject("subject")
                 .size(0)
-                .date(ZonedDateTime.now())
+                .date(Instant.now())
                 .preview("preview")
                 .build());
     }
