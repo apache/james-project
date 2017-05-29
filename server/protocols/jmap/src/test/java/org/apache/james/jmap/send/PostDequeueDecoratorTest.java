@@ -34,7 +34,6 @@ import javax.mail.Flags;
 
 import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
-import org.apache.james.jmap.send.exception.MailShouldBeInOutboxException;
 import org.apache.james.jmap.utils.SystemMailboxesProviderImpl;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -42,6 +41,7 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -52,6 +52,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
+import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
@@ -100,8 +101,8 @@ public class PostDequeueDecoratorTest {
         verify(mockedMailQueueItem).done(true);
     }
     
-    @Test(expected=MailShouldBeInOutboxException.class)
-    public void doneShouldThrowWhenMessageIsNotInOutbox() throws Exception {
+    @Test
+    public void doneShouldNotThrowWhenMessageIsNotInOutbox() throws Exception {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME, LOGGER);
         mailboxManager.createMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
         mailboxManager.createMailbox(SENT_MAILBOX_PATH, mailboxSession);
@@ -265,5 +266,24 @@ public class PostDequeueDecoratorTest {
         verify(messageIdManager, times(1)).setInMailboxes(eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class));
 
         verifyNoMoreInteractions(messageIdManager);
+    }
+
+    @Test(expected = MailQueue.MailQueueException.class)
+    public void doneShouldThrowWhenMailboxException() throws Exception {
+        MessageIdManager messageIdManager = mock(MessageIdManager.class);
+        testee = new PostDequeueDecorator(mockedMailQueueItem, mailboxManager, new InMemoryMessageId.Factory(),
+                messageIdManager, new SystemMailboxesProviderImpl(mailboxManager));
+
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME, LOGGER);
+        mailboxManager.createMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
+        mailboxManager.createMailbox(SENT_MAILBOX_PATH, mailboxSession).get();
+        MessageManager messageManager = mailboxManager.getMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
+        ComposedMessageId messageId = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, new Flags());
+        mail.setAttribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE, messageId.getMessageId().serialize());
+        mail.setAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, USERNAME);
+
+        when(messageIdManager.getMessages(eq(ImmutableList.of(messageId.getMessageId())), eq(FetchGroupImpl.MINIMAL), any(MailboxSession.class))).thenThrow(MailboxException.class);
+
+        testee.done(true);
     }
 }
