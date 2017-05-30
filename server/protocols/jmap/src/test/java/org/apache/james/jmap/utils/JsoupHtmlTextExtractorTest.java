@@ -90,6 +90,25 @@ public class JsoupHtmlTextExtractorTest {
     }
 
     @Test
+    public void toPlainTextShouldHandleOrderedListsWell() {
+        String html = "<ol>Here is my awesome list:" +
+            "  <li>JMAP</li>" +
+            "  <li>IMAP</li>" +
+            "</ol>" +
+            "<p>Followed with some text</p>" +
+            "<p>And some other text</p>";
+        String expectedPlainText = "Here is my awesome list:  \n" +
+            " - JMAP  \n" +
+            " - IMAP\n" +
+            "\n" +
+            "Followed with some text\n" +
+            "\n" +
+            "And some other text\n" +
+            "\n";
+        assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
+    }
+
+    @Test
     public void tableShouldBeWellHandled() {
         String html = " <table style=\"width:100%\">\n" +
             "  <tr>\n" +

@@ -35,6 +35,7 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
     private static final Logger LOGGER = LoggerFactory.getLogger(JsoupHtmlTextExtractor.class);
     public static final String BR_TAG = "br";
     public static final String UL_TAG = "ul";
+    public static final String OL_TAG = "ol";
     public static final String LI_TAG = "li";
     public static final String P_TAG = "p";
 
@@ -65,6 +66,9 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
                 return "\n";
             }
             if (element.tagName().equals(UL_TAG)) {
+                return "\n\n";
+            }
+            if (element.tagName().equals(OL_TAG)) {
                 return "\n\n";
             }
             if (element.tagName().equals(LI_TAG)) {
