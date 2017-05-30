@@ -22,6 +22,7 @@ package org.apache.james.jmap.utils;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -40,6 +41,7 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
     public static final String P_TAG = "p";
     public static final String IMG_TAG = "img";
     public static final String ALT_TAG = "alt";
+    public static final int INITIAL_LIST_NESTED_LEVEL = 0;
 
     @Override
     public String toPlainText(String html) {
@@ -48,7 +50,7 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
 
             Element body = Optional.ofNullable(document.body()).orElse(document);
 
-            return flatten(body)
+            return flatten(body, INITIAL_LIST_NESTED_LEVEL)
                 .map(this::convertNodeToText)
                 .reduce("", (s1, s2) -> s1 + s2);
         } catch (Exception e) {
@@ -57,7 +59,8 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
         }
     }
 
-    private String convertNodeToText(Node node) {
+    private String convertNodeToText(HTMLNode htmlNode) {
+        Node node = htmlNode.underlyingNode;
         if (node instanceof TextNode) {
             TextNode textNode = (TextNode) node;
             return textNode.getWholeText();
@@ -67,14 +70,14 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
             if (element.tagName().equals(BR_TAG)) {
                 return "\n";
             }
-            if (element.tagName().equals(UL_TAG)) {
-                return "\n\n";
+            if (isList(element)) {
+                return convertListElement(htmlNode.listNestedLevel);
             }
             if (element.tagName().equals(OL_TAG)) {
                 return "\n\n";
             }
             if (element.tagName().equals(LI_TAG)) {
-                return "\n - ";
+                return "\n" + StringUtils.repeat(" ", htmlNode.listNestedLevel) + "- ";
             }
             if (element.tagName().equals(P_TAG)) {
                 return "\n\n";
@@ -86,19 +89,45 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
         return "";
     }
 
-    Stream<Node> flatten(Node base) {
+    private String convertListElement(int nestedLevel) {
+        if (nestedLevel == 0) {
+            return "\n\n";
+        } else {
+            return "";
+        }
+    }
+
+    Stream<HTMLNode> flatten(Node base, int listNestedLevel) {
         Position position = getPosition(base);
-        Stream<Node> flatChildren = base.childNodes()
+        int nextElementLevel = getNewNestedLevel(listNestedLevel, base);
+
+        Stream<HTMLNode> baseStream = Stream.of(new HTMLNode(base, listNestedLevel));
+        Stream<HTMLNode> flatChildren = base.childNodes()
             .stream()
-            .flatMap(this::flatten);
+            .flatMap(node -> flatten(node, nextElementLevel));
+        
         switch (position) {
             case PREFIX:
-                return Stream.concat(Stream.of(base), flatChildren);
+                return Stream.concat(baseStream, flatChildren);
             case SUFFIX:
-                return Stream.concat(flatChildren, Stream.of(base));
+                return Stream.concat(flatChildren, baseStream);
             default:
                 throw new RuntimeException("Unexpected POSITION for node element: " + position);
         }
+    }
+
+    private int getNewNestedLevel(int listNestedLevel, Node node) {
+        if (node instanceof Element) {
+            Element element = (Element) node;
+            if (isList(element)) {
+                return listNestedLevel + 1;
+            }
+        }
+        return listNestedLevel;
+    }
+
+    private boolean isList(Element element) {
+        return element.tagName().equals(UL_TAG) || element.tagName().equals(OL_TAG);
     }
 
     private enum Position {
@@ -114,6 +143,16 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
             }
         }
         return Position.SUFFIX;
+    }
+
+    private static class HTMLNode {
+        private final Node underlyingNode;
+        private final int listNestedLevel;
+
+        public HTMLNode(Node underlyingNode, int listNestedLevel) {
+            this.underlyingNode = underlyingNode;
+            this.listNestedLevel = listNestedLevel;
+        }
     }
 
 }

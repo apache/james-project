@@ -155,6 +155,28 @@ public class JsoupHtmlTextExtractorTest {
     }
 
     @Test
+    public void nestedListsShouldBeWellHandled() {
+        String html = " <ul>" +
+            "  <li>Coffee</li>" +
+            "  <li>Tea" +
+            "    <ul>" +
+            "      <li>Black tea</li>" +
+            "      <li>Green tea</li>" +
+            "    </ul>" +
+            "  </li>" +
+            "  <li>Milk</li>" +
+            "</ul>";
+        String expectedPlainText = "  \n" +
+            " - Coffee  \n" +
+            " - Tea          \n" +
+            "  - Black tea      \n" +
+            "  - Green tea        \n" +
+            " - Milk\n" +
+            "\n";
+        assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
+    }
+
+    @Test
     public void nonClosedHtmlShouldBeTranslated() {
         String html = "This is an <b>HTML text !";
         String expectedPlainText = "This is an HTML text !";
