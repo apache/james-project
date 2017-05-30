@@ -148,6 +148,13 @@ public class JsoupHtmlTextExtractorTest {
     }
 
     @Test
+    public void imgShouldBeWellHandled() {
+        String html = "<img src=\"whitePoney.png\" alt=\"My wonderfull white poney picture\"/>";
+        String expectedPlainText = "[My wonderfull white poney picture]";
+        assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
+    }
+
+    @Test
     public void nonClosedHtmlShouldBeTranslated() {
         String html = "This is an <b>HTML text !";
         String expectedPlainText = "This is an HTML text !";

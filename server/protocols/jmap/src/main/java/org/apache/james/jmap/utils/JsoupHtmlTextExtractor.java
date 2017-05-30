@@ -38,6 +38,8 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
     public static final String OL_TAG = "ol";
     public static final String LI_TAG = "li";
     public static final String P_TAG = "p";
+    public static final String IMG_TAG = "img";
+    public static final String ALT_TAG = "alt";
 
     @Override
     public String toPlainText(String html) {
@@ -76,6 +78,9 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
             }
             if (element.tagName().equals(P_TAG)) {
                 return "\n\n";
+            }
+            if (element.tagName().equals(IMG_TAG)) {
+                return "[" + element.attributes().get(ALT_TAG) + "]";
             }
         }
         return "";
