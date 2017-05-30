@@ -20,10 +20,10 @@
 package org.apache.james.jmap.json;
 
 
+import java.util.function.Predicate;
+
 import com.fasterxml.jackson.databind.ser.PropertyWriter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-
-import java.util.function.Predicate;
 
 public class FieldNamePropertyFilter extends SimpleBeanPropertyFilter {
 

@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
-import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.apache.james.jmap.model.MessageProperties.HeaderProperty;
+import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;

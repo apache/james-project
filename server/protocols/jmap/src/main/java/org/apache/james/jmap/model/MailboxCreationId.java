@@ -19,9 +19,9 @@
 
 package org.apache.james.jmap.model;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-
 import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonValue;
 
 public class MailboxCreationId {
 

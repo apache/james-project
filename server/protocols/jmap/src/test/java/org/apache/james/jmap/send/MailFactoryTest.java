@@ -18,11 +18,10 @@
  ****************************************************************/
 package org.apache.james.jmap.send;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 import java.util.Collection;

@@ -20,9 +20,11 @@
 package org.apache.james.jmap.methods;
 
 import java.io.IOException;
+
 import javax.inject.Inject;
 
 import org.apache.james.jmap.model.UpdateMessagePatch;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.annotations.VisibleForTesting;

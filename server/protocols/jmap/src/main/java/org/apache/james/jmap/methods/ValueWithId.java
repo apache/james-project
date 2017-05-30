@@ -21,8 +21,8 @@ package org.apache.james.jmap.methods;
 
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessageId;
-import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.Message;
+import org.apache.james.jmap.model.SetError;
 
 public class ValueWithId<T> {
 

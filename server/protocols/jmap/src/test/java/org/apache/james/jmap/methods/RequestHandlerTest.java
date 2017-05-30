@@ -19,10 +19,9 @@
 
 package org.apache.james.jmap.methods;
 
-import static org.mockito.Mockito.mock;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.Mockito.mock;
 
 import java.util.List;
 import java.util.stream.Collectors;

@@ -23,9 +23,9 @@ import java.util.Optional;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.mailbox.Mailbox;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.james.jmap.model.mailbox.Mailbox;
 
 public class GetMailboxesResponse implements Method.Response {
 

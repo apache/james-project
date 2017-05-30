@@ -29,8 +29,8 @@ import java.util.stream.Collectors;
 
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
-import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.jmap.model.CreationMessageId;
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.EncoderUtil;

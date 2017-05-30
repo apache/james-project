@@ -18,10 +18,10 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
-import com.google.common.base.Preconditions;
-
 import java.util.Arrays;
 import java.util.Optional;
+
+import com.google.common.base.Preconditions;
 
 public enum MailboxProperty implements Property {
     ID("id"),

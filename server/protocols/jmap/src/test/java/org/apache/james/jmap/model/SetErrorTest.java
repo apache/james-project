@@ -19,14 +19,15 @@
 
 package org.apache.james.jmap.model;
 
+import static org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.apache.james.jmap.model.MessageProperties.MessageProperty;
 
 import java.util.Optional;
 import java.util.Set;
 
 import org.junit.Test;
+
 import com.google.common.collect.ImmutableSet;
 
 public class SetErrorTest {
