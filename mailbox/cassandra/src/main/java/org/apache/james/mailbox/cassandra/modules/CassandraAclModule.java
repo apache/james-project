@@ -23,7 +23,6 @@ import static com.datastax.driver.core.DataType.bigint;
 import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.DataType.timeuuid;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;

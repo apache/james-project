@@ -26,7 +26,6 @@ import java.util.List;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
-import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraSubscriptionTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;

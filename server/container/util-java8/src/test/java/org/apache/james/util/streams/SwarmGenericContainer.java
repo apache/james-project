@@ -21,7 +21,6 @@ package org.apache.james.util.streams;
 
 import java.util.List;
 
-import com.google.common.base.Strings;
 import org.junit.Assume;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -32,17 +31,19 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.shaded.com.github.dockerjava.api.command.InspectContainerResponse;
 
+import com.google.common.base.Strings;
+
 public class SwarmGenericContainer implements TestRule {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwarmGenericContainer.class);
     private static final String DOCKER_CONTAINER = "DOCKER_CONTAINER";
     private static final String NO_DOCKER_ENVIRONMENT = "Could not find a valid Docker environment.";
     private static final String SKIPPING_TEST_CAUTION = "Skipping all docker tests as no Docker environment was found";
 
-    private GenericContainer container;
+    private GenericContainer<?> container;
 
     public SwarmGenericContainer(String dockerImageName) {
         try {
-            this.container = new GenericContainer(dockerImageName);
+            this.container = new GenericContainer<>(dockerImageName);
         } catch (IllegalStateException e) {
             logAndCheckSkipTest(e);
         }
@@ -50,7 +51,7 @@ public class SwarmGenericContainer implements TestRule {
 
     public SwarmGenericContainer(ImageFromDockerfile imageFromDockerfile) {
         try {
-            this.container = new GenericContainer(imageFromDockerfile);
+            this.container = new GenericContainer<>(imageFromDockerfile);
         } catch (IllegalStateException e) {
             logAndCheckSkipTest(e);
         }

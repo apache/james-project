@@ -27,8 +27,6 @@ import static org.hamcrest.Matchers.equalTo;
 import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.specification.RequestSpecification;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
@@ -45,14 +43,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.testcontainers.shaded.com.google.common.net.InetAddresses;
 
 import com.google.common.base.Charsets;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
+import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
-import org.testcontainers.shaded.com.google.common.net.InetAddresses;
 
 public abstract class VacationRelayIntegrationTest {
 

@@ -49,7 +49,6 @@ import org.apache.james.mime4j.message.BasicBodyFactory;
 import org.apache.james.mime4j.message.BodyPart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
-import org.apache.james.mime4j.message.MessageBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.NameValuePair;
@@ -60,7 +59,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -103,7 +101,7 @@ public class MIMEMessageConverter {
             throw new IllegalArgumentException("creationMessageEntry is either null or has null message");
         }
 
-        MessageBuilder messageBuilder = MessageBuilder.create();
+        Message.Builder messageBuilder = Message.Builder.of();
         if (isMultipart(creationMessageEntry.getValue(), messageAttachments)) {
             messageBuilder.setBody(createMultipart(creationMessageEntry.getValue(), messageAttachments));
         } else {
@@ -114,7 +112,7 @@ public class MIMEMessageConverter {
         return messageBuilder.build();
     }
 
-    private void buildMimeHeaders(MessageBuilder messageBuilder, CreationMessageId creationId, CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
+    private void buildMimeHeaders(Message.Builder messageBuilder, CreationMessageId creationId, CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
         Optional<Mailbox> fromAddress = newMessage.getFrom().filter(DraftEmailer::hasValidEmail).map(this::convertEmailToMimeHeader);
         fromAddress.ifPresent(messageBuilder::setFrom);
         fromAddress.ifPresent(messageBuilder::setSender);
@@ -176,8 +174,7 @@ public class MIMEMessageConverter {
                 addBody(newMessage, builder);
     
                 Consumer<MessageAttachment> addAttachment = addAttachment(builder);
-                messageAttachments.stream()
-                    .forEach(addAttachment);
+                messageAttachments.forEach(addAttachment);
     
                 return builder.build();
             } else {
@@ -204,8 +201,7 @@ public class MIMEMessageConverter {
         MultipartBuilder bodyBuilder = MultipartBuilder.create(ALTERNATIVE_SUB_TYPE);
         addText(bodyBuilder, newMessage.getTextBody());
         addHtml(bodyBuilder, newMessage.getHtmlBody());
-        Multipart body = bodyBuilder.build();
-        return body;
+        return bodyBuilder.build();
     }
 
     private void addText(MultipartBuilder builder, Optional<String> textBody) throws IOException {
@@ -259,7 +255,7 @@ public class MIMEMessageConverter {
     }
 
     private ContentTypeField contentTypeField(MessageAttachment att) {
-        Builder<String, String> parameters = ImmutableMap.<String, String> builder();
+        Builder<String, String> parameters = ImmutableMap.builder();
         if (att.getName().isPresent()) {
             parameters.put("name", encode(att.getName().get()));
         }
@@ -275,7 +271,7 @@ public class MIMEMessageConverter {
     }
 
     private String contentTypeWithoutParameters(String type) {
-        return FluentIterable.from(Splitter.on(FIELD_PARAMETERS_SEPARATOR).split(type)).get(0);
+        return Splitter.on(FIELD_PARAMETERS_SEPARATOR).splitToList(type).get(0);
     }
 
     private ContentDispositionField contentDispositionField(boolean isInline) {

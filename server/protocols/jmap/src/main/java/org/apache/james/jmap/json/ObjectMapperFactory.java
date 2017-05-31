@@ -21,7 +21,6 @@ package org.apache.james.jmap.json;
 
 import java.io.IOException;
 import java.util.Set;
-import java.util.TimeZone;
 
 import javax.inject.Inject;
 
@@ -54,7 +53,6 @@ public class ObjectMapperFactory {
             new GuavaModule());
 
     private final Set<Module> jacksonModules;
-    private static final TimeZone UTC_TIMEZONE = TimeZone.getTimeZone("UTC");
 
     @Inject
     public ObjectMapperFactory(MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory) {

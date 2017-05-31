@@ -25,7 +25,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -34,7 +33,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.management.ImmutableDescriptor;
+import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractDomainListTest {
 

@@ -56,12 +56,12 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
-
-import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 public class PostDequeueDecoratorTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostDequeueDecoratorTest.class);
@@ -268,6 +268,7 @@ public class PostDequeueDecoratorTest {
         verifyNoMoreInteractions(messageIdManager);
     }
 
+    @SuppressWarnings("unchecked")
     @Test(expected = MailQueue.MailQueueException.class)
     public void doneShouldThrowWhenMailboxException() throws Exception {
         MessageIdManager messageIdManager = mock(MessageIdManager.class);

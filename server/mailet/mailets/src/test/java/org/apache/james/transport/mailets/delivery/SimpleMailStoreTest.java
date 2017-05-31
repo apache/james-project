@@ -27,7 +27,6 @@ import static org.mockito.Mockito.when;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.logging.Log;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;

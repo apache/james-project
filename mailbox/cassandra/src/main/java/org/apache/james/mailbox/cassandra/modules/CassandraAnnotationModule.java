@@ -22,7 +22,6 @@ package org.apache.james.mailbox.cassandra.modules;
 import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.DataType.timeuuid;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;

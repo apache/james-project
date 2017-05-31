@@ -21,7 +21,6 @@ package org.apache.james.transport.mailets.delivery;
 
 import javax.mail.MessagingException;
 
-import org.apache.commons.logging.Log;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;

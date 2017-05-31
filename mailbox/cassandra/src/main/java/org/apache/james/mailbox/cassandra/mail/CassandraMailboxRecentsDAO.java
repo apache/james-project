@@ -25,7 +25,6 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -40,7 +39,6 @@ import org.apache.james.mailbox.cassandra.table.CassandraMailboxRecentsTable;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
-import com.github.steveash.guavate.Guavate;
 
 public class CassandraMailboxRecentsDAO {
 
