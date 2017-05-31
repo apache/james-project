@@ -197,7 +197,7 @@ public class CassandraMessageDAO {
             ids -> FluentFutureStream.of(
                 ids.stream()
                     .map(id -> retrieveRow(id, fetchType)
-                        .thenApply(resultSet ->
+                        .thenApply((ResultSet resultSet) ->
                             message(resultSet.one(), id, fetchType))))
                 .completableFuture())
             .thenApply(stream -> stream.flatMap(Function.identity()));
