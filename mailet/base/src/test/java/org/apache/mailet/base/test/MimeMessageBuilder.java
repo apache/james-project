@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
@@ -132,7 +133,11 @@ public class MimeMessageBuilder {
         }
 
         public BodyPartBuilder addHeaders(Header... headers) {
-            this.headers.addAll(Arrays.asList(headers));
+            return addHeaders(Arrays.asList(headers));
+        }
+
+        public BodyPartBuilder addHeaders(Collection<Header> headers) {
+            this.headers.addAll(headers);
             return this;
         }
 
@@ -317,7 +322,11 @@ public class MimeMessageBuilder {
     }
 
     public MimeMessageBuilder addHeaders(Header... headers) {
-        this.headers.addAll(Arrays.asList(headers));
+        return addHeaders(Arrays.asList(headers));
+    }
+
+    public MimeMessageBuilder addHeaders(Collection<Header> headers) {
+        this.headers.addAll(headers);
         return this;
     }
 

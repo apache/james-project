@@ -22,6 +22,7 @@ package org.apache.mailet.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
+import java.util.Collections;
 import java.util.Properties;
 
 import javax.activation.DataHandler;
@@ -33,6 +34,7 @@ import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Test;
 
 public class AutomaticallySentMailDetectorImplTest {
@@ -282,6 +284,26 @@ public class AutomaticallySentMailDetectorImplTest {
                 .sender(new MailAddress("any@any.com"))
                 .mimeMessage(message)
                 .build();
+
+        assertThat(new AutomaticallySentMailDetectorImpl().isMdnSentAutomatically(fakeMail)).isFalse();
+    }
+
+    @Test
+    public void isMdnSentAutomaticallyShouldNotThrowOnBodyPartsWithManyLines() throws Exception {
+        int mime4jDefaultMaxHeaderCount = 1000;
+        int headerCount = mime4jDefaultMaxHeaderCount + 10;
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .addHeaders()
+            .setMultipartWithBodyParts(MimeMessageBuilder.bodyPartBuilder()
+                .addHeaders(Collections.nCopies(headerCount, new MimeMessageBuilder.Header("name", "value")))
+                .data("The body part have 1010 headers, which overpass MIME4J default limits")
+                .build())
+            .build();
+
+        FakeMail fakeMail = FakeMail.builder()
+            .sender(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(message)
+            .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMdnSentAutomatically(fakeMail)).isFalse();
     }
