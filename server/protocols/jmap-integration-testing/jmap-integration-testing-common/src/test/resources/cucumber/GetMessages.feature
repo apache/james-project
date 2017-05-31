@@ -293,3 +293,12 @@ Feature: GetMessages method
     And the list should contain 1 message
     And the preview of the message is not empty
     And the preview should not contain consecutive spaces or blank characters
+
+  Scenario: Preview should display printable characters with iso charset
+    Given the user has a message "m1" in "INBOX" mailbox with iso charset
+    When the user ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the preview of the message is not empty
+    And the preview of the message contains:
+     |effectué|à|signée dès|

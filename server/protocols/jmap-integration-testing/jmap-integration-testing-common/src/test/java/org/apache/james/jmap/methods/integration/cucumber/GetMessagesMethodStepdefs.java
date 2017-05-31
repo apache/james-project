@@ -235,6 +235,11 @@ public class GetMessagesMethodStepdefs {
         appendMessage(messageName, "eml/htmlWithLongAndComplicatedContent.eml");
     }
 
+    @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with iso charset")
+    public void appendMessageWithEncoding(String messageName, String mailbox) throws Throwable {
+        appendMessage(messageName, "eml/iso8859_1charset.eml");
+    }
+
     private void appendMessage(String messageName, String emlFileName) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         MessageId id = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(userStepdefs.lastConnectedUser,
@@ -484,6 +489,12 @@ public class GetMessagesMethodStepdefs {
     @Then("^the second attachment is:$")
     public void assertSecondAttachment(DataTable attachmentProperties) throws Throwable {
         assertAttachment(SECOND_ATTACHMENT, attachmentProperties);
+    }
+
+    @Then("^the preview of the message contains:$")
+    public void assertPreviewOfMessageShouldBePrintedWithEncoding(DataTable preview) throws Throwable {
+        String actual = jsonPath.<String>read(FIRST_MESSAGE + ".preview");
+        assertThat(actual).contains(preview.asList(String.class));
     }
 
     private void assertAttachment(String attachment, DataTable attachmentProperties) {

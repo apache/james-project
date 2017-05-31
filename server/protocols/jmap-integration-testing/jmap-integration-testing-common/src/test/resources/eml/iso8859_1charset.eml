@@ -1,0 +1,43 @@
+Return-Path: <test@local>
+Received: from local
+From: Test <test@local>
+To: "Testee" <test@local>
+Subject: Any subject
+Date: Tue, 30 May 2017 10:06:35 +0000
+Message-ID: <2a338825f11d475bb97e82f064a41119@test.local>
+Accept-Language: fr-FR, en-US
+Content-Language: fr-FR
+X-MS-Has-Attach: yes
+X-MS-TNEF-Correlator:
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.11.40.174]
+Content-Type: multipart/mixed;
+	boundary="_006_2a338825f11d475bb97e82f064a41119MBXCMC02resslocal_"
+MIME-Version: 1.0
+
+--_006_2a338825f11d475bb97e82f064a41119MBXCMC02resslocal_
+Content-Type: multipart/related;
+	boundary="_005_2a338825f11d475bb97e82f064a41119MBXCMC02resslocal_";
+	type="multipart/alternative"
+
+--_005_2a338825f11d475bb97e82f064a41119MBXCMC02resslocal_
+Content-Type: multipart/alternative;
+	boundary="_000_2a338825f11d475bb97e82f064a41119MBXCMC02resslocal_"
+
+--_000_2a338825f11d475bb97e82f064a41119MBXCMC02resslocal_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+Bonjour,
+
+Dans le cadre du stage effectu=E9 par ... 201=7, ... =E0= ... sign=E9e d=E8s que possible.
+
+--_000_2a338825f11d475bb97e82f064a41119MBXCMC02resslocal_
+Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+Bonjour,
+
+Dans le cadre du stage effectu=E9 par ... 201=7, ... =E0= ... sign=E9e d=E8s que possible.
+
+--_000_2a338825f11d475bb97e82f064a41119MBXCMC02resslocal_--
