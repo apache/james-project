@@ -329,6 +329,56 @@ public class SearchQuery implements Serializable {
     }
 
     /**
+     * Creates a filter matching messages with sent date after the given
+     * date.
+     * 
+     * @param date
+     *            given date
+     * @param res
+     *            the date resolution, either {@link DateResolution#Year},
+     *            {@link DateResolution#Month}, {@link DateResolution#Day},
+     *            {@link DateResolution#Hour}, {@link DateResolution#Minute} or
+     *            {@link DateResolution#Second}
+     * @return <code>Criterion</code>, not null
+     */
+    public static Criterion sentDateAfter(Date date, DateResolution res) {
+        return new SentDateCriterion(new DateOperator(DateComparator.AFTER, date, res));
+    }
+
+    /**
+     * Creates a filter matching messages with sent date on the given date.
+     * 
+     * @param date
+     *            given date
+     * @param res
+     *            the date resolution, either {@link DateResolution#Year},
+     *            {@link DateResolution#Month}, {@link DateResolution#Day},
+     *            {@link DateResolution#Hour}, {@link DateResolution#Minute} or
+     *            {@link DateResolution#Second}
+     * @return <code>Criterion</code>, not null
+     */
+    public static Criterion sentDateOn(Date date, DateResolution res) {
+        return new SentDateCriterion(new DateOperator(DateComparator.ON, date, res));
+    }
+
+    /**
+     * Creates a filter matching messages with sent date before the given
+     * date.
+     * 
+     * @param date
+     *            given date
+     * @param res
+     *            the date resolution, either {@link DateResolution#Year},
+     *            {@link DateResolution#Month}, {@link DateResolution#Day},
+     *            {@link DateResolution#Hour}, {@link DateResolution#Minute} or
+     *            {@link DateResolution#Second}
+     * @return <code>Criterion</code>, not null
+     */
+    public static Criterion sentDateBefore(Date date, DateResolution res) {
+        return new SentDateCriterion(new DateOperator(DateComparator.BEFORE, date, res));
+    }
+
+    /**
      * Creates a filter matching messages with the date of the given header
      * after the given date. If the header's value is not a date then it will
      * not be included.

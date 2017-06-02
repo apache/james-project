@@ -623,6 +623,36 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    public void sentDateAfterShouldReturnMessagesAfterAGivenDate() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        // Date : 2015/06/04 11:00:00.000 ( Paris time zone )
+        searchQuery.andCriteria(SearchQuery.sentDateAfter(new Date(1433408400000L), SearchQuery.DateResolution.Second));
+        searchQuery.setSorts(Lists.newArrayList(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Arrival, true)));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m3.getUid(), m2.getUid());
+    }
+
+    @Test
+    public void sentDateBeforeShouldReturnMessagesBeforeAGivenDate() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        // Date : 2015/06/01 00:00:00.000 ( Paris time zone )
+        searchQuery.andCriteria(SearchQuery.sentDateBefore(new Date(1433109600000L), SearchQuery.DateResolution.Day));
+        searchQuery.setSorts(Lists.newArrayList(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Arrival, true)));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m5.getUid());
+    }
+
+    @Test
+    public void sentDateOnShouldReturnMessagesOfTheGivenDate() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        // Date : 2015/06/02 08:00:00.000 ( Paris time zone )
+        searchQuery.andCriteria(SearchQuery.sentDateOn(new Date(1433224800000L), SearchQuery.DateResolution.Day));
+        searchQuery.setSorts(Lists.newArrayList(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Arrival, true)));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m4.getUid(), m9.getUid());
+    }
+
+    @Test
     public void modSeqEqualsShouldReturnUidsOfMessageHavingAGivenModSeq() throws Exception {
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.andCriteria(SearchQuery.modSeqEquals(2L));

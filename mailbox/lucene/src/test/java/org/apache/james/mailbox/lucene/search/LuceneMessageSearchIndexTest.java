@@ -149,4 +149,19 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
     @Override
     public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInAllMailboxes() throws MailboxException {
     }
+
+    @Ignore
+    @Override
+    public void sentDateAfterShouldReturnMessagesAfterAGivenDate() throws Exception {
+    }
+
+    @Ignore
+    @Override
+    public void sentDateBeforeShouldReturnMessagesBeforeAGivenDate() throws Exception {
+    }
+
+    @Ignore
+    @Override
+    public void sentDateOnShouldReturnMessagesOfTheGivenDate() throws Exception {
+    }
 }
