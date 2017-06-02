@@ -32,6 +32,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.MessageUid;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
@@ -1174,6 +1175,46 @@ public class SearchQuery implements Serializable {
         public boolean equals(Object obj) {
             if (obj instanceof InternalDateCriterion) {
                 InternalDateCriterion that = (InternalDateCriterion) obj;
+
+                return Objects.equal(this.operator, that.operator);
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("operator", operator)
+                .toString();
+        }
+    }
+
+    /**
+     * Filters on the sent date.
+     */
+    public static class SentDateCriterion extends Criterion {
+        private static final long serialVersionUID = 1L;
+
+        private final DateOperator operator;
+
+        public SentDateCriterion(DateOperator operator) {
+            super();
+            this.operator = operator;
+        }
+
+        public DateOperator getOperator() {
+            return operator;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(operator);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof SentDateCriterion) {
+                SentDateCriterion that = (SentDateCriterion) obj;
 
                 return Objects.equal(this.operator, that.operator);
             }
