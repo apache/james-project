@@ -72,7 +72,7 @@ public class SortConverterTest {
     @Test
     public void convertToSortsShouldSupportDate() {
         assertThat(SortConverter.convertToSorts(ImmutableList.of("date desc")))
-            .containsExactly(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Arrival, REVERSE));
+            .containsExactly(new SearchQuery.Sort(SearchQuery.Sort.SortClause.SentDate, REVERSE));
     }
 
     @Test
@@ -84,7 +84,7 @@ public class SortConverterTest {
     @Test
     public void convertToSortsShouldBeDescWhenNoOrderClause() {
         assertThat(SortConverter.convertToSorts(ImmutableList.of("date")))
-            .containsExactly(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Arrival, REVERSE));
+            .containsExactly(new SearchQuery.Sort(SearchQuery.Sort.SortClause.SentDate, REVERSE));
     }
 
     @Test
@@ -96,7 +96,7 @@ public class SortConverterTest {
     @Test
     public void convertToSortsShouldSupportAscOrder() {
         assertThat(SortConverter.convertToSorts(ImmutableList.of("date asc")))
-            .containsExactly(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Arrival, NOT_REVERSE));
+            .containsExactly(new SearchQuery.Sort(SearchQuery.Sort.SortClause.SentDate, NOT_REVERSE));
     }
 
     @Test
@@ -108,7 +108,7 @@ public class SortConverterTest {
     @Test
     public void convertToSortsShouldSupportMultipleSorts() {
         assertThat(SortConverter.convertToSorts(ImmutableList.of("date asc", "id desc")))
-            .containsExactly(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Arrival, NOT_REVERSE),
+            .containsExactly(new SearchQuery.Sort(SearchQuery.Sort.SortClause.SentDate, NOT_REVERSE),
                 new SearchQuery.Sort(SearchQuery.Sort.SortClause.Id, REVERSE));
     }
 }

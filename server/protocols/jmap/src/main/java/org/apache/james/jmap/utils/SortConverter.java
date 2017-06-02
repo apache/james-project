@@ -36,7 +36,7 @@ public class SortConverter {
     private static final String ASC_ORDERING = "asc";
 
     private static final Map<String, SearchQuery.Sort.SortClause> SORT_CLAUSE_MAP = ImmutableMap.of(
-        "date", SearchQuery.Sort.SortClause.Arrival,
+        "date", SearchQuery.Sort.SortClause.SentDate,
         "id", SearchQuery.Sort.SortClause.Id);
 
 
