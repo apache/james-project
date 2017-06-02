@@ -818,4 +818,9 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         }
         return false;
     }
+
+    @Override
+    public boolean isReadOnly() {
+        return true;
+    }
 }

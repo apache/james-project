@@ -159,4 +159,9 @@ public abstract class AbstractUsersRepository implements UsersRepository, LogEna
         }
         return false;
     }
+
+    @Override
+    public boolean isReadOnly() {
+        return false;
+    }
 }

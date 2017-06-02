@@ -142,4 +142,10 @@ public interface UsersRepository {
      */
     boolean isAdministrator(String username) throws UsersRepositoryException;
 
+    /**
+     * @return true if one can use {@link UsersRepository#updateUser(User)} {@link UsersRepository#addUser(String, String)}
+     *             {@link UsersRepository#removeUser(String)} and false overwhise
+     */
+    boolean isReadOnly();
+
 }
