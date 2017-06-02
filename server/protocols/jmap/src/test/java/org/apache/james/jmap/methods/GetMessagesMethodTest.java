@@ -20,7 +20,9 @@ package org.apache.james.jmap.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
@@ -31,6 +33,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.mail.Flags;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.model.ClientId;
@@ -65,12 +69,17 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.jayway.jsonpath.JsonPath;
 
 public class GetMessagesMethodTest {
+
+    public static final Flags FLAGS = null;
+    public static final boolean NOT_RECENT = false;
+    private MessageIdManager messageIdManager;
 
     private static class User implements org.apache.james.mailbox.MailboxSession.User {
         final String username;
@@ -128,7 +137,8 @@ public class GetMessagesMethodTest {
         customMailboxPath = new MailboxPath(inboxPath, "custom");
         mailboxManager.createMailbox(inboxPath, session);
         mailboxManager.createMailbox(customMailboxPath, session);
-        testee = new GetMessagesMethod(messageFactory, inMemoryIntegrationResources.createMessageIdManager(mailboxManager), new DefaultMetricFactory());
+        messageIdManager = inMemoryIntegrationResources.createMessageIdManager(mailboxManager);
+        testee = new GetMessagesMethod(messageFactory, messageIdManager, new DefaultMetricFactory());
     }
     
     @Test
@@ -465,5 +475,35 @@ public class GetMessagesMethodTest {
         GetMessagesResponse getMessagesResponse = (GetMessagesResponse) response;
         assertThat(getMessagesResponse.list()).hasSize(1);
         assertThat(getMessagesResponse.list().get(0).getMailboxIds()).containsOnly(customMailboxId, message1.getMailboxId());
+    }
+
+    @Test
+    public void processShouldNotFailOnSingleMessageFailure() throws Exception {
+        MessageFactory messageFactory = mock(MessageFactory.class);
+        testee = new GetMessagesMethod(messageFactory, messageIdManager, new DefaultMetricFactory());
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+        Date now = new Date();
+        ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
+            + "header1: Header1Content\r\n"
+            + "HEADer2: Header2Content\r\n"
+            + "Subject: message 1 subject\r\n\r\nmy message").getBytes(Charsets.UTF_8));
+        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, NOT_RECENT, FLAGS);
+        ComposedMessageId message2 = inbox.appendMessage(message1Content, now, session, NOT_RECENT, FLAGS);
+        when(messageFactory.fromMetaDataWithContent(any()))
+            .thenReturn(mock(Message.class))
+            .thenThrow(new RuntimeException());
+
+        GetMessagesRequest request = GetMessagesRequest.builder()
+            .ids(ImmutableList.of(message1.getMessageId(), message2.getMessageId()))
+            .properties(ImmutableList.of("mailboxIds"))
+            .build();
+
+        List<JmapResponse> responses = testee.process(request, clientId, session).collect(Guavate.toImmutableList());
+
+        assertThat(responses).hasSize(1);
+        Method.Response response = responses.get(0).getResponse();
+        assertThat(response).isInstanceOf(GetMessagesResponse.class);
+        GetMessagesResponse getMessagesResponse = (GetMessagesResponse) response;
+        assertThat(getMessagesResponse.list()).hasSize(1);
     }
 }

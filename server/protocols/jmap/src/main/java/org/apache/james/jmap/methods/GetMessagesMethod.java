@@ -20,7 +20,9 @@
 package org.apache.james.jmap.methods;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -30,6 +32,7 @@ import org.apache.james.jmap.json.FieldNamePropertyFilter;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
+import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.model.MessageProperties;
@@ -38,14 +41,15 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -55,6 +59,7 @@ import com.google.common.collect.ImmutableSet;
 public class GetMessagesMethod implements Method {
 
     public static final String HEADERS_FILTER = "headersFilter";
+    private static final Logger LOGGER = LoggerFactory.getLogger(GetMessagesMethod.class);
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMessages");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messages");
     private final MessageFactory messageFactory;
@@ -126,8 +131,8 @@ public class GetMessagesMethod implements Method {
                         .values()
                         .stream()
                         .filter(collection -> !collection.isEmpty())
-                        .map(Throwing.function(toMetaDataWithContent()).sneakyThrow())
-                        .map(Throwing.function(messageFactory::fromMetaDataWithContent).sneakyThrow())
+                        .flatMap(toMetaDataWithContent())
+                        .flatMap(toMessage())
                         .collect(Guavate.toImmutableList()))
                 .expectedMessageIds(getMessagesRequest.getIds())
                 .build();
@@ -136,16 +141,34 @@ public class GetMessagesMethod implements Method {
         }
     }
 
-    private ThrowingFunction<Collection<MessageResult>, MetaDataWithContent> toMetaDataWithContent() {
+    private Function<MetaDataWithContent, Stream<Message>> toMessage() {
+        return metaDataWithContent -> {
+            try {
+                return Stream.of(messageFactory.fromMetaDataWithContent(metaDataWithContent));
+            } catch (Exception e) {
+                LOGGER.error("Can not convert metaData with content to Message for " + metaDataWithContent.getMessageId(), e);
+                return Stream.of();
+            }
+        };
+    }
+
+    private Function<Collection<MessageResult>, Stream<MetaDataWithContent>> toMetaDataWithContent() {
         return messageResults -> {
             MessageResult firstMessageResult = messageResults.iterator().next();
-            return MetaDataWithContent.builderFromMessageResult(firstMessageResult)
-                .messageId(firstMessageResult.getMessageId())
-                .mailboxIds(messageResults.stream()
-                    .map(MessageResult::getMailboxId)
-                    .distinct()
-                    .collect(Guavate.toImmutableList()))
-                .build();
+            List<MailboxId> mailboxIds = messageResults.stream()
+                .map(MessageResult::getMailboxId)
+                .distinct()
+                .collect(Guavate.toImmutableList());
+            try {
+                return Stream.of(
+                    MetaDataWithContent.builderFromMessageResult(firstMessageResult)
+                        .messageId(firstMessageResult.getMessageId())
+                        .mailboxIds(mailboxIds)
+                        .build());
+            } catch (Exception e) {
+                LOGGER.error("Can not convert MessageResults to MetaData with content for messageId " + firstMessageResult.getMessageId() + " in " + mailboxIds, e);
+                return Stream.of();
+            }
         };
     }
 
