@@ -62,8 +62,10 @@ public class UserProvisioningFilter implements Filter {
     
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        Optional<MailboxSession> session = Optional.ofNullable((MailboxSession)request.getAttribute(AuthenticationFilter.MAILBOX_SESSION));
-        session.ifPresent(this::createAccountIfNeeded);
+        if (!usersRepository.isReadOnly()) {
+            Optional<MailboxSession> session = Optional.ofNullable((MailboxSession) request.getAttribute(AuthenticationFilter.MAILBOX_SESSION));
+            session.ifPresent(this::createAccountIfNeeded);
+        }
         chain.doFilter(request, response);
     }
     
