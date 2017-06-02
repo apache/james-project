@@ -33,8 +33,6 @@ import javax.servlet.ServletResponse;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.User;
-import org.apache.james.mailbox.exception.BadCredentialsException;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
@@ -79,11 +77,15 @@ public class UserProvisioningFilter implements Filter {
             }
         } catch (AlreadyExistInUsersRepositoryException e) {
             // Ignore
-        } catch (UsersRepositoryException|MailboxException e) {
+        } catch (UsersRepositoryException e) {
             throw Throwables.propagate(e);
         } finally {
             timeMetric.stopAndPublish();
         }
+    }
+
+    private void createAccount(User user) throws UsersRepositoryException {
+        usersRepository.addUser(getUsername(user), generatePassword());
     }
 
     private boolean needsAccountCreation(User user) throws UsersRepositoryException {
@@ -96,14 +98,6 @@ public class UserProvisioningFilter implements Filter {
         } catch (AddressException e) {
             return user.getUserName();
         }
-    }
-
-    private void createAccount(User user) throws UsersRepositoryException, BadCredentialsException, MailboxException {
-        createUser(user);
-    }
-
-    private void createUser(User user) throws UsersRepositoryException {
-        usersRepository.addUser(getUsername(user), generatePassword());
     }
     
     private String generatePassword() {
