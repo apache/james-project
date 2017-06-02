@@ -109,13 +109,27 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     @Override
     public void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) throws MailboxException {
         try {
+            LOGGER.info("Indexing mailbox {}-{} of user {} on message {}",
+                    mailbox.getName(),
+                    mailbox.getMailboxId(),
+                    session.getUser().getUserName(),
+                    message.getUid());
             indexer.indexMessage(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJson(message, ImmutableList.of(session.getUser())));
         } catch (Exception e) {
             try {
-                LOGGER.warn("indexing message {} without attachments ", message.getUid());
+                LOGGER.warn("Indexing mailbox {}-{} of user {} on message {} without attachments ",
+                        mailbox.getName(),
+                        mailbox.getMailboxId(),
+                        session.getUser().getUserName(),
+                        message.getUid());
                 indexer.indexMessage(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(session.getUser())));
             } catch (JsonProcessingException e1) {
-                LOGGER.error("Error when indexing message " + message.getUid() + " without its attachment", e1);
+                LOGGER.error("Error when indexing mailbox {}-{} of user {} on message {} without its attachment",
+                        mailbox.getName(),
+                        mailbox.getMailboxId(),
+                        session.getUser().getUserName(),
+                        message.getUid(),
+                        e1);
             }
         }
     }
