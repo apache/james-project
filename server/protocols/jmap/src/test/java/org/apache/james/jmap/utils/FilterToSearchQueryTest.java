@@ -181,7 +181,7 @@ public class FilterToSearchQueryTest {
     public void filterConditionShouldMapWhenAfter() {
         ZonedDateTime after = ZonedDateTime.now();
         SearchQuery expectedSearchQuery = new SearchQuery();
-        expectedSearchQuery.andCriteria(SearchQuery.internalDateAfter(Date.from(after.toInstant()), DateResolution.Second));
+        expectedSearchQuery.andCriteria(SearchQuery.sentDateAfter(Date.from(after.toInstant()), DateResolution.Second));
 
         SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
                 .after(after)
@@ -194,7 +194,7 @@ public class FilterToSearchQueryTest {
     public void filterConditionShouldMapWhenBefore() {
         ZonedDateTime before = ZonedDateTime.now();
         SearchQuery expectedSearchQuery = new SearchQuery();
-        expectedSearchQuery.andCriteria(SearchQuery.internalDateBefore(Date.from(before.toInstant()), DateResolution.Second));
+        expectedSearchQuery.andCriteria(SearchQuery.sentDateBefore(Date.from(before.toInstant()), DateResolution.Second));
 
         SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
                 .before(before)
