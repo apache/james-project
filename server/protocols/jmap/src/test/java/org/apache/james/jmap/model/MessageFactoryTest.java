@@ -361,6 +361,32 @@ public class MessageFactoryTest {
     }
 
     @Test
+    public void dateFromHeaderShouldUseCurrentCenturyWhenNone() throws Exception {
+        String headers = "From: user <userdomain>\n"
+            + "To: user1 <user1domain>, user2 <user2domain>\n"
+            + "Cc: usercc <userccdomain>\n"
+            + "Bcc: userbcc <userbccdomain>\n"
+            + "Date: Wed, 17 May 17 14:18:52 +0300\n"
+            + "Subject: test subject\n";
+
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(new Flags(Flag.SEEN))
+            .size(headers.length())
+            .internalDate(INTERNAL_DATE)
+            .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(new TestMessageId.Factory().generate())
+            .build();
+
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+
+        assertThat(testee.getDate())
+            .isEqualTo(Instant.parse("2017-05-17T11:18:52.000Z"));
+    }
+
+    @Test
     public void internalDateShouldBeUsedIfNoDateInHeaders() throws Exception {
         String headers = "From: user <userdomain>\n"
             + "To: user1 <user1domain>, user2 <user2domain>\n"
