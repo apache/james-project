@@ -47,6 +47,26 @@ public class MessagePreviewGeneratorTest {
     }
 
     @Test
+    public void computeShouldReturnStringEmptyWhenOnlySpaceTabAndBreakLines() throws Exception {
+        assertThat(testee.compute(Optional.of(" \n\t "))).isEqualTo(MessagePreviewGenerator.NO_BODY);
+    }
+
+    @Test
+    public void computeShouldReturnStringEmptyWhenOnlySpace() throws Exception {
+        assertThat(testee.compute(Optional.of(" "))).isEqualTo(MessagePreviewGenerator.NO_BODY);
+    }
+
+    @Test
+    public void computeShouldReturnStringEmptyWhenOnlyTab() throws Exception {
+        assertThat(testee.compute(Optional.of("\t"))).isEqualTo(MessagePreviewGenerator.NO_BODY);
+    }
+
+    @Test
+    public void computeShouldReturnStringEmptyWhenOnlyBreakLines() throws Exception {
+        assertThat(testee.compute(Optional.of("\n"))).isEqualTo(MessagePreviewGenerator.NO_BODY);
+    }
+
+    @Test
     public void computeShouldReturnStringWithoutTruncation() throws Exception {
         String body = StringUtils.leftPad("a", 100, "b");
 

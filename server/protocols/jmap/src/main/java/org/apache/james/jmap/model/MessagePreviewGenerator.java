@@ -29,12 +29,13 @@ public class MessagePreviewGenerator {
     public static final int MAX_PREVIEW_LENGTH = 256;
 
     public String compute(Optional<String> textBody) {
-        return textBody.filter(text -> !text.isEmpty())
-                .map(this::truncateToMaxLength)
-                .orElse(NO_BODY);
+        return textBody.map(StringUtils::normalizeSpace)
+            .filter(text -> !text.isEmpty())
+            .map(this::truncateToMaxLength)
+            .orElse(NO_BODY);
     }
 
     private String truncateToMaxLength(String body) {
-        return StringUtils.left(StringUtils.normalizeSpace(body), MAX_PREVIEW_LENGTH);
+        return StringUtils.left(body, MAX_PREVIEW_LENGTH);
     }
 }
