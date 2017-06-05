@@ -71,7 +71,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     private MessageToElasticSearchJson messageToElasticSearchJson;
     private ElasticSearchListeningMessageSearchIndex testee;
     private MailboxSession session;
-    private User user;
+    private List<User> users;
     
     @Before
     public void setup() throws JsonProcessingException {
@@ -84,7 +84,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         
         testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory, indexer, elasticSearchSearcher, messageToElasticSearchJson);
         session = new MockMailboxSession(USERNAME);
-        user = session.getUser();
+        users = ImmutableList.of(session.getUser());
     }
     
     @Test
@@ -94,7 +94,6 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         when(mailbox.getMailboxId())
             .thenReturn(MAILBOX_ID);
         MailboxMessage message = mockedMessage(MESSAGE_UID);
-        List<User> users = ImmutableList.of(user);
         
         when(messageToElasticSearchJson.convertToJson(eq(message), eq(users)))
             .thenReturn(EXPECTED_JSON_CONTENT);
@@ -115,7 +114,6 @@ public class ElasticSearchListeningMessageSearchIndexTest {
             .thenReturn(MAILBOX_ID);
         
         MailboxMessage message = mockedMessage(MESSAGE_UID);
-        List<User> users = ImmutableList.of(user);
         
         when(messageToElasticSearchJson.convertToJson(eq(message), eq(users)))
             .thenThrow(JsonProcessingException.class);
@@ -145,7 +143,6 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         when(mailbox.getMailboxId())
             .thenReturn(MAILBOX_ID);
         MailboxMessage message = mockedMessage(MESSAGE_UID);
-        List<User> users = ImmutableList.of(user);
         
         when(messageToElasticSearchJson.convertToJson(eq(message), eq(users)))
             .thenThrow(JsonProcessingException.class);

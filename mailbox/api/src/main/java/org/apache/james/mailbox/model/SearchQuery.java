@@ -35,6 +35,8 @@ import org.apache.james.mailbox.MessageUid;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /**
  * <p>
@@ -732,6 +734,18 @@ public class SearchQuery implements Serializable {
         return new CustomFlagCriterion(flag, BooleanOperator.unset());
     }
 
+    public SearchQuery() {
+        this(new ArrayList<Criterion>());
+    }
+
+    public SearchQuery(Criterion... criteria) {
+        this(ImmutableList.copyOf(criteria));
+    }
+
+    public SearchQuery(List<Criterion> criterias) {
+        this.criterias = criterias;
+    }
+
     /**
      * Creates a filter matching all messages.
      * 
@@ -743,7 +757,7 @@ public class SearchQuery implements Serializable {
 
     private final Set<MessageUid> recentMessageUids = new HashSet<MessageUid>();
 
-    private final List<Criterion> criterias = new ArrayList<Criterion>();
+    private final List<Criterion> criterias;
 
     private List<Sort> sorts = Collections.singletonList(new Sort(Sort.SortClause.Uid, false));
 
@@ -1854,7 +1868,8 @@ public class SearchQuery implements Serializable {
         private final DateResolution dateResolution;
 
         public DateOperator(DateComparator type, Date date, DateResolution dateResolution) {
-            super();
+            Preconditions.checkNotNull(date);
+            Preconditions.checkNotNull(dateResolution);
             this.type = type;
             this.date = date;
             this.dateResolution = dateResolution;
