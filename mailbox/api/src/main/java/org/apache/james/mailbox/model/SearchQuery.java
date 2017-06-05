@@ -1248,7 +1248,6 @@ public class SearchQuery implements Serializable {
         private final DateOperator operator;
 
         public SentDateCriterion(DateOperator operator) {
-            super();
             this.operator = operator;
         }
 
