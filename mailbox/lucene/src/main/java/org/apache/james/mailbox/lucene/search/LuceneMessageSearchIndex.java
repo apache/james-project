@@ -773,65 +773,45 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     private String toSentDateField(DateResolution res) {
-        String field;
         switch (res) {
-        case Year:
-            field = SENT_DATE_FIELD_YEAR_RESOLUTION;
-            break;
-        case Month:
-            field = SENT_DATE_FIELD_MONTH_RESOLUTION;
-            break;
-        case Day:
-            field = SENT_DATE_FIELD_DAY_RESOLUTION;
-            break;
-        case Hour:
-            field = SENT_DATE_FIELD_HOUR_RESOLUTION;
-            break;
-        case Minute:
-            field = SENT_DATE_FIELD_MINUTE_RESOLUTION;
-            break;
-        case Second:
-            field = SENT_DATE_FIELD_SECOND_RESOLUTION;
-            break;
-        default:
-            field = SENT_DATE_FIELD_MILLISECOND_RESOLUTION;
-            break;
+            case Year:
+                return SENT_DATE_FIELD_YEAR_RESOLUTION;
+            case Month:
+                return SENT_DATE_FIELD_MONTH_RESOLUTION;
+            case Day:
+                return SENT_DATE_FIELD_DAY_RESOLUTION;
+            case Hour:
+                return SENT_DATE_FIELD_HOUR_RESOLUTION;
+            case Minute:
+                return SENT_DATE_FIELD_MINUTE_RESOLUTION;
+            case Second:
+                return SENT_DATE_FIELD_SECOND_RESOLUTION;
+            default:
+                return SENT_DATE_FIELD_MILLISECOND_RESOLUTION;
         }
-        return field;
     }
-
 
     private static Calendar getGMT() {
         return Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.US);
     }
 
-    
     private String toInteralDateField(DateResolution res) {
-        String field;
         switch (res) {
-        case Year:
-            field = INTERNAL_DATE_FIELD_YEAR_RESOLUTION;
-            break;
-        case Month:
-            field = INTERNAL_DATE_FIELD_MONTH_RESOLUTION;
-            break;
-        case Day:
-            field = INTERNAL_DATE_FIELD_DAY_RESOLUTION;
-            break;
-        case Hour:
-            field = INTERNAL_DATE_FIELD_HOUR_RESOLUTION;
-            break;
-        case Minute:
-            field = INTERNAL_DATE_FIELD_MINUTE_RESOLUTION;
-            break;
-        case Second:
-            field = INTERNAL_DATE_FIELD_SECOND_RESOLUTION;
-            break;
-        default:
-            field = INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION;
-            break;
+            case Year:
+                return INTERNAL_DATE_FIELD_YEAR_RESOLUTION;
+            case Month:
+                return INTERNAL_DATE_FIELD_MONTH_RESOLUTION;
+            case Day:
+                return INTERNAL_DATE_FIELD_DAY_RESOLUTION;
+            case Hour:
+                return INTERNAL_DATE_FIELD_HOUR_RESOLUTION;
+            case Minute:
+                return INTERNAL_DATE_FIELD_MINUTE_RESOLUTION;
+            case Second:
+                return INTERNAL_DATE_FIELD_SECOND_RESOLUTION;
+            default:
+                return INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION;
         }
-        return field;
     }
     
     /**
@@ -1059,106 +1039,97 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
     
     private Sort createSort(List<SearchQuery.Sort> sorts) {
-        Sort sort = new Sort();
         List<SortField> fields = new ArrayList<SortField>();
 
-        for (SearchQuery.Sort s : sorts) {
-            boolean reverse = s.isReverse();
-            SortField sf = null;
+        for (SearchQuery.Sort sort : sorts) {
+            boolean reverse = sort.isReverse();
+            SortField sortField = createSortField(sort, reverse);
+            if (sortField != null) {
 
-            switch (s.getSortClause()) {
-                case Arrival:
-                    if (reverse) {
-                        sf = ARRIVAL_MAILBOX_SORT_REVERSE;
-                    } else {
-                        sf = ARRIVAL_MAILBOX_SORT;
-                    }
-                    break;
-                case SentDate:
-                    if (reverse) {
-                        sf = SENT_DATE_SORT_REVERSE;
-                    } else {
-                        sf = SENT_DATE_SORT;
-                    }
-                    break;
-                case MailboxCc:
-                    if (reverse) {
-                        sf = FIRST_CC_MAILBOX_SORT_REVERSE;
-                    } else {
-                        sf = FIRST_CC_MAILBOX_SORT;
-                    }
-                    break;
-                case MailboxFrom:
-                    if (reverse) {
-                        sf = FIRST_FROM_MAILBOX_SORT_REVERSE;
-                    } else {
-                        sf = FIRST_FROM_MAILBOX_SORT;
-                    }
-                    break;
-                case Size:
-                    if (reverse) {
-                        sf = SIZE_SORT_REVERSE;
-                    } else {
-                        sf = SIZE_SORT;
-                    }
-                    break;
-                case BaseSubject:
-                    if (reverse) {
-                        sf = BASE_SUBJECT_SORT_REVERSE;
-                    } else {
-                        sf = BASE_SUBJECT_SORT;
-                    }
-                    break;
-                case MailboxTo:
-                    if (reverse) {
-                        sf = FIRST_TO_MAILBOX_SORT_REVERSE;
-                    } else {
-                        sf = FIRST_TO_MAILBOX_SORT;
-                    }
-                    break;
-
-                case Uid:
-                    if (reverse) {
-                        sf = UID_SORT_REVERSE;
-                    } else {
-                        sf = UID_SORT;
-                    }
-                    break;
-                case DisplayFrom:
-                    if (reverse) {
-                        sf = FIRST_FROM_MAILBOX_DISPLAY_SORT_REVERSE;
-                    } else {
-                        sf = FIRST_FROM_MAILBOX_DISPLAY_SORT;
-                    }
-                    break;
-                case DisplayTo:
-                    if (reverse) {
-                        sf = FIRST_TO_MAILBOX_DISPLAY_SORT_REVERSE;
-                    } else {
-                        sf = FIRST_TO_MAILBOX_DISPLAY_SORT;
-                    }
-                    break;
-                default:
-                    break;
-            }
-            if (sf != null) {
-
-                fields.add(sf);
+                fields.add(sortField);
 
                 // Add the uid sort as tie-breaker
-                if (sf == SENT_DATE_SORT) {
+                if (sortField == SENT_DATE_SORT) {
                     fields.add(UID_SORT);
-                } else if (sf == SENT_DATE_SORT_REVERSE) {
+                } else if (sortField == SENT_DATE_SORT_REVERSE) {
                     fields.add(UID_SORT_REVERSE);
                 }
             }
         }
         // add the uid sorting as last so if no other sorting was able todo the job it will get sorted by the uid
         fields.add(UID_SORT);
+        Sort sort = new Sort();
         sort.setSort(fields.toArray(new SortField[0]));
         return sort;
     }
-    
+
+    private SortField createSortField(SearchQuery.Sort s, boolean reverse) {
+        switch (s.getSortClause()) {
+            case Arrival:
+                if (reverse) {
+                    return ARRIVAL_MAILBOX_SORT_REVERSE;
+                } else {
+                    return ARRIVAL_MAILBOX_SORT;
+                }
+            case SentDate:
+                if (reverse) {
+                    return SENT_DATE_SORT_REVERSE;
+                } else {
+                    return SENT_DATE_SORT;
+                }
+            case MailboxCc:
+                if (reverse) {
+                    return FIRST_CC_MAILBOX_SORT_REVERSE;
+                } else {
+                    return FIRST_CC_MAILBOX_SORT;
+                }
+            case MailboxFrom:
+                if (reverse) {
+                    return FIRST_FROM_MAILBOX_SORT_REVERSE;
+                } else {
+                    return FIRST_FROM_MAILBOX_SORT;
+                }
+            case Size:
+                if (reverse) {
+                    return SIZE_SORT_REVERSE;
+                } else {
+                    return SIZE_SORT;
+                }
+            case BaseSubject:
+                if (reverse) {
+                    return BASE_SUBJECT_SORT_REVERSE;
+                } else {
+                    return BASE_SUBJECT_SORT;
+                }
+            case MailboxTo:
+                if (reverse) {
+                    return FIRST_TO_MAILBOX_SORT_REVERSE;
+                } else {
+                    return FIRST_TO_MAILBOX_SORT;
+                }
+            case Uid:
+                if (reverse) {
+                    return UID_SORT_REVERSE;
+                } else {
+                    return UID_SORT;
+                }
+            case DisplayFrom:
+                if (reverse) {
+                    return FIRST_FROM_MAILBOX_DISPLAY_SORT_REVERSE;
+                } else {
+                    return FIRST_FROM_MAILBOX_DISPLAY_SORT;
+                }
+            case DisplayTo:
+                if (reverse) {
+                    return FIRST_TO_MAILBOX_DISPLAY_SORT_REVERSE;
+                } else {
+                    return FIRST_TO_MAILBOX_DISPLAY_SORT;
+                }
+            default:
+                return null;
+        }
+    }
+
     /**
      * Convert the given {@link Flag} to a String
      * 
