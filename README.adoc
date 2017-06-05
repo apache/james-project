@@ -189,6 +189,17 @@ You can add an optional port binding to port 8000, to expose the webadmin server
 
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
+===== Handling attachment indexing
+
+You can handle attachment text extraction before indexing in ElasticSearch. This makes attachments searchable. To enable this:
+
+Run tika:
+
+    $ docker run --name tika logicalspark/docker-tikaserver:latest
+
+Add a link for the tika container in the above command line:
+
+    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --link tika:tika --name james_run -t james_run
 
 ==== Run James with Java 8 + Guice + JPA + Lucene
 
