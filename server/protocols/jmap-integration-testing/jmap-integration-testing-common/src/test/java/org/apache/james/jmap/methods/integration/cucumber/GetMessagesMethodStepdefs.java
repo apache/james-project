@@ -122,6 +122,12 @@ public class GetMessagesMethodStepdefs {
         messageIdsByName.put(messageName, id);
     }
 
+    @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with content-type \"([^\"]*)\" subject \"([^\"]*)\", content \"([^\"]*)\", headers$")
+    public void appendMessage(String messageName, String mailbox, String contentType, String subject, String content, DataTable headers) throws Exception {
+        MessageId id = appendMessage(mailbox, ContentType.from(contentType), subject, content, Optional.of(headers.asMap(String.class, String.class)));
+        messageIdsByName.put(messageName, id);
+    }
+
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with subject \"([^\"]*)\", content \"([^\"]*)\", headers$")
     public void appendMessage(String messageName, String mailbox, String subject, String content, DataTable headers) throws Exception {
         MessageId id = appendMessage(mailbox, ContentType.noContentType(), subject, content, Optional.of(headers.asMap(String.class, String.class)));
@@ -233,11 +239,6 @@ public class GetMessagesMethodStepdefs {
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with long and complicated HTML content$")
     public void appendMessageWithSpecialCase(String messageName, String mailbox) throws Exception {
         appendMessage(messageName, "eml/htmlWithLongAndComplicatedContent.eml");
-    }
-
-    @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with iso charset")
-    public void appendMessageWithEncoding(String messageName, String mailbox) throws Exception {
-        appendMessage(messageName, "eml/iso8859_1charset.eml");
     }
 
     private void appendMessage(String messageName, String emlFileName) throws Exception {
@@ -491,10 +492,10 @@ public class GetMessagesMethodStepdefs {
         assertAttachment(SECOND_ATTACHMENT, attachmentProperties);
     }
 
-    @Then("^the preview of the message contains:$")
-    public void assertPreviewOfMessageShouldBePrintedWithEncoding(DataTable preview) throws Exception {
+    @Then("^the preview of the message contains: (.*)$")
+    public void assertPreviewOfMessageShouldBePrintedWithEncoding(List<String> preview) throws Exception {
         String actual = jsonPath.<String>read(FIRST_MESSAGE + ".preview");
-        assertThat(actual).contains(preview.asList(String.class));
+        assertThat(actual).contains(preview);
     }
 
     private void assertAttachment(String attachment, DataTable attachmentProperties) {

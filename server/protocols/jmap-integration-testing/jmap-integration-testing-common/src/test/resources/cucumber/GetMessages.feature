@@ -294,11 +294,14 @@ Feature: GetMessages method
     And the preview of the message is not empty
     And the preview should not contain consecutive spaces or blank characters
 
-  Scenario: Preview should display printable characters with iso charset
-    Given the user has a message "m1" in "INBOX" mailbox with iso charset
+  Scenario Outline: Preview should display printable characters with charset
+    Given the user has a message "m1" in "INBOX" mailbox with content-type <content-type> subject "Subject", content <content>, headers
+        |Content-Transfer-Encoding    |<tranfer-encoding> |
     When the user ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
-    And the preview of the message is not empty
-    And the preview of the message contains:
-     |effectué|à|signée dès|
+    And the preview of the message contains: <preview>
+
+    Examples:
+            |content-type                                       |tranfer-encoding   |content                                                                                                     |preview                                                                                      |
+            |"text/html; charset=iso-8859-1"                    |quoted-printable   |"Dans le cadre du stage effectu=E9 Mlle 2017, =E0 sign=E9e d=E8s que possible, =E0, tr=E8s, journ=E9e.."    |effectué, à, signée dès, très, journée                                                                        |
