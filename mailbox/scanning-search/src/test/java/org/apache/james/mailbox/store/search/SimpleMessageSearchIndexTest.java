@@ -251,18 +251,4 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
     public void searchWithFullTextShouldReturnMailsWhenHtmlBodyMatchesWithStemming() throws Exception {
     }
 
-    @Ignore
-    @Override
-    public void sentDateAfterShouldReturnMessagesAfterAGivenDate() throws Exception {
-    }
-
-    @Ignore
-    @Override
-    public void sentDateBeforeShouldReturnMessagesBeforeAGivenDate() throws Exception {
-    }
-
-    @Ignore
-    @Override
-    public void sentDateOnShouldReturnMessagesOfTheGivenDate() throws Exception {
-    }
 }

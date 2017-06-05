@@ -201,6 +201,8 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
             result = matches((SearchQuery.AttachmentCriterion) criterion, message);
         } else if (criterion instanceof SearchQuery.ModSeqCriterion) {
             result = matches((SearchQuery.ModSeqCriterion) criterion, message);
+        } else if (criterion instanceof SearchQuery.SentDateCriterion) {
+            result = matches((SearchQuery.SentDateCriterion) criterion, message);
         } else {
             throw new UnsupportedSearchException();
         }
@@ -586,16 +588,16 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     private boolean matchesInternalDate(SearchQuery.DateOperator operator, MailboxMessage message)
             throws UnsupportedSearchException {
         Date date = operator.getDate();
-        DateResolution res = operator.getDateResultion();
+        DateResolution dateResultion = operator.getDateResultion();
         Date internalDate = message.getInternalDate();
         SearchQuery.DateComparator type = operator.getType();
         switch (type) {
         case ON:
-            return on(internalDate, date, res);
+            return on(internalDate, date, dateResultion);
         case BEFORE:
-            return before(internalDate, date, res);
+            return before(internalDate, date, dateResultion);
         case AFTER:
-            return after(internalDate, date, res);
+            return after(internalDate, date, dateResultion);
         default:
             throw new UnsupportedSearchException();
         }
@@ -622,37 +624,60 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     }
 
     private String createDateString(Date date, DateResolution res) {
-        SimpleDateFormat format;
-        switch (res) {
-        case Year:
-            format = new SimpleDateFormat("yyyy");
-            break;
-        case Month:
-            format = new SimpleDateFormat("yyyyMM");
-            break;
-        case Day:
-            format = new SimpleDateFormat("yyyyMMdd");
-            break;
-        case Hour:
-            format = new SimpleDateFormat("yyyyMMddhh");
-            break;
-        case Minute:
-            format = new SimpleDateFormat("yyyyMMddhhmm");
-            break;
-        case Second:
-            format = new SimpleDateFormat("yyyyMMddhhmmss");
-            break;
-        default:
-            format = new SimpleDateFormat("yyyyMMddhhmmssSSS");
-
-            break;
-        }
+        SimpleDateFormat format = createFormat(res);
         format.setCalendar(getGMT());
         return format.format(date);
     }
 
+    private SimpleDateFormat createFormat(DateResolution res) {
+        switch (res) {
+        case Year:
+            return new SimpleDateFormat("yyyy");
+        case Month:
+            return new SimpleDateFormat("yyyyMM");
+        case Day:
+            return new SimpleDateFormat("yyyyMMdd");
+        case Hour:
+            return new SimpleDateFormat("yyyyMMddhh");
+        case Minute:
+            return new SimpleDateFormat("yyyyMMddhhmm");
+        case Second:
+            return new SimpleDateFormat("yyyyMMddhhmmss");
+        default:
+            return new SimpleDateFormat("yyyyMMddhhmmssSSS");
+        }
+    }
+
     private Calendar getGMT() {
         return Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.ENGLISH);
+    }
+
+    private boolean matches(SearchQuery.SentDateCriterion criterion, MailboxMessage message) throws MailboxException {
+        SearchQuery.DateOperator operator = criterion.getOperator();
+        try {
+            return matchesSentDate(operator, message);
+        } catch (IOException e) {
+            throw new MailboxException("Can not read header Date", e);
+        } catch (ParseException e) {
+            throw new MailboxException("Can not parse header Date", e);
+        }
+    }
+
+    private boolean matchesSentDate(SearchQuery.DateOperator operator, MailboxMessage message) throws MailboxException, IOException, ParseException {
+        Date date = operator.getDate();
+        DateResolution dateResolution = operator.getDateResultion();
+        Date sentDate = toISODate(headerValue("Date", message));
+        SearchQuery.DateComparator type = operator.getType();
+        switch (type) {
+            case ON:
+                return on(sentDate, date, dateResolution);
+            case BEFORE:
+                return before(sentDate, date, dateResolution);
+            case AFTER:
+                return after(sentDate, date, dateResolution);
+            default:
+                throw new UnsupportedSearchException();
+        }
     }
 
 }
