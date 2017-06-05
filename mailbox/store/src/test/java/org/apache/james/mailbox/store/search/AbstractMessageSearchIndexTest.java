@@ -57,6 +57,8 @@ public abstract class AbstractMessageSearchIndexTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMessageSearchIndexTest.class);
     public static final long LIMIT = 100L;
+    public static final boolean RECENT = true;
+    public static final boolean NOT_RECENT = false;
 
     protected MessageSearchIndex messageSearchIndex;
     protected StoreMailboxManager storeMailboxManager;
@@ -110,7 +112,7 @@ public abstract class AbstractMessageSearchIndexTest {
             ClassLoader.getSystemResourceAsStream("eml/spamMail.eml"),
             new Date(1388617200000L),
             session,
-            true,
+            RECENT,
             new Flags(Flags.Flag.DELETED));
         // sentDate: Thu, 4 Jun 2015 09:23:37 +0000
         // Internal date : 2014/02/02 00:00:00.000
@@ -118,7 +120,7 @@ public abstract class AbstractMessageSearchIndexTest {
             ClassLoader.getSystemResourceAsStream("eml/mail1.eml"),
             new Date(1391295600000L),
             session,
-            true,
+            RECENT,
             new Flags(Flags.Flag.ANSWERED));
         // sentDate: Thu, 4 Jun 2015 09:27:37 +0000
         // Internal date : 2014/03/02 00:00:00.000
@@ -126,7 +128,7 @@ public abstract class AbstractMessageSearchIndexTest {
             ClassLoader.getSystemResourceAsStream("eml/mail2.eml"),
             new Date(1393714800000L),
             session,
-            true,
+            RECENT,
             new Flags(Flags.Flag.DRAFT));
         // sentDate: Tue, 2 Jun 2015 08:16:19 +0000
         // Internal date : 2014/05/02 00:00:00.000
@@ -134,7 +136,7 @@ public abstract class AbstractMessageSearchIndexTest {
             ClassLoader.getSystemResourceAsStream("eml/mail3.eml"),
             new Date(1398981600000L),
             session,
-            true,
+            RECENT,
             new Flags(Flags.Flag.RECENT));
         // sentDate: Fri, 15 May 2015 06:35:59 +0000
         // Internal date : 2014/04/02 00:00:00.000
@@ -142,7 +144,7 @@ public abstract class AbstractMessageSearchIndexTest {
             ClassLoader.getSystemResourceAsStream("eml/mail4.eml"),
             new Date(1396389600000L),
             session,
-            true,
+            RECENT,
             new Flags(Flags.Flag.FLAGGED));
         // sentDate: Wed, 03 Jun 2015 19:14:32 +0000
         // Internal date : 2014/06/02 00:00:00.000
@@ -150,7 +152,7 @@ public abstract class AbstractMessageSearchIndexTest {
             ClassLoader.getSystemResourceAsStream("eml/pgpSignedMail.eml"),
             new Date(1401660000000L),
             session,
-            true,
+            RECENT,
             new Flags(Flags.Flag.SEEN));
         // sentDate: Thu, 04 Jun 2015 07:36:08 +0000
         // Internal date : 2014/07/02 00:00:00.000
@@ -158,7 +160,7 @@ public abstract class AbstractMessageSearchIndexTest {
             ClassLoader.getSystemResourceAsStream("eml/htmlMail.eml"),
             new Date(1404252000000L),
             session,
-            false,
+            NOT_RECENT,
             new Flags());
         // sentDate: Thu, 4 Jun 2015 06:08:41 +0200
         // Internal date : 2014/08/02 00:00:00.000
@@ -166,7 +168,7 @@ public abstract class AbstractMessageSearchIndexTest {
             ClassLoader.getSystemResourceAsStream("eml/mail.eml"),
             new Date(1406930400000L),
             session,
-            true,
+            RECENT,
             new Flags("Hello"));
         // sentDate: Thu, 4 Jun 2015 06:08:41 +0200
         // Internal date : 2014/08/02 00:00:00.000
@@ -174,34 +176,34 @@ public abstract class AbstractMessageSearchIndexTest {
             ClassLoader.getSystemResourceAsStream("eml/mail.eml"),
             new Date(1406930400000L),
             session,
-            true,
+            RECENT,
             new Flags(Flags.Flag.SEEN));
         m9 = inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/frnog.eml"),
             new Date(1409608800000L),
             session,
-            true,
+            RECENT,
             new Flags("Hello you"));
 
         mailWithAttachment = myFolderMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"),
             new Date(1409608900000L),
             session,
-            true,
+            RECENT,
             new Flags("Hello you"));
 
         mailWithInlinedAttachment = myFolderMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachment.eml"),
             new Date(1409608900000L),
             session,
-            true,
+            RECENT,
             new Flags("Hello you"));
 
         m10 = otherInboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/mail1.eml"),
             new Date(1391295600000L),
             otherSession,
-            true,
+            RECENT,
             new Flags());
         await();
     }
