@@ -284,15 +284,15 @@ public class SearchQuery implements Serializable {
      * 
      * @param date
      *            given date
-     * @param res
+     * @param dateResolution
      *            the date resolution, either {@link DateResolution#Year},
      *            {@link DateResolution#Month}, {@link DateResolution#Day},
      *            {@link DateResolution#Hour}, {@link DateResolution#Minute} or
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static Criterion internalDateAfter(Date date, DateResolution res) {
-        return new InternalDateCriterion(new DateOperator(DateComparator.AFTER, date, res));
+    public static Criterion internalDateAfter(Date date, DateResolution dateResolution) {
+        return new InternalDateCriterion(new DateOperator(DateComparator.AFTER, date, dateResolution));
     }
 
     /**
@@ -300,15 +300,15 @@ public class SearchQuery implements Serializable {
      * 
      * @param date
      *            given date
-     * @param res
+     * @param dateResolution
      *            the date resolution, either {@link DateResolution#Year},
      *            {@link DateResolution#Month}, {@link DateResolution#Day},
      *            {@link DateResolution#Hour}, {@link DateResolution#Minute} or
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static Criterion internalDateOn(Date date, DateResolution res) {
-        return new InternalDateCriterion(new DateOperator(DateComparator.ON, date, res));
+    public static Criterion internalDateOn(Date date, DateResolution dateResolution) {
+        return new InternalDateCriterion(new DateOperator(DateComparator.ON, date, dateResolution));
     }
 
     /**
@@ -317,15 +317,15 @@ public class SearchQuery implements Serializable {
      * 
      * @param date
      *            given date
-     * @param res
+     * @param dateResolution
      *            the date resolution, either {@link DateResolution#Year},
      *            {@link DateResolution#Month}, {@link DateResolution#Day},
      *            {@link DateResolution#Hour}, {@link DateResolution#Minute} or
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static Criterion internalDateBefore(Date date, DateResolution res) {
-        return new InternalDateCriterion(new DateOperator(DateComparator.BEFORE, date, res));
+    public static Criterion internalDateBefore(Date date, DateResolution dateResolution) {
+        return new InternalDateCriterion(new DateOperator(DateComparator.BEFORE, date, dateResolution));
     }
 
     /**
@@ -334,15 +334,15 @@ public class SearchQuery implements Serializable {
      * 
      * @param date
      *            given date
-     * @param res
+     * @param dateResolution
      *            the date resolution, either {@link DateResolution#Year},
      *            {@link DateResolution#Month}, {@link DateResolution#Day},
      *            {@link DateResolution#Hour}, {@link DateResolution#Minute} or
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static Criterion sentDateAfter(Date date, DateResolution res) {
-        return new SentDateCriterion(new DateOperator(DateComparator.AFTER, date, res));
+    public static Criterion sentDateAfter(Date date, DateResolution dateResolution) {
+        return new SentDateCriterion(new DateOperator(DateComparator.AFTER, date, dateResolution));
     }
 
     /**
@@ -350,15 +350,15 @@ public class SearchQuery implements Serializable {
      * 
      * @param date
      *            given date
-     * @param res
+     * @param dateResolution
      *            the date resolution, either {@link DateResolution#Year},
      *            {@link DateResolution#Month}, {@link DateResolution#Day},
      *            {@link DateResolution#Hour}, {@link DateResolution#Minute} or
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static Criterion sentDateOn(Date date, DateResolution res) {
-        return new SentDateCriterion(new DateOperator(DateComparator.ON, date, res));
+    public static Criterion sentDateOn(Date date, DateResolution dateResolution) {
+        return new SentDateCriterion(new DateOperator(DateComparator.ON, date, dateResolution));
     }
 
     /**
@@ -367,15 +367,15 @@ public class SearchQuery implements Serializable {
      * 
      * @param date
      *            given date
-     * @param res
+     * @param dateResolution
      *            the date resolution, either {@link DateResolution#Year},
      *            {@link DateResolution#Month}, {@link DateResolution#Day},
      *            {@link DateResolution#Hour}, {@link DateResolution#Minute} or
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static Criterion sentDateBefore(Date date, DateResolution res) {
-        return new SentDateCriterion(new DateOperator(DateComparator.BEFORE, date, res));
+    public static Criterion sentDateBefore(Date date, DateResolution dateResolution) {
+        return new SentDateCriterion(new DateOperator(DateComparator.BEFORE, date, dateResolution));
     }
 
     /**
@@ -387,15 +387,15 @@ public class SearchQuery implements Serializable {
      *            name of the header whose value will be compared, not null
      * @param date
      *            given date
-     * @param res
+     * @param dateResolution
      *            the date resolution, either {@link DateResolution#Year},
      *            {@link DateResolution#Month}, {@link DateResolution#Day},
      *            {@link DateResolution#Hour}, {@link DateResolution#Minute} or
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static Criterion headerDateAfter(String headerName, Date date, DateResolution res) {
-        return new HeaderCriterion(headerName, new DateOperator(DateComparator.AFTER, date, res));
+    public static Criterion headerDateAfter(String headerName, Date date, DateResolution dateResolution) {
+        return new HeaderCriterion(headerName, new DateOperator(DateComparator.AFTER, date, dateResolution));
     }
 
     /**
@@ -407,15 +407,15 @@ public class SearchQuery implements Serializable {
      *            name of the header whose value will be compared, not null
      * @param date
      *            given date
-     * @param res
+     * @param dateResolution
      *            the date resolution, either {@link DateResolution#Year},
      *            {@link DateResolution#Month}, {@link DateResolution#Day},
      *            {@link DateResolution#Hour}, {@link DateResolution#Minute} or
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static Criterion headerDateOn(String headerName, Date date, DateResolution res) {
-        return new HeaderCriterion(headerName, new DateOperator(DateComparator.ON, date, res));
+    public static Criterion headerDateOn(String headerName, Date date, DateResolution dateResolution) {
+        return new HeaderCriterion(headerName, new DateOperator(DateComparator.ON, date, dateResolution));
     }
 
     /**
@@ -427,15 +427,15 @@ public class SearchQuery implements Serializable {
      *            name of the header whose value will be compared, not null
      * @param date
      *            given date
-     * @param res
+     * @param dateResolution
      *            the date resolution, either {@link DateResolution#Year},
      *            {@link DateResolution#Month}, {@link DateResolution#Day},
      *            {@link DateResolution#Hour}, {@link DateResolution#Minute} or
      *            {@link DateResolution#Second}
      * @return <code>Criterion</code>, not null
      */
-    public static Criterion headerDateBefore(String headerName, Date date, DateResolution res) {
-        return new HeaderCriterion(headerName, new DateOperator(DateComparator.BEFORE, date, res));
+    public static Criterion headerDateBefore(String headerName, Date date, DateResolution dateResolution) {
+        return new HeaderCriterion(headerName, new DateOperator(DateComparator.BEFORE, date, dateResolution));
     }
 
     /**
@@ -1852,13 +1852,13 @@ public class SearchQuery implements Serializable {
 
         private final Date date;
 
-        private final DateResolution res;
+        private final DateResolution dateResolution;
 
-        public DateOperator(DateComparator type, Date date, DateResolution res) {
+        public DateOperator(DateComparator type, Date date, DateResolution dateResolution) {
             super();
             this.type = type;
             this.date = date;
-            this.res = res;
+            this.dateResolution = dateResolution;
         }
 
         public Date getDate() {
@@ -1866,7 +1866,7 @@ public class SearchQuery implements Serializable {
         }
 
         public DateResolution getDateResultion() {
-            return res;
+            return dateResolution;
         }
 
         /**
@@ -1881,7 +1881,7 @@ public class SearchQuery implements Serializable {
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(res, type);
+            return Objects.hashCode(dateResolution, type);
         }
 
 
@@ -1890,7 +1890,7 @@ public class SearchQuery implements Serializable {
             if (obj instanceof DateOperator) {
                 DateOperator that = (DateOperator) obj;
 
-                return Objects.equal(this.res, that.res)
+                return Objects.equal(this.dateResolution, that.dateResolution)
                     && Objects.equal(this.type, that.type);
             }
             return false;
@@ -1900,7 +1900,7 @@ public class SearchQuery implements Serializable {
         public String toString() {
             return MoreObjects.toStringHelper(this)
                 .add("date", date)
-                .add("res", res)
+                .add("dateResolution", dateResolution)
                 .add("type", type)
                 .toString();
         }
