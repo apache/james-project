@@ -1269,6 +1269,10 @@ public class SearchQuery implements Serializable {
             return operator;
         }
 
+        public HeaderCriterion toHeaderCriterion() {
+            return new HeaderCriterion("Date", operator);
+        }
+
         @Override
         public int hashCode() {
             return Objects.hashCode(operator);
