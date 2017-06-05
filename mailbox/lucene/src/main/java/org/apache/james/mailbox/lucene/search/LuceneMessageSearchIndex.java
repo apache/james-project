@@ -1068,63 +1068,53 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             case Arrival:
                 if (reverse) {
                     return ARRIVAL_MAILBOX_SORT_REVERSE;
-                } else {
-                    return ARRIVAL_MAILBOX_SORT;
                 }
+                return ARRIVAL_MAILBOX_SORT;
             case SentDate:
                 if (reverse) {
                     return SENT_DATE_SORT_REVERSE;
-                } else {
-                    return SENT_DATE_SORT;
                 }
+                return SENT_DATE_SORT;
             case MailboxCc:
                 if (reverse) {
                     return FIRST_CC_MAILBOX_SORT_REVERSE;
-                } else {
-                    return FIRST_CC_MAILBOX_SORT;
                 }
+                return FIRST_CC_MAILBOX_SORT;
             case MailboxFrom:
                 if (reverse) {
                     return FIRST_FROM_MAILBOX_SORT_REVERSE;
-                } else {
-                    return FIRST_FROM_MAILBOX_SORT;
                 }
+                return FIRST_FROM_MAILBOX_SORT;
             case Size:
                 if (reverse) {
                     return SIZE_SORT_REVERSE;
-                } else {
-                    return SIZE_SORT;
                 }
+                return SIZE_SORT;
             case BaseSubject:
                 if (reverse) {
                     return BASE_SUBJECT_SORT_REVERSE;
-                } else {
-                    return BASE_SUBJECT_SORT;
                 }
+                return BASE_SUBJECT_SORT;
             case MailboxTo:
                 if (reverse) {
                     return FIRST_TO_MAILBOX_SORT_REVERSE;
-                } else {
-                    return FIRST_TO_MAILBOX_SORT;
                 }
+                return FIRST_TO_MAILBOX_SORT;
             case Uid:
                 if (reverse) {
                     return UID_SORT_REVERSE;
-                } else {
-                    return UID_SORT;
                 }
+                return UID_SORT;
             case DisplayFrom:
                 if (reverse) {
                     return FIRST_FROM_MAILBOX_DISPLAY_SORT_REVERSE;
-                } else {
-                    return FIRST_FROM_MAILBOX_DISPLAY_SORT;
                 }
+                return FIRST_FROM_MAILBOX_DISPLAY_SORT;
             case DisplayTo:
                 if (reverse) {
                     return FIRST_TO_MAILBOX_DISPLAY_SORT_REVERSE;
-                } else {
-                    return FIRST_TO_MAILBOX_DISPLAY_SORT;
                 }
+                return FIRST_TO_MAILBOX_DISPLAY_SORT;
             default:
                 return null;
         }
