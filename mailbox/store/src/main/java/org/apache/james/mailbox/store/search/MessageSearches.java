@@ -201,8 +201,6 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
             result = matches((SearchQuery.AttachmentCriterion) criterion, message);
         } else if (criterion instanceof SearchQuery.ModSeqCriterion) {
             result = matches((SearchQuery.ModSeqCriterion) criterion, message);
-        } else if (criterion instanceof SearchQuery.SentDateCriterion) {
-            result = matches((SearchQuery.SentDateCriterion) criterion, message);
         } else {
             throw new UnsupportedSearchException();
         }
@@ -650,34 +648,6 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
     private Calendar getGMT() {
         return Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.ENGLISH);
-    }
-
-    private boolean matches(SearchQuery.SentDateCriterion criterion, MailboxMessage message) throws MailboxException {
-        SearchQuery.DateOperator operator = criterion.getOperator();
-        try {
-            return matchesSentDate(operator, message);
-        } catch (IOException e) {
-            throw new MailboxException("Can not read header Date", e);
-        } catch (ParseException e) {
-            throw new MailboxException("Can not parse header Date", e);
-        }
-    }
-
-    private boolean matchesSentDate(SearchQuery.DateOperator operator, MailboxMessage message) throws MailboxException, IOException, ParseException {
-        Date date = operator.getDate();
-        DateResolution dateResolution = operator.getDateResultion();
-        Date sentDate = toISODate(headerValue("Date", message));
-        SearchQuery.DateComparator type = operator.getType();
-        switch (type) {
-            case ON:
-                return on(sentDate, date, dateResolution);
-            case BEFORE:
-                return before(sentDate, date, dateResolution);
-            case AFTER:
-                return after(sentDate, date, dateResolution);
-            default:
-                throw new UnsupportedSearchException();
-        }
     }
 
 }

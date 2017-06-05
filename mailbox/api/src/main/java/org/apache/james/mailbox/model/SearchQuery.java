@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class SearchQuery implements Serializable {
     private static final long serialVersionUID = 1L;
+    private static final String DATE_HEADER_NAME = "Date";
 
     /**
      * The Resolution which should get used for {@link Date} searches
@@ -344,7 +345,7 @@ public class SearchQuery implements Serializable {
      * @return <code>Criterion</code>, not null
      */
     public static Criterion sentDateAfter(Date date, DateResolution dateResolution) {
-        return new SentDateCriterion(new DateOperator(DateComparator.AFTER, date, dateResolution));
+        return headerDateAfter(DATE_HEADER_NAME, date, dateResolution);
     }
 
     /**
@@ -360,7 +361,7 @@ public class SearchQuery implements Serializable {
      * @return <code>Criterion</code>, not null
      */
     public static Criterion sentDateOn(Date date, DateResolution dateResolution) {
-        return new SentDateCriterion(new DateOperator(DateComparator.ON, date, dateResolution));
+        return headerDateOn(DATE_HEADER_NAME, date, dateResolution);
     }
 
     /**
@@ -377,7 +378,7 @@ public class SearchQuery implements Serializable {
      * @return <code>Criterion</code>, not null
      */
     public static Criterion sentDateBefore(Date date, DateResolution dateResolution) {
-        return new SentDateCriterion(new DateOperator(DateComparator.BEFORE, date, dateResolution));
+        return headerDateBefore(DATE_HEADER_NAME, date, dateResolution);
     }
 
     /**
@@ -1239,49 +1240,6 @@ public class SearchQuery implements Serializable {
         public boolean equals(Object obj) {
             if (obj instanceof InternalDateCriterion) {
                 InternalDateCriterion that = (InternalDateCriterion) obj;
-
-                return Objects.equal(this.operator, that.operator);
-            }
-            return false;
-        }
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                .add("operator", operator)
-                .toString();
-        }
-    }
-
-    /**
-     * Filters on the sent date.
-     */
-    public static class SentDateCriterion extends Criterion {
-        private static final long serialVersionUID = 1L;
-
-        private final DateOperator operator;
-
-        public SentDateCriterion(DateOperator operator) {
-            this.operator = operator;
-        }
-
-        public DateOperator getOperator() {
-            return operator;
-        }
-
-        public HeaderCriterion toHeaderCriterion() {
-            return new HeaderCriterion("Date", operator);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(operator);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof SentDateCriterion) {
-                SentDateCriterion that = (SentDateCriterion) obj;
 
                 return Objects.equal(this.operator, that.operator);
             }

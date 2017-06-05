@@ -1267,9 +1267,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return createConjunctionQuery(crit, inMailboxes, recentUids);
         } else if (criterion instanceof SearchQuery.ModSeqCriterion) {
             return createModSeqQuery((SearchQuery.ModSeqCriterion) criterion);
-        } else if (criterion instanceof SearchQuery.SentDateCriterion) {
-            SearchQuery.SentDateCriterion sentDateCriterion = (SearchQuery.SentDateCriterion) criterion;
-            return createHeaderQuery(sentDateCriterion.toHeaderCriterion());
         }
         throw new UnsupportedSearchException();
 
