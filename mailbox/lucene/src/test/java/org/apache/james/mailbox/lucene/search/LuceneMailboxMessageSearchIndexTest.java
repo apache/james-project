@@ -21,7 +21,6 @@ package org.apache.james.mailbox.lucene.search;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,7 +43,9 @@ import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
+import org.apache.james.mailbox.model.SearchQuery.Sort;
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
+import org.apache.james.mailbox.model.SearchQuery.Sort.Order;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
@@ -54,6 +55,8 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.lucene.store.RAMDirectory;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
 
 public class LuceneMailboxMessageSearchIndexTest {
 
@@ -457,171 +460,171 @@ public class LuceneMailboxMessageSearchIndexTest {
     
     @Test
     public void uidReverseSortShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.Uid, true)));
-        query.andCriteria(SearchQuery.all());
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.Uid, Order.REVERSE)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid4, uid3, uid1);
     }
     
     @Test
     public void sortOnSentDateShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.SentDate, false)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.SentDate, Order.NATURAL)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4, uid1);
     }
     
     @Test
     public void reverseSortOnSentDateShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.SentDate, true)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.SentDate, Order.REVERSE)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid4, uid3);
     }
 
     @Test
     public void sortOnSubjectShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.BaseSubject, false)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.BaseSubject, Order.NATURAL)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid1, uid4);
     }
     
     @Test
     public void reverseSortOnSubjectShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.BaseSubject, true)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.BaseSubject, Order.REVERSE)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid4, uid1, uid3);
     }
     
     @Test
     public void sortOnMailboxFromShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.MailboxFrom, false)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.MailboxFrom, Order.NATURAL)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4, uid1);
     }
     
     @Test
     public void reverseSortOnMailboxFromShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.MailboxFrom, true)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.MailboxFrom, Order.REVERSE)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid4, uid3);
     }
     
     @Test
     public void sortOnMailboxCCShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.MailboxCc, false)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.MailboxCc, Order.NATURAL)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid3, uid4);
     }
     
     @Test
     public void reverseSortOnMailboxCCShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.MailboxCc, true)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.MailboxCc, Order.REVERSE)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4, uid1);
     }
     
     @Test
     public void sortOnMailboxToShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.MailboxTo, false)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.MailboxTo, Order.NATURAL)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid4, uid1, uid3);
     }
     
     @Test
     public void reverseSortOnMailboxToShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.MailboxTo, true)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.MailboxTo, Order.REVERSE)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid1, uid4);
     }
     
     @Test
     public void sortOnDisplayToShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.DisplayTo, false)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.DisplayTo, Order.NATURAL)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid4, uid1, uid3);
     }
     
     @Test
     public void reverseSortOnDisplayToShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.DisplayTo, true)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.DisplayTo, Order.REVERSE)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid1, uid4);
     }
     
     @Test
     public void sortOnDisplayFromShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.DisplayFrom, false)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.DisplayFrom, Order.NATURAL)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4, uid1);
     }
     
     @Test
     public void reverseSortOnDisplayFromShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.DisplayFrom, true)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.DisplayFrom, Order.REVERSE)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid4, uid3);
     }
     
     @Test
     public void sortOnArrivalDateShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.Arrival, false)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, Order.NATURAL)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid1, uid4);
     }
     
     @Test
     public void reverseSortOnArrivalDateShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.Arrival, true)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, Order.REVERSE)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid4, uid1, uid3);
     }
     
     @Test
     public void sortOnSizeShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.Size, false)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.Size, Order.NATURAL)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4, uid1);
     }
     
     @Test
     public void reverseSortOnSizeShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
-        query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.Size, true)));
+        SearchQuery query = new SearchQuery(SearchQuery.all());
+        query.setSorts(ImmutableList.of(new Sort(SortClause.Size, Order.REVERSE)));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid3, uid4);
     }
@@ -630,6 +633,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void notOperatorShouldReverseMatching() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.not(SearchQuery.uid(new SearchQuery.UidRange[] { new SearchQuery.UidRange(uid1)})));
+
         Iterator<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4);
     }

@@ -22,6 +22,9 @@ package org.apache.james.mailbox.store.search;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.model.SearchQuery.Sort;
+import org.apache.james.mailbox.model.SearchQuery.Sort.Order;
+import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
 import org.apache.james.mailbox.store.search.comparator.BaseSubjectComparator;
 import org.apache.james.mailbox.store.search.comparator.CombinedComparator;
 import org.apache.james.mailbox.store.search.comparator.HeaderDisplayComparator;
@@ -40,7 +43,6 @@ import com.google.common.collect.ImmutableList;
 
 public class CombinedComparatorTest {
 
-    public static final boolean REVERSE = true;
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
@@ -61,84 +63,84 @@ public class CombinedComparatorTest {
     @Test
     @SuppressWarnings("unchecked")
     public void createShouldConvertInternalDate() {
-        assertThat(CombinedComparator.create(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Arrival))).getComparators())
+        assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.Arrival))).getComparators())
             .containsOnly(InternalDateComparator.INTERNALDATE);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void createShouldConvertCc() {
-        assertThat(CombinedComparator.create(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.MailboxCc))).getComparators())
+        assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.MailboxCc))).getComparators())
             .containsOnly(HeaderMailboxComparator.CC_COMPARATOR);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void createShouldConvertFrom() {
-        assertThat(CombinedComparator.create(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.MailboxFrom))).getComparators())
+        assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.MailboxFrom))).getComparators())
             .containsOnly(HeaderMailboxComparator.FROM_COMPARATOR);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void createShouldConvertTo() {
-        assertThat(CombinedComparator.create(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.MailboxTo))).getComparators())
+        assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.MailboxTo))).getComparators())
             .containsOnly(HeaderMailboxComparator.TO_COMPARATOR);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void createShouldConvertSize() {
-        assertThat(CombinedComparator.create(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Size))).getComparators())
+        assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.Size))).getComparators())
             .containsOnly(SizeComparator.SIZE);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void createShouldConvertBaseSubject() {
-        assertThat(CombinedComparator.create(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.BaseSubject))).getComparators())
+        assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.BaseSubject))).getComparators())
             .containsOnly(BaseSubjectComparator.BASESUBJECT);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void createShouldConvertUid() {
-        assertThat(CombinedComparator.create(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Uid))).getComparators())
+        assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.Uid))).getComparators())
             .containsOnly(UidComparator.UID);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void createShouldConvertSentDate() {
-        assertThat(CombinedComparator.create(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.SentDate))).getComparators())
+        assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.SentDate))).getComparators())
             .containsOnly(SentDateComparator.SENTDATE);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void createShouldConvertDisplayTo() {
-        assertThat(CombinedComparator.create(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.DisplayTo))).getComparators())
+        assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.DisplayTo))).getComparators())
             .containsOnly(HeaderDisplayComparator.TO_COMPARATOR);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void createShouldConvertDisplayFrom() {
-        assertThat(CombinedComparator.create(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.DisplayFrom))).getComparators())
+        assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.DisplayFrom))).getComparators())
             .containsOnly(HeaderDisplayComparator.FROM_COMPARATOR);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void createShouldConvertId() {
-        assertThat(CombinedComparator.create(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Id))).getComparators())
+        assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.Id))).getComparators())
             .containsOnly(MessageIdComparator.MESSAGE_ID_COMPARATOR);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void createShouldReverse() {
-        assertThat(CombinedComparator.create(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.DisplayFrom, REVERSE))).getComparators())
+        assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.DisplayFrom, Order.REVERSE))).getComparators())
             .containsOnly(new ReverseComparator(HeaderDisplayComparator.FROM_COMPARATOR));
     }
 }

@@ -71,6 +71,11 @@ public class SearchQuery implements Serializable {
     public static class Sort implements Serializable {
         private static final long serialVersionUID = 1L;
 
+        public enum Order {
+            REVERSE,
+            NATURAL
+        }
+
         /**
          * Specify on what to sort
          */
@@ -158,21 +163,21 @@ public class SearchQuery implements Serializable {
             Id
         }
 
-        private final boolean reverse;
+        private final Order order;
         private final SortClause sortClause;
 
-        public Sort(SortClause sortClause, boolean reverse) {
-            this.reverse = reverse;
+        public Sort(SortClause sortClause, Order order) {
+            this.order = order;
             this.sortClause = sortClause;
         }
 
         /**
-         * Create a new {@link Sort} which is NOT {@link #reverse}
+         * Create a new {@link Sort} which is NOT {@link #order}
          * 
          * @param sortClause
          */
         public Sort(SortClause sortClause) {
-            this(sortClause, false);
+            this(sortClause, Order.NATURAL);
         }
 
         /**
@@ -181,7 +186,7 @@ public class SearchQuery implements Serializable {
          * @return reverse
          */
         public boolean isReverse() {
-            return reverse;
+            return order == Order.REVERSE;
         }
 
         /**
@@ -198,14 +203,14 @@ public class SearchQuery implements Serializable {
             if (o instanceof Sort) {
                 Sort that = (Sort) o;
                 return Objects.equal(this.sortClause, that.sortClause)
-                    && Objects.equal(this.reverse, that.reverse);
+                    && Objects.equal(this.order, that.order);
             }
             return false;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(sortClause, reverse);
+            return Objects.hashCode(sortClause, order);
         }
     }
 
@@ -760,7 +765,7 @@ public class SearchQuery implements Serializable {
 
     private final List<Criterion> criterias;
 
-    private List<Sort> sorts = Collections.singletonList(new Sort(Sort.SortClause.Uid, false));
+    private List<Sort> sorts = Collections.singletonList(new Sort(Sort.SortClause.Uid, Sort.Order.NATURAL));
 
     public void andCriteria(Criterion crit) {
         criterias.add(crit);

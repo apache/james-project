@@ -23,7 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.model.SearchQuery.Sort;
+import org.apache.james.mailbox.model.SearchQuery.Sort.Order;
+import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -33,8 +35,6 @@ import com.google.common.collect.Lists;
 
 public class SortConverterTest {
 
-    public static final boolean REVERSE = true;
-    public static final boolean NOT_REVERSE = !REVERSE;
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
@@ -72,19 +72,19 @@ public class SortConverterTest {
     @Test
     public void convertToSortsShouldSupportDate() {
         assertThat(SortConverter.convertToSorts(ImmutableList.of("date desc")))
-            .containsExactly(new SearchQuery.Sort(SearchQuery.Sort.SortClause.SentDate, REVERSE));
+            .containsExactly(new Sort(SortClause.SentDate, Order.REVERSE));
     }
 
     @Test
     public void convertToSortsShouldSupportId() {
         assertThat(SortConverter.convertToSorts(ImmutableList.of("id desc")))
-            .containsExactly(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Id, REVERSE));
+            .containsExactly(new Sort(SortClause.Id, Order.REVERSE));
     }
 
     @Test
     public void convertToSortsShouldBeDescWhenNoOrderClause() {
         assertThat(SortConverter.convertToSorts(ImmutableList.of("date")))
-            .containsExactly(new SearchQuery.Sort(SearchQuery.Sort.SortClause.SentDate, REVERSE));
+            .containsExactly(new Sort(SortClause.SentDate, Order.REVERSE));
     }
 
     @Test
@@ -96,7 +96,7 @@ public class SortConverterTest {
     @Test
     public void convertToSortsShouldSupportAscOrder() {
         assertThat(SortConverter.convertToSorts(ImmutableList.of("date asc")))
-            .containsExactly(new SearchQuery.Sort(SearchQuery.Sort.SortClause.SentDate, NOT_REVERSE));
+            .containsExactly(new Sort(SortClause.SentDate, Order.NATURAL));
     }
 
     @Test
@@ -108,7 +108,7 @@ public class SortConverterTest {
     @Test
     public void convertToSortsShouldSupportMultipleSorts() {
         assertThat(SortConverter.convertToSorts(ImmutableList.of("date asc", "id desc")))
-            .containsExactly(new SearchQuery.Sort(SearchQuery.Sort.SortClause.SentDate, NOT_REVERSE),
-                new SearchQuery.Sort(SearchQuery.Sort.SortClause.Id, REVERSE));
+            .containsExactly(new Sort(SortClause.SentDate, Order.NATURAL),
+                new Sort(SortClause.Id, Order.REVERSE));
     }
 }

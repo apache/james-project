@@ -39,6 +39,7 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.mailbox.model.SearchQuery.Sort;
+import org.apache.james.mailbox.model.SearchQuery.Sort.Order;
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
@@ -61,7 +62,6 @@ public abstract class AbstractMessageSearchIndexTest {
     public static final long LIMIT = 100L;
     public static final boolean RECENT = true;
     public static final boolean NOT_RECENT = false;
-    public static final boolean REVERSE = true;
 
     protected MessageSearchIndex messageSearchIndex;
     protected StoreMailboxManager storeMailboxManager;
@@ -629,7 +629,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1433408400000L),
             DateResolution.Second));
         // Date : 2015/06/04 11:00:00.000 ( Paris time zone )
-        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, REVERSE)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, Order.REVERSE)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(m3.getUid(), m2.getUid());
@@ -641,7 +641,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1433109600000L),
             DateResolution.Day));
         // Date : 2015/06/01 00:00:00.000 ( Paris time zone )
-        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, REVERSE)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, Order.REVERSE)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(m5.getUid());
@@ -653,7 +653,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1433224800000L),
             DateResolution.Day));
         // Date : 2015/06/02 08:00:00.000 ( Paris time zone )
-        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, REVERSE)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, Order.REVERSE)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(m4.getUid(), m9.getUid());
@@ -818,7 +818,7 @@ public abstract class AbstractMessageSearchIndexTest {
     @Test
     public void revertSortingShouldReturnElementsInAReversedOrder() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
-        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, REVERSE)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, Order.REVERSE)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m9.getUid(), m8.getUid(), m7.getUid(), m6.getUid(), m4.getUid(), m5.getUid(), m3.getUid(), m2.getUid(), m1.getUid());
@@ -829,7 +829,7 @@ public abstract class AbstractMessageSearchIndexTest {
         SearchQuery searchQuery = new SearchQuery(
             SearchQuery.headerDateAfter("sentDate", new Date(1433408400000L), DateResolution.Second));
         // Date : 2015/06/04 11:00:00.000 ( Paris time zone )
-        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, REVERSE)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, Order.REVERSE)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(m3.getUid(), m2.getUid());
@@ -840,7 +840,7 @@ public abstract class AbstractMessageSearchIndexTest {
         SearchQuery searchQuery = new SearchQuery(
             SearchQuery.headerDateBefore("sentDate", new Date(1433109600000L), DateResolution.Day));
         // Date : 2015/06/01 00:00:00.000 ( Paris time zone )
-        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, REVERSE)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, Order.REVERSE)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(m5.getUid());
@@ -851,7 +851,7 @@ public abstract class AbstractMessageSearchIndexTest {
         SearchQuery searchQuery = new SearchQuery(
             SearchQuery.headerDateOn("sentDate", new Date(1433224800000L), DateResolution.Day));
         // Date : 2015/06/02 08:00:00.000 ( Paris time zone )
-        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, REVERSE)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, Order.REVERSE)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(m4.getUid(), m9.getUid());
@@ -897,7 +897,7 @@ public abstract class AbstractMessageSearchIndexTest {
     public void sortOnToShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
-        searchQuery.setSorts(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.MailboxTo)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.MailboxTo)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m5.getUid(), m2.getUid(), m3.getUid(), m4.getUid());
@@ -911,7 +911,7 @@ public abstract class AbstractMessageSearchIndexTest {
     public void sortOnSubjectShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
-        searchQuery.setSorts(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.BaseSubject)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.BaseSubject)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m4.getUid(), m3.getUid(), m2.getUid(), m5.getUid());
@@ -925,7 +925,7 @@ public abstract class AbstractMessageSearchIndexTest {
     public void sortOnSizeShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
-        searchQuery.setSorts(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Size)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Size)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m2.getUid(), m3.getUid(), m5.getUid(), m4.getUid());
@@ -939,7 +939,7 @@ public abstract class AbstractMessageSearchIndexTest {
     public void sortOnDisplayFromShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
-        searchQuery.setSorts(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.DisplayFrom)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.DisplayFrom)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m4.getUid(), m3.getUid(), m5.getUid(), m2.getUid());
@@ -953,7 +953,7 @@ public abstract class AbstractMessageSearchIndexTest {
     public void sortOnDisplayToShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
-        searchQuery.setSorts(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.DisplayTo)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.DisplayTo)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m3.getUid(), m2.getUid(), m4.getUid(), m5.getUid());
@@ -967,7 +967,7 @@ public abstract class AbstractMessageSearchIndexTest {
     public void sortOnSentDateShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
-        searchQuery.setSorts(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.SentDate)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.SentDate)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m5.getUid(), m4.getUid(), m2.getUid(), m3.getUid());
@@ -981,7 +981,7 @@ public abstract class AbstractMessageSearchIndexTest {
     public void sortOnIdShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
-        searchQuery.setSorts(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Uid)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Uid)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m2.getUid(), m3.getUid(), m4.getUid(), m5.getUid());
@@ -1104,7 +1104,7 @@ public abstract class AbstractMessageSearchIndexTest {
     @Test
     public void sortShouldNotDiscardResultWhenSearchingFieldIsIdentical() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
-        searchQuery.setSorts(ImmutableList.of(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Arrival)));
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival)));
 
         List<MessageId> actual = messageSearchIndex.search(session, MultimailboxesSearchQuery.from(searchQuery).build(), LIMIT);
 

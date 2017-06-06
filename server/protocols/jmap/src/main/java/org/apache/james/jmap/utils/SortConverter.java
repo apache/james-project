@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.model.SearchQuery.Sort;
+import org.apache.james.mailbox.model.SearchQuery.Sort.Order;
+import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
@@ -35,19 +38,19 @@ public class SortConverter {
     private static final String DESC_ORDERING = "desc";
     private static final String ASC_ORDERING = "asc";
 
-    private static final Map<String, SearchQuery.Sort.SortClause> SORT_CLAUSE_MAP = ImmutableMap.of(
-        "date", SearchQuery.Sort.SortClause.SentDate,
-        "id", SearchQuery.Sort.SortClause.Id);
+    private static final Map<String, SortClause> SORT_CLAUSE_MAP = ImmutableMap.of(
+        "date", SortClause.SentDate,
+        "id", SortClause.Id);
 
 
-    public static List<SearchQuery.Sort> convertToSorts(List<String> jmapSorts) {
+    public static List<Sort> convertToSorts(List<String> jmapSorts) {
         Preconditions.checkNotNull(jmapSorts);
         return jmapSorts.stream()
             .map(SortConverter::toSort)
             .collect(Guavate.toImmutableList());
     }
 
-    private static SearchQuery.Sort toSort(String jmapSort) {
+    private static Sort toSort(String jmapSort) {
         Preconditions.checkNotNull(jmapSort);
         List<String> splitToList = Splitter.on(SEPARATOR).splitToList(jmapSort);
         checkField(splitToList);
@@ -55,23 +58,23 @@ public class SortConverter {
             isReverse(splitToList));
     }
 
-    private static SearchQuery.Sort.SortClause getSortClause(String field) {
+    private static SortClause getSortClause(String field) {
         if (! SORT_CLAUSE_MAP.containsKey(field)) {
             throw new IllegalArgumentException("Unknown sorting field: " + field + " should be one of " + SORT_CLAUSE_MAP.keySet());
         }
         return SORT_CLAUSE_MAP.get(field);
     }
 
-    private static boolean isReverse(List<String> splitList) {
+    private static Order isReverse(List<String> splitList) {
         if (splitList.size() == 1) {
-            return true;
+            return Order.REVERSE;
         }
         String order = splitList.get(1);
         switch (order) {
             case DESC_ORDERING:
-                return true;
+                return Order.REVERSE;
             case ASC_ORDERING:
-                return false;
+                return Order.NATURAL;
         }
         throw new IllegalArgumentException("Unknown sorting order: " + order + " should be one of [asc, desc]");
     }
