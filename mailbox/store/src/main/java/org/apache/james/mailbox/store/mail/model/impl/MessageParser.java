@@ -69,6 +69,25 @@ public class MessageParser {
             ContentDispositionField.DISPOSITION_TYPE_ATTACHMENT.toLowerCase(Locale.US),
             ContentDispositionField.DISPOSITION_TYPE_INLINE.toLowerCase(Locale.US));
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageParser.class);
+    private static final Function<String, Optional<Cid>> STRING_TO_CID_FUNCTION = new Function<String, Optional<Cid>>() {
+        @Override
+        public Optional<Cid> apply(String cid) {
+            try {
+                return Optional.of(Cid.from(cid));
+            } catch (IllegalArgumentException e) {
+                return Optional.absent();
+            }
+        }
+    };
+
+    private static final Function<ContentIdField, Optional<Cid>> CONTENT_ID_FIELD_TO_OPTIONAL_CID_FUNCTION = new Function<ContentIdField, Optional<Cid>>() {
+        @Override
+        public Optional<Cid> apply(ContentIdField field) {
+            return Optional.fromNullable(field.getId())
+                    .transform(STRING_TO_CID_FUNCTION)
+                    .or(Optional.<Cid>absent());
+        }
+    };
 
     public List<MessageAttachment> retrieveAttachments(InputStream fullContent) throws MimeException, IOException {
         DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
@@ -178,19 +197,8 @@ public class MessageParser {
     }
 
     private Optional<Cid> cid(Optional<ContentIdField> contentIdField) {
-        return contentIdField.transform(new Function<ContentIdField, Optional<Cid>>() {
-            @Override
-            public Optional<Cid> apply(ContentIdField field) {
-                return Optional.fromNullable(field.getId())
-                        .transform(new Function<String, Cid>() {
-
-                            @Override
-                            public Cid apply(String cid) {
-                                return Cid.from(cid);
-                            }
-                        });
-            }
-        }).or(Optional.<Cid> absent());
+        return contentIdField.transform(CONTENT_ID_FIELD_TO_OPTIONAL_CID_FUNCTION)
+                .or(Optional.<Cid>absent());
     }
 
     private boolean isMultipart(Entity entity) {

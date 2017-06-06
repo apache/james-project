@@ -201,9 +201,23 @@ public class MessageParserTest {
 
     @Test
     public void getAttachmentsShouldRetrieveAttachmentsWhenNoCidForInlined() throws Exception {
-        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/multiAttachmentsWithOneWrongInlinedAttachment.eml"));
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachmentWithNoCid.eml"));
 
-        assertThat(attachments).hasSize(2);
+        assertThat(attachments).hasSize(1);
+    }
+
+    @Test
+    public void getAttachmentsShouldRetrieveAttachmentsWhenEmptyCidForInlined() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachmentWithEmptyCid.eml"));
+
+        assertThat(attachments).hasSize(1);
+    }
+
+    @Test
+    public void getAttachmentsShouldRetrieveAttachmentsWhenBlankCidForInlined() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachmentWithBlankCid.eml"));
+
+        assertThat(attachments).hasSize(1);
     }
 
     @Test
