@@ -221,6 +221,11 @@ public class GetMessagesMethodStepdefs {
         appendMessage(messageName, "eml/mailWithInlinedAttachmentButNoCid.eml");
     }
 
+    @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with inline attachment and blank CID$")
+    public void appendMessageWithInlineAttachmentAndBlankCid(String messageName, String mailbox) throws Throwable {
+        appendMessage(messageName, "eml/mailWithInlinedAttachmentAndBlankCid.eml");
+    }
+
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with HTML body with many empty tags$")
     public void appendMessageWithNoPreview(String messageName, String mailbox) throws Exception {
         appendMessage(messageName, "eml/htmlBodyWithManyEmptyTags.eml");

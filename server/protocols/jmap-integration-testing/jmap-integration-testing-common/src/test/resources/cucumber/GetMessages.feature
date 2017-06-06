@@ -262,6 +262,19 @@ Feature: GetMessages method
       |cid      |null                                       |
       |isInline |true                                      |
 
+  Scenario: Retrieving message with inline attachment and blank CID should convert that inlined attachment to normal attachment
+    Given the user has a message "m1" in "INBOX" mailbox with inline attachment and blank CID
+    When the user ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the hasAttachment of the message is "true"
+    And the list of attachments of the message contains 1 attachments
+    And the first attachment is:
+        |key      | value            |
+        |type     |"application/pdf" |
+        |cid      |null              |
+        |isInline |true              |
+
   Scenario: Preview should be computed even when HTML body contains many tags without content
     Given the user has a message "m1" in "INBOX" mailbox with HTML body with many empty tags
     When the user ask for messages "m1"
