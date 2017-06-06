@@ -19,15 +19,20 @@
 
 package org.apache.james.util.concurrency;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 
 public class ConcurrentTestRunner {
 
@@ -40,6 +45,7 @@ public class ConcurrentTestRunner {
     private class ConcurrentRunnableTask implements Runnable {
         private final int threadNumber;
         private final BiConsumer biConsumer;
+        private Exception exception;
 
         public ConcurrentRunnableTask(int threadNumber, BiConsumer biConsumer) {
             this.threadNumber = threadNumber;
@@ -48,13 +54,18 @@ public class ConcurrentTestRunner {
 
         @Override
         public void run() {
+            exception = null;
             countDownLatch.countDown();
             for (int i = 0; i < operationCount; i++) {
                 try {
                     biConsumer.consume(threadNumber, i);
                 } catch (Exception e) {
                     LOGGER.error("Error caught during concurrent testing", e);
+                    exception = e;
                 }
+            }
+            if (exception != null) {
+                throw Throwables.propagate(exception);
             }
         }
     }
@@ -64,6 +75,7 @@ public class ConcurrentTestRunner {
     private final CountDownLatch countDownLatch;
     private final BiConsumer biConsumer;
     private final ExecutorService executorService;
+    private final List<Future> futures;
 
     public ConcurrentTestRunner(int threadCount, int operationCount, BiConsumer biConsumer) {
         Preconditions.checkArgument(threadCount > 0, "Thread count should be strictly positive");
@@ -74,11 +86,19 @@ public class ConcurrentTestRunner {
         this.countDownLatch = new CountDownLatch(threadCount);
         this.biConsumer = biConsumer;
         this.executorService = Executors.newFixedThreadPool(threadCount);
+        this.futures = new ArrayList<Future>();
     }
 
     public ConcurrentTestRunner run() {
         for (int i = 0; i < threadCount; i++) {
-            executorService.submit(new ConcurrentRunnableTask(i, biConsumer));
+            futures.add(executorService.submit(new ConcurrentRunnableTask(i, biConsumer)));
+        }
+        return this;
+    }
+
+    public ConcurrentTestRunner assertNoException() throws ExecutionException, InterruptedException {
+        for (Future future: futures) {
+            future.get();
         }
         return this;
     }

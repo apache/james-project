@@ -22,6 +22,7 @@ package org.apache.james.util.concurrency;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Rule;
@@ -125,6 +126,103 @@ public class ConcurrentTestRunnerTest {
                 @Override
                 public void consume(int threadNumber, int step) throws Exception {
                     queue.add(threadNumber + ":" + step);
+                }
+            })
+            .run();
+
+        assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(queue).containsOnly("0:0", "0:1", "1:0", "1:1");
+    }
+
+    @Test
+    public void runShouldNotThrowOnExceptions() throws Exception {
+        int operationCount = 2;
+        int threadCount = 2;
+
+        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
+            new ConcurrentTestRunner.BiConsumer() {
+                @Override
+                public void consume(int threadNumber, int step) throws Exception {
+                    throw new RuntimeException();
+                }
+            })
+            .run();
+
+        assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
+    }
+
+    @Test
+    public void noExceptionsShouldNotThrowWhenNoExceptionGenerated() throws Exception {
+        int operationCount = 2;
+        int threadCount = 2;
+
+        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
+            new ConcurrentTestRunner.BiConsumer() {
+                @Override
+                public void consume(int threadNumber, int step) throws Exception {
+
+                }
+            })
+            .run();
+
+        concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS);
+
+        concurrentTestRunner.assertNoException();
+    }
+
+    @Test
+    public void assertNoExceptionShouldThrowOnExceptions() throws Exception {
+        int operationCount = 2;
+        int threadCount = 2;
+
+        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
+            new ConcurrentTestRunner.BiConsumer() {
+                @Override
+                public void consume(int threadNumber, int step) throws Exception {
+                    throw new RuntimeException();
+                }
+            })
+            .run();
+        concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS);
+
+        expectedException.expect(ExecutionException.class);
+        concurrentTestRunner.assertNoException();
+    }
+
+    @Test
+    public void runShouldPerformAllOperationsEvenOnExceptions() throws Exception {
+        int operationCount = 2;
+        int threadCount = 2;
+        final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<String>();
+
+        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
+            new ConcurrentTestRunner.BiConsumer() {
+                @Override
+                public void consume(int threadNumber, int step) throws Exception {
+                    queue.add(threadNumber + ":" + step);
+                    throw new RuntimeException();
+                }
+            })
+            .run();
+
+        assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(queue).containsOnly("0:0", "0:1", "1:0", "1:1");
+    }
+
+    @Test
+    public void runShouldPerformAllOperationsEvenOnOccasionalExceptions() throws Exception {
+        int operationCount = 2;
+        int threadCount = 2;
+        final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<String>();
+
+        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
+            new ConcurrentTestRunner.BiConsumer() {
+                @Override
+                public void consume(int threadNumber, int step) throws Exception {
+                    queue.add(threadNumber + ":" + step);
+                    if ((threadNumber + step) % 2 == 0) {
+                        throw new RuntimeException();
+                    }
                 }
             })
             .run();
