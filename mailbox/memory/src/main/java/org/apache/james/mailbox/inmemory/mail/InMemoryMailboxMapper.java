@@ -20,7 +20,6 @@ package org.apache.james.mailbox.inmemory.mail;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -36,55 +35,49 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 
 public class InMemoryMailboxMapper implements MailboxMapper {
     
     private static final int INITIAL_SIZE = 128;
-    private final Map<InMemoryId, Mailbox> mailboxesById;
+    private final ConcurrentHashMap<MailboxPath, Mailbox> mailboxesByPath;
     private final AtomicLong mailboxIdGenerator = new AtomicLong();
 
     public InMemoryMailboxMapper() {
-        mailboxesById = new ConcurrentHashMap<InMemoryId, Mailbox>(INITIAL_SIZE);
+        mailboxesByPath = new ConcurrentHashMap<MailboxPath, Mailbox>(INITIAL_SIZE);
     }
 
     /**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#delete(org.apache.james.mailbox.store.mail.model.Mailbox)
      */
     public void delete(Mailbox mailbox) throws MailboxException {
-        mailboxesById.remove(mailbox.getMailboxId());
+        mailboxesByPath.remove(mailbox.generateAssociatedPath());
     }
 
     public void deleteAll() throws MailboxException {
-        mailboxesById.clear();
+        mailboxesByPath.clear();
     }
 
     /**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxByPath(org.apache.james.mailbox.model.MailboxPath)
      */
     public synchronized Mailbox findMailboxByPath(MailboxPath path) throws MailboxException {
-        Mailbox result = null;
-        for (Mailbox mailbox:mailboxesById.values()) {
-            MailboxPath mp = new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName());
-            if (mp.equals(path)) {
-                result = mailbox;
-                break;
-            }
-        }
+        Mailbox result = mailboxesByPath.get(path);
         if (result == null) {
             throw new MailboxNotFoundException(path);
         } else {
-            return result;
+            return new SimpleMailbox(result);
         }
     }
 
     public synchronized Mailbox findMailboxById(MailboxId id) throws MailboxException {
         InMemoryId mailboxId = (InMemoryId)id;
-        Mailbox result = mailboxesById.get(mailboxId);
-        if (result == null) {
-            throw new MailboxNotFoundException(mailboxId.serialize());
-        } else {
-            return result;
+        for (Mailbox mailbox: mailboxesByPath.values()) {
+            if (mailbox.getMailboxId().equals(mailboxId)) {
+                return new SimpleMailbox(mailbox);
+            }
         }
+        throw new MailboxNotFoundException(mailboxId.serialize());
     }
 
     /**
@@ -93,9 +86,9 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     public List<Mailbox> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
         final String regex = path.getName().replace("%", ".*");
         List<Mailbox> results = new ArrayList<Mailbox>();
-        for (Mailbox mailbox:mailboxesById.values()) {
+        for (Mailbox mailbox: mailboxesByPath.values()) {
             if (mailboxMatchesRegex(mailbox, path, regex)) {
-                results.add(mailbox);
+                results.add(new SimpleMailbox(mailbox));
             }
         }
         return results;
@@ -115,21 +108,19 @@ public class InMemoryMailboxMapper implements MailboxMapper {
         if (id == null) {
             id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());
             ((SimpleMailbox) mailbox).setMailboxId(id);
+        } else {
+            try {
+                Mailbox mailboxWithPreviousName = findMailboxById(id);
+                mailboxesByPath.remove(mailboxWithPreviousName.generateAssociatedPath());
+            } catch (MailboxNotFoundException e) {
+                // No need to remove the previous mailbox
+            }
         }
-        if (isPathAlreadyUsedByAnotherMailbox(mailbox)) {
+        Mailbox previousMailbox = mailboxesByPath.putIfAbsent(mailbox.generateAssociatedPath(), mailbox);
+        if (previousMailbox != null) {
             throw new MailboxExistsException(mailbox.getName());
         }
-        mailboxesById.put(id, mailbox);
         return mailbox.getMailboxId();
-    }
-
-    private boolean isPathAlreadyUsedByAnotherMailbox(Mailbox mailbox) throws MailboxException {
-        try {
-            Mailbox storedMailbox = findMailboxByPath(mailbox.generateAssociatedPath());
-            return !Objects.equal(storedMailbox.getMailboxId(), mailbox.getMailboxId());
-        } catch (MailboxNotFoundException e) {
-            return false;
-        }
     }
 
     /**
@@ -144,7 +135,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
      */
     public boolean hasChildren(Mailbox mailbox, char delimiter) throws MailboxException {
         String mailboxName = mailbox.getName() + delimiter;
-        for (Mailbox box:mailboxesById.values()) {
+        for (Mailbox box: mailboxesByPath.values()) {
             if (belongsToSameUser(mailbox, box) && box.getName().startsWith(mailboxName)) {
                 return true;
             }
@@ -161,7 +152,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#list()
      */
     public List<Mailbox> list() throws MailboxException {
-        return new ArrayList<Mailbox>(mailboxesById.values());
+        return new ArrayList<Mailbox>(mailboxesByPath.values());
     }
 
     public <T> T execute(Transaction<T> transaction) throws MailboxException {
