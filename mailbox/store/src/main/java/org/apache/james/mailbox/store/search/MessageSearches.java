@@ -147,16 +147,14 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     private boolean isMatch(MailboxMessage message) throws MailboxException {
         final List<SearchQuery.Criterion> criteria = query.getCriterias();
         final Collection<MessageUid> recentMessageUids = query.getRecentMessageUids();
-        boolean result = true;
         if (criteria != null) {
             for (SearchQuery.Criterion criterion : criteria) {
                 if (!isMatch(criterion, message, recentMessageUids)) {
-                    result = false;
-                    break;
+                    return false;
                 }
             }
         }
-        return result;
+        return true;
     }
 
     /**
@@ -174,37 +172,35 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
      */
     public boolean isMatch(SearchQuery.Criterion criterion, MailboxMessage message,
             final Collection<MessageUid> recentMessageUids) throws MailboxException {
-        final boolean result;
         if (criterion instanceof SearchQuery.InternalDateCriterion) {
-            result = matches((SearchQuery.InternalDateCriterion) criterion, message);
+            return matches((SearchQuery.InternalDateCriterion) criterion, message);
         } else if (criterion instanceof SearchQuery.SizeCriterion) {
-            result = matches((SearchQuery.SizeCriterion) criterion, message);
+            return matches((SearchQuery.SizeCriterion) criterion, message);
         } else if (criterion instanceof SearchQuery.HeaderCriterion) {
             try {
-                result = matches((SearchQuery.HeaderCriterion) criterion, message);
+                return matches((SearchQuery.HeaderCriterion) criterion, message);
             } catch (IOException e) {
                 throw new MailboxException("Unable to search header", e);
             }
         } else if (criterion instanceof SearchQuery.UidCriterion) {
-            result = matches((SearchQuery.UidCriterion) criterion, message);
+            return matches((SearchQuery.UidCriterion) criterion, message);
         } else if (criterion instanceof SearchQuery.FlagCriterion) {
-            result = matches((SearchQuery.FlagCriterion) criterion, message, recentMessageUids);
+            return matches((SearchQuery.FlagCriterion) criterion, message, recentMessageUids);
         } else if (criterion instanceof SearchQuery.CustomFlagCriterion) {
-            result = matches((SearchQuery.CustomFlagCriterion) criterion, message, recentMessageUids);
+            return matches((SearchQuery.CustomFlagCriterion) criterion, message);
         } else if (criterion instanceof SearchQuery.TextCriterion) {
-            result = matches((SearchQuery.TextCriterion) criterion, message);
+            return matches((SearchQuery.TextCriterion) criterion, message);
         } else if (criterion instanceof SearchQuery.AllCriterion) {
-            result = true;
+            return true;
         } else if (criterion instanceof SearchQuery.ConjunctionCriterion) {
-            result = matches((SearchQuery.ConjunctionCriterion) criterion, message, recentMessageUids);
+            return matches((SearchQuery.ConjunctionCriterion) criterion, message, recentMessageUids);
         } else if (criterion instanceof SearchQuery.AttachmentCriterion) {
-            result = matches((SearchQuery.AttachmentCriterion) criterion, message);
+            return matches((SearchQuery.AttachmentCriterion) criterion, message);
         } else if (criterion instanceof SearchQuery.ModSeqCriterion) {
-            result = matches((SearchQuery.ModSeqCriterion) criterion, message);
+            return matches((SearchQuery.ModSeqCriterion) criterion, message);
         } else {
             throw new UnsupportedSearchException();
         }
-        return result;
     }
 
     private boolean matches(SearchQuery.TextCriterion criterion, MailboxMessage message)
@@ -302,71 +298,62 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     }
 
     private boolean and(List<SearchQuery.Criterion> criteria, MailboxMessage message,
-            final Collection<MessageUid> recentMessageUids) throws MailboxException {
-        boolean result = true;
+                        Collection<MessageUid> recentMessageUids) throws MailboxException {
         for (SearchQuery.Criterion criterion : criteria) {
             boolean matches = isMatch(criterion, message, recentMessageUids);
             if (!matches) {
-                result = false;
-                break;
+                return false;
             }
         }
-        return result;
+        return true;
     }
 
     private boolean or(List<SearchQuery.Criterion> criteria, MailboxMessage message,
-            final Collection<MessageUid> recentMessageUids) throws MailboxException {
-        boolean result = false;
+                       Collection<MessageUid> recentMessageUids) throws MailboxException {
         for (SearchQuery.Criterion criterion : criteria) {
             boolean matches = isMatch(criterion, message, recentMessageUids);
             if (matches) {
-                result = true;
-                break;
+                return true;
             }
         }
-        return result;
+        return false;
     }
 
     private boolean nor(List<SearchQuery.Criterion> criteria, MailboxMessage message,
-            final Collection<MessageUid> recentMessageUids) throws MailboxException {
-        boolean result = true;
+                        Collection<MessageUid> recentMessageUids) throws MailboxException {
         for (SearchQuery.Criterion criterion : criteria) {
             boolean matches = isMatch(criterion, message, recentMessageUids);
             if (matches) {
-                result = false;
-                break;
+                return false;
             }
         }
-        return result;
+        return true;
     }
 
     private boolean matches(SearchQuery.FlagCriterion criterion, MailboxMessage message,
-            Collection<MessageUid> recentMessageUids) {
+                            Collection<MessageUid> recentMessageUids) {
         SearchQuery.BooleanOperator operator = criterion.getOperator();
         boolean isSet = operator.isSet();
         Flags.Flag flag = criterion.getFlag();
-        boolean result;
         if (flag == Flags.Flag.ANSWERED) {
-            result = isSet == message.isAnswered();
+            return isSet == message.isAnswered();
         } else if (flag == Flags.Flag.SEEN) {
-            result = isSet == message.isSeen();
+            return isSet == message.isSeen();
         } else if (flag == Flags.Flag.DRAFT) {
-            result = isSet == message.isDraft();
+            return isSet == message.isDraft();
         } else if (flag == Flags.Flag.FLAGGED) {
-            result = isSet == message.isFlagged();
+            return isSet == message.isFlagged();
         } else if (flag == Flags.Flag.RECENT) {
             final MessageUid uid = message.getUid();
-            result = isSet == recentMessageUids.contains(uid);
+            return isSet == recentMessageUids.contains(uid);
         } else if (flag == Flags.Flag.DELETED) {
-            result = isSet == message.isDeleted();
+            return isSet == message.isDeleted();
         } else {
-            result = false;
+            return false;
         }
-        return result;
     }
 
-    private boolean matches(SearchQuery.CustomFlagCriterion criterion, MailboxMessage message,
-            Collection<MessageUid> recentMessageUids) {
+    private boolean matches(SearchQuery.CustomFlagCriterion criterion, MailboxMessage message) {
         SearchQuery.BooleanOperator operator = criterion.getOperator();
         boolean isSet = operator.isSet();
         String flag = criterion.getFlag();
@@ -377,33 +364,29 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         SearchQuery.UidInOperator operator = criterion.getOperator();
         UidRange[] ranges = operator.getRange();
         MessageUid uid = message.getUid();
-        boolean result = false;
         for (UidRange numericRange : ranges) {
             if (numericRange.isIn(uid)) {
-                result = true;
-                break;
+                return true;
             }
         }
-        return result;
+        return false;
     }
 
     private boolean matches(SearchQuery.HeaderCriterion criterion, MailboxMessage message)
             throws MailboxException, IOException {
         SearchQuery.HeaderOperator operator = criterion.getOperator();
         String headerName = criterion.getHeaderName();
-        boolean result;
         if (operator instanceof SearchQuery.DateOperator) {
-            result = matches((SearchQuery.DateOperator) operator, headerName, message);
+            return matches((SearchQuery.DateOperator) operator, headerName, message);
         } else if (operator instanceof SearchQuery.ContainsOperator) {
-            result = matches((SearchQuery.ContainsOperator) operator, headerName, message);
+            return matches((SearchQuery.ContainsOperator) operator, headerName, message);
         } else if (operator instanceof SearchQuery.ExistsOperator) {
-            result = exists(headerName, message);
+            return exists(headerName, message);
         } else if (operator instanceof SearchQuery.AddressOperator) {
-            result = matchesAddress((SearchQuery.AddressOperator) operator, headerName, message);
+            return matchesAddress((SearchQuery.AddressOperator) operator, headerName, message);
         } else {
             throw new UnsupportedSearchException();
         }
-        return result;
     }
 
     /**
@@ -450,23 +433,20 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     }
 
     private boolean exists(String headerName, MailboxMessage message) throws MailboxException, IOException {
-        boolean result = false;
         List<Header> headers = ResultUtils.createHeaders(message);
 
         for (Header header : headers) {
             String name = header.getName();
             if (headerName.equalsIgnoreCase(name)) {
-                result = true;
-                break;
+                return true;
             }
         }
-        return result;
+        return false;
     }
 
     private boolean matches(SearchQuery.ContainsOperator operator, String headerName,
             MailboxMessage message) throws MailboxException, IOException {
         String text = operator.getValue().toUpperCase(Locale.US);
-        boolean result = false;
         List<Header> headers = ResultUtils.createHeaders(message);
         for (Header header : headers) {
             String name = header.getName();
@@ -474,13 +454,12 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                 String value = MimeUtil.unscrambleHeaderValue(header.getValue());
                 if (value != null) {
                     if (value.toUpperCase(Locale.US).contains(text)) {
-                        result = true;
-                        break;
+                        return true;
                     }
                 }
             }
         }
-        return result;
+        return false;
     }
 
     private boolean matches(SearchQuery.DateOperator operator, String headerName, MailboxMessage message)
@@ -517,15 +496,13 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
     private String headerValue(String headerName, MailboxMessage message) throws MailboxException, IOException {
         List<Header> headers = ResultUtils.createHeaders(message);
-        String value = null;
         for (Header header : headers) {
             String name = header.getName();
             if (headerName.equalsIgnoreCase(name)) {
-                value = MimeUtil.unscrambleHeaderValue(header.getValue());
-                break;
+                return MimeUtil.unscrambleHeaderValue(header.getValue());
             }
         }
-        return value;
+        return null;
     }
 
     private Date toISODate(String value) throws ParseException {
