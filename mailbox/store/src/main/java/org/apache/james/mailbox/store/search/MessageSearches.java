@@ -578,34 +578,34 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         }
     }
 
-    private boolean on(Date date1, Date date2, DateResolution res) {
-        String d1 = createDateString(date1, res);
-        String d2 = createDateString(date2, res);
+    private boolean on(Date date1, Date date2, DateResolution dateResolution) {
+        String d1 = createDateString(date1, dateResolution);
+        String d2 = createDateString(date2, dateResolution);
         return d1.compareTo(d2) == 0;
     }
 
-    private boolean before(Date date1, Date date2, DateResolution res) {
-        String d1 = createDateString(date1, res);
-        String d2 = createDateString(date2, res);
+    private boolean before(Date date1, Date date2, DateResolution dateResolution) {
+        String d1 = createDateString(date1, dateResolution);
+        String d2 = createDateString(date2, dateResolution);
 
         return d1.compareTo(d2) < 0;
     }
 
-    private boolean after(Date date1, Date date2, DateResolution res) {
-        String d1 = createDateString(date1, res);
-        String d2 = createDateString(date2, res);
+    private boolean after(Date date1, Date date2, DateResolution dateResolution) {
+        String d1 = createDateString(date1, dateResolution);
+        String d2 = createDateString(date2, dateResolution);
 
         return d1.compareTo(d2) > 0;
     }
 
-    private String createDateString(Date date, DateResolution res) {
-        SimpleDateFormat format = createFormat(res);
+    private String createDateString(Date date, DateResolution dateResolution) {
+        SimpleDateFormat format = createFormat(dateResolution);
         format.setCalendar(getGMT());
         return format.format(date);
     }
 
-    private SimpleDateFormat createFormat(DateResolution res) {
-        switch (res) {
+    private SimpleDateFormat createFormat(DateResolution dateResolution) {
+        switch (dateResolution) {
         case Year:
             return new SimpleDateFormat("yyyy");
         case Month:
