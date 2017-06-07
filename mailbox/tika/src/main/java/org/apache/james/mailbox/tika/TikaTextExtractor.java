@@ -85,7 +85,7 @@ public class TikaTextExtractor implements TextExtractor {
         @Override
         public ContentAndMetadata deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
             TreeNode treeNode = jsonParser.getCodec().readTree(jsonParser);
-            Preconditions.checkState(treeNode.isArray() && treeNode.size() == 1, "The response should have only one element");
+            Preconditions.checkState(treeNode.isArray() && treeNode.size() >= 1, "The response should be an array with at least one element");
             Preconditions.checkState(treeNode.get(0).isObject(), "The element should be a Json object");
             ObjectNode node = (ObjectNode) treeNode.get(0);
             return ContentAndMetadata.from(ImmutableList.copyOf(node.fields())

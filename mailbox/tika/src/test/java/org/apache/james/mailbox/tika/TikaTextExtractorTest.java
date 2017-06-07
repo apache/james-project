@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.tika.TikaTextExtractor.ContentAndMetadataDeserializer;
 import org.junit.Before;
@@ -111,7 +112,7 @@ public class TikaTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/slides.odp");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.oasis.opendocument.presentation").getTextualContent())
-            .isEqualTo("James is awesome\n\nIt manages attachments so well !\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+            .isEqualTo("James is awesome\n\nIt manages attachments so well !\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     }
     
     @Test
@@ -153,20 +154,26 @@ public class TikaTextExtractorTest {
     }
 
     @Test
-    public void deserializerShouldThrowWhenMoreThanOneNode() throws Exception {
-        expectedException.expect(IllegalStateException.class);
-        expectedException.expectMessage("The response should have only one element");
-
-        TikaTextExtractor textExtractor = new TikaTextExtractor(new TikaHttpClient() {
-            
-            @Override
-            public InputStream recursiveMetaDataAsJson(InputStream inputStream, String contentType) throws TikaException {
-                return new ByteArrayInputStream("[{\"key1\":\"value1\"},{\"key2\":\"value2\"}]".getBytes(Charsets.UTF_8));
-            }
-        });
+    public void deserializerShouldNotThrowWhenMoreThanOneNode() throws Exception {
+        TikaTextExtractor textExtractor = new TikaTextExtractor(
+            (inputStream, contentType) -> new ByteArrayInputStream(("[{\"X-TIKA:content\": \"This is an awesome LibreOffice document !\"}, " +
+                "{\"Chroma BlackIsZero\": \"true\"}]").getBytes(Charsets.UTF_8)));
 
         InputStream inputStream = null;
         textExtractor.extractContent(inputStream, "text/plain");
+    }
+
+    @Test
+    public void deserializerShouldTakeFirstNodeWhenSeveral() throws Exception {
+        String expectedExtractedContent = "content A";
+        TikaTextExtractor textExtractor = new TikaTextExtractor(
+            (inputStream, contentType) -> new ByteArrayInputStream(("[{\"X-TIKA:content\": \"" + expectedExtractedContent + "\"}, " +
+                "{\"X-TIKA:content\": \"content B\"}]").getBytes(Charsets.UTF_8)));
+
+        InputStream inputStream = null;
+        ParsedContent parsedContent = textExtractor.extractContent(inputStream, "text/plain");
+
+        assertThat(parsedContent.getTextualContent()).isEqualTo(expectedExtractedContent);
     }
 
     @Test
@@ -174,13 +181,8 @@ public class TikaTextExtractorTest {
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage("The element should be a Json object");
 
-        TikaTextExtractor textExtractor = new TikaTextExtractor(new TikaHttpClient() {
-            
-            @Override
-            public InputStream recursiveMetaDataAsJson(InputStream inputStream, String contentType) throws TikaException {
-                return new ByteArrayInputStream("[\"value1\"]".getBytes(Charsets.UTF_8));
-            }
-        });
+        TikaTextExtractor textExtractor = new TikaTextExtractor(
+            (inputStream, contentType) -> new ByteArrayInputStream("[\"value1\"]".getBytes(Charsets.UTF_8)));
 
         InputStream inputStream = null;
         textExtractor.extractContent(inputStream, "text/plain");
