@@ -195,7 +195,7 @@ You can handle attachment text extraction before indexing in ElasticSearch. This
 
 Run tika:
 
-    $ docker run --name tika logicalspark/docker-tikaserver:latest
+    $ docker run --name tika logicalspark/docker-tikaserver:1.15rc2
 
 Add a link for the tika container in the above command line:
 

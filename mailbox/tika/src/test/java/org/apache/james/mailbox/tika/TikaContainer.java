@@ -35,7 +35,7 @@ public class TikaContainer extends ExternalResource {
     private final SwarmGenericContainer tika;
 
     public TikaContainer() {
-        tika = new SwarmGenericContainer("logicalspark/docker-tikaserver:latest")
+        tika = new SwarmGenericContainer("logicalspark/docker-tikaserver:1.15rc2")
                 .withExposedPorts(DEFAULT_TIKA_PORT)
                 .waitingFor(Wait.forHttp("/tika"))
                 .withStartupTimeout(Duration.ofSeconds(30));
