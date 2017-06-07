@@ -22,5 +22,5 @@ import java.io.InputStream;
 
 public interface TikaHttpClient {
 
-    InputStream rmetaAsJson(InputStream inputStream, String contentType) throws TikaException;
+    InputStream recursiveMetaDataAsJson(InputStream inputStream, String contentType) throws TikaException;
 }

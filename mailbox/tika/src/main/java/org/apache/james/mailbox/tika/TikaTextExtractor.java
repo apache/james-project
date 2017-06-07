@@ -71,7 +71,7 @@ public class TikaTextExtractor implements TextExtractor {
 
     @Override
     public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
-        ContentAndMetadata contentAndMetadata = convert(tikaHttpClient.rmetaAsJson(inputStream, contentType));
+        ContentAndMetadata contentAndMetadata = convert(tikaHttpClient.recursiveMetaDataAsJson(inputStream, contentType));
         return new ParsedContent(contentAndMetadata.getContent(), contentAndMetadata.getMetadata());
     }
 

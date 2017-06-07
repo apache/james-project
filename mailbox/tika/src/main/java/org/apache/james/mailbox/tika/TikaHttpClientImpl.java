@@ -29,14 +29,14 @@ import org.apache.http.entity.ContentType;
 
 public class TikaHttpClientImpl implements TikaHttpClient {
 
-    private static final String RMETA_AS_TEXT_ENDPOINT = "/rmeta/text";
+    private static final String RECURSIVE_METADATA_AS_TEXT_ENDPOINT = "/rmeta/text";
 
     private final TikaConfiguration tikaConfiguration;
-    private final URI rmeta;
+    private final URI recursiveMetaData;
 
     public TikaHttpClientImpl(TikaConfiguration tikaConfiguration) throws URISyntaxException {
         this.tikaConfiguration = tikaConfiguration;
-        this.rmeta = buildURI(tikaConfiguration).resolve(RMETA_AS_TEXT_ENDPOINT);
+        this.recursiveMetaData = buildURI(tikaConfiguration).resolve(RECURSIVE_METADATA_AS_TEXT_ENDPOINT);
     }
 
     private URI buildURI(TikaConfiguration tikaConfiguration) throws URISyntaxException {
@@ -48,9 +48,9 @@ public class TikaHttpClientImpl implements TikaHttpClient {
     }
 
     @Override
-    public InputStream rmetaAsJson(InputStream inputStream, String contentType) throws TikaException {
+    public InputStream recursiveMetaDataAsJson(InputStream inputStream, String contentType) throws TikaException {
         try {
-            return Request.Put(rmeta)
+            return Request.Put(recursiveMetaData)
                     .socketTimeout(tikaConfiguration.getTimeoutInMillis())
                     .bodyStream(inputStream, ContentType.create(contentType))
                     .execute()

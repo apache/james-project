@@ -160,7 +160,7 @@ public class TikaTextExtractorTest {
         TikaTextExtractor textExtractor = new TikaTextExtractor(new TikaHttpClient() {
             
             @Override
-            public InputStream rmetaAsJson(InputStream inputStream, String contentType) throws TikaException {
+            public InputStream recursiveMetaDataAsJson(InputStream inputStream, String contentType) throws TikaException {
                 return new ByteArrayInputStream("[{\"key1\":\"value1\"},{\"key2\":\"value2\"}]".getBytes(Charsets.UTF_8));
             }
         });
@@ -177,7 +177,7 @@ public class TikaTextExtractorTest {
         TikaTextExtractor textExtractor = new TikaTextExtractor(new TikaHttpClient() {
             
             @Override
-            public InputStream rmetaAsJson(InputStream inputStream, String contentType) throws TikaException {
+            public InputStream recursiveMetaDataAsJson(InputStream inputStream, String contentType) throws TikaException {
                 return new ByteArrayInputStream("[\"value1\"]".getBytes(Charsets.UTF_8));
             }
         });
