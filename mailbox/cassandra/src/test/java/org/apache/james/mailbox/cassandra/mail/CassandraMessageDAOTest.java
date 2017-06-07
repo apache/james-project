@@ -103,7 +103,7 @@ public class CassandraMessageDAOTest {
                         .isInline(true)
                         .build()));
 
-        testee.save(messageWith1Attachment);
+        testee.save(messageWith1Attachment).join();
 
         List<Optional<CassandraMessageDAO.MessageAttachmentRepresentation>> attachmentRepresentation = testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Optional.empty())
                 .get()
@@ -125,7 +125,7 @@ public class CassandraMessageDAOTest {
                         .isInline(true)
                         .build()));
 
-        testee.save(messageWith1Attachment);
+        testee.save(messageWith1Attachment).join();
 
         List<Optional<CassandraMessageDAO.MessageAttachmentRepresentation>> attachmentRepresentation = testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Optional.empty())
                 .get()
