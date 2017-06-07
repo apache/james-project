@@ -87,6 +87,32 @@
 
   </section>
 
+    <section name="Tika Configuration">
+
+        <p>When using ElasticSearch, you can configure an external Tika server for extracting and indexing text from attachments.
+            Thus you can significantly improve user experience upon text searches.</p>
+
+        <p>Note that to use this feature you need Guice, built with ElasticSearch</p>
+
+        <p>Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/tika.properties">tika.properties</a> to get some examples and hints.</p>
+
+        Here are the different properties:
+
+        <dl>
+            <dt><strong>tika.host</strong></dt>
+            <dd>IP or domain name of your Tika server. The default value is 127.0.0.1</dd>
+            <dt><strong>tika.port</strong></dt>
+            <dd>Port of your tika server. The default value is 9998</dd>
+            <dt><strong>tika.timeoutInMillis</strong></dt>
+            <dd>Timeout when issuing request to the tika server. The default value is 3 seconds.</dd>
+        </dl>
+
+        Note: You can launch a tika server using this command line:
+
+        <code><pre>docker run --name tika logicalspark/docker-tikaserver:latest</pre></code>
+
+    </section>
+
 </body>
 
 </document>
