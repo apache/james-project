@@ -155,6 +155,48 @@ public class JsoupHtmlTextExtractorTest {
     }
 
     @Test
+    public void imgShouldBeWellInsertedInText() {
+        String html = "Text <img src=\"whitePoney.png\" alt=\"My wonderfull white poney picture\"/> text";
+        String expectedPlainText = "Text [My wonderfull white poney picture] text";
+        assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
+    }
+
+    @Test
+    public void imgShouldNotBeDisplayedOnEmptyAlt() {
+        String html = "Text <img src=\"whitePoney.png\" alt=\"\"/> text";
+        String expectedPlainText = "Text  text";
+        assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
+    }
+
+    @Test
+    public void imgShouldNotBeDisplayedOnWhiteSpaceAlt() {
+        String html = "Text <img src=\"whitePoney.png\" alt=\" \"/> text";
+        String expectedPlainText = "Text  text";
+        assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
+    }
+
+    @Test
+    public void imgShouldNotBeDisplayedOnTabSpaceAlt() {
+        String html = "Text <img src=\"whitePoney.png\" alt=\"\t\"/> text";
+        String expectedPlainText = "Text  text";
+        assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
+    }
+
+    @Test
+    public void imgShouldNotBeDisplayedOnLineBreakSpaceAlt() {
+        String html = "Text <img src=\"whitePoney.png\" alt=\"\n\"/> text";
+        String expectedPlainText = "Text  text";
+        assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
+    }
+
+    @Test
+    public void imgShouldNotBeDisplayedOnMissingAlt() {
+        String html = "Text <img src=\"whitePoney.png\"/> text";
+        String expectedPlainText = "Text  text";
+        assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
+    }
+
+    @Test
     public void nestedListsShouldBeWellHandled() {
         String html = " <ul>" +
             "  <li>Coffee</li>" +

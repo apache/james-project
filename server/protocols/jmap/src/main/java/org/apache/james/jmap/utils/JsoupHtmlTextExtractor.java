@@ -83,10 +83,18 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
                 return "\n\n";
             }
             if (element.tagName().equals(IMG_TAG)) {
-                return "[" + element.attributes().get(ALT_TAG) + "]";
+                return generateImageAlternativeText(element);
             }
         }
         return "";
+    }
+
+    private String generateImageAlternativeText(Element element) {
+        return Optional.ofNullable(element.attributes().get(ALT_TAG))
+            .map(StringUtils::normalizeSpace)
+            .filter(s -> !s.isEmpty())
+            .map(s -> "[" + s + "]")
+            .orElse("");
     }
 
     private String convertListElement(int nestedLevel) {
