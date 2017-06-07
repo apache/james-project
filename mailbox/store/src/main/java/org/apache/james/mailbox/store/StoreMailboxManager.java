@@ -562,7 +562,9 @@ public class StoreMailboxManager implements MailboxManager {
                     }
                 }, true);
 
-            return Optional.fromNullable(Iterables.getLast(mailboxIds));
+            if (!mailboxIds.isEmpty()) {
+                return Optional.fromNullable(Iterables.getLast(mailboxIds));
+            }
         }
         return Optional.absent();
     }
