@@ -25,8 +25,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.mail.Flags;
@@ -41,11 +39,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MessageResultIterator;
+import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 
 import com.google.common.base.Optional;
@@ -69,6 +64,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
     private final Set<MessageUid> flagUpdateUids = new TreeSet<MessageUid>();
     private final Flags.Flag uninterestingFlag = Flags.Flag.RECENT;
     private final Set<MessageUid> expungedUids = new TreeSet<MessageUid>();
+    private final UidMsnConverter uidMsnConverter;
 
     private boolean isDeletedByOtherSession = false;
     private boolean sizeChanged = false;
@@ -77,14 +73,6 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
 
     private boolean applicableFlagsChanged;
 
-    private final SortedMap<Integer, MessageUid> msnToUid =new TreeMap<Integer, MessageUid>();
-
-    private final SortedMap<MessageUid, Integer> uidToMsn = new TreeMap<MessageUid, Integer>();
-
-    private MessageUid highestUid = MessageUid.MIN_VALUE;
-
-    private int highestMsn = 0;
-    
     public SelectedMailboxImpl(MailboxManager mailboxManager, ImapSession session, MailboxPath path) throws MailboxException {
         this.session = session;
         this.sessionId = ImapSessionUtils.getMailboxSession(session).getSessionId();
@@ -100,13 +88,13 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
 
         MessageManager messageManager = mailboxManager.getMailbox(path, mailboxSession);
         applicableFlags = messageManager.getApplicableFlags(mailboxSession);
-        MessageResultIterator messages = messageManager.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, mailboxSession);
-        synchronized (this) {
-            while(messages.hasNext()) {
-                MessageResult mr = messages.next();
-                add(mr.getUid());
-            }
-        }
+        uidMsnConverter = getUidMsnConverter(mailboxSession, messageManager);
+    }
+    
+    private UidMsnConverter getUidMsnConverter(MailboxSession mailboxSession , MessageManager messageManager) throws MailboxException {
+        return new UidMsnConverter(
+                messageManager.search(
+                        new SearchQuery(SearchQuery.all()), mailboxSession));
     }
 
     @Override
@@ -119,68 +107,16 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
         return ExecutionMode.SYNCHRONOUS;
     }
 
-    private void add(int msn, MessageUid uid) {
-        if (uid.compareTo(highestUid) > 0) {
-            highestUid = uid;
-        }
-        msnToUid.put(msn, uid);
-        uidToMsn.put(uid, msn);
-    }
-
-    /**
-     * Expunge the message with the given uid
-     */
-    private void expunge(MessageUid uid) {
-        final int msn = msn(uid);
-        remove(msn, uid);
-
-        for (int aMsn = msn + 1; aMsn <= msnToUid.size() + 1; aMsn++) {
-            Optional<MessageUid> aUid = uid(aMsn);
-            if (aUid.isPresent()) {
-                remove(aMsn, aUid.get());
-                add(aMsn - 1, aUid.get());
-            }
-        }
-        highestMsn--;
-    }
-
-    private void remove(int msn, MessageUid uid) {
-        uidToMsn.remove(uid);
-        msnToUid.remove(msn);
-    }
-
-    /**
-     * Add the give uid
-     * 
-     * @param uid
-     */
-    private void add(MessageUid uid) {
-        if (!uidToMsn.containsKey(uid)) {
-            highestMsn++;
-            add(highestMsn, uid);
-        }
-    }
-
     @Override
     public synchronized Optional<MessageUid> getFirstUid() {
-        if (uidToMsn.isEmpty()) {
-            return Optional.absent();
-        } else {
-            return Optional.of(uidToMsn.firstKey());
-        }
+        return uidMsnConverter.getFirstUid();
     }
 
     @Override
     public synchronized Optional<MessageUid> getLastUid() {
-        if (uidToMsn.isEmpty()) {
-            return Optional.absent();
-        } else {
-            return Optional.of(uidToMsn.lastKey());
-        }
+        return uidMsnConverter.getLastUid();
     }
 
-
-    
     public synchronized void deselect() {
         MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
 
@@ -192,14 +128,11 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
             }
         }
         
-        uidToMsn.clear();
-        msnToUid.clear();
+        uidMsnConverter.clear();
         flagUpdateUids.clear();
 
         expungedUids.clear();
         recentUids.clear();
- 
-
     }
 
     @Override
@@ -265,11 +198,9 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
     @Override
     public synchronized  int remove(MessageUid uid) {
         final int result = msn(uid);
-        expunge(uid);
+        uidMsnConverter.remove(uid);
         return result;
     }
-
-
 
     private boolean interestingFlags(UpdatedFlags updated) {
         boolean result;
@@ -361,12 +292,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
         
     }
 
-
-
-
-    
     public synchronized Flags getApplicableFlags() {
-        return applicableFlags;
+        return new Flags(applicableFlags);
     }
 
     
@@ -392,7 +319,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
                     final List<MessageUid> uids = ((Added) event).getUids();
                     SelectedMailbox sm = session.getSelected();
                     for (MessageUid uid : uids) {
-                        add(uid);
+                        uidMsnConverter.addUid(uid);
                         if (sm != null) {
                             sm.addRecent(uid);
                         }
@@ -467,31 +394,20 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
 
     @Override
     public synchronized int msn(MessageUid uid) {
-        Integer msn = uidToMsn.get(uid);
-        if (msn != null) {
-            return msn.intValue();
-        } else {
-            return SelectedMailbox.NO_SUCH_MESSAGE;
-        }
+        return uidMsnConverter.getMsn(uid).or(NO_SUCH_MESSAGE);
     }
 
     @Override
     public synchronized Optional<MessageUid> uid(int msn) {
-        if (msn == -1) {
+        if (msn == NO_SUCH_MESSAGE) {
             return Optional.absent();
         }
-        MessageUid uid = msnToUid.get(msn);
-        if (uid != null) {
-            return Optional.of(uid);
-        } else {
-            return Optional.absent();
-        }
+
+        return uidMsnConverter.getUid(msn);
     }
 
     
     public synchronized long existsCount() {
-        return uidToMsn.size();
+        return uidMsnConverter.getNumMessage();
     }
-    
-
 }
