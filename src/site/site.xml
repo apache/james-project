@@ -137,9 +137,6 @@
                         <item name="Events" href="/server/config-events.html" />
                     </item>
                     <item name="4. Manage" href="/server/manage.html" collapse="true" >
-                        <item name="Domains" href="/server/manage-domains.html" />
-                        <item name="Users" href="/server/manage-users.html" />
-                        <item name="Recipient Rewrite" href="/server/manage-recipientrewrite.html" />
                         <item name="WebAdmin" href="/server/manage-webadmin.html" />
                         <item name="Command line" href="/server/manage-cli.html" />
                         <item name="Metrics" href="/server/metrics.html" />
