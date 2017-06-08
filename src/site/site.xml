@@ -140,8 +140,9 @@
                         <item name="Domains" href="/server/manage-domains.html" />
                         <item name="Users" href="/server/manage-users.html" />
                         <item name="Recipient Rewrite" href="/server/manage-recipientrewrite.html" />
+                        <item name="WebAdmin" href="/server/manage-webadmin.html" />
+                        <item name="Command line" href="/server/manage-cli.html" />
                         <item name="Metrics" href="/server/metrics.html" />
-                        <item name="Metrics" href="/server/manage-webadmin.html" />
                     </item>
                     <item name="5. Monitor" href="/server/monitor.html" collapse="true" >
                         <item name="Logging" href="/server/monitor-logging.html" />
