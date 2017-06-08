@@ -245,7 +245,7 @@ public class CmdTypeTest {
     
     @Test
     public void usageShouldOutputCommandNamesAndArguments() {
-        assertThat(CmdType.CREATEMAILBOX.getUsage()).isEqualTo("createmailbox <namespace> <user> <name>");
+        assertThat(CmdType.CREATEMAILBOX.getUsage()).isEqualTo("CreateMailbox <namespace> <user> <name>");
     }
     
 }
