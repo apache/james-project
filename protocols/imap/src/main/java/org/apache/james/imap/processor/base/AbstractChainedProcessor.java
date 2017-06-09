@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor.base;
 
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -54,6 +55,11 @@ abstract public class AbstractChainedProcessor<M extends ImapMessage> implements
         } else {
             next.process(message, responder, session);
         }
+    }
+
+    @Override
+    public void configure(ImapConfiguration imapConfiguration) {
+        next.configure(imapConfiguration);
     }
 
     /**

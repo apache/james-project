@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.display.CharsetUtil;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -74,6 +75,13 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
         super(CapabilityRequest.class, next, mailboxManager, factory, metricFactory);
         capabilities.add(this);
         
+    }
+
+    @Override
+    public void configure(ImapConfiguration imapConfiguration) {
+        super.configure(imapConfiguration);
+
+        disabledCaps.addAll(imapConfiguration.getDisabledCaps());
     }
 
     /**

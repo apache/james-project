@@ -20,6 +20,7 @@
 package org.apache.james.imap.processor.base;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.ImapRequest;
@@ -60,4 +61,8 @@ public class UnknownRequestProcessor implements ImapProcessor {
         responder.respond(response);
     }
 
+    @Override
+    public void configure(ImapConfiguration imapConfiguration) {
+
+    }
 }

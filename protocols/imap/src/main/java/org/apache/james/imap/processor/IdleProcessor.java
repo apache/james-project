@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -53,10 +54,12 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     // 2 minutes
     public final static long DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS = 2 * 60;
     public final static TimeUnit DEFAULT_HEARTBEAT_INTERVAL_UNIT = TimeUnit.SECONDS;
+    public final static boolean DEFAULT_ENABLE_IDLE = true;
     public final static int DEFAULT_SCHEDULED_POOL_CORE_SIZE = 5;
     private final static String DONE = "DONE";
     private TimeUnit heartbeatIntervalUnit;
     private long heartbeatInterval;
+    private boolean enableIdle;
     private ScheduledExecutorService heartbeatExecutor;
 
     public IdleProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
@@ -72,6 +75,18 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         this.heartbeatIntervalUnit = heartbeatIntervalUnit;
         this.heartbeatExecutor = heartbeatExecutor;
 
+    }
+
+    @Override
+    public void configure(ImapConfiguration imapConfiguration) {
+        super.configure(imapConfiguration);
+
+        this.heartbeatInterval = imapConfiguration.getIdleTimeInterval();
+        this.heartbeatIntervalUnit = imapConfiguration.getIdleTimeIntervalUnit();
+        this.enableIdle = imapConfiguration.isEnableIdle();
+        if (enableIdle) {
+            this.heartbeatExecutor = Executors.newScheduledThreadPool(DEFAULT_SCHEDULED_POOL_CORE_SIZE);
+        }
     }
 
     protected void doProcess(IdleRequest message, final ImapSession session, final String tag, final ImapCommand command, final Responder responder) {
@@ -128,7 +143,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             });
 
             // Check if we should send heartbeats
-            if (heartbeatInterval > 0) {
+            if (enableIdle) {
                 heartbeatExecutor.schedule(new Runnable() {
 
                     public void run() {
