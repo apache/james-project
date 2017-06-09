@@ -20,7 +20,6 @@
 package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_IDLE;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -50,15 +49,15 @@ import org.apache.james.metrics.api.MetricFactory;
 
 public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> implements CapabilityImplementingProcessor {
 
-    private final ScheduledExecutorService heartbeatExecutor;
     private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_IDLE));
     // 2 minutes
     public final static long DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS = 2 * 60;
     public final static TimeUnit DEFAULT_HEARTBEAT_INTERVAL_UNIT = TimeUnit.SECONDS;
     public final static int DEFAULT_SCHEDULED_POOL_CORE_SIZE = 5;
     private final static String DONE = "DONE";
-    private final TimeUnit heartbeatIntervalUnit;
-    private final long heartbeatInterval;
+    private TimeUnit heartbeatIntervalUnit;
+    private long heartbeatInterval;
+    private ScheduledExecutorService heartbeatExecutor;
 
     public IdleProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {

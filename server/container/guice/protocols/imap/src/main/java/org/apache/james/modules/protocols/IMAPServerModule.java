@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -59,7 +58,6 @@ public class IMAPServerModule extends AbstractModule {
     }
 
     @Provides
-    @Singleton
     ImapProcessor provideImapProcessor(
             @Named(Names.MAILBOXMANAGER_NAME)MailboxManager mailboxManager,
             SubscriptionManager subscriptionManager,
@@ -72,8 +70,6 @@ public class IMAPServerModule extends AbstractModule {
                 null,
                 quotaManager,
                 quotaRootResolver,
-                120,
-                ImmutableSet.of("ACL", "MOVE"),
                 metricFactory);
     }
 

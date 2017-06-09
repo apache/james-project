@@ -25,7 +25,6 @@ import static org.apache.james.imap.api.ImapConstants.SUPPORTS_LITERAL_PLUS;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_RFC3348;
 import static org.apache.james.imap.api.ImapConstants.UTF8;
 import static org.apache.james.imap.api.ImapConstants.VERSION;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -63,18 +62,17 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
     private static final List<CapabilityImplementingProcessor> capabilities = new ArrayList<CapabilityImplementingProcessor>();
     private static final Set<String> disabledCaps = new HashSet<String>();
     
-    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, List<CapabilityImplementingProcessor> capabilities, Set<String> disabledCaps,
+    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, List<CapabilityImplementingProcessor> capabilities,
             MetricFactory metricFactory) {
-        this(next, mailboxManager, factory, disabledCaps, metricFactory);
+        this(next, mailboxManager, factory, metricFactory);
         CapabilityProcessor.capabilities.addAll(capabilities);
 
     }
 
-    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, Set<String> disabledCaps,
+    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
         super(CapabilityRequest.class, next, mailboxManager, factory, metricFactory);
-        CapabilityProcessor.disabledCaps.addAll(disabledCaps);
-        capabilities.add(this); 
+        capabilities.add(this);
         
     }
 
