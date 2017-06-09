@@ -30,7 +30,7 @@ james           | Started : true
 
 Then, a default domain has been created: james.local
 
-    $ docker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 listdomains james.local
+    $ docker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 listdomains
 
 James will respond to IMAP port 143 and SMTP port 25.
 You have to create users before playing, you may also create other domains...
