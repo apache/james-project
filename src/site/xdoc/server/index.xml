@@ -58,7 +58,8 @@
           configuration compatibility has been retained with 2.3.2.</p>
           
         <p>Apache James Server 3.0 requires Java 1.6. A migration guide for
-           users willing to upgrade from 2.3 to 3.0 is <a href="upgrade-2.3.html">available</a>.</p>
+           users willing to upgrade from 2.3 to 3.0 is <a href="upgrade-2.3.html">available</a>. If relying on Guice
+           packaging, you can use some additional components (Cassandra, ElasticSearch, ...). Guice packaging requires java-8.</p>
     
 
 
