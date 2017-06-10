@@ -40,11 +40,11 @@
 	      <a href="manage.html">manage</a>, <a href="monitor.html">monitor</a> 
 	      and <a href="dev.html">develop</a> Apache James Server.</p>
 
-        <p>Download Apache James Mail Server 3.0-beta4 and <a href="quick-start.html">quick-start</a> it!</p>
+        <p>Download Apache James Mail Server 3.0-RC1 and <a href="quick-start.html">quick-start</a> it!</p>
         <p>
           <span class="minibutton btn-download">
             <a href="http://james.apache.org/download.cgi#Apache_James_Server">
-              <span><span class="icon"></span>Early Apache James Server 3.0-beta4</span>
+              <span><span class="icon"></span>Early Apache James Server 3.0-RC1</span>
             </a>
           </span>
         </p>
