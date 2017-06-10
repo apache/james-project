@@ -1,0 +1,12 @@
+---
+layout: post
+title:  "Apache James Mailet 2.5.0 Released"
+date:   2012-12-08 16:13:22 +0200
+categories: james update
+---
+
+Apache Mailet 2.5.0 released.
+
+This release brings all components under the same project so future releases will be made with
+all of them. All Mailet artifact have the same version, names that start with apache-mailet-*
+and are OSGi bundles.

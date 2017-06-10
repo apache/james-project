@@ -44,45 +44,6 @@
                     <a href='http://james.apache.org/download.cgi'>here</a>.
                 </p>
             </subsection>
-            <subsection name='News'>
-                <ul>
-                    <li>2012 December -
-                        <a href="http://james.apache.org/mailet/">Apache Mailet</a>
-                        2.5.0 released.
-                        This release brings all components under the same project so future releases will be made with
-                        all of them. All Mailet artifact have the same version, names that start with apache-mailet-*
-                        and are OSGi bundles.
-                    </li>
-                    <li>2009 May -
-                        <a href='http://james.apache.org/mailet/crypto' rel='tag'>Apache Crypto Mailets</a>
-                        1.0 released. This package contains mailets which encode, decode, sign and verify mail
-                        plus cryptology utilities. This code has previously been bundled with
-                        <a href='http://james.apache.org/server'>Apache James Server</a>.
-                        For more information, see the
-                        <a href='http://james.apache.org/mailet/crypto/release-notes.html'>release notes</a>.
-                    </li>
-                    <li>2009 Apr -
-                        <a href='http://james.apache.org/mailet/base/' rel='tag'>Apache Mailet Base</a>
-                        1.0 released. Mailbox base is a basic mailet toolkit. This code has previously been bundled with
-                        <a href='http://james.apache.org/server'>Apache James Server</a>.
-                        For more information, see the
-                        <a href='http://james.apache.org/mailet/base/release-notes.html'>release notes</a>.
-                    </li>
-                    <li>2009 Feb -
-                        <a href='http://james.apache.org/mailet/mailetdocs-maven-plugin/' rel='tag'>MailetDocs</a>
-                        <a href='http://maven.apache.org' rel='tag'>Maven</a>
-                        Plugin 0.1 released. This is the first
-                        release of this catalog generator.
-                        For more information, see the
-                        <a href='http://james.apache.org/mailet/mailetdocs-maven-plugin/release-notes.html'>release
-                            notes</a>.
-                    </li>
-                    <li>2009 Jan -
-                        <a href='http://james.apache.org/mailet/api/index.html' rel='tag'>Apache Mailet 2.4</a>
-                        released. Available<a href='http://james.apache.org/download.cgi'>here</a>.
-                    </li>
-                </ul>
-            </subsection>
         </section>
         <section name='Further Information'>
             <ul>
