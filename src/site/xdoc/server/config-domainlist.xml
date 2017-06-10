@@ -31,7 +31,7 @@
     
       <p>This configuration block is defined by the <strong>domainlist</strong> tag.</p>
       
-      <p>You must specify the DomainList class as attribute of the domainlist tag (org.apache.james.domainlist.jpa.JPADomainList, or org.apache.james.domainlist.xml.XMLDomainList, or...)</p> 
+      <p>Using Spring, you must specify the DomainList class as attribute of the domainlist tag (org.apache.james.domainlist.jpa.JPADomainList, or org.apache.james.domainlist.xml.XMLDomainList, or...). This have no effect when using Guice.</p>
 
       <dl>
         <dt><strong>domainnames</strong></dt>

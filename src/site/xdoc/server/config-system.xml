@@ -53,7 +53,9 @@
     </subsection>
 
     <subsection name="james-database.properties">
-    
+
+        <p>This configuration file is only relevant when using JPA, with Spring or Guice.</p>
+
       <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/james-database-template.properties">james-database.properties</a> in GIT to get some examples and hints.</p>
 
       <p>The database connection in database.properties</p>
