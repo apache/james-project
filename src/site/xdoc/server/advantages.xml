@@ -63,7 +63,9 @@
 
         <subsection name="Manageable">
 
-          <p>Manage domains, users,... via well-known JMX tools - <a href="manage.html">read more</a>.</p>
+          <p>Manage domains, users,... via a <a href="manage-cli.html">command line client</a>, a <a href="manage-webadmin.html">
+            REST interface</a> or a well-known JMX tools - <a href="manage.html">read more</a>.See also <a href="metrics.html">
+            metrics</a> in live with Grafana.</p>
 
           <p><img src="images/jmx-management/jmx-user-part.png" /></p>
 
