@@ -136,28 +136,6 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       </code></p>
     
     </subsection>
-  
-    <subsection name="Nightly Builds">
-   
-      <p>The software listed above represents the latest Release Build
-         available from the Apache James Project.</p>
-<!-- 
-Do not promote snapshots, See JAMES-1558
-
-      <p>The James project also provides 
-         <a href="http://people.apache.org/builds/james/nightly/">Nighly Builds</a>:
-        <u>periodic snapshots during development</u>. Generally, these are considered
-        stable snapshots, but they have not undergone as much testing as a
-        Release Build, nor have they been voted upon for release by the
-        developer community. These are simply convenient test builds.
-        Sometimes the purpose for a Nightly Build could be soliciting feedback on
-        a specific change.</p>
-    
-      <p>James continous integration can be found on 
-      <a href="https://hudson.apache.org/hudson/view/G-L/view/James/">Hudson</a>.</p>
--->    
-  
-    </subsection>
 
   </section>
 
