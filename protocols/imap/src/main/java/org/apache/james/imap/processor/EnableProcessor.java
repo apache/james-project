@@ -46,17 +46,19 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
     private final static List<PermitEnableCapabilityProcessor> capabilities = new ArrayList<PermitEnableCapabilityProcessor>();
     public final static String ENABLED_CAPABILITIES = "ENABLED_CAPABILITIES";
     private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_ENABLE));
+    private final CapabilityProcessor capabilityProcessor;
 
     public EnableProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, List<PermitEnableCapabilityProcessor> capabilities,
-            MetricFactory metricFactory) {
-        this(next, mailboxManager, factory, metricFactory);
+            MetricFactory metricFactory, CapabilityProcessor capabilityProcessor) {
+        this(next, mailboxManager, factory, metricFactory, capabilityProcessor);
         EnableProcessor.capabilities.addAll(capabilities);
 
     }
 
     public EnableProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+            MetricFactory metricFactory, CapabilityProcessor capabilityProcessor) {
         super(EnableRequest.class, next, mailboxManager, factory, metricFactory);
+        this.capabilityProcessor = capabilityProcessor;
     }
 
 
@@ -83,12 +85,12 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
         }
     }
    
-    public static Set<String> enable(ImapRequest request, Responder responder, ImapSession session, Iterator<String> caps) throws EnableException {
+    public Set<String> enable(ImapRequest request, Responder responder, ImapSession session, Iterator<String> caps) throws EnableException {
         Set<String> enabledCaps = new HashSet<String>();
         while(caps.hasNext()) {
             String cap = caps.next();
             // Check if the CAPABILITY is supported at all
-            if (CapabilityProcessor.getSupportedCapabilities(session).contains(cap)) {
+            if (capabilityProcessor.getSupportedCapabilities(session).contains(cap)) {
                 for (PermitEnableCapabilityProcessor enableProcessor : capabilities) {
                     if (enableProcessor.getPermitEnableCapabilities(session).contains(cap)) {
                         enableProcessor.enable(request, responder, session, cap);
