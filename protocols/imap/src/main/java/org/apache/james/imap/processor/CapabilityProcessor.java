@@ -83,6 +83,14 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
         super.configure(imapConfiguration);
 
         disabledCaps.addAll(imapConfiguration.getDisabledCaps());
+        if (shouldDisableCondstore(imapConfiguration)) {
+            disabledCaps.add(SUPPORTS_CONDSTORE);
+        }
+    }
+
+    private boolean shouldDisableCondstore(ImapConfiguration imapConfiguration) {
+        return !imapConfiguration.isCondstoreEnable() 
+                && !disabledCaps.contains(SUPPORTS_CONDSTORE);
     }
 
     /**
