@@ -51,6 +51,8 @@ And list your domains:
 
 ## Managing users
 
+Note: the following commands are explained with virtual hosting turned on.
+
 Users are accounts on the mail server. James can maintain mailboxes for them.
 
 You can add a user:
@@ -83,6 +85,30 @@ Finally, you can list users:
 {cli} ListUsers
 ```
 
+### Virtual hosting
+
+James supports virtualhosting.
+
+ - If set to true in the configuration, then the username is the full mail address.
+
+The domains then become a part of the user.
+
+*usera@domaina.com and* *usera@domainb.com* on a mail server with *domaina.com* and *domainb.com* configured are mail addresses that belongs to different users.
+
+ - If set to false in the configurations, then the username is the mail address local part.
+
+It means that a user  is automatically created for all the domains configured on your server.
+
+*usera@domaina.com and* *usera@domainb.com* on a mail server with *domaina.com* and *domainb.com* configured are mail addresses that belongs to the same users.
+
+Here are some sample commands for managing users when virtual hosting is turned off:
+
+```
+{cli} AddUser user password
+{cli} RemoveUser user
+{cli} SetPassword user password
+```
+
 ## Managing mailboxes
 
 An administrator can perform some basic operation on user mailboxes.
@@ -90,7 +116,7 @@ An administrator can perform some basic operation on user mailboxes.
 Note on mailbox formatting: mailboxes are composed of three parts.
 
  - The namespace, indicating what kind of mailbox it is. (Shared or not?). The value for users mailboxes is #private . Note that for now no other values are supported as James do not support shared mailboxes.
- - The username.
+ - The username as stated above, depending on the virtual hosting value.
  - And finally mailbox name. Be aware that '.' serves as mailbox hierarchy delimiter.
 
 An administrator can delete all of the mailboxes of a user, which is not done automatically when removing a user (to avoid data loss):
