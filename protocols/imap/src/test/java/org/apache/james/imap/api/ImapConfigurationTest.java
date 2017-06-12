@@ -22,8 +22,6 @@ package org.apache.james.imap.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.imap.processor.IdleProcessor;
-
 import com.google.common.collect.ImmutableSet;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -44,7 +42,7 @@ public class ImapConfigurationTest {
     public void idleKeepAliveShouldBeDefaultValueWhenNoSetting() throws Exception {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder().build();
 
-        assertThat(imapConfiguration.getIdleTimeInterval()).isEqualTo(IdleProcessor.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS);
+        assertThat(imapConfiguration.getIdleTimeInterval()).isEqualTo(ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS);
     }
 
     @Test
@@ -79,7 +77,7 @@ public class ImapConfigurationTest {
     public void millisecondsShouldBeDefaultValueWhenNoSetting() throws Exception {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder().build();
 
-        assertThat(imapConfiguration.getIdleTimeIntervalUnit()).isEqualTo(IdleProcessor.DEFAULT_HEARTBEAT_INTERVAL_UNIT);
+        assertThat(imapConfiguration.getIdleTimeIntervalUnit()).isEqualTo(ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_UNIT);
     }
 
     @Test

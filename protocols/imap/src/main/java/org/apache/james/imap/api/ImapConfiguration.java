@@ -21,7 +21,6 @@ package org.apache.james.imap.api;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.imap.processor.IdleProcessor;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Function;
@@ -34,6 +33,9 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
 public class ImapConfiguration {
+    public final static boolean DEFAULT_ENABLE_IDLE = true;
+    public final static long DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS = 2 * 60;
+    public final static TimeUnit DEFAULT_HEARTBEAT_INTERVAL_UNIT = TimeUnit.SECONDS;
 
     public static Builder builder() {
         return new Builder();
@@ -105,9 +107,9 @@ public class ImapConfiguration {
                     .transform(NORMALIZE_STRING)
                     .toSet();
             return new ImapConfiguration(
-                    enableIdle.or(IdleProcessor.DEFAULT_ENABLE_IDLE),
-                    idleTimeInterval.or(IdleProcessor.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS),
-                    idleTimeIntervalUnit.or(IdleProcessor.DEFAULT_HEARTBEAT_INTERVAL_UNIT),
+                    enableIdle.or(DEFAULT_ENABLE_IDLE),
+                    idleTimeInterval.or(DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS),
+                    idleTimeIntervalUnit.or(DEFAULT_HEARTBEAT_INTERVAL_UNIT),
                     normalizeDisableCaps);
         }
     }

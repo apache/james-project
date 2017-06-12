@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.imap.api.ImapConfiguration;
-import org.apache.james.imap.processor.IdleProcessor;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 
 import com.google.common.collect.ImmutableSet;
@@ -41,9 +40,9 @@ public class IMAPServerTest {
         ImapConfiguration imapConfiguration = IMAPServer.getImapConfiguration(new DefaultConfigurationBuilder());
 
         ImapConfiguration expectImapConfiguration = ImapConfiguration.builder()
-                .enableIdle(IdleProcessor.DEFAULT_ENABLE_IDLE)
-                .idleTimeInterval(IdleProcessor.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS)
-                .idleTimeIntervalUnit(IdleProcessor.DEFAULT_HEARTBEAT_INTERVAL_UNIT)
+                .enableIdle(ImapConfiguration.DEFAULT_ENABLE_IDLE)
+                .idleTimeInterval(ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS)
+                .idleTimeIntervalUnit(ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_UNIT)
                 .disabledCaps(ImmutableSet.<String>of())
                 .build();
 

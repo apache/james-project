@@ -51,10 +51,6 @@ import org.apache.james.metrics.api.MetricFactory;
 public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> implements CapabilityImplementingProcessor {
 
     private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_IDLE));
-    // 2 minutes
-    public final static long DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS = 2 * 60;
-    public final static TimeUnit DEFAULT_HEARTBEAT_INTERVAL_UNIT = TimeUnit.SECONDS;
-    public final static boolean DEFAULT_ENABLE_IDLE = true;
     public final static int DEFAULT_SCHEDULED_POOL_CORE_SIZE = 5;
     private final static String DONE = "DONE";
     private TimeUnit heartbeatIntervalUnit;
@@ -64,17 +60,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
     public IdleProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        this(next, mailboxManager, factory, DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS, DEFAULT_HEARTBEAT_INTERVAL_UNIT, Executors.newScheduledThreadPool(DEFAULT_SCHEDULED_POOL_CORE_SIZE), metricFactory);
-
-    }
-
-    public IdleProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, long heartbeatInterval, TimeUnit heartbeatIntervalUnit, ScheduledExecutorService heartbeatExecutor,
-            MetricFactory metricFactory) {
         super(IdleRequest.class, next, mailboxManager, factory, metricFactory);
-        this.heartbeatInterval = heartbeatInterval;
-        this.heartbeatIntervalUnit = heartbeatIntervalUnit;
-        this.heartbeatExecutor = heartbeatExecutor;
-
     }
 
     @Override

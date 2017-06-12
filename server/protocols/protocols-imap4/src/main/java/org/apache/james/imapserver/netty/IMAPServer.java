@@ -27,7 +27,6 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.encode.ImapEncoder;
-import org.apache.james.imap.processor.IdleProcessor;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.ChannelGroupHandler;
@@ -117,8 +116,8 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         ImmutableSet<String> disabledCaps = ImmutableSet.copyOf(Splitter.on(CAPABILITY_SEPARATOR).split(configuration.getString("disabledCaps", "")));
 
         return ImapConfiguration.builder()
-                .enableIdle(configuration.getBoolean("enableIdle", IdleProcessor.DEFAULT_ENABLE_IDLE))
-                .idleTimeInterval(configuration.getLong("idleTimeInterval", IdleProcessor.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS))
+                .enableIdle(configuration.getBoolean("enableIdle", ImapConfiguration.DEFAULT_ENABLE_IDLE))
+                .idleTimeInterval(configuration.getLong("idleTimeInterval", ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS))
                 .idleTimeIntervalUnit(getTimeIntervalUnit(configuration.getString("idleTimeIntervalUnit", DEFAULT_TIME_UNIT)))
                 .disabledCaps(disabledCaps)
                 .build();
@@ -128,8 +127,8 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         try {
             return TimeUnit.valueOf(timeIntervalUnit);
         } catch (IllegalArgumentException e) {
-            LOG.info("Time interval unit is not valid {}, the default {} value should be used", timeIntervalUnit, IdleProcessor.DEFAULT_HEARTBEAT_INTERVAL_UNIT);
-            return IdleProcessor.DEFAULT_HEARTBEAT_INTERVAL_UNIT;
+            LOG.info("Time interval unit is not valid {}, the default {} value should be used", timeIntervalUnit, ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_UNIT);
+            return ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_UNIT;
         }
     }
 
