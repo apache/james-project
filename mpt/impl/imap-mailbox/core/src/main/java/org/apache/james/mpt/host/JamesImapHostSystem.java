@@ -27,6 +27,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthorizator;
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.main.ImapRequestStreamHandler;
@@ -159,5 +160,8 @@ public abstract class JamesImapHostSystem implements ImapHostSystem {
         configuration.addProperty("administratorId", "imapuser");
         return configuration;
     }
-    
+
+    public void configure(ImapConfiguration imapConfiguration) {
+        processor.configure(imapConfiguration);
+    }
 }

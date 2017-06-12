@@ -28,5 +28,4 @@ public interface ImapHostSystem extends HostSystem {
     void createMailbox(MailboxPath mailboxPath) throws Exception;
 
     void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws Exception;
-
 }

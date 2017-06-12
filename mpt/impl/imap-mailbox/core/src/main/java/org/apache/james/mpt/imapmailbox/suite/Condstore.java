@@ -16,29 +16,42 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mpt.imapmailbox.inmemory;
 
-import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.api.ImapHostSystem;
+package org.apache.james.mpt.imapmailbox.suite;
+
+import java.util.Locale;
+
+import javax.inject.Inject;
+
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
+import org.apache.james.mpt.imapmailbox.suite.base.BaseAuthenticatedState;
+import org.junit.Test;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
+public class Condstore extends BaseAuthenticatedState {
 
-public class InMemoryMailboxTestModule extends AbstractModule {
+    @Inject
+    private static JamesImapHostSystem system;
 
-    @Override
-    protected void configure() {
-        bind(HostSystem.class).to(JamesImapHostSystem.class);
-        bind(ImapHostSystem.class).to(JamesImapHostSystem.class);
+    public Condstore() throws Exception {
+        super(system);
     }
 
-    @Provides
-    @Singleton
-    public JamesImapHostSystem provideHostSystem() throws Exception {
-        return InMemoryHostSystem.build();
+    @Test
+    public void condstoreShouldBeDisableByDefault() throws Exception {
+        system.configure(ImapConfiguration.builder().build());
+        scriptTest("CondstoreDisable", Locale.US);
     }
 
+    @Test
+    public void condstoreShouldBeDisableWhenGivenAndFalse() throws Exception {
+        system.configure(ImapConfiguration.builder().isCondstoreEnable(false).build());
+        scriptTest("CondstoreDisable", Locale.US);
+    }
+
+    @Test
+    public void condstoreShouldBeEnableWhenGivenAndTrue() throws Exception {
+        system.configure(ImapConfiguration.builder().isCondstoreEnable(true).build());
+        scriptTest("CondstoreEnable", Locale.US);
+    }
 }

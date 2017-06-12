@@ -112,5 +112,4 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
     public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws Exception {
         throw new NotImplementedException();
     }
-    
 }
