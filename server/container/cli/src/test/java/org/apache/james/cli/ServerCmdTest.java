@@ -1267,6 +1267,41 @@ public class ServerCmdTest {
     }
 
     @Test
+    public void getHostShouldUseDefaultValueWhenNone() throws Exception {
+        String[] arguments = { "-p", "9999", "command", "arg1", "arg2", "arg3" };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+        assertThat(ServerCmd.getHost(commandLine)).isEqualTo("127.0.0.1");
+    }
+
+    @Test
+    public void getHostShouldUseDefaultValueWhenEmpty() throws Exception {
+        String[] arguments = { "-h", "", "-p", "9999", "command", "arg1", "arg2", "arg3" };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+        assertThat(ServerCmd.getHost(commandLine)).isEqualTo("127.0.0.1");
+    }
+
+    @Test
+    public void getHostShouldReturnValueWhenGiven() throws Exception {
+        String[] arguments = { "-h", "123.4.5.6", "-p", "9999", "command", "arg1", "arg2", "arg3" };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+        assertThat(ServerCmd.getHost(commandLine)).isEqualTo("123.4.5.6");
+    }
+
+    @Test
+    public void getPortShouldUseDefaultValueWhenNone() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "command", "arg1", "arg2", "arg3" };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+        assertThat(ServerCmd.getPort(commandLine)).isEqualTo(9999);
+    }
+
+    @Test
+    public void getPortShouldUseDefaultValueWhenEmpty() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "", "command", "arg1", "arg2", "arg3" };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+        assertThat(ServerCmd.getPort(commandLine)).isEqualTo(9999);
+    }
+
+    @Test
     public void getPortShouldRetrievePort() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);

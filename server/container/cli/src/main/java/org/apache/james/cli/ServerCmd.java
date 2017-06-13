@@ -28,7 +28,6 @@ import java.util.Map.Entry;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
@@ -58,6 +57,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 
 /**
  * Command line utility for managing various aspect of the James server.
@@ -68,16 +68,14 @@ public class ServerCmd {
     public static final String PORT_OPT_LONG = "port";
     public static final String PORT_OPT_SHORT = "p";
 
+    private static final String DEFAULT_HOST = "127.0.0.1";
     private static final int DEFAULT_PORT = 9999;
     private static final Logger LOG = LoggerFactory.getLogger(ServerCmd.class);
     
     private static Options createOptions() {
-        Options options = new Options();
-        Option optHost = new Option(HOST_OPT_SHORT, HOST_OPT_LONG, true, "node hostname or ip address");
-        optHost.setRequired(true);
-        options.addOption(optHost);
-        options.addOption(PORT_OPT_SHORT, PORT_OPT_LONG, true, "remote jmx agent port number");
-        return options;
+        return new Options()
+                .addOption(HOST_OPT_SHORT, HOST_OPT_LONG, true, "node hostname or ip address")
+                .addOption(PORT_OPT_SHORT, PORT_OPT_LONG, true, "remote jmx agent port number");
     }
 
     /**
@@ -110,7 +108,7 @@ public class ServerCmd {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         CommandLine cmd = parseCommandLine(args);
-        JmxConnection jmxConnection = new JmxConnection(cmd.getOptionValue(HOST_OPT_LONG), getPort(cmd));
+        JmxConnection jmxConnection = new JmxConnection(getHost(cmd), getPort(cmd));
         CmdType cmdType = new ServerCmd(
                 new JmxDataProbe().connect(jmxConnection),
                 new JmxMailboxProbe().connect(jmxConnection),
@@ -148,9 +146,18 @@ public class ServerCmd {
     }
 
     @VisibleForTesting
+    static String getHost(CommandLine cmd) {
+        String host = cmd.getOptionValue(HOST_OPT_LONG);
+        if (Strings.isNullOrEmpty(host)) {
+            return DEFAULT_HOST;
+        }
+        return host;
+    }
+
+    @VisibleForTesting
     static int getPort(CommandLine cmd) throws ParseException {
         String portNum = cmd.getOptionValue(PORT_OPT_LONG);
-        if (portNum != null) {
+        if (!Strings.isNullOrEmpty(portNum)) {
             try {
                 return validatePortNumber(Integer.parseInt(portNum));
             } catch (NumberFormatException e) {
