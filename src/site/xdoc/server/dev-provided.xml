@@ -27,15 +27,18 @@
 
 <section name="James Provided Extensions">
 
-  <subsection name="Provided Mailet">
+  <subsection name="Provided Mailets and Matchers">
   
-    <p>See the <a href="dev-provided-mailets.html">provided mailets</a> page for more information.</p>
-  
-  </subsection>
- 
-  <subsection name="Provided  Matcher">
-  
-    <p>See the <a href="dev-provided-mailets.html">provided matchers</a> page for more information.</p>
+    <p>See the <a href="dev-provided-mailets.html">provided mailets and matchers</a> page for more information.</p>
+
+      <!--
+      Page dev-provided-mailets.xml ommited from sources.
+
+      To generate its HTML version run + rename mvn org.apache.james:mailetdocs-maven-plugin:3.0.0-RC2-SNAPSHOT:aggregate
+      in james-project. It is in target/site/ folder.
+
+      You then need to ensure page have the rights menu and move it to the website server folder.
+      -->
   
   </subsection>
  

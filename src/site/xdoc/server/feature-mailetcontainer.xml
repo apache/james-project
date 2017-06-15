@@ -124,7 +124,9 @@
         <p>James bundles a number of Matchers and Mailets in its distribution.  Descriptions of provided matchers 
         can be found <a href="dev-provided-matchers.html">here</a>, while descriptions of provided mailets can be found 
         <a href="dev-provided-mailets.html">here</a>.</p>
-        
+
+        <p>You can retrieve the full list of mailets and matchers packaged in James <a href="dev-provided-mailets.html">here</a></p>
+
         <p>You can read more on mailets on following web sites:</p>
     
         <ul>
@@ -132,10 +134,7 @@
           <li><a href="http://james.apache.org/mailet/api/index.html">Mailet API</a></li>
           <li><a href="http://james.apache.org/mailet/base/index.html">Mailet Toolkit</a></li>
           <li><a href="http://james.apache.org/mailet/crypto/index.html">Mailet Crypto</a></li>
-          <li><a href="http://james.apache.org/mailet/standard/index.html">Mailet Sieve</a></li>
           <li><a href="http://james.apache.org/mailet/standard/index.html">Mailet Standard</a></li>
-          <li><a href="http://james.apache.org/mailet/maven-mailetdocs-plugin/index.html">Mailet Docs</a></li>
-          <li><a href="/james-server-mailets-function/mailet-report.html">Server Mailets</a></li>
         </ul>
     
      </subsection>

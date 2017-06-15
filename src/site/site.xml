@@ -161,7 +161,6 @@
                         </item>
                         <item name="Provided Extensions" href="/server/dev-provided.html" collapse="true" >
                             <item name="Mailets" href="/server/dev-provided-mailets.html" />
-                            <item name="Matchers" href="/server/dev-provided-matchers.html" />
                             <item name="SMTP Hooks" href="/server/dev-provided-smtp-hooks.html" />
                         </item>
                     </item>
