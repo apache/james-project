@@ -30,6 +30,15 @@ import org.apache.mailet.base.MailetUtil;
 
 import com.google.common.collect.ImmutableList;
 
+/**
+ * This matcher matches emails that have too many recipients.
+ *
+ * <p>The example below will reject any email with more than 5 recipients</p>
+ *
+ * <pre><code>
+ * &lt;mailet match=&quot;TooManyRecipients=5&quot; class=&quot;&lt;any-class&gt;&quot;/&gt;
+ * </code></pre>
+ */
 public class TooManyRecipients extends GenericMatcher {
 
     private int maximumRecipientCount;

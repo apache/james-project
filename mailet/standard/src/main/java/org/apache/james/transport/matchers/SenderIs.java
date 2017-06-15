@@ -32,6 +32,18 @@ import org.apache.mailet.base.GenericMatcher;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
+
+/**
+ * This matcher matches a specific sender, passed as a condition to this matcher.
+ *
+ *
+ * <p>The example below will match mail with a sender being user@domain</p>
+ *
+ * <pre><code>
+ * &lt;mailet match=&quot;SenderIs=user@domain&quot; class=&quot;&lt;any-class&gt;&quot;&gt;
+ * &lt;/mailet&gt;
+ * </code></pre>
+ */
 public class SenderIs extends GenericMatcher {
 
     private Set<MailAddress> senders;

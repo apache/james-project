@@ -38,7 +38,7 @@ import org.apache.mailet.base.RFC2822Headers;
 
 import com.google.common.base.Optional;
 
-/*
+/**
  * Takes the message and attaches a footer message to it.  Right now, it only
  * supports simple messages.  Needs to have additions to make it support
  * messages with alternate content types or with attachments.

@@ -40,6 +40,20 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * This matcher will check if the incoming email will make recipients exceed their quotas.
+ *
+ * Quota are managed directly by the mailbox. Performance will depend on your implementation (Cassandra and JPA maintains counts, thus it is a fast operation).
+ *
+ * Here is a configuration example:
+ *
+ * <pre><code>
+ * &lt;mailet match=&quot;IsOverQuota&quot; class=&quot;&lt;any-class&gt;&quot;/&gt;
+ * </code></pre>
+ *
+ * Read the <a href="http://james.apache.org/server/manage-cli.html">CLI documentation on how to configure quota</a>. Note:
+ * managing quotas can also be done through <a href="http://james.apache.org/server/manage-webadmin.html">WebAdmin</a>.
+ */
 public class IsOverQuota extends GenericMatcher {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IsOverQuota.class);

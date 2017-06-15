@@ -28,15 +28,15 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 
+/**
+ * This is the Or CompositeMatcher - consider it to be a union of the
+ * results.
+ *
+ * @return Collection of Recipients from the Or composition results of the
+ *         child matchers.
+ */
 public class Or extends GenericCompositeMatcher {
 
-    /**
-     * This is the Or CompositeMatcher - consider it to be a union of the
-     * results.
-     * 
-     * @return Collection of Recipient from the Or composition results of the
-     *         child matchers.
-     */
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         HashSet<MailAddress> result = new HashSet<MailAddress>();
         for (Matcher matcher : getMatchers()) {

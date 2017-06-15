@@ -26,6 +26,15 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.GenericMailet;
 
+/**
+ * This mailet adds the de-facto standard QMail Delivered-To header.
+ *
+ * Upon processing by LocalDelivery, a Delivered-To header matching the recipient mail address will be added before storage.
+ *
+ * <pre><code>
+ * &lt;mailet match=&quot;All&quot; class=&quot;&lt;AddDeliveredToHeader&gt;&quot;/&gt;
+ * </code></pre>
+ */
 public class AddDeliveredToHeader extends GenericMailet {
 
     public static final String DELIVERED_TO = "Delivered-To";

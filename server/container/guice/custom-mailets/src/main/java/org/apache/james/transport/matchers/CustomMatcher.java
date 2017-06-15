@@ -27,6 +27,12 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
 
+
+/**
+ * Matcher introduced for testing purposes.
+ *
+ * Rejects all recipients.
+ */
 public class CustomMatcher extends GenericMatcher {
 
     @Override
