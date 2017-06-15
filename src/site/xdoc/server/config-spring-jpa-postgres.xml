@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Spring JPA With Postgres Configuration</title>
+ </properties>
+
+<body>
+
+
+    <section name="Introduction">
+      <p>Consult <a href="http://james.apache.org/server/config-system.html">System Configuration</a> to get template, some examples and hints for the configuration with JPA.</p>
+    </section>
+
+    <section name="Current Supported Relational Database">
+      <p>James supports Derby as a default database, you do not need to do any additional configuration if you are using Derby</p>
+    </section>
+
+    <section name="Spring JPA With Postgres Configuration">
+      <p>If you wish to use Postgres as a database, please follow those steps to configure it</p>
+      <subsection name="Step 1: Create database on Postgres">
+
+        <p>You need to install Postgres or run Postgres with Docker</p>
+
+        <p>Example to install it on Debian:</p>
+        <source>
+          sudo apt-get update && sudo apt-get install postgresql-9.4 postgresql-client-9.4
+        </source>
+        <p>Example to pull and launch Postgres on docker</p>
+        <source>
+          docker run --detach --name postgres library/postgres
+        </source>
+        <p>Postgres does not create database on the fly so you need to create the database manually if it does not exist. Here is the command to perform this action: </p>
+
+        <source>psql --username postgres --tuples-only --command "SELECT 1 FROM pg_database WHERE dataname = '<strong><italic>database_name</italic></strong>'" \
+          | grep -q 1 || psql --username postgres --command "CREATE DATABASE <strong><italic>database_name</italic></strong>"</source>
+
+        <dl>
+          <dt><strong>database_name</strong></dt>
+          <dd>The name of database</dd>
+        </dl>
+
+      </subsection>
+
+      <subsection name="Step 2: Point to the database in configuration file">
+        <p>Change the content of <italic>james-database.properties</italic> and point to the 'database_name' created earlier</p>
+        <source>
+          database.driverClassName=org.postgresql.Driver
+          database.url=jdbc:postgresql://<strong>ip_of_postgres</strong>/<strong>database_name</strong>
+          database.username=postgres
+          database.password=postgres
+
+          vendorAdapter.database=POSTGRESQL
+        </source>
+        <p>If you are using the James Spring docker image. You need to customise the configuration file of the docker container with those steps:</p>
+          <ul>
+            <li>Create a new james-database.properties file with above content</li>
+            <li>Then you can add the configuration file to docker container using --volume flag</li>
+              <source>
+                --volume path_to_folder_which_contain_configuration_file/james-database.properties:/root/james-server-app-3.0.0-RC2-SNAPSHOT/conf/james-database.properties
+              </source>
+          </ul>
+      </subsection>
+
+      <subsection name="Step 3: Copy driver class to the right place">
+        <p>Follow this link <a href="https://jdbc.postgresql.org/download.html">Postgres Driver</a> to download the right version of the JDBC driver.</p>
+        <p>Copy that jar file to the <strong>conf/lib/</strong> folder of Spring James</p>
+        <p>If you are using the James Spring docker image, download the jar file then make it available on the classpath of your James instance using an additional docker volume: </p>
+        <source>
+          --volume path_to_folder_which_contain_jar_file/:/root/james-server-app-3.0.0-RC2-SNAPSHOT/conf/lib/
+        </source>
+      </subsection>
+
+      <subsection name="Step 4: Restart James">
+        <p>Follow the guide on <a href="http://james.apache.org/server/install.html">Restart and Testing</a> to restart James</p>
+
+        <p>If you are using the James Spring docker image, launch James docker or just stop and start docker container again if it ran. </p>
+
+        <p>Example to launch James Spring docker image with the volume</p>
+        <source>
+          docker run --volume path_to_folder_which_contain_configuration_file/james-database.properties:/root/james-server-app-3.0.0-RC2-SNAPSHOT/conf/james-database.properties \
+          --volume path_to_folder_which_contain_jar_file/:/root/james-server-app-3.0.0-RC2-SNAPSHOT/conf/lib/ \
+          --hostname localhost --publish "25:25" --publish "110:110" --publish "143:143" --publish "465:465" --publish "587:587" --publish "993:993" \
+          --name james_run linagora/james-jpa-spring
+        </source>
+      </subsection>
+    </section>
+
+</body>
+
+</document>

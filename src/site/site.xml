@@ -134,6 +134,7 @@
                         <item name="Guice" href="/server/config-guice.html" />
                         <item name="ElasticSearch" href="/server/config-elasticsearch.html" />
                         <item name="Cassandra" href="/server/config-cassandra.html" />
+                        <item name="Spring JPA Postgres" href="/server/config-spring-jpa-postgres.html" />
                         <item name="Quota" href="/server/config-quota.html" />
                         <item name="Events" href="/server/config-events.html" />
                     </item>
