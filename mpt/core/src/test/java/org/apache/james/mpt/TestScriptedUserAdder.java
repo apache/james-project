@@ -25,15 +25,13 @@ import junit.framework.TestCase;
 
 public class TestScriptedUserAdder extends TestCase {
     
-    private static final int PORT = 10001;
-    
     private DiscardProtocol protocol;
     
     private DiscardProtocol.Record record;
     
     protected void setUp() throws Exception {
         super.setUp();
-        protocol = new DiscardProtocol(PORT);
+        protocol = new DiscardProtocol();
         protocol.start();
         record = protocol.recordNext();
     }
@@ -44,7 +42,7 @@ public class TestScriptedUserAdder extends TestCase {
     }
 
     public void testShouldExecuteScriptAgainstPort() throws Exception {
-        ScriptedUserAdder adder = new ScriptedUserAdder("localhost", PORT, "C: USER='${user}' password='${password}'");
+        ScriptedUserAdder adder = new ScriptedUserAdder("localhost", protocol.getPort(), "C: USER='${user}' password='${password}'");
         adder.addUser("A User", "Some Password");
         assertEquals("USER='A User' password='Some Password'\r\n", record.complete());
     }

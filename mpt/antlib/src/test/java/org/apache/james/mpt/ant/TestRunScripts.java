@@ -23,20 +23,18 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStream;
 
-import junit.framework.TestCase;
-
 import org.apache.james.mpt.DiscardProtocol;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.types.resources.StringResource;
 import org.apache.tools.ant.types.resources.Union;
 
+import junit.framework.TestCase;
+
 public class TestRunScripts extends TestCase {
 
     private static final String SCRIPT = "A script";
 
-    private static final int PORT = 10001;
-    
     Union stubResourceCollection;
     Resource stubResource;
     
@@ -47,7 +45,7 @@ public class TestRunScripts extends TestCase {
     
     protected void setUp() throws Exception {
         super.setUp();
-        fakeServer = new DiscardProtocol(PORT);
+        fakeServer = new DiscardProtocol();
         fakeServer.start();
         record = fakeServer.recordNext();
         
@@ -57,7 +55,7 @@ public class TestRunScripts extends TestCase {
         
         subject = new MailProtocolTestTask();
         subject.setHost("127.0.0.1");
-        subject.setPort(PORT);
+        subject.setPort(fakeServer.getPort());
         subject.setProject(new Project());
     }
 

@@ -47,7 +47,7 @@ public class DiscardProtocol {
     private static final Log LOG = LogFactory.getLog(DiscardProtocol.class);
     
     /** Serve on this port */
-    private final int port;
+    private int port;
     
     /** 
      * Queues requests for recordings.
@@ -64,9 +64,8 @@ public class DiscardProtocol {
     private volatile ServerSocketChannel socket;
     
 
-    public DiscardProtocol(int port) {
+    public DiscardProtocol() {
         super();
-        this.port = port;
         queue = new LinkedList<Server>();
         runningServers = new LinkedList<Server>();
     }
@@ -81,7 +80,8 @@ public class DiscardProtocol {
         {
             if (socket == null) {
                 socket = ServerSocketChannel.open();
-                socket.socket().bind(new InetSocketAddress(port));
+                socket.socket().bind(new InetSocketAddress(0));
+                port = socket.socket().getLocalPort();
                 // only going to record a single conversation
                 socket.configureBlocking(false);
                 
@@ -94,6 +94,9 @@ public class DiscardProtocol {
         }
     }
     
+    public int getPort() {
+        return port;
+    }
     
     public Record recordNext() {
         synchronized (queue)

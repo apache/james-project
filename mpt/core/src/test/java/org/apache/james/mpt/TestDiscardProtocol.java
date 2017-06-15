@@ -52,8 +52,6 @@ public class TestDiscardProtocol extends TestCase {
 
     private static final String INPUT = "One, two, three - Testing";
 
-    private static final int PORT = 10001;
-    
     private DiscardProtocol protocol;
     private Socket socket;
 
@@ -62,9 +60,9 @@ public class TestDiscardProtocol extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        protocol = new DiscardProtocol(PORT);
+        protocol = new DiscardProtocol();
         protocol.start();
-        socket = SocketFactory.getDefault().createSocket("127.0.0.1", PORT);
+        socket = SocketFactory.getDefault().createSocket("127.0.0.1", protocol.getPort());
         record = protocol.recordNext();
     }
 
