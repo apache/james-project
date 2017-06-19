@@ -1,7 +1,7 @@
 Manage James via the Command Line
 =================================
 
-With any packaging, James is packed with a command line client.
+With any wiring, James is packed with a command line client.
 
 To use it enter, for Spring distrubution:
 

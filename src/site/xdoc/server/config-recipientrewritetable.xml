@@ -33,7 +33,7 @@
     
      <p>The default table for storing James' Recipient Rewrite mappings.</p>
 
-     <p>Using Spring, you should add a class attribute to recipientrewritetable tag (class="org.apache.james.rrt.jpa.JPARecipientRewriteTable). It has no effect with Guice packaging.</p>
+     <p>Using Spring, you should add a class attribute to recipientrewritetable tag (class="org.apache.james.rrt.jpa.JPARecipientRewriteTable). It has no effect with Guice wiring.</p>
 
      <dl>
         <dt><strong>recursiveMapping</strong></dt>

@@ -29,15 +29,15 @@
   
     <p>All configuration files resides in the ./conf and ./conf/META-INF folder.</p>
     
-    <p>With default Spring packaging, we ship with default configuration (embedded in jars) and -template files
+    <p>With default Spring wiring, we ship with default configuration (embedded in jars) and -template files
        you can use to override the default configuration. Simply copy in conf folder *-template.xml
        to *.xml (example: smtpserver-template.xml to smtpserver.xml), and change
        in *.xml the settings to map your needs.</p>
 
-    <p> For Guice based packaging, you are encouraged to take a look at default configuration of the
+    <p> For Guice based wiring, you are encouraged to take a look at default configuration of the
       <a href="https://github.com/apache/james-project/tree/master/dockerfiles/run/guice">James docker images</a>.</p>
 
-    <p>Please note that the configuration is dependent of the packaging you have chosen. Some configuration files are specific to
+    <p>Please note that the configuration is dependent of the wiring you have chosen. Some configuration files are specific to
     some back-ends, to some protocols. Please also note that some configuration files are not required for Guice. In this
     case, it will be specified.</p>
        

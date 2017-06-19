@@ -113,7 +113,7 @@
                         <item name="Performance" href="/server/feature-performance.html" />
                         <item name="Security" href="/server/feature-security.html" />
                     </item>
-                    <item name="2. Packaging" href="/server/packaging.html" />
+                    <item name="2. Wiring" href="/server/wiring.html" />
                     <item name="3. Install James" href="/server/install.html" />
                     <item name="4. Configure James" href="/server/config.html" collapse="true" >
                         <item name="System" href="/server/config-system.html" />

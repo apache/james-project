@@ -27,7 +27,7 @@
 
   <section name="Guice configure Apache James Server">
 
-    <p>Such configuration only applies to Guice packaging.</p>
+    <p>Such configuration only applies to Guice wiring.</p>
 
     <p>You are encouraged to contribute by developing a new backend guice module.
        Have a look to the <i>james-server-cassandra-guice</i> artifact. This can easily be done

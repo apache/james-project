@@ -27,7 +27,7 @@
 
   <section name="Fetchmail Configuration">
 
-    This configuration file requires Spring packaging.
+    This configuration file requires Spring wiring.
 
     <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/fetchmail-template.xml">fetchmail-template.xml</a> in GIT to get some examples and hints.</p>
 
