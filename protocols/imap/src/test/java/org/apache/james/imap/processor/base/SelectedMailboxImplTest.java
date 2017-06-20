@@ -52,7 +52,6 @@ import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -65,7 +64,9 @@ import com.google.common.collect.ImmutableList;
 public class SelectedMailboxImplTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SelectedMailboxImplTest.class);
-    public static final MessageUid MESSAGE_UID_5 = MessageUid.of(5);
+    private static final MessageUid EMITTED_EVENT_UID = MessageUid.of(5);
+    private static final int MOD_SEQ = 12;
+    private static final int SIZE = 38;
 
     private ExecutorService executorService;
     private MailboxManager mailboxManager;
@@ -77,20 +78,23 @@ public class SelectedMailboxImplTest {
     @Before
     public void setUp() throws Exception {
         executorService = Executors.newFixedThreadPool(1);
-
         mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "tellier@linagora.com", MailboxConstants.INBOX);
         mailboxManager = mock(MailboxManager.class);
         messageManager = mock(MessageManager.class);
-        when(mailboxManager.getMailbox(eq(mailboxPath), any(MailboxSession.class))).thenReturn(messageManager);
-        when(messageManager.getApplicableFlags(any(MailboxSession.class))).thenReturn(new Flags());
-        when(messageManager.search(any(SearchQuery.class), any(MailboxSession.class)))
-            .then(sleepThenSearchAnswer());
-
         imapSession = mock(ImapSession.class);
+        mailbox = mock(Mailbox.class);
+
+        when(mailboxManager.getMailbox(eq(mailboxPath), any(MailboxSession.class)))
+            .thenReturn(messageManager);
+        when(messageManager.getApplicableFlags(any(MailboxSession.class)))
+            .thenReturn(new Flags());
+        when(messageManager.search(any(SearchQuery.class), any(MailboxSession.class)))
+            .then(delayedSearchAnswer());
+
         when(imapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mock(MailboxSession.class));
 
-        mailbox = mock(Mailbox.class);
-        when(mailbox.generateAssociatedPath()).thenReturn(mailboxPath);
+        when(mailbox.generateAssociatedPath())
+            .thenReturn(mailboxPath);
     }
 
     @After
@@ -98,11 +102,10 @@ public class SelectedMailboxImplTest {
         executorService.shutdownNow();
     }
 
-    @Ignore
     @Test
-    public void concurrentEventShouldNotSkipUidEmmitedDuringInitialization() throws Exception {
-        final AtomicInteger success = new AtomicInteger(0);
-        doAnswer(generateEmitEventAnswer(success))
+    public void concurrentEventShouldNotSkipAddedEventsEmittedDuringInitialisation() throws Exception {
+        final AtomicInteger successCount = new AtomicInteger(0);
+        doAnswer(generateEmitEventAnswer(successCount))
             .when(mailboxManager)
             .addListener(eq(mailboxPath), any(MailboxListener.class), any(MailboxSession.class));
 
@@ -111,14 +114,13 @@ public class SelectedMailboxImplTest {
             imapSession,
             mailboxPath);
 
-        assertThat(selectedMailbox.getLastUid().get()).isEqualTo(MESSAGE_UID_5);
+        assertThat(selectedMailbox.getLastUid().get()).isEqualTo(EMITTED_EVENT_UID);
     }
 
-    @Ignore
     @Test
-    public void concurrentEventShouldBeSupportedDuringInitialisation() throws Exception {
-        final AtomicInteger success = new AtomicInteger(0);
-        doAnswer(generateEmitEventAnswer(success))
+    public void concurrentEventShouldBeProcessedSuccessfullyDuringInitialisation() throws Exception {
+        final AtomicInteger successCount = new AtomicInteger(0);
+        doAnswer(generateEmitEventAnswer(successCount))
             .when(mailboxManager)
             .addListener(eq(mailboxPath), any(MailboxListener.class), any(MailboxSession.class));
 
@@ -127,12 +129,12 @@ public class SelectedMailboxImplTest {
             imapSession,
             mailboxPath);
 
-        assertThat(success.get())
+        assertThat(successCount.get())
             .as("Get the incremented value in case of successful event processing.")
             .isEqualTo(1);
     }
 
-    private Answer<Iterator<MessageUid>> sleepThenSearchAnswer() {
+    private Answer<Iterator<MessageUid>> delayedSearchAnswer() {
         return new Answer<Iterator<MessageUid>>() {
             @Override
             public Iterator<MessageUid> answer(InvocationOnMock invocation) throws Throwable {
@@ -166,7 +168,7 @@ public class SelectedMailboxImplTest {
 
     private void emitEvent(MailboxListener mailboxListener) {
         TreeMap<MessageUid, MessageMetaData> result = new TreeMap<MessageUid, MessageMetaData>();
-        result.put(MESSAGE_UID_5, new SimpleMessageMetaData(MESSAGE_UID_5, 12, new Flags(), 38, new Date(), new DefaultMessageId()));
+        result.put(EMITTED_EVENT_UID, new SimpleMessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
         mailboxListener.event(new EventFactory().added(mock(MailboxSession.class), result, mailbox));
     }
 }

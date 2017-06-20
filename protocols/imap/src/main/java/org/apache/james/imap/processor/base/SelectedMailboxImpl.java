@@ -44,6 +44,7 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Default implementation of {@link SelectedMailbox}
@@ -84,17 +85,14 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
 
         MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
 
+        uidMsnConverter = new UidMsnConverter();
+
         mailboxManager.addListener(path, this, mailboxSession);
 
         MessageManager messageManager = mailboxManager.getMailbox(path, mailboxSession);
         applicableFlags = messageManager.getApplicableFlags(mailboxSession);
-        uidMsnConverter = getUidMsnConverter(mailboxSession, messageManager);
-    }
-    
-    private UidMsnConverter getUidMsnConverter(MailboxSession mailboxSession , MessageManager messageManager) throws MailboxException {
-        return new UidMsnConverter(
-                messageManager.search(
-                        new SearchQuery(SearchQuery.all()), mailboxSession));
+        uidMsnConverter.addAll(ImmutableList.copyOf(
+            messageManager.search(new SearchQuery(SearchQuery.all()), mailboxSession)));
     }
 
     @Override
