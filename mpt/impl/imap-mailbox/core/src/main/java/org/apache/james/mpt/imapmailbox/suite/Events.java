@@ -24,30 +24,53 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class Events extends BaseSelectedState {
+public class Events implements ImapTestConstants {
 
     @Inject
     private static HostSystem system;
     
-    public Events() throws Exception {
-        super(system);
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
     public void testAppendToSelectedUS() throws Exception {
-        scriptTest("AppendToSelected", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("AppendToSelected");
     }
 
     @Test
     public void testAppendToSelectedKOREA() throws Exception {
-        scriptTest("AppendToSelected", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("AppendToSelected");
     }
 
     @Test
     public void testAppendToSelectedITALY() throws Exception {
-        scriptTest("AppendToSelected", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("AppendToSelected");
     }
 }

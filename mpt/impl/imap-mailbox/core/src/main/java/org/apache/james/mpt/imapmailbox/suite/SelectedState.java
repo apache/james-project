@@ -24,165 +24,243 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class SelectedState extends BaseSelectedState {
+public class SelectedState implements ImapTestConstants {
 
     @Inject
     private static HostSystem system;
     
-    public SelectedState() throws Exception {
-        super(system);
+    
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
     public void testCheckUS() throws Exception {
-        scriptTest("Check", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("Check");
     }
 
     @Test
     public void testExpungeUS() throws Exception {
-        scriptTest("Expunge", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("Expunge");
     }
 
     @Test
     public void testSearchUS() throws Exception {
-        scriptTest("Search", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("Search");
     }
 
     @Test
     public void testFetchSingleMessageUS() throws Exception {
-        scriptTest("FetchSingleMessage", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchSingleMessage");
     }
 
     @Test
     public void testFetchMultipleMessagesUS() throws Exception {
-        scriptTest("FetchMultipleMessages", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchMultipleMessages");
     }
 
     @Test
     public void testFetchPeekUS() throws Exception {
-        scriptTest("FetchPeek", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchPeek");
     }
 
     @Test
     public void testStoreUS() throws Exception {
-        scriptTest("Store", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("Store");
     }
 
     @Test
     public void testCopyUS() throws Exception {
-        scriptTest("Copy", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("Copy");
     }
 
     @Test
     public void testUidUS() throws Exception {
-        scriptTest("Uid", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("Uid");
     }
 
     @Test
     public void testCheckITALY() throws Exception {
-        scriptTest("Check", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Check");
     }
 
     @Test
     public void testExpungeITALY() throws Exception {
-        scriptTest("Expunge", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Expunge");
     }
 
     @Test
     public void testSearchITALY() throws Exception {
-        scriptTest("Search", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Search");
     }
 
     @Test
     public void testFetchSingleMessageITALY() throws Exception {
-        scriptTest("FetchSingleMessage", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchSingleMessage");
     }
 
     @Test
     public void testFetchMultipleMessagesITALY() throws Exception {
-        scriptTest("FetchMultipleMessages", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchMultipleMessages");
     }
 
     @Test
     public void testFetchPeekITALY() throws Exception {
-        scriptTest("FetchPeek", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchPeek");
     }
 
     @Test
     public void testStoreITALY() throws Exception {
-        scriptTest("Store", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Store");
     }
 
     @Test
     public void testCopyITALY() throws Exception {
-        scriptTest("Copy", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Copy");
     }
 
     @Test
     public void testUidITALY() throws Exception {
-        scriptTest("Uid", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Uid");
     }
 
     @Test
     public void testCheckKOREA() throws Exception {
-        scriptTest("Check", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Check");
     }
 
     @Test
     public void testExpungeKOREA() throws Exception {
-        scriptTest("Expunge", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Expunge");
     }
 
     @Test
     public void testSearchKOREA() throws Exception {
-        scriptTest("Search", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Search");
     }
 
     @Test
     public void testFetchSingleMessageKOREA() throws Exception {
-        scriptTest("FetchSingleMessage", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchSingleMessage");
     }
 
     @Test
     public void testFetchMultipleMessagesKOREA() throws Exception {
-        scriptTest("FetchMultipleMessages", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchMultipleMessages");
     }
 
     @Test
     public void testFetchPeekKOREA() throws Exception {
-        scriptTest("FetchPeek", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchPeek");
     }
 
     @Test
     public void testStoreKOREA() throws Exception {
-        scriptTest("Store", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Store");
     }
 
     @Test
     public void testCopyKOREA() throws Exception {
-        scriptTest("Copy", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Copy");
     }
 
     @Test
     public void testUidKOREA() throws Exception {
-        scriptTest("Uid", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Uid");
     }
     
     @Test
     public void testNamespaceUS() throws Exception {
-        scriptTest("Namespace", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("Namespace");
     }
 
     @Test
     public void testNamespaceITALY() throws Exception {
-        scriptTest("Namespace", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Namespace");
     }
     
     @Test
     public void testNamespaceKOREA() throws Exception {
-        scriptTest("Namespace", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Namespace");
     }
 }

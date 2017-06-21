@@ -26,16 +26,31 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseNonAuthenticatedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class AuthenticatePlain extends BaseNonAuthenticatedState {
+public class AuthenticatePlain implements ImapTestConstants {
     
     @Inject
     private static ImapHostSystem system;
 
-    public AuthenticatePlain() throws Exception {
-        super(system);
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
@@ -43,7 +58,7 @@ public class AuthenticatePlain extends BaseNonAuthenticatedState {
         system.addUser("delegate", "123456");
         system.createMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "delegate", "delegate"));
         system.createMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "imapuser", "imapuser"));
-        scriptTest("AuthenticatePlain", Locale.US);
+        simpleScriptedTestProtocol.run("AuthenticatePlain");
     }
 
     @Test
@@ -51,7 +66,9 @@ public class AuthenticatePlain extends BaseNonAuthenticatedState {
         system.addUser("delegate", "123456");
         system.createMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "delegate", "delegate"));
         system.createMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "imapuser", "imapuser"));
-        scriptTest("AuthenticatePlain", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("AuthenticatePlain");
     }
 
     @Test
@@ -59,6 +76,8 @@ public class AuthenticatePlain extends BaseNonAuthenticatedState {
         system.addUser("delegate", "123456");
         system.createMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "delegate", "delegate"));
         system.createMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "imapuser", "imapuser"));
-        scriptTest("AuthenticatePlain", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("AuthenticatePlain");
     }
 }

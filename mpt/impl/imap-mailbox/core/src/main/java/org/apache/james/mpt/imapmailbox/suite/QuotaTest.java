@@ -19,16 +19,21 @@
 
 package org.apache.james.mpt.imapmailbox.suite;
 
-import org.apache.james.mpt.api.ImapFeatures;
-import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedState;
-import org.junit.Assume;
-import org.junit.Test;
-
-import javax.inject.Inject;
 import java.util.Locale;
 
-public class QuotaTest extends BaseSelectedState {
+import javax.inject.Inject;
+
+import org.apache.james.mpt.api.ImapFeatures;
+import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
+
+public class QuotaTest implements ImapTestConstants {
 
     private static final int MAX_MESSAGE_QUOTA = 4096;
     private static final long MAX_STORAGE_QUOTA = 5 * 1024L * 1024L * 1024L;
@@ -36,16 +41,30 @@ public class QuotaTest extends BaseSelectedState {
     @Inject
     private static ImapHostSystem system;
 
-    public QuotaTest() throws Exception {
-        super(system);
+    
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        Assume.assumeTrue(system.supports(ImapFeatures.Feature.QUOTA_SUPPORT));
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
     public void testQuotaScript() throws Exception {
-        Assume.assumeTrue(system.supports(ImapFeatures.Feature.QUOTA_SUPPORT));
-
         system.setQuotaLimits(MAX_MESSAGE_QUOTA, MAX_STORAGE_QUOTA);
-
-        scriptTest("Quota", Locale.CANADA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.CANADA)
+            .run("Quota");
     }
 }

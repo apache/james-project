@@ -24,60 +24,95 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class FetchBodySection extends BaseSelectedState {
+public class FetchBodySection implements ImapTestConstants {
 
     @Inject
     private static HostSystem system;
     
-    public FetchBodySection() throws Exception {
-        super(system);
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
     public void testFetchMultipartAlternativeUS() throws Exception {
-        scriptTest("FetchMultipartAlternative", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchMultipartAlternative");
     }
 
     @Test
     public void testFetchMultipartAlternativeITALY() throws Exception {
-        scriptTest("FetchMultipartAlternative", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchMultipartAlternative");
     }
 
     @Test
     public void testFetchMultipartAlternativeKOREA() throws Exception {
-        scriptTest("FetchMultipartAlternative", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchMultipartAlternative");
     }
 
     @Test
     public void testFetchMultipartMixedUS() throws Exception {
-        scriptTest("FetchMultipartMixed", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchMultipartMixed");
     }
 
     @Test
     public void testFetchMultipartMixedITALY() throws Exception {
-        scriptTest("FetchMultipartMixed", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchMultipartMixed");
     }
 
     @Test
     public void testFetchMultipartMixedKOREA() throws Exception {
-        scriptTest("FetchMultipartMixed", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchMultipartMixed");
     }
 
     @Test
     public void testFetchMultipartMixedComplexUS() throws Exception {
-        scriptTest("FetchMultipartMixedComplex", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchMultipartMixedComplex");
     }
 
     @Test
     public void testFetchMultipartMixedComplexITALY() throws Exception {
-        scriptTest("FetchMultipartMixedComplex", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchMultipartMixedComplex");
     }
 
     @Test
     public void testFetchMultipartMixedComplexKOREA() throws Exception {
-        scriptTest("FetchMultipartMixedComplex", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchMultipartMixedComplex");
     }
 }

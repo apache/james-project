@@ -19,33 +19,40 @@
 
 package org.apache.james.mpt.imapmailbox.suite;
 
-import javax.inject.Inject;
 import java.util.Locale;
 
+import javax.inject.Inject;
+
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseImapProtocol;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.Before;
 import org.junit.Test;
 
-public class DeploymentValidation extends BaseImapProtocol {
+public class DeploymentValidation implements ImapTestConstants {
 
     public static final String DOMAIN = "domain";
-    public static final String USER = "imapuser@" + DOMAIN;
 
     @Inject
     private static HostSystem system;
+    public static final String USER = "imapuser";
+    public static final String PASSWORD = "password";
 
-    public DeploymentValidation() throws Exception {
-        super(system);
-    }
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
-
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER + "@" + DOMAIN, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
     }
-
+    
     @Test
     public void validateDeployment() throws Exception {
-        scriptTest("ValidateDeployment", Locale.US);
+        simpleScriptedTestProtocol.run("ValidateDeployment");
     }
 
 }

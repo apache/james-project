@@ -22,14 +22,13 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-import org.apache.james.mpt.script.AbstractSimpleScriptedTestProtocol;
-import org.junit.Before;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
-public class SmtpStarttlsCommandTest extends AbstractSimpleScriptedTestProtocol {
+public class SmtpStarttlsCommandTest {
 
     public static final String USER = "bob";
     public static final String DOMAIN = "mydomain.tld";
@@ -43,41 +42,40 @@ public class SmtpStarttlsCommandTest extends AbstractSimpleScriptedTestProtocol 
 
     @Inject
     private static SmtpHostSystem hostSystem;
+    
+    private SimpleScriptedTestProtocol scriptedTest;
 
     public SmtpStarttlsCommandTest() throws Exception {
-        super(hostSystem, USER_AT_DOMAIN, PASSWORD, "/org/apache/james/smtp/scripts/");
-    }
-
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
+        String scriptDir = "/org/apache/james/smtp/scripts/";
+        scriptedTest = new SimpleScriptedTestProtocol(scriptDir, hostSystem)
+                .withLocale(Locale.US)
+                .withUser(USER_AT_DOMAIN, PASSWORD);
     }
 
     @Test
     public void starttlsShouldWork() throws Exception {
-        scriptTest("starttls", Locale.US);
+        scriptedTest.run("starttls");
     }
 
     @Test
     public void starttlsShouldBeRejectedWhenFollowedByCommand() throws Exception {
-        scriptTest("starttls_with_injection", Locale.US);
+        scriptedTest.run("starttls_with_injection");
     }
 
     @Test
     public void shouldNotRejectContentWithStartTls() throws Exception {
-        scriptTest("data_with_starttls", Locale.US);
+        scriptedTest.run("data_with_starttls");
     }
 
 
     @Test
     public void shouldNotRejectRcptWithStartTls() throws Exception {
-        hostSystem.addUser("starttls@mydomain.tld", PASSWORD);
-
-        scriptTest("rcpt_with_starttls", Locale.US);
+        scriptedTest.withUser("starttls@mydomain.tld", PASSWORD);
+        scriptedTest.run("rcpt_with_starttls");
     }
 
     @Test
     public void shouldNotRejectContentStartsWithStartTls() throws Exception {
-        scriptTest("data_starts_with_starttls", Locale.US);
+        scriptedTest.run("data_starts_with_starttls");
     }
 }

@@ -24,135 +24,201 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class Fetch extends BaseSelectedState {
+public class Fetch implements ImapTestConstants {
 
     @Inject
     private static HostSystem system;
     
-    public Fetch() throws Exception {
-        super(system);
+    
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
     public void testFetchEnvelopeUS() throws Exception {
-        scriptTest("FetchEnvelope", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchEnvelope");
     }
 
     @Test
     public void testFetchEnvelopeIT() throws Exception {
-        scriptTest("FetchEnvelope", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchEnvelope");
     }
 
     @Test
     public void testFetchEnvelopeKOREA() throws Exception {
-        scriptTest("FetchEnvelope", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchEnvelope");
     }
 
     @Test
     public void testFetchTextUS() throws Exception {
-        scriptTest("FetchText", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchText");
     }
 
     @Test
     public void testFetchBodyNoSectionUS() throws Exception {
-        scriptTest("FetchBodyNoSection", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchBodyNoSection");
     }
 
     @Test
     public void testFetchTextIT() throws Exception {
-        scriptTest("FetchText", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchText");
     }
 
     @Test
     public void testFetchBodyNoSectionIT() throws Exception {
-        scriptTest("FetchBodyNoSection", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchBodyNoSection");
     }
 
     @Test
     public void testFetchTextKOREA() throws Exception {
-        scriptTest("FetchText", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchText");
     }
 
     @Test
     public void testFetchBodyNoSectionKOREA() throws Exception {
-        scriptTest("FetchBodyNoSection", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchBodyNoSection");
     }
 
     @Test
     public void testFetchRFC822US() throws Exception {
-        scriptTest("FetchRFC822", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchRFC822");
     }
 
     @Test
     public void testFetchRFC822TextUS() throws Exception {
-        scriptTest("FetchRFC822Text", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchRFC822Text");
     }
 
     @Test
     public void testFetchRFC822HeaderUS() throws Exception {
-        scriptTest("FetchRFC822Header", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchRFC822Header");
     }
 
     @Test
     public void testFetchRFC822KOREA() throws Exception {
-        scriptTest("FetchRFC822", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchRFC822");
     }
 
     @Test
     public void testFetchRFC822TextKOREA() throws Exception {
-        scriptTest("FetchRFC822Text", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchRFC822Text");
     }
 
     @Test
     public void testFetchRFC822HeaderKOREA() throws Exception {
-        scriptTest("FetchRFC822Header", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchRFC822Header");
     }
 
     @Test
     public void testFetchRFC822ITALY() throws Exception {
-        scriptTest("FetchRFC822", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchRFC822");
     }
 
     @Test
     public void testFetchRFC822TextITALY() throws Exception {
-        scriptTest("FetchRFC822Text", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchRFC822Text");
     }
 
     @Test
     public void testFetchRFC822HeaderITALY() throws Exception {
-        scriptTest("FetchRFC822Header", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchRFC822Header");
     }
 
     @Test
     public void testFetchInternalDateUS() throws Exception {
-        scriptTest("FetchInternalDate", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchInternalDate");
     }
 
     @Test
     public void testFetchInternalDateITALY() throws Exception {
-        scriptTest("FetchInternalDate", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchInternalDate");
     }
 
     @Test
     public void testFetchInternalDateKOREA() throws Exception {
-        scriptTest("FetchInternalDate", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchInternalDate");
     }
 
     @Test
     public void testFetchFetchRfcMixedUS() throws Exception {
-        scriptTest("FetchRFC822Mixed", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchRFC822Mixed");
     }
 
     @Test
     public void testFetchFetchRfcMixedKOREA() throws Exception {
-        scriptTest("FetchRFC822Mixed", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchRFC822Mixed");
     }
 
     @Test
     public void testFetchFetchRfcMixedITALY() throws Exception {
-        scriptTest("FetchRFC822Mixed", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchRFC822Mixed");
     }
 }

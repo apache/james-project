@@ -19,18 +19,21 @@
 
 package org.apache.james.mpt.imapmailbox.suite;
 
+import java.util.Locale;
+
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.GrantRightsOnHost;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
 import org.apache.james.mpt.imapmailbox.MailboxMessageAppender;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseImapProtocol;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.Before;
 import org.junit.Test;
 
-import javax.inject.Inject;
-import java.util.Locale;
-
-public class ACLIntegration extends BaseImapProtocol {
+public class ACLIntegration implements ImapTestConstants {
     public static final String OTHER_USER_NAME = "Boby";
     public static final String OTHER_USER_PASSWORD = "password";
     public static final MailboxPath OTHER_USER_MAILBOX = new MailboxPath("#private", OTHER_USER_NAME, "");
@@ -43,64 +46,64 @@ public class ACLIntegration extends BaseImapProtocol {
     @Inject
     private MailboxMessageAppender mailboxMessageAppender;
 
-    public ACLIntegration() throws Exception {
-        super(system);
-    }
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
-        system.addUser(OTHER_USER_NAME, OTHER_USER_PASSWORD);
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(TO_ADDRESS, PASSWORD)
+                .withUser(OTHER_USER_NAME, OTHER_USER_PASSWORD)
+                .withLocale(Locale.US);
     }
-
+    
     @Test
     public void rightRShouldBeSufficientToPerformStatusSelectCloseExamineUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("r"));
-        scriptTest("aclIntegration/ACLIntegrationRightR", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationRightR");
     }
 
     @Test
     public void rightRShouldBeNeededToPerformStatusSelectCloseExamineUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("lswipkxtecda"));
-        scriptTest("aclIntegration/ACLIntegrationWithoutRightR", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationWithoutRightR");
     }
 
     @Test
     public void rightLShouldBeSufficientToPerformListUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("l"));
-        scriptTest("aclIntegration/ACLIntegrationRightL", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationRightL");
     }
 
     @Test
     public void rightLShouldBeNeededToPerformListLsubSubscribeUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rswipkxtecda"));
-        scriptTest("aclIntegration/ACLIntegrationWithoutRightL", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationWithoutRightL");
     }
 
     @Test
     public void rightAShouldBeSufficientToManageACLUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("a"));
-        scriptTest("aclIntegration/ACLIntegrationRightA", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationRightA");
     }
 
     @Test
     public void rightAShouldBeNeededToManageACLUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rswipkxtecdl"));
-        scriptTest("aclIntegration/ACLIntegrationWithoutRightA", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationWithoutRightA");
     }
 
     @Test
     public void rightXOnOriginShouldBeSufficientToRenameAMailboxUS() throws Exception {
         system.createMailbox(new MailboxPath("#private","Boby","test"));
         grantRightsOnHost.grantRights(new MailboxPath("#private", OTHER_USER_NAME, "test"), USER, new SimpleMailboxACL.Rfc4314Rights("x"));
-        scriptTest("aclIntegration/ACLIntegrationRightX", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationRightX");
     }
 
     @Test
     public void rightXOnOriginShouldBeNeededToRenameAMailboxUS() throws Exception {
         system.createMailbox(new MailboxPath("#private","Boby","test"));
         grantRightsOnHost.grantRights(new MailboxPath("#private", OTHER_USER_NAME, "test"), USER, new SimpleMailboxACL.Rfc4314Rights("rswipktela"));
-        scriptTest("aclIntegration/ACLIntegrationWithoutRightX", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationWithoutRightX");
     }
 
     @Test
@@ -109,7 +112,7 @@ public class ACLIntegration extends BaseImapProtocol {
         system.createMailbox(newMailbox);
         grantRightsOnHost.grantRights(newMailbox, USER, new SimpleMailboxACL.Rfc4314Rights("x"));
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("k"));
-        scriptTest("aclIntegration/ACLIntegrationRightK", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationRightK");
     }
 
     @Test
@@ -118,146 +121,146 @@ public class ACLIntegration extends BaseImapProtocol {
         system.createMailbox(newMailbox);
         grantRightsOnHost.grantRights(newMailbox, USER, new SimpleMailboxACL.Rfc4314Rights("x"));
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rswipxtela"));
-        scriptTest("aclIntegration/ACLIntegrationWithoutRightK", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationWithoutRightK");
     }
 
     @Test
     public void rightREShouldBeSufficientToPerformExpungeUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("re"));
-        scriptTest("aclIntegration/ACLIntegrationRightRE", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationRightRE");
     }
 
     @Test
     public void rightEShouldBeNeededToPerformExpungeUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rswipxtclak"));
-        scriptTest("aclIntegration/ACLIntegrationWithoutRightE", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationWithoutRightE");
     }
 
     @Test
     public void rightIShouldBeSufficientToPerformAppendUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("ri"));
-        scriptTest("aclIntegration/ACLIntegrationRightI", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationRightI");
     }
 
     @Test
     public void rightIShouldBeNeededToPerformAppendUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rswepxtcdlak"));
-        scriptTest("aclIntegration/ACLIntegrationWithoutRightI", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationWithoutRightI");
     }
 
     @Test
     public void rightISShouldBeSufficientToPerformAppendOfSeenMessageUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("ris"));
-        scriptTest("aclIntegration/ACLIntegrationRightIS", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationRightIS");
     }
 
     @Test
     public void rightITShouldBeSufficientToPerformAppendOfDeletedMessageUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rit"));
-        scriptTest("aclIntegration/ACLIntegrationRightIT", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationRightIT");
     }
 
     @Test
     public void rightIWShouldBeSufficientToPerformAppendOfDeletedMessageUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("riw"));
-        scriptTest("aclIntegration/ACLIntegrationRightIW", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationRightIW");
     }
 
     @Test
     public void rightRSShouldBeSufficientToPerformStoreAndFetchOnSeenMessageUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rs"));
         mailboxMessageAppender.fillMailbox(OTHER_USER_MAILBOX);
-        scriptTest("aclIntegration/ACLIntegrationRightRS", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationRightRS");
     }
 
     @Test
     public void rightSShouldBeNeededToPerformStoreAndFetchOnSeenMessageUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rwipxtcdlake"));
         mailboxMessageAppender.fillMailbox(OTHER_USER_MAILBOX);
-        scriptTest("aclIntegration/ACLIntegrationWithoutRightS", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationWithoutRightS");
     }
 
     @Test
     public void rightRWShouldBeSufficientToPerformStoreOnFlaggedMessageUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rw"));
         mailboxMessageAppender.fillMailbox(OTHER_USER_MAILBOX);
-        scriptTest("aclIntegration/ACLIntegrationRightRW", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationRightRW");
     }
 
     @Test
     public void rightWShouldBeNeededToPerformStoreOnFlaggedMessageUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rsipxtcdlake"));
         mailboxMessageAppender.fillMailbox(OTHER_USER_MAILBOX);
-        scriptTest("aclIntegration/ACLIntegrationWithoutRightW", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationWithoutRightW");
     }
 
     @Test
     public void rightRTShouldBeSufficientToPerformStoreOnDeletedMessageUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rt"));
         mailboxMessageAppender.fillMailbox(OTHER_USER_MAILBOX);
-        scriptTest("aclIntegration/ACLIntegrationRightRT", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationRightRT");
     }
 
     @Test
     public void rightTShouldBeNeededToPerformStoreOnFlaggedMessageUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rwipxslake"));
         mailboxMessageAppender.fillMailbox(OTHER_USER_MAILBOX);
-        scriptTest("aclIntegration/ACLIntegrationWithoutRightT", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationWithoutRightT");
     }
 
     @Test
     public void rightIShouldBeSufficientToPerformCopyUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("i"));
         mailboxMessageAppender.fillMailbox(MY_INBOX);
-        scriptTest("aclIntegration/ACLIntegrationCopyI", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationCopyI");
     }
 
     @Test
     public void rightIShouldBeNeededToPerformCopyUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rswpxtcdlake"));
         mailboxMessageAppender.fillMailbox(MY_INBOX);
-        scriptTest("aclIntegration/ACLIntegrationCopyWithoutI", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationCopyWithoutI");
     }
 
     @Test
     public void rightIShouldBeSufficientToPerformOfSeenMessagesCopyUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("ris"));
         mailboxMessageAppender.fillMailbox(MY_INBOX);
-        scriptTest("aclIntegration/ACLIntegrationCopyIS", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationCopyIS");
     }
 
     @Test
     public void rightSShouldBeNeededToPerformCopyOfSeenMessageUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("riwpxtcdlake"));
         mailboxMessageAppender.fillMailbox(MY_INBOX);
-        scriptTest("aclIntegration/ACLIntegrationCopyWithoutS", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationCopyWithoutS");
     }
 
     @Test
     public void rightIWShouldBeSufficientToPerformOfFlaggedMessagesCopyUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("riw"));
         mailboxMessageAppender.fillMailbox(MY_INBOX);
-        scriptTest("aclIntegration/ACLIntegrationCopyIW", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationCopyIW");
     }
 
     @Test
     public void rightWShouldBeNeededToPerformCopyOfFlaggedMessageUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rispxtcdlake"));
         mailboxMessageAppender.fillMailbox(MY_INBOX);
-        scriptTest("aclIntegration/ACLIntegrationCopyWithoutW", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationCopyWithoutW");
     }
 
     @Test
     public void rightITShouldBeSufficientToPerformOfDeletedMessagesCopyUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rit"));
         mailboxMessageAppender.fillMailbox(MY_INBOX);
-        scriptTest("aclIntegration/ACLIntegrationCopyIT", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationCopyIT");
     }
 
     @Test
     public void rightTShouldBeNeededToPerformCopyOfDeletedMessageUS() throws Exception {
         grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, new SimpleMailboxACL.Rfc4314Rights("rispxwlake"));
         mailboxMessageAppender.fillMailbox(MY_INBOX);
-        scriptTest("aclIntegration/ACLIntegrationCopyWithoutT", Locale.US);
+        simpleScriptedTestProtocol.run("aclIntegration/ACLIntegrationCopyWithoutT");
     }
 }

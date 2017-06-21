@@ -24,75 +24,117 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class FetchBodyStructure extends BaseSelectedState {
+public class FetchBodyStructure implements ImapTestConstants {
 
     @Inject
     private static HostSystem system;
     
-    public FetchBodyStructure() throws Exception {
-        super(system);
+    
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
     public void testFetchFetchSimpleBodyStructureUS() throws Exception {
-        scriptTest("FetchSimpleBodyStructure", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchSimpleBodyStructure");
     }
 
     @Test
     public void testFetchFetchSimpleBodyStructureKOREA() throws Exception {
-        scriptTest("FetchSimpleBodyStructure", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchSimpleBodyStructure");
     }
 
     @Test
     public void testFetchFetchSimpleBodyStructureITALY() throws Exception {
-        scriptTest("FetchSimpleBodyStructure", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchSimpleBodyStructure");
     }
 
     @Test
     public void testFetchFetchMultipartBodyStructureUS() throws Exception {
-        scriptTest("FetchMultipartBodyStructure", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchMultipartBodyStructure");
     }
 
     @Test
     public void testFetchFetchMultipartBodyStructureKOREA() throws Exception {
-        scriptTest("FetchMultipartBodyStructure", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchMultipartBodyStructure");
     }
 
     @Test
     public void testFetchFetchMultipartBodyStructureITALY() throws Exception {
-        scriptTest("FetchMultipartBodyStructure", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchMultipartBodyStructure");
     }
 
     @Test
     public void testFetchStructureEmbeddedUS() throws Exception {
-        scriptTest("FetchStructureEmbedded", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchStructureEmbedded");
     }
 
     @Test
     public void testFetchStructureEmbeddedITALY() throws Exception {
-        scriptTest("FetchStructureEmbedded", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchStructureEmbedded");
     }
 
     @Test
     public void testFetchStructureEmbeddedKOREA() throws Exception {
-        scriptTest("FetchStructureEmbedded", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchStructureEmbedded");
     }
 
     @Test
     public void testFetchStructureComplexUS() throws Exception {
-        scriptTest("FetchStructureComplex", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchStructureComplex");
     }
 
     @Test
     public void testFetchStructureComplexITALY() throws Exception {
-        scriptTest("FetchStructureComplex", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchStructureComplex");
     }
 
     @Test
     public void testFetchStructureComplexKOREA() throws Exception {
-        scriptTest("FetchStructureComplex", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchStructureComplex");
     }
 }

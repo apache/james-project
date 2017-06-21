@@ -24,45 +24,75 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class FetchHeaders extends BaseSelectedState {
+public class FetchHeaders implements ImapTestConstants {
 
     @Inject
     private static HostSystem system;
     
-    public FetchHeaders() throws Exception {
-        super(system);
+    
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
     public void testFetchHeaderFieldsUS() throws Exception {
-        scriptTest("FetchHeaderFields", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchHeaderFields");
     }
 
     @Test
     public void testFetchHeaderFieldsITALY() throws Exception {
-        scriptTest("FetchHeaderFields", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchHeaderFields");
     }
 
     @Test
     public void testFetchHeaderFieldsKOREA() throws Exception {
-        scriptTest("FetchHeaderFields", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchHeaderFields");
     }
 
     @Test
     public void testFetchHeaderFieldsNotUS() throws Exception {
-        scriptTest("FetchHeaderFieldsNot", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchHeaderFieldsNot");
     }
 
     @Test
     public void testFetchHeaderFieldsNotITALY() throws Exception {
-        scriptTest("FetchHeaderFieldsNot", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("FetchHeaderFieldsNot");
     }
 
     @Test
     public void testFetchHeaderFieldsNotKOREA() throws Exception {
-        scriptTest("FetchHeaderFieldsNot", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("FetchHeaderFieldsNot");
     }
 }

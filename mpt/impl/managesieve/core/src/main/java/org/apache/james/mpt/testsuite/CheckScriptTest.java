@@ -21,27 +21,39 @@ package org.apache.james.mpt.testsuite;
 
 import com.google.inject.Inject;
 import org.apache.james.mpt.host.ManageSieveHostSystem;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Locale;
 
-public class CheckScriptTest extends ManageSieveMPTTest {
+public class CheckScriptTest {
 
     @Inject
     private static ManageSieveHostSystem hostSystem;
 
-    public CheckScriptTest() throws Exception {
-        super(hostSystem);
-    }
+    public static final String USER = "user";
+    public static final String PASSWORD = "password";
+    
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/managesieve/scripts/", hostSystem)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        hostSystem.afterTest();
     }
 
     @Test
     public void checkScriptShouldWork() throws Exception {
-        scriptTest("checkscript", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("checkscript");
     }
 }

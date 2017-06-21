@@ -24,75 +24,117 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class PartialFetch extends BaseSelectedState {
+public class PartialFetch implements ImapTestConstants {
 
     @Inject
     private static HostSystem system;
     
-    public PartialFetch() throws Exception {
-        super(system);
+    
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
     public void testBodyPartialFetchUS() throws Exception {
-        scriptTest("BodyPartialFetch", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("BodyPartialFetch");
     }
 
     @Test
     public void testBodyPartialFetchIT() throws Exception {
-        scriptTest("BodyPartialFetch", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("BodyPartialFetch");
     }
 
     @Test
     public void testBodyPartialFetchKO() throws Exception {
-        scriptTest("BodyPartialFetch", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("BodyPartialFetch");
     }
 
     @Test
     public void testTextPartialFetchUS() throws Exception {
-        scriptTest("TextPartialFetch", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("TextPartialFetch");
     }
 
     @Test
     public void testTextPartialFetchKO() throws Exception {
-        scriptTest("TextPartialFetch", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("TextPartialFetch");
     }
 
     @Test
     public void testTextPartialFetchIT() throws Exception {
-        scriptTest("TextPartialFetch", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("TextPartialFetch");
     }
 
     @Test
     public void testMimePartialFetchUS() throws Exception {
-        scriptTest("MimePartialFetch", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("MimePartialFetch");
     }
 
     @Test
     public void testMimePartialFetchIT() throws Exception {
-        scriptTest("MimePartialFetch", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("MimePartialFetch");
     }
 
     @Test
     public void testMimePartialFetchKO() throws Exception {
-        scriptTest("MimePartialFetch", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("MimePartialFetch");
     }
 
     @Test
     public void testHeaderPartialFetchUS() throws Exception {
-        scriptTest("HeaderPartialFetch", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("HeaderPartialFetch");
     }
 
     @Test
     public void testHeaderPartialFetchIT() throws Exception {
-        scriptTest("HeaderPartialFetch", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("HeaderPartialFetch");
     }
 
     @Test
     public void testHeaderPartialFetchKO() throws Exception {
-        scriptTest("HeaderPartialFetch", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("HeaderPartialFetch");
     }
 }

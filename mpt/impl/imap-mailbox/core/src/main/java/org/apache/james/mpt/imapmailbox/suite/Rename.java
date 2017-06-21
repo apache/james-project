@@ -24,60 +24,96 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class Rename extends BaseSelectedState {
+public class Rename implements ImapTestConstants {
 
     @Inject
     private static HostSystem system;
     
-    public Rename() throws Exception {
-        super(system);
+    
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
     public void testRenameUS() throws Exception {
-        scriptTest("Rename", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("Rename");
     }
     
     @Test
     public void testRenameKOREA() throws Exception {
-        scriptTest("Rename", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Rename");
     }
 
     @Test
     public void testRenameITALY() throws Exception {
-        scriptTest("Rename", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Rename");
     }
 
     @Test
     public void testRenameHierarchyUS() throws Exception {
-        scriptTest("RenameHierarchy", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("RenameHierarchy");
     }
 
     @Test
     public void testRenameHierarchyKO() throws Exception {
-        scriptTest("RenameHierarchy", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("RenameHierarchy");
     }
 
     @Test
     public void testRenameHierarchyIT() throws Exception {
-        scriptTest("RenameHierarchy", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("RenameHierarchy");
     }
 
     @Test
     public void testRenameSelectedUS() throws Exception {
-        scriptTest("RenameSelected", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("RenameSelected");
     }
 
     @Test
     public void testRenameSelectedIT() throws Exception {
-        scriptTest("RenameSelected", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("RenameSelected");
     }
 
     @Test
     public void testRenameSelectedKO() throws Exception {
-        scriptTest("RenameSelected", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("RenameSelected");
     }
 }

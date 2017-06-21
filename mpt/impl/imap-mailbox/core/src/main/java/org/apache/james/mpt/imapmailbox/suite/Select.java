@@ -24,30 +24,52 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseAuthenticatedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class Select extends BaseAuthenticatedState {
+public class Select implements ImapTestConstants {
 
     @Inject
     private static HostSystem system;
     
-    public Select() throws Exception {
-        super(system);
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
     public void testSelectUnseenUS() throws Exception {
-        scriptTest("SelectUnseen", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("SelectUnseen");
     }
 
     @Test
     public void testSelectUnseenKOREA() throws Exception {
-        scriptTest("SelectUnseen", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("SelectUnseen");
     }
 
     @Test
     public void testSelectUnseenITALY() throws Exception {
-        scriptTest("SelectUnseen", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("SelectUnseen");
     }
 }

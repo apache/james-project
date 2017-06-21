@@ -19,23 +19,42 @@
 
 package org.apache.james.mpt.testsuite;
 
-import com.google.inject.Inject;
-import org.apache.james.mpt.host.ManageSieveHostSystem;
-import org.junit.Test;
-
 import java.util.Locale;
 
-public class LogoutTest extends ManageSieveMPTTest {
+import org.apache.james.mpt.host.ManageSieveHostSystem;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.google.inject.Inject;
+
+public class LogoutTest {
 
     @Inject
     private static ManageSieveHostSystem hostSystem;
 
-    public LogoutTest() throws Exception {
-        super(hostSystem);
+    public static final String USER = "user";
+    public static final String PASSWORD = "password";
+    
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/managesieve/scripts/", hostSystem)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        hostSystem.afterTest();
     }
 
     @Test
     public void logoutShouldWork() throws Exception {
-        scriptTest("logout", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("logout");
     }
 }

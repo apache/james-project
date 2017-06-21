@@ -24,20 +24,39 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedInbox;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class MailboxWithLongNameError extends BaseSelectedInbox {
+public class MailboxWithLongNameError implements ImapTestConstants {
     @Inject
     private static HostSystem system;
+    
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
-    public MailboxWithLongNameError() throws Exception {
-        super(system);
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
     public void testWithLongMailboxNameUS() throws Exception {
-        scriptTest("CreateErrorWithLongName", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("CreateErrorWithLongName");
     }
 
 }

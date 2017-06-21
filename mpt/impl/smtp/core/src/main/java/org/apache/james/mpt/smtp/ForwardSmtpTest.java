@@ -28,7 +28,7 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-import org.apache.james.mpt.script.AbstractSimpleScriptedTestProtocol;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.junit.Before;
 import org.junit.Rule;
@@ -42,7 +42,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-public class ForwardSmtpTest extends AbstractSimpleScriptedTestProtocol {
+public class ForwardSmtpTest {
 
     public static final String USER = "bob";
     public static final String DOMAIN = "mydomain.tld";
@@ -59,13 +59,16 @@ public class ForwardSmtpTest extends AbstractSimpleScriptedTestProtocol {
     @Inject
     private static SmtpHostSystem hostSystem;
 
+    private SimpleScriptedTestProtocol scriptedTest;
+    
     public ForwardSmtpTest() throws Exception {
-        super(hostSystem, USER_AT_DOMAIN, PASSWORD, "/org/apache/james/smtp/scripts/");
+        scriptedTest = new SimpleScriptedTestProtocol("/org/apache/james/smtp/scripts/", hostSystem)
+                .withLocale(Locale.US)
+                .withUser(USER_AT_DOMAIN, PASSWORD);
     }
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         InetAddress containerIp = InetAddresses.forString(fakeSmtp.getIp());
         hostSystem.getInMemoryDnsService()
             .registerRecord("yopmail.com", containerIp, "yopmail.com");
@@ -82,7 +85,7 @@ public class ForwardSmtpTest extends AbstractSimpleScriptedTestProtocol {
 
     @Test
     public void forwardingAnEmailShouldWork() throws Exception {
-        scriptTest("helo", Locale.US);
+        scriptedTest.run("helo");
 
         when()
             .get("/api/email")

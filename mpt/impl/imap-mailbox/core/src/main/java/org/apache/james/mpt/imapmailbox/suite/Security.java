@@ -24,125 +24,185 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseImapProtocol;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class Security extends BaseImapProtocol {
+public class Security implements ImapTestConstants {
 
     @Inject
     private static HostSystem system;
     
-    public Security() throws Exception {
-        super(system);
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
     public void accessingOtherPeopleNamespaceShouldBeDenied() throws Exception {
-        scriptTest("SharedMailbox", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("SharedMailbox");
     }
 
     @Test
     public void testLoginThreeStrikesUS() throws Exception {
-        scriptTest("LoginThreeStrikes", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("LoginThreeStrikes");
     }
 
     @Test
     public void testLoginThreeStrikesKOREA() throws Exception {
-        scriptTest("LoginThreeStrikes", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("LoginThreeStrikes");
     }
 
     @Test
     public void testLoginThreeStrikesITALY() throws Exception {
-        scriptTest("LoginThreeStrikes", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("LoginThreeStrikes");
     }
 
     @Test
     public void testBadTagUS() throws Exception {
-        scriptTest("BadTag", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("BadTag");
     }
 
     @Test
     public void testBadTagKOREA() throws Exception {
-        scriptTest("BadTag", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("BadTag");
     }
 
     @Test
     public void testBadTagITALY() throws Exception {
-        scriptTest("BadTag", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("BadTag");
     }
 
     @Test
     public void testNoTagUS() throws Exception {
-        scriptTest("NoTag", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("NoTag");
     }
 
     @Test
     public void testNoTagKOREA() throws Exception {
-        scriptTest("NoTag", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("NoTag");
     }
 
     @Test
     public void testNoTagITALY() throws Exception {
-        scriptTest("NoTag", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("NoTag");
     }
 
     @Test
     public void testIllegalTagUS() throws Exception {
-        scriptTest("IllegalTag", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("IllegalTag");
     }
 
     @Test
     public void testIllegalTagKOREA() throws Exception {
-        scriptTest("IllegalTag", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("IllegalTag");
     }
 
     @Test
     public void testIllegalTagITALY() throws Exception {
-        scriptTest("IllegalTag", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("IllegalTag");
     }
 
     @Test
     public void testJustTagUS() throws Exception {
-        scriptTest("JustTag", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("JustTag");
     }
 
     @Test
     public void testJustTagKOREA() throws Exception {
-        scriptTest("JustTag", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("JustTag");
     }
 
     @Test
     public void testJustTagITALY() throws Exception {
-        scriptTest("JustTag", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("JustTag");
     }
 
     @Test
     public void testNoCommandUS() throws Exception {
-        scriptTest("NoCommand", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("NoCommand");
     }
 
     @Test
     public void testNoCommandKOREA() throws Exception {
-        scriptTest("NoCommand", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("NoCommand");
     }
 
     @Test
     public void testNoCommandITALY() throws Exception {
-        scriptTest("NoCommand", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("NoCommand");
     }
 
     @Test
     public void testBogusCommandUS() throws Exception {
-        scriptTest("BogusCommand", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("BogusCommand");
     }
 
     @Test
     public void testBogusCommandKOREA() throws Exception {
-        scriptTest("BogusCommand", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("BogusCommand");
     }
 
     @Test
     public void testNoBogusITALY() throws Exception {
-        scriptTest("BogusCommand", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("BogusCommand");
     }
 }

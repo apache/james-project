@@ -24,20 +24,30 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.Before;
 import org.junit.Test;
 
-public class Copy extends BaseSelectedState {
+public class Copy implements ImapTestConstants {
 
     @Inject
     private static HostSystem system;
     
-    public Copy() throws Exception {
-        super(system);
-    }
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+    }
+    
     @Test
     public void copyCommandShouldRespectTheRFC() throws Exception {
-        scriptTest("Copy", Locale.US);
+        simpleScriptedTestProtocol.run("Copy");
     }
 }

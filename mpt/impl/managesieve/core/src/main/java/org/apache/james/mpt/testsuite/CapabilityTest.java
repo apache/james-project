@@ -19,29 +19,42 @@
 
 package org.apache.james.mpt.testsuite;
 
-import com.google.inject.Inject;
+import java.util.Locale;
+
 import org.apache.james.mpt.host.ManageSieveHostSystem;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Locale;
+import com.google.inject.Inject;
 
-public class CapabilityTest extends ManageSieveMPTTest {
+public class CapabilityTest {
 
     @Inject
     private static ManageSieveHostSystem hostSystem;
 
-    public CapabilityTest() throws Exception {
-        super(hostSystem);
-    }
+    public static final String USER = "user";
+    public static final String PASSWORD = "password";
+    
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/managesieve/scripts/", hostSystem)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        hostSystem.afterTest();
     }
 
     @Test
     public void capabilityShouldWork() throws Exception {
-        scriptTest("capability", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("capability");
     }
 }

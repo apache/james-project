@@ -25,23 +25,43 @@ import javax.inject.Inject;
 
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 
-public class Move  extends BaseSelectedState {
+public class Move implements ImapTestConstants {
 
     @Inject
     private static ImapHostSystem system;
 
-    public Move() throws Exception {
-        super(system);
+    
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
     public void moveShouldWork() throws Exception {
         Assume.assumeTrue(system.supports(ImapFeatures.Feature.MOVE_SUPPORT));
-        scriptTest("Move", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("Move");
     }
 
 }

@@ -24,45 +24,72 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseAuthenticatedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class Listing extends BaseAuthenticatedState {
+public class Listing implements ImapTestConstants {
 
     @Inject
     private static HostSystem system;
     
-    public Listing() throws Exception {
-        super(system);
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
     }
 
     @Test
     public void testListPlusUS() throws Exception {
-        scriptTest("ListPlus", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("ListPlus");
     }
     
     @Test
     public void testListPercentWildcardUS() throws Exception {
-        scriptTest("ListPercentWildcard", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("ListPercentWildcard");
     }
 
     @Test
     public void testListPlusKOREA() throws Exception {
-        scriptTest("ListPlus", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("ListPlus");
     }
     
     @Test
     public void testListPercentWildcardKOREA() throws Exception {
-        scriptTest("ListPercentWildcard", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("ListPercentWildcard");
     }
     
     @Test
     public void testListPlusITALY() throws Exception {
-        scriptTest("ListPlus", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("ListPlus");
     }
     
     @Test
     public void testListPercentWildcardITALY() throws Exception {
-        scriptTest("ListPercentWildcard", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("ListPercentWildcard");
     }
 }

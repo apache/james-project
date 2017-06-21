@@ -24,30 +24,54 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class Expunge extends BaseSelectedState {
+public class Expunge implements ImapTestConstants {
 
     @Inject
     private static HostSystem system;
     
-    public Expunge() throws Exception {
-        super(system);
+    
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
     }
     
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
+    }
+
     @Test
     public void testBasicExpungeUS() throws Exception {
-        scriptTest("ExpungeBasics", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("ExpungeBasics");
     }
     
     @Test
     public void testBasicExpungeIT() throws Exception {
-        scriptTest("ExpungeBasics", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("ExpungeBasics");
     }
     
     @Test
     public void testBasicExpungeKO() throws Exception {
-        scriptTest("ExpungeBasics", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("ExpungeBasics");
     }
 }
