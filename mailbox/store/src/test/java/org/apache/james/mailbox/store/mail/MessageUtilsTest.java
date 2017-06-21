@@ -46,7 +46,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class MessageUtilsTest {
-    private static final MailboxSession mailboxSession = new MockMailboxSession("user");
     private static final MessageUid MESSAGE_UID = MessageUid.of(1);
     private static final MessageId MESSAGE_ID = new DefaultMessageId();
     private static final int BODY_START = 16;
@@ -55,6 +54,7 @@ public class MessageUtilsTest {
     @Mock private ModSeqProvider modSeqProvider;
     @Mock private UidProvider uidProvider;
     @Mock private Mailbox mailbox;
+    private MailboxSession mailboxSession;
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -65,6 +65,7 @@ public class MessageUtilsTest {
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
+        mailboxSession = new MockMailboxSession("user");
         messageUtils = new MessageUtils(mailboxSession, uidProvider, modSeqProvider);
         message = new SimpleMailboxMessage(MESSAGE_ID, new Date(), CONTENT.length(), BODY_START, new SharedByteArrayInputStream(CONTENT.getBytes()), new Flags(), new PropertyBuilder(), mailbox.getMailboxId());
     }

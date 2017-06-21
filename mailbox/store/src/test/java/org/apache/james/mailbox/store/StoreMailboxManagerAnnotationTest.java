@@ -67,7 +67,6 @@ public class StoreMailboxManagerAnnotationTest {
 
     private static final List<MailboxAnnotation> ANNOTATIONS = ImmutableList.of(PRIVATE_ANNOTATION, SHARED_ANNOTATION);
     private static final List<MailboxAnnotation> ANNOTATIONS_WITH_NIL_ENTRY = ImmutableList.of(PRIVATE_ANNOTATION, MailboxAnnotation.nil(SHARED_KEY));
-    private static final MockMailboxSession session = new MockMailboxSession("userName");
 
     @Mock private MailboxSessionMapperFactory mailboxSessionMapperFactory;
     @Mock private Authenticator authenticator;
@@ -81,6 +80,7 @@ public class StoreMailboxManagerAnnotationTest {
     @Mock private MessageParser messageParser;
     @Mock private MailboxId mailboxId;
     @Mock private MessageId.Factory messageIdFactory;
+    private MockMailboxSession session;
 
     private StoreMailboxManager storeMailboxManager;
 
@@ -89,6 +89,8 @@ public class StoreMailboxManagerAnnotationTest {
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
+
+        session = new MockMailboxSession("userName");
 
         when(mailboxSessionMapperFactory.getMailboxMapper(eq(session))).thenReturn(mailboxMapper);
         when(mailboxSessionMapperFactory.getAnnotationMapper(eq(session))).thenReturn(annotationMapper);

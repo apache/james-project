@@ -32,8 +32,6 @@ import org.junit.Test;
 import com.google.common.base.Optional;
 
 public class GlobalRegistrationTest {
-
-    public static final MockMailboxSession SESSION = new MockMailboxSession("test");
     public static final MailboxPath INBOX = new MailboxPath("#private", "btellier@apache.org", "INBOX");
     public static final MailboxPath NEW_PATH = new MailboxPath("#private", "btellier@apache.org", "INBOX.new");
     public static final int UID_VALIDITY = 45;
@@ -42,10 +40,12 @@ public class GlobalRegistrationTest {
 
     private GlobalRegistration globalRegistration;
     private EventFactory eventFactory;
+    private MockMailboxSession session;
 
     @Before
     public void setUp() {
         eventFactory = new EventFactory();
+        session = new MockMailboxSession("test");
         globalRegistration = new GlobalRegistration();
     }
 
@@ -56,21 +56,21 @@ public class GlobalRegistrationTest {
 
     @Test
     public void pathToIndexShouldNotBeChangedByAddedEvents() {
-        MailboxListener.Event event = eventFactory.mailboxAdded(SESSION, MAILBOX);
+        MailboxListener.Event event = eventFactory.mailboxAdded(session, MAILBOX);
         globalRegistration.event(event);
         assertThat(globalRegistration.getPathToIndex(INBOX).get()).isEqualTo(INBOX);
     }
 
     @Test
     public void pathToIndexShouldBeNullifiedByDeletedEvents() {
-        MailboxListener.Event event = eventFactory.mailboxDeleted(SESSION, MAILBOX);
+        MailboxListener.Event event = eventFactory.mailboxDeleted(session, MAILBOX);
         globalRegistration.event(event);
         assertThat(globalRegistration.getPathToIndex(INBOX)).isEqualTo(Optional.absent());
     }
 
     @Test
     public void pathToIndexShouldBeModifiedByRenamedEvents() {
-        MailboxListener.Event event = eventFactory.mailboxRenamed(SESSION, INBOX, NEW_MAILBOX);
+        MailboxListener.Event event = eventFactory.mailboxRenamed(session, INBOX, NEW_MAILBOX);
         globalRegistration.event(event);
         assertThat(globalRegistration.getPathToIndex(INBOX).get()).isEqualTo(NEW_PATH);
     }

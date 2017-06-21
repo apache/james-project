@@ -48,7 +48,6 @@ import java.util.List;
 
 public class MailboxAnnotationListenerTest {
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
-    private static final MailboxSession mailboxSession = new MockMailboxSession("test");
 
     private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
     private static final MailboxAnnotationKey SHARED_KEY = new MailboxAnnotationKey("/shared/comment");
@@ -68,10 +67,12 @@ public class MailboxAnnotationListenerTest {
     private EventFactory eventFactory;
     private MailboxAnnotationListener listener;
     private MailboxListener.Event deleteEvent;
+    private MailboxSession mailboxSession;
 
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
+        mailboxSession = new MockMailboxSession("test");
         listener = new MailboxAnnotationListener(mailboxSessionMapperFactory);
         eventFactory = new EventFactory();
         mailbox = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "name"), UID_VALIDITY, mailboxId);

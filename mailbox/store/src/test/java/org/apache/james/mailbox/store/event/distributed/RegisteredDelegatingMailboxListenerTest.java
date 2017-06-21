@@ -52,8 +52,6 @@ public class RegisteredDelegatingMailboxListenerTest {
     private static final Topic TOPIC = new Topic("topic");
     private static final Topic TOPIC_2 = new Topic("topic_2");
     private static final byte[] BYTES = new byte[0];
-    private static final MailboxSession mailboxSession = new MockMailboxSession("benwa");
-    public static final MailboxListener.Event EVENT = new MailboxListener.Event(mailboxSession, MAILBOX_PATH) {};
 
     private RegisteredDelegatingMailboxListener testee;
     private MailboxPathRegister mockedMailboxPathRegister;
@@ -62,9 +60,14 @@ public class RegisteredDelegatingMailboxListenerTest {
     private EventCollector mailboxEventCollector;
     private EventCollector eachEventCollector;
     private EventCollector onceEventCollector;
+    private MailboxSession mailboxSession;
+    private MailboxListener.Event event;
 
     @Before
     public void setUp() throws Exception {
+        mailboxSession = new MockMailboxSession("benwa");
+        event = new MailboxListener.Event(mailboxSession, MAILBOX_PATH) {};
+
         mockedEventSerializer = mock(EventSerializer.class);
         mockedPublisher = mock(Publisher.class);
         mockedMailboxPathRegister = mock(MailboxPathRegister.class);
@@ -91,8 +94,8 @@ public class RegisteredDelegatingMailboxListenerTest {
                 return TOPIC;
             }
         });
-        testee.event(EVENT);
-        assertThat(mailboxEventCollector.getEvents()).containsOnly(EVENT);
+        testee.event(event);
+        assertThat(mailboxEventCollector.getEvents()).containsOnly(event);
         verify(mockedMailboxPathRegister, times(2)).getLocalTopic();
         verify(mockedMailboxPathRegister).getTopics(MAILBOX_PATH);
         verifyNoMoreInteractions(mockedEventSerializer);
@@ -116,17 +119,17 @@ public class RegisteredDelegatingMailboxListenerTest {
                 return TOPIC;
             }
         });
-        when(mockedEventSerializer.serializeEvent(EVENT)).thenAnswer(new Answer<byte[]>() {
+        when(mockedEventSerializer.serializeEvent(event)).thenAnswer(new Answer<byte[]>() {
             @Override
             public byte[] answer(InvocationOnMock invocation) throws Throwable {
                 return BYTES;
             }
         });
-        testee.event(EVENT);
-        assertThat(mailboxEventCollector.getEvents()).containsOnly(EVENT);
+        testee.event(event);
+        assertThat(mailboxEventCollector.getEvents()).containsOnly(event);
         verify(mockedMailboxPathRegister, times(2)).getLocalTopic();
         verify(mockedMailboxPathRegister).getTopics(MAILBOX_PATH);
-        verify(mockedEventSerializer).serializeEvent(EVENT);
+        verify(mockedEventSerializer).serializeEvent(event);
         verify(mockedPublisher).publish(TOPIC_2, BYTES);
         verifyNoMoreInteractions(mockedEventSerializer);
         verifyNoMoreInteractions(mockedPublisher);
@@ -170,11 +173,11 @@ public class RegisteredDelegatingMailboxListenerTest {
         when(mockedEventSerializer.deSerializeEvent(BYTES)).thenAnswer(new Answer<MailboxListener.Event>() {
             @Override
             public MailboxListener.Event answer(InvocationOnMock invocation) throws Throwable {
-                return EVENT;
+                return event;
             }
         });
         testee.receiveSerializedEvent(BYTES);
-        assertThat(mailboxEventCollector.getEvents()).containsOnly(EVENT);
+        assertThat(mailboxEventCollector.getEvents()).containsOnly(event);
         verify(mockedMailboxPathRegister).getLocalTopic();
         verify(mockedEventSerializer).deSerializeEvent(BYTES);
         verifyNoMoreInteractions(mockedEventSerializer);
@@ -189,7 +192,7 @@ public class RegisteredDelegatingMailboxListenerTest {
         when(mockedEventSerializer.deSerializeEvent(BYTES)).thenAnswer(new Answer<MailboxListener.Event>() {
             @Override
             public MailboxListener.Event answer(InvocationOnMock invocation) throws Throwable {
-                return EVENT;
+                return event;
             }
         });
         testee.receiveSerializedEvent(BYTES);

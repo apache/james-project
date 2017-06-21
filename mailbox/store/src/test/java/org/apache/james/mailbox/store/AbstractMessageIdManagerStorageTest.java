@@ -55,8 +55,6 @@ import com.google.common.collect.ImmutableMap;
 public abstract class AbstractMessageIdManagerStorageTest {
     public static final Flags FLAGS = new Flags();
 
-    private static final MailboxSession SYSTEM_USER = new MockMailboxSession("systemuser", SessionType.System);
-
     private static final MessageUid messageUid1 = MessageUid.of(111);
     private static final MessageUid messageUid2 = MessageUid.of(222);
 
@@ -95,6 +93,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
     private Mailbox mailbox4;
     private MailboxSession session;
     private MailboxSession otherSession;
+    private MailboxSession systemSession;
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -105,6 +104,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
     public void setUp() throws Exception {
         session = new MockMailboxSession(MailboxManagerFixture.USER);
         otherSession = new MockMailboxSession(MailboxManagerFixture.OTHER_USER);
+        systemSession = new MockMailboxSession("systemuser", SessionType.System);
         testingData = createTestingData();
         messageIdManager = testingData.getMessageIdManager();
 
@@ -349,7 +349,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
 
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
 
-        messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), SYSTEM_USER);
+        messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), systemSession);
     }
 
     @Test
@@ -510,7 +510,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         Flags newFlags = new Flags(Flags.Flag.SEEN);
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
 
-        messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox1.getMailboxId()), SYSTEM_USER);
+        messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox1.getMailboxId()), systemSession);
     }
 
     @Test
