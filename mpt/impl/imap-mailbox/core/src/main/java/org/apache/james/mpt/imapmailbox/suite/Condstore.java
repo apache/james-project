@@ -21,8 +21,6 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
-import javax.inject.Inject;
-
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
@@ -31,15 +29,16 @@ import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.junit.Before;
 import org.junit.Test;
 
-public class Condstore implements ImapTestConstants {
+public abstract class Condstore implements ImapTestConstants {
 
-    @Inject
-    private static JamesImapHostSystem system;
-
+    protected abstract JamesImapHostSystem createJamesImapHostSystem();
+    
+    private JamesImapHostSystem system;
     private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @Before
     public void setUp() throws Exception {
+        system = createJamesImapHostSystem();
         simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
                 .withUser(TO_ADDRESS, PASSWORD)
                 .withLocale(Locale.US);

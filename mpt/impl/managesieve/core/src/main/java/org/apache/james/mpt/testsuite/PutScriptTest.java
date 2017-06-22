@@ -27,20 +27,21 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.inject.Inject;
-
-public class PutScriptTest {
-
-    @Inject
-    private static ManageSieveHostSystem hostSystem;
+public abstract class PutScriptTest {
 
     public static final String USER = "user";
     public static final String PASSWORD = "password";
     
+    protected abstract ManageSieveHostSystem createManageSieveHostSystem();
+    
+    private ManageSieveHostSystem hostSystem;
     private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @Before
     public void setUp() throws Exception {
+        hostSystem = createManageSieveHostSystem();
+        hostSystem.beforeTest();
+
         simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/managesieve/scripts/", hostSystem)
                 .withUser(USER, PASSWORD)
                 .withLocale(Locale.US);

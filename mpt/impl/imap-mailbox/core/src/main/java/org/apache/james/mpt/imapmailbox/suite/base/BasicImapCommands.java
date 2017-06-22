@@ -21,16 +21,17 @@ package org.apache.james.mpt.imapmailbox.suite.base;
 
 import org.apache.james.mpt.api.ProtocolInteractor;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.script.GenericSimpleScriptedTestProtocol;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 
 
 public class BasicImapCommands implements ImapTestConstants {
     
-    public static void welcome(SimpleScriptedTestProtocol scriptedTestProtocol) {
+    public static void welcome(GenericSimpleScriptedTestProtocol<?, ?> scriptedTestProtocol) {
         scriptedTestProtocol.preElements().SL("\\* OK IMAP4rev1 Server ready", "BaseAuthenticatedState.java:32");
     }
     
-    public static void authenticate(SimpleScriptedTestProtocol scriptedTestProtocol) {
+    public static void authenticate(GenericSimpleScriptedTestProtocol<?, ?> scriptedTestProtocol) {
         addLogin(scriptedTestProtocol.preElements(), USER, PASSWORD);
     }
 

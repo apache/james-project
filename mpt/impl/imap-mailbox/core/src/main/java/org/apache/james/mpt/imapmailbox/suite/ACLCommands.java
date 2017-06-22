@@ -21,83 +21,85 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
-import javax.inject.Inject;
-
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
-import org.apache.james.mpt.api.HostSystem;
+import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.GrantRightsOnHost;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
-import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.apache.james.mpt.imapmailbox.MailboxMessageAppender;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ACLCommands implements ImapTestConstants {
+public abstract class ACLCommands implements ImapTestConstants {
+    
     public static final String OTHER_USER_NAME = "Boby";
     public static final String OTHER_USER_PASSWORD = "password";
     public static final MailboxPath OTHER_USER_MAILBOX = new MailboxPath("#private", OTHER_USER_NAME, "") ;
 
-    @Inject
-    private static HostSystem system;
+    protected abstract ImapHostSystem createImapHostSystem();
+    protected abstract GrantRightsOnHost createGrantRightsOnHost();
     
-    @Inject
+    private ImapHostSystem system;
     private GrantRightsOnHost grantRightsOnHost;
 
     private MailboxACL.MailboxACLRights readWriteSeenRight;
-    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+    private ACLScriptedTestProtocol scriptedTestProtocol;
 
     @Before
     public void setUp() throws Exception {
-        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
-                .withUser(TO_ADDRESS, PASSWORD)
+        system = createImapHostSystem();
+        grantRightsOnHost = createGrantRightsOnHost();
+        MailboxMessageAppender appender = null;
+        scriptedTestProtocol = new ACLScriptedTestProtocol(grantRightsOnHost, appender, "/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
                 .withLocale(Locale.US);
         readWriteSeenRight = new SimpleMailboxACL.Rfc4314Rights("rsw");
     }
 
     @Test
     public void testACLCommandsOwnerUS() throws Exception {
-        simpleScriptedTestProtocol.run("ACLCommandsOnOwner");
+        scriptedTestProtocol.run("ACLCommandsOnOwner");
     }
 
     @Test
     public void testACLCommandsOtherUserUS() throws Exception {
-        simpleScriptedTestProtocol
-            .withUser(OTHER_USER_NAME, OTHER_USER_PASSWORD);
-        grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, readWriteSeenRight);
-        simpleScriptedTestProtocol.run("ACLCommandsOnOtherUser");
+        scriptedTestProtocol
+            .withUser(OTHER_USER_NAME, OTHER_USER_PASSWORD)
+            .withGrantRights(OTHER_USER_MAILBOX, USER, readWriteSeenRight)
+            .run("ACLCommandsOnOtherUser");
     }
 
     @Test
     public void testACLCommandsOwnerKorea() throws Exception {
-        simpleScriptedTestProtocol.withLocale(Locale.KOREA);
-        simpleScriptedTestProtocol.run("ACLCommandsOnOwner");
+        scriptedTestProtocol.withLocale(Locale.KOREA)
+            .run("ACLCommandsOnOwner");
     }
 
     @Test
     public void testACLCommandsOtherUserKorea() throws Exception {
-        simpleScriptedTestProtocol
+        scriptedTestProtocol
             .withUser(OTHER_USER_NAME, OTHER_USER_PASSWORD)
-            .withLocale(Locale.KOREA);
-        grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, readWriteSeenRight);
-        simpleScriptedTestProtocol.run("ACLCommandsOnOtherUser");
+            .withLocale(Locale.KOREA)
+            .withGrantRights(OTHER_USER_MAILBOX, USER, readWriteSeenRight)
+            .run("ACLCommandsOnOtherUser");
     }
 
 
     @Test
     public void testACLCommandsOwnerItaly() throws Exception {
-        simpleScriptedTestProtocol
-            .withLocale(Locale.ITALY);
-        simpleScriptedTestProtocol.run("ACLCommandsOnOwner");
+        scriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("ACLCommandsOnOwner");
     }
 
     @Test
     public void testACLCommandsOtherUserItaly() throws Exception {
-        simpleScriptedTestProtocol
+        scriptedTestProtocol
             .withUser(OTHER_USER_NAME, OTHER_USER_PASSWORD)
-            .withLocale(Locale.ITALY);
-        grantRightsOnHost.grantRights(OTHER_USER_MAILBOX, USER, readWriteSeenRight);
-        simpleScriptedTestProtocol.run("ACLCommandsOnOtherUser");
+            .withLocale(Locale.ITALY)
+            .withGrantRights(OTHER_USER_MAILBOX, USER, readWriteSeenRight)
+            .run("ACLCommandsOnOtherUser");
     }
 
 }

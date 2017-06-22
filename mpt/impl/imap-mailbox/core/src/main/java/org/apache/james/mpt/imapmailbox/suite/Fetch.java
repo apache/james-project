@@ -21,26 +21,23 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
-import javax.inject.Inject;
-
-import org.apache.james.mpt.api.HostSystem;
+import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
 import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class Fetch implements ImapTestConstants {
+public abstract class Fetch implements ImapTestConstants {
 
-    @Inject
-    private static HostSystem system;
+    protected abstract ImapHostSystem createImapHostSystem();
     
-    
+    private ImapHostSystem system;
     private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @Before
     public void setUp() throws Exception {
+        system = createImapHostSystem();
         simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
                 .withUser(USER, PASSWORD)
                 .withLocale(Locale.US);
@@ -49,11 +46,6 @@ public class Fetch implements ImapTestConstants {
         BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
     }
     
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
-    }
-
     @Test
     public void testFetchEnvelopeUS() throws Exception {
         simpleScriptedTestProtocol

@@ -26,22 +26,20 @@ import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
 import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.inject.Inject;
+public abstract class UserFlagsSupport implements ImapTestConstants {
 
-public class UserFlagsSupport implements ImapTestConstants {
-
-    @Inject
-    private static ImapHostSystem system;
+    protected abstract ImapHostSystem createImapHostSystem();
     
+    private ImapHostSystem system;
     private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @Before
     public void setUp() throws Exception {
+        system = createImapHostSystem();
         simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
                 .withUser(USER, PASSWORD)
                 .withLocale(Locale.US);
@@ -49,11 +47,6 @@ public class UserFlagsSupport implements ImapTestConstants {
         BasicImapCommands.authenticate(simpleScriptedTestProtocol);
     }
     
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
-    }
-
     @Test
     public void testUserFlagsSupport() throws Exception {
         Assume.assumeTrue(system.supports(ImapFeatures.Feature.USER_FLAGS_SUPPORT));

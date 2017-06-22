@@ -20,15 +20,14 @@ package org.apache.james.mpt.smtp;
 
 import java.util.Locale;
 
-import javax.inject.Inject;
-
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
-public class SmtpStarttlsCommandTest {
+public abstract class SmtpStarttlsCommandTest {
 
     public static final String USER = "bob";
     public static final String DOMAIN = "mydomain.tld";
@@ -40,12 +39,14 @@ public class SmtpStarttlsCommandTest {
     @Rule
     public final RuleChain chain = RuleChain.outerRule(folder);
 
-    @Inject
-    private static SmtpHostSystem hostSystem;
+    protected abstract SmtpHostSystem createSmtpHostSystem();
     
+    private SmtpHostSystem hostSystem;
     private SimpleScriptedTestProtocol scriptedTest;
 
-    public SmtpStarttlsCommandTest() throws Exception {
+    @Before
+    public void setUp() throws Exception {
+        hostSystem = createSmtpHostSystem();
         String scriptDir = "/org/apache/james/smtp/scripts/";
         scriptedTest = new SimpleScriptedTestProtocol(scriptDir, hostSystem)
                 .withLocale(Locale.US)

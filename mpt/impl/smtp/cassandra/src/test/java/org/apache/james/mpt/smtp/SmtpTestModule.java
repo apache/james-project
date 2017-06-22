@@ -24,9 +24,26 @@ import com.google.inject.AbstractModule;
 
 public class SmtpTestModule extends AbstractModule {
 
+    enum Port {
+        SMTP(1025),
+        SMTP_START_TTLS(1587);
+        
+        private int port;
+
+        Port(int port) {
+            this.port = port;
+        }
+    }
+    
+    private Port smtpPort;
+
+    public SmtpTestModule(Port smtpPort) {
+        this.smtpPort = smtpPort;
+    }
+    
     @Override
     protected void configure() {
-        bind(SmtpHostSystem.class).toInstance(new CassandraJamesSmtpHostSystem(1025));
+        bind(SmtpHostSystem.class).toInstance(new CassandraJamesSmtpHostSystem(smtpPort.port));
     }
 
 }

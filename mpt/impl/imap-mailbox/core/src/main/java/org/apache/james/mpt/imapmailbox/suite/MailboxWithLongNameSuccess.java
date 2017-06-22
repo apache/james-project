@@ -21,24 +21,25 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
-import javax.inject.Inject;
-
-import org.apache.james.mpt.api.HostSystem;
+import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
 import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
-public class MailboxWithLongNameSuccess implements ImapTestConstants {
-    @Inject
-    private static HostSystem system;
+@Ignore("why ?")
+public abstract class MailboxWithLongNameSuccess implements ImapTestConstants {
 
+    protected abstract ImapHostSystem createImapHostSystem();
     
+    private ImapHostSystem system;
     private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @Before
     public void setUp() throws Exception {
+        system = createImapHostSystem();
         simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
                 .withUser(USER, PASSWORD)
                 .withLocale(Locale.US);

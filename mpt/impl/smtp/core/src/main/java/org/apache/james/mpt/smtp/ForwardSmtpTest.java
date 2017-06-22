@@ -26,8 +26,6 @@ import static org.hamcrest.Matchers.equalTo;
 import java.net.InetAddress;
 import java.util.Locale;
 
-import javax.inject.Inject;
-
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.junit.Before;
@@ -42,7 +40,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
-public class ForwardSmtpTest {
+public abstract class ForwardSmtpTest {
 
     public static final String USER = "bob";
     public static final String DOMAIN = "mydomain.tld";
@@ -56,20 +54,21 @@ public class ForwardSmtpTest {
     @Rule
     public final RuleChain chain = RuleChain.outerRule(folder).around(fakeSmtp);
 
-    @Inject
-    private static SmtpHostSystem hostSystem;
-
-    private SimpleScriptedTestProtocol scriptedTest;
+    protected abstract SmtpHostSystem createSmtpHostSystem();
     
-    public ForwardSmtpTest() throws Exception {
-        scriptedTest = new SimpleScriptedTestProtocol("/org/apache/james/smtp/scripts/", hostSystem)
-                .withLocale(Locale.US)
-                .withUser(USER_AT_DOMAIN, PASSWORD);
-    }
+    private SmtpHostSystem hostSystem;
+    private SimpleScriptedTestProtocol scriptedTest;
 
     @Before
     public void setUp() throws Exception {
+        hostSystem = createSmtpHostSystem();
+
+        scriptedTest = new SimpleScriptedTestProtocol("/org/apache/james/smtp/scripts/", hostSystem)
+                .withLocale(Locale.US)
+                .withUser(USER_AT_DOMAIN, PASSWORD);
+
         InetAddress containerIp = InetAddresses.forString(fakeSmtp.getIp());
+        
         hostSystem.getInMemoryDnsService()
             .registerRecord("yopmail.com", containerIp, "yopmail.com");
         hostSystem.addAddressMapping(USER, DOMAIN, "ray@yopmail.com");

@@ -21,8 +21,6 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
-import javax.inject.Inject;
-
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
@@ -33,19 +31,19 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
-public class QuotaTest implements ImapTestConstants {
+public abstract class QuotaTest implements ImapTestConstants {
 
     private static final int MAX_MESSAGE_QUOTA = 4096;
     private static final long MAX_STORAGE_QUOTA = 5 * 1024L * 1024L * 1024L;
 
-    @Inject
-    private static ImapHostSystem system;
-
+    protected abstract ImapHostSystem createImapHostSystem();
     
+    private ImapHostSystem system;
     private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @Before
     public void setUp() throws Exception {
+        system = createImapHostSystem();
         Assume.assumeTrue(system.supports(ImapFeatures.Feature.QUOTA_SUPPORT));
         simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
                 .withUser(USER, PASSWORD)
