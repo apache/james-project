@@ -56,6 +56,25 @@ S: \* OK \[HIGHESTMODSEQ .*\] Highest
 S: \* OK \[UIDNEXT .*\] Predicted next UID
 }
 S: 0004 OK \[READ-WRITE\] SELECT completed\.
+REINIT
+
+# Correct user with correct password can authenticate with empty delegation part
+C: A002 AUTHENTICATE PLAIN aW1hcHVzZXIAaW1hcHVzZXIAcGFzc3dvcmQ=
+# \0imapuser\0imapuser\0password
+S: A002 OK AUTHENTICATE completed.
+
+# Ensure we are imapuser
+C: 0004 SELECT imapuser
+SUB {
+S: \* FLAGS .*
+S: \* .* EXISTS
+S: \* .* RECENT
+S: \* OK \[UIDVALIDITY .*\] UIDs valid
+S: \* OK \[PERMANENTFLAGS .*\] Limited
+S: \* OK \[HIGHESTMODSEQ .*\] Highest
+S: \* OK \[UIDNEXT .*\] Predicted next UID
+}
+S: 0004 OK \[READ-WRITE\] SELECT completed\.
 
 REINIT
 

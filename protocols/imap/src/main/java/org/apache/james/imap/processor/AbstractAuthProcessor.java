@@ -185,7 +185,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
         }
 
         public boolean isDelegation() {
-            return delegateUserName.isPresent();
+            return delegateUserName.isPresent() && !delegateUserName.get().equals(authenticationId);
         }
 
         public Optional<String> getDelegateUserName() {
