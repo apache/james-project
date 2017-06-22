@@ -20,7 +20,6 @@
 
 package org.apache.james.transport.mailets;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
@@ -102,7 +101,7 @@ public class MailAttributesToMimeHeadersTest {
                 .mailetName("Test")
                 .setProperty("simplemapping", "invalidConfigEntry")
                 .build();
-        expectedException.expect(MessagingException.class);
+        expectedException.expect(IllegalArgumentException.class);
         mailet.init(mailetConfig);
     }
 
@@ -112,7 +111,7 @@ public class MailAttributesToMimeHeadersTest {
                 .mailetName("Test")
                 .setProperty("simplemapping", "first;second;third")
                 .build();
-        expectedException.expect(MessagingException.class);
+        expectedException.expect(IllegalArgumentException.class);
         mailet.init(mailetConfig);
     }
 
@@ -121,7 +120,7 @@ public class MailAttributesToMimeHeadersTest {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .build();
-        expectedException.expect(MessagingException.class);
+        expectedException.expect(IllegalArgumentException.class);
         mailet.init(mailetConfig);
     }
 }
