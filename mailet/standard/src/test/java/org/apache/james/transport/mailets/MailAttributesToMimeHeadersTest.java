@@ -17,10 +17,10 @@
  * under the License.                                           *
  ****************************************************************/
 
-
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import javax.mail.MessagingException;
 
@@ -52,6 +52,64 @@ public class MailAttributesToMimeHeadersTest {
     @Before
     public void setup() {
         mailet = new MailAttributesToMimeHeaders();
+    }
+
+    @Test
+    public void shouldThrowMessagingExceptionIfMappingIsNotGiven() throws MessagingException {
+        expectedException.expect(MessagingException.class);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName("Test")
+            .build();
+
+        mailet.init(mailetConfig);
+    }
+
+    @Test
+    public void shouldThrowMessagingExceptionIfMappingIsEmpty() throws MessagingException {
+        expectedException.expect(MessagingException.class);
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("simplemmapping", "")
+            .build();
+
+        mailet.init(mailetConfig);
+    }
+
+    @Test
+    public void shouldIgnoreAttributeOfMappingThatDoesNotExistOnTheMessage() throws MessagingException {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("simplemapping",
+                MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1 +
+                    "," + MAIL_ATTRIBUTE_NAME2 + "; " + HEADER_NAME2 +
+                    "," + "another.attribute" + "; " + "Another-Header")
+            .build();
+
+        mailet.init(mailetConfig);
+
+        FakeMail mockedMail = MailUtil.createMockMail2Recipients(MailUtil.createMimeMessage());
+        mockedMail.setAttribute(MAIL_ATTRIBUTE_NAME1, MAIL_ATTRIBUTE_VALUE1);
+        mockedMail.setAttribute(MAIL_ATTRIBUTE_NAME2, MAIL_ATTRIBUTE_VALUE2);
+
+        mailet.service(mockedMail);
+        assertThat(mockedMail.getMessage().getHeader("another.attribute")).isNull();
+    }
+
+    @Test
+    public void shouldWorkWithMappingWithASingleBinding() throws MessagingException {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("simplemapping",
+                MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1)
+            .build();
+
+        mailet.init(mailetConfig);
+
+        FakeMail mockedMail = MailUtil.createMockMail2Recipients(MailUtil.createMimeMessage());
+        mockedMail.setAttribute(MAIL_ATTRIBUTE_NAME1, MAIL_ATTRIBUTE_VALUE1);
+
+        mailet.service(mockedMail);
+        assertThat(mockedMail.getMessage().getHeader(HEADER_NAME1)).containsExactly(MAIL_ATTRIBUTE_VALUE1);
     }
 
     @Test
@@ -120,7 +178,7 @@ public class MailAttributesToMimeHeadersTest {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .build();
-        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expect(MessagingException.class);
         mailet.init(mailetConfig);
     }
 }
