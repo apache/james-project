@@ -20,7 +20,7 @@ package org.apache.james.mpt.imapmailbox.jcr;
 
 import org.junit.Ignore;
 
-@Ignore("JWC-130 : JCR mailbox does not correctly release resources + append problems")
+@Ignore("MPT-7 : JCR mailbox does not correctly release resources + append problems")
 public class JcrMailboxTest {
 
 }
