@@ -1,0 +1,22 @@
+---
+layout: post
+title:  "Apache James JSieve 0.7"
+date:   2017-06-23 11:30:00 +0700
+categories: james update
+---
+
+James JSieve 0.7 has been released.
+
+The library is available as a maven artifact, for instance for jsieve core:
+
+```
+<dependency>
+    <groupId>org.apache.james</groupId>
+    <artifactId>apache-jsieve-core</artifactId>
+    <version>0.7</version>
+</dependency>
+```
+
+This release solves issues with folded encoded header matching.
+
+It also adds an additional DiscardAction to make discarding emails explicit for the calling code.
