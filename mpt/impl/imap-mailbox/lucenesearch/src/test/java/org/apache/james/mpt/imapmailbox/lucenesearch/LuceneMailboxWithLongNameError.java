@@ -9,7 +9,7 @@ import org.junit.Ignore;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-@Ignore("why ?")
+@Ignore("MAILBOX-300 JPA should fail gracefully when too long mailbox name")
 public class LuceneMailboxWithLongNameError extends MailboxWithLongNameError {
 
     private ImapHostSystem system;

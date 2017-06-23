@@ -26,10 +26,8 @@ import org.apache.james.mpt.imapmailbox.ImapTestConstants;
 import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore("why ?")
 public abstract class MailboxWithLongNameSuccess implements ImapTestConstants {
 
     protected abstract ImapHostSystem createImapHostSystem();
@@ -45,7 +43,6 @@ public abstract class MailboxWithLongNameSuccess implements ImapTestConstants {
                 .withLocale(Locale.US);
         BasicImapCommands.welcome(simpleScriptedTestProtocol);
         BasicImapCommands.authenticate(simpleScriptedTestProtocol);
-        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
     }
     
     @Test

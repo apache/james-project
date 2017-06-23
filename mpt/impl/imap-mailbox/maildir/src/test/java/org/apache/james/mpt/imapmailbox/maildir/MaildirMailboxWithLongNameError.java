@@ -9,7 +9,7 @@ import org.junit.Ignore;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-@Ignore("why ?")
+@Ignore("MAILBOX-299 Maildir should fail gracefully when too long mailbox name")
 public class MaildirMailboxWithLongNameError extends MailboxWithLongNameError {
 
     private ImapHostSystem system;
