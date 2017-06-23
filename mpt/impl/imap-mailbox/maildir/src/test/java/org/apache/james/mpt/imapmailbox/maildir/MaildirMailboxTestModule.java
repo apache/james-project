@@ -20,6 +20,7 @@ package org.apache.james.mpt.imapmailbox.maildir;
 
 import org.apache.james.mpt.api.HostSystem;
 import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.maildir.host.MaildirHostSystem;
 
 import com.google.inject.AbstractModule;
@@ -30,12 +31,13 @@ public class MaildirMailboxTestModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(HostSystem.class).to(ImapHostSystem.class);
+        bind(HostSystem.class).to(JamesImapHostSystem.class);
+        bind(ImapHostSystem.class).to(JamesImapHostSystem.class);
     }
 
     @Provides
     @Singleton
-    public ImapHostSystem provideImapHostSystem() throws Exception {
+    public JamesImapHostSystem provideImapHostSystem() throws Exception {
         return MaildirHostSystem.build();
     }
 

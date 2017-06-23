@@ -40,7 +40,7 @@ public abstract class Condstore implements ImapTestConstants {
     public void setUp() throws Exception {
         system = createJamesImapHostSystem();
         simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
-                .withUser(TO_ADDRESS, PASSWORD)
+                .withUser(USER, PASSWORD)
                 .withLocale(Locale.US);
         BasicImapCommands.welcome(simpleScriptedTestProtocol);
         BasicImapCommands.authenticate(simpleScriptedTestProtocol);
