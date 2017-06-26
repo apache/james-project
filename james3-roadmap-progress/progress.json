@@ -23,7 +23,7 @@
    },
    {
      "name" : "Gatling load and endurance testing",
-     "completion" : 90,
+     "completion" : 100,
      "complexity" : 30
    },
    {
@@ -58,7 +58,7 @@
    },
    {
      "name" : "Make security audits",
-     "completion" : 40,
+     "completion" : 100,
      "complexity" : 5
    },
    {
