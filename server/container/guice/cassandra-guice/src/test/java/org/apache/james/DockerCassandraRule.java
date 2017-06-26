@@ -25,10 +25,9 @@ import org.apache.james.modules.mailbox.CassandraSessionConfiguration;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import org.testcontainers.shaded.com.github.dockerjava.api.model.ExposedPort;
-import org.testcontainers.shaded.com.github.dockerjava.api.model.Ports;
-import org.testcontainers.shaded.com.github.dockerjava.api.model.Ports.Binding;
 
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.Ports;
 import com.google.inject.Module;
 
 
@@ -36,7 +35,7 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
 
     private static final int CASSANDRA_PORT = 9042;
 
-    private static boolean isBindingToEveryThing(Binding binding) {
+    private static boolean isBindingToEveryThing(Ports.Binding binding) {
         String bindingIp = binding.getHostIp();
         return bindingIp == null || bindingIp.equals("0.0.0.0");
     }
