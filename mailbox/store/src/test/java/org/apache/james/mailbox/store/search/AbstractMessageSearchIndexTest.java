@@ -54,9 +54,9 @@ import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractMessageSearchIndexTest {
 
-    private static final String INBOX = "INBOX";
-    private static final String OTHERUSER = "otheruser";
-    private static final String USERNAME = "benwa";
+    protected static final String INBOX = "INBOX";
+    protected static final String OTHERUSER = "otheruser";
+    protected static final String USERNAME = "benwa";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMessageSearchIndexTest.class);
     public static final long LIMIT = 100L;
