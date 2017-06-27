@@ -60,7 +60,6 @@ import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
 import org.elasticsearch.client.Client;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -123,7 +122,6 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         storeMailboxManager.init();
     }
 
-    @Ignore("MAILBOX-301 Lucene terms length exceeded on some emails")
     @Test
     public void termsBetweenElasticSearchAndLuceneLimitDueTuNonAsciiCharsShouldBeTruncated() throws Exception {
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, INBOX);

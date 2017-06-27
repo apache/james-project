@@ -39,7 +39,6 @@ public class NodeMappingFactory {
     public static final String ANALYZER = "analyzer";
     public static final String SNOWBALL = "snowball";
     public static final String IGNORE_ABOVE = "ignore_above";
-    public static final int LUCENE_LIMIT = 32766;
 
     public static Client applyMapping(Client client, IndexName indexName, TypeName typeName, XContentBuilder mappingsSources) {
         client.admin()
