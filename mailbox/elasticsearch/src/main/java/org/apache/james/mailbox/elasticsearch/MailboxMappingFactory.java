@@ -19,13 +19,57 @@
 
 package org.apache.james.mailbox.elasticsearch;
 
+import static org.apache.james.backends.es.IndexCreationFactory.CASE_INSENSITIVE;
+import static org.apache.james.backends.es.NodeMappingFactory.ANALYZER;
+import static org.apache.james.backends.es.NodeMappingFactory.BOOLEAN;
+import static org.apache.james.backends.es.NodeMappingFactory.FIELDS;
+import static org.apache.james.backends.es.NodeMappingFactory.FORMAT;
+import static org.apache.james.backends.es.NodeMappingFactory.IGNORE_ABOVE;
+import static org.apache.james.backends.es.NodeMappingFactory.INDEX;
+import static org.apache.james.backends.es.NodeMappingFactory.LONG;
+import static org.apache.james.backends.es.NodeMappingFactory.LUCENE_LIMIT;
+import static org.apache.james.backends.es.NodeMappingFactory.NESTED;
+import static org.apache.james.backends.es.NodeMappingFactory.NOT_ANALYZED;
+import static org.apache.james.backends.es.NodeMappingFactory.PROPERTIES;
+import static org.apache.james.backends.es.NodeMappingFactory.RAW;
+import static org.apache.james.backends.es.NodeMappingFactory.SNOWBALL;
+import static org.apache.james.backends.es.NodeMappingFactory.TYPE;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.BCC;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.CC;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.DATE;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.FROM;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.HAS_ATTACHMENT;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.HTML_BODY;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.IS_ANSWERED;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.IS_DELETED;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.IS_DRAFT;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.IS_FLAGGED;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.IS_RECENT;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.IS_UNREAD;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.MAILBOX_ID;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.MEDIA_TYPE;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.MESSAGE_ID;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.MODSEQ;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.SENT_DATE;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.SIZE;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.SUBJECT;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.SUBTYPE;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.TEXT;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.TEXT_BODY;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.TO;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.UID;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.USERS;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.USER_FLAGS;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
 
+import static org.apache.james.backends.es.NodeMappingFactory.STRING;
+
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.NodeMappingFactory;
-import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
+import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.EMailer;
+import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.Property;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import com.google.common.base.Throwables;
@@ -38,188 +82,205 @@ public class MailboxMappingFactory {
                 .startObject()
 
                     .startObject(MailboxElasticsearchConstants.MESSAGE_TYPE.getValue())
-                        .startObject(NodeMappingFactory.PROPERTIES)
-                            .startObject(JsonMessageConstants.MESSAGE_ID)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
-                            .endObject()
-                            .startObject(JsonMessageConstants.UID)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.LONG)
-                            .endObject()
-                            .startObject(JsonMessageConstants.MODSEQ)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.LONG)
-                            .endObject()
-                            .startObject(JsonMessageConstants.SIZE)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.LONG)
-                            .endObject()
-                            .startObject(JsonMessageConstants.IS_ANSWERED)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.BOOLEAN)
-                            .endObject()
-                            .startObject(JsonMessageConstants.IS_DELETED)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.BOOLEAN)
-                            .endObject()
-                            .startObject(JsonMessageConstants.IS_DRAFT)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.BOOLEAN)
-                            .endObject()
-                            .startObject(JsonMessageConstants.IS_FLAGGED)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.BOOLEAN)
-                            .endObject()
-                            .startObject(JsonMessageConstants.IS_RECENT)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.BOOLEAN)
-                            .endObject()
-                            .startObject(JsonMessageConstants.IS_UNREAD)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.BOOLEAN)
-                            .endObject()
-                            .startObject(JsonMessageConstants.DATE)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.DATE)
-                                .field(NodeMappingFactory.FORMAT, "yyyy-MM-dd'T'HH:mm:ssZ")
-                            .endObject()
-                            .startObject(JsonMessageConstants.SENT_DATE)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.DATE)
-                                .field(NodeMappingFactory.FORMAT, "yyyy-MM-dd'T'HH:mm:ssZ")
-                            .endObject()
-                            .startObject(JsonMessageConstants.MEDIA_TYPE)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
-                            .endObject()
-                            .startObject(JsonMessageConstants.SUBTYPE)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
-                            .endObject()
-                            .startObject(JsonMessageConstants.USER_FLAGS)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
+                        .startObject(PROPERTIES)
+
+                            .startObject(MESSAGE_ID)
+                                .field(TYPE, STRING)
+                                .field(INDEX, NOT_ANALYZED)
                             .endObject()
 
-                            .startObject(JsonMessageConstants.FROM)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.NESTED)
-                                .startObject(NodeMappingFactory.PROPERTIES)
-                                    .startObject(JsonMessageConstants.EMailer.NAME)
-                                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                        .startObject(NodeMappingFactory.FIELDS)
-                                            .startObject(NodeMappingFactory.RAW)
-                                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                                .field(NodeMappingFactory.ANALYZER, IndexCreationFactory.CASE_INSENSITIVE)
+                            .startObject(UID)
+                                .field(TYPE, LONG)
+                            .endObject()
+
+                            .startObject(MODSEQ)
+                                .field(TYPE, LONG)
+                            .endObject()
+
+                            .startObject(SIZE)
+                                .field(TYPE, LONG)
+                            .endObject()
+
+                            .startObject(IS_ANSWERED)
+                                .field(TYPE, BOOLEAN)
+                            .endObject()
+
+                            .startObject(IS_DELETED)
+                                .field(TYPE, BOOLEAN)
+                            .endObject()
+
+                            .startObject(IS_DRAFT)
+                                .field(TYPE, BOOLEAN)
+                            .endObject()
+
+                            .startObject(IS_FLAGGED)
+                                .field(TYPE, BOOLEAN)
+                            .endObject()
+
+                            .startObject(IS_RECENT)
+                                .field(TYPE, BOOLEAN)
+                            .endObject()
+
+                            .startObject(IS_UNREAD)
+                                .field(TYPE, BOOLEAN)
+                            .endObject()
+
+                            .startObject(DATE)
+                                .field(TYPE, NodeMappingFactory.DATE)
+                                .field(FORMAT, "yyyy-MM-dd'T'HH:mm:ssZ")
+                            .endObject()
+
+                            .startObject(SENT_DATE)
+                                .field(TYPE, NodeMappingFactory.DATE)
+                                .field(FORMAT, "yyyy-MM-dd'T'HH:mm:ssZ")
+                            .endObject()
+
+                            .startObject(MEDIA_TYPE)
+                                .field(TYPE, STRING)
+                                .field(INDEX, NOT_ANALYZED)
+                            .endObject()
+
+                            .startObject(SUBTYPE)
+                                .field(TYPE, STRING)
+                                .field(INDEX, NOT_ANALYZED)
+                            .endObject()
+
+                            .startObject(USER_FLAGS)
+                                .field(TYPE, STRING)
+                                .field(INDEX, NOT_ANALYZED)
+                            .endObject()
+
+                            .startObject(FROM)
+                                .field(TYPE, NESTED)
+                                .startObject(PROPERTIES)
+                                    .startObject(EMailer.NAME)
+                                        .field(TYPE, STRING)
+                                        .startObject(FIELDS)
+                                            .startObject(RAW)
+                                                .field(TYPE, STRING)
+                                                .field(ANALYZER, CASE_INSENSITIVE)
                                             .endObject()
                                         .endObject()
                                     .endObject()
-                                    .startObject(JsonMessageConstants.EMailer.ADDRESS)
-                                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                        .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
+                                    .startObject(EMailer.ADDRESS)
+                                        .field(TYPE, STRING)
+                                        .field(INDEX, NOT_ANALYZED)
                                     .endObject()
                                 .endObject()
                             .endObject()
 
-                            .startObject(JsonMessageConstants.SUBJECT)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                .startObject(NodeMappingFactory.FIELDS)
-                                    .startObject(NodeMappingFactory.RAW)
-                                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                        .field(NodeMappingFactory.ANALYZER, IndexCreationFactory.CASE_INSENSITIVE)
+                            .startObject(SUBJECT)
+                                .field(TYPE, STRING)
+                                .startObject(FIELDS)
+                                    .startObject(RAW)
+                                        .field(TYPE, STRING)
+                                        .field(ANALYZER, CASE_INSENSITIVE)
                                     .endObject()
                                 .endObject()
                             .endObject()
 
-                            .startObject(JsonMessageConstants.TO)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.NESTED)
-                                .startObject(NodeMappingFactory.PROPERTIES)
-                                    .startObject(JsonMessageConstants.EMailer.NAME)
-                                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                        .startObject(NodeMappingFactory.FIELDS)
-                                            .startObject(NodeMappingFactory.RAW)
-                                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                                .field(NodeMappingFactory.ANALYZER, IndexCreationFactory.CASE_INSENSITIVE)
+                            .startObject(TO)
+                                .field(TYPE, NESTED)
+                                .startObject(PROPERTIES)
+                                    .startObject(EMailer.NAME)
+                                        .field(TYPE, STRING)
+                                        .startObject(FIELDS)
+                                            .startObject(RAW)
+                                                .field(TYPE, STRING)
+                                                .field(ANALYZER, CASE_INSENSITIVE)
                                             .endObject()
                                         .endObject()
                                     .endObject()
-                                    .startObject(JsonMessageConstants.EMailer.ADDRESS)
-                                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                        .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
+                                    .startObject(EMailer.ADDRESS)
+                                        .field(TYPE, STRING)
+                                        .field(INDEX, NOT_ANALYZED)
                                     .endObject()
                                 .endObject()
                             .endObject()
 
-                            .startObject(JsonMessageConstants.CC)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.NESTED)
-                                .startObject(NodeMappingFactory.PROPERTIES)
-                                    .startObject(JsonMessageConstants.EMailer.NAME)
-                                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
+                            .startObject(CC)
+                                .field(TYPE, NESTED)
+                                .startObject(PROPERTIES)
+                                    .startObject(EMailer.NAME)
+                                        .field(TYPE, STRING)
                                     .endObject()
-                                    .startObject(JsonMessageConstants.EMailer.ADDRESS)
-                                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                        .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
-                                    .endObject()
-                                .endObject()
-                            .endObject()
-
-                            .startObject(JsonMessageConstants.BCC)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.NESTED)
-                                .startObject(NodeMappingFactory.PROPERTIES)
-                                    .startObject(JsonMessageConstants.EMailer.NAME)
-                                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                    .endObject()
-                                    .startObject(JsonMessageConstants.EMailer.ADDRESS)
-                                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                        .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
+                                    .startObject(EMailer.ADDRESS)
+                                        .field(TYPE, STRING)
+                                        .field(INDEX, NOT_ANALYZED)
                                     .endObject()
                                 .endObject()
                             .endObject()
 
-                            .startObject(JsonMessageConstants.MAILBOX_ID)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
-                            .endObject()
-                            .startObject(JsonMessageConstants.USERS)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
-                            .endObject()
-                            .startObject(JsonMessageConstants.PROPERTIES)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.NESTED)
-                                .startObject(NodeMappingFactory.PROPERTIES)
-                                    .startObject(JsonMessageConstants.Property.NAMESPACE)
-                                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                        .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
+                            .startObject(BCC)
+                                .field(TYPE, NESTED)
+                                .startObject(PROPERTIES)
+                                    .startObject(EMailer.NAME)
+                                        .field(TYPE, STRING)
                                     .endObject()
-                                    .startObject(JsonMessageConstants.Property.NAME)
-                                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                        .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
-                                    .endObject()
-                                    .startObject(JsonMessageConstants.Property.VALUE)
-                                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
+                                    .startObject(EMailer.ADDRESS)
+                                        .field(TYPE, STRING)
+                                        .field(INDEX, NOT_ANALYZED)
                                     .endObject()
                                 .endObject()
                             .endObject()
 
-                            .startObject(JsonMessageConstants.TEXT_BODY)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                .startObject(NodeMappingFactory.FIELDS)
-                                    .startObject(NodeMappingFactory.RAW)
-                                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                        .field(NodeMappingFactory.ANALYZER, IndexCreationFactory.CASE_INSENSITIVE)
-                                        .field(NodeMappingFactory.IGNORE_ABOVE, NodeMappingFactory.LUCENE_LIMIT)
+                            .startObject(MAILBOX_ID)
+                                .field(TYPE, STRING)
+                                .field(INDEX, NOT_ANALYZED)
+                            .endObject()
+
+                            .startObject(USERS)
+                                .field(TYPE, STRING)
+                                .field(INDEX, NOT_ANALYZED)
+                            .endObject()
+
+                            .startObject(PROPERTIES)
+                                .field(TYPE, NESTED)
+                                .startObject(PROPERTIES)
+                                    .startObject(Property.NAMESPACE)
+                                        .field(TYPE, STRING)
+                                        .field(INDEX, NOT_ANALYZED)
+                                    .endObject()
+                                    .startObject(Property.NAME)
+                                        .field(TYPE, STRING)
+                                        .field(INDEX, NOT_ANALYZED)
+                                    .endObject()
+                                    .startObject(Property.VALUE)
+                                        .field(TYPE, STRING)
                                     .endObject()
                                 .endObject()
                             .endObject()
 
-                            .startObject(JsonMessageConstants.HTML_BODY)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                .startObject(NodeMappingFactory.FIELDS)
-                                    .startObject(NodeMappingFactory.RAW)
-                                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                        .field(NodeMappingFactory.ANALYZER, IndexCreationFactory.CASE_INSENSITIVE)
-                                        .field(NodeMappingFactory.IGNORE_ABOVE, NodeMappingFactory.LUCENE_LIMIT)
+                            .startObject(TEXT_BODY)
+                                .field(TYPE, STRING)
+                                .startObject(FIELDS)
+                                    .startObject(RAW)
+                                        .field(TYPE, STRING)
+                                        .field(ANALYZER, CASE_INSENSITIVE)
+                                        .field(IGNORE_ABOVE, LUCENE_LIMIT)
                                     .endObject()
                                 .endObject()
                             .endObject()
 
-                            .startObject(JsonMessageConstants.HAS_ATTACHMENT)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.BOOLEAN)
+                            .startObject(HTML_BODY)
+                                .field(TYPE, STRING)
+                                .startObject(FIELDS)
+                                    .startObject(RAW)
+                                        .field(TYPE, STRING)
+                                        .field(ANALYZER, CASE_INSENSITIVE)
+                                        .field(IGNORE_ABOVE, LUCENE_LIMIT)
+                                    .endObject()
+                                .endObject()
                             .endObject()
 
-                            .startObject(JsonMessageConstants.TEXT)
-                                .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                                .field(NodeMappingFactory.ANALYZER, NodeMappingFactory.SNOWBALL)
-                                .field(NodeMappingFactory.IGNORE_ABOVE, NodeMappingFactory.LUCENE_LIMIT)
+                            .startObject(HAS_ATTACHMENT)
+                                .field(TYPE, BOOLEAN)
+                            .endObject()
+
+                            .startObject(TEXT)
+                                .field(TYPE, STRING)
+                                .field(ANALYZER, SNOWBALL)
+                                .field(IGNORE_ABOVE, LUCENE_LIMIT)
                             .endObject()
                         .endObject()
                     .endObject()
