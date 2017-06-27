@@ -29,6 +29,7 @@ import com.google.common.base.Throwables;
 
 public class EmbeddedCassandra {
 
+    private int port;
 
     public static EmbeddedCassandra createStartServer() {
         return new EmbeddedCassandra();
@@ -36,10 +37,14 @@ public class EmbeddedCassandra {
 
     private EmbeddedCassandra() {
         try {
-            EmbeddedCassandraServerHelper.startEmbeddedCassandra(TimeUnit.SECONDS.toMillis(20));
-        } catch (ConfigurationException | TTransportException | IOException | InterruptedException e) {
+            EmbeddedCassandraServerHelper.startEmbeddedCassandra(EmbeddedCassandraServerHelper.CASSANDRA_RNDPORT_YML_FILE, TimeUnit.SECONDS.toMillis(20));
+            port = EmbeddedCassandraServerHelper.getNativeTransportPort();
+        } catch (ConfigurationException | TTransportException | IOException e) {
             Throwables.propagate(e);
         }
     }
-    
+
+    public int getPort() {
+        return port;
+    }
 }
