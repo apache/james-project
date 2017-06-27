@@ -384,6 +384,26 @@ public class MessageFactoryTest {
     }
 
     @Test
+    public void messageWithoutFromShouldHaveEmptyFromField() throws Exception {
+        String headers = "To: user <user@domain>\n"
+            + "Subject: test subject\n";
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(new Flags(Flag.SEEN))
+            .size(headers.length())
+            .internalDate(INTERNAL_DATE)
+            .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(new TestMessageId.Factory().generate())
+            .build();
+
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+
+        assertThat(testee.getFrom()).isEmpty();
+    }
+
+    @Test
     public void dateFromHeaderShouldBeUsedIfPresent() throws Exception {
         String headers = "From: user <userdomain>\n"
             + "To: user1 <user1domain>, user2 <user2domain>\n"
