@@ -30,6 +30,7 @@ import javax.naming.NameClassPair;
 import javax.naming.NameParser;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.NoInitialContextException;
 import javax.naming.ServiceUnavailableException;
 
 import org.apache.james.util.retry.api.ExceptionRetryingProxy;
@@ -48,7 +49,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
 
     static public final Class<?>[] DEFAULT_EXCEPTION_CLASSES = new Class<?>[] {
             CommunicationException.class,
-            ServiceUnavailableException.class };
+            ServiceUnavailableException.class,
+            NoInitialContextException.class };
 
     private Context _delegate = null;
     private RetrySchedule _schedule = null;
