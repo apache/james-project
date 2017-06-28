@@ -237,9 +237,7 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public void removeQuota() throws QuotaNotFoundException {
-        if (!cassandraSieveQuotaDAO.removeQuota().join()) {
-            throw new QuotaNotFoundException();
-        }
+        cassandraSieveQuotaDAO.removeQuota().join();
     }
 
     @Override
@@ -266,9 +264,7 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public void removeQuota(String user) throws QuotaNotFoundException {
-        if (!cassandraSieveQuotaDAO.removeQuota(user).join()) {
-            throw new QuotaNotFoundException();
-        }
+        cassandraSieveQuotaDAO.removeQuota(user).join();
     }
 
 }

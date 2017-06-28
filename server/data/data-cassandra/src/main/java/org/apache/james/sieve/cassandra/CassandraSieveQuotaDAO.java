@@ -89,14 +89,12 @@ public class CassandraSieveQuotaDAO {
         deleteClusterQuotaStatement = session.prepare(
             delete()
                 .from(CassandraSieveClusterQuotaTable.TABLE_NAME)
-                .where(eq(CassandraSieveClusterQuotaTable.NAME, bindMarker(CassandraSieveClusterQuotaTable.NAME)))
-                .ifExists());
+                .where(eq(CassandraSieveClusterQuotaTable.NAME, bindMarker(CassandraSieveClusterQuotaTable.NAME))));
 
         deleteUserQuotaStatement = session.prepare(
             delete()
                 .from(CassandraSieveQuotaTable.TABLE_NAME)
-                .where(eq(CassandraSieveQuotaTable.USER_NAME, bindMarker(CassandraSieveQuotaTable.USER_NAME)))
-                .ifExists());
+                .where(eq(CassandraSieveQuotaTable.USER_NAME, bindMarker(CassandraSieveQuotaTable.USER_NAME))));
     }
 
     public CompletableFuture<Long> spaceUsedBy(String user) {
@@ -128,8 +126,8 @@ public class CassandraSieveQuotaDAO {
                 .setString(CassandraSieveClusterQuotaTable.NAME, CassandraSieveClusterQuotaTable.DEFAULT_NAME));
     }
 
-    public CompletableFuture<Boolean> removeQuota() {
-        return cassandraAsyncExecutor.executeReturnApplied(
+    public CompletableFuture<Void> removeQuota() {
+        return cassandraAsyncExecutor.executeVoid(
             deleteClusterQuotaStatement.bind()
                 .setString(CassandraSieveClusterQuotaTable.NAME, CassandraSieveClusterQuotaTable.DEFAULT_NAME));
     }
@@ -148,8 +146,8 @@ public class CassandraSieveQuotaDAO {
                 .setString(CassandraSieveQuotaTable.USER_NAME, user));
     }
 
-    public CompletableFuture<Boolean> removeQuota(String user)  {
-        return cassandraAsyncExecutor.executeReturnApplied(
+    public CompletableFuture<Void> removeQuota(String user)  {
+        return cassandraAsyncExecutor.executeVoid(
             deleteUserQuotaStatement.bind()
                 .setString(CassandraSieveQuotaTable.USER_NAME, user));
     }

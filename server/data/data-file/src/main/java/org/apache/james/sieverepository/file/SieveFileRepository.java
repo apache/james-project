@@ -420,7 +420,7 @@ public class SieveFileRepository implements SieveRepository {
     public synchronized void removeQuota() throws QuotaNotFoundException, StorageException {
         File file = getQuotaFile();
         if (!file.exists()) {
-            throw new QuotaNotFoundException("No default quota");
+            return;
         }
         try {
             FileUtils.forceDelete(file);
@@ -475,7 +475,7 @@ public class SieveFileRepository implements SieveRepository {
         synchronized (lock) {
             File file = getQuotaFile(user);
             if (!file.exists()) {
-                throw new QuotaNotFoundException("No quota for user: " + user);
+                return;
             }
             try {
                 FileUtils.forceDelete(file);

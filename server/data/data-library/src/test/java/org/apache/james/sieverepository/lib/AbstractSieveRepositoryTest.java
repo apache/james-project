@@ -303,9 +303,14 @@ public abstract class AbstractSieveRepositoryTest {
         assertThat(sieveRepository.hasQuota(USER)).isTrue();
     }
 
-    @Test(expected = QuotaNotFoundException.class)
-    public void removeQuotaShouldThrowIfRepositoryDoesNotHaveQuota() throws Exception {
+    @Test
+    public void removeQuotaShouldNotThrowIfRepositoryDoesNotHaveQuota() throws Exception {
         sieveRepository.removeQuota();
+    }
+
+    @Test
+    public void removeUserQuotaShouldNotThrowWhenAbsent() throws Exception {
+        sieveRepository.removeQuota(USER);
     }
 
     @Test
