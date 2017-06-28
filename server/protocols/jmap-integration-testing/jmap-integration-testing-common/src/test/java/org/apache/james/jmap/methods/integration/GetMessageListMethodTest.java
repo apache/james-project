@@ -50,6 +50,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
+import org.apache.james.util.date.ImapDateTimeFormatter;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
@@ -793,6 +794,29 @@ public abstract class GetMessageListMethodTest {
         given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"sort\":[\"date\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", contains(message1.getMessageId().serialize(), message2.getMessageId().serialize()));
+    }
+
+    @Test
+    public void getMessageListShouldSortMessagesWhenDateDoesntHaveCentury() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+
+        LocalDate date = LocalDate.parse("Wed, 28 Jun 17 09:23:01 +0200", ImapDateTimeFormatter.rfc5322());
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
+        LocalDate date2 = LocalDate.parse("Tue, 27 Jun 2017 09:23:01 +0200", ImapDateTimeFormatter.rfc5322());
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date2), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessageList\", {\"sort\":[\"date desc\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()

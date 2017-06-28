@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.elasticsearch.json;
 
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
@@ -37,6 +36,7 @@ import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.util.MimeUtil;
+import org.apache.james.util.date.ImapDateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -157,7 +157,7 @@ public class HeaderCollection {
             try {
                 return Optional.of(ZonedDateTime.parse(
                     sanitizeDateStringHeaderValue(value),
-                    DateTimeFormatter.RFC_1123_DATE_TIME));
+                    ImapDateTimeFormatter.rfc5322()));
             } catch (Exception e) {
                 LOGGER.info("Can not parse receive date " + value);
                 return Optional.empty();

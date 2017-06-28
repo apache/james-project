@@ -223,6 +223,16 @@ public class HeaderCollectionTest {
     }
 
     @Test
+    public void partialYearShouldBeCompleted() {
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Date", "Thu, 4 Jun 15 06:08:41 +0200"))
+            .build();
+
+        assertThat(DATE_TIME_FORMATTER.format(headerCollection.getSentDate().get()))
+            .isEqualTo("2015/06/04 06:08:41");
+    }
+
+    @Test
     public void nonStandardDatesShouldBeRetreived() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Date", "Thu, 4 Jun 2015 06:08:41 +0200 (UTC)"))
