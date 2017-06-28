@@ -131,12 +131,12 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public void setActive(String user, String name) throws ScriptNotFoundException {
-        CompletableFuture<Void> unactivateOldScriptFuture = unactivateOldScript(user);
-        CompletableFuture<Boolean> activateNewScript = updateScriptActivation(user, name, true)
-            .thenCompose(CompletableFutureUtil.composeIfTrue(
-                () -> cassandraActiveScriptDAO.activate(user, name)));
+        CompletableFuture<Boolean> activateNewScript =
+            unactivateOldScript(user)
+                .thenCompose( any -> updateScriptActivation(user, name, true)
+                    .thenCompose(CompletableFutureUtil.composeIfTrue(
+                        () -> cassandraActiveScriptDAO.activate(user, name))));
 
-        unactivateOldScriptFuture.join();
         if (!activateNewScript.join()) {
             throw new ScriptNotFoundException();
         }
