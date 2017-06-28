@@ -58,7 +58,7 @@
         <jutf7.version>1.0.0</jutf7.version>
         <junit.version>4.10</junit.version>
         <slf4j.version>1.6.3</slf4j.version>
-        <jsieve.version>0.6</jsieve.version>
+        <jsieve.version>0.7</jsieve.version>
         <mockito-core.version>1.9.0</mockito-core.version>
         <assertj-1.version>1.7.1</assertj-1.version>
         <assertj-3.version>3.2.0</assertj-3.version>
