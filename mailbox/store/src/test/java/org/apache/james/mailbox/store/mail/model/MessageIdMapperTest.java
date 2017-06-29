@@ -47,9 +47,7 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.assertj.core.data.MapEntry;
-import org.junit.After;
 import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -83,12 +81,10 @@ public abstract class MessageIdMapperTest {
 
     protected abstract MapperProvider provideMapper();
 
-    @Before
-    public final void setUp() throws MailboxException {
+    public void setUp() throws MailboxException {
         this.mapperProvider = provideMapper();
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.UNIQUE_MESSAGE_ID));
 
-        this.mapperProvider.ensureMapperPrepared();
         this.sut = mapperProvider.createMessageIdMapper();
         this.messageMapper = mapperProvider.createMessageMapper();
         this.mailboxMapper = mapperProvider.createMailboxMapper();
@@ -100,12 +96,6 @@ public abstract class MessageIdMapperTest {
         message2 = createMessage(benwaInboxMailbox, "Subject: Test2 \n\nBody2\n.\n", BODY_START, new PropertyBuilder());
         message3 = createMessage(benwaInboxMailbox, "Subject: Test3 \n\nBody3\n.\n", BODY_START, new PropertyBuilder());
         message4 = createMessage(benwaWorkMailbox, "Subject: Test4 \n\nBody4\n.\n", BODY_START, new PropertyBuilder());
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        mapperProvider.clearMapper();
-        mapperProvider.close();
     }
 
     @Test

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
@@ -34,6 +35,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.github.steveash.guavate.Guavate;
@@ -45,6 +47,9 @@ public class CassandraMailboxDAOTest {
     public static final MailboxPath NEW_MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "xyz");
     public static CassandraId CASSANDRA_ID_1 = CassandraId.timeBased();
     public static CassandraId CASSANDRA_ID_2 = CassandraId.timeBased();
+
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
     private CassandraCluster cassandra;
     private CassandraMailboxDAO testee;
     private SimpleMailbox mailbox1;
@@ -52,10 +57,11 @@ public class CassandraMailboxDAOTest {
 
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraModuleComposite(new CassandraMailboxModule(), new CassandraAclModule()));
-        cassandra.ensureAllTables();
+        CassandraModuleComposite modules = new CassandraModuleComposite(new CassandraMailboxModule(), new CassandraAclModule());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
 
         testee = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
+
         mailbox1 = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "abcd"),
             UID_VALIDITY_1,
             CASSANDRA_ID_1);
@@ -66,7 +72,6 @@ public class CassandraMailboxDAOTest {
 
     @After
     public void tearDown() {
-        cassandra.clearAllTables();
         cassandra.close();
     }
 

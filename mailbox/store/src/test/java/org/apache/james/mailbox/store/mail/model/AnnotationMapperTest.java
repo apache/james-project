@@ -26,9 +26,7 @@ import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
-import org.junit.After;
 import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -61,20 +59,12 @@ public abstract class AnnotationMapperTest {
 
     protected abstract MapperProvider createMapperProvider();
 
-    @Before
-    public final void setUp() throws MailboxException {
+    public void setUp() throws Exception {
         mapperProvider = createMapperProvider();
-        mapperProvider.ensureMapperPrepared();
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.ANNOTATION));
 
         this.annotationMapper = mapperProvider.createAnnotationMapper();
         this.mailboxId = mapperProvider.generateId();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        mapperProvider.clearMapper();
-        mapperProvider.close();
     }
 
     @Test

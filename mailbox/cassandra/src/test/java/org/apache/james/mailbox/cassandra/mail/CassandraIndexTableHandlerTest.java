@@ -28,6 +28,7 @@ import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
@@ -48,6 +49,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.github.steveash.guavate.Guavate;
@@ -60,6 +62,8 @@ public class CassandraIndexTableHandlerTest {
     public static final int UID_VALIDITY = 15;
     public static final long MODSEQ = 17;
 
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
     private CassandraCluster cassandra;
     private CassandraMailboxCounterDAO mailboxCounterDAO;
     private CassandraMailboxRecentsDAO mailboxRecentsDAO;
@@ -77,9 +81,7 @@ public class CassandraIndexTableHandlerTest {
                 new CassandraMailboxRecentsModule(),
                 new CassandraFirstUnseenModule(),
                 new CassandraApplicableFlagsModule(),
-                new CassandraDeletedMessageModule()));
-        cassandra.ensureAllTables();
-
+                new CassandraDeletedMessageModule()), cassandraServer.getIp(), cassandraServer.getBindingPort());
         mailboxCounterDAO = new CassandraMailboxCounterDAO(cassandra.getConf());
         mailboxRecentsDAO = new CassandraMailboxRecentsDAO(cassandra.getConf());
         firstUnseenDAO = new CassandraFirstUnseenDAO(cassandra.getConf());
@@ -99,7 +101,6 @@ public class CassandraIndexTableHandlerTest {
 
     @After
     public void tearDown() {
-        cassandra.clearAllTables();
         cassandra.close();
     }
 

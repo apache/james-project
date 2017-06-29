@@ -24,26 +24,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class CassandraSieveQuotaDAOTest {
 
     public static final String USER = "user";
+
+    
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
     private CassandraCluster cassandra;
     private CassandraSieveQuotaDAO sieveQuotaDAO;
 
     @Before
-    public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule());
-        cassandra.ensureAllTables();
+    public void setUp() throws Exception {
+        cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         sieveQuotaDAO = new CassandraSieveQuotaDAO(cassandra.getConf());
     }
 
     @After
     public void tearDown() {
-        cassandra.clearAllTables();
         cassandra.close();
     }
 

@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
-import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.mailbox.MessageUid;
@@ -32,7 +31,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 
-public interface MapperProvider extends Closeable {
+public interface MapperProvider {
     enum Capabilities {
         MESSAGE,
         MAILBOX,
@@ -65,8 +64,6 @@ public interface MapperProvider extends Closeable {
     long highestModSeq(Mailbox mailbox) throws MailboxException;
 
     void clearMapper() throws MailboxException;
-
-    void ensureMapperPrepared() throws MailboxException;
 
     boolean supportPartialAttachmentFetch();
     

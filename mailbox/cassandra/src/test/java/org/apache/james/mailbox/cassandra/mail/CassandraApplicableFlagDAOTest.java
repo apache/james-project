@@ -24,11 +24,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.Flags;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
@@ -39,21 +41,20 @@ public class CassandraApplicableFlagDAOTest {
     public static final String USER_FLAG2 = "User Flag 2";
     public static final CassandraId CASSANDRA_ID = CassandraId.timeBased();
 
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
     private CassandraCluster cassandra;
 
     private CassandraApplicableFlagDAO testee;
 
     @Before
     public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraApplicableFlagsModule());
-        cassandra.ensureAllTables();
-
+        cassandra = CassandraCluster.create(new CassandraApplicableFlagsModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         testee = new CassandraApplicableFlagDAO(cassandra.getConf());
     }
 
     @After
     public void tearDown() throws Exception {
-        cassandra.clearAllTables();
         cassandra.close();
     }
 

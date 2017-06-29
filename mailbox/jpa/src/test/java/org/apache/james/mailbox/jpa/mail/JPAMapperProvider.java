@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
@@ -98,11 +97,6 @@ public class JPAMapperProvider implements MapperProvider {
     }
 
     @Override
-    public void ensureMapperPrepared() throws MailboxException {
-
-    }
-
-    @Override
     public boolean supportPartialAttachmentFetch() {
         return false;
     }
@@ -132,8 +126,4 @@ public class JPAMapperProvider implements MapperProvider {
         throw new NotImplementedException();
     }
 
-    @Override
-    public void close() throws IOException {
-
-    }
 }

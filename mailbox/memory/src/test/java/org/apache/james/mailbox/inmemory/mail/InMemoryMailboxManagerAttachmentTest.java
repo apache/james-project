@@ -37,6 +37,7 @@ import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.junit.Before;
 
 public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
 
@@ -44,7 +45,9 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
     private InMemoryMailboxManager mailboxManager;
     private InMemoryMailboxManager parseFailingMailboxManager;
 
-    public InMemoryMailboxManagerAttachmentTest() throws Exception {
+
+    @Before
+    public void setUp() throws Exception {
         mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
@@ -58,6 +61,7 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
         parseFailingMailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, noAuthenticator, noAuthorizator, new NoMailboxPathLocker(),
                 new UnionMailboxACLResolver(), null, failingMessageParser, messageIdFactory);
         parseFailingMailboxManager.init();
+        super.setUp();
     }
 
     @Override

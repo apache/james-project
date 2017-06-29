@@ -73,15 +73,17 @@ public class JPAHostSystem extends JamesImapHostSystem {
         Feature.USER_FLAGS_SUPPORT,
         Feature.ANNOTATION_SUPPORT,
         Feature.QUOTA_SUPPORT);
-    private final JPAPerUserMaxQuotaManager maxQuotaManager;
 
     public static JamesImapHostSystem build() throws Exception {
         return new JPAHostSystem();
     }
     
-    private final OpenJPAMailboxManager mailboxManager;
+    private JPAPerUserMaxQuotaManager maxQuotaManager;
+    private OpenJPAMailboxManager mailboxManager;
 
-    public JPAHostSystem() throws Exception {
+    @Override
+    public void beforeTest() throws Exception {
+        super.beforeTest();
         EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
         JPAUidProvider uidProvider = new JPAUidProvider(locker, entityManagerFactory);
@@ -118,17 +120,18 @@ public class JPAHostSystem extends JamesImapHostSystem {
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
                 new DefaultImapEncoderFactory().buildImapEncoder(),
                 defaultImapProcessorFactory);
-
     }
 
-    public void resetData() throws Exception {
+    @Override
+    public void afterTest() throws Exception {
         resetUserMetaData();
-        MailboxSession session = mailboxManager.createSystemSession("test");
-        mailboxManager.startProcessingRequest(session);
-        mailboxManager.deleteEverything(session);
-        mailboxManager.endProcessingRequest(session);
-        mailboxManager.logout(session, false);
-        
+        if (mailboxManager != null) {
+            MailboxSession session = mailboxManager.createSystemSession("test");
+            mailboxManager.startProcessingRequest(session);
+            mailboxManager.deleteEverything(session);
+            mailboxManager.endProcessingRequest(session);
+            mailboxManager.logout(session, false);
+        }
     }
     
     public void resetUserMetaData() throws Exception {

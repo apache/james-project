@@ -32,7 +32,6 @@ import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -75,11 +74,6 @@ public abstract class AbstractMessageIdManagerQuotaTest {
         mailbox1 = testingData.createMailbox(MailboxManagerFixture.MAILBOX_PATH1, session);
         mailbox2 = testingData.createMailbox(MailboxManagerFixture.MAILBOX_PATH2, session);
         mailbox3 = testingData.createMailbox(MailboxManagerFixture.MAILBOX_PATH3, session);
-    }
-
-    @After
-    public void tearDown() {
-        testingData.clean();
     }
 
     @Test

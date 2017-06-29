@@ -35,6 +35,7 @@ public class InMemoryExpunge extends Expunge {
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new InMemoryMailboxTestModule());
         system = injector.getInstance(ImapHostSystem.class);
+        system.beforeTest();
         super.setUp();
     }
     

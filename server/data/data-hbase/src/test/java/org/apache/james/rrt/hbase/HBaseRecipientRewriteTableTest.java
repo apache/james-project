@@ -18,14 +18,13 @@
  ****************************************************************/
 package org.apache.james.rrt.hbase;
 
-import java.io.IOException;
-
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.apache.james.system.hbase.TablePool;
+import org.junit.After;
 import org.junit.Before;
 
 /**
@@ -39,10 +38,16 @@ public class HBaseRecipientRewriteTableTest extends AbstractRecipientRewriteTabl
     private static final HBaseClusterSingleton cluster = HBaseClusterSingleton.build();
 
     @Before
-    public void setMeUp() throws IOException {
+    public void setMeUp() throws Exception {
         TablePool.getInstance(cluster.getConf());
+        super.setUp();
     }
 
+    @After
+    public void tearDown() throws Exception {
+        super.tearDown();
+    }
+    
     /**
      * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest#getRecipientRewriteTable()
      */

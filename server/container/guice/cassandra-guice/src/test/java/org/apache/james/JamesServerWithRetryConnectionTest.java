@@ -30,7 +30,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.util.streams.SwarmGenericContainer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -75,32 +74,36 @@ public class JamesServerWithRetryConnectionTest {
 
     @Test
     public void serverShouldRetryToConnectToCassandraWhenStartService() throws Exception {
-        jamesServer = cassandraJmapTestRule.jmapServer();
-        dockerCassandraRule.getCassandraContainer().stop();
+        jamesServer = cassandraJmapTestRule.jmapServer(dockerCassandraRule.getModule());
+        dockerCassandraRule.pause();
 
-        waitToStartContainer(WAITING_TIME, dockerCassandraRule.getCassandraContainer());
+        waitToStartContainer(WAITING_TIME, dockerCassandraRule::unpause);
 
         assertThatServerStartCorrectly();
     }
 
     @Test
     public void serverShouldRetryToConnectToElasticSearchWhenStartService() throws Exception {
-        jamesServer = cassandraJmapTestRule.jmapServer();
-        dockerElasticSearchRule.getElasticSearchContainer().stop();
+        jamesServer = cassandraJmapTestRule.jmapServer(dockerCassandraRule.getModule());
+        dockerElasticSearchRule.pause();
 
-        waitToStartContainer(WAITING_TIME, dockerElasticSearchRule.getElasticSearchContainer());
+        waitToStartContainer(WAITING_TIME, dockerElasticSearchRule::unpause);
 
         assertThatServerStartCorrectly();
     }
 
-    private void waitToStartContainer(long waitingTime, SwarmGenericContainer dockerContainer) {
+    interface StartAction {
+        void execute();
+    }
+    
+    private void waitToStartContainer(long waitingTime, StartAction action) {
         executorService.submit(() -> {
             try {
                 Thread.sleep(waitingTime);
             } catch (InterruptedException e) {
                 throw Throwables.propagate(e);
             }
-            dockerContainer.start();
+            action.execute();
         });
     }
 

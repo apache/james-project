@@ -40,8 +40,8 @@ public class ContainerTest {
     public void containerShouldBeReachableOnExposedPort() throws IOException, URISyntaxException {
         Response response = Request.Get(new URIBuilder()
             .setScheme("http")
-            .setHost(container.getIp())
-            .setPort(80).build())
+            .setHost(container.getHostIp())
+            .setPort(container.getMappedPort(80)).build())
             .execute();
 
         assertThat(response.returnResponse().getStatusLine().getStatusCode())

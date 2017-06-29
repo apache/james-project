@@ -19,27 +19,32 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import java.util.Arrays;
-import java.util.List;
-
 import static com.datastax.driver.core.DataType.text;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
+
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.google.common.collect.ImmutableList;
 
 public class CassandraTypeProviderTest {
 
     private static final String TYPE_NAME = "typename";
     private static final String PROPERTY = "property";
+
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
     private CassandraCluster cassandra;
     private CassandraModule module;
@@ -58,13 +63,13 @@ public class CassandraTypeProviderTest {
                         .addColumn(PROPERTY, text()))));
             }
         };
-        cassandra = CassandraCluster.create(module);
+        cassandra = CassandraCluster.create(module, cassandraServer.getIp(), cassandraServer.getBindingPort());
         cassandra.getTypesProvider();
-        cassandra.ensureAllTables();
     }
 
     @After
     public void tearDown() {
+        cassandra.close();
     }
 
     @Test

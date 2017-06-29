@@ -19,22 +19,26 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import com.github.steveash.guavate.Guavate;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
 import java.util.UUID;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
 import org.apache.james.mailbox.model.MessageRange;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.github.steveash.guavate.Guavate;
 
 public class CassandraDeletedMessageDAOTest {
+    
     public static final CassandraId MAILBOX_ID = CassandraId.of(UUID.fromString("110e8400-e29b-11d4-a716-446655440000"));
     public static final MessageUid UID_1 = MessageUid.of(1);
     public static final MessageUid UID_2 = MessageUid.of(2);
@@ -43,21 +47,20 @@ public class CassandraDeletedMessageDAOTest {
     public static final MessageUid UID_7 = MessageUid.of(7);
     public static final MessageUid UID_8 = MessageUid.of(8);
 
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
     private CassandraCluster cassandra;
     private CassandraDeletedMessageDAO testee;
 
     @Before
     public void setUp() {
         cassandra = CassandraCluster.create(
-            new CassandraDeletedMessageModule());
-        cassandra.ensureAllTables();
-
+            new CassandraDeletedMessageModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         testee = new CassandraDeletedMessageDAO(cassandra.getConf());
     }
 
     @After
     public void tearDown() {
-        cassandra.clearAllTables();
         cassandra.close();
     }
 

@@ -16,35 +16,49 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.backends.cassandra;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.cassandra.exceptions.ConfigurationException;
-import org.apache.thrift.transport.TTransportException;
-import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
+import org.rnorth.ducttape.unreliables.Unreliables;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.WaitStrategy;
 
-import com.google.common.base.Throwables;
+import com.google.common.primitives.Ints;
 
-public class EmbeddedCassandra {
+public class CassandraWaitStrategy implements WaitStrategy {
 
-    private int port;
+    private static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(1);
+    private Duration timeout = DEFAULT_TIMEOUT;
 
-    public static EmbeddedCassandra createStartServer() {
-        return new EmbeddedCassandra();
+    public CassandraWaitStrategy() {
+        this(DEFAULT_TIMEOUT);
     }
 
-    private EmbeddedCassandra() {
-        try {
-            EmbeddedCassandraServerHelper.startEmbeddedCassandra(EmbeddedCassandraServerHelper.CASSANDRA_RNDPORT_YML_FILE, TimeUnit.SECONDS.toMillis(20));
-            port = EmbeddedCassandraServerHelper.getNativeTransportPort();
-        } catch (ConfigurationException | TTransportException | IOException e) {
-            Throwables.propagate(e);
-        }
+    public CassandraWaitStrategy(Duration timeout) {
+        this.timeout = timeout;
     }
 
-    public int getPort() {
-        return port;
+    @Override
+    public void waitUntilReady(@SuppressWarnings("rawtypes") GenericContainer container) {
+        Unreliables.retryUntilTrue(Ints.checkedCast(timeout.getSeconds()), TimeUnit.SECONDS, () -> {
+                try {
+                    return container
+                        .execInContainer("cqlsh", "-e", "show host")
+                        .getStdout()
+                        .contains("Connected to Test Cluster");
+                } catch (IOException|InterruptedException e) {
+                    return false;
+                }
+            }
+        );
+    }
+
+    @Override
+    public WaitStrategy withStartupTimeout(Duration startupTimeout) {
+        return new CassandraWaitStrategy(startupTimeout);
     }
 }

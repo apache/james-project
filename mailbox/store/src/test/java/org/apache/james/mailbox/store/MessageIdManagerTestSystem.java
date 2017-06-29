@@ -60,7 +60,5 @@ public abstract class MessageIdManagerTestSystem {
 
     public abstract void deleteMailbox(MailboxId mailboxId, MailboxSession session);
 
-    public abstract void clean();
-
     public abstract int getConstantMessageSize();
 }

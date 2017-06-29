@@ -32,8 +32,6 @@ import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.joda.time.DateTime;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 public abstract class AbstractSieveRepositoryTest {
@@ -50,14 +48,8 @@ public abstract class AbstractSieveRepositoryTest {
 
     protected SieveRepository sieveRepository;
 
-    @Before
     public void setUp() throws Exception {
         sieveRepository = createSieveRepository();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        cleanUp();
     }
 
     @Test(expected = ScriptNotFoundException.class)
@@ -352,7 +344,5 @@ public abstract class AbstractSieveRepositoryTest {
     }
 
     protected abstract SieveRepository createSieveRepository() throws Exception;
-
-    protected abstract void cleanUp() throws Exception;
 
 }

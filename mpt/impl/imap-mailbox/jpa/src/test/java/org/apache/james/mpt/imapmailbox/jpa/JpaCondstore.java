@@ -35,6 +35,7 @@ public class JpaCondstore extends Condstore {
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new JpaMailboxTestModule());
         system = injector.getInstance(JamesImapHostSystem.class);
+        system.beforeTest();
         super.setUp();
     }
     

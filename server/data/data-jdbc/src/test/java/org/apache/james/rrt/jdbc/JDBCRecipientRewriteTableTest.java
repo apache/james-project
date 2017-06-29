@@ -25,11 +25,24 @@ import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
+import org.junit.After;
+import org.junit.Before;
 
 /**
  * Test the JDBC Virtual User Table implementation.
  */
 public class JDBCRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        super.tearDown();
+    }
+
 
     /**
      * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest#getRecipientRewriteTable()

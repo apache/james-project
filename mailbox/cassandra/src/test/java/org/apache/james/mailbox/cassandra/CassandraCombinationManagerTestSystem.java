@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -35,8 +36,8 @@ public class CassandraCombinationManagerTestSystem extends CombinationManagerTes
     private final CassandraMailboxSessionMapperFactory mapperFactory;
     private final CassandraMailboxManager cassandraMailboxManager;
 
-    public static CombinationManagerTestSystem createTestingData(QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
-        CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory();
+    public static CombinationManagerTestSystem createTestingData(CassandraCluster cassandra, QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
+        CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory(cassandra);
 
         return new CassandraCombinationManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, dispatcher),
             mapperFactory,
@@ -60,16 +61,4 @@ public class CassandraCombinationManagerTestSystem extends CombinationManagerTes
         return cassandraMailboxManager.createMessageManager(mailbox, session);
     }
 
-    @Override
-    public void clean() {
-        CassandraTestSystemFixture.clean();
-    }
-
-    public static void init() {
-        CassandraTestSystemFixture.init();
-    }
-
-    public static void stop() {
-        CassandraTestSystemFixture.stop();
-    }
 }

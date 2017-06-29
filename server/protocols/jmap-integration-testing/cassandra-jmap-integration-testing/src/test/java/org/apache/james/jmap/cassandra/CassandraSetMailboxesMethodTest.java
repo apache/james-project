@@ -20,19 +20,24 @@
 package org.apache.james.jmap.cassandra;
 
 import org.apache.james.CassandraJmapTestRule;
+import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.methods.integration.SetMailboxesMethodTest;
+import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 
 public class CassandraSetMailboxesMethodTest extends SetMailboxesMethodTest {
 
+    @ClassRule
+    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    
     @Rule 
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
     
     @Override
     protected GuiceJamesServer createJmapServer() {
-        return rule.jmapServer();
+        return rule.jmapServer(cassandra.getModule());
     }
 
     @Override
@@ -40,13 +45,14 @@ public class CassandraSetMailboxesMethodTest extends SetMailboxesMethodTest {
         rule.await();
     }
 
-    @Ignore
     @Override
+    @Ignore
     public void setMailboxesShouldCreateWhenOverLimitName() throws Exception {
     }
 
-    @Ignore
     @Override
+    @Ignore
     public void setMailboxesShouldUpdateMailboxWhenOverLimitName() throws Exception {
     }
+
 }

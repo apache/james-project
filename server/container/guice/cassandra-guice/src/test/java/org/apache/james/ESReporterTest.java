@@ -68,7 +68,7 @@ public class ESReporterTest {
     private Timer timer;
 
     @Rule
-    public CassandraJmapTestRule cassandraJmap = new CassandraJmapTestRule(embeddedElasticSearchRule, new EmbeddedCassandraRule());
+    public CassandraJmapTestRule cassandraJmap = new CassandraJmapTestRule(embeddedElasticSearchRule, new DockerCassandraRule());
 
     private GuiceJamesServer server;
     private AccessToken accessToken;

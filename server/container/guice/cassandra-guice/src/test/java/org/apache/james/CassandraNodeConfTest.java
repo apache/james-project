@@ -27,15 +27,18 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.modules.mailbox.CassandraSessionConfiguration;
+import org.apache.james.backends.cassandra.init.CassandraSessionConfiguration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.testcontainers.DockerClientFactory;
 
+import com.google.common.base.Joiner;
+
 public class CassandraNodeConfTest {
 
+    private static final int CASSANDRA_PORT = 9042;
     private static final int IMAP_PORT = 1143;
 
     private static String getDockerHostIp() {
@@ -74,7 +77,10 @@ public class CassandraNodeConfTest {
     @Test
     public void serverShouldStartWhenOneCassandraNodeIsUnreachable() throws Exception {
         String unreachableNode = "10.2.3.42";
-        PropertiesConfiguration configuration = getCassandraConfigurationForDocker(unreachableNode + "," + dockerCassandraRule.getIp());
+        PropertiesConfiguration configuration = getCassandraConfigurationForDocker(
+                Joiner.on(',')
+                    .join(unreachableNode, 
+                          dockerCassandraRule.getIp() + ":" + dockerCassandraRule.getMappedPort(CASSANDRA_PORT)));
 
         jamesServer = cassandraJmapTestRule.jmapServer(
                 (binder) -> binder.bind(CassandraSessionConfiguration.class).toInstance(() -> configuration));
@@ -84,7 +90,7 @@ public class CassandraNodeConfTest {
 
     @Test
     public void configShouldWorkWithNonDefaultPort() throws Exception {
-        PropertiesConfiguration configuration = getCassandraConfigurationForDocker(getDockerHostIp() + ":" + dockerCassandraRule.getBindingPort());
+        PropertiesConfiguration configuration = getCassandraConfigurationForDocker(getDockerHostIp() + ":" + dockerCassandraRule.getMappedPort(CASSANDRA_PORT));
         jamesServer = cassandraJmapTestRule.jmapServer(
                 (binder) -> binder.bind(CassandraSessionConfiguration.class).toInstance(() -> configuration));
 

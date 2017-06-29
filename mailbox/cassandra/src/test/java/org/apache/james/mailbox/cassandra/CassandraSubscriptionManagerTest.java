@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
@@ -39,28 +40,34 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.apache.james.mailbox.exception.SubscriptionException;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
 
 /**
  * Test Cassandra subscription against some general purpose written code.
  */
 public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
 
-    private static CassandraCluster cassandra;
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
+    private CassandraCluster cassandra;
 
-    @BeforeClass
-    public static void init() {
-        cassandra = CassandraCluster.create(
-            new CassandraModuleComposite(
-                new CassandraSubscriptionModule(),
-                new CassandraMailboxCounterModule(),
-                new CassandraUidModule(),
-                new CassandraModSeqModule()));
+    @Before
+    public void init() {
+        CassandraModuleComposite modules = new CassandraModuleComposite(
+            new CassandraSubscriptionModule(),
+            new CassandraMailboxCounterModule(),
+            new CassandraUidModule(),
+            new CassandraModSeqModule());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
+        super.setup();
     }
 
-    @AfterClass
-    public static void close() {
+    @After
+    public void close() throws SubscriptionException {
+        super.teardown();
         cassandra.close();
     }
 

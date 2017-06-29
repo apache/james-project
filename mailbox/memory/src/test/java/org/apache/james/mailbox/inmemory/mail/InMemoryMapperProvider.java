@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.inmemory.mail;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
@@ -93,11 +92,6 @@ public class InMemoryMapperProvider implements MapperProvider {
     }
 
     @Override
-    public void ensureMapperPrepared() throws MailboxException {
-
-    }
-
-    @Override
     public boolean supportPartialAttachmentFetch() {
         return false;
     }
@@ -134,8 +128,4 @@ public class InMemoryMapperProvider implements MapperProvider {
             .highestModSeq(new MockMailboxSession("user"), mailbox);
     }
 
-    @Override
-    public void close() throws IOException {
-
-    }
 }

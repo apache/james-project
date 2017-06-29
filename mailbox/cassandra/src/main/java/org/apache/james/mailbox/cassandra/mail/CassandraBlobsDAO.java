@@ -30,7 +30,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.CassandraConfiguration;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.BlobId;
 import org.apache.james.mailbox.cassandra.mail.utils.DataChunker;
@@ -38,7 +39,6 @@ import org.apache.james.mailbox.cassandra.table.BlobTable;
 import org.apache.james.mailbox.cassandra.table.BlobTable.BlobParts;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.OptionalUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;

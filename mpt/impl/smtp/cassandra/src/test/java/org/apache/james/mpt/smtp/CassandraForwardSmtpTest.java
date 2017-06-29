@@ -19,19 +19,24 @@
 
 package org.apache.james.mpt.smtp;
 
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 public class CassandraForwardSmtpTest extends ForwardSmtpTest {
 
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
     private SmtpHostSystem system;
 
     @Before
     public void setUp() throws Exception {
-        Injector injector = Guice.createInjector(new SmtpTestModule(SmtpTestModule.Port.SMTP));
+        Injector injector = Guice.createInjector(
+                new SmtpTestModule(SmtpTestModule.Port.SMTP, cassandraServer.getIp(), cassandraServer.getBindingPort()));
         system = injector.getInstance(SmtpHostSystem.class);
         system.beforeTest();
         super.setUp();

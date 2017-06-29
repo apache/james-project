@@ -25,10 +25,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.sieve.cassandra.model.Script;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class CassandraSieveDAOTest {
@@ -54,24 +56,24 @@ public class CassandraSieveDAOTest {
         .copyOf(SCRIPT)
         .content("newContent")
         .build();
+
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
     private CassandraCluster cassandra;
     private CassandraSieveDAO sieveDAO;
 
     @Before
-    public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule());
-        cassandra.ensureAllTables();
+    public void setUp() throws Exception {
+        cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         sieveDAO = new CassandraSieveDAO(cassandra.getConf());
     }
 
     @After
     public void tearDown() {
-        cassandra.clearAllTables();
         cassandra.close();
     }
-
-    @Test
+    
+     @Test
     public void getScriptShouldReturnEmptyByDefault() {
         assertThat(sieveDAO.getScript(USER, SCRIPT_NAME).join().isPresent())
             .isFalse();

@@ -17,10 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.cassandra;
+package org.apache.james.backends.cassandra.init;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;

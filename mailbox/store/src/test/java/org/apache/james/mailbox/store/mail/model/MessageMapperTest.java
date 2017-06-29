@@ -51,9 +51,7 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
-import org.junit.After;
 import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -89,10 +87,8 @@ public abstract class MessageMapperTest {
 
     protected abstract MapperProvider createMapperProvider();
 
-    @Before
-    public final void setProducer() throws MailboxException {
+    public void setUp() throws Exception {
         this.mapperProvider = createMapperProvider();
-        this.mapperProvider.ensureMapperPrepared();
 
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.MESSAGE));
 
@@ -112,12 +108,6 @@ public abstract class MessageMapperTest {
         message4 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test4 \n\nBody4\n.\n", BODY_START, new PropertyBuilder());
         message5 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test5 \n\nBody5\n.\n", BODY_START, new PropertyBuilder());
         message6 = createMessage(benwaWorkMailbox, mapperProvider.generateMessageId(), "Subject: Test6 \n\nBody6\n.\n", BODY_START, new PropertyBuilder());
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        mapperProvider.clearMapper();
-        mapperProvider.close();
     }
 
     @Test

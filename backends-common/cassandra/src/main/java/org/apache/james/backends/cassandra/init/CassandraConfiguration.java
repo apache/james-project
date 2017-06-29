@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.cassandra;
+package org.apache.james.backends.cassandra.init;
 
 import java.util.Objects;
 import java.util.Optional;

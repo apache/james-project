@@ -29,8 +29,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,14 +48,8 @@ public abstract class AbstractDomainListTest {
 
     private DomainList domainList;
 
-    @Before
     public void setUp() throws Exception {
         domainList = createDomainList();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        deleteAll();
     }
 
     @Test
@@ -158,23 +150,6 @@ public abstract class AbstractDomainListTest {
     @Test(expected = DomainListException.class)
     public void removeDomainShouldThrowIfTheDomainIsAbsent() throws DomainListException {
         domainList.removeDomain(DOMAIN_1);
-    }
-
-    /**
-     * Delete all possible domains from database.
-     */
-    private void deleteAll() throws DomainListException {
-        for (String domain : domainList.getDomains()) {
-            deleteWithoutError(domain);
-        }
-    }
-
-    private void deleteWithoutError(String domain) {
-        try {
-            domainList.removeDomain(domain);
-        } catch(DomainListException e) {
-            LOGGER.info("Ignored error", e);
-        }
     }
 
     /**

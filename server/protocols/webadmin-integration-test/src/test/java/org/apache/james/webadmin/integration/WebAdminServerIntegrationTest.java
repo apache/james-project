@@ -28,6 +28,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
 import org.apache.james.CassandraJmapTestRule;
+import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -40,6 +41,7 @@ import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -61,6 +63,9 @@ public class WebAdminServerIntegrationTest {
     public static final String UPGRADE_VERSION = VERSION + "/upgrade";
     public static final String UPGRADE_TO_LATEST_VERSION = UPGRADE_VERSION + "/latest";
 
+    @ClassRule
+    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    
     @Rule
     public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
 
@@ -70,7 +75,7 @@ public class WebAdminServerIntegrationTest {
 
     @Before
     public void setUp() throws Exception {
-        guiceJamesServer = cassandraJmapTestRule.jmapServer()
+        guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule())
                 .overrideWith(new WebAdminConfigurationModule());
         guiceJamesServer.start();
         dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);

@@ -35,15 +35,19 @@ public class SmtpTestModule extends AbstractModule {
         }
     }
     
-    private Port smtpPort;
+    private final Port smtpPort;
+    private final String cassandraHost;
+    private final int cassandraPort;
 
-    public SmtpTestModule(Port smtpPort) {
+    public SmtpTestModule(Port smtpPort, String cassandraHost, int cassandraPort) {
         this.smtpPort = smtpPort;
+        this.cassandraHost = cassandraHost;
+        this.cassandraPort = cassandraPort;
     }
     
     @Override
     protected void configure() {
-        bind(SmtpHostSystem.class).toInstance(new CassandraJamesSmtpHostSystem(smtpPort.port));
+        bind(SmtpHostSystem.class).toInstance(new CassandraJamesSmtpHostSystem(smtpPort.port, cassandraHost, cassandraPort));
     }
 
 }

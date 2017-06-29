@@ -20,21 +20,35 @@
 package org.apache.james.jmap.cassandra.access;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.AccessTokenRepositoryTest;
 import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
 
 public class CassandraAccessTokenRepositoryTest extends AccessTokenRepositoryTest {
-    private static final CassandraCluster CLUSTER = CassandraCluster.create(new CassandraAccessModule());
+    
 
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
+    private CassandraCluster cassandra;
+
+    @Before
+    public void setUp() throws Exception {
+        cassandra = CassandraCluster.create(new CassandraAccessModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+        super.setUp();
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        cassandra.close();
+    }
+    
     @Override
     protected AccessTokenRepository provideAccessTokenRepository() {
         return new CassandraAccessTokenRepository(
-            new CassandraAccessTokenDAO(CLUSTER.getConf(), AccessTokenRepositoryTest.TTL_IN_MS));
+            new CassandraAccessTokenDAO(cassandra.getConf(), AccessTokenRepositoryTest.TTL_IN_MS));
     }
 
-    @After
-    public void tearDown() {
-        CLUSTER.clearAllTables();
-   }
 }

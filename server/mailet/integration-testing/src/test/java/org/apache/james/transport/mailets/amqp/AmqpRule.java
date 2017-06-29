@@ -54,7 +54,7 @@ public class AmqpRule extends ExternalResource {
 
     @Override
     protected void before() throws Throwable {
-        amqpUri = "amqp://" + rabbitMqContainer.getIp();
+        amqpUri = "amqp://" + rabbitMqContainer.getContainerIp();
         ConnectionFactory factory = new ConnectionFactory();
         factory.setUri(amqpUri);
         waitingForRabbitToBeReady(factory);

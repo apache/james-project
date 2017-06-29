@@ -48,5 +48,4 @@ public abstract class CombinationManagerTestSystem {
 
     public abstract MessageManager createMessageManager(Mailbox mailbox, MailboxSession session) throws MailboxException;
 
-    public abstract void clean();
 }

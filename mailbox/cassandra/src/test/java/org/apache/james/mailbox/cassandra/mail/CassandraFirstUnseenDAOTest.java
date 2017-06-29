@@ -22,27 +22,30 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class CassandraFirstUnseenDAOTest {
+    
     public static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     public static final MessageUid UID_1 = MessageUid.of(1);
     public static final MessageUid UID_2 = MessageUid.of(2);
 
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
     private CassandraCluster cassandra;
     private CassandraFirstUnseenDAO testee;
 
     @Before
     public void setUp() {
         cassandra = CassandraCluster.create(
-            new CassandraFirstUnseenModule());
-        cassandra.ensureAllTables();
-
+            new CassandraFirstUnseenModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         testee = new CassandraFirstUnseenDAO(cassandra.getConf());
     }
 

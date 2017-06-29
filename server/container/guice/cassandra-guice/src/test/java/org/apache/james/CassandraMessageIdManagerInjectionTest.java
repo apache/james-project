@@ -30,6 +30,7 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -40,8 +41,12 @@ import com.google.inject.multibindings.Multibinder;
 
 public class CassandraMessageIdManagerInjectionTest {
 
+    @ClassRule
+    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    
     @Rule
     public CassandraJmapTestRule cassandraJmap = CassandraJmapTestRule.defaultTestRule();
+    
     private GuiceJamesServer server;
 
     @Before
@@ -52,7 +57,7 @@ public class CassandraMessageIdManagerInjectionTest {
                 Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(CallMe.class);
             }
         };
-        server = cassandraJmap.jmapServer(module);
+        server = cassandraJmap.jmapServer(module, cassandra.getModule());
         server.start();
     }
 

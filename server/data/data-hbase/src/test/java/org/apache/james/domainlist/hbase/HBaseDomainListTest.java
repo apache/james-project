@@ -25,6 +25,8 @@ import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainListTest;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
 import org.apache.james.system.hbase.TablePool;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -42,6 +44,19 @@ public class HBaseDomainListTest extends AbstractDomainListTest {
     @BeforeClass
     public static void setMeUp() throws IOException {
         TablePool.getInstance(cluster.getConf());
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+    }
+    
+    @After
+    public void tearDown() throws DomainListException {
+        DomainList domainList = createDomainList();
+        for (String domain: domainList.getDomains()) {
+            domainList.removeDomain(domain);
+        }
     }
 
     /**

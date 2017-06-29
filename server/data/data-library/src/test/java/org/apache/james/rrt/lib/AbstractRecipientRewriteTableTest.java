@@ -27,8 +27,6 @@ import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -48,12 +46,10 @@ public abstract class AbstractRecipientRewriteTableTest {
     protected final static int ADDRESS_TYPE = 2;
     protected final static int ALIASDOMAIN_TYPE = 3;
 
-    @Before
     public void setUp() throws Exception {
         virtualUserTable = getRecipientRewriteTable();
     }
 
-    @After
     public void tearDown() throws Exception {
 
         Map<String, Mappings> mappings = virtualUserTable.getAllMappings();
@@ -348,7 +344,7 @@ public abstract class AbstractRecipientRewriteTableTest {
 
         addMapping(user, domain, address, ADDRESS_TYPE);
         addMapping(user, domain, address, REGEX_TYPE);
-        
+
         assertThat(virtualUserTable.getMappings(user, domain)).hasSize(2);
     }
 

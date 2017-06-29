@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.rrt.cassandra;
 
+import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 
 import cucumber.api.CucumberOptions;
@@ -29,4 +31,6 @@ import cucumber.api.junit.Cucumber;
         glue = { "org.apache.james.rrt.lib", "org.apache.james.rrt.cassandra" }
     )
 public class RewriteTablesTest {
+    
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 }

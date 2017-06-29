@@ -29,7 +29,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.CassandraConfiguration;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -45,7 +46,6 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.OptionalUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.exceptions.InvalidQueryException;
@@ -97,7 +97,9 @@ public class CassandraMailboxMapper implements MailboxMapper {
                 .orElseThrow(() -> new MailboxNotFoundException(path));
         } catch (CompletionException e) {
             if (e.getCause() instanceof InvalidQueryException) {
-                if (StringUtils.containsIgnoreCase(e.getCause().getMessage(), VALUES_MAY_NOT_BE_LARGER_THAN_64_K)) {
+                String errorMessage = e.getCause().getMessage();
+                if (StringUtils.containsIgnoreCase(errorMessage, VALUES_MAY_NOT_BE_LARGER_THAN_64_K)||
+                    StringUtils.containsIgnoreCase(errorMessage, CLUSTERING_COLUMNS_IS_TOO_LONG)) {
                     throw new TooLongMailboxNameException("too long mailbox name");
                 }
                 throw new MailboxException("It has error with cassandra storage", e.getCause());

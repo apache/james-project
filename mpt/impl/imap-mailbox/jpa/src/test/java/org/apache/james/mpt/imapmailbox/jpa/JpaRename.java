@@ -35,6 +35,7 @@ public class JpaRename extends Rename {
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new JpaMailboxTestModule());
         system = injector.getInstance(ImapHostSystem.class);
+        system.beforeTest();
         super.setUp();
     }
     

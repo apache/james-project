@@ -35,6 +35,7 @@ public class InMemoryCondstore extends Condstore {
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new InMemoryMailboxTestModule());
         system = injector.getInstance(JamesImapHostSystem.class);
+        system.beforeTest();
         super.setUp();
     }
     

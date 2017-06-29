@@ -21,9 +21,15 @@ package org.apache.james.user.memory;
 
 import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
+import org.junit.Before;
 
 public class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+    }
+    
     @Override
     protected AbstractUsersRepository getUsersRepository() throws Exception {
         return MemoryUsersRepository.withVirtualHosting();

@@ -19,22 +19,30 @@
 
 package org.apache.james.mpt.managesieve.cassandra;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import org.apache.james.mpt.host.ManageSieveHostSystem;
 import org.apache.james.mpt.managesieve.cassandra.host.CassandraHostSystem;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+
 public class CassandraModule extends AbstractModule {
 
+    private final String cassandraHost;
+    private final int cassandraPort;
+
+    public CassandraModule(String cassandraHost, int cassandraPort) {
+        this.cassandraHost = cassandraHost;
+        this.cassandraPort = cassandraPort;
+    }
+    
     @Override
     protected void configure() {
-
     }
 
     @Provides
     @Singleton
     public ManageSieveHostSystem provideHostSystem() throws Exception {
-        return new CassandraHostSystem();
+        return new CassandraHostSystem(cassandraHost, cassandraPort);
     }
 }

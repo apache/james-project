@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +32,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -48,6 +48,7 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -59,6 +60,8 @@ public class CassandraMessageDAOTest {
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final String CONTENT = "Subject: Test7 \n\nBody7\n.\n";
     private static final MessageUid messageUid = MessageUid.of(1);
+
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     private CassandraCluster cassandra;
 
@@ -73,9 +76,7 @@ public class CassandraMessageDAOTest {
 
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraModuleComposite(new CassandraMessageModule(), new CassandraBlobModule()));
-        cassandra.ensureAllTables();
-
+        cassandra = CassandraCluster.create(new CassandraModuleComposite(new CassandraMessageModule(), new CassandraBlobModule()), cassandraServer.getIp(), cassandraServer.getBindingPort());
         messageIdFactory = new CassandraMessageId.Factory();
         messageId = messageIdFactory.generate();
         blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
@@ -92,7 +93,6 @@ public class CassandraMessageDAOTest {
 
     @After
     public void tearDown() {
-        cassandra.clearAllTables();
         cassandra.close();
     }
 

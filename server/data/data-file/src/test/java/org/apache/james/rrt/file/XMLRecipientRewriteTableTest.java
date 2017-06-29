@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
@@ -30,7 +31,7 @@ import org.apache.james.rrt.lib.MappingImpl;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.lib.MappingsImpl.Builder;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -43,11 +44,16 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     private final DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
 
     @Before
-    @Override
     public void setUp() throws Exception {
         defaultConfiguration.setDelimiterParsingDisabled(true);
         super.setUp();
     }
+
+    @After
+    public void tearDown() throws Exception {
+        super.tearDown();
+    }
+
 
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {

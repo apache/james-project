@@ -63,7 +63,7 @@ public class ESReporterTest {
 
     @Before
     public void setUp() {
-        clientProvider = ClientProviderImpl.forHost(esContainer.getIp(), ES_APPLICATIVE_PORT);
+        clientProvider = ClientProviderImpl.forHost(esContainer.getHostIp(), esContainer.getMappedPort(ES_APPLICATIVE_PORT));
         await().atMost(Duration.ONE_MINUTE)
             .until(() -> elasticSearchStarted(clientProvider));
 
@@ -72,7 +72,7 @@ public class ESReporterTest {
         esMetricReporter = new ESMetricReporter(
             ESReporterConfiguration.builder()
                 .enabled()
-                .onHost(esContainer.getIp(), ES_HTTP_PORT)
+                .onHost(esContainer.getHostIp(), esContainer.getMappedPort(ES_HTTP_PORT))
                 .onIndex(INDEX)
                 .periodInSecond(PERIOD_IN_SECOND)
                 .build(),

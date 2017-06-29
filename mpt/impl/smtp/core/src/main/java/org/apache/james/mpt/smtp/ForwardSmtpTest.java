@@ -35,7 +35,6 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
-import com.google.common.net.InetAddresses;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
@@ -49,6 +48,7 @@ public abstract class ForwardSmtpTest {
 
     private final TemporaryFolder folder = new TemporaryFolder();
     private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest")
+            .withExposedPorts(25)
             .withAffinityToContainer();
     
     @Rule
@@ -67,7 +67,7 @@ public abstract class ForwardSmtpTest {
                 .withLocale(Locale.US)
                 .withUser(USER_AT_DOMAIN, PASSWORD);
 
-        InetAddress containerIp = InetAddresses.forString(fakeSmtp.getIp());
+        InetAddress containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
         
         hostSystem.getInMemoryDnsService()
             .registerRecord("yopmail.com", containerIp, "yopmail.com");

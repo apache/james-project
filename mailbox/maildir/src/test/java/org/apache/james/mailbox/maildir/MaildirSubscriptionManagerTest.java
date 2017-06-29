@@ -22,12 +22,23 @@ import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 
 public class MaildirSubscriptionManagerTest extends AbstractSubscriptionManagerTest{
 
+    @Rule
+    public TemporaryFolder tmpFolder = new TemporaryFolder();
+    
+    @Before
+    public void setUp() throws Exception {
+        super.setup();
+    }
+    
     @Override
     public SubscriptionManager createSubscriptionManager() {
-        MaildirStore store = new MaildirStore("target/Maildir/%domain/%user", new JVMMailboxPathLocker());
+        MaildirStore store = new MaildirStore(tmpFolder + "/Maildir/%domain/%user", new JVMMailboxPathLocker());
         MaildirMailboxSessionMapperFactory factory = new MaildirMailboxSessionMapperFactory(store);
         return new StoreSubscriptionManager(factory);
     }

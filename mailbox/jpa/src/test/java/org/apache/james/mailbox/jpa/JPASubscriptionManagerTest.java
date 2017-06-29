@@ -28,10 +28,16 @@ import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.junit.After;
+import org.junit.Before;
 
 public class JPASubscriptionManagerTest extends AbstractSubscriptionManagerTest{
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
+    
+    @Before
+    public void setUp() throws Exception {
+        super.setup();
+    }
     
     @Override
     public SubscriptionManager createSubscriptionManager() {

@@ -37,9 +37,7 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.junit.After;
 import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -64,10 +62,8 @@ public abstract class MessageMoveTest {
     @Rule
     public ExpectedException expected = ExpectedException.none();
 
-    @Before
-    public final void setUp() throws MailboxException {
+    public void setUp() throws Exception {
         this.mapperProvider = createMapperProvider();
-        this.mapperProvider.ensureMapperPrepared();
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.MOVE));
         this.messageMapper = mapperProvider.createMessageMapper();
         Assume.assumeNotNull(messageMapper);
@@ -75,12 +71,6 @@ public abstract class MessageMoveTest {
         benwaInboxMailbox = createMailbox(new MailboxPath("#private", "benwa", "INBOX"));
         benwaWorkMailbox = createMailbox( new MailboxPath("#private", "benwa", "INBOX"+DELIMITER+"work"));
         message1 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        mapperProvider.clearMapper();
-        mapperProvider.close();
     }
 
     @Test

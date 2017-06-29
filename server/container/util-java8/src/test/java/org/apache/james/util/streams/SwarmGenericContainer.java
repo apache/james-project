@@ -28,6 +28,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.WaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
@@ -105,9 +106,25 @@ public class SwarmGenericContainer implements TestRule {
         container.stop();
     }
 
+    public void pause() {
+        DockerClientFactory.instance().client().pauseContainerCmd(container.getContainerInfo().getId());
+    }
+
+    public void unpause() {
+        DockerClientFactory.instance().client().unpauseContainerCmd(container.getContainerInfo().getId());
+    }
+
+    public Integer getMappedPort(int originalPort) {
+        return container.getMappedPort(originalPort);
+    }
+
     @SuppressWarnings("deprecation")
-    public String getIp() {
-        return getContainerInfo().getNetworkSettings().getIpAddress();
+    public String getContainerIp() {
+        return container.getContainerInfo().getNetworkSettings().getIpAddress();
+    }
+    
+    public String getHostIp() {
+        return container.getContainerIpAddress();
     }
 
     public InspectContainerResponse getContainerInfo() {

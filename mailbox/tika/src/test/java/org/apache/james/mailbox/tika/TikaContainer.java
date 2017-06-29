@@ -60,11 +60,11 @@ public class TikaContainer extends ExternalResource {
     }
 
     public String getIp() {
-        return tika.getIp();
+        return tika.getHostIp();
     }
 
     public int getPort() {
-        return DEFAULT_TIKA_PORT;
+        return tika.getMappedPort(DEFAULT_TIKA_PORT);
     }
 
     public int getTimeoutInMillis() {

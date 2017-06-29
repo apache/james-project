@@ -19,30 +19,28 @@
 package org.apache.james.mailbox.cassandra.user;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperTest;
 import org.junit.After;
-import org.junit.AfterClass;
+import org.junit.ClassRule;
 
 public class CassandraSubscriptionMapperTest extends SubscriptionMapperTest {
 
-    private static final CassandraCluster cassandra = CassandraCluster.create(new CassandraSubscriptionModule());
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
+    private final CassandraCluster cassandra = CassandraCluster.create(new CassandraSubscriptionModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
 
     @Override
     protected SubscriptionMapper createSubscriptionMapper() {
-        cassandra.ensureAllTables();
         return new CassandraSubscriptionMapper(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     @After
     public void tearDown() {
-        cassandra.clearAllTables();
-    }
-
-    @AfterClass
-    public static void stop() {
         cassandra.close();
     }
+
 }

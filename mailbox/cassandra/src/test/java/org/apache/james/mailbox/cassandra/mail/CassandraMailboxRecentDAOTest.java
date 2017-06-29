@@ -24,11 +24,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.stream.IntStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.github.steveash.guavate.Guavate;
@@ -38,20 +40,19 @@ public class CassandraMailboxRecentDAOTest {
     public static final MessageUid UID2 = MessageUid.of(37L);
     public static final CassandraId CASSANDRA_ID = CassandraId.timeBased();
 
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
     private CassandraCluster cassandra;
     private CassandraMailboxRecentsDAO testee;
 
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraMailboxRecentsModule());
-        cassandra.ensureAllTables();
-
+        cassandra = CassandraCluster.create(new CassandraMailboxRecentsModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         testee = new CassandraMailboxRecentsDAO(cassandra.getConf());
     }
 
     @After
     public void tearDown() {
-        cassandra.clearAllTables();
         cassandra.close();
     }
 

@@ -27,7 +27,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.modules.mailbox.CassandraSessionConfiguration;
+import org.apache.james.backends.cassandra.init.CassandraSessionConfiguration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -69,7 +69,7 @@ public class CassandraLogConfigurationTest {
     public void serverShouldStartWithMinimalConfigAboutAConstantThresholdSlowQueryLogger() throws Exception {
         jamesServer = cassandraJmapTestRule.jmapServer(
             (binder) -> binder.bind(CassandraSessionConfiguration.class).toInstance(() -> {
-                PropertiesConfiguration configuration = dockerCassandraRule.getCassandraConfigurationForDocker();
+                PropertiesConfiguration configuration = dockerCassandraRule.getCassandraConfigurationForDocker("keyspace1");
 
                 configuration.addProperty("cassandra.query.logger.constant.threshold", 100);
 
@@ -84,7 +84,7 @@ public class CassandraLogConfigurationTest {
         jamesServer = cassandraJmapTestRule.jmapServer(
             (binder) ->
                 binder.bind(CassandraSessionConfiguration.class).toInstance(() -> {
-                    PropertiesConfiguration configuration = dockerCassandraRule.getCassandraConfigurationForDocker();
+                    PropertiesConfiguration configuration = dockerCassandraRule.getCassandraConfigurationForDocker("keyspace2");
 
                     configuration.addProperty("cassandra.query.slow.query.latency.threshold.percentile", 90);
                     configuration.addProperty("cassandra.query.logger.max.logged.parameters", 9);
@@ -104,7 +104,7 @@ public class CassandraLogConfigurationTest {
         jamesServer = cassandraJmapTestRule.jmapServer(
             (binder) ->
                 binder.bind(CassandraSessionConfiguration.class).toInstance(() -> {
-                    PropertiesConfiguration configuration = dockerCassandraRule.getCassandraConfigurationForDocker();
+                    PropertiesConfiguration configuration = dockerCassandraRule.getCassandraConfigurationForDocker("keyspace3");
 
                     configuration.addProperty("cassandra.query.slow.query.latency.threshold.percentile", 90);
                     configuration.addProperty("cassandra.query.logger.constant.threshold", 100);

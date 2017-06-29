@@ -35,6 +35,7 @@ public class CassandraTableManager {
 
     public CassandraTableManager ensureAllTables() {
         module.moduleTables()
+            .parallelStream()
             .forEach(table -> session.execute(table.getCreateStatement()));
         return this;
     }

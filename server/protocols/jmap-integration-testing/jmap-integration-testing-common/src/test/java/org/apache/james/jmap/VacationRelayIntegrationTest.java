@@ -43,7 +43,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.testcontainers.shaded.com.google.common.net.InetAddresses;
 
 import com.google.common.base.Charsets;
 import com.jayway.awaitility.Awaitility;
@@ -83,7 +82,7 @@ public abstract class VacationRelayIntegrationTest {
     @Before
     public void setUp() throws Exception {
 
-        InetAddress containerIp = InetAddresses.forString(fakeSmtp.getIp());
+        InetAddress containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
         getInMemoryDns()
             .registerRecord("yopmail.com", containerIp, "yopmail.com");
 

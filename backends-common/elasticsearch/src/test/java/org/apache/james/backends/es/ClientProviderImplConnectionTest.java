@@ -52,7 +52,7 @@ public class ClientProviderImplConnectionTest {
         Awaitility.await()
             .atMost(1, TimeUnit.MINUTES)
             .pollInterval(5, TimeUnit.SECONDS)
-            .until(() -> isConnected(ClientProviderImpl.forHost(es1.getIp(), 9300)));
+            .until(() -> isConnected(ClientProviderImpl.forHost(es1.getHostIp(), 9300)));
     }
 
     @Test
@@ -62,8 +62,8 @@ public class ClientProviderImplConnectionTest {
             .pollInterval(5, TimeUnit.SECONDS)
             .until(() ->isConnected(
                 ClientProviderImpl.fromHostsString(
-                    es1.getIp() + ":" + ES_APPLICATIVE_PORT + ","
-                    + es2.getIp() + ":" + ES_APPLICATIVE_PORT)));
+                    es1.getHostIp() + ":" + ES_APPLICATIVE_PORT + ","
+                    + es2.getHostIp() + ":" + ES_APPLICATIVE_PORT)));
     }
 
     @Test
@@ -75,8 +75,8 @@ public class ClientProviderImplConnectionTest {
             .pollInterval(5, TimeUnit.SECONDS)
             .until(() -> isConnected(
                 ClientProviderImpl.fromHostsString(
-                    es1.getIp() + ":" + ES_APPLICATIVE_PORT + ","
-                    + es2.getIp() + ":" + ES_APPLICATIVE_PORT)));
+                    es1.getHostIp() + ":" + ES_APPLICATIVE_PORT + ","
+                    + es2.getHostIp() + ":" + ES_APPLICATIVE_PORT)));
     }
 
     private boolean isConnected(ClientProvider clientProvider) {
