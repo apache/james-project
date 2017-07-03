@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 @SuppressWarnings("deprecation")
@@ -226,7 +227,7 @@ public class MailDelivrer {
 
         if (sfe.getValidUnsentAddresses() != null && sfe.getValidUnsentAddresses().length > 0) {
             if (configuration.isDebug())
-                logger.debug("Send failed, {} valid addresses remain, continuing with any other servers", sfe.getValidUnsentAddresses().length);
+                logger.debug("Send failed, {} valid addresses remain, continuing with any other servers", ImmutableList.copyOf(sfe.getValidUnsentAddresses()));
             return sfe;
         } else {
             // There are no valid addresses left to send, so rethrow
