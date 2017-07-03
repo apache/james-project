@@ -180,13 +180,10 @@ public class SearchUtil {
 
 
     public static String getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(MailboxMessage mailboxMessage) {
-        try {
-            MessageId messageId = mailboxMessage.getMessageId();
-            if (messageId != null) {
-                return messageId.serialize();
-            }
-        } catch(UnsupportedOperationException e) {}
-
+        MessageId messageId = mailboxMessage.getMessageId();
+        if (messageId != null) {
+            return messageId.serialize();
+        }
         return null;
     }
     
