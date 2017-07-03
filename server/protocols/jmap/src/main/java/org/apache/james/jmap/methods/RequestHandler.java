@@ -56,7 +56,7 @@ public class RequestHandler {
         return Optional.ofNullable(methods.get(request.getMethodName()))
                         .map(extractAndProcess(request))
                         .map(jmapResponseWriter::formatMethodResponse)
-                        .orElseThrow(() -> new IllegalStateException("unknown method"));
+                        .orElseThrow(() -> new IllegalStateException("unknown method " + request.getMethodName()));
     }
     
     private Function<Method, Stream<JmapResponse>> extractAndProcess(AuthenticatedProtocolRequest request) {
