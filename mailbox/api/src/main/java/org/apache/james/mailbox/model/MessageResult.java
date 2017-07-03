@@ -176,7 +176,7 @@ public interface MessageResult extends Comparable<MessageResult>, MessageMetaDat
          * @return name of this header
          * @throws MessagingException
          */
-        String getName() throws MailboxException;
+        String getName();
 
         /**
          * Gets the (unparsed) value of this header.
@@ -184,7 +184,7 @@ public interface MessageResult extends Comparable<MessageResult>, MessageMetaDat
          * @return value of this header
          * @throws MessagingException
          */
-        String getValue() throws MailboxException;
+        String getValue();
     }
 
     /**
