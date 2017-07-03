@@ -25,6 +25,8 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.PerRecipientHeaders.Header;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -66,6 +68,8 @@ import java.util.UUID;
  * </p>
  */
 public class MailImpl implements Disposable, Mail {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailImpl.class);
 
     /**
      * We hardcode the serialVersionUID so that from James 1.2 on, MailImpl will
@@ -181,10 +185,10 @@ public class MailImpl implements Disposable, Mail {
                 setAttributesRaw(attribs);
             }
         } catch (IOException e) {
-            // should never happen for in memory streams
+            LOGGER.error("Error while deserializing attributes", e);
             setAttributesRaw(new HashMap<String, Object>());
         } catch (ClassNotFoundException e) {
-            // should never happen as we just serialized it
+            LOGGER.error("Error while deserializing attributes", e);
             setAttributesRaw(new HashMap<String, Object>());
         }
     }
