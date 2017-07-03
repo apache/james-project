@@ -501,7 +501,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         try {
             bind();
         } catch (Exception e) {
-            logger.error("Unable to start server");
+            logger.error("Unable to start server", e);
             return false;
         }
         return true;

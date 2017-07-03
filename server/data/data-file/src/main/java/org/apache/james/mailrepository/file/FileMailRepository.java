@@ -235,8 +235,7 @@ public class FileMailRepository extends AbstractMailRepository {
                     remove(key);
                 }
                 final String errorMessage = exceptionBuffer.toString();
-                getLogger().warn(errorMessage);
-                getLogger().debug(errorMessage, re);
+                getLogger().warn(errorMessage, re);
                 return null;
             }
             MimeMessageStreamRepositorySource source = new MimeMessageStreamRepositorySource(streamRepository, destination, key);

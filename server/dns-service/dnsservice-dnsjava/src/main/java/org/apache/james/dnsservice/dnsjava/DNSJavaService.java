@@ -337,7 +337,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
                     // so we can't add it to the server list. In this
                     // case we return an empty list of servers
                     logBuffer = new StringBuffer(128).append("Couldn't resolve IP address for host ").append(hostname).append(".");
-                    logger.error(logBuffer.toString());
+                    logger.error(logBuffer.toString(), uhe);
                 }
             }
             timeMetric.stopAndPublish();
