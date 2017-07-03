@@ -71,7 +71,6 @@ public class MailDelivrer {
      * throw an exception.
      *
      * @param mail    org.apache.james.core.MailImpl
-     * @param session javax.mail.Session
      * @return boolean Whether the delivery was successful and the message can be deleted
      */
     public ExecutionResult deliver(Mail mail) {
