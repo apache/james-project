@@ -92,7 +92,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
             session.getLog().debug("Select failed as mailbox does not exist " + mailboxName, e);
             responder.respond(statusResponseFactory.taggedNo(tag, command, HumanReadableText.FAILURE_NO_SUCH_MAILBOX));
         } catch (MailboxException e) {
-            session.getLog().info("Select failed for mailbox " + mailboxName , e);
+            session.getLog().error("Select failed for mailbox " + mailboxName , e);
             no(command, tag, responder, HumanReadableText.SELECT);
         } 
     }

@@ -92,14 +92,12 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
      * @param responder
      */
     protected final void doProcess(String referenceName, String mailboxName, ImapSession session, String tag, ImapCommand command, Responder responder, MailboxTyper mailboxTyper) {
+        String user = ImapSessionUtils.getUserName(session);
+        final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         try {
             // Should the namespace section be returned or not?
             final boolean isRelative;
-
             final List<MailboxMetaData> results;
-
-            final String user = ImapSessionUtils.getUserName(session);
-            final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
 
             if (mailboxName.length() == 0) {
                 // An empty mailboxName signifies a request for the hierarchy
@@ -127,31 +125,18 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                 results = new ArrayList<MailboxMetaData>(1);
                 results.add(new MailboxMetaData() {
 
-                    /**
-                     * @see org.apache.james.mailbox.MailboxMetaData#inferiors()
-                     */
                     public Children inferiors() {
                         return Children.CHILDREN_ALLOWED_BUT_UNKNOWN;
                     }
 
-                    /**
-                     * @see org.apache.james.mailbox.MailboxMetaData#getSelectability()
-                     */
                     public Selectability getSelectability() {
                         return Selectability.NOSELECT;
                     }
-
-                    /**
-                     * @see org.apache.james.mailbox.MailboxMetaData#getHierarchyDelimiter()
-                     */
+                    
                     public char getHierarchyDelimiter() {
                         return mailboxSession.getPathDelimiter();
                     }
 
-                    /**
-                     * (non-Javadoc)
-                     * @see org.apache.james.mailbox.MailboxMetaData#getPath()
-                     */
                     public MailboxPath getPath() {
                         return rootPath;
                     }
@@ -190,9 +175,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
 
             okComplete(command, tag, responder);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("List failed", e);
-            }
+            session.getLog().error("List failed for mailboxName " + mailboxName + " and user" + user, e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
         }
     }

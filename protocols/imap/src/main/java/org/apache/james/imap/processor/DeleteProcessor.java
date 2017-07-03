@@ -71,9 +71,7 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
             }
             taggedBad(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Delete failed for mailbox " + mailboxPath, e);
-            }
+            session.getLog().error("Delete failed for mailbox " + mailboxPath, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

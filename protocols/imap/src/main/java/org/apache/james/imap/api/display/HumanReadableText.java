@@ -25,6 +25,8 @@ import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapConstants;
 
+import com.google.common.base.Joiner;
+
 /**
  * Keys human response text that may be displayed to the user.
  */
@@ -258,5 +260,9 @@ public class HumanReadableText {
 
     public String toString() {
         return defaultValue;
+    }
+
+    public String asString() {
+        return key + " " + defaultValue + "[" + Joiner.on(", ").join(parameters) + "]";
     }
 }

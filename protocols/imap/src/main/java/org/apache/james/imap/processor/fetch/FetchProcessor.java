@@ -51,6 +51,8 @@ import org.apache.james.mailbox.model.MessageResult.MimePath;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.google.common.collect.ImmutableList;
+
 public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
 
     public FetchProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
@@ -127,13 +129,11 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             okComplete(command, tag, responder);
         } catch (MessageRangeException e) {
             if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("Fetch failed for mailbox " + session.getSelected().getPath() + " because of invalid sequence-set " + idSet.toString(), e);
+                session.getLog().debug("Fetch failed for mailbox " + session.getSelected().getPath() + " because of invalid sequence-set " + ImmutableList.copyOf(idSet), e);
             }
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Fetch failed for mailbox " + session.getSelected().getPath() + " and sequence-set " + idSet.toString(), e);
-            }
+            session.getLog().error("Fetch failed for mailbox " + session.getSelected().getPath() + " and sequence-set " + ImmutableList.copyOf(idSet), e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
         }
     }
@@ -181,9 +181,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                     // So we just skip it 
                     //
                     // See IMAP-347
-                    if (session.getLog().isDebugEnabled()) {
-                        session.getLog().debug("Unable to fetch message with uid " + result.getUid() + ", so skip it", e);
-                    }
+                    session.getLog().error("Unable to fetch message with uid " + result.getUid() + ", so skip it", e);
                 }
             }
 

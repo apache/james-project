@@ -42,7 +42,6 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;
 import org.apache.james.metrics.api.MetricFactory;
-import org.slf4j.Logger;
 
 /**
  * GETACL Processor.
@@ -102,10 +101,7 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
         } catch (MailboxNotFoundException e) {
             no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (MailboxException e) {
-            Logger log = session.getLog();
-            if (log.isInfoEnabled()) {
-                log.info(command.getName() +" failed for mailbox " + mailboxName, e);
-            }
+            session.getLog().error(command.getName() +" failed for mailbox " + mailboxName, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
 

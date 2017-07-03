@@ -70,7 +70,7 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
             session.getLog().info(command.getName() + " failed for mailbox " + mailboxName, e);
             no(command, tag, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, e.getMessage()));
         } catch (MailboxException e) {
-            session.getLog().info(command.getName() + " failed for mailbox " + mailboxName, e);
+            session.getLog().error(command.getName() + " failed for mailbox " + mailboxName, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

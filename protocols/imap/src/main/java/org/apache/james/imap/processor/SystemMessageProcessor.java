@@ -49,13 +49,11 @@ public class SystemMessageProcessor extends AbstractChainedProcessor<SystemMessa
                 forceLogout(session);
                 break;
             default:
+                session.getLog().info("Unknown system message " + message);
                 break;
             }
         } catch (MailboxException e) {
-            final Logger log = session.getLog();
-            if (log.isDebugEnabled()) {
-                log.debug("Cannot force logout", e);
-            }
+            session.getLog().error("Cannot force logout", e);
         }
     }
 

@@ -42,6 +42,9 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
 public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRangeRequest> extends AbstractMailboxProcessor<M> {
 
     public AbstractMessageRangeProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
@@ -104,13 +107,11 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
             }
         } catch (MessageRangeException e) {
             if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug(getOperationName() + " failed from mailbox " + currentMailbox.getPath() + " to " + targetMailbox + " for invalid sequence-set " + idSet.toString(), e);
+                session.getLog().debug(getOperationName() + " failed from mailbox " + currentMailbox.getPath() + " to " + targetMailbox + " for invalid sequence-set " + ImmutableList.copyOf(idSet), e);
             }
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info(getOperationName() + " failed from mailbox " + currentMailbox.getPath() + " to " + targetMailbox + " for sequence-set " + idSet.toString(), e);
-            }
+            session.getLog().error(getOperationName() + " failed from mailbox " + currentMailbox.getPath() + " to " + targetMailbox + " for sequence-set " + ImmutableList.copyOf(idSet), e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

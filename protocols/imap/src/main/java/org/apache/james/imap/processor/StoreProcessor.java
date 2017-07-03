@@ -57,6 +57,8 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.google.common.collect.ImmutableList;
+
 public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
 
     /**
@@ -210,13 +212,11 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             }
         } catch (MessageRangeException e) {
             if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("Store failed for mailbox " + session.getSelected().getPath() + " because of an invalid sequence-set " + idSet.toString(), e); 
+                session.getLog().debug("Store failed for mailbox " + session.getSelected().getPath() + " because of an invalid sequence-set " + ImmutableList.copyOf(idSet), e);
             }
             taggedBad(imapCommand, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Store failed for mailbox " + session.getSelected().getPath(), e);
-            }
+            session.getLog().error("Store failed for mailbox " + session.getSelected().getPath() + " and sequence-set " + ImmutableList.copyOf(idSet), e);
             no(imapCommand, tag, responder, HumanReadableText.SAVE_FAILED);
         }
     }

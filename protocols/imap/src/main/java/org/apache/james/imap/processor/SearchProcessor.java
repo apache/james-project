@@ -204,9 +204,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             }
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Search failed in mailbox " + session.getSelected().getPath(), e);
-            }
+            session.getLog().error("Search failed in mailbox " + session.getSelected().getPath(), e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
             
             if (resultOptions.contains(SearchResultOption.SAVE)) {
