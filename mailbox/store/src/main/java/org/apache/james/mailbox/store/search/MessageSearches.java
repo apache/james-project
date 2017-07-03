@@ -116,7 +116,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                 }
             } catch (MailboxException e) {
                 if (session != null && session.getLog() != null) {
-                    session.getLog().debug("Unable to search message " + m.getUid(), e);
+                    session.getLog().error("Unable to search message " + m.getUid(), e);
                 }
             }
         }

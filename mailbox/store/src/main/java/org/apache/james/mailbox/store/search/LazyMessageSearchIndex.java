@@ -110,9 +110,8 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
                     try {
                         add(session, mailbox, message);
                     } catch (MailboxException e) {
-                        session.getLog().debug("Unable to index message " + message.getUid() + " in mailbox " + mailbox.getName(), e);
+                        session.getLog().error("Unable to index message " + message.getUid() + " in mailbox " + mailbox.getName(), e);
                     }
-
                 }
             }
         }
