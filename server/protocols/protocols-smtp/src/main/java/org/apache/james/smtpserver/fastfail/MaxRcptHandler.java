@@ -33,7 +33,6 @@ public class MaxRcptHandler extends org.apache.james.protocols.smtp.core.fastfai
 
     @Override
     public void destroy() {
-        // nothing todo
-        
+        // nothing to do
     }
 }

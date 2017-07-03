@@ -447,7 +447,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
      */
     @Override
     protected void begin() throws MailboxException {
-        // nothing todo
+        // nothing to do
     }
 
     /**
@@ -455,7 +455,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
      */
     @Override
     protected void commit() throws MailboxException {
-        // nothing todo
+        // nothing to do
     }
 
     /**
@@ -463,7 +463,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
      */
     @Override
     protected void rollback() throws MailboxException {
-        // nothing todo
+        // nothing to do
     }
 
 }

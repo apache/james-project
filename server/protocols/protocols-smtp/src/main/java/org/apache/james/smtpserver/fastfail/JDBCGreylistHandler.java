@@ -452,6 +452,6 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
 
     @Override
     public void destroy() {
-        // nothing todo
+        // nothing to do
     }
 }
