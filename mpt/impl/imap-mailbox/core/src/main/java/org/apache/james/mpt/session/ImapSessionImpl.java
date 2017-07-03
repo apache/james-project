@@ -111,12 +111,10 @@ public class ImapSessionImpl implements ImapSession {
     }
 
     public void pushLineHandler(ImapLineHandler lineHandler) {
-        // TODO Auto-generated method stub
 
     }
 
     public void popLineHandler() {
-        // TODO Auto-generated method stub
 
     }
 

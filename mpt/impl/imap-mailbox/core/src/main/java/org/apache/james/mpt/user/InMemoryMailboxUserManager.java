@@ -91,12 +91,10 @@ public class InMemoryMailboxUserManager implements SubscriptionManager {
     }
 
     public void endProcessingRequest(MailboxSession session) {
-        // TODO Auto-generated method stub
         
     }
 
     public void startProcessingRequest(MailboxSession session) {
-        // TODO Auto-generated method stub
         
     }
 

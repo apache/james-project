@@ -237,13 +237,11 @@ public class ValidRcptHandlerTest {
 
             @Override
             public String getGreeting() {
-                // TODO Auto-generated method stub
                 return null;
             }
 
             @Override
             public String getSoftwareName() {
-                // TODO Auto-generated method stub
                 return null;
             }
         };

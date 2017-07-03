@@ -252,7 +252,6 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
 
     @Override
     public void destroy() {
-        // TODO Auto-generated method stub
-        
+
     }
 }

@@ -29,7 +29,6 @@ public class OSGIConfigurationProvider implements org.apache.james.container.spr
 
     @Override
     public void registerConfiguration(String beanName, HierarchicalConfiguration conf) {
-        // TODO Auto-generated method stub
         
     }
 

@@ -89,8 +89,7 @@ final class MockLogger implements Logger {
     }
 
     public String getName() {
-	// TODO Auto-generated method stub
-	return null;
+        return null;
     }
 
     public void info(Marker arg0, String arg1, Object arg2, Object arg3) {
