@@ -67,24 +67,10 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
         }
 
         protected synchronized void incrementReferenceCount() {
-            /*
-             * Used to track references while debugging try { throw new
-             * Exception("incrementReferenceCount: "+(wrapped != null ?
-             * System.identityHashCode(wrapped)+"" :
-             * "null")+" ["+referenceCount+"]"); } catch (Exception e) {
-             * e.printStackTrace(); }
-             */
             referenceCount++;
         }
 
         protected synchronized void decrementReferenceCount() {
-            /*
-             * Used to track references while debugging try { throw new
-             * Exception("decrementReferenceCount: "+(wrapped != null ?
-             * System.identityHashCode(wrapped)+"" :
-             * "null")+" ["+referenceCount+"]"); } catch (Exception e) {
-             * e.printStackTrace(); }
-             */
             referenceCount--;
             if (referenceCount <= 0) {
                 LifecycleUtil.dispose(wrapped);
