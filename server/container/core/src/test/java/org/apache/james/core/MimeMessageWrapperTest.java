@@ -151,59 +151,36 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         mmw.writeTo(System.out);
     }
 
-    /*
-     * Class under test for String getSubject()
-     */
     @Test
-    public void testGetSubjectFolding() {
-        try {
-            StringBuilder res = new StringBuilder();
-            BufferedReader r = new BufferedReader(new InputStreamReader(mw.getInputStream()));
-            String line;
-            while (r.ready()) {
-                line = r.readLine();
-                res.append(line).append("\r\n");
-            }
-            r.close();
-            assertEquals(body, res.toString());
-        } catch (MessagingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+    public void testGetSubjectFolding() throws Exception {
+        StringBuilder res = new StringBuilder();
+        BufferedReader r = new BufferedReader(new InputStreamReader(mw.getInputStream()));
+        String line;
+        while (r.ready()) {
+            line = r.readLine();
+            res.append(line).append("\r\n");
         }
+        r.close();
+        assertEquals(body, res.toString());
     }
 
-    /*
-     * Class under test for String getSubject()
-     */
     @Test
-    public void testAddHeaderAndSave() {
-        try {
-            mw.addHeader("X-Test", "X-Value");
+    public void testAddHeaderAndSave() throws Exception {
+        mw.addHeader("X-Test", "X-Value");
 
-            assertEquals("X-Value", mw.getHeader("X-Test")[0]);
+        assertEquals("X-Value", mw.getHeader("X-Test")[0]);
 
-            mw.saveChanges();
+        mw.saveChanges();
 
-            ByteArrayOutputStream rawMessage = new ByteArrayOutputStream();
-            mw.writeTo(rawMessage);
+        ByteArrayOutputStream rawMessage = new ByteArrayOutputStream();
+        mw.writeTo(rawMessage);
 
-            assertEquals("X-Value", mw.getHeader("X-Test")[0]);
+        assertEquals("X-Value", mw.getHeader("X-Test")[0]);
 
-            String res = rawMessage.toString();
+        String res = rawMessage.toString();
 
-            boolean found = res.indexOf("X-Test: X-Value") > 0;
-            assertEquals(true, found);
-
-        } catch (MessagingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        boolean found = res.indexOf("X-Test: X-Value") > 0;
+        assertEquals(true, found);
     }
 
     @Test
