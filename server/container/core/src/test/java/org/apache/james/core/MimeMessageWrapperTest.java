@@ -40,7 +40,9 @@ import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.mailet.base.RFC2822Headers;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /**
  * Test the subject folding issue.
@@ -87,13 +89,12 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     final String sep = "\r\n\r\n";
     final String body = "bar\r\n";
 
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
     @Override
     protected MimeMessage getMessageFromSources(String sources) throws Exception {
-        MimeMessageInputStreamSource mmis = null;
-        try {
-            mmis = new MimeMessageInputStreamSource("test", new SharedByteArrayInputStream(sources.getBytes()));
-        } catch (MessagingException e) {
-        }
+        MimeMessageInputStreamSource mmis = new MimeMessageInputStreamSource("test", new SharedByteArrayInputStream(sources.getBytes()));
         return new TestableMimeMessageWrapper(mmis);
     }
 
@@ -130,11 +131,10 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     @Test
     public void testDeferredHeaderLoading() throws MessagingException, IOException {
         mw.setHeadersLoadable(false);
-        try {
-            assertEquals("foo", mw.getSubject());
-            fail("subject should not be loadable here, headers loading is disabled");
-        } catch (IllegalStateException e) {
-        }
+
+        expectedException.expect(IllegalStateException.class);
+
+        mw.getSubject();
     }
 
     /**

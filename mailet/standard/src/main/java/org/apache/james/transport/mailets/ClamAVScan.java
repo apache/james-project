@@ -20,6 +20,7 @@
 
 package org.apache.james.transport.mailets;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -703,82 +704,13 @@ public class ClamAVScan extends GenericMailet {
             log("Exception caught calling CLAMD on " + socket.getInetAddress() + ": " + ex.getMessage(), ex);
             throw new MessagingException("Exception caught", ex);
         } finally {
-            shutdownReader(reader);
-            shutdownWriter(writer);
-            shutdownStream(bos);
-            shutdownSocket(streamSocket);
-            shutdownSocket(socket);
+            IOUtils.closeQuietly(reader);
+            IOUtils.closeQuietly(writer);
+            IOUtils.closeQuietly(bos);
+            IOUtils.closeQuietly(streamSocket);
+            IOUtils.closeQuietly(socket);
         }
 
-    }
-
-    /**
-     * Unconditionally close an <code>OutputStream</code>.
-     * Equivalent to {@link OutputStream#close()}, except any exceptions will be ignored.
-     *
-     * @param output A (possibly null) OutputStream
-     */
-    private static void shutdownStream(OutputStream output) {
-        if (null == output) {
-            return;
-        }
-
-        try {
-            output.close();
-        } catch (IOException ignored) {
-        }
-    }
-
-    /**
-     * Unconditionally close an <code>Socket</code>.
-     * Equivalent to {@link Socket#close()}, except any exceptions will be ignored.
-     *
-     * @param socket A (possibly null) Socket
-     */
-    private static void shutdownSocket(Socket socket) {
-        if (null == socket) {
-            return;
-        }
-
-        try {
-            socket.close();
-        } catch (IOException ioe) {
-        }
-    }
-
-    /**
-     * Unconditionally close an <code>Writer</code>.
-     * Equivalent to {@link Writer#close()}, except any exceptions will be ignored.
-     *
-     * @param output A (possibly null) Writer
-     */
-    private void shutdownWriter(Writer output) {
-        if (null == output) {
-            return;
-        }
-
-        try {
-            output.close();
-        } catch (IOException ioe) {
-        }
-    }
-
-
-    /**
-     * Unconditionally close an <code>Reader</code>.
-     * Equivalent to {@link Reader#close()}, except any exceptions will be ignored.
-     *
-     * @param input A (possibly null) Reader
-     */
-    private void shutdownReader(Reader input) {
-        if (null == input) {
-            return;
-        }
-
-        try {
-            input.close();
-        } catch (IOException ioe) {
-        }
     }
 
     /**
@@ -872,10 +804,11 @@ public class ClamAVScan extends GenericMailet {
     protected final int getStreamPortFromAnswer(String answer) throws ConnectException {
         int port = -1;
         if (answer != null && answer.startsWith(STREAM_PORT_STRING)) {
+            String portSubstring = answer.substring(STREAM_PORT_STRING.length());
             try {
-                port = Integer.parseInt(answer.substring(STREAM_PORT_STRING.length()));
+                port = Integer.parseInt(portSubstring);
             } catch (NumberFormatException nfe) {
-
+                log("Can not parse port from substring " + portSubstring);
             }
         }
 

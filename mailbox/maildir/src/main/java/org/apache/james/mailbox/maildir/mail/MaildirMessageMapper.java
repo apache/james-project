@@ -35,6 +35,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -305,16 +306,8 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         } catch (IOException ioe) {
             throw new MailboxException("Failure while save MailboxMessage " + message + " in Mailbox " + mailbox, ioe);
         } finally {
-            try {
-                if (fos != null)
-                    fos.close();
-            } catch (IOException e) {
-            }
-            try {
-                if (input != null)
-                    input.close();
-            } catch (IOException e) {
-            }
+            IOUtils.closeQuietly(fos);
+            IOUtils.closeQuietly(input);
         }
         File newMessageFile = null;
         // delivered via SMTP, goes to ./new without flags

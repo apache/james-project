@@ -168,7 +168,7 @@ public class SMTPServerTest {
 
     private static final long HALF_SECOND = 500;
     private static final int MAX_ITERATIONS = 10;
-    private static final Logger log = LoggerFactory.getLogger(SMTPServerTest.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(SMTPServerTest.class);
 
     protected SMTPTestConfiguration smtpConfiguration;
     protected final InMemoryUsersRepository usersRepository = new InMemoryUsersRepository();
@@ -370,6 +370,7 @@ public class SMTPServerTest {
             Thread.sleep(3000);
             fail("Shold disconnect connection 3");
         } catch (Exception e) {
+            LOGGER.info("Ignored error", e);
         }
 
         ensureIsDisconnected(smtpProtocol);
@@ -627,17 +628,17 @@ public class SMTPServerTest {
         SMTPClient smtp = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtp.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-        if (log.isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             smtp.addProtocolCommandListener(new ProtocolCommandListener() {
 
                 @Override
                 public void protocolCommandSent(ProtocolCommandEvent event) {
-                    log.debug("> " + event.getMessage().trim());
+                    LOGGER.debug("> " + event.getMessage().trim());
                 }
 
                 @Override
                 public void protocolReplyReceived(ProtocolCommandEvent event) {
-                    log.debug("< " + event.getMessage().trim());
+                    LOGGER.debug("< " + event.getMessage().trim());
                 }
             });
         }

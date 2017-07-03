@@ -37,14 +37,15 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CassandraMailboxMapperTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapperTest.class);
 
     public static final int MAX_RETRY = 10;
     public static final int UID_VALIDITY = 52;
     public static final MailboxPath MAILBOX_PATH = new MailboxPath("#private", "user", "name");
-    public static final int THREAD_COUNT = 10;
-    public static final int OPERATION_COUNT = 10;
     private CassandraCluster cassandra;
     private CassandraMailboxPathDAO mailboxPathDAO;
     private CassandraMailboxMapper testee;
@@ -75,6 +76,7 @@ public class CassandraMailboxMapperTest {
             testee.save(newMailbox);
             fail("TooLongMailboxNameException expected");
         } catch (TooLongMailboxNameException e) {
+            LOGGER.info("Ignored error", e);
         }
 
         Optional<CassandraIdAndPath> cassandraIdAndPath = mailboxPathDAO.retrieveId(MAILBOX_PATH).get();

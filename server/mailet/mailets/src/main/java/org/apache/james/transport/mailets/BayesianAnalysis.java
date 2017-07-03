@@ -397,6 +397,7 @@ public class BayesianAnalysis extends GenericMailet {
                 message.setSubject(toAppend + " " + subject, "iso-8859-1");
             }
         } catch (MessagingException ex) {
+            log("Ignored error while modifying subject", ex);
         }
     }
 

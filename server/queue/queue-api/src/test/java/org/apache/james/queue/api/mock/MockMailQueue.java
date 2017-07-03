@@ -28,6 +28,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.mail.MessagingException;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.james.core.MailImpl;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.mailet.Mail;
@@ -94,18 +96,8 @@ public class MockMailQueue implements MailQueue {
             log.error("", ex);
             throw new RuntimeException(ex);
         } finally {
-            try {
-                if (bais != null) {
-                    bais.close();
-                }
-            } catch (IOException ex) {
-            }
-            try {
-                if (baos != null) {
-                    baos.close();
-                }
-            } catch (IOException ex) {
-            }
+            IOUtils.closeQuietly(bais);
+            IOUtils.closeQuietly(baos);
         }
     }
 

@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class AbstractStateCompositeProcessorTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractStateCompositeProcessorTest.class);
 
     @Test
     public void testChooseRightProcessor() throws Exception {
@@ -82,6 +83,7 @@ public abstract class AbstractStateCompositeProcessorTest {
         processor.service(mail4);
         fail("should fail because of no mapping to a processor for this state");
         } catch (MessagingException e) {
+            LOGGER.info("Ignored error", e);
         }
 
     } finally {
