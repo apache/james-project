@@ -118,29 +118,24 @@ public abstract class AbstractFileRepository implements Repository, Configurable
         FilenameFilter num_filter = new NumberedRepositoryFileFilter(getExtensionDecorator());
         final String[] names = directory.list(num_filter);
 
-        try {
-            for (String origFilename : names) {
-                // This needs to handle (skip over) the possible repository
-                // numbers
-                int pos = origFilename.length() - m_postfix.length();
-                while (pos >= 1 && Character.isDigit(origFilename.charAt(pos - 1))) {
-                    pos--;
-                }
-                pos -= ".".length() + m_name.length();
-                String newFilename = origFilename.substring(0, pos) + m_extension;
-
-                File origFile = new File(directory, origFilename);
-                File newFile = new File(directory, newFilename);
-
-                if (origFile.renameTo(newFile)) {
-                    getLogger().info("Renamed " + origFile + " to " + newFile);
-                } else {
-                    getLogger().info("Unable to rename " + origFile + " to " + newFile);
-                }
+        for (String origFilename : names) {
+            // This needs to handle (skip over) the possible repository
+            // numbers
+            int pos = origFilename.length() - m_postfix.length();
+            while (pos >= 1 && Character.isDigit(origFilename.charAt(pos - 1))) {
+                pos--;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
+            pos -= ".".length() + m_name.length();
+            String newFilename = origFilename.substring(0, pos) + m_extension;
+
+            File origFile = new File(directory, origFilename);
+            File newFile = new File(directory, newFilename);
+
+            if (origFile.renameTo(newFile)) {
+                getLogger().info("Renamed " + origFile + " to " + newFile);
+            } else {
+                getLogger().info("Unable to rename " + origFile + " to " + newFile);
+            }
         }
 
     }
