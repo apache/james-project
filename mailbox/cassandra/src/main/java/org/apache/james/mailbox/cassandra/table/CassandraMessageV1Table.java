@@ -21,7 +21,7 @@ package org.apache.james.mailbox.cassandra.table;
 
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
 
-public interface CassandraMessageTable {
+public interface CassandraMessageV1Table {
 
     String TABLE_NAME = "message";
     String INTERNAL_DATE = "internalDate";

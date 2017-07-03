@@ -35,7 +35,8 @@ import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageIds;
-import org.apache.james.mailbox.cassandra.table.CassandraMessageTable;
+import org.apache.james.mailbox.cassandra.table.CassandraMessageV1Table;
+import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table;
 import org.apache.james.mailbox.cassandra.table.Flag;
 import org.apache.james.mailbox.cassandra.table.MessageIdToImapUid;
 
@@ -89,33 +90,46 @@ public class CassandraMessageModule implements CassandraModule {
                     .compactionOptions(SchemaBuilder.leveledStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CACHED_MESSAGE_ID_ROWS))),
-            new CassandraTable(CassandraMessageTable.TABLE_NAME,
-                SchemaBuilder.createTable(CassandraMessageTable.TABLE_NAME)
+            new CassandraTable(CassandraMessageV1Table.TABLE_NAME,
+                SchemaBuilder.createTable(CassandraMessageV1Table.TABLE_NAME)
                     .ifNotExists()
                     .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
-                    .addColumn(CassandraMessageTable.INTERNAL_DATE, timestamp())
-                    .addColumn(CassandraMessageTable.BODY_START_OCTET, cint())
-                    .addColumn(CassandraMessageTable.BODY_OCTECTS, bigint())
-                    .addColumn(CassandraMessageTable.TEXTUAL_LINE_COUNT, bigint())
-                    .addColumn(CassandraMessageTable.FULL_CONTENT_OCTETS, bigint())
-                    .addColumn(CassandraMessageTable.BODY_CONTENT, blob())
-                    .addColumn(CassandraMessageTable.HEADER_CONTENT, blob())
-                    .addUDTListColumn(CassandraMessageTable.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageTable.ATTACHMENTS))
-                    .addUDTListColumn(CassandraMessageTable.PROPERTIES, SchemaBuilder.frozen(CassandraMessageTable.PROPERTIES))));
+                    .addColumn(CassandraMessageV1Table.INTERNAL_DATE, timestamp())
+                    .addColumn(CassandraMessageV1Table.BODY_START_OCTET, cint())
+                    .addColumn(CassandraMessageV1Table.BODY_OCTECTS, bigint())
+                    .addColumn(CassandraMessageV1Table.TEXTUAL_LINE_COUNT, bigint())
+                    .addColumn(CassandraMessageV1Table.FULL_CONTENT_OCTETS, bigint())
+                    .addColumn(CassandraMessageV1Table.BODY_CONTENT, blob())
+                    .addColumn(CassandraMessageV1Table.HEADER_CONTENT, blob())
+                    .addUDTListColumn(CassandraMessageV1Table.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageV1Table.ATTACHMENTS))
+                    .addUDTListColumn(CassandraMessageV1Table.PROPERTIES, SchemaBuilder.frozen(CassandraMessageV1Table.PROPERTIES))),
+            new CassandraTable(CassandraMessageV2Table.TABLE_NAME,
+                SchemaBuilder.createTable(CassandraMessageV2Table.TABLE_NAME)
+                    .ifNotExists()
+                    .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
+                    .addColumn(CassandraMessageV2Table.INTERNAL_DATE, timestamp())
+                    .addColumn(CassandraMessageV2Table.BODY_START_OCTET, cint())
+                    .addColumn(CassandraMessageV2Table.BODY_OCTECTS, bigint())
+                    .addColumn(CassandraMessageV2Table.TEXTUAL_LINE_COUNT, bigint())
+                    .addColumn(CassandraMessageV2Table.FULL_CONTENT_OCTETS, bigint())
+                    .addColumn(CassandraMessageV2Table.BODY_CONTENT, timeuuid())
+                    .addColumn(CassandraMessageV2Table.HEADER_CONTENT, timeuuid())
+                    .addUDTListColumn(CassandraMessageV2Table.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageV2Table.ATTACHMENTS))
+                    .addUDTListColumn(CassandraMessageV2Table.PROPERTIES, SchemaBuilder.frozen(CassandraMessageV2Table.PROPERTIES))));
         types = ImmutableList.of(
-            new CassandraType(CassandraMessageTable.PROPERTIES,
-                SchemaBuilder.createType(CassandraMessageTable.PROPERTIES)
+            new CassandraType(CassandraMessageV1Table.PROPERTIES,
+                SchemaBuilder.createType(CassandraMessageV1Table.PROPERTIES)
                     .ifNotExists()
-                    .addColumn(CassandraMessageTable.Properties.NAMESPACE, text())
-                    .addColumn(CassandraMessageTable.Properties.NAME, text())
-                    .addColumn(CassandraMessageTable.Properties.VALUE, text())),
-            new CassandraType(CassandraMessageTable.ATTACHMENTS,
-                SchemaBuilder.createType(CassandraMessageTable.ATTACHMENTS)
+                    .addColumn(CassandraMessageV1Table.Properties.NAMESPACE, text())
+                    .addColumn(CassandraMessageV1Table.Properties.NAME, text())
+                    .addColumn(CassandraMessageV1Table.Properties.VALUE, text())),
+            new CassandraType(CassandraMessageV1Table.ATTACHMENTS,
+                SchemaBuilder.createType(CassandraMessageV1Table.ATTACHMENTS)
                     .ifNotExists()
-                    .addColumn(CassandraMessageTable.Attachments.ID, text())
-                    .addColumn(CassandraMessageTable.Attachments.NAME, text())
-                    .addColumn(CassandraMessageTable.Attachments.CID, text())
-                    .addColumn(CassandraMessageTable.Attachments.IS_INLINE, cboolean())));
+                    .addColumn(CassandraMessageV1Table.Attachments.ID, text())
+                    .addColumn(CassandraMessageV1Table.Attachments.NAME, text())
+                    .addColumn(CassandraMessageV1Table.Attachments.CID, text())
+                    .addColumn(CassandraMessageV1Table.Attachments.IS_INLINE, cboolean())));
     }
 
     @Override
