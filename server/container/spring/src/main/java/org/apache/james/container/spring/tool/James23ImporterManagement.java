@@ -18,18 +18,17 @@
  ****************************************************************/
 package org.apache.james.container.spring.tool;
 
-import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.mailrepository.api.MailRepositoryStore.MailRepositoryStoreException;
-import org.apache.james.user.api.UsersRepositoryException;
-
 import javax.inject.Inject;
-import javax.mail.MessagingException;
-import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link James23Importer} support via JMX.
  */
 public class James23ImporterManagement implements James23ImporterManagementMBean {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(James23ImporterManagement.class);
 
     @Inject
     private James23Importer james23Importer;
@@ -38,16 +37,8 @@ public class James23ImporterManagement implements James23ImporterManagementMBean
     public void importUsersAndMailsFromJames23(String james23MailRepositoryPath, String defaultPassword) throws Exception {
         try {
             james23Importer.importUsersAndMailsFromJames23(james23MailRepositoryPath, defaultPassword);
-        } catch (MailRepositoryStoreException e) {
-            throw new Exception(e.getMessage());
-        } catch (MessagingException e) {
-            throw new Exception(e.getMessage());
-        } catch (UsersRepositoryException e) {
-            throw new Exception(e.getMessage());
-        } catch (DomainListException e) {
-            throw new Exception(e.getMessage());
-        } catch (IOException e) {
-            throw new Exception(e.getMessage());
+        } catch (Exception e) {
+            throw new Exception("Error while importing users and mails", e);
         }
     }
 
@@ -55,12 +46,8 @@ public class James23ImporterManagement implements James23ImporterManagementMBean
     public void importUsersFromJames23(String defaultPassword) throws Exception {
         try {
             james23Importer.importUsersFromJames23(defaultPassword);
-        } catch (MessagingException e) {
-            throw new Exception(e.getMessage());
-        } catch (UsersRepositoryException e) {
-            throw new Exception(e.getMessage());
-        } catch (DomainListException e) {
-            throw new Exception(e.getMessage());
+        } catch (Exception e) {
+            throw new Exception("Error while importing users", e);
         }
     }
 
@@ -69,23 +56,8 @@ public class James23ImporterManagement implements James23ImporterManagementMBean
         try {
             james23Importer.importMailsFromJames23(james23MailRepositoryPath);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("Error while importing mail", e);
             throw new Exception(e.getMessage());
-            // } catch (MailboxException e) {
-            // e.printStackTrace();
-            // throw new Exception(e.getMessage());
-            // } catch (MailRepositoryStoreException e) {
-            // e.printStackTrace();
-            // throw new Exception(e.getMessage());
-            // } catch (MessagingException e) {
-            // e.printStackTrace();
-            // throw new Exception(e.getMessage());
-            // } catch (UsersRepositoryException e) {
-            // e.printStackTrace();
-            // throw new Exception(e.getMessage());
-            // } catch (IOException e) {
-            // e.printStackTrace();
-            // throw new Exception(e.getMessage());
         }
     }
 
