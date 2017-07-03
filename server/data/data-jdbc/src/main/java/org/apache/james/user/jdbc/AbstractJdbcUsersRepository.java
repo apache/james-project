@@ -469,7 +469,6 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
                 userList.add(user);
             }
         } catch (SQLException sqlExc) {
-            sqlExc.printStackTrace();
             throw new UsersRepositoryException("Error accessing database", sqlExc);
         } finally {
             theJDBCUtil.closeJDBCResultSet(rsUsers);
@@ -502,7 +501,6 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
 
             addUserStatement.execute();
         } catch (SQLException sqlExc) {
-            sqlExc.printStackTrace();
             throw new UsersRepositoryException("Error accessing database", sqlExc);
         } finally {
             theJDBCUtil.closeJDBCStatement(addUserStatement);
@@ -531,7 +529,6 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             removeUserStatement.setString(1, username);
             removeUserStatement.execute();
         } catch (SQLException sqlExc) {
-            sqlExc.printStackTrace();
             throw new UsersRepositoryException("Error accessing database", sqlExc);
         } finally {
             theJDBCUtil.closeJDBCStatement(removeUserStatement);
@@ -557,7 +554,6 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             setUserForUpdateStatement(user, updateUserStatement);
             updateUserStatement.execute();
         } catch (SQLException sqlExc) {
-            sqlExc.printStackTrace();
             throw new UsersRepositoryException("Error accessing database", sqlExc);
         } finally {
             theJDBCUtil.closeJDBCStatement(updateUserStatement);
@@ -642,7 +638,6 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             }
             return user;
         } catch (SQLException sqlExc) {
-            sqlExc.printStackTrace();
             throw new UsersRepositoryException("Error accessing database", sqlExc);
         } finally {
             theJDBCUtil.closeJDBCResultSet(rsUsers);

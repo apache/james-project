@@ -25,6 +25,8 @@ import java.util.List;
 import org.apache.james.protocols.api.AbstractResponse;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.logger.Logger;
+import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link FutureResponse} implementation which wraps a {@link AbstractResponse} implementation
@@ -36,7 +38,7 @@ public class FutureResponseImpl implements FutureResponse{
     private final Logger logger;
 
     public FutureResponseImpl() {
-        this(null);
+        this(new ProtocolLoggerAdapter(LoggerFactory.getLogger(FutureResponseImpl.class)));
     }
     
     public FutureResponseImpl(Logger logger) {
@@ -154,11 +156,7 @@ public class FutureResponseImpl implements FutureResponse{
                 try {
                     listener.onResponse(this);
                 } catch (Throwable e) {
-                    if (logger != null) {
-                        logger.warn("An exception was thrown by the listener " + listener, e);
-                    } else {
-                        e.printStackTrace();
-                    }
+                    logger.warn("An exception was thrown by the listener " + listener, e);
                 }
             }
             listeners = null;
