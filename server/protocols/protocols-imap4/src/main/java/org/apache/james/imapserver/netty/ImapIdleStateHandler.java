@@ -40,7 +40,9 @@ public class ImapIdleStateHandler extends IdleStateAwareChannelHandler implement
             ImapSession session = (ImapSession) attributes.get(ctx.getChannel());
             InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
 
-            session.getLog().info("Logout client " + address.getHostName() + " (" + address.getAddress().getHostAddress() + ") because it idled for too long...");
+            session.getLog().info("Logout client {} ({}) because it idled for too long...",
+                address.getHostName(),
+                address.getAddress().getHostAddress());
 
             // logout the client
             session.logout();

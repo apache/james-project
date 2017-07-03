@@ -185,8 +185,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             }
             address = new InetSocketAddress(ip, port);
 
-            String infoBuffer = getServiceType() + " bound to: " + ip + ":" + port;
-            logger.info(infoBuffer);
+            logger.info(getServiceType() + " bound to: " + ip + ":" + port);
 
             bindAddresses.add(address);
         }
@@ -346,8 +345,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             hostName = "localhost";
         }
 
-        infoBuffer = new StringBuilder(64).append(getServiceType()).append(" is running on: ").append(hostName);
-        getLogger().info(infoBuffer.toString());
+        getLogger().info("{} is running on: {}", getServiceType(), hostName);
 
         boolean autodetect = handlerConfiguration.getBoolean(HELLO_NAME + ".[@autodetect]", true);
         if (autodetect) {
@@ -359,8 +357,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             }
         }
 
-        infoBuffer = new StringBuilder(64).append(getServiceType()).append(" handler hello name is: ").append(helloName);
-        getLogger().info(infoBuffer.toString());
+        getLogger().info("{} handler hello name is: {}", getServiceType(), helloName);
     }
 
     /**
