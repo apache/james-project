@@ -374,7 +374,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
             } catch (IllegalStateException ise) {
                 // This is okay, because it mimics the original behaviour
                 // TODO find out if it's a bug in DNSJava
-                logger.debug("Error determining result ", ise);
+                logger.warn("Error determining result ", ise);
                 throw new TemporaryResolutionException("DNSService is temporary not reachable");
             }
 
