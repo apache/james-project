@@ -58,6 +58,7 @@ import org.apache.james.mailbox.store.quota.QuotaChecker;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -158,7 +159,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         allowOnMailboxSession(mailboxIds, mailboxSession, mailboxMapper);
 
         List<MailboxMessage> mailboxMessages = FluentIterable.from(messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Full))
-            .filter(belongsToUser(mailboxSession, mailboxMapper))
+            .filter(messageBelongsToUser(mailboxSession, mailboxMapper))
             .toList();
 
         if (!mailboxMessages.isEmpty()) {
@@ -264,20 +265,6 @@ public class StoreMessageIdManager implements MessageIdManager {
         };
     }
 
-    private Predicate<MailboxMessage> belongsToUser(final MailboxSession mailboxSession, final MailboxMapper mailboxMapper) {
-        return new Predicate<MailboxMessage>() {
-            @Override
-            public boolean apply(MailboxMessage input) {
-                try {
-                    Mailbox currentMailbox = mailboxMapper.findMailboxById(input.getMailboxId());
-                    return belongsToCurrentUser(currentMailbox, mailboxSession);
-                } catch (MailboxException e) {
-                    return false;
-                }
-            }
-        };
-    }
-
     private Predicate<MailboxId> mailboxBelongsToUser(final MailboxSession mailboxSession, final MailboxMapper mailboxMapper) {
         return new Predicate<MailboxId>() {
             @Override
@@ -286,10 +273,17 @@ public class StoreMessageIdManager implements MessageIdManager {
                     Mailbox currentMailbox = mailboxMapper.findMailboxById(mailboxId);
                     return belongsToCurrentUser(currentMailbox, mailboxSession);
                 } catch (MailboxException e) {
+                    mailboxSession.getLog().error(String.format("Can not retrieve mailboxPath associated with %s", mailboxId.serialize()), e);
                     return false;
                 }
             }
         };
+    }
+
+    private Predicate<MailboxMessage> messageBelongsToUser(MailboxSession mailboxSession, MailboxMapper mailboxMapper) {
+        return Predicates.compose(
+            mailboxBelongsToUser(mailboxSession, mailboxMapper),
+            EXTRACT_MAILBOX_ID_FUNCTION);
     }
 
     private void allowOnMailboxSession(List<MailboxId> mailboxIds, MailboxSession mailboxSession, MailboxMapper mailboxMapper) throws MailboxNotFoundException {
@@ -302,17 +296,8 @@ public class StoreMessageIdManager implements MessageIdManager {
         }
     }
 
-    private Predicate<MailboxId> isMailboxOfOtherUser(final MailboxSession mailboxSession, final MailboxMapper mailboxMapper) {
-        return new Predicate<MailboxId>() {
-            @Override
-            public boolean apply(MailboxId mailboxId) {
-                try {
-                    return !belongsToCurrentUser(mailboxMapper.findMailboxById(mailboxId), mailboxSession);
-                } catch (MailboxException e) {
-                    return true;
-                }
-            }
-        };
+    private Predicate<MailboxId> isMailboxOfOtherUser(MailboxSession mailboxSession, MailboxMapper mailboxMapper) {
+        return Predicates.not(mailboxBelongsToUser(mailboxSession, mailboxMapper));
     }
 
     private boolean belongsToCurrentUser(Mailbox mailbox, MailboxSession session) {
