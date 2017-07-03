@@ -249,10 +249,10 @@ public class MailDelivrer {
         if (configuration.isDebug()) {
             EnhancedMessagingException enhancedMessagingException = new EnhancedMessagingException(sfe);
             if (enhancedMessagingException.hasReturnCode()) {
-                logger.debug("SMTP SEND FAILED: Command [{}] RetCode: [{}] Response[{}]", enhancedMessagingException.computeCommand(),
+                logger.info("SMTP SEND FAILED: Command [{}] RetCode: [{}] Response[{}]", enhancedMessagingException.computeCommand(),
                     enhancedMessagingException.getReturnCode(), sfe.getMessage());
             } else {
-                logger.debug("Send failed: {}", sfe.toString());
+                logger.info("Send failed", sfe);
             }
             logLevels(sfe);
         }
