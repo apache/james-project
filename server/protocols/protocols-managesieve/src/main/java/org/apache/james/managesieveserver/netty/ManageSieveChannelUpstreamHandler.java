@@ -79,8 +79,7 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        getLogger(ctx.getChannel()).warn("Error while processing ManageSieve request: " + e.getCause().getClass().getName() + " - " + e.getCause().getMessage());
-        getLogger(ctx.getChannel()).debug("Error while processing ManageSieve request", e.getCause());
+        getLogger(ctx.getChannel()).warn("Error while processing ManageSieve request", e.getCause());
 
         if (e.getCause() instanceof TooLongFrameException) {
             // Max line length exceeded

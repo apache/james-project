@@ -35,6 +35,7 @@ import org.apache.james.protocols.api.handler.DisconnectHandler;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
 import org.apache.james.protocols.api.handler.ProtocolHandlerResultHandler;
+import org.apache.james.protocols.api.logger.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandler.Sharable;
@@ -165,9 +166,7 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         ProtocolSession session = (ProtocolSession) ctx.getAttachment();
-        if (session != null) {
-            session.getLogger().info("Connection closed for " + session.getRemoteAddress().getAddress().getHostAddress());
-        }
+        getLogger(session).info("Connection closed for " + session.getRemoteAddress().getAddress().getHostAddress());
         cleanup(ctx);
 
         super.channelClosed(ctx, e);
@@ -221,11 +220,16 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
                 } 
                 transport.writeResponse(Response.DISCONNECT, session);
             }
-            if (session != null) {
-                session.getLogger().debug("Unable to process request", e.getCause());
-            }
+            getLogger(session).error("Unable to process request", e.getCause());
             cleanup(ctx);            
         }
+    }
+
+    private Logger getLogger(ProtocolSession session) {
+        if (session != null) {
+            return session.getLogger();
+        }
+        return protocol.getProtocolLogger();
     }
 
 }

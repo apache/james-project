@@ -61,4 +61,7 @@ public class ProtocolImpl implements Protocol{
         return config;
     }
 
+    public Logger getProtocolLogger() {
+        return logger;
+    }
 }

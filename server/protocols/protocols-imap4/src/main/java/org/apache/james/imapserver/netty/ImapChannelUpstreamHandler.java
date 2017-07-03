@@ -141,8 +141,7 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
         
-        getLogger(ctx.getChannel()).warn("Error while processing imap request: " + e.getCause().getClass().getName() + " - " + e.getCause().getMessage());
-        getLogger(ctx.getChannel()).debug("Error while processing imap request", e.getCause());
+        getLogger(ctx.getChannel()).warn("Error while processing imap request", e.getCause());
 
         if (e.getCause() instanceof TooLongFrameException) {
 
