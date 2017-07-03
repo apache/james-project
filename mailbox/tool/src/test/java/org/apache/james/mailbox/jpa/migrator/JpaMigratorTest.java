@@ -21,38 +21,35 @@ package org.apache.james.mailbox.jpa.migrator;
 import org.junit.Ignore;
 import org.junit.Test;
 
-// TODO
 @Ignore("This class needs to be reviewed")
 public class JpaMigratorTest {
-
     @Test
     public void testImap165() throws Exception {
         JpaMigrator.main(new String[]{"IMAP165"});
     }
 
-    @Test()
+    @Test
     public void testImap168() throws Exception {
         JpaMigrator.main(new String[]{"IMAP168"});
     }
 
-    @Test()
+    @Test
     public void testImap172() throws Exception {
         JpaMigrator.main(new String[]{"IMAP172"});
     }
 
-    @Test()
+    @Test
     public void testImap176() throws Exception {
         JpaMigrator.main(new String[]{"IMAP176"});
     }
 
-    @Test()
+    @Test
     public void testImap180() throws Exception {
         JpaMigrator.main(new String[]{"IMAP180"});
     }
 
-    @Test()
+    @Test
     public void testImap184() throws Exception {
         JpaMigrator.main(new String[]{"IMAP184"});
     }
-
 }
