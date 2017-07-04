@@ -51,29 +51,13 @@ public class JMSMailQueueItem implements MailQueueItem {
             if (success) {
                 session.commit();
             } else {
-                try {
-                    session.rollback();
-                } catch (JMSException e1) {
-                    // ignore on rollback
-                }
+                JMSMailQueue.rollback(session);
             }
         } catch (JMSException ex) {
             throw new MailQueueException("Unable to commit dequeue operation for mail " + mail.getName(), ex);
         } finally {
-            if (consumer != null) {
-
-                try {
-                    consumer.close();
-                } catch (JMSException e1) {
-                    // ignore on rollback
-                }
-            }
-            try {
-                if (session != null)
-                    session.close();
-            } catch (JMSException e) {
-                // ignore here
-            }
+            JMSMailQueue.closeConsumer(consumer);
+            JMSMailQueue.closeSession(session);
         }
     }
 

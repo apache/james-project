@@ -60,6 +60,7 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 
@@ -75,6 +76,58 @@ import com.google.common.base.Throwables;
  * </p>
  */
 public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPrioritySupport, Disposable {
+
+    protected static void closeSession(Session session) {
+        if (session != null) {
+            try {
+                session.close();
+            } catch (JMSException e) {
+                LOGGER.error("Error while closing session", e);
+            }
+        }
+    }
+
+    protected static void closeProducer(MessageProducer producer) {
+        if (producer != null) {
+            try {
+                producer.close();
+            } catch (JMSException e) {
+                LOGGER.error("Error while closing producer", e);
+            }
+        }
+    }
+
+    protected static void closeConsumer(MessageConsumer consumer) {
+        if (consumer != null) {
+            try {
+                consumer.close();
+            } catch (JMSException e) {
+                LOGGER.error("Error while closing consumer", e);
+            }
+        }
+    }
+
+    protected static void rollback(Session session) {
+        if (session != null) {
+            try {
+                session.rollback();
+            } catch (JMSException e) {
+                LOGGER.error("Error while rolling session back", e);
+            }
+        }
+    }
+
+    private static void closeBrowser(QueueBrowser browser) {
+        if (browser != null) {
+            try {
+                browser.close();
+            } catch (JMSException e) {
+                LOGGER.error("Error while closing browser", e);
+            }
+        }
+    }
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JMSMailQueue.class);
 
     protected final String queueName;
     protected final Connection connection;
@@ -132,47 +185,14 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
                     return createMailQueueItem(connection, session, consumer, message);
                 } else {
                     session.commit();
-
-                    if (consumer != null) {
-
-                        try {
-                            consumer.close();
-                        } catch (JMSException e1) {
-                            // ignore on rollback
-                        }
-                    }
-                    try {
-                        if (session != null)
-                            session.close();
-                    } catch (JMSException e1) {
-                        // ignore here
-                    }
+                    closeConsumer(consumer);
+                    closeSession(session);
                 }
 
             } catch (Exception e) {
-                if (session != null) {
-                    try {
-                        session.rollback();
-                    } catch (JMSException e1) {
-                        // ignore on rollback
-                    }
-                }
-
-                if (consumer != null) {
-
-                    try {
-                        consumer.close();
-                    } catch (JMSException e1) {
-                        // ignore on rollback
-                    }
-                }
-                try {
-                    if (session != null)
-                        session.close();
-                } catch (JMSException e1) {
-                    // ignore here
-                }
-
+                rollback(session);
+                closeConsumer(consumer);
+                closeSession(session);
                 throw new MailQueueException("Unable to dequeue next message", e);
             } finally {
                 timeMetric.stopAndPublish();
@@ -209,23 +229,11 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             enqueuedMailsMetric.increment();
             mailQueueSize.increment();
         } catch (Exception e) {
-            if (session != null) {
-                try {
-                    session.rollback();
-                } catch (JMSException e1) {
-                    // ignore on rollback
-                }
-            }
+            rollback(session);
             throw new MailQueueException("Unable to enqueue mail " + mail, e);
-
         } finally {
             timeMetric.stopAndPublish();
-            try {
-                if (session != null)
-                    session.close();
-            } catch (JMSException e) {
-                // ignore here
-            }
+            closeSession(session);
         }
     }
 
@@ -267,15 +275,8 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             producer.send(message, Message.DEFAULT_DELIVERY_MODE, msgPrio, Message.DEFAULT_TIME_TO_LIVE);
 
         } finally {
-
-            try {
-                if (producer != null)
-                    producer.close();
-            } catch (JMSException e) {
-                // ignore here
-            }
+            closeProducer(producer);
         }
-
     }
 
     /**
@@ -505,20 +506,8 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             logger.error("Unable to get size of queue " + queueName, e);
             throw new MailQueueException("Unable to get size of queue " + queueName, e);
         } finally {
-            try {
-                if (browser != null)
-                    browser.close();
-            } catch (JMSException e1) {
-                // ignore here
-            }
-
-            try {
-                if (session != null)
-                    session.close();
-            } catch (JMSException e1) {
-                // ignore here
-            }
-
+            closeBrowser(browser);
+            closeSession(session);
         }
     }
 
@@ -557,37 +546,12 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             return count;
         } catch (Exception e) {
             logger.error("Unable to flush mail", e);
-            try {
-                session.rollback();
-            } catch (JMSException e1) {
-                // ignore on rollback
-            }
+            rollback(session);
             throw new MailQueueException("Unable to get size of queue " + queueName, e);
         } finally {
-            if (consumer != null) {
-
-                try {
-                    consumer.close();
-                } catch (JMSException e1) {
-                    // ignore on rollback
-                }
-            }
-            if (producer != null) {
-
-                try {
-                    producer.close();
-                } catch (JMSException e1) {
-                    // ignore on rollback
-                }
-            }
-
-            try {
-                if (session != null)
-                    session.close();
-            } catch (JMSException e1) {
-                // ignore here
-            }
-
+            closeConsumer(consumer);
+            closeProducer(producer);
+            closeSession(session);
         }
     }
 
@@ -636,30 +600,12 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             session.commit();
             return messages;
         } catch (Exception e) {
-            try {
-                session.rollback();
-            } catch (JMSException e1) {
-                // ignore on rollback
-            }
+            rollback(session);
             throw new MailQueueException("Unable to remove mails", e);
 
         } finally {
-            if (consumer != null) {
-
-                try {
-                    consumer.close();
-                } catch (JMSException e1) {
-                    // ignore on rollback
-                }
-            }
-
-            try {
-                if (session != null)
-                    session.close();
-            } catch (JMSException e1) {
-                // ignore here
-            }
-
+            closeConsumer(consumer);
+            closeSession(session);
         }
     }
 
@@ -760,39 +706,15 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
                 @Override
                 public void close() {
-
-                    try {
-                        if (myBrowser != null)
-                            myBrowser.close();
-                    } catch (JMSException e1) {
-                        // ignore here
-                    }
-
-                    try {
-                        if (mySession != null)
-                            mySession.close();
-                    } catch (JMSException e1) {
-                        // ignore here
-                    }
-
+                    closeBrowser(myBrowser);
+                    closeSession(mySession);
                 }
             };
 
         } catch (Exception e) {
 
-            try {
-                if (browser != null)
-                    browser.close();
-            } catch (JMSException e1) {
-                // ignore here
-            }
-
-            try {
-                if (session != null)
-                    session.close();
-            } catch (JMSException e1) {
-                // ignore here
-            }
+            closeBrowser(browser);
+            closeSession(session);
 
             logger.error("Unable to browse queue " + queueName, e);
             throw new MailQueueException("Unable to browse queue " + queueName, e);
@@ -804,6 +726,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         try {
             connection.close();
         } catch (JMSException e) {
+            logger.error("Error while closing session", e);
         }
     }
     
