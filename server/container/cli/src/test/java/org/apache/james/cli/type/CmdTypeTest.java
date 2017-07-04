@@ -139,6 +139,11 @@ public class CmdTypeTest {
     }
 
     @Test
+    public void lookupImportEmlFileToMailboxShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("importemlfiletomailbox")).isEqualTo(CmdType.IMPORTEMLFILETOMAILBOX);
+    }
+
+    @Test
     public void lookupSetDefaultMaxStorageQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("setdefaultmaxstoragequota")).isEqualTo(CmdType.SETDEFAULTMAXSTORAGEQUOTA);
     }
