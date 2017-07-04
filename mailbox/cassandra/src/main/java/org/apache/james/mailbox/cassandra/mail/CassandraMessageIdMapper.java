@@ -113,7 +113,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .sorted(Comparator.comparing(MailboxMessage::getUid));
     }
 
-    private CompletableFuture<Boolean> mailboxExists(CassandraMessageDAO.MessageWithoutAttachment messageWithoutAttachment) {
+    private CompletableFuture<Boolean> mailboxExists(MessageWithoutAttachment messageWithoutAttachment) {
         CassandraId cassandraId = (CassandraId) messageWithoutAttachment.getMailboxId();
         return mailboxDAO.retrieveMailbox(cassandraId)
             .thenApply(optional -> {
@@ -127,8 +127,8 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             });
     }
 
-    private Function<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<CassandraMessageDAO.MessageAttachmentRepresentation>>,
-                     CompletableFuture<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<MessageAttachment>>>>
+    private Function<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>,
+                     CompletableFuture<Pair<MessageWithoutAttachment, Stream<MessageAttachment>>>>
                      loadAttachments(FetchType fetchType) {
         if (fetchType == FetchType.Full || fetchType == FetchType.Body) {
             return pair -> attachmentLoader
@@ -139,7 +139,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         }
     }
 
-    private FunctionChainer<Pair<CassandraMessageDAO.MessageWithoutAttachment, Stream<MessageAttachment>>, SimpleMailboxMessage> toMailboxMessages() {
+    private FunctionChainer<Pair<MessageWithoutAttachment, Stream<MessageAttachment>>, SimpleMailboxMessage> toMailboxMessages() {
         return Throwing.function(pair -> pair.getLeft()
             .toMailboxMessage(pair.getRight()
                 .collect(Guavate.toImmutableList())));

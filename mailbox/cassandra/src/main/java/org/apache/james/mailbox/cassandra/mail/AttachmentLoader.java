@@ -42,10 +42,10 @@ public class AttachmentLoader {
         this.attachmentMapper = attachmentMapper;
     }
 
-    public CompletableFuture<Collection<MessageAttachment>> getAttachments(List<CassandraMessageDAO.MessageAttachmentRepresentation> attachmentRepresentations) {
+    public CompletableFuture<Collection<MessageAttachment>> getAttachments(List<MessageAttachmentRepresentation> attachmentRepresentations) {
         CompletableFuture<Map<AttachmentId, Attachment>> attachmentsByIdFuture =
             attachmentsById(attachmentRepresentations.stream()
-                .map(CassandraMessageDAO.MessageAttachmentRepresentation::getAttachmentId)
+                .map(MessageAttachmentRepresentation::getAttachmentId)
                 .collect(Guavate.toImmutableSet()));
 
         return attachmentsByIdFuture.thenApply(attachmentsById ->
@@ -54,7 +54,7 @@ public class AttachmentLoader {
                 .collect(Guavate.toImmutableList()));
     }
 
-    private MessageAttachment constructMessageAttachment(Attachment attachment, CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation) {
+    private MessageAttachment constructMessageAttachment(Attachment attachment, MessageAttachmentRepresentation messageAttachmentRepresentation) {
         return MessageAttachment.builder()
                 .attachment(attachment)
                 .name(messageAttachmentRepresentation.getName().orElse(null))

@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.apache.james.mailbox.cassandra.mail.MessageAttachmentRepresentation;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.junit.Test;
@@ -45,9 +46,9 @@ public class MessageAttachmentRepresentationByIdTest {
     @Test
     public void buildShouldWorkWhenMandatoryAttributesAreGiven() {
         AttachmentId attachmentId = AttachmentId.from("1");
-        CassandraMessageDAO.MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, Optional.empty(), Optional.empty(), false);
+        MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new MessageAttachmentRepresentation(attachmentId, Optional.empty(), Optional.empty(), false);
 
-        CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation = CassandraMessageDAO.MessageAttachmentRepresentation.builder()
+        MessageAttachmentRepresentation messageAttachmentRepresentation = MessageAttachmentRepresentation.builder()
             .attachmentId(attachmentId)
             .build();
 
@@ -58,7 +59,7 @@ public class MessageAttachmentRepresentationByIdTest {
     public void buildShouldSetIsInlineDefaultValueWhenNotGiven() {
         AttachmentId attachmentId = AttachmentId.from("1");
 
-        CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation = CassandraMessageDAO.MessageAttachmentRepresentation.builder()
+        MessageAttachmentRepresentation messageAttachmentRepresentation = MessageAttachmentRepresentation.builder()
             .attachmentId(attachmentId)
             .build();
 
@@ -68,9 +69,9 @@ public class MessageAttachmentRepresentationByIdTest {
     @Test
     public void buildShouldAcceptInlineAndWithoutCid() {
         AttachmentId attachmentId = AttachmentId.from("1");
-        CassandraMessageDAO.MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, Optional.empty(), Optional.empty(), true);
+        MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new MessageAttachmentRepresentation(attachmentId, Optional.empty(), Optional.empty(), true);
 
-        CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation = CassandraMessageDAO.MessageAttachmentRepresentation.builder()
+        MessageAttachmentRepresentation messageAttachmentRepresentation = MessageAttachmentRepresentation.builder()
             .attachmentId(attachmentId)
             .isInline(true)
             .build();
@@ -81,9 +82,9 @@ public class MessageAttachmentRepresentationByIdTest {
     @Test
     public void buildShouldSetAttributesWhenAllAreGiven() {
         AttachmentId attachmentId = AttachmentId.from("1");
-        CassandraMessageDAO.MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, Optional.of("name"), Optional.of(Cid.from("cid")), true);
+        MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new MessageAttachmentRepresentation(attachmentId, Optional.of("name"), Optional.of(Cid.from("cid")), true);
 
-        CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation = CassandraMessageDAO.MessageAttachmentRepresentation.builder()
+        MessageAttachmentRepresentation messageAttachmentRepresentation = MessageAttachmentRepresentation.builder()
             .attachmentId(attachmentId)
             .name("name")
             .cid(Cid.from("cid"))

@@ -33,6 +33,7 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.util.OptionalConverter;
+
 import org.assertj.core.data.MapEntry;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,7 +68,7 @@ public class AttachmentLoaderTest {
         Optional<String> name = Optional.of("name1");
         Optional<Cid> cid = Optional.empty();
         boolean isInlined = false;
-        CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, name, cid, isInlined);
+        MessageAttachmentRepresentation attachmentRepresentation = new MessageAttachmentRepresentation(attachmentId, name, cid, isInlined);
 
         Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation, attachmentRepresentation))
             .join();
@@ -94,8 +95,8 @@ public class AttachmentLoaderTest {
         Optional<String> name2 = Optional.of("name2");
         Optional<Cid> cid = Optional.empty();
         boolean isInlined = false;
-        CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation1 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, name1, cid, isInlined);
-        CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation2 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, name2, cid, isInlined);
+        MessageAttachmentRepresentation attachmentRepresentation1 = new MessageAttachmentRepresentation(attachmentId, name1, cid, isInlined);
+        MessageAttachmentRepresentation attachmentRepresentation2 = new MessageAttachmentRepresentation(attachmentId, name2, cid, isInlined);
 
         Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2))
             .join();
@@ -128,8 +129,8 @@ public class AttachmentLoaderTest {
         Optional<String> name2 = Optional.of("name2");
         Optional<Cid> cid = Optional.empty();
         boolean isInlined = false;
-        CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation1 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId1, name1, cid, isInlined);
-        CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation2 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId2, name2, cid, isInlined);
+        MessageAttachmentRepresentation attachmentRepresentation1 = new MessageAttachmentRepresentation(attachmentId1, name1, cid, isInlined);
+        MessageAttachmentRepresentation attachmentRepresentation2 = new MessageAttachmentRepresentation(attachmentId2, name2, cid, isInlined);
 
         Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2))
             .join();

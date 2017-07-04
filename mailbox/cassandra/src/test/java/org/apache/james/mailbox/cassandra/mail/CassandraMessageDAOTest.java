@@ -106,7 +106,7 @@ public class CassandraMessageDAOTest {
 
         testee.save(messageWith1Attachment).join();
 
-        List<Optional<CassandraMessageDAO.MessageAttachmentRepresentation>> attachmentRepresentation = testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Optional.empty())
+        List<Optional<MessageAttachmentRepresentation>> attachmentRepresentation = testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Optional.empty())
                 .get()
                 .map(pair -> pair.getRight())
                 .map(streamAttachemnt -> streamAttachemnt.findFirst())
@@ -128,7 +128,7 @@ public class CassandraMessageDAOTest {
 
         testee.save(messageWith1Attachment).join();
 
-        List<Optional<CassandraMessageDAO.MessageAttachmentRepresentation>> attachmentRepresentation = testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Optional.empty())
+        List<Optional<MessageAttachmentRepresentation>> attachmentRepresentation = testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Optional.empty())
                 .get()
                 .map(pair -> pair.getRight())
                 .map(streamAttachemnt -> streamAttachemnt.findFirst())
