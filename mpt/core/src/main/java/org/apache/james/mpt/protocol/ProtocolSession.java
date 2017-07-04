@@ -348,12 +348,7 @@ public class ProtocolSession implements ProtocolInteractor {
             if (!match(expectedLine, testLine)) {
                 String errMsg = "\nLocation: " + location + "\nLastClientMsg: " + lastClientMessage + "\nExpected: '"
                         + expectedLine + "'\nActual   : '" + testLine + "'";
-                if (continueAfterFailure) {
-                    System.out.println(errMsg);
-                }
-                else {
-                    throw new InvalidServerResponseException(errMsg);
-                }
+                handleFailure(continueAfterFailure, errMsg);
             }
         }
 
@@ -467,12 +462,7 @@ public class ProtocolSession implements ProtocolInteractor {
                         errMsg.append(iter.next());
                     }
                     errMsg.append("\nActual: ").append(actualLine);
-                    if (continueAfterFailure) {
-                        System.out.println(errMsg.toString());
-                    }
-                    else {
-                        throw new InvalidServerResponseException(errMsg.toString());
-                    }
+                    handleFailure(continueAfterFailure, errMsg.toString());
                 }
             }
         }
@@ -493,12 +483,7 @@ public class ProtocolSession implements ProtocolInteractor {
             String testLine = session.readLine();
             if (!"+".equals(testLine) || !continued) {
                 final String message = "Expected continuation";
-                if (continueAfterFailure) {
-                    System.out.print(message);
-                }
-                else {
-                    throw new InvalidServerResponseException(message);
-                }
+                handleFailure(continueAfterFailure, message);
             }
             continuationExpected = false;
             continued = false;
@@ -510,6 +495,14 @@ public class ProtocolSession implements ProtocolInteractor {
 
         public boolean isClient() {
             return false;
+        }
+    }
+
+    private void handleFailure(boolean continueAfterFailure, String message) throws InvalidServerResponseException {
+        if (continueAfterFailure) {
+            LOGGER.warn(message);
+        } else {
+            throw new InvalidServerResponseException(message);
         }
     }
 

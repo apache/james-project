@@ -166,8 +166,6 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
                 MaildirMessageName messageName = folder.getMessageNameByUid(mailboxSession, member.getUid());
                 if (messageName != null) {
                     File messageFile = messageName.getFile();
-                    // System.out.println("save existing " + message +
-                    // " as " + messageFile.getName());
                     messageName.setFlags(member.createFlags());
                     // this automatically moves messages from new to cur if
                     // needed
@@ -314,16 +312,12 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         if (message.isRecent()) {
             messageName.setFlags(message.createFlags());
             newMessageFile = new File(folder.getNewFolder(), messageName.getFullName());
-            // System.out.println("save new recent " + message + " as " +
-            // newMessageFile.getName());
         }
         // appended via IMAP (might already have flags etc, goes to ./cur
         // directly)
         else {
             messageName.setFlags(message.createFlags());
             newMessageFile = new File(folder.getCurFolder(), messageName.getFullName());
-            // System.out.println("save new not recent " + message + " as "
-            // + newMessageFile.getName());
         }
         try {
             FileUtils.moveFile(messageFile, newMessageFile);

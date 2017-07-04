@@ -25,6 +25,9 @@ import javax.mail.internet.ContentType;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * <p>Manages texts encoded as <code>text/plain; format=flowed</code>.</p>
  * <p>As a reference see:</p>
@@ -48,6 +51,8 @@ import java.io.IOException;
  * </ul>
  */
 public final class FlowedMessageUtils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FlowedMessageUtils.class);
+
     public static final char RFC2646_SPACE = ' ';
     public static final char RFC2646_QUOTE = '>';
     public static final String RFC2646_SIGNATURE = "-- ";
@@ -157,9 +162,10 @@ public final class FlowedMessageUtils {
             ct.getParameterList().remove("format");
             ct.getParameterList().remove("delsp");
             
-            if (ct.toString().contains("flowed"))
-                System.out.println("\n\n*************************\n* ERROR!!! FlowedMessageUtils dind't remove the flowed correctly!\n******************\n\n" + ct.toString() + " \n " + ct.toString() + "\n");
-            
+            if (ct.toString().contains("flowed")) {
+                LOGGER.error("FlowedMessageUtils dind't remove the flowed correctly");
+            }
+
             m.setContent(deflowed, ct.toString());
             m.saveChanges();
         }
