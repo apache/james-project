@@ -40,6 +40,8 @@ public interface MailboxProbe {
 
     void deleteMailbox(String namespace, String user, String name);
 
+	void importEmlFileToMailBox(String namespace, String user, String name, String emlpath);
+	
     ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate,
             boolean isRecent, Flags flags) throws MailboxException;
 
