@@ -332,7 +332,24 @@ public class ServerCmdTest {
         testee.executeCommandLine(commandLine);
         control.verify();
     }
+    
+    @Test
+    public void importEmlFileToMailboxCommandShouldWork() throws Exception {
+        String user = "user@domain";
+        String namespace = "#private";
+        String name = "INBOX.test";
+        String emlpath = ClassLoader.getSystemResource("eml/frnog.eml").getFile();
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEMLFILETOMAILBOX.getCommand(), namespace, user, name, emlpath};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
+        mailboxProbe.importEmlFileToMailBox(namespace, user, name, emlpath);
+        expectLastCall();
+
+        control.replay();
+        testee.executeCommandLine(commandLine);
+        control.verify();
+    }
+	
     @Test
     public void listUserMailboxesMappingsCommandShouldWork() throws Exception {
         String user = "user@domain";
@@ -811,6 +828,23 @@ public class ServerCmdTest {
             control.verify();
         }
     }
+	
+	
+    @Test(expected = InvalidArgumentNumberException.class)
+    public void importEmlFileToMailboxCommandShouldThrowOnMissingArguments() throws Exception {
+        String user = "user@domain";
+        String namespace = "#private";
+        String name = "INBOX.test";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEMLFILETOMAILBOX.getCommand(), namespace, user, name};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        control.replay();
+        try {
+            testee.executeCommandLine(commandLine);
+        } finally {
+            control.verify();
+        }
+    }
 
     @Test(expected = InvalidArgumentNumberException.class)
     public void listUserMailboxesMappingsCommandShouldThrowOnMissingArguments() throws Exception {
@@ -1090,6 +1124,23 @@ public class ServerCmdTest {
         }
     }
 
+    @Test(expected = InvalidArgumentNumberException.class)
+    public void importEmlFileToMailboxCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String user = "user@domain";
+        String namespace = "#private";
+        String name = "INBOX.test";
+        String emlpath = "./deneme.eml";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEMLFILETOMAILBOX.getCommand(), namespace, user, name, emlpath, ADDITIONAL_ARGUMENT};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        control.replay();
+        try {
+            testee.executeCommandLine(commandLine);
+        } finally {
+            control.verify();
+        }
+    }
+	
     @Test(expected = InvalidArgumentNumberException.class)
     public void listUserMailboxesMappingsCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
