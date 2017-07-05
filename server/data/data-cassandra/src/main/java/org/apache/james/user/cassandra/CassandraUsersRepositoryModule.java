@@ -44,8 +44,7 @@ public class CassandraUsersRepositoryModule implements CassandraModule {
                         .addPartitionKey(CassandraUserTable.NAME, text())
                         .addColumn(CassandraUserTable.REALNAME, text())
                         .addColumn(CassandraUserTable.PASSWORD, text())
-                        .addColumn(CassandraUserTable.ALGORITHM, text()))
-                    );
+                        .addColumn(CassandraUserTable.ALGORITHM, text())));
         types = ImmutableList.of();
     }
 
