@@ -262,6 +262,21 @@ public class MailboxManagementTest {
 				.isEqualTo(IOUtils.toString(mailboxMessage.getFullContent(), Charsets.UTF_8));
 	}
 
+    @Test
+    public void importEmlFileToMailBoxShouldNotImportEmlFileWithWrongPathToGivenMailbox() throws Exception {
+        Mailbox mailbox = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, USER, "name"),
+                UID_VALIDITY);
+        inMemoryMapperFactory.createMailboxMapper(session).save(mailbox);
+        String emlpath = ClassLoader.getSystemResource("eml/frnog.eml").getFile();
+        mailboxManagerManagement.importEmlFileToMailBox(MailboxConstants.USER_NAMESPACE, USER, "name", "wrong_path" + emlpath);
+
+        assertThat(inMemoryMapperFactory.getMessageMapper(session).countMessagesInMailbox(mailbox)).isEqualTo(0);
+        Iterator<MailboxMessage> iterator = inMemoryMapperFactory.getMessageMapper(session).findInMailbox(mailbox,
+                MessageRange.all(), null, 1);
+        assertFalse(iterator.hasNext());
+    }
+
+	
     @Test(expected = NullPointerException.class)
     public void deleteMailboxShouldThrowOnNullNamespace() {
         mailboxManagerManagement.deleteMailbox(null, "a", "a");
