@@ -338,7 +338,7 @@ public class ServerCmdTest {
         String user = "user@domain";
         String namespace = "#private";
         String name = "INBOX.test";
-        String emlpath = ClassLoader.getSystemResource("eml/frnog.eml").getFile();
+        String emlpath = "./src/test/resources/eml/frnog.eml";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEMLFILETOMAILBOX.getCommand(), namespace, user, name, emlpath};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
