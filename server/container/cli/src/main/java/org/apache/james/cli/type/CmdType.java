@@ -41,7 +41,7 @@ public enum CmdType {
     CREATEMAILBOX("CreateMailbox", "namespace", "user", "name"),
     LISTUSERMAILBOXES("ListUserMailboxes", "user"),
     DELETEMAILBOX("DeleteMailbox", "namespace", "user", "name"),
-    IMPORTEMLFILETOMAILBOX("importemlfiletomailbox", "namespace", "user", "name", "path"),
+    IMPORTEMLFILETOMAILBOX("ImportEmlFileToMailbox", "namespace", "user", "name", "path"),
     GETSTORAGEQUOTA("GetStorageQuota", "quotaroot"),
     GETMESSAGECOUNTQUOTA("GetMessageCountQuota", "quotaroot"),
     GETQUOTAROOT("GetQuotaroot", "namespace", "user", "name"),
