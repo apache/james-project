@@ -104,6 +104,51 @@ public class CassandraConfiguration {
             return this;
         }
 
+        public Builder messageReadChunkSize(Optional<Integer> value) {
+            value.ifPresent(this::messageReadChunkSize);
+            return this;
+        }
+
+        public Builder expungeChunkSize(Optional<Integer> value) {
+            value.ifPresent(this::expungeChunkSize);
+            return this;
+        }
+
+        public Builder flagsUpdateChunkSize(Optional<Integer> value) {
+            value.ifPresent(this::flagsUpdateChunkSize);
+            return this;
+        }
+
+        public Builder flagsUpdateMessageIdMaxRetry(Optional<Integer> value) {
+            value.ifPresent(this::flagsUpdateMessageIdMaxRetry);
+            return this;
+        }
+
+        public Builder flagsUpdateMessageMaxRetry(Optional<Integer> value) {
+            value.ifPresent(this::flagsUpdateMessageMaxRetry);
+            return this;
+        }
+
+        public Builder modSeqMaxRetry(Optional<Integer> value) {
+            value.ifPresent(this::modSeqMaxRetry);
+            return this;
+        }
+
+        public Builder uidMaxRetry(Optional<Integer> value) {
+            value.ifPresent(this::uidMaxRetry);
+            return this;
+        }
+
+        public Builder aclMaxRetry(Optional<Integer> value) {
+            value.ifPresent(this::aclMaxRetry);
+            return this;
+        }
+
+        public Builder fetchNextPageInAdvanceRow(Optional<Integer> value) {
+            value.ifPresent(this::fetchNextPageInAdvanceRow);
+            return this;
+        }
+
         public CassandraConfiguration build() {
             return new CassandraConfiguration(aclMaxRetry.orElse(DEFAULT_ACL_MAX_RETRY),
                 messageReadChunkSize.orElse(DEFAULT_MESSAGE_CHUNK_SIZE_ON_READ),

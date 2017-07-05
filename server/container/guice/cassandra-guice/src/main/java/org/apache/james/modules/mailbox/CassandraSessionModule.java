@@ -54,6 +54,7 @@ import com.datastax.driver.core.QueryLogger;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.exceptions.NoHostAvailableException;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -76,11 +77,19 @@ public class CassandraSessionModule extends AbstractModule {
     private static final int DEFAULT_READ_TIMEOUT_MILLIS = 5000;
     private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
     private static final String BATCHSIZES_FILE_NAME = "batchsizes";
+    private static final String MAILBOX_MAX_RETRY_ACL = "mailbox.max.retry.acl";
+    private static final String MAILBOX_MAX_RETRY_MODSEQ = "mailbox.max.retry.modseq";
+    private static final String MAILBOX_MAX_RETRY_UID = "mailbox.max.retry.uid";
+    private static final String MAILBOX_MAX_RETRY_MESSAGE_FLAGS_UPDATE = "mailbox.max.retry.message.flags.update";
+    private static final String MAILBOX_MAX_RETRY_MESSAGE_ID_FLAGS_UPDATE = "mailbox.max.retry.message.id.flags.update";
+    private static final String FETCH_ADVANCE_ROW_COUNT = "fetch.advance.row.count";
+    private static final String CHUNK_SIZE_FLAGS_UPDATE = "chunk.size.flags.update";
+    private static final String CHUNK_SIZE_MESSAGE_READ = "chunk.size.message.read";
+    private static final String CHUNK_SIZE_EXPUNGE = "chunk.size.expunge";
 
     @Override
     protected void configure() {
         bind(ScheduledExecutorService.class).toProvider(ScheduledExecutorServiceProvider.class);
-        bind(CassandraConfiguration.class).toInstance(CassandraConfiguration.DEFAULT_CONFIGURATION);
         bind(CassandraUtils.class).in(Scopes.SINGLETON);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
@@ -241,6 +250,34 @@ public class CassandraSessionModule extends AbstractModule {
     @Provides
     private AsyncRetryExecutor provideAsyncRetryExecutor(ScheduledExecutorService scheduler) {
         return new AsyncRetryExecutor(scheduler);
+    }
+
+    @VisibleForTesting
+    @Provides
+    @Singleton
+    CassandraConfiguration provideCassandraConfiguration(CassandraSessionConfiguration sessionConfiguration) throws ConfigurationException {
+        PropertiesConfiguration propertiesConfiguration = sessionConfiguration.getConfiguration();
+
+        return CassandraConfiguration.builder()
+            .aclMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_ACL, null)))
+            .modSeqMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_MODSEQ, null)))
+            .uidMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_UID, null)))
+            .flagsUpdateMessageMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_MESSAGE_FLAGS_UPDATE, null)))
+            .flagsUpdateMessageIdMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_MESSAGE_ID_FLAGS_UPDATE, null)))
+            .fetchNextPageInAdvanceRow(Optional.ofNullable(
+                propertiesConfiguration.getInteger(FETCH_ADVANCE_ROW_COUNT, null)))
+            .flagsUpdateChunkSize(Optional.ofNullable(
+                propertiesConfiguration.getInteger(CHUNK_SIZE_FLAGS_UPDATE, null)))
+            .messageReadChunkSize(Optional.ofNullable(
+                propertiesConfiguration.getInteger(CHUNK_SIZE_MESSAGE_READ, null)))
+            .expungeChunkSize(Optional.ofNullable(
+                propertiesConfiguration.getInteger(CHUNK_SIZE_EXPUNGE, null)))
+            .build();
     }
 
     private PropertiesConfiguration getConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {

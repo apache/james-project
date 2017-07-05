@@ -22,6 +22,8 @@ package org.apache.james.backends.cassandra.utils;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import javax.inject.Inject;
+
 import org.apache.james.backends.cassandra.CassandraConfiguration;
 
 import com.datastax.driver.core.ResultSet;
@@ -33,6 +35,7 @@ public class CassandraUtils {
 
     private final CassandraConfiguration cassandraConfiguration;
 
+    @Inject
     public CassandraUtils(CassandraConfiguration cassandraConfiguration) {
         this.cassandraConfiguration = cassandraConfiguration;
     }
