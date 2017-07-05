@@ -123,7 +123,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
 
         this(uidProvider, modSeqProvider, session, messageDAO, messageIdDAO, imapUidDAO, mailboxCounterDAO,
              mailboxRecentsDAO, mailboxDAO, mailboxPathDAO, firstUnseenDAO, applicableFlagDAO, deletedMesageDAO,
-            CassandraUtils.DEFAULT_CASSANDRA_UTILS, CassandraConfiguration.DEFAULT_CONFIGURATION);
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION, CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @Override

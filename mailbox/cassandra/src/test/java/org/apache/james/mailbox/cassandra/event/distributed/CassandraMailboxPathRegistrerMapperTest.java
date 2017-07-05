@@ -48,7 +48,7 @@ public class CassandraMailboxPathRegistrerMapperTest {
     public void setUp() {
         mapper = new CassandraMailboxPathRegisterMapper(cassandra.getConf(),
             cassandra.getTypesProvider(),
-            CassandraUtils.DEFAULT_CASSANDRA_UTILS,
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             CASSANDRA_TIME_OUT_IN_S);
     }
 
@@ -112,7 +112,7 @@ public class CassandraMailboxPathRegistrerMapperTest {
         int verySmallTimeoutInSecond = 1;
         mapper = new CassandraMailboxPathRegisterMapper(cassandra.getConf(),
             cassandra.getTypesProvider(),
-            CassandraUtils.DEFAULT_CASSANDRA_UTILS,
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             verySmallTimeoutInSecond);
         mapper.doRegister(MAILBOX_PATH, TOPIC);
         Thread.sleep(2 * TimeUnit.SECONDS.toMillis(verySmallTimeoutInSecond));

@@ -33,7 +33,7 @@ public class CassandraSubscriptionMapperTest extends SubscriptionMapperTest {
     @Override
     protected SubscriptionMapper createSubscriptionMapper() {
         cassandra.ensureAllTables();
-        return new CassandraSubscriptionMapper(cassandra.getConf(), CassandraUtils.DEFAULT_CASSANDRA_UTILS);
+        return new CassandraSubscriptionMapper(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     @After

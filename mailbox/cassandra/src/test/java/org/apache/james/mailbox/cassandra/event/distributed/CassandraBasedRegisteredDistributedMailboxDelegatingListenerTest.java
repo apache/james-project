@@ -77,7 +77,7 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
             new CassandraMailboxPathRegisterMapper(
                 cassandra.getConf(),
                 cassandra.getTypesProvider(),
-                CassandraUtils.DEFAULT_CASSANDRA_UTILS,
+                CassandraUtils.WITH_DEFAULT_CONFIGURATION,
                 CASSANDRA_TIME_OUT_IN_S),
             SCHEDULER_PERIOD_IN_S);
         registeredDelegatingMailboxListener1 = new RegisteredDelegatingMailboxListener(
@@ -92,7 +92,7 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
             new CassandraMailboxPathRegisterMapper(
                 cassandra.getConf(),
                 cassandra.getTypesProvider(),
-                CassandraUtils.DEFAULT_CASSANDRA_UTILS,
+                CassandraUtils.WITH_DEFAULT_CONFIGURATION,
                 CASSANDRA_TIME_OUT_IN_S),
             SCHEDULER_PERIOD_IN_S);
         registeredDelegatingMailboxListener2 = new RegisteredDelegatingMailboxListener(
@@ -107,7 +107,7 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
             new CassandraMailboxPathRegisterMapper(
                 cassandra.getConf(),
                 cassandra.getTypesProvider(),
-                CassandraUtils.DEFAULT_CASSANDRA_UTILS,
+                CassandraUtils.WITH_DEFAULT_CONFIGURATION,
                 CASSANDRA_TIME_OUT_IN_S),
             SCHEDULER_PERIOD_IN_S);
         registeredDelegatingMailboxListener3 = new RegisteredDelegatingMailboxListener(

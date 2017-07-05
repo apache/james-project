@@ -50,7 +50,7 @@ public class CassandraHostSystem extends JamesManageSieveHostSystem {
     }
 
     protected static UsersRepository createUsersRepository() {
-        CassandraUsersRepository cassandraUsersRepository = new CassandraUsersRepository(CASSANDRA_CLUSTER.getConf(), CassandraUtils.DEFAULT_CASSANDRA_UTILS);
+        CassandraUsersRepository cassandraUsersRepository = new CassandraUsersRepository(CASSANDRA_CLUSTER.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         cassandraUsersRepository.setEnableVirtualHosting(false);
         return cassandraUsersRepository;
     }

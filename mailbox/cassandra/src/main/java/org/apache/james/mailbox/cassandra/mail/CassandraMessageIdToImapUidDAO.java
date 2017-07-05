@@ -92,7 +92,7 @@ public class CassandraMessageIdToImapUidDAO {
 
     @VisibleForTesting
     public CassandraMessageIdToImapUidDAO(Session session, CassandraMessageId.Factory messageIdFactory) {
-        this(session, messageIdFactory, CassandraUtils.DEFAULT_CASSANDRA_UTILS);
+        this(session, messageIdFactory, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareDelete(Session session) {

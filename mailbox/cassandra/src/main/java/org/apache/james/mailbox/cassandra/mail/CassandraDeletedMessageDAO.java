@@ -75,7 +75,7 @@ public class CassandraDeletedMessageDAO {
 
     @VisibleForTesting
     public CassandraDeletedMessageDAO(Session session) {
-        this(session, CassandraUtils.DEFAULT_CASSANDRA_UTILS);
+        this(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareAllUidStatement(Session session) {

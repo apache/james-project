@@ -37,7 +37,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
@@ -87,7 +86,7 @@ public class CassandraMailboxDAO {
 
     @VisibleForTesting
     public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider) {
-        this(session, typesProvider, CassandraUtils.DEFAULT_CASSANDRA_UTILS, CassandraConfiguration.DEFAULT_CONFIGURATION);
+        this(session, typesProvider, CassandraUtils.WITH_DEFAULT_CONFIGURATION, CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareInsert(Session session) {

@@ -107,7 +107,7 @@ public class CassandraMailboxPathDAO {
 
     @VisibleForTesting
     public CassandraMailboxPathDAO(Session session, CassandraTypesProvider typesProvider) {
-        this(session, typesProvider, CassandraUtils.DEFAULT_CASSANDRA_UTILS);
+        this(session, typesProvider, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareDelete(Session session) {

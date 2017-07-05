@@ -31,7 +31,7 @@ import com.datastax.driver.core.Row;
 
 public class CassandraUtils {
 
-    public static final CassandraUtils DEFAULT_CASSANDRA_UTILS = new CassandraUtils(CassandraConfiguration.DEFAULT_CONFIGURATION);
+    public static final CassandraUtils WITH_DEFAULT_CONFIGURATION = new CassandraUtils(CassandraConfiguration.DEFAULT_CONFIGURATION);
 
     private final CassandraConfiguration cassandraConfiguration;
 

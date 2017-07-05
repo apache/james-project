@@ -60,7 +60,7 @@ public class CassandraMailboxRecentsDAO {
 
     @VisibleForTesting
     public CassandraMailboxRecentsDAO(Session session) {
-        this(session, CassandraUtils.DEFAULT_CASSANDRA_UTILS);
+        this(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement createReadStatement(Session session) {

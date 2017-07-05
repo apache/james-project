@@ -87,7 +87,7 @@ public class CassandraDomainList extends AbstractDomainList {
 
     @VisibleForTesting
     CassandraDomainList(Session session) {
-        this(session, CassandraUtils.DEFAULT_CASSANDRA_UTILS);
+        this(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     @Override

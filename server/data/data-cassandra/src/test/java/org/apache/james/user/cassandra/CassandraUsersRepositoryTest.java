@@ -37,6 +37,6 @@ public class CassandraUsersRepositoryTest extends AbstractUsersRepositoryTest {
     @Override
     protected AbstractUsersRepository getUsersRepository() throws Exception {
         cassandra = CassandraCluster.create(new CassandraUsersRepositoryModule());
-        return new CassandraUsersRepository(cassandra.getConf(), CassandraUtils.DEFAULT_CASSANDRA_UTILS);
+        return new CassandraUsersRepository(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 }
