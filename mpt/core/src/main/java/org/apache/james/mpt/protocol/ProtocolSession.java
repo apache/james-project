@@ -264,6 +264,7 @@ public class ProtocolSession implements ProtocolInteractor {
         }
 
         private void writeMessage(Session session) throws Exception {
+            LOGGER.debug("C: {}", message);
             session.writeLine(message);
         }
 
@@ -345,6 +346,7 @@ public class ProtocolSession implements ProtocolInteractor {
 
         protected void checkResponse(Session session, boolean continueAfterFailure) throws Exception {
             String testLine = readLine(session);
+            LOGGER.debug("S: {}", testLine);
             if (!match(expectedLine, testLine)) {
                 String errMsg = "\nLocation: " + location + "\nLastClientMsg: " + lastClientMessage + "\nExpected: '"
                         + expectedLine + "'\nActual   : '" + testLine + "'";
