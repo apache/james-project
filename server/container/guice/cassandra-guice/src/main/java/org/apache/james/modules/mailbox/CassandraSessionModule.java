@@ -130,7 +130,7 @@ public class CassandraSessionModule extends AbstractModule {
 
     @Provides
     @Singleton
-    Cluster provideCluster(CassandraSessionConfiguration cassandraSessionConfiguration, AsyncRetryExecutor executor) throws FileNotFoundException, ConfigurationException, ExecutionException, InterruptedException {
+    Cluster provideCluster(CassandraSessionConfiguration cassandraSessionConfiguration, AsyncRetryExecutor executor) throws ConfigurationException, ExecutionException, InterruptedException {
         PropertiesConfiguration configuration = cassandraSessionConfiguration.getConfiguration();
         List<Host> servers = listCassandraServers(configuration);
         QueryLoggerConfiguration queryLoggerConfiguration = getCassandraQueryLoggerConf(configuration);
