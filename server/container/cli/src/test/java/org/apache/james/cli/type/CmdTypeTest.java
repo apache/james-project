@@ -140,7 +140,7 @@ public class CmdTypeTest {
 
     @Test
     public void lookupImportEmlFileToMailboxShouldReturnEnumValue() {
-        assertThat(CmdType.lookup("importemlfiletomailbox")).isEqualTo(CmdType.IMPORTEMLFILETOMAILBOX);
+        assertThat(CmdType.lookup("ImportEmlFileToMailbox")).isEqualTo(CmdType.IMPORTEMLFILETOMAILBOX);
     }
 
     @Test
