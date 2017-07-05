@@ -73,7 +73,7 @@ public class AuthenticationFilter implements Filter {
         try {
             chain.doFilter(authenticate(httpRequest), response);
         } catch (UnauthorizedException | NoValidAuthHeaderException | MailboxSessionCreationException | JwtException e) {
-            LOGGER.error("Exception occurred during authentication process", e);
+            LOGGER.info("Exception occurred during authentication process", e);
             httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
