@@ -60,11 +60,11 @@ public class JpaMigrator {
 
             for (String jira: jiras) {
                 JpaMigrateCommand jiraJpaMigratable = (JpaMigrateCommand) Class.forName(JPA_MIGRATION_COMMAND_PACKAGE + "." + jira.toUpperCase(Locale.US) + JpaMigrateCommand.class.getSimpleName()).newInstance();
-                LOGGER.info("Now executing " + jira + " migration.");
+                LOGGER.info("Now executing {} migration", jira);
                 em.getTransaction().begin();
                 jiraJpaMigratable.migrate(em);
                 em.getTransaction().commit();
-                LOGGER.info(jira + " migration is successfully achieved.");
+                LOGGER.info("{} migration is successfully achieved", jira);
             }
         } catch (Throwable t) {
             throw new JpaMigrateException(t);

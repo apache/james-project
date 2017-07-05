@@ -132,9 +132,9 @@ public abstract class AbstractFileRepository implements Repository, Configurable
             File newFile = new File(directory, newFilename);
 
             if (origFile.renameTo(newFile)) {
-                getLogger().info("Renamed " + origFile + " to " + newFile);
+                getLogger().info("Renamed {} to {}", origFile, newFile);
             } else {
-                getLogger().info("Unable to rename " + origFile + " to " + newFile);
+                getLogger().info("Unable to rename {} to {}", origFile, newFile);
             }
         }
 

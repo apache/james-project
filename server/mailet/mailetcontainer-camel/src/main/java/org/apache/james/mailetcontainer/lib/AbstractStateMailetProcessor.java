@@ -429,8 +429,8 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
                 // error processor. That is currently the
                 // normal situation for James, and the message
                 // will show up in the error store.
-                logger.warn("Message " + mail.getName() + " reached the end of this processor, and is automatically deleted." +
-                    "  This may indicate a configuration error.");
+                logger.warn("Message {} reached the end of this processor, and is automatically deleted. " +
+                    "This may indicate a configuration error.", mail.getName());
             }
 
             // Set the mail to ghost state

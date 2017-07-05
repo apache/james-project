@@ -370,7 +370,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             long modSeq = key.getModSeq();
             return SearchQuery.or(SearchQuery.modSeqEquals(modSeq), SearchQuery.modSeqGreaterThan(modSeq));
         default:
-            session.getLog().warn("Ignoring unknown search key " + type);
+            session.getLog().warn("Ignoring unknown search key {}", type);
             return SearchQuery.all();
         }
     }

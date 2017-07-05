@@ -65,8 +65,6 @@ import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sun.misc.IOUtils;
-
 /**
  * Mail repository that is backed by a JCR content repository.
  */
@@ -618,9 +616,9 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
                         nodes.nextNode().remove();
                     }
                     session.save();
-                    LOGGER.info("Mail " + key + " removed from repository");
+                    LOGGER.info("Mail {} removed from repository", key);
                 } else {
-                    LOGGER.warn("Mail " + key + " not found");
+                    LOGGER.warn("Mail {} not found", key);
                 }
             } finally {
                 session.logout();
@@ -655,7 +653,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
                     setMail(node, mail);
                 }
                 session.save();
-                LOGGER.info("Mail " + mail.getName() + " stored in repository");
+                LOGGER.info("Mail {} stored in repository", mail.getName());
             } finally {
                 session.logout();
             }
