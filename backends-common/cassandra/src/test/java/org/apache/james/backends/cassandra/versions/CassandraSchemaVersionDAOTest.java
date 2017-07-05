@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,13 +35,12 @@ public class CassandraSchemaVersionDAOTest {
 
     private CassandraSchemaVersionDAO testee;
 
-
     @Before
     public void setUp() {
         cassandra = CassandraCluster.create(new CassandraSchemaVersionModule());
         cassandra.ensureAllTables();
 
-        testee = new CassandraSchemaVersionDAO(cassandra.getConf());
+        testee = new CassandraSchemaVersionDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     @After
@@ -61,7 +61,7 @@ public class CassandraSchemaVersionDAOTest {
 
         testee.updateVersion(version).join();
 
-        assertThat(testee.getCurrentSchemaVersion().join()).isEqualTo(Optional.of(version));
+        assertThat(testee.getCurrentSchemaVersion().join()).contains(version);
     }
 
     @Test

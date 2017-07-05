@@ -20,6 +20,7 @@
 package org.apache.james.backends.cassandra.versions;
 
 import static com.datastax.driver.core.DataType.cint;
+import static com.datastax.driver.core.DataType.timeuuid;
 
 import java.util.List;
 
@@ -40,7 +41,7 @@ public class CassandraSchemaVersionModule implements CassandraModule {
             new CassandraTable(CassandraSchemaVersionTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraSchemaVersionTable.TABLE_NAME)
                     .ifNotExists()
-                    .addPartitionKey(CassandraSchemaVersionTable.KEY, cint())
+                    .addPartitionKey(CassandraSchemaVersionTable.KEY, timeuuid())
                     .addClusteringColumn(CassandraSchemaVersionTable.VALUE, cint())));
     }
 
