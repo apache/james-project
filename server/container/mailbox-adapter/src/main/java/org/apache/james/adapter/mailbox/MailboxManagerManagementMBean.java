@@ -59,17 +59,17 @@ public interface MailboxManagerManagementMBean {
      */
     void deleteMailbox(String namespace, String user, String name);
 
-	/**
-	 * Import Eml File to the given mailbox
-	 *
-	 * @param namespace
-	 *            Namespace of the mailbox to import email file
-	 * @param user
-	 *            User the mailbox to import email file belongs to
-	 * @param name
-	 *            Name of the mailbox to import email file
-	 * @param emlpath
-	 *            Name of the email file of this URL
-	 */
-	void importEmlFileToMailBox(String namespace, String user, String name, String emlpath);	
+    /**
+     * Import Eml File to the given mailbox
+     *
+     * @param namespace
+     *            Namespace of the mailbox to import email file
+     * @param user
+     *            User the mailbox to import email file belongs to
+     * @param name
+     *            Name of the mailbox to import email file
+     * @param emlpath
+     *            Name of the email file of this URL
+     */
+    void importEmlFileToMailBox(String namespace, String user, String name, String emlpath);
 }
