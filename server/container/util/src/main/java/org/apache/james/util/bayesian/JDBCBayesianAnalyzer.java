@@ -21,6 +21,8 @@ package org.apache.james.util.bayesian;
 
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +48,8 @@ import java.sql.DatabaseMetaData;
  */
 
 abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JDBCBayesianAnalyzer.class);
 
     /** Public object representing a lock on database activity. */
     public final static String DATABASE_LOCK = "database lock";
@@ -213,6 +217,7 @@ abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
                 try {
                     rs.close();
                 } catch (java.sql.SQLException se) {
+                    LOGGER.info("Exception ignored", se);
                 }
 
                 rs = null;
@@ -222,6 +227,7 @@ abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
                 try {
                     pstmt.close();
                 } catch (java.sql.SQLException se) {
+                    LOGGER.info("Exception ignored", se);
                 }
 
                 pstmt = null;

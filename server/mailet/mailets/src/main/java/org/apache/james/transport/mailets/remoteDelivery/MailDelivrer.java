@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 @SuppressWarnings("deprecation")
@@ -70,7 +71,6 @@ public class MailDelivrer {
      * throw an exception.
      *
      * @param mail    org.apache.james.core.MailImpl
-     * @param session javax.mail.Session
      * @return boolean Whether the delivery was successful and the message can be deleted
      */
     public ExecutionResult deliver(Mail mail) {
@@ -226,7 +226,7 @@ public class MailDelivrer {
 
         if (sfe.getValidUnsentAddresses() != null && sfe.getValidUnsentAddresses().length > 0) {
             if (configuration.isDebug())
-                logger.debug("Send failed, {} valid addresses remain, continuing with any other servers", sfe.getValidUnsentAddresses().length);
+                logger.debug("Send failed, {} valid addresses remain, continuing with any other servers", ImmutableList.copyOf(sfe.getValidUnsentAddresses()));
             return sfe;
         } else {
             // There are no valid addresses left to send, so rethrow
@@ -249,10 +249,10 @@ public class MailDelivrer {
         if (configuration.isDebug()) {
             EnhancedMessagingException enhancedMessagingException = new EnhancedMessagingException(sfe);
             if (enhancedMessagingException.hasReturnCode()) {
-                logger.debug("SMTP SEND FAILED: Command [{}] RetCode: [{}] Response[{}]", enhancedMessagingException.computeCommand(),
+                logger.info("SMTP SEND FAILED: Command [{}] RetCode: [{}] Response[{}]", enhancedMessagingException.computeCommand(),
                     enhancedMessagingException.getReturnCode(), sfe.getMessage());
             } else {
-                logger.debug("Send failed: {}", sfe.toString());
+                logger.info("Send failed", sfe);
             }
             logLevels(sfe);
         }

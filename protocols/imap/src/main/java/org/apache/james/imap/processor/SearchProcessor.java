@@ -204,9 +204,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             }
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Search failed in mailbox " + session.getSelected().getPath(), e);
-            }
+            session.getLog().error("Search failed in mailbox " + session.getSelected().getPath(), e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
             
             if (resultOptions.contains(SearchResultOption.SAVE)) {
@@ -372,7 +370,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             long modSeq = key.getModSeq();
             return SearchQuery.or(SearchQuery.modSeqEquals(modSeq), SearchQuery.modSeqGreaterThan(modSeq));
         default:
-            session.getLog().warn("Ignoring unknown search key.");
+            session.getLog().warn("Ignoring unknown search key {}", type);
             return SearchQuery.all();
         }
     }

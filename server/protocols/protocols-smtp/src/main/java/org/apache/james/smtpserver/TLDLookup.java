@@ -21,11 +21,16 @@ package org.apache.james.smtpserver;
 
 import java.util.HashSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A utility class that caches sets of multi-part top level domains (TLDs) for
  * quick lookup.
  */
 public class TLDLookup {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TLDLookup.class);
 
     /**
      * Simple regular expression to match strings in the cache. Note: if the
@@ -168,7 +173,7 @@ public class TLDLookup {
      */
     private static void debugOut(String msg) {
         if (testing) {
-            System.out.println(msg);
+            LOGGER.debug(msg);
         }
     }
 
@@ -177,7 +182,7 @@ public class TLDLookup {
      */
     private static void debugOut(Throwable th) {
         if (testing) {
-            System.out.println(th);
+            LOGGER.debug("Error caught", th);
         }
     }
 }

@@ -28,7 +28,6 @@ import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 
@@ -69,18 +68,12 @@ public class SetMessagesMethod implements Method {
                     .responseName(RESPONSE_NAME)
                     .build());
             return responses;
-        } catch (MailboxException e) {
-            return Stream.of(
-                    JmapResponse.builder().clientId(clientId)
-                    .error()
-                    .responseName(RESPONSE_NAME)
-                    .build());
         } finally {
             timeMetric.stopAndPublish();
         }
     }
 
-    private SetMessagesResponse setMessagesResponse(SetMessagesRequest request, MailboxSession mailboxSession) throws MailboxException {
+    private SetMessagesResponse setMessagesResponse(SetMessagesRequest request, MailboxSession mailboxSession) {
         return messagesProcessors.stream()
                 .map(processor -> processor.process(request, mailboxSession))
                 .reduce(SetMessagesResponse.builder(),

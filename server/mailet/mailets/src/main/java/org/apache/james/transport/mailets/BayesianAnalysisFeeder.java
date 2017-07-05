@@ -325,6 +325,7 @@ public class BayesianAnalysisFeeder extends GenericMailet {
                     dbUpdated = false;
                 }
             } catch (Exception e) {
+                log("Ignored error while rolling back", e);
             }
             theJDBCUtil.closeJDBCConnection(conn);
         }
@@ -338,7 +339,8 @@ public class BayesianAnalysisFeeder extends GenericMailet {
             Header header = headers.nextElement();
             try {
                 message.removeHeader(header.getName());
-            } catch (javax.mail.MessagingException me) {
+            } catch (MessagingException me) {
+                log("Ignored error while removing header", me);
             }
         }
         message.saveChanges();

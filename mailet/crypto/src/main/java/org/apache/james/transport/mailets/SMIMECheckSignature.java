@@ -182,7 +182,6 @@ public class SMIMECheckSignature extends GenericMailet {
             log("Error during the analysis of the signed message", e);
             signers = null;
         } catch (Exception e) {
-            e.printStackTrace();
             log("Generic error occured during the analysis of the message", e);
             signers = null;
         }

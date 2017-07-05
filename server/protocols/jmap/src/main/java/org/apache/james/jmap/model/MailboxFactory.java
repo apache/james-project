@@ -30,14 +30,17 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.base.Throwables;
 
 public class MailboxFactory {
     private final MailboxManager mailboxManager;
@@ -74,8 +77,10 @@ public class MailboxFactory {
             try {
                 MessageManager mailbox = mailboxFactory.mailboxManager.getMailbox(id, session);
                 return mailboxFactory.fromMessageManager(mailbox, Optional.ofNullable(userMailboxesMetadata), session);
-            } catch (MailboxException e) {
+            } catch (MailboxNotFoundException e) {
                 return Optional.empty();
+            } catch (MailboxException e) {
+                throw Throwables.propagate(e);
             }
         }
     }

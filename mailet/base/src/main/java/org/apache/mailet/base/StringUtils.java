@@ -77,7 +77,7 @@ public final class StringUtils {
             StringBuilder sb = new StringBuilder();
             byte buf[] = message.getBytes();
             byte[] md5 = md.digest(buf);
-            //System.out.println(message);
+
             for (byte aMd5 : md5) {
                 String tmpStr = "0" + Integer.toHexString((0xff & aMd5));
                 sb.append(tmpStr.substring(tmpStr.length() - 2));

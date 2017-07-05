@@ -93,7 +93,7 @@ public class MailPriorityHandler implements JamesMessageHook, ProtocolHandler {
 
     @Override
     public void destroy() {
-        // nothing todo
+        // nothing to do
     }
 
 }

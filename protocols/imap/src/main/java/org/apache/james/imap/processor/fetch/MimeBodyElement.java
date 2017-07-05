@@ -91,11 +91,7 @@ public class MimeBodyElement implements BodyElement {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         for (MessageResult.Header header : headers) {
-            try {
-                out.write((header.getName() + ": " + header.getValue() + ImapConstants.LINE_END).getBytes(US_ASCII));
-            } catch (MailboxException e) {
-                throw new IOException("Unable to read header", e);
-            }
+            out.write((header.getName() + ": " + header.getValue() + ImapConstants.LINE_END).getBytes(US_ASCII));
         }
         // no empty line with CRLF for MIME headers. See IMAP-297
         if (size > 0) {

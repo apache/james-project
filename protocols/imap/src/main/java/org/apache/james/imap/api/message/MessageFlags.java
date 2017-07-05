@@ -26,7 +26,7 @@ import java.util.Collections;
 import javax.mail.Flags;
 
 /**
- * The set of flags associated with a message. TODO - why not use
+ * The set of flags associated with a message.
  * javax.mail.Flags instead of having our own.
  * 
  * <p>

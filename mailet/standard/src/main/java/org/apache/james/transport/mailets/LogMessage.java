@@ -63,6 +63,7 @@ public class LogMessage extends GenericMailet {
             bodyMax = (getInitParameter("maxBody") == null) ? 0 : Integer.parseInt(getInitParameter("maxBody"));
             comment = getInitParameter("comment");
         } catch (Exception e) {
+            log("Caught exception while initializing LogMessage", e);
         }
     }
 

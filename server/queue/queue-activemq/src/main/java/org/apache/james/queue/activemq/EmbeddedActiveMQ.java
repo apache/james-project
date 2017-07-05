@@ -32,10 +32,14 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.plugin.StatisticsBrokerPlugin;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.james.filesystem.api.FileSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 
 public class EmbeddedActiveMQ {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmbeddedActiveMQ.class);
 
     private final ActiveMQConnectionFactory activeMQConnectionFactory;
     private final PersistenceAdapter persistenceAdapter;
@@ -102,6 +106,6 @@ public class EmbeddedActiveMQ {
         String[] transportConnectorsURIs = {"tcp://localhost:0"};
         brokerService.setTransportConnectorURIs(transportConnectorsURIs);
         brokerService.start();
-        System.out.println("Started : " + brokerService.isStarted());
+        LOGGER.info("Started embedded activeMq");
     }
 }

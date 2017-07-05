@@ -55,7 +55,7 @@ class ContentBodyElement implements BodyElement {
         try {
             return content.size();
         } catch (MailboxException e) {
-            throw new IOException("Unable to get size for body element",e);
+            throw new IOException("Unable to get size for body element", e);
         }
     }
 

@@ -35,8 +35,6 @@ public class ActiveMQMailQueueBlobTest extends ActiveMQMailQueueTest {
     public final static String BASE_DIR = "file://target/james-test";
     private MyFileSystem fs;
 
-    private JMSMailQueue queue;
-
     @Override
     protected ActiveMQConnectionFactory createConnectionFactory() {
         ActiveMQConnectionFactory factory = super.createConnectionFactory();
@@ -59,16 +57,6 @@ public class ActiveMQMailQueueBlobTest extends ActiveMQMailQueueTest {
         if (fs != null) {
             fs.destroy();
         }
-    }
-
-    @Override
-    public JMSMailQueue getQueue() {
-        return queue;
-    }
-
-    @Override
-    public void setQueue(JMSMailQueue queue) {
-        this.queue = queue;
     }
 
     @Override

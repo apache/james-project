@@ -29,6 +29,8 @@ import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.lib.jmx.AbstractCommandHandlerStats;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -36,6 +38,7 @@ import org.apache.james.protocols.lib.jmx.AbstractCommandHandlerStats;
  */
 public class SMTPCommandHandlerStats extends AbstractCommandHandlerStats implements SMTPCommandHandlerStatsMBean, Disposable {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SMTPCommandHandlerStats.class);
     private final AtomicLong temp = new AtomicLong(0);
     private final AtomicLong perm = new AtomicLong(0);
     private final AtomicLong ok = new AtomicLong(0);
@@ -84,7 +87,7 @@ public class SMTPCommandHandlerStats extends AbstractCommandHandlerStats impleme
             }
 
         } catch (NumberFormatException e) {
-            // should never happen
+            LOGGER.error("Error while reading SMTP return code " + response.getRetCode(), e);
         }
     }
 

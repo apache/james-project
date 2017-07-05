@@ -25,9 +25,12 @@ import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.core.MimeMessageSource;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link MimeMessageSource} implementation which reads the data from the
@@ -35,6 +38,8 @@ import org.apache.james.lifecycle.api.LifecycleUtil;
  * array otherwise it will throw an {@link ClassCastException}
  */
 public class MimeMessageObjectMessageSource extends MimeMessageSource implements Disposable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MimeMessageObjectMessageSource.class);
 
     private final ObjectMessage message;
     private final SharedByteArrayInputStream in;
@@ -65,22 +70,18 @@ public class MimeMessageObjectMessageSource extends MimeMessageSource implements
 
     @Override
     public void dispose() {
-        try {
-            in.close();
-        } catch (IOException e1) {
-            // ignore on dispose
-        }
+        IOUtils.closeQuietly(in);
         LifecycleUtil.dispose(in);
 
         try {
             message.clearBody();
         } catch (JMSException e) {
-            // ignore on dispose
+            LOGGER.error("Error clearing JMS message body", e);
         }
         try {
             message.clearProperties();
         } catch (JMSException e) {
-            // ignore on dispose
+            LOGGER.error("Error clearing JMS message properties", e);
         }
         content = null;
     }

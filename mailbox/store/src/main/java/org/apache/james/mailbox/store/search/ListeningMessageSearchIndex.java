@@ -83,7 +83,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
                             try {
                                 add(session, mailbox, message);
                             } catch (MailboxException e) {
-                                session.getLog().debug("Unable to index message " + message.getUid() + " for mailbox " + mailbox, e);
+                                session.getLog().error("Unable to index message " + message.getUid() + " for mailbox " + mailbox, e);
                             }
                         }
 
@@ -93,7 +93,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
                     try {
                         delete(session, expunged.getMailbox(), expunged.getUids());
                     } catch (MailboxException e) {
-                        session.getLog().debug("Unable to deleted messages " + expunged.getUids() + " from index for mailbox " + expunged.getMailbox(), e);
+                        session.getLog().error("Unable to deleted messages " + expunged.getUids() + " from index for mailbox " + expunged.getMailbox(), e);
                     }
                 } else if (event instanceof EventFactory.FlagsUpdatedImpl) {
                     EventFactory.FlagsUpdatedImpl flagsUpdated = (EventFactory.FlagsUpdatedImpl) event;
@@ -102,15 +102,14 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
                     try {
                         update(session, mailbox, flagsUpdated.getUpdatedFlags());
                     } catch (MailboxException e) {
-                        session.getLog().debug("Unable to update flags in index for mailbox " + mailbox, e);
+                        session.getLog().error("Unable to update flags in index for mailbox " + mailbox, e);
                     }
                 }
             } else if (event instanceof EventFactory.MailboxDeletionImpl) {
                 deleteAll(session, ((EventFactory.MailboxDeletionImpl) event).getMailbox());
             }
         } catch (MailboxException e) {
-            session.getLog().debug("Unable to update index", e);
-
+            session.getLog().error("Unable to update index", e);
         }
     }
 

@@ -372,6 +372,7 @@ public class WhiteListManager extends GenericMailet {
                     dbUpdated = false;
                 }
             } catch (Exception e) {
+                log("Ignored exception upon rollback", e);
             }
             theJDBCUtil.closeJDBCConnection(conn);
         }
@@ -540,6 +541,7 @@ public class WhiteListManager extends GenericMailet {
                     dbUpdated = false;
                 }
             } catch (Exception e) {
+                log("Ignored exception upon rollback", e);
             }
             theJDBCUtil.closeJDBCConnection(conn);
         }
@@ -660,6 +662,7 @@ public class WhiteListManager extends GenericMailet {
                     dbUpdated = false;
                 }
             } catch (Exception e) {
+                log("Ignored exception upon rollback", e);
             }
             theJDBCUtil.closeJDBCConnection(conn);
         }

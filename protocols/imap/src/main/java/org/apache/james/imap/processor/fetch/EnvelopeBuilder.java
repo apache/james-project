@@ -145,7 +145,7 @@ public final class EnvelopeBuilder {
                         addresses.add(mailboxAddress);
 
                     } else {
-                        logger.warn("Unknown address type");
+                        logger.warn("Unknown address type {}", address.getClass());
                     }
                 }
 

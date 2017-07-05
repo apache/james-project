@@ -34,6 +34,5 @@ public class HBaseNonTransactionalMapper extends NonTransactionalMapper {
     @Override
     public void endRequest() {
         //TODO: maybe do some thing more wise here?
-        //System.out.println("Bye!");
     }
 }

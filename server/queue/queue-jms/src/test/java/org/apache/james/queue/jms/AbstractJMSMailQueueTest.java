@@ -30,6 +30,7 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.ConnectionFactory;
@@ -48,6 +49,7 @@ import org.apache.james.queue.api.ManageableMailQueue.MailQueueIterator;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -61,9 +63,7 @@ public abstract class AbstractJMSMailQueueTest {
 
     protected final static String QUEUE_NAME = "test";
 
-    public abstract JMSMailQueue getQueue();
-
-    public abstract void setQueue(JMSMailQueue queue);
+    private JMSMailQueue queue;
 
     protected ActiveMQConnectionFactory createConnectionFactory() {
         return new ActiveMQConnectionFactory("vm://localhost?create=false");
@@ -77,12 +77,11 @@ public abstract class AbstractJMSMailQueueTest {
     @Before
     public void setUp() throws Exception {
         ConnectionFactory connectionFactory = createConnectionFactory();
-        setQueue(createQueue(connectionFactory, new RawMailQueueItemDecoratorFactory(), QUEUE_NAME));
+        queue = createQueue(connectionFactory, new RawMailQueueItemDecoratorFactory(), QUEUE_NAME);
     }
 
     @Test
     public void testFIFO() throws MessagingException, InterruptedException, IOException, MailAddressException {
-        final JMSMailQueue queue = getQueue();
         // should be empty
         assertEquals(0, queue.getSize());
 
@@ -123,7 +122,6 @@ public abstract class AbstractJMSMailQueueTest {
 
     @Test
     public void testDelayedDeQueue() throws MessagingException, InterruptedException, IOException, MailAddressException {
-        final JMSMailQueue queue = getQueue();
         // should be empty
         assertEquals(0, queue.getSize());
 
@@ -159,7 +157,6 @@ public abstract class AbstractJMSMailQueueTest {
 
     @Test
     public void testFlush() throws MessagingException, InterruptedException, IOException, MailAddressException {
-        final JMSMailQueue queue = getQueue();
         // should be empty
         assertEquals(0, queue.getSize());
 
@@ -203,8 +200,6 @@ public abstract class AbstractJMSMailQueueTest {
 
     @Test
     public void testRemoveWithRecipient() throws MessagingException, InterruptedException, MailAddressException {
-        final JMSMailQueue queue = getQueue();
-
         assertEquals(0, queue.getSize());
 
         Mail mail = createMail();
@@ -231,7 +226,6 @@ public abstract class AbstractJMSMailQueueTest {
 
     @Test
     public void testRemoveWithSender() throws MessagingException, InterruptedException, MailAddressException {
-        final JMSMailQueue queue = getQueue();
         assertEquals(0, queue.getSize());
 
         MailImpl mail = createMail();
@@ -258,7 +252,6 @@ public abstract class AbstractJMSMailQueueTest {
 
     @Test
     public void testRemoveWithName() throws MessagingException, InterruptedException, MailAddressException {
-        final JMSMailQueue queue = getQueue();
         assertEquals(0, queue.getSize());
 
         MailImpl mail = createMail();
@@ -335,7 +328,6 @@ public abstract class AbstractJMSMailQueueTest {
 
     @Test
     public void testPrioritySupport() throws InterruptedException, MessagingException, IOException, MailAddressException {
-        final JMSMailQueue queue = getQueue();
         // should be empty
         assertEquals(0, queue.getSize());
 
@@ -371,7 +363,6 @@ public abstract class AbstractJMSMailQueueTest {
 
     @Test
     public void testBrowse() throws MessagingException, InterruptedException, IOException, MailAddressException {
-        final JMSMailQueue queue = getQueue();
         // should be empty
         assertEquals(0, queue.getSize());
 

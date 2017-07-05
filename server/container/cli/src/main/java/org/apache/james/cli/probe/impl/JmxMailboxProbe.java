@@ -96,7 +96,6 @@ public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
 
     @Override
     public Mailbox getMailbox(String namespace, String user, String name) {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -104,14 +103,12 @@ public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
     @Override
     public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message,
             Date internalDate, boolean isRecent, Flags flags) throws MailboxException {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     @Override
     public Collection<String> listSubscriptions(String user) throws Exception {
-        // TODO Auto-generated method stub
         return null;
     }
 

@@ -88,7 +88,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             // consume message on exception
             consume(messageIn);
             
-            session.getLog().info("Append failed for mailbox " + mailboxPath, e);
+            session.getLog().error("Append failed for mailbox " + mailboxPath, e);
             
             // Some other issue
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
@@ -121,11 +121,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
      *            not null
      */
     private void tryCreate(ImapSession session, String tag, ImapCommand command, Responder responder, MailboxNotFoundException e) {
-
-        final Logger logger = session.getLog();
-        if (logger.isDebugEnabled()) {
-            logger.debug("Cannot open mailbox: ", e);
-        }
+        session.getLog().debug("Cannot open mailbox: ", e);
 
         no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
     }
@@ -146,21 +142,14 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
 
             unsolicitedResponses(session, responder, false);
 
-            // in case of MULTIAPPEND support we will push more then one UID
-            // here
+            // in case of MULTIAPPEND support we will push more then one UID here
             okComplete(command, tag, ResponseCode.appendUid(uidValidity, new UidRange[] { new UidRange(messageId.getUid()) }), responder);
         } catch (MailboxNotFoundException e) {
             // Indicates that the mailbox does not exist
             // So TRY CREATE
             tryCreate(session, tag, command, responder, e);
-            /*
-             * } catch (StorageException e) { taggedBad(command, tag, responder,
-             * e.getKey());
-             */
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Unable to append message to mailbox " + mailboxPath, e);
-            }
+            session.getLog().error("Unable to append message to mailbox " + mailboxPath, e);
             // Some other issue
             no(command, tag, responder, HumanReadableText.SAVE_FAILED);
         }

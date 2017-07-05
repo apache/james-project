@@ -61,7 +61,7 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
             MailboxSession mailboxsession = ImapSessionUtils.getMailboxSession(session);
             mailboxManager.renameMailbox(existingPath, newPath, mailboxsession);
 
-            if (existingPath.getName().equalsIgnoreCase(ImapConstants.INBOX_NAME) && mailboxManager.mailboxExists(existingPath, mailboxsession) == false) {
+            if (existingPath.getName().equalsIgnoreCase(ImapConstants.INBOX_NAME) && !mailboxManager.mailboxExists(existingPath, mailboxsession)) {
                 mailboxManager.createMailbox(existingPath, mailboxsession);
             }
             okComplete(command, tag, responder);
@@ -82,9 +82,7 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
             }
             taggedBad(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Rename from " + existingPath + " to " + newPath + " failed", e);
-            }
+            session.getLog().error("Rename from " + existingPath + " to " + newPath + " failed", e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

@@ -45,12 +45,6 @@ public abstract class AbstractLoaderBeanFactory<T> extends AbstractBeanFactory {
         Class<T> c = (Class<T>) getBeanFactory().getBeanClassLoader().loadClass(fullName);
         @SuppressWarnings("deprecation")
         T t = (T) getBeanFactory().createBean(c, AutowireCapableBeanFactory.AUTOWIRE_AUTODETECT, true);
-        if (name.equals("LocalDelivery")) {
-            System.out.println(t);
-        }
-        if (name.equals("SieveMailet")) {
-            System.out.println(t);
-        }
         return t;
 
     }
@@ -65,8 +59,7 @@ public abstract class AbstractLoaderBeanFactory<T> extends AbstractBeanFactory {
      * @return not null
      */
     protected MailetException loadFailed(String name, String type, Exception e) {
-        final String builder = "Could not load " + type + " (" + name + ")";
-        return new MailetException(builder.toString(), e);
+        return new MailetException("Could not load " + type + " (" + name + ")", e);
     }
 
     /**

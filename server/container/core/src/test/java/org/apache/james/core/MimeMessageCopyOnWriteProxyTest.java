@@ -40,11 +40,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
 
     @Override
     protected MimeMessage getMessageFromSources(String sources) throws Exception {
-        MimeMessageInputStreamSource mmis = null;
-        try {
-            mmis = new MimeMessageInputStreamSource("test", new SharedByteArrayInputStream(sources.getBytes()));
-        } catch (MessagingException e) {
-        }
+        MimeMessageInputStreamSource mmis = new MimeMessageInputStreamSource("test", new SharedByteArrayInputStream(sources.getBytes()));
         return new MimeMessageCopyOnWriteProxy(mmis);
         // return new MimeMessage(Session.getDefaultInstance(new
         // Properties()),new ByteArrayInputStream(sources.getBytes()));

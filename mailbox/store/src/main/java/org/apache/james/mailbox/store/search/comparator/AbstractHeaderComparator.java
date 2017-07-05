@@ -27,9 +27,13 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageResult.Header;
 import org.apache.james.mailbox.store.ResultUtils;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public abstract class AbstractHeaderComparator implements Comparator<MailboxMessage>{
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractHeaderComparator.class);
 
     public final static String FROM ="from";
     public final static String TO ="to";
@@ -39,18 +43,15 @@ public abstract class AbstractHeaderComparator implements Comparator<MailboxMess
         try {
             final List<Header> headers = ResultUtils.createHeaders(message);
             for (Header header : headers) {
-                try {
-                    String name = header.getName();
-                    if (headerName.equalsIgnoreCase(name)) {
-                        final String value = header.getValue();
-                        return value.toUpperCase(Locale.US);
-                    }
-                } catch (MailboxException e) {
-                    // skip the header line
+                String name = header.getName();
+                if (headerName.equalsIgnoreCase(name)) {
+                    final String value = header.getValue();
+                    return value.toUpperCase(Locale.US);
                 }
 
             }
         } catch (IOException e) {
+            LOGGER.warn("Exception encountered, skipping header line", e);
             // skip the header
         }
         return "";

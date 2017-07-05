@@ -48,7 +48,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JMAPServlet extends HttpServlet {
 
-    public static final Logger LOG = LoggerFactory.getLogger(JMAPServlet.class);
+    public static final Logger LOGGER = LoggerFactory.getLogger(JMAPServlet.class);
     public static final String JSON_CONTENT_TYPE = "application/json";
     public static final String JSON_CONTENT_TYPE_UTF8 = "application/json; charset=UTF-8";
 
@@ -78,8 +78,11 @@ public class JMAPServlet extends HttpServlet {
             resp.setContentType(JSON_CONTENT_TYPE);
             objectMapper.writeValue(resp.getOutputStream(), responses);
         } catch (IOException e) {
-            LOG.error("error handling request", e);
+            LOGGER.warn("error handling request", e);
             resp.setStatus(SC_BAD_REQUEST);
+        } catch (Exception e) {
+            LOGGER.error("Error handling request", e);
+            throw new ServletException(e);
         } finally {
             timeMetric.stopAndPublish();
         }

@@ -35,6 +35,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -165,8 +166,6 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
                 MaildirMessageName messageName = folder.getMessageNameByUid(mailboxSession, member.getUid());
                 if (messageName != null) {
                     File messageFile = messageName.getFile();
-                    // System.out.println("save existing " + message +
-                    // " as " + messageFile.getName());
                     messageName.setFlags(member.createFlags());
                     // this automatically moves messages from new to cur if
                     // needed
@@ -305,32 +304,20 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         } catch (IOException ioe) {
             throw new MailboxException("Failure while save MailboxMessage " + message + " in Mailbox " + mailbox, ioe);
         } finally {
-            try {
-                if (fos != null)
-                    fos.close();
-            } catch (IOException e) {
-            }
-            try {
-                if (input != null)
-                    input.close();
-            } catch (IOException e) {
-            }
+            IOUtils.closeQuietly(fos);
+            IOUtils.closeQuietly(input);
         }
         File newMessageFile = null;
         // delivered via SMTP, goes to ./new without flags
         if (message.isRecent()) {
             messageName.setFlags(message.createFlags());
             newMessageFile = new File(folder.getNewFolder(), messageName.getFullName());
-            // System.out.println("save new recent " + message + " as " +
-            // newMessageFile.getName());
         }
         // appended via IMAP (might already have flags etc, goes to ./cur
         // directly)
         else {
             messageName.setFlags(message.createFlags());
             newMessageFile = new File(folder.getCurFolder(), messageName.getFullName());
-            // System.out.println("save new not recent " + message + " as "
-            // + newMessageFile.getName());
         }
         try {
             FileUtils.moveFile(messageFile, newMessageFile);
@@ -447,7 +434,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
      */
     @Override
     protected void begin() throws MailboxException {
-        // nothing todo
+        // nothing to do
     }
 
     /**
@@ -455,7 +442,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
      */
     @Override
     protected void commit() throws MailboxException {
-        // nothing todo
+        // nothing to do
     }
 
     /**
@@ -463,7 +450,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
      */
     @Override
     protected void rollback() throws MailboxException {
-        // nothing todo
+        // nothing to do
     }
 
 }

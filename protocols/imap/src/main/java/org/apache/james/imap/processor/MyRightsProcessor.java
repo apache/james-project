@@ -99,10 +99,7 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
         } catch (MailboxNotFoundException e) {
             no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (MailboxException e) {
-            Logger log = session.getLog();
-            if (log.isInfoEnabled()) {
-                log.info(command.getName() + " failed for mailbox " + mailboxName, e);
-            }
+            session.getLog().error(command.getName() + " failed for mailbox " + mailboxName, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
 

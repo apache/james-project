@@ -43,9 +43,12 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MaildirMailboxMapper extends NonTransactionalMapper implements MailboxMapper {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MaildirMailboxMapper.class);
     /**
      * The {@link MaildirStore} the mailboxes reside in
      */
@@ -99,7 +102,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                     FileUtils.forceDelete(file);
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.error("Error while deleting file " + file, e);
             }
         }
     }

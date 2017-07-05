@@ -18,65 +18,38 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa.migrator;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
-/**
- * TODO this test class needs to be reviewed.
- */
+@Ignore("This class needs to be reviewed")
 public class JpaMigratorTest {
-    
-    @Test()
-    public void testImap165() {
-//        try {
-//            JpaMigrator.main(new String[]{"IMAP165"});
-//        } catch (JpaMigrateException e) {
-//            e.printStackTrace();
-//        }
+    @Test
+    public void testImap165() throws Exception {
+        JpaMigrator.main(new String[]{"IMAP165"});
     }
 
-    @Test()
-    public void testImap168() {
-//        try {
-//            JpaMigrator.main(new String[]{"IMAP168"});
-//        } catch (JpaMigrateException e) {
-//            e.printStackTrace();
-//        }
+    @Test
+    public void testImap168() throws Exception {
+        JpaMigrator.main(new String[]{"IMAP168"});
     }
 
-    @Test()
-    public void testImap172() {
-//        try {
-//            JpaMigrator.main(new String[]{"IMAP172"});
-//        } catch (JpaMigrateException e) {
-//            e.printStackTrace();
-//        }
+    @Test
+    public void testImap172() throws Exception {
+        JpaMigrator.main(new String[]{"IMAP172"});
     }
 
-    @Test()
-    public void testImap176() {
-//        try {
-//            JpaMigrator.main(new String[]{"IMAP176"});
-//        } catch (JpaMigrateException e) {
-//            e.printStackTrace();
-//        }
+    @Test
+    public void testImap176() throws Exception {
+        JpaMigrator.main(new String[]{"IMAP176"});
     }
 
-    @Test()
-    public void testImap180() {
-//        try {
-//            JpaMigrator.main(new String[]{"IMAP180"});
-//        } catch (JpaMigrateException e) {
-//            e.printStackTrace();
-//        }
+    @Test
+    public void testImap180() throws Exception {
+        JpaMigrator.main(new String[]{"IMAP180"});
     }
 
-    @Test()
-    public void testImap184() {
-//        try {
-//            JpaMigrator.main(new String[]{"IMAP184"});
-//        } catch (JpaMigrateException e) {
-//            e.printStackTrace();
-//        }
+    @Test
+    public void testImap184() throws Exception {
+        JpaMigrator.main(new String[]{"IMAP184"});
     }
-
 }

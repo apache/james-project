@@ -320,8 +320,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     }
 
     private void handleResponseException(ImapProcessor.Responder responder, MailboxException e, HumanReadableText message, ImapSession session) {
-        session.getLog().info(message.toString());
-        session.getLog().debug(message.toString(), e);
+        session.getLog().error(message.toString(), e);
         // TODO: consider whether error message should be passed to the user
         final StatusResponse response = factory.untaggedNo(message);
         responder.respond(response);

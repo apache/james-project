@@ -207,13 +207,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
             }
             throw e;
         } finally {
-
-            try {
-                if (producer != null)
-                    producer.close();
-            } catch (JMSException e) {
-                // ignore here
-            }
+            closeProducer(producer);
         }
 
     }
@@ -304,35 +298,16 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
                     size = reply.getLong("size");
                     return size;
                 } catch (NumberFormatException e) {
-                    // if we hit this we can't calculate the size so just catch
-                    // it
+                    return super.getSize();
                 }
             }
-
+            return super.getSize();
         } catch (Exception e) {
             throw new MailQueueException("Unable to remove mails", e);
 
         } finally {
-
-            if (consumer != null) {
-
-                try {
-                    consumer.close();
-                } catch (JMSException e1) {
-                    e1.printStackTrace();
-                    // ignore on rollback
-                }
-            }
-
-            if (producer != null) {
-
-                try {
-                    producer.close();
-                } catch (JMSException e1) {
-                    // ignore on rollback
-                }
-            }
-
+            closeConsumer(consumer);
+            closeProducer(producer);
             if (replyTo != null) {
                 try {
 
@@ -342,18 +317,11 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
                     // every TemporaryQueue which will never get unregistered
                     replyTo.delete();
                 } catch (JMSException e) {
+                    logger.error("Error while deleting temporary queue", e);
                 }
             }
-            try {
-                if (session != null)
-                    session.close();
-            } catch (JMSException e1) {
-                // ignore here
-            }
+            closeSession(session);
         }
-
-        // if we came to this point we should just fallback to super method
-        return super.getSize();
     }
 
 }

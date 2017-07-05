@@ -32,6 +32,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xbill.DNS.Cache;
 import org.xbill.DNS.DClass;
@@ -47,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class DNSJavaServiceTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DNSJavaServiceTest.class);
 
     private TestableDNSServer dnsServer;
     private static final byte[] DNS_SERVER_CONFIG = ("<dnsserver>" +
@@ -142,6 +145,7 @@ public class DNSJavaServiceTest {
             res.add("");
             fail("MX Collection should not be modifiable");
         } catch (UnsupportedOperationException e) {
+            LOGGER.info("Ignored error", e);
         }
         assertEquals(1, res.size());
         assertEquals("mail.test-zone.com.", res.iterator().next());

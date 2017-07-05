@@ -18,10 +18,15 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.lib;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.List;
+
 import javax.mail.MessagingException;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -29,64 +34,64 @@ import org.apache.james.core.MailImpl;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.mock.MockMailProcessor;
 import org.apache.mailet.Mail;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class AbstractStateCompositeProcessorTest {
 
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
     @Test
     public void testChooseRightProcessor() throws Exception {
-    AbstractStateCompositeProcessor processor = new AbstractStateCompositeProcessor() {
-
-        @Override
-        protected MailProcessor createMailProcessor(final String state, HierarchicalConfiguration config) throws
-            Exception {
-        return new MockMailProcessor("") {
+        AbstractStateCompositeProcessor processor = new AbstractStateCompositeProcessor() {
 
             @Override
-            public void service(Mail mail) throws MessagingException {
-            // check if the right processor was selected depending on the state
-            assertEquals(state, mail.getState());
-            super.service(mail);
+            protected MailProcessor createMailProcessor(final String state, HierarchicalConfiguration config) throws
+                Exception {
+                return new MockMailProcessor("") {
+
+                    @Override
+                    public void service(Mail mail) throws MessagingException {
+                        // check if the right processor was selected depending on the state
+                        assertEquals(state, mail.getState());
+                        super.service(mail);
+                    }
+                };
             }
         };
-        }
-    };
-    Logger log = LoggerFactory.getLogger("MockLog");
-    // slf4j can't set programmatically any log level. It's just a facade
-    // log.setLevel(SimpleLog.LOG_LEVEL_DEBUG);
-    processor.setLog(log);
-    processor.configure(createConfig(Arrays.asList("root", "error", "test")));
-    processor.init();
-
-    try {
-        Mail mail1 = new MailImpl();
-        mail1.setState(Mail.DEFAULT);
-        Mail mail2 = new MailImpl();
-        mail2.setState(Mail.ERROR);
-
-        Mail mail3 = new MailImpl();
-        mail3.setState("test");
-
-        Mail mail4 = new MailImpl();
-        mail4.setState("invalid");
-
-        processor.service(mail1);
-        processor.service(mail2);
-        processor.service(mail3);
+        Logger log = LoggerFactory.getLogger("MockLog");
+        // slf4j can't set programmatically any log level. It's just a facade
+        // log.setLevel(SimpleLog.LOG_LEVEL_DEBUG);
+        processor.setLog(log);
+        processor.configure(createConfig(Arrays.asList("root", "error", "test")));
+        processor.init();
 
         try {
-        processor.service(mail4);
-        fail("should fail because of no mapping to a processor for this state");
-        } catch (MessagingException e) {
-        }
+            Mail mail1 = new MailImpl();
+            mail1.setState(Mail.DEFAULT);
+            Mail mail2 = new MailImpl();
+            mail2.setState(Mail.ERROR);
 
-    } finally {
-        processor.dispose();
-    }
+            Mail mail3 = new MailImpl();
+            mail3.setState("test");
+
+            Mail mail4 = new MailImpl();
+            mail4.setState("invalid");
+
+            processor.service(mail1);
+            processor.service(mail2);
+            processor.service(mail3);
+
+            expectedException.expect(MessagingException.class);
+
+            processor.service(mail4);
+        } finally {
+            processor.dispose();
+        }
 
     }
 

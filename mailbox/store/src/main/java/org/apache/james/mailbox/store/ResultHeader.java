@@ -47,14 +47,14 @@ public final class ResultHeader implements MessageResult.Header {
     /**
      * @see org.apache.james.mailbox.model.MessageResult.Header#getName()
      */
-    public String getName() throws MailboxException {
+    public String getName() {
         return name;
     }
 
     /**
      * @see org.apache.james.mailbox.model.MessageResult.Header#getValue()
      */
-    public String getValue() throws MailboxException {
+    public String getValue() {
         return value;
     }
 

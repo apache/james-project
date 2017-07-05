@@ -63,11 +63,13 @@ import org.apache.james.mailrepository.lib.AbstractMailRepository;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Mail repository that is backed by a JCR content repository.
  */
 public class JCRMailRepository extends AbstractMailRepository implements MailRepository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JCRMailRepository.class);
 
     private final static String MAIL_PATH = "mailrepository";
 
@@ -75,7 +77,6 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
     private SimpleCredentials creds;
     private String workspace;
 
-    private Logger logger;
 
     @Inject
     public void setRepository(Repository repository) {
@@ -526,11 +527,9 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
                 try {
                     message.writeTo(output);
                 } catch (Exception e) {
+                    LOGGER.info("Exception ignored", e);
                 } finally {
-                    try {
-                        output.close();
-                    } catch (IOException e) {
-                    }
+                    org.apache.commons.io.IOUtils.closeQuietly(output);
                 }
             }
         }.start();
@@ -617,9 +616,9 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
                         nodes.nextNode().remove();
                     }
                     session.save();
-                    logger.info("Mail " + key + " removed from repository");
+                    LOGGER.info("Mail {} removed from repository", key);
                 } else {
-                    logger.warn("Mail " + key + " not found");
+                    LOGGER.warn("Mail {} not found", key);
                 }
             } finally {
                 session.logout();
@@ -654,7 +653,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
                     setMail(node, mail);
                 }
                 session.save();
-                logger.info("Mail " + mail.getName() + " stored in repository");
+                LOGGER.info("Mail {} stored in repository", mail.getName());
             } finally {
                 session.logout();
             }

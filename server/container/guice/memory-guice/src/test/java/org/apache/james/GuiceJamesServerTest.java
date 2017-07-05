@@ -11,11 +11,14 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.multibindings.Multibinder;
 
 public class GuiceJamesServerTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GuiceJamesServerTest.class);
 
     public static final ConfigurationPerformer THROWING_CONFIGURATION_PERFORMER = new ConfigurationPerformer() {
         @Override
@@ -109,7 +112,9 @@ public class GuiceJamesServerTest {
 
             try {
                 overWrittenServer.start();
-            } catch (RuntimeException e) {}
+            } catch (RuntimeException e) {
+                LOGGER.info("Ignored expected exception", e);
+            }
 
             assertThat(overWrittenServer.isStarted()).isFalse();
         } finally {

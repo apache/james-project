@@ -65,11 +65,7 @@ public class FullByteContent implements Content {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         for (Header header : headers) {
             if (header != null) {
-                try {
-                    out.write((header.getName() + ": " + header.getValue() + "\r\n").getBytes("US-ASCII"));
-                } catch (MailboxException e) {
-                    throw new IOException("Unable to read headers", e);
-                }
+                out.write((header.getName() + ": " + header.getValue() + "\r\n").getBytes("US-ASCII"));
             }
         }
         out.write("\r\n".getBytes("US-ASCII"));

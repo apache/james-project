@@ -77,9 +77,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
                 manageFailureCount(session, tag, command, responder, failed);
             }
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Login failed", e);
-            }
+            session.getLog().error("Error encountered while login", e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

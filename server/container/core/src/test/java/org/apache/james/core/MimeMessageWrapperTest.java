@@ -40,7 +40,9 @@ import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.mailet.base.RFC2822Headers;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /**
  * Test the subject folding issue.
@@ -87,13 +89,12 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     final String sep = "\r\n\r\n";
     final String body = "bar\r\n";
 
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
     @Override
     protected MimeMessage getMessageFromSources(String sources) throws Exception {
-        MimeMessageInputStreamSource mmis = null;
-        try {
-            mmis = new MimeMessageInputStreamSource("test", new SharedByteArrayInputStream(sources.getBytes()));
-        } catch (MessagingException e) {
-        }
+        MimeMessageInputStreamSource mmis = new MimeMessageInputStreamSource("test", new SharedByteArrayInputStream(sources.getBytes()));
         return new TestableMimeMessageWrapper(mmis);
     }
 
@@ -130,11 +131,10 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     @Test
     public void testDeferredHeaderLoading() throws MessagingException, IOException {
         mw.setHeadersLoadable(false);
-        try {
-            assertEquals("foo", mw.getSubject());
-            fail("subject should not be loadable here, headers loading is disabled");
-        } catch (IllegalStateException e) {
-        }
+
+        expectedException.expect(IllegalStateException.class);
+
+        mw.getSubject();
     }
 
     /**
@@ -151,59 +151,36 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         mmw.writeTo(System.out);
     }
 
-    /*
-     * Class under test for String getSubject()
-     */
     @Test
-    public void testGetSubjectFolding() {
-        try {
-            StringBuilder res = new StringBuilder();
-            BufferedReader r = new BufferedReader(new InputStreamReader(mw.getInputStream()));
-            String line;
-            while (r.ready()) {
-                line = r.readLine();
-                res.append(line).append("\r\n");
-            }
-            r.close();
-            assertEquals(body, res.toString());
-        } catch (MessagingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+    public void testGetSubjectFolding() throws Exception {
+        StringBuilder res = new StringBuilder();
+        BufferedReader r = new BufferedReader(new InputStreamReader(mw.getInputStream()));
+        String line;
+        while (r.ready()) {
+            line = r.readLine();
+            res.append(line).append("\r\n");
         }
+        r.close();
+        assertEquals(body, res.toString());
     }
 
-    /*
-     * Class under test for String getSubject()
-     */
     @Test
-    public void testAddHeaderAndSave() {
-        try {
-            mw.addHeader("X-Test", "X-Value");
+    public void testAddHeaderAndSave() throws Exception {
+        mw.addHeader("X-Test", "X-Value");
 
-            assertEquals("X-Value", mw.getHeader("X-Test")[0]);
+        assertEquals("X-Value", mw.getHeader("X-Test")[0]);
 
-            mw.saveChanges();
+        mw.saveChanges();
 
-            ByteArrayOutputStream rawMessage = new ByteArrayOutputStream();
-            mw.writeTo(rawMessage);
+        ByteArrayOutputStream rawMessage = new ByteArrayOutputStream();
+        mw.writeTo(rawMessage);
 
-            assertEquals("X-Value", mw.getHeader("X-Test")[0]);
+        assertEquals("X-Value", mw.getHeader("X-Test")[0]);
 
-            String res = rawMessage.toString();
+        String res = rawMessage.toString();
 
-            boolean found = res.indexOf("X-Test: X-Value") > 0;
-            assertEquals(true, found);
-
-        } catch (MessagingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        boolean found = res.indexOf("X-Test: X-Value") > 0;
+        assertEquals(true, found);
     }
 
     @Test

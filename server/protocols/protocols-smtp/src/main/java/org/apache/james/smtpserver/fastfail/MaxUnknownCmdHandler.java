@@ -33,8 +33,7 @@ public class MaxUnknownCmdHandler extends org.apache.james.protocols.smtp.core.f
 
     @Override
     public void destroy() {
-        // nothing todo
-        
+        // nothing to do
     }
 }
 

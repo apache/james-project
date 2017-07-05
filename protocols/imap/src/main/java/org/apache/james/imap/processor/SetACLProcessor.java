@@ -45,7 +45,6 @@ import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.SimpleMailboxACL.SimpleMailboxACLEntryKey;
 import org.apache.james.metrics.api.MetricFactory;
-import org.slf4j.Logger;
 
 /**
  * SETACL Processor.
@@ -148,10 +147,7 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
         } catch (MailboxNotFoundException e) {
             no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (MailboxException e) {
-            Logger log = session.getLog();
-            if (log.isInfoEnabled()) {
-                log.info(command.getName() +" failed for mailbox " + mailboxName, e);
-            }
+            session.getLog().error(command.getName() + " failed for mailbox " + mailboxName, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
 

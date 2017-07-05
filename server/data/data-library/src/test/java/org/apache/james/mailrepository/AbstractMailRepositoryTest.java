@@ -52,14 +52,9 @@ public abstract class AbstractMailRepositoryTest {
 
     @Before
     public void setUp() throws Exception {
-
         mailRepository = getMailRepository();
-        MimeMessageInputStreamSource mmis = null;
-        try {
-            mmis = new MimeMessageInputStreamSource("test", new SharedByteArrayInputStream((content + sep + body).
-                    getBytes()));
-        } catch (MessagingException e) {
-        }
+        MimeMessageInputStreamSource mmis = new MimeMessageInputStreamSource("test",
+            new SharedByteArrayInputStream((content + sep + body).getBytes()));
         mimeMessage = new MimeMessageCopyOnWriteProxy(mmis);
         Collection<MailAddress> recipients = new ArrayList<MailAddress>();
         recipients.add(new MailAddress("rec1", "domain.com"));

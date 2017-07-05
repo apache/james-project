@@ -102,7 +102,7 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
         try {
             messageIdFactory.fromString((String) messageId);
         } catch (Exception e) {
-            LOG.error("Invalid messageId: " + messageId);
+            LOG.error("Invalid messageId: " + messageId, e);
             return false;
         }
         return true;

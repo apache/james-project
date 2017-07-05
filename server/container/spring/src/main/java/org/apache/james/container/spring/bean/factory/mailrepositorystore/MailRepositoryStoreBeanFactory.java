@@ -122,14 +122,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
             }
 
             if (infoEnabled) {
-                StringBuilder infoBuffer = new StringBuilder(128);
-                infoBuffer.append("Registering Repository instance of class ");
-                infoBuffer.append(className);
-                infoBuffer.append(" to handle ");
-                infoBuffer.append(protocol);
-                infoBuffer.append(" protocol requests for repositories with key ");
-                infoBuffer.append(protocol);
-                getLogger().info(infoBuffer.toString());
+                getLogger().info("Registering Repository instance of class {} to handle {} protocol requests", className, protocol);
             }
 
             if (classes.get(protocol) != null) {
