@@ -41,6 +41,7 @@ import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFact
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.SchemaState;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.store.BatchSizes;
@@ -326,7 +327,28 @@ public class CassandraSessionModule extends AbstractModule {
 
         @Override
         public void initModule() {
-            versionManager.ensureSchemaIsSupported();
+            SchemaState schemaState = versionManager.computeSchemaState();
+            switch (schemaState) {
+                case TOO_OLD:
+                    throw new IllegalStateException(
+                        String.format("Current schema version is %d whereas minimum required version is %d. " +
+                            "Recommended version is %d", versionManager.computeVersion(), versionManager.getMinimumSupportedVersion(),
+                            versionManager.getMaximumSupportedVersion()));
+                case TOO_RECENT:
+                    throw new IllegalStateException(
+                        String.format("Current schema version is %d whereas the minimum supported version is %d. " +
+                            "Recommended version is %d.", versionManager.computeVersion(), versionManager.getMinimumSupportedVersion(),
+                            versionManager.getMaximumSupportedVersion()));
+                case UP_TO_DATE:
+                    LOGGER.info("Schema version is up-to-date");
+                    return;
+                case UPGRADABLE:
+                    LOGGER.warn("Current schema version is {}. Recommended version is {}", versionManager.computeVersion(),
+                        versionManager.getMaximumSupportedVersion());
+                    return;
+                default:
+                    throw new IllegalStateException("Unknown schema state " + schemaState);
+            }
         }
 
         @Override
