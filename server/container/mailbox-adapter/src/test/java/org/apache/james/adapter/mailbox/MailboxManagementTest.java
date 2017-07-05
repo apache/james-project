@@ -273,7 +273,7 @@ public class MailboxManagementTest {
         assertThat(inMemoryMapperFactory.getMessageMapper(session).countMessagesInMailbox(mailbox)).isEqualTo(0);
         Iterator<MailboxMessage> iterator = inMemoryMapperFactory.getMessageMapper(session).findInMailbox(mailbox,
                 MessageRange.all(), null, 1);
-        assertFalse(iterator.hasNext());
+        assertThat(iterator.hasNext()).isFalse();
     }
 
 	
