@@ -149,17 +149,17 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
     }
 
     @Override
-    public void importEmlFileToMailBox(String namespace, String user, String name, String emlpath) {
+    public void importEmlFileToMailbox(String namespace, String user, String name, String emlpath) {
         checkMailboxArguments(namespace, user, name, emlpath);
         MailboxSession session = null;
         try {
             session = mailboxManager.createSystemSession(user, log);
             mailboxManager.startProcessingRequest(session);
             MessageManager messageManager = mailboxManager.getMailbox(new MailboxPath(namespace, user, name), session);
-            InputStream emlFileResourceAsStream = new FileInputStream(emlpath);
-            ComposedMessageId composedMessageId = messageManager.appendMessage(emlFileResourceAsStream, new Date(),
-                    session, false, new Flags());
-            System.out.println(composedMessageId);
+            InputStream emlFileAsStream = new FileInputStream(emlpath);
+            boolean isRecent = true;
+            messageManager.appendMessage(emlFileResourceAsStream, new Date(),
+                    session, isRecent, new Flags());
         } catch (Exception e) {
             log.error("Unable to create mailbox", e);
         } finally {
