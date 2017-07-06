@@ -37,6 +37,7 @@ import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -54,6 +55,7 @@ public class MailboxManagementTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxManagementTest.class);
     public static final String USER = "user";
     public static final int UID_VALIDITY = 10;
+    public static final int LIMIT = 1;
 
     private MailboxManagerManagement mailboxManagerManagement;
     private InMemoryMailboxSessionMapperFactory inMemoryMapperFactory;
@@ -246,16 +248,16 @@ public class MailboxManagementTest {
     }
 
     @Test
-    public void importEmlFileToMailBoxShouldImportEmlFileToGivenMailbox() throws Exception {
+    public void importEmlFileToMailboxShouldImportEmlFileToGivenMailbox() throws Exception {
         Mailbox mailbox = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, USER, "name"),
                 UID_VALIDITY);
         inMemoryMapperFactory.createMailboxMapper(session).save(mailbox);
         String emlpath = ClassLoader.getSystemResource("eml/frnog.eml").getFile();
-        mailboxManagerManagement.importEmlFileToMailBox(MailboxConstants.USER_NAMESPACE, USER, "name", emlpath);
+        mailboxManagerManagement.importEmlFileToMailbox(MailboxConstants.USER_NAMESPACE, USER, "name", emlpath);
 
         assertThat(inMemoryMapperFactory.getMessageMapper(session).countMessagesInMailbox(mailbox)).isEqualTo(1);
         Iterator<MailboxMessage> iterator = inMemoryMapperFactory.getMessageMapper(session).findInMailbox(mailbox,
-                MessageRange.all(), null, 1);
+                MessageRange.all(), MessageMapper.FetchType.Full, LIMIT);
         MailboxMessage mailboxMessage = iterator.next();
 
         assertThat(IOUtils.toString(new FileInputStream(new File(emlpath)), Charsets.UTF_8))
@@ -263,16 +265,16 @@ public class MailboxManagementTest {
     }
 
     @Test
-    public void importEmlFileToMailBoxShouldNotImportEmlFileWithWrongPathToGivenMailbox() throws Exception {
+    public void importEmlFileToMailboxShouldNotImportEmlFileWithWrongPathToGivenMailbox() throws Exception {
         Mailbox mailbox = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, USER, "name"),
                 UID_VALIDITY);
         inMemoryMapperFactory.createMailboxMapper(session).save(mailbox);
         String emlpath = ClassLoader.getSystemResource("eml/frnog.eml").getFile();
-        mailboxManagerManagement.importEmlFileToMailBox(MailboxConstants.USER_NAMESPACE, USER, "name", "wrong_path" + emlpath);
+        mailboxManagerManagement.importEmlFileToMailbox(MailboxConstants.USER_NAMESPACE, USER, "name", "wrong_path" + emlpath);
 
         assertThat(inMemoryMapperFactory.getMessageMapper(session).countMessagesInMailbox(mailbox)).isEqualTo(0);
         Iterator<MailboxMessage> iterator = inMemoryMapperFactory.getMessageMapper(session).findInMailbox(mailbox,
-                MessageRange.all(), null, 1);
+                MessageRange.all(), MessageMapper.FetchType.Full, LIMIT);
         assertThat(iterator.hasNext()).isFalse();
     }
 
