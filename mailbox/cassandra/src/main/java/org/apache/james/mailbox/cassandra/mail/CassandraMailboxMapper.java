@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -55,18 +56,18 @@ public class CassandraMailboxMapper implements MailboxMapper {
     public static final String VALUES_MAY_NOT_BE_LARGER_THAN_64_K = "Index expression values may not be larger than 64K";
     public static final String CLUSTERING_COLUMNS_IS_TOO_LONG = "The sum of all clustering columns is too long";
 
-    private final int maxRetry;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraMailboxPathDAO mailboxPathDAO;
     private final CassandraMailboxDAO mailboxDAO;
     private final Session session;
+    private final CassandraConfiguration cassandraConfiguration;
 
-    public CassandraMailboxMapper(Session session, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAO mailboxPathDAO, int maxRetry) {
-        this.maxRetry = maxRetry;
+    public CassandraMailboxMapper(Session session, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAO mailboxPathDAO, CassandraConfiguration cassandraConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.mailboxDAO = mailboxDAO;
         this.mailboxPathDAO = mailboxPathDAO;
         this.session = session;
+        this.cassandraConfiguration = cassandraConfiguration;
     }
 
     @Override
@@ -193,7 +194,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        new CassandraACLMapper(cassandraId, session, cassandraAsyncExecutor, maxRetry).updateACL(mailboxACLCommand);
+        new CassandraACLMapper(cassandraId, session, cassandraAsyncExecutor, cassandraConfiguration).updateACL(mailboxACLCommand);
     }
 
     @Override

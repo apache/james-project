@@ -74,8 +74,6 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
         cassandra.close();
     }
 
-    public static final int MAX_ACL_RETRY = 10;
-
     private CassandraMailboxSessionMapperFactory mailboxSessionMapperFactory;
     private CassandraMailboxManager mailboxManager;
     private CassandraMailboxManager parseFailingMailboxManager;
@@ -83,7 +81,7 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
     public CassandraMailboxManagerAttachmentTest() throws Exception {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), MAX_ACL_RETRY);
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
         CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
         CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(cassandra.getConf());
         CassandraDeletedMessageDAO deletedMessageDAO = new CassandraDeletedMessageDAO(cassandra.getConf());

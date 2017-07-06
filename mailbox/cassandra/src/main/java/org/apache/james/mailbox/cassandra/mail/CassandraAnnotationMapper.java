@@ -28,13 +28,12 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.lte;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Ascii;
-import com.google.common.base.Optional;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraAnnotationTable;
@@ -47,26 +46,30 @@ import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Select;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
 
 public class CassandraAnnotationMapper extends NonTransactionalMapper implements AnnotationMapper {
 
     private final Session session;
+    private final CassandraUtils cassandraUtils;
 
-    public CassandraAnnotationMapper(Session session) {
+    public CassandraAnnotationMapper(Session session, CassandraUtils cassandraUtils) {
         this.session = session;
+        this.cassandraUtils = cassandraUtils;
     }
 
     public List<MailboxAnnotation> getAllAnnotations(MailboxId mailboxId) {
         CassandraId cassandraId = (CassandraId)mailboxId;
-        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQuery(cassandraId)))
+        return cassandraUtils.convertToStream(session.execute(getStoredAnnotationsQuery(cassandraId)))
             .map(this::toAnnotation)
             .collect(Collectors.toList());
     }
 
     public List<MailboxAnnotation> getAnnotationsByKeys(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
         CassandraId cassandraId = (CassandraId)mailboxId;
-        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryForKeys(cassandraId, keys)))
+        return cassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryForKeys(cassandraId, keys)))
             .map(this::toAnnotation)
             .collect(Collectors.toList());
     }
@@ -102,8 +105,11 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
     @Override
     public boolean exist(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
         CassandraId cassandraId = (CassandraId)mailboxId;
-        Optional<Row> row = Optional.fromNullable(session.execute(getStoredAnnotationsQueryByKey(cassandraId, mailboxAnnotation.getKey().asString()))
-            .one());
+        Optional<Row> row = Optional.ofNullable(
+            session.execute(
+                getStoredAnnotationsQueryByKey(cassandraId,
+                    mailboxAnnotation.getKey().asString()))
+                .one());
         return row.isPresent();
     }
 
@@ -146,13 +152,13 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
     }
 
     private Stream<MailboxAnnotation> getAnnotationsByKeyWithAllDepth(CassandraId mailboxId, MailboxAnnotationKey key) {
-        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryLikeKey(mailboxId, key.asString())))
+        return cassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryLikeKey(mailboxId, key.asString())))
             .map(this::toAnnotation)
             .filter(annotation -> key.isAncestorOrIsEqual(annotation.getKey()));
     }
 
     private Stream<MailboxAnnotation> getAnnotationsByKeyWithOneDepth(CassandraId mailboxId, MailboxAnnotationKey key) {
-        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryLikeKey(mailboxId, key.asString())))
+        return cassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryLikeKey(mailboxId, key.asString())))
             .map(this::toAnnotation)
             .filter(annotation -> key.isParentOrIsEqual(annotation.getKey()));
     }

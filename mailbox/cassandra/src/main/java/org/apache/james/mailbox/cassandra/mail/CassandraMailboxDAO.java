@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
@@ -55,14 +56,15 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.google.common.annotations.VisibleForTesting;
 
 public class CassandraMailboxDAO {
 
-    public static final String MAX_ACL_RETRY = "maxAclRetry";
     private final CassandraAsyncExecutor executor;
     private final MailboxBaseTupleUtil mailboxBaseTupleUtil;
     private final Session session;
-    private final int maxAclRetry;
+    private final CassandraUtils cassandraUtils;
+    private CassandraConfiguration cassandraConfiguration;
     private final PreparedStatement readStatement;
     private final PreparedStatement listStatement;
     private final PreparedStatement deleteStatement;
@@ -70,7 +72,7 @@ public class CassandraMailboxDAO {
     private final PreparedStatement updateStatement;
 
     @Inject
-    public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider, @Named(MAX_ACL_RETRY) Integer maxAclRetry) {
+    public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider, CassandraUtils cassandraUtils, CassandraConfiguration cassandraConfiguration) {
         this.executor = new CassandraAsyncExecutor(session);
         this.mailboxBaseTupleUtil = new MailboxBaseTupleUtil(typesProvider);
         this.session = session;
@@ -79,7 +81,13 @@ public class CassandraMailboxDAO {
         this.deleteStatement = prepareDelete(session);
         this.listStatement = prepareList(session);
         this.readStatement = prepareRead(session);
-        this.maxAclRetry = maxAclRetry;
+        this.cassandraUtils = cassandraUtils;
+        this.cassandraConfiguration = cassandraConfiguration;
+    }
+
+    @VisibleForTesting
+    public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider) {
+        this(session, typesProvider, CassandraUtils.DEFAULT_CASSANDRA_UTILS, CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -140,7 +148,7 @@ public class CassandraMailboxDAO {
     }
 
     private CompletableFuture<Optional<SimpleMailbox>> mailbox(CassandraId cassandraId, CompletableFuture<Optional<Row>> rowFuture) {
-        CompletableFuture<MailboxACL> aclCompletableFuture = new CassandraACLMapper(cassandraId, session, executor, maxAclRetry).getACL();
+        CompletableFuture<MailboxACL> aclCompletableFuture = new CassandraACLMapper(cassandraId, session, executor, cassandraConfiguration).getACL();
         return rowFuture.thenApply(rowOptional -> rowOptional.map(this::mailboxFromRow))
             .thenApply(mailboxOptional -> {
                 mailboxOptional.ifPresent(mailbox -> mailbox.setMailboxId(cassandraId));
@@ -163,7 +171,7 @@ public class CassandraMailboxDAO {
 
     public CompletableFuture<Stream<SimpleMailbox>> retrieveAllMailboxes() {
         return executor.execute(listStatement.bind())
-            .thenApply(CassandraUtils::convertToStream)
+            .thenApply(cassandraUtils::convertToStream)
             .thenApply(stream -> stream.map(this::toMailboxWithId))
             .thenCompose(stream -> CompletableFutureUtil.allOf(stream.map(this::toMailboxWithAclFuture)));
     }
@@ -176,7 +184,7 @@ public class CassandraMailboxDAO {
 
     private CompletableFuture<SimpleMailbox> toMailboxWithAclFuture(SimpleMailbox mailbox) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        return new CassandraACLMapper(cassandraId, session, executor, maxAclRetry).getACL()
+        return new CassandraACLMapper(cassandraId, session, executor, cassandraConfiguration).getACL()
             .thenApply(acl -> {
                 mailbox.setACL(acl);
                 return mailbox;

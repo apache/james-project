@@ -59,7 +59,6 @@ import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 public class CassandraTestSystemFixture {
     
     public static final int MOD_SEQ = 452;
-    public static final int MAX_ACL_RETRY = 10;
     private static CassandraCluster cassandra;
     
     public static CassandraMailboxSessionMapperFactory createMapperFactory() {
@@ -74,7 +73,7 @@ public class CassandraTestSystemFixture {
         CassandraMailboxRecentsDAO mailboxRecentsDAO = new CassandraMailboxRecentsDAO(cassandra.getConf());
         CassandraApplicableFlagDAO applicableFlagDAO = new CassandraApplicableFlagDAO(cassandra.getConf());
 
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), MAX_ACL_RETRY);
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
         CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
         CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(cassandra.getConf());
         CassandraDeletedMessageDAO deletedMessageDAO = new CassandraDeletedMessageDAO(cassandra.getConf());

@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
@@ -39,20 +38,27 @@ import org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
+import com.google.common.annotations.VisibleForTesting;
 
 public class CassandraDomainList extends AbstractDomainList {
 
-    private Session session;
+    private final Session session;
+    private final CassandraUtils cassandraUtils;
 
     @Inject
-    @Resource
-    public void setSession(Session session) {
+    public CassandraDomainList(Session session, CassandraUtils cassandraUtils) {
         this.session = session;
+        this.cassandraUtils = cassandraUtils;
+    }
+
+    @VisibleForTesting
+    CassandraDomainList(Session session) {
+        this(session, CassandraUtils.DEFAULT_CASSANDRA_UTILS);
     }
 
     @Override
     protected List<String> getDomainListInternal() throws DomainListException {
-        return CassandraUtils.convertToStream(session.execute(select(CassandraDomainsTable.DOMAIN).from(CassandraDomainsTable.TABLE_NAME)))
+        return cassandraUtils.convertToStream(session.execute(select(CassandraDomainsTable.DOMAIN).from(CassandraDomainsTable.TABLE_NAME)))
             .map(row -> row.getString(CassandraDomainsTable.DOMAIN))
             .collect(Collectors.toList());
     }

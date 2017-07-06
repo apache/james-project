@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.backends.cassandra.utils.LightweightTransactionException;
 import org.apache.james.mailbox.MailboxSession;
@@ -60,8 +61,6 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Throwables;
 
 public class CassandraMessageIdMapper implements MessageIdMapper {
-
-    private static final int MAX_RETRY = 1000;
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageIdMapper.class);
 
     private final MailboxMapper mailboxMapper;
@@ -73,10 +72,11 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private final ModSeqProvider modSeqProvider;
     private final MailboxSession mailboxSession;
     private final AttachmentLoader attachmentLoader;
+    private final CassandraConfiguration cassandraConfiguration;
 
     public CassandraMessageIdMapper(MailboxMapper mailboxMapper, CassandraMailboxDAO mailboxDAO, CassandraAttachmentMapper attachmentMapper,
                                     CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
-                                    CassandraIndexTableHandler indexTableHandler, ModSeqProvider modSeqProvider, MailboxSession mailboxSession) {
+                                    CassandraIndexTableHandler indexTableHandler, ModSeqProvider modSeqProvider, MailboxSession mailboxSession, CassandraConfiguration cassandraConfiguration) {
         this.mailboxMapper = mailboxMapper;
         this.mailboxDAO = mailboxDAO;
         this.imapUidDAO = imapUidDAO;
@@ -86,6 +86,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         this.modSeqProvider = modSeqProvider;
         this.mailboxSession = mailboxSession;
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
+        this.cassandraConfiguration = cassandraConfiguration;
     }
 
     @Override
@@ -223,7 +224,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     private Stream<Pair<MailboxId, UpdatedFlags>> flagsUpdateWithRetry(Flags newState, MessageManager.FlagsUpdateMode updateMode, MailboxId mailboxId, MessageId messageId) {
         try {
-            Pair<Flags, ComposedMessageIdWithMetaData> pair = new FunctionRunnerWithRetry(MAX_RETRY)
+            Pair<Flags, ComposedMessageIdWithMetaData> pair = new FunctionRunnerWithRetry(cassandraConfiguration.getFlagsUpdateMessageIdMaxRetry())
                 .executeAndRetrieveObject(() -> tryFlagsUpdate(newState, updateMode, mailboxId, messageId));
             ComposedMessageIdWithMetaData composedMessageIdWithMetaData = pair.getRight();
             Flags oldFlags = pair.getLeft();

@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO.CassandraIdAndPath;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
@@ -40,11 +41,8 @@ import org.junit.Test;
 
 public class CassandraMailboxMapperTest {
 
-    public static final int MAX_RETRY = 10;
     public static final int UID_VALIDITY = 52;
     public static final MailboxPath MAILBOX_PATH = new MailboxPath("#private", "user", "name");
-    public static final int THREAD_COUNT = 10;
-    public static final int OPERATION_COUNT = 10;
     private CassandraCluster cassandra;
     private CassandraMailboxPathDAO mailboxPathDAO;
     private CassandraMailboxMapper testee;
@@ -54,9 +52,9 @@ public class CassandraMailboxMapperTest {
         cassandra = CassandraCluster.create(new CassandraModuleComposite(new CassandraMailboxModule(), new CassandraAclModule()));
         cassandra.ensureAllTables();
 
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), MAX_RETRY);
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
         mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        testee = new CassandraMailboxMapper(cassandra.getConf(), mailboxDAO, mailboxPathDAO, MAX_RETRY);
+        testee = new CassandraMailboxMapper(cassandra.getConf(), mailboxDAO, mailboxPathDAO, CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @After

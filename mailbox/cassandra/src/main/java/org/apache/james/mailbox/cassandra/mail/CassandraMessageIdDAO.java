@@ -65,6 +65,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
 public class CassandraMessageIdDAO {
@@ -80,10 +81,11 @@ public class CassandraMessageIdDAO {
     private final PreparedStatement selectAllUids;
     private final PreparedStatement selectUidGte;
     private final PreparedStatement selectUidRange;
+    private CassandraUtils cassandraUtils;
     private final PreparedStatement update;
 
     @Inject
-    public CassandraMessageIdDAO(Session session, CassandraMessageId.Factory messageIdFactory) {
+    public CassandraMessageIdDAO(Session session, CassandraMessageId.Factory messageIdFactory, CassandraUtils cassandraUtils) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.messageIdFactory = messageIdFactory;
         this.delete = prepareDelete(session);
@@ -93,6 +95,12 @@ public class CassandraMessageIdDAO {
         this.selectAllUids = prepareSelectAllUids(session);
         this.selectUidGte = prepareSelectUidGte(session);
         this.selectUidRange = prepareSelectUidRange(session);
+        this.cassandraUtils = cassandraUtils;
+    }
+
+    @VisibleForTesting
+    public CassandraMessageIdDAO(Session session, CassandraMessageId.Factory messageIdFactory) {
+        this(session, messageIdFactory, CassandraUtils.DEFAULT_CASSANDRA_UTILS);
     }
 
     private PreparedStatement prepareDelete(Session session) {
@@ -253,7 +261,7 @@ public class CassandraMessageIdDAO {
 
     private CompletableFuture<Stream<ComposedMessageIdWithMetaData>> toMessageIds(CompletableFuture<ResultSet> completableFuture) {
         return completableFuture
-            .thenApply(resultSet -> CassandraUtils.convertToStream(resultSet)
+            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
                 .map(this::fromRowToComposedMessageIdWithFlags));
     }
 

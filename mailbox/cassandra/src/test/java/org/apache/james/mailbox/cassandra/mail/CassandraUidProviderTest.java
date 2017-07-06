@@ -24,6 +24,7 @@ import static org.assertj.guava.api.Assertions.assertThat;
 import java.util.stream.LongStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
@@ -45,8 +46,6 @@ public class CassandraUidProviderTest {
         new CassandraMailboxModule(),
         new CassandraUidModule()));
     
-    private static final int MAX_RETRY = 100;
-    
     private CassandraUidProvider uidProvider;
     private CassandraMailboxMapper mapper;
     private SimpleMailbox mailbox;
@@ -55,9 +54,9 @@ public class CassandraUidProviderTest {
     public void setUpClass() throws Exception {
         cassandra.ensureAllTables();
         uidProvider = new CassandraUidProvider(cassandra.getConf());
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), MAX_RETRY);
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
         CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        mapper = new CassandraMailboxMapper(cassandra.getConf(), mailboxDAO, mailboxPathDAO, MAX_RETRY);
+        mapper = new CassandraMailboxMapper(cassandra.getConf(), mailboxDAO, mailboxPathDAO, CassandraConfiguration.DEFAULT_CONFIGURATION);
         MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
         mailbox = new SimpleMailbox(path, 1234);
         mapper.save(mailbox);

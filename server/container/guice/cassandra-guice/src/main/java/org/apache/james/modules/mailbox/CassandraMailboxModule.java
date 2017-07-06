@@ -75,10 +75,6 @@ public class CassandraMailboxModule extends AbstractModule {
         install(new DefaultEventModule());
         install(new CassandraQuotaModule());
 
-        bind(Integer.class)
-            .annotatedWith(com.google.inject.name.Names.named(CassandraMailboxDAO.MAX_ACL_RETRY))
-            .toInstance(CassandraMailboxSessionMapperFactory.DEFAULT_MAX_RETRY);
-
         bind(CassandraMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxManager.class).in(Scopes.SINGLETON);
         bind(NoMailboxPathLocker.class).in(Scopes.SINGLETON);

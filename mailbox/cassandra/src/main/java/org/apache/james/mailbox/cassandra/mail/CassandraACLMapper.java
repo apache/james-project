@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
@@ -66,17 +67,16 @@ public class CassandraACLMapper {
 
     private static final Logger LOG = LoggerFactory.getLogger(CassandraACLMapper.class);
 
-    public CassandraACLMapper(CassandraId cassandraId, Session session, CassandraAsyncExecutor cassandraAsyncExecutor, int maxRetry) {
-        this(cassandraId, session, cassandraAsyncExecutor, maxRetry, () -> {});
+    public CassandraACLMapper(CassandraId cassandraId, Session session, CassandraAsyncExecutor cassandraAsyncExecutor, CassandraConfiguration cassandraConfiguration) {
+        this(cassandraId, session, cassandraAsyncExecutor, cassandraConfiguration, () -> {});
     }
 
-    public CassandraACLMapper(CassandraId cassandraId, Session session, CassandraAsyncExecutor cassandraAsyncExecutor, int maxRetry, CodeInjector codeInjector) {
-        Preconditions.checkArgument(maxRetry > 0);
+    public CassandraACLMapper(CassandraId cassandraId, Session session, CassandraAsyncExecutor cassandraAsyncExecutor, CassandraConfiguration cassandraConfiguration, CodeInjector codeInjector) {
         Preconditions.checkArgument(cassandraId != null);
         this.cassandraId = cassandraId;
         this.session = session;
         this.executor = cassandraAsyncExecutor;
-        this.maxRetry = maxRetry;
+        this.maxRetry = cassandraConfiguration.getAclMaxRetry();
         this.codeInjector = codeInjector;
     }
 

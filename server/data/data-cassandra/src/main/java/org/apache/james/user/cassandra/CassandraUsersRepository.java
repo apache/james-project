@@ -55,12 +55,13 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
 
     private static final String DEFAULT_ALGO_VALUE = "SHA1";
 
-    private Session session;
+    private final Session session;
+    private final CassandraUtils cassandraUtils;
 
     @Inject
-    @Resource
-    public void setSession(Session session) {
+    public CassandraUsersRepository(Session session, CassandraUtils cassandraUtils) {
         this.session = session;
+        this.cassandraUtils = cassandraUtils;
     }
     
     @Override
@@ -132,7 +133,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
         ResultSet result = session.execute(
                 select(REALNAME)
                 .from(TABLE_NAME));
-        return CassandraUtils.convertToStream(result)
+        return cassandraUtils.convertToStream(result)
             .map(row -> row.getString(REALNAME))
             .iterator();
     }

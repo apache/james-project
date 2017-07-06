@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.cassandra.user;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperTest;
@@ -32,7 +33,7 @@ public class CassandraSubscriptionMapperTest extends SubscriptionMapperTest {
     @Override
     protected SubscriptionMapper createSubscriptionMapper() {
         cassandra.ensureAllTables();
-        return new CassandraSubscriptionMapper(cassandra.getConf());
+        return new CassandraSubscriptionMapper(cassandra.getConf(), CassandraUtils.DEFAULT_CASSANDRA_UTILS);
     }
 
     @After

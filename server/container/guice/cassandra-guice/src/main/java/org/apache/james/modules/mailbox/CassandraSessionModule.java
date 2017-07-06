@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
@@ -37,6 +38,7 @@ import org.apache.james.backends.cassandra.init.ClusterBuilder;
 import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
 import org.apache.james.backends.cassandra.init.QueryLoggerConfiguration;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.util.Host;
 import org.apache.james.utils.PropertiesProvider;
@@ -54,6 +56,7 @@ import com.datastax.driver.core.exceptions.NoHostAvailableException;
 import com.github.steveash.guavate.Guavate;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
@@ -77,6 +80,8 @@ public class CassandraSessionModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(ScheduledExecutorService.class).toProvider(ScheduledExecutorServiceProvider.class);
+        bind(CassandraConfiguration.class).toInstance(CassandraConfiguration.DEFAULT_CONFIGURATION);
+        bind(CassandraUtils.class).in(Scopes.SINGLETON);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().to(CassandraZonedDateTimeModule.class);

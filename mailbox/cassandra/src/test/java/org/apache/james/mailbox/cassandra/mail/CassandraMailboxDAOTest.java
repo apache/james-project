@@ -40,7 +40,6 @@ import com.github.steveash.guavate.Guavate;
 
 public class CassandraMailboxDAOTest {
 
-    public static final int MAX_ACL_RETRY = 10;
     public static final int UID_VALIDITY_1 = 145;
     public static final int UID_VALIDITY_2 = 147;
     public static final MailboxPath NEW_MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "xyz");
@@ -56,7 +55,7 @@ public class CassandraMailboxDAOTest {
         cassandra = CassandraCluster.create(new CassandraModuleComposite(new CassandraMailboxModule(), new CassandraAclModule()));
         cassandra.ensureAllTables();
 
-        testee = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), MAX_ACL_RETRY);
+        testee = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
         mailbox1 = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "abcd"),
             UID_VALIDITY_1,
             CASSANDRA_ID_1);

@@ -39,6 +39,7 @@ import org.apache.james.mailbox.cassandra.table.CassandraMailboxRecentsTable;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import com.google.common.annotations.VisibleForTesting;
 
 public class CassandraMailboxRecentsDAO {
 
@@ -46,13 +47,20 @@ public class CassandraMailboxRecentsDAO {
     private final PreparedStatement readStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement addStatement;
+    private CassandraUtils cassandraUtils;
 
     @Inject
-    public CassandraMailboxRecentsDAO(Session session) {
+    public CassandraMailboxRecentsDAO(Session session, CassandraUtils cassandraUtils) {
         cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         readStatement = createReadStatement(session);
         deleteStatement = createDeleteStatement(session);
         addStatement = createAddStatement(session);
+        this.cassandraUtils = cassandraUtils;
+    }
+
+    @VisibleForTesting
+    public CassandraMailboxRecentsDAO(Session session) {
+        this(session, CassandraUtils.DEFAULT_CASSANDRA_UTILS);
     }
 
     private PreparedStatement createReadStatement(Session session) {
@@ -79,7 +87,7 @@ public class CassandraMailboxRecentsDAO {
 
     public CompletableFuture<Stream<MessageUid>> getRecentMessageUidsInMailbox(CassandraId mailboxId) {
         return cassandraAsyncExecutor.execute(bindWithMailbox(mailboxId, readStatement))
-            .thenApply(CassandraUtils::convertToStream)
+            .thenApply(cassandraUtils::convertToStream)
             .thenApply(stream -> stream.map(row -> row.getLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID)))
             .thenApply(stream -> stream.map(MessageUid::of));
     }

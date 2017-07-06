@@ -168,6 +168,12 @@
                     <version>${assertj-3.version}</version>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <groupId>nl.jqno.equalsverifier</groupId>
+                    <artifactId>equalsverifier</artifactId>
+                    <version>1.7.6</version>
+                    <scope>test</scope>
+                </dependency>
 		        <dependency>
 		            <groupId>org.cassandraunit</groupId>
 		            <artifactId>cassandra-unit</artifactId>

@@ -62,6 +62,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
 public class CassandraMessageIdToImapUidDAO {
@@ -75,9 +76,10 @@ public class CassandraMessageIdToImapUidDAO {
     private final PreparedStatement update;
     private final PreparedStatement selectAll;
     private final PreparedStatement select;
+    private CassandraUtils cassandraUtils;
 
     @Inject
-    public CassandraMessageIdToImapUidDAO(Session session, CassandraMessageId.Factory messageIdFactory) {
+    public CassandraMessageIdToImapUidDAO(Session session, CassandraMessageId.Factory messageIdFactory, CassandraUtils cassandraUtils) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.messageIdFactory = messageIdFactory;
         this.delete = prepareDelete(session);
@@ -85,6 +87,12 @@ public class CassandraMessageIdToImapUidDAO {
         this.update = prepareUpdate(session);
         this.selectAll = prepareSelectAll(session);
         this.select = prepareSelect(session);
+        this.cassandraUtils = cassandraUtils;
+    }
+
+    @VisibleForTesting
+    public CassandraMessageIdToImapUidDAO(Session session, CassandraMessageId.Factory messageIdFactory) {
+        this(session, messageIdFactory, CassandraUtils.DEFAULT_CASSANDRA_UTILS);
     }
 
     private PreparedStatement prepareDelete(Session session) {
@@ -185,7 +193,7 @@ public class CassandraMessageIdToImapUidDAO {
 
     public CompletableFuture<Stream<ComposedMessageIdWithMetaData>> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
         return selectStatement(messageId, mailboxId)
-                .thenApply(resultSet -> CassandraUtils.convertToStream(resultSet)
+                .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
                         .map(this::toComposedMessageIdWithMetadata));
     }
 
