@@ -71,5 +71,5 @@ public interface MailboxManagerManagementMBean {
      * @param emlpath
      *            Name of the email file of this URL
      */
-    void importEmlFileToMailBox(String namespace, String user, String name, String emlpath);
+    void importEmlFileToMailbox(String namespace, String user, String name, String emlpath);
 }

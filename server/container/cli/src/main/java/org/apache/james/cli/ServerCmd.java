@@ -267,7 +267,7 @@ public class ServerCmd {
             mailboxProbe.deleteMailbox(arguments[1], arguments[2], arguments[3]);
             break;
         case IMPORTEMLFILETOMAILBOX:
-            mailboxProbe.importEmlFileToMailBox(arguments[1], arguments[2], arguments[3], arguments[4]);
+            mailboxProbe.importEmlFileToMailbox(arguments[1], arguments[2], arguments[3], arguments[4]);
             break;
         case GETSTORAGEQUOTA:
             printStorageQuota(arguments[1], quotaProbe.getStorageQuota(arguments[1]), printStream);
