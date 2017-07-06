@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class FluentFutureStream<T> {
@@ -31,6 +32,16 @@ public class FluentFutureStream<T> {
 
     public static <T> FluentFutureStream<T> of(CompletableFuture<Stream<T>> completableFuture) {
         return new FluentFutureStream<>(completableFuture);
+    }
+
+    public static <T> FluentFutureStream<T> ofNestedStreams(Stream<CompletableFuture<Stream<T>>> completableFuture) {
+        return of(completableFuture)
+            .flatMap(Function.identity());
+    }
+
+    public static <T> FluentFutureStream<T> ofOptionals(Stream<CompletableFuture<Optional<T>>> completableFuture) {
+        return of(completableFuture)
+            .flatMapOptional(Function.identity());
     }
 
     public static <T> FluentFutureStream<T> of(Stream<CompletableFuture<T>> completableFutureStream) {
@@ -69,9 +80,26 @@ public class FluentFutureStream<T> {
             CompletableFutureUtil.thenComposeOnAll(completableFuture(), function));
     }
 
+    public <U> FluentFutureStream<U> thenFlatCompose(Function<T, CompletableFuture<Stream<U>>> function) {
+        return FluentFutureStream.of(
+            CompletableFutureUtil.thenComposeOnAll(completableFuture(), function))
+            .flatMap(Function.identity());
+    }
+
+    public <U> FluentFutureStream<U> thenFlatComposeOnOptional(Function<T, CompletableFuture<Optional<U>>> function) {
+        return FluentFutureStream.of(
+            CompletableFutureUtil.thenComposeOnAll(completableFuture(), function))
+            .flatMapOptional(Function.identity());
+    }
+
     public <U> FluentFutureStream<U> flatMap(Function<T, Stream<U>> function) {
         return FluentFutureStream.of(completableFuture().thenApply(stream ->
             stream.flatMap(function)));
+    }
+
+    public <U> FluentFutureStream<U> flatMapOptional(Function<T, Optional<U>> function) {
+        return map(function)
+            .flatMap(OptionalConverter::toStream);
     }
 
     public <U> FluentFutureStream<U> thenCompose(Function<Stream<T>, CompletableFuture<Stream<U>>> function) {
@@ -80,6 +108,11 @@ public class FluentFutureStream<T> {
 
     public CompletableFuture<Stream<T>> completableFuture() {
         return this.completableFuture;
+    }
+
+    public FluentFutureStream<T> filter(Predicate<T> predicate) {
+        return FluentFutureStream.of(completableFuture
+            .thenApply(stream -> stream.filter(predicate)));
     }
 
     public Stream<T> join() {
