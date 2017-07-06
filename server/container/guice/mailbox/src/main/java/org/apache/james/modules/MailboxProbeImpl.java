@@ -179,9 +179,8 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         return subscriptionManager.subscriptions(mailboxSession);
     }
 
-	//TODO: ilker: impelement this
 	@Override
 	public void importEmlFileToMailbox(String namespace, String user, String name, String emlpath) {
-		
+		throw new NotImplementedException();
 	}
 }
