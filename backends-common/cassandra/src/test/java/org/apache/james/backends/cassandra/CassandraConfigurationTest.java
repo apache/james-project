@@ -21,6 +21,7 @@ package org.apache.james.backends.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -31,6 +32,9 @@ public class CassandraConfigurationTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
+
+    @Rule
+    public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
 
     @Test
     public void cassandraConfigurationShouldRespectBeanContract() {
@@ -211,15 +215,15 @@ public class CassandraConfigurationTest {
             .expungeChunkSize(expungeChunkSize)
             .build();
 
-        assertThat(configuration.getAclMaxRetry()).isEqualTo(aclMaxRetry);
-        assertThat(configuration.getModSeqMaxRetry()).isEqualTo(modSeqMaxRetry);
-        assertThat(configuration.getUidMaxRetry()).isEqualTo(uidMaxRetry);
-        assertThat(configuration.getFetchNextPageInAdvanceRow()).isEqualTo(fetchNextPageInAdvanceRow);
-        assertThat(configuration.getFlagsUpdateMessageMaxRetry()).isEqualTo(flagsUpdateMessageMaxRetry);
-        assertThat(configuration.getFlagsUpdateMessageIdMaxRetry()).isEqualTo(flagsUpdateMessageIdMaxRetry);
-        assertThat(configuration.getFlagsUpdateChunkSize()).isEqualTo(flagsUpdateChunkSize);
-        assertThat(configuration.getMessageReadChunkSize()).isEqualTo(messageReadChunkSize);
-        assertThat(configuration.getExpungeChunkSize()).isEqualTo(expungeChunkSize);
+        softly.assertThat(configuration.getAclMaxRetry()).isEqualTo(aclMaxRetry);
+        softly.assertThat(configuration.getModSeqMaxRetry()).isEqualTo(modSeqMaxRetry);
+        softly.assertThat(configuration.getUidMaxRetry()).isEqualTo(uidMaxRetry);
+        softly.assertThat(configuration.getFetchNextPageInAdvanceRow()).isEqualTo(fetchNextPageInAdvanceRow);
+        softly.assertThat(configuration.getFlagsUpdateMessageMaxRetry()).isEqualTo(flagsUpdateMessageMaxRetry);
+        softly.assertThat(configuration.getFlagsUpdateMessageIdMaxRetry()).isEqualTo(flagsUpdateMessageIdMaxRetry);
+        softly.assertThat(configuration.getFlagsUpdateChunkSize()).isEqualTo(flagsUpdateChunkSize);
+        softly.assertThat(configuration.getMessageReadChunkSize()).isEqualTo(messageReadChunkSize);
+        softly.assertThat(configuration.getExpungeChunkSize()).isEqualTo(expungeChunkSize);
     }
 
 }
