@@ -23,35 +23,30 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.BlobParts;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Blobs;
 
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.ids.BlobId;
-import org.apache.james.mailbox.cassandra.ids.PartId;
 import org.apache.james.mailbox.cassandra.mail.utils.DataChunker;
-import org.apache.james.util.CompletableFutureUtil;
+import org.apache.james.mailbox.cassandra.table.BlobTable;
+import org.apache.james.mailbox.cassandra.table.BlobTable.BlobParts;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.OptionalConverter;
 
 import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Bytes;
-
 
 public class CassandraBlobsDAO {
 
@@ -76,26 +71,27 @@ public class CassandraBlobsDAO {
 
     private PreparedStatement prepareSelect(Session session) {
         return session.prepare(select()
-            .from(Blobs.TABLE_NAME)
-            .where(eq(Blobs.ID, bindMarker(Blobs.ID))));
+            .from(BlobTable.TABLE_NAME)
+            .where(eq(BlobTable.ID, bindMarker(BlobTable.ID))));
     }
 
     private PreparedStatement prepareSelectPart(Session session) {
         return session.prepare(select()
             .from(BlobParts.TABLE_NAME)
-            .where(eq(BlobParts.ID, bindMarker(BlobParts.ID))));
+            .where(eq(BlobTable.ID, bindMarker(BlobTable.ID)))
+            .and(eq(BlobParts.CHUNK_NUMBER, bindMarker(BlobParts.CHUNK_NUMBER))));
     }
 
     private PreparedStatement prepareInsert(Session session) {
-        return session.prepare(insertInto(Blobs.TABLE_NAME)
-            .value(Blobs.ID, bindMarker(Blobs.ID))
-            .value(Blobs.POSITION, bindMarker(Blobs.POSITION))
-            .value(Blobs.PART, bindMarker(Blobs.PART)));
+        return session.prepare(insertInto(BlobTable.TABLE_NAME)
+            .value(BlobTable.ID, bindMarker(BlobTable.ID))
+            .value(BlobTable.NUMBER_OF_CHUNK, bindMarker(BlobTable.NUMBER_OF_CHUNK)));
     }
 
     private PreparedStatement prepareInsertPart(Session session) {
         return session.prepare(insertInto(BlobParts.TABLE_NAME)
-            .value(BlobParts.ID, bindMarker(BlobParts.ID))
+            .value(BlobTable.ID, bindMarker(BlobTable.ID))
+            .value(BlobParts.CHUNK_NUMBER, bindMarker(BlobParts.CHUNK_NUMBER))
             .value(BlobParts.DATA, bindMarker(BlobParts.DATA)));
     }
 
@@ -105,55 +101,57 @@ public class CassandraBlobsDAO {
         }
         BlobId blobId = BlobId.forPayload(data);
         return saveBlobParts(data, blobId)
-            .thenCompose(partIds -> saveBlobPartsReferences(blobId, partIds))
+            .thenCompose(numberOfChunk-> saveBlobPartsReferences(blobId, numberOfChunk))
             .thenApply(any -> Optional.of(blobId));
     }
 
-    private CompletableFuture<Stream<Pair<Integer, PartId>>> saveBlobParts(byte[] data, BlobId blobId) {
+    private CompletableFuture<Integer> saveBlobParts(byte[] data, BlobId blobId) {
         return FluentFutureStream.of(
             dataChunker.chunk(data, CHUNK_SIZE)
                 .map(pair -> writePart(pair.getRight(), blobId, pair.getKey())
                     .thenApply(partId -> Pair.of(pair.getKey(), partId))))
-            .completableFuture();
+            .completableFuture()
+            .thenApply(stream ->
+                getLastOfStream(stream)
+                    .map(numOfChunkAndPartId -> numOfChunkAndPartId.getLeft() + 1)
+                    .orElse(0));
     }
 
-    private CompletableFuture<PartId> writePart(ByteBuffer data, BlobId blobId, int position) {
-        PartId partId = PartId.create(blobId, position);
+    private static <T> Optional<T> getLastOfStream(Stream<T> stream) {
+        return stream.reduce((first, second) -> second);
+    }
+
+    private CompletableFuture<Void> writePart(ByteBuffer data, BlobId blobId, int position) {
         return cassandraAsyncExecutor.executeVoid(
             insertPart.bind()
-                .setString(BlobParts.ID, partId.getId())
-                .setBytes(BlobParts.DATA, data))
-            .thenApply(any -> partId);
+                .setString(BlobTable.ID, blobId.getId())
+                .setInt(BlobParts.CHUNK_NUMBER, position)
+                .setBytes(BlobParts.DATA, data));
     }
 
-    private CompletableFuture<Stream<Void>> saveBlobPartsReferences(BlobId blobId, Stream<Pair<Integer, PartId>> stream) {
-        return FluentFutureStream.of(stream.map(pair ->
-            cassandraAsyncExecutor.executeVoid(insert.bind()
-                .setString(Blobs.ID, blobId.getId())
-                .setLong(Blobs.POSITION, pair.getKey())
-                .setString(Blobs.PART, pair.getValue().getId()))))
-            .completableFuture();
+    private CompletableFuture<Void> saveBlobPartsReferences(BlobId blobId, int numberOfChunk) {
+        return cassandraAsyncExecutor.executeVoid(insert.bind()
+            .setString(BlobTable.ID, blobId.getId())
+            .setInt(BlobTable.NUMBER_OF_CHUNK, numberOfChunk));
     }
 
     public CompletableFuture<byte[]> read(BlobId blobId) {
-        return cassandraAsyncExecutor.execute(
+        return cassandraAsyncExecutor.executeSingleRow(
             select.bind()
-                .setString(Blobs.ID, blobId.getId()))
-            .thenApply(this::toPartIds)
+                .setString(BlobTable.ID, blobId.getId()))
             .thenCompose(this::toDataParts)
             .thenApply(this::concatenateDataParts);
     }
 
-    private ImmutableMap<Long, PartId> toPartIds(ResultSet resultSet) {
-        return CassandraUtils.convertToStream(resultSet)
-            .map(row -> Pair.of(row.getLong(Blobs.POSITION), PartId.from(row.getString(Blobs.PART))))
-            .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
-    }
-
-    private CompletableFuture<Stream<Optional<Row>>> toDataParts(ImmutableMap<Long, PartId> positionToIds) {
-        return CompletableFutureUtil.chainAll(
-            positionToIds.values().stream(),
-            this::readPart);
+    private CompletableFuture<Stream<Optional<Row>>> toDataParts(Optional<Row> blobRowOptional) {
+        return blobRowOptional.map(blobRow -> {
+            BlobId blobId = BlobId.from(blobRow.getString(BlobTable.ID));
+            int numOfChunk = blobRow.getInt(BlobTable.NUMBER_OF_CHUNK);
+            return FluentFutureStream.of(
+                IntStream.range(0, numOfChunk)
+                    .mapToObj(position -> readPart(blobId, position)))
+                .completableFuture();
+        }).orElse(CompletableFuture.completedFuture(Stream.empty()));
     }
 
     private byte[] concatenateDataParts(Stream<Optional<Row>> rows) {
@@ -170,8 +168,10 @@ public class CassandraBlobsDAO {
         return data;
     }
 
-    private CompletableFuture<Optional<Row>> readPart(PartId partId) {
-        return cassandraAsyncExecutor.executeSingleRow(selectPart.bind()
-            .setString(BlobParts.ID, partId.getId()));
+    private CompletableFuture<Optional<Row>> readPart(BlobId blobId, int position) {
+        return cassandraAsyncExecutor.executeSingleRow(
+            selectPart.bind()
+                .setString(BlobTable.ID, blobId.getId())
+                .setInt(BlobParts.CHUNK_NUMBER, position));
     }
 }

@@ -24,12 +24,11 @@ import java.util.List;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
-import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.BlobParts;
-import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Blobs;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.google.common.collect.ImmutableList;
+import org.apache.james.mailbox.cassandra.table.BlobTable;
 
 public class CassandraBlobModule implements CassandraModule {
 
@@ -38,17 +37,17 @@ public class CassandraBlobModule implements CassandraModule {
 
     public CassandraBlobModule() {
         tables = ImmutableList.of(
-                new CassandraTable(Blobs.TABLE_NAME,
-                        SchemaBuilder.createTable(Blobs.TABLE_NAME)
+                new CassandraTable(BlobTable.TABLE_NAME,
+                        SchemaBuilder.createTable(BlobTable.TABLE_NAME)
                                 .ifNotExists()
-                                .addPartitionKey(Blobs.ID, DataType.text())
-                                .addClusteringColumn(Blobs.POSITION, DataType.bigint())
-                                .addColumn(Blobs.PART, DataType.text())),
-                new CassandraTable(BlobParts.TABLE_NAME,
-                        SchemaBuilder.createTable(BlobParts.TABLE_NAME)
+                                .addPartitionKey(BlobTable.ID, DataType.text())
+                                .addClusteringColumn(BlobTable.NUMBER_OF_CHUNK, DataType.cint())),
+                new CassandraTable(BlobTable.BlobParts.TABLE_NAME,
+                        SchemaBuilder.createTable(BlobTable.BlobParts.TABLE_NAME)
                                 .ifNotExists()
-                                .addPartitionKey(BlobParts.ID, DataType.text())
-                                .addColumn(BlobParts.DATA, DataType.blob())));
+                                .addPartitionKey(BlobTable.ID, DataType.text())
+                                .addClusteringColumn(BlobTable.BlobParts.CHUNK_NUMBER, DataType.cint())
+                                .addColumn(BlobTable.BlobParts.DATA, DataType.blob())));
         types = ImmutableList.of();
     }
 

@@ -52,16 +52,4 @@ public interface CassandraMessageV2Table {
         String IS_INLINE = "isInline";
     }
 
-    interface Blobs {
-        String TABLE_NAME = "blobs";
-        String ID = "id";
-        String POSITION = "position";
-        String PART = "part";
-    }
-
-    interface BlobParts {
-        String TABLE_NAME = "blobParts";
-        String ID = "id";
-        String DATA = "data";
-    }
 }

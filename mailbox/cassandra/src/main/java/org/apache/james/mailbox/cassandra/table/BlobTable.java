@@ -19,15 +19,14 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
-public interface BlobsTable {
+public interface BlobTable {
     String TABLE_NAME = "blobs";
     String ID = "id";
-    String POSITION = "position";
-    String PART = "part";
+    String NUMBER_OF_CHUNK = "position";
 
     interface BlobParts {
         String TABLE_NAME = "blobParts";
-        String ID = "id";
+        String CHUNK_NUMBER = "chunkNumber";
         String DATA = "data";
     }
 }
