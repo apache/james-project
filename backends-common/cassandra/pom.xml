@@ -144,19 +144,19 @@
                         </exclusion>
                     </exclusions>
                 </dependency>
-		        <dependency>
-		            <groupId>com.google.guava</groupId>
-		            <artifactId>guava</artifactId>
-		        </dependency>
-			<dependency>
-			    <groupId>commons-lang</groupId>
-			    <artifactId>commons-lang</artifactId>
-			    <version>2.6</version>
-			</dependency>
-            <dependency>
-                <groupId>javax.inject</groupId>
-                <artifactId>javax.inject</artifactId>
-            </dependency>
+                <dependency>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>commons-lang</groupId>
+                    <artifactId>commons-lang</artifactId>
+                    <version>2.6</version>
+                </dependency>
+                <dependency>
+                    <groupId>javax.inject</groupId>
+                    <artifactId>javax.inject</artifactId>
+                </dependency>
                 <dependency>
                     <groupId>net.javacrumbs.future-converter</groupId>
                     <artifactId>future-converter-java8-guava</artifactId>
@@ -174,13 +174,13 @@
                     <version>1.7.6</version>
                     <scope>test</scope>
                 </dependency>
-		        <dependency>
-		            <groupId>org.cassandraunit</groupId>
-		            <artifactId>cassandra-unit</artifactId>
-		            <version>2.1.9.2</version>
-		            <scope>test</scope>
-		        </dependency>
-		    </dependencies>
+                <dependency>
+                    <groupId>org.cassandraunit</groupId>
+                    <artifactId>cassandra-unit</artifactId>
+                    <version>2.1.9.2</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
             <build>
                 <plugins>
                     <plugin>
