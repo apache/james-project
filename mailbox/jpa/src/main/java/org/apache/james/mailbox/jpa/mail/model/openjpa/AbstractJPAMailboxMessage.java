@@ -233,7 +233,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     private List<JPAUserFlag> userFlags;
 
     public AbstractJPAMailboxMessage() {
-        
+
     }
 
     public AbstractJPAMailboxMessage(JPAMailbox mailbox, Date internalDate, Flags flags, long contentOctets,
@@ -260,7 +260,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     /**
      * Constructs a copy of the given message. All properties are cloned except
      * mailbox and UID.
-     * 
+     *
      * @param mailbox
      *            new mailbox
      * @param uid
@@ -330,7 +330,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
 
     /**
      * Gets the top level MIME content media type.
-     * 
+     *
      * @return top level MIME content media type, or null if default
      */
     public String getMediaType() {
@@ -339,7 +339,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
 
     /**
      * Gets the MIME content subtype.
-     * 
+     *
      * @return the MIME content subtype, or null if default
      */
     public String getSubType() {
@@ -350,7 +350,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
      * Gets a read-only list of meta-data properties. For properties with
      * multiple values, this list will contain several enteries with the same
      * namespace and local name.
-     * 
+     *
      * @return unmodifiable list of meta-data, not null
      */
     public List<Property> getProperties() {
@@ -359,7 +359,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
 
     /**
      * Gets the number of CRLF in a textual document.
-     * 
+     *
      * @return CRLF count when document is textual, null otherwise
      */
     public Long getTextualLineCount() {
@@ -430,6 +430,11 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     }
 
     @Override
+    public long getHeaderOctets() {
+        return bodyStartOctet;
+    }
+
+    @Override
     public void setFlags(Flags flags) {
         answered = flags.contains(Flags.Flag.ANSWERED);
         deleted = flags.contains(Flags.Flag.DELETED);
@@ -493,16 +498,16 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     }
 
     public String toString() {
-        return "message(" 
-                + "mailboxId = " + this.getMailboxId() + TOSTRING_SEPARATOR 
+        return "message("
+                + "mailboxId = " + this.getMailboxId() + TOSTRING_SEPARATOR
                 + "uid = " + this.uid + TOSTRING_SEPARATOR
-                + "internalDate = " + this.internalDate + TOSTRING_SEPARATOR 
+                + "internalDate = " + this.internalDate + TOSTRING_SEPARATOR
                 + "answered = " + this.answered + TOSTRING_SEPARATOR
-                + "deleted = " + this.deleted + TOSTRING_SEPARATOR 
+                + "deleted = " + this.deleted + TOSTRING_SEPARATOR
                 + "draft = " + this.draft + TOSTRING_SEPARATOR
-                + "flagged = " + this.flagged + TOSTRING_SEPARATOR 
-                + "recent = " + this.recent + TOSTRING_SEPARATOR 
-                + "seen = " + this.seen + TOSTRING_SEPARATOR 
+                + "flagged = " + this.flagged + TOSTRING_SEPARATOR
+                + "recent = " + this.recent + TOSTRING_SEPARATOR
+                + "seen = " + this.seen + TOSTRING_SEPARATOR
                 + " )";
     }
 

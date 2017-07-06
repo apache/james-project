@@ -224,6 +224,11 @@ public class MaildirMessage implements Message {
     }
 
     @Override
+    public long getHeaderOctets() {
+        return getBodyStartOctet();
+    }
+
+    @Override
     public Long getTextualLineCount() {
         parseMessage();
         return propertyBuilder.getTextualLineCount();

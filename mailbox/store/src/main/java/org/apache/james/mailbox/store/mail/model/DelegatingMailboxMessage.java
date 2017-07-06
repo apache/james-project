@@ -97,6 +97,11 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
     }
 
     @Override
+    public long getHeaderOctets() {
+        return message.getHeaderOctets();
+    }
+
+    @Override
     public String getMediaType() {
         return message.getMediaType();
     }

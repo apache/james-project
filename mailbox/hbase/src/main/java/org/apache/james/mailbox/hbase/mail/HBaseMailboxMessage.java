@@ -309,6 +309,11 @@ public class HBaseMailboxMessage implements MailboxMessage {
         return FlagsBuilder.createFlags(this, createUserFlags());
     }
 
+    @Override
+    public long getHeaderOctets() {
+        return bodyStartOctet;
+    }
+
     /**
      * This implementation supports user flags
      */

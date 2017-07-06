@@ -119,7 +119,12 @@ public class SimpleMailboxMembership implements MailboxMessage {
     public void unsetRecent() {
         recent = false;
     }
-    
+
+    @Override
+    public long getHeaderOctets() {
+        return size - body.length;
+    }
+
     public void setFlags(Flags flags) {
         answered = flags.contains(Flags.Flag.ANSWERED);
         deleted = flags.contains(Flags.Flag.DELETED);

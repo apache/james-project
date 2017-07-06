@@ -145,7 +145,7 @@ public class CassandraMessageDAO {
             BoundStatement boundStatement = insert.bind()
                 .setUUID(MESSAGE_ID, messageId.get())
                 .setTimestamp(INTERNAL_DATE, message.getInternalDate())
-                .setInt(BODY_START_OCTET, (int) (message.getFullContentOctets() - message.getBodyOctets()))
+                .setInt(BODY_START_OCTET, (int) (message.getHeaderOctets()))
                 .setLong(FULL_CONTENT_OCTETS, message.getFullContentOctets())
                 .setLong(BODY_OCTECTS, message.getBodyOctets())
                 .setBytes(BODY_CONTENT, toByteBuffer(message.getBodyContent()))

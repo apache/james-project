@@ -70,6 +70,13 @@ public interface Message {
     long getFullContentOctets();
 
     /**
+     * The number of octets contained in the header content of this document.
+     *
+     * @return number of octets
+     */
+    long getHeaderOctets();
+
+    /**
      * Gets the number of CRLF in a textual document.
      * @return CRLF count when document is textual,
      * null otherwise

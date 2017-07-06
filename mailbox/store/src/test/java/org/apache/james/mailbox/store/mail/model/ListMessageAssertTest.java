@@ -153,6 +153,11 @@ public class ListMessageAssertTest {
             }
 
             @Override
+            public long getHeaderOctets() {
+                return bodyStart;
+            }
+
+            @Override
             public MessageId getMessageId() {
                 return messageId;
             }

@@ -679,6 +679,11 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
     }
 
     @Override
+    public long getHeaderOctets() {
+        return getBodyStartOctet();
+    }
+
+    @Override
     public int compareTo(MailboxMessage other) {
         return MESSAGE_UID_COMPARATOR.compare(this, other);
     }
