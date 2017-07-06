@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.in;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.FIELDS;
@@ -34,7 +33,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -43,16 +44,15 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
+import org.apache.james.util.FluentFutureStream;
 
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.ThrownByLambdaException;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
+import org.apache.james.util.OptionalConverter;
 
 public class CassandraAttachmentMapper implements AttachmentMapper {
 
@@ -98,23 +98,29 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     public CompletableFuture<List<Attachment>> getAttachmentsAsFuture(Collection<AttachmentId> attachmentIds) {
         Preconditions.checkArgument(attachmentIds != null);
-        if (attachmentIds.isEmpty()) {
-            return CompletableFuture.completedFuture(ImmutableList.of());
-        }
-        List<String> ids = attachmentIds.stream()
-                .map(AttachmentId::getId)
-                .collect(Guavate.toImmutableList());
-        return cassandraAsyncExecutor.execute(
-            select(FIELDS)
-                .from(TABLE_NAME)
-                .where(in(ID, ids)))
-            .thenApply(this::attachments);
+
+        Stream<CompletableFuture<Optional<Attachment>>> attachments = attachmentIds
+                .stream()
+                .distinct()
+                .map(this::getAttachmentAsFuture);
+
+        return FluentFutureStream
+            .of(attachments)
+            .flatMap(OptionalConverter::toStream)
+            .completableFuture()
+            .thenApply(stream ->
+                stream.collect(Guavate.toImmutableList()));
     }
 
-    private List<Attachment> attachments(ResultSet resultSet) {
-        Builder<Attachment> builder = ImmutableList.<Attachment> builder();
-        resultSet.forEach(row -> builder.add(attachment(row)));
-        return builder.build();
+    private CompletableFuture<Optional<Attachment>> getAttachmentAsFuture(AttachmentId attachmentId) {
+        String id = attachmentId.getId();
+
+        return cassandraAsyncExecutor.executeSingleRow(
+            select(FIELDS)
+                .from(TABLE_NAME)
+                .where(eq(ID, id)))
+            .thenApply(optional ->
+                optional.map(this::attachment));
     }
 
     @Override
