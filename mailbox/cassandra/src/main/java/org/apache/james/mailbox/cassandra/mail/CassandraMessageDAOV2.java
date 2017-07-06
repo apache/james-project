@@ -121,16 +121,16 @@ public class CassandraMessageDAOV2 {
 
     private PreparedStatement prepareInsert(Session session) {
         return session.prepare(insertInto(TABLE_NAME)
-                .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
-                .value(INTERNAL_DATE, bindMarker(INTERNAL_DATE))
-                .value(BODY_START_OCTET, bindMarker(BODY_START_OCTET))
-                .value(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS))
-                .value(BODY_OCTECTS, bindMarker(BODY_OCTECTS))
-                .value(BODY_CONTENT, bindMarker(BODY_CONTENT))
-                .value(HEADER_CONTENT, bindMarker(HEADER_CONTENT))
-                .value(PROPERTIES, bindMarker(PROPERTIES))
-                .value(TEXTUAL_LINE_COUNT, bindMarker(TEXTUAL_LINE_COUNT))
-                .value(ATTACHMENTS, bindMarker(ATTACHMENTS)));
+            .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
+            .value(INTERNAL_DATE, bindMarker(INTERNAL_DATE))
+            .value(BODY_START_OCTET, bindMarker(BODY_START_OCTET))
+            .value(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS))
+            .value(BODY_OCTECTS, bindMarker(BODY_OCTECTS))
+            .value(BODY_CONTENT, bindMarker(BODY_CONTENT))
+            .value(HEADER_CONTENT, bindMarker(HEADER_CONTENT))
+            .value(PROPERTIES, bindMarker(PROPERTIES))
+            .value(TEXTUAL_LINE_COUNT, bindMarker(TEXTUAL_LINE_COUNT))
+            .value(ATTACHMENTS, bindMarker(ATTACHMENTS)));
     }
 
     private PreparedStatement prepareDelete(Session session) {
@@ -154,8 +154,8 @@ public class CassandraMessageDAOV2 {
                     message.getHeaderContent()));
 
             return bodyContent.thenCompose(bodyContentId ->
-                    headerContent.thenApply(headerContentId ->
-                            Pair.of(bodyContentId, headerContentId)));
+                headerContent.thenApply(headerContentId ->
+                    Pair.of(bodyContentId, headerContentId)));
         } catch (IOException e) {
             throw new MailboxException("Error saving mail content", e);
         }
@@ -164,24 +164,24 @@ public class CassandraMessageDAOV2 {
     private BoundStatement boundWriteStatement(MailboxMessage message, Pair<Optional<BlobId>, Optional<BlobId>> pair) {
         CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
         return insert.bind()
-                .setUUID(MESSAGE_ID, messageId.get())
-                .setTimestamp(INTERNAL_DATE, message.getInternalDate())
-                .setInt(BODY_START_OCTET, (int) (message.getHeaderOctets()))
-                .setLong(FULL_CONTENT_OCTETS, message.getFullContentOctets())
-                .setLong(BODY_OCTECTS, message.getBodyOctets())
-                .setString(BODY_CONTENT, pair.getLeft().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
-                .setString(HEADER_CONTENT, pair.getRight().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
-                .setLong(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getTextualLineCount()).orElse(DEFAULT_LONG_VALUE))
-                .setList(PROPERTIES, message.getProperties().stream()
-                        .map(x -> typesProvider.getDefinedUserType(PROPERTIES)
-                                .newValue()
-                                .setString(Properties.NAMESPACE, x.getNamespace())
-                                .setString(Properties.NAME, x.getLocalName())
-                                .setString(Properties.VALUE, x.getValue()))
-                        .collect(Collectors.toList()))
-                .setList(ATTACHMENTS, message.getAttachments().stream()
-                        .map(this::toUDT)
-                        .collect(Guavate.toImmutableList()));
+            .setUUID(MESSAGE_ID, messageId.get())
+            .setTimestamp(INTERNAL_DATE, message.getInternalDate())
+            .setInt(BODY_START_OCTET, (int) (message.getHeaderOctets()))
+            .setLong(FULL_CONTENT_OCTETS, message.getFullContentOctets())
+            .setLong(BODY_OCTECTS, message.getBodyOctets())
+            .setString(BODY_CONTENT, pair.getLeft().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
+            .setString(HEADER_CONTENT, pair.getRight().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
+            .setLong(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getTextualLineCount()).orElse(DEFAULT_LONG_VALUE))
+            .setList(PROPERTIES, message.getProperties().stream()
+                .map(x -> typesProvider.getDefinedUserType(PROPERTIES)
+                    .newValue()
+                    .setString(Properties.NAMESPACE, x.getNamespace())
+                    .setString(Properties.NAME, x.getLocalName())
+                    .setString(Properties.VALUE, x.getValue()))
+                .collect(Collectors.toList()))
+            .setList(ATTACHMENTS, message.getAttachments().stream()
+                .map(this::toUDT)
+                .collect(Guavate.toImmutableList()));
     }
 
     private UDTValue toUDT(MessageAttachment messageAttachment) {
@@ -218,7 +218,7 @@ public class CassandraMessageDAOV2 {
     }
 
     private CompletableFuture<MessageResult>
-            message(ResultSet rows,ComposedMessageIdWithMetaData messageIdWithMetaData, FetchType fetchType) {
+    message(ResultSet rows,ComposedMessageIdWithMetaData messageIdWithMetaData, FetchType fetchType) {
         ComposedMessageId messageId = messageIdWithMetaData.getComposedMessageId();
 
         if (rows.isExhausted()) {
@@ -256,13 +256,13 @@ public class CassandraMessageDAOV2 {
 
     private Stream<MessageAttachmentRepresentation> getAttachments(Row row, FetchType fetchType) {
         switch (fetchType) {
-        case Full:
-        case Body:
-            List<UDTValue> udtValues = row.getList(ATTACHMENTS, UDTValue.class);
+            case Full:
+            case Body:
+                List<UDTValue> udtValues = row.getList(ATTACHMENTS, UDTValue.class);
 
-            return attachmentByIds(udtValues);
-        default:
-            return Stream.of();
+                return attachmentByIds(udtValues);
+            default:
+                return Stream.of();
         }
     }
 
@@ -273,11 +273,11 @@ public class CassandraMessageDAOV2 {
 
     private MessageAttachmentRepresentation messageAttachmentByIdFrom(UDTValue udtValue) {
         return MessageAttachmentRepresentation.builder()
-                .attachmentId(AttachmentId.from(udtValue.getString(Attachments.ID)))
-                .name(udtValue.getString(Attachments.NAME))
-                .cid(Optional.ofNullable(udtValue.getString(Attachments.CID)).map(Cid::from))
-                .isInline(udtValue.getBool(Attachments.IS_INLINE))
-                .build();
+            .attachmentId(AttachmentId.from(udtValue.getString(Attachments.ID)))
+            .name(udtValue.getString(Attachments.NAME))
+            .cid(Optional.ofNullable(udtValue.getString(Attachments.CID)).map(Cid::from))
+            .isInline(udtValue.getBool(Attachments.IS_INLINE))
+            .build();
     }
 
     private PreparedStatement retrieveSelect(FetchType fetchType) {
@@ -308,7 +308,7 @@ public class CassandraMessageDAOV2 {
                 return this::getHeaderContent;
             case Body:
                 return row -> getBodyContent(row)
-                        .thenApply(data -> Bytes.concat(new byte[row.getInt(BODY_START_OCTET)], data));
+                    .thenApply(data -> Bytes.concat(new byte[row.getInt(BODY_START_OCTET)], data));
             case Metadata:
                 return row -> CompletableFuture.completedFuture(EMPTY_BYTE_ARRAY);
             default:

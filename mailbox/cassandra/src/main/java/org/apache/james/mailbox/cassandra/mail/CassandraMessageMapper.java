@@ -177,16 +177,16 @@ public class CassandraMessageMapper implements MessageMapper {
     public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange messageRange, FetchType ftype, int max) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return retrieveMessages(retrieveMessageIds(mailboxId, messageRange), ftype, Limit.from(max))
-                .join()
-                .map(SimpleMailboxMessage -> (MailboxMessage) SimpleMailboxMessage)
-                .sorted(Comparator.comparing(MailboxMessage::getUid))
-                .iterator();
+            .join()
+            .map(SimpleMailboxMessage -> (MailboxMessage) SimpleMailboxMessage)
+            .sorted(Comparator.comparing(MailboxMessage::getUid))
+            .iterator();
     }
 
     private List<ComposedMessageIdWithMetaData> retrieveMessageIds(CassandraId mailboxId, MessageRange messageRange) {
         return messageIdDAO.retrieveMessages(mailboxId, messageRange)
-                .join()
-                .collect(Guavate.toImmutableList());
+            .join()
+            .collect(Guavate.toImmutableList());
     }
 
     private CompletableFuture<Stream<SimpleMailboxMessage>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
@@ -203,8 +203,8 @@ public class CassandraMessageMapper implements MessageMapper {
     public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return mailboxRecentDAO.getRecentMessageUidsInMailbox(mailboxId)
-                .join()
-                .collect(Guavate.toImmutableList());
+            .join()
+            .collect(Guavate.toImmutableList());
     }
 
     @Override
@@ -239,11 +239,11 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     private CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>> retrieveMessagesAndDoMigrationIfNeeded(
-            List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
+        List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
         return messageDAOV2.retrieveMessages(messageIds, fetchType, limit)
-                .thenCompose(messageResults -> FluentFutureStream.of(messageResults
-                        .map(v1ToV2Migration::moveFromV1toV2))
-                        .completableFuture());
+            .thenCompose(messageResults -> FluentFutureStream.of(messageResults
+                .map(v1ToV2Migration::moveFromV1toV2))
+                .completableFuture());
     }
 
     @Override

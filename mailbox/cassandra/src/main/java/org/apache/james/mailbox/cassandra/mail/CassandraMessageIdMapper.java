@@ -115,10 +115,11 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     private CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>>
             retrieveMessages(FetchType fetchType, ImmutableList<ComposedMessageIdWithMetaData> composedMessageIds) {
+
         return messageDAOV2.retrieveMessages(composedMessageIds, fetchType, Limit.unlimited())
-                .thenCompose(messageResults -> FluentFutureStream.of(messageResults
-                        .map(v1ToV2Migration::moveFromV1toV2))
-                        .completableFuture());
+            .thenCompose(messageResults -> FluentFutureStream.of(messageResults
+                .map(v1ToV2Migration::moveFromV1toV2))
+                .completableFuture());
     }
 
     private CompletableFuture<Stream<SimpleMailboxMessage>> filterMessagesWIthExistingMailbox(Stream<SimpleMailboxMessage> stream) {
