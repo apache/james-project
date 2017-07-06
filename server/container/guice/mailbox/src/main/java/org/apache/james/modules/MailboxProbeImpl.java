@@ -146,6 +146,17 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
     }
 
     @Override
+    public void importEmlFileToMailbox(String namespace, String user, String name, String emlpath) throws Exception{
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(user, LOGGER);
+        mailboxManager.startProcessingRequest(mailboxSession);
+        MessageManager messageManager = mailboxManager.getMailbox(new MailboxPath(namespace, user, name),
+                mailboxSession);
+        InputStream emlFileAsStream = new FileInputStream(emlpath);
+        boolean isRecent = true;
+        messageManager.appendMessage(emlFileAsStream, new Date(), mailboxSession, isRecent, new Flags());
+    }
+    
+    @Override
     public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
             throws MailboxException {
         
@@ -179,15 +190,4 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(user, LOGGER);
         return subscriptionManager.subscriptions(mailboxSession);
     }
-
-	@Override
-	public void importEmlFileToMailbox(String namespace, String user, String name, String emlpath) throws Exception{
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(user, LOGGER);
-        mailboxManager.startProcessingRequest(mailboxSession);
-        MessageManager messageManager = mailboxManager.getMailbox(new MailboxPath(namespace, user, name),
-                mailboxSession);
-        InputStream emlFileAsStream = new FileInputStream(emlpath);
-        boolean isRecent = true;
-        messageManager.appendMessage(emlFileAsStream, new Date(), mailboxSession, isRecent, new Flags());
-	}
 }
