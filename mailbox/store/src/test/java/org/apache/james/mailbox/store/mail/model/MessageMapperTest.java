@@ -286,6 +286,15 @@ public abstract class MessageMapperTest {
     }
 
     @Test
+    public void messagesRetrievedUsingFetchTypeFullShouldHaveBodyDataLoaded() throws MailboxException, IOException{
+        saveMessages();
+        MessageMapper.FetchType fetchType = FetchType.Full;
+        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), fetchType, LIMIT);
+        assertThat(retrievedMessageIterator.next()).isEqualToWithoutAttachment(message1, fetchType);
+        assertThat(retrievedMessageIterator).isEmpty();
+    }
+
+    @Test
     public void retrievingMessagesWithALimitShouldLimitTheNumberOfMessages() throws MailboxException {
         int limit = 2;
         saveMessages();

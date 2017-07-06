@@ -24,10 +24,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.OptionalConverter;
 
 import com.github.steveash.guavate.Guavate;
@@ -40,6 +44,20 @@ public class AttachmentLoader {
 
     public AttachmentLoader(CassandraAttachmentMapper attachmentMapper) {
         this.attachmentMapper = attachmentMapper;
+    }
+
+    public CompletableFuture<Stream<SimpleMailboxMessage>> toMailboxMessageWithAttachments(
+                CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>> messageRepresentations) {
+
+        return FluentFutureStream.of(messageRepresentations)
+            .thenComposeOnAll(pair -> getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
+                    .thenApply(attachments -> Pair.of(pair.getLeft(), attachments)))
+            .map(pair ->
+                pair.getLeft()
+                    .toMailboxMessage(pair.getRight()
+                        .stream()
+                        .collect(Guavate.toImmutableList())))
+            .completableFuture();
     }
 
     public CompletableFuture<Collection<MessageAttachment>> getAttachments(List<MessageAttachmentRepresentation> attachmentRepresentations) {

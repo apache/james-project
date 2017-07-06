@@ -57,6 +57,7 @@ import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.Limit;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV1Table.Attachments;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV1Table.Properties;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -186,9 +187,13 @@ public class CassandraMessageDAO {
         return ByteBuffer.wrap(ByteStreams.toByteArray(stream));
     }
 
-    public CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
+    public CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>> retrieveMessages(
+        List<ComposedMessageIdWithMetaData> messageIds,
+        FetchType fetchType,
+        Limit limit
+    ) {
         return CompletableFutureUtil.chainAll(
-            getLimitedIdStream(messageIds.stream().distinct(), limit)
+            limit.applyOnStream(messageIds.stream().distinct())
                 .collect(JamesCollectors.chunker(cassandraConfiguration.getMessageReadChunkSize())),
             ids -> FluentFutureStream.of(
                 ids.stream()
@@ -197,13 +202,6 @@ public class CassandraMessageDAO {
                             message(resultSet.one(), id, fetchType))))
                 .completableFuture())
             .thenApply(stream -> stream.flatMap(Function.identity()));
-    }
-
-    private Stream<ComposedMessageIdWithMetaData> getLimitedIdStream(Stream<ComposedMessageIdWithMetaData> messageIds, Optional<Integer> limit) {
-        return limit
-            .filter(value -> value > 0)
-            .map(messageIds::limit)
-            .orElse(messageIds);
     }
 
     private CompletableFuture<ResultSet> retrieveRow(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {

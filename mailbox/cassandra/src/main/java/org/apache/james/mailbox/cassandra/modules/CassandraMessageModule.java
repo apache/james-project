@@ -112,8 +112,8 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(CassandraMessageV2Table.BODY_OCTECTS, bigint())
                     .addColumn(CassandraMessageV2Table.TEXTUAL_LINE_COUNT, bigint())
                     .addColumn(CassandraMessageV2Table.FULL_CONTENT_OCTETS, bigint())
-                    .addColumn(CassandraMessageV2Table.BODY_CONTENT, timeuuid())
-                    .addColumn(CassandraMessageV2Table.HEADER_CONTENT, timeuuid())
+                    .addColumn(CassandraMessageV2Table.BODY_CONTENT, text())
+                    .addColumn(CassandraMessageV2Table.HEADER_CONTENT, text())
                     .addUDTListColumn(CassandraMessageV2Table.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageV2Table.ATTACHMENTS))
                     .addUDTListColumn(CassandraMessageV2Table.PROPERTIES, SchemaBuilder.frozen(CassandraMessageV2Table.PROPERTIES))));
         types = ImmutableList.of(

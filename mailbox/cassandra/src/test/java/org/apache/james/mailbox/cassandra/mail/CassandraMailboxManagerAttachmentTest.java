@@ -31,6 +31,7 @@ import org.apache.james.mailbox.cassandra.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
@@ -59,6 +60,7 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
                     new CassandraAclModule(),
                     new CassandraMailboxModule(),
                     new CassandraMessageModule(),
+                    new CassandraBlobModule(),
                     new CassandraMailboxCounterModule(),
                     new CassandraMailboxRecentsModule(),
                     new CassandraFirstUnseenModule(),
@@ -85,11 +87,16 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
         CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
         CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(cassandra.getConf());
         CassandraDeletedMessageDAO deletedMessageDAO = new CassandraDeletedMessageDAO(cassandra.getConf());
+
+        CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
+        CassandraMessageDAO messageDAO = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        CassandraMessageDAOV2 messageDAOV2 = new CassandraMessageDAOV2(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO);
         mailboxSessionMapperFactory = new CassandraMailboxSessionMapperFactory(
                 new CassandraUidProvider(cassandra.getConf()),
                 new CassandraModSeqProvider(cassandra.getConf()),
                 cassandra.getConf(),
-                new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider()),
+                messageDAO,
+                messageDAOV2,
                 new CassandraMessageIdDAO(cassandra.getConf(), messageIdFactory),
                 new CassandraMessageIdToImapUidDAO(cassandra.getConf(), messageIdFactory),
                 new CassandraMailboxCounterDAO(cassandra.getConf()),

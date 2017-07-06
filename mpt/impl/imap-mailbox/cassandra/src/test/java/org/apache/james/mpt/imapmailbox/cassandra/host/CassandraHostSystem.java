@@ -29,6 +29,7 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.CassandraBlobsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
@@ -37,6 +38,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
@@ -45,6 +47,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
@@ -89,6 +92,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
             new CassandraAclModule(),
             new CassandraMailboxModule(),
             new CassandraMessageModule(),
+            new CassandraBlobModule(),
             new CassandraMailboxCounterModule(),
             new CassandraMailboxRecentsModule(),
             new CassandraFirstUnseenModule(),
@@ -107,6 +111,8 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         CassandraTypesProvider typesProvider = new CassandraTypesProvider(mailboxModule, session);
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         CassandraMessageDAO messageDAO = new CassandraMessageDAO(session, typesProvider);
+        CassandraBlobsDAO cassandraBlobDao = new CassandraBlobsDAO(session);
+        CassandraMessageDAOV2 messageDAOV2 = new CassandraMessageDAOV2(session, typesProvider, cassandraBlobDao);
         CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(session, messageIdFactory);
         CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(session, messageIdFactory);
         CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(session);
@@ -122,6 +128,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
             modSeqProvider,
             session,
             messageDAO,
+            messageDAOV2,
             messageIdDAO,
             imapUidDAO,
             mailboxCounterDAO,

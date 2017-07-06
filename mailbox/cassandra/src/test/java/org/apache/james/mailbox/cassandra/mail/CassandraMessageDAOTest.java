@@ -29,6 +29,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.Limit;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
@@ -106,7 +107,8 @@ public class CassandraMessageDAOTest {
 
         testee.save(messageWith1Attachment).join();
 
-        List<Optional<MessageAttachmentRepresentation>> attachmentRepresentation = testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Optional.empty())
+        List<Optional<MessageAttachmentRepresentation>> attachmentRepresentation =
+            testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Limit.unlimited())
                 .get()
                 .map(pair -> pair.getRight())
                 .map(streamAttachemnt -> streamAttachemnt.findFirst())
@@ -128,7 +130,8 @@ public class CassandraMessageDAOTest {
 
         testee.save(messageWith1Attachment).join();
 
-        List<Optional<MessageAttachmentRepresentation>> attachmentRepresentation = testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Optional.empty())
+        List<Optional<MessageAttachmentRepresentation>> attachmentRepresentation =
+            testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Limit.unlimited())
                 .get()
                 .map(pair -> pair.getRight())
                 .map(streamAttachemnt -> streamAttachemnt.findFirst())
@@ -138,8 +141,23 @@ public class CassandraMessageDAOTest {
         assertThat(attachmentRepresentation.get(0).get().getCid().isPresent()).isFalse();
     }
 
-    private SimpleMailboxMessage createMessage(MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) {
-        return new SimpleMailboxMessage(messageId, new Date(), content.length(), bodyStart, new SharedByteArrayInputStream(content.getBytes()), new Flags(), propertyBuilder, MAILBOX_ID, attachments);
+    private SimpleMailboxMessage createMessage(
+        MessageId messageId,
+        String content,
+        int bodyStart,
+        PropertyBuilder propertyBuilder,
+        List<MessageAttachment> attachments
+    ) {
+        return new SimpleMailboxMessage(
+            messageId,
+            new Date(),
+            content.length(),
+            bodyStart,
+            new SharedByteArrayInputStream(content.getBytes()),
+            new Flags(),
+            propertyBuilder,
+            MAILBOX_ID,
+            attachments);
     }
 
 }

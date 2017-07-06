@@ -25,6 +25,7 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraBlobsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
@@ -32,6 +33,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
@@ -55,7 +57,9 @@ public class CassandraMailboxManagerProvider {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(session, messageIdFactory);
         CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(session, messageIdFactory);
+        CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(session);
         CassandraMessageDAO messageDAO = new CassandraMessageDAO(session, cassandraTypesProvider);
+        CassandraMessageDAOV2 messageDAOV2 = new CassandraMessageDAOV2(session, cassandraTypesProvider, blobsDAO);
         CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(session);
         CassandraMailboxRecentsDAO mailboxRecentsDAO = new CassandraMailboxRecentsDAO(session);
         CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(session, cassandraTypesProvider);
@@ -68,6 +72,7 @@ public class CassandraMailboxManagerProvider {
             modSeqProvider,
             session,
             messageDAO,
+            messageDAOV2,
             messageIdDAO,
             imapUidDAO,
             mailboxCounterDAO,
