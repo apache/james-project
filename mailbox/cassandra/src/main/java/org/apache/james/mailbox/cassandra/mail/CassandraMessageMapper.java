@@ -193,16 +193,8 @@ public class CassandraMessageMapper implements MessageMapper {
         CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>>
             messageRepresentations = retrieveMessagesAndDoMigrationIfNeeded(messageIds, fetchType, limit);
 
-        if (fetchType == FetchType.Body || fetchType == FetchType.Full) {
-            return attachmentLoader.toMailboxMessageWithAttachments(messageRepresentations);
-        } else {
-            return FluentFutureStream.of(messageRepresentations)
-                .map(pair ->
-                    pair
-                        .getLeft()
-                        .toMailboxMessage(ImmutableList.of()))
-                .completableFuture();
-        }
+        return messageRepresentations
+            .thenCompose(stream -> attachmentLoader.addAttachmentToMessages(stream, fetchType));
     }
 
 

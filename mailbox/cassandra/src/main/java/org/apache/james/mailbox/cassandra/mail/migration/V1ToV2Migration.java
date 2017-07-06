@@ -36,10 +36,14 @@ import org.apache.james.mailbox.cassandra.mail.MessageWithoutAttachment;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
 public class V1ToV2Migration {
+    private static final Logger LOGGER = LoggerFactory.getLogger(V1ToV2Migration.class);
+
     private final CassandraMessageDAO messageDAOV1;
     private final CassandraMessageDAOV2 messageDAOV2;
     private final AttachmentLoader attachmentLoader;
@@ -64,8 +68,7 @@ public class V1ToV2Migration {
     }
 
     private CompletableFuture<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> performV1ToV2Migration(Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> messageV1) {
-        return attachmentLoader.toMailboxMessageWithAttachments(
-            CompletableFuture.completedFuture(Stream.of(messageV1)))
+        return attachmentLoader.addAttachmentToMessages(Stream.of(messageV1), MessageMapper.FetchType.Full)
             .thenApply(stream -> stream.findAny().get())
             .thenCompose(this::saveInV2FromV1)
             .thenCompose(this::deleteInV1)
@@ -83,6 +86,7 @@ public class V1ToV2Migration {
         try {
             return messageDAOV2.save(message).thenApply(any -> Optional.of(message));
         } catch (MailboxException e) {
+            LOGGER.error("Exception while saving message during migration", e);
             return CompletableFuture.completedFuture(Optional.<SimpleMailboxMessage>empty());
         }
     }
