@@ -84,7 +84,7 @@ public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
     }
 
     @Override
-    public void importEmlFileToMailBox(String namespace, String user, String name, String emlpath) {
+    public void importEmlFileToMailbox(String namespace, String user, String name, String emlpath) {
         mailboxManagerManagement.importEmlFileToMailbox(namespace, user, name, emlpath);
     }
 
