@@ -158,7 +158,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
             MessageManager messageManager = mailboxManager.getMailbox(new MailboxPath(namespace, user, name), session);
             InputStream emlFileAsStream = new FileInputStream(emlpath);
             boolean isRecent = true;
-            messageManager.appendMessage(emlFileResourceAsStream, new Date(),
+            messageManager.appendMessage(emlFileAsStream, new Date(),
                     session, isRecent, new Flags());
         } catch (Exception e) {
             log.error("Unable to create mailbox", e);
