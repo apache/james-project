@@ -342,7 +342,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEMLFILETOMAILBOX.getCommand(), namespace, user, name, emlpath};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        mailboxProbe.importEmlFileToMailBox(namespace, user, name, emlpath);
+        mailboxProbe.importEmlFileToMailbox(namespace, user, name, emlpath);
         expectLastCall();
 
         control.replay();
@@ -1129,7 +1129,7 @@ public class ServerCmdTest {
         String user = "user@domain";
         String namespace = "#private";
         String name = "INBOX.test";
-        String emlpath = "./deneme.eml";
+        String emlpath = "./src/test/resources/eml/frnog.eml";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEMLFILETOMAILBOX.getCommand(), namespace, user, name, emlpath, ADDITIONAL_ARGUMENT};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
