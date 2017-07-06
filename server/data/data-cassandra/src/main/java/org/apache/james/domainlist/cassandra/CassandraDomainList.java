@@ -19,6 +19,10 @@
 
 package org.apache.james.domainlist.cassandra;
 
+import static org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable.TABLE_NAME;
+import static org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable.DOMAIN;
+
+import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
@@ -26,52 +30,88 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.utils.CassandraConstants;
+import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
-import org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable;
 
-import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 
 public class CassandraDomainList extends AbstractDomainList {
-
-    private Session session;
+    private final CassandraAsyncExecutor executor;
+    private final CassandraUtils cassandraUtils;
+    private final PreparedStatement readAllStatement;
+    private final PreparedStatement readStatement;
+    private final PreparedStatement insertStatement;
+    private final PreparedStatement removeStatement;
 
     @Inject
-    @Resource
-    public void setSession(Session session) {
-        this.session = session;
+    public CassandraDomainList(Session session, CassandraUtils cassandraUtils) {
+        this.executor = new CassandraAsyncExecutor(session);
+        this.cassandraUtils = cassandraUtils;
+        this.readAllStatement = prepareReadAllStatement(session);
+        this.readStatement = prepareReadStatement(session);
+        this.insertStatement = prepareInsertStatement(session);
+        this.removeStatement = prepareRemoveStatement(session);
+    }
+
+    private PreparedStatement prepareRemoveStatement(Session session) {
+        return session.prepare(delete()
+            .from(TABLE_NAME)
+            .ifExists()
+            .where(eq(DOMAIN, bindMarker(DOMAIN))));
+    }
+
+    private PreparedStatement prepareInsertStatement(Session session) {
+        return session.prepare(insertInto(TABLE_NAME)
+            .ifNotExists()
+            .value(DOMAIN, bindMarker(DOMAIN)));
+    }
+
+    private PreparedStatement prepareReadStatement(Session session) {
+        return session.prepare(select(DOMAIN)
+            .from(TABLE_NAME)
+            .where(eq(DOMAIN, bindMarker(DOMAIN))));
+    }
+
+    private PreparedStatement prepareReadAllStatement(Session session) {
+        return session.prepare(select(DOMAIN)
+            .from(TABLE_NAME));
+    }
+
+    @VisibleForTesting
+    CassandraDomainList(Session session) {
+        this(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     @Override
     protected List<String> getDomainListInternal() throws DomainListException {
-        return CassandraUtils.convertToStream(session.execute(select(CassandraDomainsTable.DOMAIN).from(CassandraDomainsTable.TABLE_NAME)))
-            .map(row -> row.getString(CassandraDomainsTable.DOMAIN))
-            .collect(Collectors.toList());
+        return executor.execute(readAllStatement.bind())
+            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
+                .map(row -> row.getString(DOMAIN))
+                .collect(Guavate.toImmutableList()))
+            .join();
     }
 
     @Override
     public boolean containsDomain(String domain) throws DomainListException {
-        return session.execute(select(CassandraDomainsTable.DOMAIN)
-            .from(CassandraDomainsTable.TABLE_NAME)
-            .where(eq(CassandraDomainsTable.DOMAIN, domain.toLowerCase(Locale.US))))
-            .one() != null;
+        return executor.executeSingleRow(readStatement.bind()
+                .setString(DOMAIN, domain.toLowerCase(Locale.US)))
+            .join()
+            .isPresent();
     }
 
     @Override
     public void addDomain(String domain) throws DomainListException {
-        boolean executed = session.execute(insertInto(CassandraDomainsTable.TABLE_NAME)
-            .ifNotExists()
-            .value(CassandraDomainsTable.DOMAIN, domain.toLowerCase(Locale.US)))
-            .one()
-            .getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED);
+        boolean executed = executor.executeReturnApplied(insertStatement.bind()
+            .setString(DOMAIN, domain.toLowerCase(Locale.US)))
+            .join();
         if (!executed) {
             throw new DomainListException(domain.toLowerCase(Locale.US) + " already exists.");
         }
@@ -79,11 +119,10 @@ public class CassandraDomainList extends AbstractDomainList {
 
     @Override
     public void removeDomain(String domain) throws DomainListException {
-        ResultSet resultSet = session.execute(delete()
-            .from(CassandraDomainsTable.TABLE_NAME)
-            .ifExists()
-            .where(eq(CassandraDomainsTable.DOMAIN, domain.toLowerCase(Locale.US))));
-        if (!resultSet.one().getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED)) {
+        boolean executed = executor.executeReturnApplied(removeStatement.bind()
+            .setString(DOMAIN, domain.toLowerCase(Locale.US)))
+            .join();
+        if (!executed) {
             throw new DomainListException(domain + " was not found");
         }
     }

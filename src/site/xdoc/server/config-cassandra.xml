@@ -93,6 +93,24 @@
         <dd>Optional.
           If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/pooling/">Specify heartbeat timeout</a></dd>
 
+        <dt><strong>mailbox.max.retry.acl</strong></dt>
+        <dd>Optional. Defaults to 1000.<br/> Controls the number of retries upon Cassandra ACL updates.</dd>
+        <dt><strong>mailbox.max.retry.modseq</strong></dt>
+        <dd>Optional. Defaults to 100000.<br/> Controls the number of retries upon Cassandra ModSeq generation.</dd>
+        <dt><strong>mailbox.max.retry.uid</strong></dt>
+        <dd>Optional. Defaults to 100000.<br/> Controls the number of retries upon Cassandra Uid generation.</dd>
+        <dt><strong>mailbox.max.retry.message.flags.update</strong></dt>
+        <dd>Optional. Defaults to 1000.<br/> Controls the number of retries upon Cassandra flags update, in MessageMapper.</dd>
+        <dt><strong>mailbox.max.retry.message.id.flags.update</strong></dt>
+        <dd>Optional. Defaults to 1000.<br/> Controls the number of retries upon Cassandra flags update, in MessageIdMapper.</dd>
+        <dt><strong>fetch.advance.row.count</strong></dt>
+        <dd>Optional. Defaults to 1000.<br/> Controls the number of remaining rows we should wait before prefetch when paging.</dd>
+        <dt><strong>chunk.size.flags.update</strong></dt>
+        <dd>Optional. Defaults to 20.<br/> Controls the number of messages flags updates to be performed concurently by MessageMapper.</dd>
+        <dt><strong>chunk.size.message.read</strong></dt>
+        <dd>Optional. Defaults to 100.<br/> Controls the number of messages to be retrieved in parallel.</dd>
+        <dt><strong>chunk.size.expunge</strong></dt>
+        <dd>Optional. Defaults to 100.<br/> Controls the number of messages to be expunged in parallel.</dd>
       </dl>
 
 

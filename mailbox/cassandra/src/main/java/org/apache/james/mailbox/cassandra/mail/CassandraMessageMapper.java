@@ -32,6 +32,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
@@ -67,14 +68,11 @@ public class CassandraMessageMapper implements MessageMapper {
         .count(0L)
         .unseen(0L)
         .build();
-    public static final int EXPUNGE_BATCH_SIZE = 100;
-    public static final int UPDATE_FLAGS_BATCH_SIZE = 20;
     public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageMapper.class);
 
     private final CassandraModSeqProvider modSeqProvider;
     private final MailboxSession mailboxSession;
     private final CassandraUidProvider uidProvider;
-    private final int maxRetries;
     private final CassandraMessageDAO messageDAO;
     private final CassandraMessageIdDAO messageIdDAO;
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
@@ -85,16 +83,16 @@ public class CassandraMessageMapper implements MessageMapper {
     private final CassandraFirstUnseenDAO firstUnseenDAO;
     private final AttachmentLoader attachmentLoader;
     private final CassandraDeletedMessageDAO deletedMessageDAO;
+    private final CassandraConfiguration cassandraConfiguration;
 
     public CassandraMessageMapper(CassandraUidProvider uidProvider, CassandraModSeqProvider modSeqProvider,
-                                  MailboxSession mailboxSession, int maxRetries, CassandraAttachmentMapper attachmentMapper,
+                                  MailboxSession mailboxSession, CassandraAttachmentMapper attachmentMapper,
                                   CassandraMessageDAO messageDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageIdToImapUidDAO imapUidDAO,
                                   CassandraMailboxCounterDAO mailboxCounterDAO, CassandraMailboxRecentsDAO mailboxRecentDAO, CassandraApplicableFlagDAO applicableFlagDAO,
-                                  CassandraIndexTableHandler indexTableHandler, CassandraFirstUnseenDAO firstUnseenDAO, CassandraDeletedMessageDAO deletedMessageDAO) {
+                                  CassandraIndexTableHandler indexTableHandler, CassandraFirstUnseenDAO firstUnseenDAO, CassandraDeletedMessageDAO deletedMessageDAO, CassandraConfiguration cassandraConfiguration) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
         this.mailboxSession = mailboxSession;
-        this.maxRetries = maxRetries;
         this.messageDAO = messageDAO;
         this.messageIdDAO = messageIdDAO;
         this.imapUidDAO = imapUidDAO;
@@ -105,6 +103,7 @@ public class CassandraMessageMapper implements MessageMapper {
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
         this.applicableFlagDAO = applicableFlagDAO;
         this.deletedMessageDAO = deletedMessageDAO;
+        this.cassandraConfiguration = cassandraConfiguration;
     }
 
     @Override
@@ -230,7 +229,7 @@ public class CassandraMessageMapper implements MessageMapper {
 
         return deletedMessageDAO.retrieveDeletedMessage(mailboxId, messageRange)
             .join()
-            .collect(JamesCollectors.chunker(EXPUNGE_BATCH_SIZE))
+            .collect(JamesCollectors.chunker(cassandraConfiguration.getExpungeChunkSize()))
             .map(uidChunk -> expungeUidChunk(mailboxId, uidChunk))
             .flatMap(CompletableFuture::join)
             .collect(Guavate.toImmutableMap(MailboxMessage::getUid, SimpleMessageMetaData::new));
@@ -303,7 +302,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private FlagsUpdateStageResult handleUpdatesStagedRetry(CassandraId mailboxId, FlagsUpdateCalculator flagUpdateCalculator, FlagsUpdateStageResult firstResult) {
         FlagsUpdateStageResult globalResult = firstResult;
         int retryCount = 0;
-        while (retryCount < maxRetries && globalResult.containsFailedResults()) {
+        while (retryCount < cassandraConfiguration.getFlagsUpdateMessageMaxRetry() && globalResult.containsFailedResults()) {
             retryCount++;
             FlagsUpdateStageResult stageResult = retryUpdatesStage(mailboxId, flagUpdateCalculator, globalResult.getFailed());
             globalResult = globalResult.keepSucceded().merge(stageResult);
@@ -323,7 +322,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private FlagsUpdateStageResult runUpdateStage(CassandraId mailboxId, Stream<ComposedMessageIdWithMetaData> toBeUpdated, FlagsUpdateCalculator flagsUpdateCalculator) {
         Long newModSeq = modSeqProvider.nextModSeq(mailboxId).join().orElseThrow(() -> new RuntimeException("ModSeq generation failed for mailbox " + mailboxId.asUuid()));
 
-        return toBeUpdated.collect(JamesCollectors.chunker(UPDATE_FLAGS_BATCH_SIZE))
+        return toBeUpdated.collect(JamesCollectors.chunker(cassandraConfiguration.getFlagsUpdateChunkSize()))
             .map(uidChunk -> performUpdatesForChunk(mailboxId, flagsUpdateCalculator, newModSeq, uidChunk))
             .map(CompletableFuture::join)
             .reduce(FlagsUpdateStageResult.none(), FlagsUpdateStageResult::merge);

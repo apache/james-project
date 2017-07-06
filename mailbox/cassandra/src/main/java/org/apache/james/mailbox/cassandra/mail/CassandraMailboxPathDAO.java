@@ -47,6 +47,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 
 public class CassandraMailboxPathDAO {
@@ -87,19 +88,26 @@ public class CassandraMailboxPathDAO {
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final MailboxBaseTupleUtil mailboxBaseTupleUtil;
+    private final CassandraUtils cassandraUtils;
     private final PreparedStatement delete;
     private final PreparedStatement insert;
     private final PreparedStatement select;
     private final PreparedStatement selectAll;
 
     @Inject
-    public CassandraMailboxPathDAO(Session session, CassandraTypesProvider typesProvider) {
+    public CassandraMailboxPathDAO(Session session, CassandraTypesProvider typesProvider, CassandraUtils cassandraUtils) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.mailboxBaseTupleUtil = new MailboxBaseTupleUtil(typesProvider);
+        this.cassandraUtils = cassandraUtils;
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
         this.select = prepareSelect(session);
         this.selectAll = prepareSelectAll(session);
+    }
+
+    @VisibleForTesting
+    public CassandraMailboxPathDAO(Session session, CassandraTypesProvider typesProvider) {
+        this(session, typesProvider, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareDelete(Session session) {
@@ -145,7 +153,7 @@ public class CassandraMailboxPathDAO {
         return cassandraAsyncExecutor.execute(
             selectAll.bind()
                 .setUDTValue(NAMESPACE_AND_USER, mailboxBaseTupleUtil.createMailboxBaseUDT(namespace, user)))
-            .thenApply(resultSet -> CassandraUtils.convertToStream(resultSet).map(this::fromRowToCassandraIdAndPath));
+            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet).map(this::fromRowToCassandraIdAndPath));
     }
 
     private CassandraIdAndPath fromRowToCassandraIdAndPath(Row row) {

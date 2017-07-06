@@ -79,7 +79,6 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         Feature.USER_FLAGS_SUPPORT,
         Feature.QUOTA_SUPPORT,
         Feature.ANNOTATION_SUPPORT);
-    public static final int MAX_ACL_RETRY = 10;
 
     private final CassandraMailboxManager mailboxManager;
     private final CassandraCluster cassandraClusterSingleton;
@@ -112,7 +111,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(session, messageIdFactory);
         CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(session);
         CassandraMailboxRecentsDAO mailboxRecentsDAO = new CassandraMailboxRecentsDAO(session);
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(session, typesProvider, MAX_ACL_RETRY);
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(session, typesProvider);
         CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(session, typesProvider);
         CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(session);
         CassandraApplicableFlagDAO applicableFlagDAO = new CassandraApplicableFlagDAO(session);

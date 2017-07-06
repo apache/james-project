@@ -42,9 +42,11 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 public class CassandraSubscriptionMapper extends NonTransactionalMapper implements SubscriptionMapper {
     private final Session session;
+    private CassandraUtils cassandraUtils;
 
-    public CassandraSubscriptionMapper(Session session) {
+    public CassandraSubscriptionMapper(Session session, CassandraUtils cassandraUtils) {
         this.session = session;
+        this.cassandraUtils = cassandraUtils;
     }
 
     @Override
@@ -66,7 +68,7 @@ public class CassandraSubscriptionMapper extends NonTransactionalMapper implemen
 
     @Override
     public List<Subscription> findSubscriptionsForUser(String user) {
-        return CassandraUtils.convertToStream(
+        return cassandraUtils.convertToStream(
             session.execute(select(MAILBOX)
                 .from(TABLE_NAME)
                 .where(eq(USER, user))))
@@ -82,7 +84,7 @@ public class CassandraSubscriptionMapper extends NonTransactionalMapper implemen
     }
 
     public List<SimpleSubscription> list() {
-        return CassandraUtils.convertToStream(
+        return cassandraUtils.convertToStream(
             session.execute(select(FIELDS)
                 .from(TABLE_NAME)))
             .map((row) -> new SimpleSubscription(row.getString(USER), row.getString(MAILBOX)))

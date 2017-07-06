@@ -20,6 +20,7 @@
 package org.apache.james.user.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
 import org.junit.After;
@@ -36,8 +37,6 @@ public class CassandraUsersRepositoryTest extends AbstractUsersRepositoryTest {
     @Override
     protected AbstractUsersRepository getUsersRepository() throws Exception {
         cassandra = CassandraCluster.create(new CassandraUsersRepositoryModule());
-        CassandraUsersRepository cassandraUsersRepository = new CassandraUsersRepository();
-        cassandraUsersRepository.setSession(cassandra.getConf());
-        return cassandraUsersRepository;
+        return new CassandraUsersRepository(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 }

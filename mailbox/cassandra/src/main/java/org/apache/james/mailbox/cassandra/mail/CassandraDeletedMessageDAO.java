@@ -43,6 +43,8 @@ import org.apache.james.mailbox.cassandra.CassandraId;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.james.mailbox.model.MessageRange;
 
 public class CassandraDeletedMessageDAO {
@@ -57,9 +59,10 @@ public class CassandraDeletedMessageDAO {
     private final PreparedStatement selectOneUidStatement;
     private final PreparedStatement selectBetweenUidStatement;
     private final PreparedStatement selectFromUidStatement;
+    private final CassandraUtils cassandraUtils;
 
     @Inject
-    public CassandraDeletedMessageDAO(Session session) {
+    public CassandraDeletedMessageDAO(Session session, CassandraUtils cassandraUtils) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.addStatement = prepareAddStatement(session);
         this.deleteStatement = prepareDeleteStatement(session);
@@ -67,6 +70,12 @@ public class CassandraDeletedMessageDAO {
         this.selectOneUidStatement = prepareOneUidStatement(session);
         this.selectBetweenUidStatement = prepareBetweenUidStatement(session);
         this.selectFromUidStatement = prepareFromUidStatement(session);
+        this.cassandraUtils = cassandraUtils;
+    }
+
+    @VisibleForTesting
+    public CassandraDeletedMessageDAO(Session session) {
+        this(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareAllUidStatement(Session session) {
@@ -125,7 +134,7 @@ public class CassandraDeletedMessageDAO {
 
     public CompletableFuture<Stream<MessageUid>> retrieveDeletedMessage(CassandraId cassandraId, MessageRange range) {
         return retrieveResultSetOfDeletedMessage(cassandraId, range)
-            .thenApply(CassandraDeletedMessageDAO::resultSetToStream);
+            .thenApply(this::resultSetToStream);
     }
 
     private CompletableFuture<ResultSet> retrieveResultSetOfDeletedMessage(CassandraId cassandraId, MessageRange range) {
@@ -143,8 +152,8 @@ public class CassandraDeletedMessageDAO {
         throw new UnsupportedOperationException();
     }
 
-    private static Stream<MessageUid> resultSetToStream(ResultSet resultSet) {
-        return CassandraUtils.convertToStream(resultSet)
+    private Stream<MessageUid> resultSetToStream(ResultSet resultSet) {
+        return cassandraUtils.convertToStream(resultSet)
             .map(row ->
                 MessageUid.of(row.getLong(UID)));
     }

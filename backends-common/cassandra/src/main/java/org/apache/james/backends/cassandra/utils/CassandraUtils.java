@@ -22,22 +22,38 @@ package org.apache.james.backends.cassandra.utils;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import javax.inject.Inject;
+
+import org.apache.james.backends.cassandra.CassandraConfiguration;
+
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 
 public class CassandraUtils {
 
-    private static final int FETCH_NEXT_PAGE_ADVANCE_IN_ROW = 100;
+    public static final CassandraUtils WITH_DEFAULT_CONFIGURATION = new CassandraUtils(CassandraConfiguration.DEFAULT_CONFIGURATION);
 
-    public static Stream<Row> convertToStream(ResultSet resultSet) {
+    private final CassandraConfiguration cassandraConfiguration;
+
+    @Inject
+    public CassandraUtils(CassandraConfiguration cassandraConfiguration) {
+        this.cassandraConfiguration = cassandraConfiguration;
+    }
+
+    public Stream<Row> convertToStream(ResultSet resultSet) {
         return StreamSupport.stream(resultSet.spliterator(), true)
             .peek(row -> ensureFetchedNextPage(resultSet));
     }
 
-    private static void ensureFetchedNextPage(ResultSet resultSet) {
-        if (resultSet.getAvailableWithoutFetching() == FETCH_NEXT_PAGE_ADVANCE_IN_ROW && !resultSet.isFullyFetched()) {
+    private void ensureFetchedNextPage(ResultSet resultSet) {
+        if (fetchNeeded(resultSet)) {
             resultSet.fetchMoreResults();
         }
+    }
+
+    private boolean fetchNeeded(ResultSet resultSet) {
+        return resultSet.getAvailableWithoutFetching() == cassandraConfiguration.getFetchNextPageInAdvanceRow()
+            && !resultSet.isFullyFetched();
     }
 
 }

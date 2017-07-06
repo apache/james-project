@@ -55,6 +55,7 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.MessageUid;
@@ -93,8 +94,6 @@ import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Bytes;
 
 public class CassandraMessageDAO {
-
-    public static final int CHUNK_SIZE_ON_READ = 100;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraTypesProvider typesProvider;
     private final PreparedStatement insert;
@@ -103,9 +102,10 @@ public class CassandraMessageDAO {
     private final PreparedStatement selectHeaders;
     private final PreparedStatement selectFields;
     private final PreparedStatement selectBody;
+    private final CassandraConfiguration cassandraConfiguration;
 
     @Inject
-    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider) {
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraConfiguration cassandraConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.typesProvider = typesProvider;
         this.insert = prepareInsert(session);
@@ -114,6 +114,12 @@ public class CassandraMessageDAO {
         this.selectHeaders = prepareSelect(session, HEADERS);
         this.selectFields = prepareSelect(session, FIELDS);
         this.selectBody = prepareSelect(session, BODY);
+        this.cassandraConfiguration = cassandraConfiguration;
+    }
+
+    @VisibleForTesting
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider) {
+        this(session, typesProvider, CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareSelect(Session session, String[] fields) {
@@ -193,7 +199,7 @@ public class CassandraMessageDAO {
     public CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
         return CompletableFutureUtil.chainAll(
             getLimitedIdStream(messageIds.stream().distinct(), limit)
-                .collect(JamesCollectors.chunker(CHUNK_SIZE_ON_READ)),
+                .collect(JamesCollectors.chunker(cassandraConfiguration.getMessageReadChunkSize())),
             ids -> FluentFutureStream.of(
                 ids.stream()
                     .map(id -> retrieveRow(id, fetchType)

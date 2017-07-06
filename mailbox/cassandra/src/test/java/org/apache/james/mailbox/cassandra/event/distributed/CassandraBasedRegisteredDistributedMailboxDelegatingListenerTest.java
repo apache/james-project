@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.TreeMap;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.modules.CassandraRegistrationModule;
@@ -76,6 +77,7 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
             new CassandraMailboxPathRegisterMapper(
                 cassandra.getConf(),
                 cassandra.getTypesProvider(),
+                CassandraUtils.WITH_DEFAULT_CONFIGURATION,
                 CASSANDRA_TIME_OUT_IN_S),
             SCHEDULER_PERIOD_IN_S);
         registeredDelegatingMailboxListener1 = new RegisteredDelegatingMailboxListener(
@@ -90,6 +92,7 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
             new CassandraMailboxPathRegisterMapper(
                 cassandra.getConf(),
                 cassandra.getTypesProvider(),
+                CassandraUtils.WITH_DEFAULT_CONFIGURATION,
                 CASSANDRA_TIME_OUT_IN_S),
             SCHEDULER_PERIOD_IN_S);
         registeredDelegatingMailboxListener2 = new RegisteredDelegatingMailboxListener(
@@ -104,6 +107,7 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
             new CassandraMailboxPathRegisterMapper(
                 cassandra.getConf(),
                 cassandra.getTypesProvider(),
+                CassandraUtils.WITH_DEFAULT_CONFIGURATION,
                 CASSANDRA_TIME_OUT_IN_S),
             SCHEDULER_PERIOD_IN_S);
         registeredDelegatingMailboxListener3 = new RegisteredDelegatingMailboxListener(

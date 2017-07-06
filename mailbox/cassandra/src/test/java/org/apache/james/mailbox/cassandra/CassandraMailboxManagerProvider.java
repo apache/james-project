@@ -48,7 +48,6 @@ import com.google.common.base.Throwables;
 public class CassandraMailboxManagerProvider {
     private static final int LIMIT_ANNOTATIONS = 3;
     private static final int LIMIT_ANNOTATION_SIZE = 30;
-    public static final int MAX_ACL_RETRY = 10;
 
     public static CassandraMailboxManager provideMailboxManager(Session session, CassandraTypesProvider cassandraTypesProvider) {
         CassandraUidProvider uidProvider = new CassandraUidProvider(session);
@@ -59,7 +58,7 @@ public class CassandraMailboxManagerProvider {
         CassandraMessageDAO messageDAO = new CassandraMessageDAO(session, cassandraTypesProvider);
         CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(session);
         CassandraMailboxRecentsDAO mailboxRecentsDAO = new CassandraMailboxRecentsDAO(session);
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(session, cassandraTypesProvider, MAX_ACL_RETRY);
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(session, cassandraTypesProvider);
         CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(session, cassandraTypesProvider);
         CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(session);
         CassandraApplicableFlagDAO applicableFlagDAO = new CassandraApplicableFlagDAO(session);

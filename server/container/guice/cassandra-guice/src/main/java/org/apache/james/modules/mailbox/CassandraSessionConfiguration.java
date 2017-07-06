@@ -19,13 +19,11 @@
 
 package org.apache.james.modules.mailbox;
 
-import java.io.FileNotFoundException;
-
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
 public interface CassandraSessionConfiguration {
 
-    PropertiesConfiguration getConfiguration() throws FileNotFoundException, ConfigurationException;
+    PropertiesConfiguration getConfiguration() throws ConfigurationException;
 
 }
