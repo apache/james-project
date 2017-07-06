@@ -178,4 +178,10 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(user, LOGGER);
         return subscriptionManager.subscriptions(mailboxSession);
     }
+
+	//TODO: ilker: impelement this
+	@Override
+	public void importEmlFileToMailbox(String namespace, String user, String name, String emlpath) {
+		
+	}
 }
