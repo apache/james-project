@@ -16,50 +16,38 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.cassandra;
+
+package org.apache.james.mailbox.cassandra.ids;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
 
+import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
+import org.junit.Before;
 import org.junit.Test;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
+public class CassandraMailboxIdDeserializerTest {
 
-public class CassandraMessageIdTest {
+    private static final String UUID_STRING = "5530370f-44c6-4647-990e-7768ce5131d4";
+    private static final String MALFORMED_UUID_STRING = "xyz";
+    private static final CassandraId CASSANDRA_ID = CassandraId.of(UUID.fromString(UUID_STRING));
 
-    @Test
-    public void beanShouldRespectBeanContract() {
-        EqualsVerifier.forClass(CassandraMessageId.class)
-            .verify();
+    private CassandraMailboxIdDeserializer mailboxIdDeserializer;
+
+    @Before
+    public void setUp() {
+        mailboxIdDeserializer = new CassandraMailboxIdDeserializer();
     }
 
     @Test
-    public void generateShouldReturnAValidCassandraMesssageId() {
-        CassandraMessageId.Factory testee = new CassandraMessageId.Factory();
-
-        CassandraMessageId cassandraMessageId = testee.generate();
-        assertThat(cassandraMessageId.serialize()).isNotNull();
+    public void deserializeShouldWork() throws Exception {
+        assertThat(mailboxIdDeserializer.deserialize(UUID_STRING)).isEqualTo(CASSANDRA_ID);
     }
 
-    @Test
-    public void ofShouldReturnAValidCassandraMesssageId() {
-        CassandraMessageId.Factory testee = new CassandraMessageId.Factory();
-
-        UUID expectedUuid = UUID.randomUUID();
-        CassandraMessageId cassandraMessageId = testee.of(expectedUuid);
-
-        assertThat(cassandraMessageId.get()).isEqualTo(expectedUuid);
+    @Test(expected = MailboxIdDeserialisationException.class)
+    public void deserializeShouldThrowOnMalformedData() throws Exception {
+        mailboxIdDeserializer.deserialize(MALFORMED_UUID_STRING);
     }
 
-    @Test
-    public void serializeShouldReturnTheUuidAsString() {
-        CassandraMessageId.Factory testee = new CassandraMessageId.Factory();
-
-        UUID uuid = UUID.randomUUID();
-        CassandraMessageId cassandraMessageId = testee.of(uuid);
-
-        String expected = uuid.toString();
-        assertThat(cassandraMessageId.serialize()).isEqualTo(expected);
-    }
 }

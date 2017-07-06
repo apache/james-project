@@ -17,68 +17,60 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra;
+package org.apache.james.mailbox.cassandra.mail.utils;
+
+import com.google.common.base.Preconditions;
 
 import java.util.Objects;
-import java.util.UUID;
+import java.util.Optional;
+import java.util.stream.Stream;
 
-import org.apache.james.mailbox.model.MessageId;
+public class Limit {
 
-import com.datastax.driver.core.utils.UUIDs;
-import com.google.common.base.MoreObjects;
-
-public class CassandraMessageId implements MessageId {
-
-    public static class Factory implements MessageId.Factory {
-
-        @Override
-        public CassandraMessageId generate() {
-            return of(UUIDs.timeBased());
-        }
-
-        public CassandraMessageId of(UUID uuid) {
-            return new CassandraMessageId(uuid);
-        }
-
-        @Override
-        public MessageId fromString(String serialized) {
-            return of(UUID.fromString(serialized));
+    public static Limit from(int limit) {
+        if (limit > 0) {
+            return new Limit(Optional.of(limit));
+        } else {
+            return unlimited();
         }
     }
 
-    private final UUID uuid;
-
-    private CassandraMessageId(UUID uuid) {
-        this.uuid = uuid;
-    }
-    
-    @Override
-    public String serialize() {
-        return uuid.toString();
+    public static Limit unlimited() {
+        return new Limit(Optional.empty());
     }
 
-    public UUID get() {
-        return uuid;
+    public static Limit limit(int limit) {
+        Preconditions.checkArgument(limit > 0, "limit should be positive");
+        return new Limit(Optional.of(limit));
+    }
+
+    private final Optional<Integer> limit;
+
+    private Limit(Optional<Integer> limit) {
+        this.limit = limit;
+    }
+
+    public Optional<Integer> getLimit() {
+        return limit;
+    }
+
+    public <T> Stream<T> applyOnStream(Stream<T> stream) {
+        return limit
+            .map(stream::limit)
+            .orElse(stream);
     }
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof CassandraMessageId) {
-            CassandraMessageId other = (CassandraMessageId) o;
-            return Objects.equals(uuid, other.uuid);
+        if (o instanceof Limit) {
+            Limit other = (Limit) o;
+            return Objects.equals(limit, other.limit);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(uuid);
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("uuid", uuid)
-            .toString();
+        return Objects.hash(limit);
     }
 }

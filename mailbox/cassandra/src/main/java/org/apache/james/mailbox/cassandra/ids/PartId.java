@@ -17,60 +17,56 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra;
+package org.apache.james.mailbox.cassandra.ids;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
-
-public class Limit {
-
-    public static Limit from(int limit) {
-        if (limit > 0) {
-            return new Limit(Optional.of(limit));
-        } else {
-            return unlimited();
-        }
+public class PartId {
+    public static PartId create(BlobId blobId, int position) {
+        Preconditions.checkNotNull(blobId);
+        Preconditions.checkArgument(position >= 0, "Position needs to be positive");
+        return new PartId(blobId.getId() + "-" + position);
     }
 
-    public static Limit unlimited() {
-        return new Limit(Optional.empty());
+    public static PartId from(String id) {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(id));
+        return new PartId(id);
     }
 
-    public static Limit limit(int limit) {
-        Preconditions.checkArgument(limit > 0, "limit should be positive");
-        return new Limit(Optional.of(limit));
+    private final String id;
+
+    @VisibleForTesting
+    PartId(String id) {
+        this.id = id;
     }
 
-    private final Optional<Integer> limit;
-
-    private Limit(Optional<Integer> limit) {
-        this.limit = limit;
-    }
-
-    public Optional<Integer> getLimit() {
-        return limit;
-    }
-
-    public <T> Stream<T> applyOnStream(Stream<T> stream) {
-        return limit
-            .map(stream::limit)
-            .orElse(stream);
+    public String getId() {
+        return id;
     }
 
     @Override
-    public final boolean equals(Object o) {
-        if (o instanceof Limit) {
-            Limit other = (Limit) o;
-            return Objects.equals(limit, other.limit);
+    public final boolean equals(Object obj) {
+        if (obj instanceof PartId) {
+            PartId other = (PartId) obj;
+            return Objects.equal(id, other.id);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(limit);
+        return Objects.hashCode(id);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects
+            .toStringHelper(this)
+            .add("id", id)
+            .toString();
     }
 }

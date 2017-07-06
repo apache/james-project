@@ -26,7 +26,7 @@ import java.util.Optional;
 
 import org.apache.commons.io.Charsets;
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.mailbox.cassandra.BlobId;
+import org.apache.james.mailbox.cassandra.ids.BlobId;
 import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
 import org.junit.After;
 import org.junit.Before;

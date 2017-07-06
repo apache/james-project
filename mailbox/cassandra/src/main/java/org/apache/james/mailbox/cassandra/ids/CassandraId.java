@@ -16,56 +16,65 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.mailbox.cassandra.ids;
 
-package org.apache.james.mailbox.cassandra;
+import java.util.Objects;
+import java.util.UUID;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.james.mailbox.model.MailboxId;
+
+import com.datastax.driver.core.utils.UUIDs;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
-public class PartId {
-    public static PartId create(BlobId blobId, int position) {
-        Preconditions.checkNotNull(blobId);
-        Preconditions.checkArgument(position >= 0, "Position needs to be positive");
-        return new PartId(blobId.getId() + "-" + position);
+public class CassandraId implements MailboxId {
+
+    public static class Factory implements MailboxId.Factory {
+        @Override
+        public CassandraId fromString(String serialized) {
+            return of(UUID.fromString(serialized));
+        }
+    }
+    
+    private final UUID id;
+
+    public static CassandraId timeBased() {
+        return of(UUIDs.timeBased());
     }
 
-    public static PartId from(String id) {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(id));
-        return new PartId(id);
+    public static CassandraId of(UUID id) {
+        return new CassandraId(id);
     }
 
-    private final String id;
-
-    @VisibleForTesting
-    PartId(String id) {
+    private CassandraId(UUID id) {
         this.id = id;
     }
 
-    public String getId() {
+    @Override
+    public String serialize() {
+        return id.toString();
+    }
+
+    public UUID asUuid() {
         return id;
     }
 
     @Override
-    public final boolean equals(Object obj) {
-        if (obj instanceof PartId) {
-            PartId other = (PartId) obj;
-            return Objects.equal(id, other.id);
+    public final boolean equals(Object o) {
+        if (o instanceof CassandraId) {
+            CassandraId other = (CassandraId) o;
+            return Objects.equals(id, other.id);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hash(id);
     }
 
     @Override
     public String toString() {
-        return MoreObjects
-            .toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("id", id)
             .toString();
     }

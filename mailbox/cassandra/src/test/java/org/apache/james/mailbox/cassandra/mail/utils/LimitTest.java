@@ -17,11 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra;
+package org.apache.james.mailbox.cassandra.mail.utils;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import nl.jqno.equalsverifier.EqualsVerifier;
+
+import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

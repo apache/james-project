@@ -16,38 +16,41 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
-package org.apache.james.mailbox.cassandra;
+package org.apache.james.mailbox.cassandra.ids;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.UUID;
 
-public class CassandraMailboxIdDeserializerTest {
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-    private static final String UUID_STRING = "5530370f-44c6-4647-990e-7768ce5131d4";
-    private static final String MALFORMED_UUID_STRING = "xyz";
-    private static final CassandraId CASSANDRA_ID = CassandraId.of(UUID.fromString(UUID_STRING));
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    private CassandraMailboxIdDeserializer mailboxIdDeserializer;
+public class CassandraIdTest {
 
-    @Before
-    public void setUp() {
-        mailboxIdDeserializer = new CassandraMailboxIdDeserializer();
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
+    @Test
+    public void beanShouldRespectBeanContract() {
+        EqualsVerifier.forClass(CassandraId.class)
+            .verify();
     }
 
     @Test
-    public void deserializeShouldWork() throws Exception {
-        assertThat(mailboxIdDeserializer.deserialize(UUID_STRING)).isEqualTo(CASSANDRA_ID);
+    public void fromStringShouldWorkWhenParameterIsAnUUID() {
+        UUID id = UUID.randomUUID();
+
+        CassandraId cassandraId = new CassandraId.Factory().fromString(id.toString());
+
+        assertThat(cassandraId.asUuid()).isEqualTo(id);
     }
 
-    @Test(expected = MailboxIdDeserialisationException.class)
-    public void deserializeShouldThrowOnMalformedData() throws Exception {
-        mailboxIdDeserializer.deserialize(MALFORMED_UUID_STRING);
+    @Test
+    public void fromStringShouldThrowWhenParameterIsNotAnUUID() {
+        expectedException.expect(IllegalArgumentException.class);
+        new CassandraId.Factory().fromString("not an UUID");
     }
-
 }
