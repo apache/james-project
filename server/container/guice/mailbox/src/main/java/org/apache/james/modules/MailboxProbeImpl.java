@@ -183,6 +183,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
 	@Override
 	public void importEmlFileToMailbox(String namespace, String user, String name, String emlpath) throws Exception{
         MailboxSession mailboxSession = mailboxManager.createSystemSession(user, LOGGER);
+        mailboxManager.startProcessingRequest(mailboxSession);
         MessageManager messageManager = mailboxManager.getMailbox(new MailboxPath(namespace, user, name),
                 mailboxSession);
         InputStream emlFileAsStream = new FileInputStream(emlpath);
