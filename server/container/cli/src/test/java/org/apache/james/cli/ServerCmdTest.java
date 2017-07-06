@@ -339,7 +339,7 @@ public class ServerCmdTest {
         String namespace = "#private";
         String name = "INBOX.test";
         String emlpath = "./src/test/resources/eml/frnog.eml";
-        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEMLFILETOMAILBOX.getCommand(), namespace, user, name, emlpath};
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEML.getCommand(), namespace, user, name, emlpath};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         mailboxProbe.importEmlFileToMailbox(namespace, user, name, emlpath);
@@ -835,7 +835,7 @@ public class ServerCmdTest {
         String user = "user@domain";
         String namespace = "#private";
         String name = "INBOX.test";
-        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEMLFILETOMAILBOX.getCommand(), namespace, user, name};
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEML.getCommand(), namespace, user, name};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         control.replay();
@@ -1130,7 +1130,7 @@ public class ServerCmdTest {
         String namespace = "#private";
         String name = "INBOX.test";
         String emlpath = "./src/test/resources/eml/frnog.eml";
-        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEMLFILETOMAILBOX.getCommand(), namespace, user, name, emlpath, ADDITIONAL_ARGUMENT};
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEML.getCommand(), namespace, user, name, emlpath, ADDITIONAL_ARGUMENT};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         control.replay();
