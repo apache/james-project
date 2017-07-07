@@ -39,6 +39,7 @@ import org.apache.james.mailbox.cassandra.mail.MessageWithoutAttachment;
 import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.ImmutableList;
 
@@ -75,8 +76,9 @@ public class V1ToV2Migration {
         }
 
         return messageDAOV1.retrieveMessages(ImmutableList.of(result.getMetadata()), MessageMapper.FetchType.Full, Limit.unlimited())
-            .thenApply(results -> results.findAny()
-                .orElseThrow(() -> new IllegalArgumentException("Message not found in DAO V1" + result.getMetadata())))
+            .thenApply(
+                Throwing.function(results -> results.findAny()
+                    .orElseThrow(() -> new IllegalArgumentException("Message not found in DAO V1" + result.getMetadata()))))
             .thenApply(this::submitMigration);
     }
 
