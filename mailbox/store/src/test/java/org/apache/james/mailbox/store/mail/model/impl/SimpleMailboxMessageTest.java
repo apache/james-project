@@ -31,24 +31,41 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.james.mailbox.FlagsBuilder;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Attachment;
+import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
+import org.assertj.core.api.JUnitSoftAssertions;
 import org.assertj.core.internal.FieldByFieldComparator;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 
 public class SimpleMailboxMessageTest {
     private static final Charset MESSAGE_CHARSET = Charsets.UTF_8;
     private static final String MESSAGE_CONTENT = "Simple message content without special characters";
+    public static final SharedByteArrayInputStream CONTENT_STREAM = new SharedByteArrayInputStream(MESSAGE_CONTENT.getBytes(MESSAGE_CHARSET));
     private static final String MESSAGE_CONTENT_SPECIAL_CHAR = "Simple message content with special characters: \"'(§è!çà$*`";
     public static final TestId TEST_ID = TestId.of(1L);
     public static final int BODY_START_OCTET = 0;
+    public static final MessageId MESSAGE_ID = new TestMessageId.Factory().generate();
+    public static final int SIZE = 1000;
     private SimpleMailboxMessage MESSAGE;
     private SimpleMailboxMessage MESSAGE_SPECIAL_CHAR;
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
+    @Rule
+    public final JUnitSoftAssertions soft = new JUnitSoftAssertions();
 
     @Before
     public void setUp() {
@@ -107,7 +124,7 @@ public class SimpleMailboxMessageTest {
         SimpleMailboxMessage original = new SimpleMailboxMessage(new TestMessageId.Factory().generate(), new Date(),
             MESSAGE_CONTENT.length(),
             BODY_START_OCTET,
-            new SharedByteArrayInputStream(MESSAGE_CONTENT.getBytes(MESSAGE_CHARSET)),
+            CONTENT_STREAM,
             new Flags(),
             propertyBuilder,
             TEST_ID);
@@ -127,6 +144,216 @@ public class SimpleMailboxMessageTest {
             content.length(), BODY_START_OCTET, new SharedByteArrayInputStream(
                     content.getBytes(MESSAGE_CHARSET)), new Flags(),
             new PropertyBuilder(), TEST_ID);
+    }
+
+    @Test
+    public void modseqShouldThrowWhenNegative() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        SimpleMailboxMessage.builder()
+            .modseq(-1);
+    }
+
+    @Test
+    public void sizeShouldThrowWhenNegative() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        SimpleMailboxMessage.builder()
+            .size(-1);
+    }
+
+    @Test
+    public void bodyStartOctetShouldThrowWhenNegative() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        SimpleMailboxMessage.builder()
+            .bodyStartOctet(-1);
+    }
+
+    @Test
+    public void buildShouldWorkWithMinimalContent() {
+        Date internalDate = new Date();
+        SimpleMailboxMessage.builder()
+            .messageId(MESSAGE_ID)
+            .mailboxId(TEST_ID)
+            .internalDate(internalDate)
+            .bodyStartOctet(BODY_START_OCTET)
+            .size(SIZE)
+            .content(CONTENT_STREAM)
+            .flags(new Flags())
+            .propertyBuilder(new PropertyBuilder())
+            .build();
+    }
+
+
+
+    @Test
+    public void buildShouldCreateAMessageWithAllFields() throws IOException {
+        Date internalDate = new Date();
+        Flags flags = new Flags();
+        PropertyBuilder propertyBuilder = new PropertyBuilder();
+        int modseq = 145;
+        MessageUid uid = MessageUid.of(45);
+        MessageAttachment messageAttachment = MessageAttachment.builder()
+            .attachment(Attachment.builder()
+                .bytes("".getBytes(Charsets.UTF_8))
+                .type("type")
+                .build())
+            .name("name")
+            .isInline(false)
+            .build();
+        SimpleMailboxMessage message = SimpleMailboxMessage.builder()
+            .messageId(MESSAGE_ID)
+            .mailboxId(TEST_ID)
+            .modseq(modseq)
+            .uid(uid)
+            .internalDate(internalDate)
+            .bodyStartOctet(BODY_START_OCTET)
+            .size(SIZE)
+            .content(CONTENT_STREAM)
+            .flags(flags)
+            .propertyBuilder(propertyBuilder)
+            .addAttachments(ImmutableList.of(messageAttachment))
+            .build();
+
+        soft.assertThat(message.getMessageId()).isEqualTo(MESSAGE_ID);
+        soft.assertThat(message.getMailboxId()).isEqualTo(TEST_ID);
+        soft.assertThat(message.getInternalDate()).isEqualTo(internalDate);
+        soft.assertThat(message.getHeaderOctets()).isEqualTo(BODY_START_OCTET);
+        soft.assertThat(message.getFullContentOctets()).isEqualTo(SIZE);
+        soft.assertThat(IOUtils.toString(message.getFullContent(), Charsets.UTF_8)).isEqualTo(MESSAGE_CONTENT);
+        soft.assertThat(message.createFlags()).isEqualTo(flags);
+        soft.assertThat(message.getProperties()).isEqualTo(propertyBuilder.toProperties());
+        soft.assertThat(message.getUid()).isEqualTo(uid);
+        soft.assertThat(message.getModSeq()).isEqualTo(modseq);
+        soft.assertThat(message.getAttachments()).containsOnly(messageAttachment);
+    }
+
+    @Test
+    public void buildShouldThrowOnMissingMessageId() {
+        expectedException.expect(NullPointerException.class);
+
+        Date internalDate = new Date();
+        SimpleMailboxMessage.builder()
+            .mailboxId(TEST_ID)
+            .internalDate(internalDate)
+            .bodyStartOctet(BODY_START_OCTET)
+            .size(SIZE)
+            .content(CONTENT_STREAM)
+            .flags(new Flags())
+            .propertyBuilder(new PropertyBuilder())
+            .build();
+    }
+
+    @Test
+    public void buildShouldThrowOnMissingMailboxId() {
+        expectedException.expect(NullPointerException.class);
+
+        Date internalDate = new Date();
+        SimpleMailboxMessage.builder()
+            .messageId(MESSAGE_ID)
+            .internalDate(internalDate)
+            .bodyStartOctet(BODY_START_OCTET)
+            .size(SIZE)
+            .content(CONTENT_STREAM)
+            .flags(new Flags())
+            .propertyBuilder(new PropertyBuilder())
+            .build();
+    }
+
+    @Test
+    public void buildShouldThrowOnMissingInternalDate() {
+        expectedException.expect(NullPointerException.class);
+
+        SimpleMailboxMessage.builder()
+            .messageId(MESSAGE_ID)
+            .mailboxId(TEST_ID)
+            .bodyStartOctet(BODY_START_OCTET)
+            .size(SIZE)
+            .content(CONTENT_STREAM)
+            .flags(new Flags())
+            .propertyBuilder(new PropertyBuilder())
+            .build();
+    }
+
+    @Test
+    public void buildShouldThrowOnMissingBodyStartOctets() {
+        expectedException.expect(NullPointerException.class);
+
+        Date internalDate = new Date();
+        SimpleMailboxMessage.builder()
+            .messageId(MESSAGE_ID)
+            .mailboxId(TEST_ID)
+            .internalDate(internalDate)
+            .size(SIZE)
+            .content(CONTENT_STREAM)
+            .flags(new Flags())
+            .propertyBuilder(new PropertyBuilder())
+            .build();
+    }
+
+    @Test
+    public void buildShouldThrowOnMissingSize() {
+        expectedException.expect(NullPointerException.class);
+
+        Date internalDate = new Date();
+        SimpleMailboxMessage.builder()
+            .messageId(MESSAGE_ID)
+            .mailboxId(TEST_ID)
+            .internalDate(internalDate)
+            .bodyStartOctet(BODY_START_OCTET)
+            .content(CONTENT_STREAM)
+            .flags(new Flags())
+            .propertyBuilder(new PropertyBuilder())
+            .build();
+    }
+
+    @Test
+    public void buildShouldThrowOnMissingContent() {
+        expectedException.expect(NullPointerException.class);
+
+        Date internalDate = new Date();
+        SimpleMailboxMessage.builder()
+            .messageId(MESSAGE_ID)
+            .mailboxId(TEST_ID)
+            .internalDate(internalDate)
+            .bodyStartOctet(BODY_START_OCTET)
+            .size(SIZE)
+            .flags(new Flags())
+            .propertyBuilder(new PropertyBuilder())
+            .build();
+    }
+
+    @Test
+    public void buildShouldThrowOnMissingFlags() {
+        expectedException.expect(NullPointerException.class);
+
+        Date internalDate = new Date();
+        SimpleMailboxMessage.builder()
+            .messageId(MESSAGE_ID)
+            .mailboxId(TEST_ID)
+            .internalDate(internalDate)
+            .bodyStartOctet(BODY_START_OCTET)
+            .size(SIZE)
+            .content(CONTENT_STREAM)
+            .propertyBuilder(new PropertyBuilder())
+            .build();
+    }
+
+    @Test
+    public void buildShouldThrowOnMissingProperties() {
+        expectedException.expect(NullPointerException.class);
+
+        Date internalDate = new Date();
+        SimpleMailboxMessage.builder()
+            .messageId(MESSAGE_ID)
+            .mailboxId(TEST_ID)
+            .internalDate(internalDate)
+            .bodyStartOctet(BODY_START_OCTET)
+            .size(SIZE)
+            .content(CONTENT_STREAM)
+            .flags(new Flags())
+            .build();
     }
 
 }

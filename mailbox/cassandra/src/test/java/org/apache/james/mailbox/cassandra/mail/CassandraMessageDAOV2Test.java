@@ -167,9 +167,17 @@ public class CassandraMessageDAOV2Test {
     }
 
     private SimpleMailboxMessage createMessage(MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder) {
-        return new SimpleMailboxMessage(messageId, new Date(), content.length(), bodyStart,
-            new SharedByteArrayInputStream(content.getBytes(Charsets.UTF_8)), new Flags(),
-            propertyBuilder, MAILBOX_ID);
+        return SimpleMailboxMessage.builder()
+            .messageId(messageId)
+            .mailboxId(MAILBOX_ID)
+            .uid(messageUid)
+            .internalDate(new Date())
+            .bodyStartOctet(bodyStart)
+            .size(content.length())
+            .content(new SharedByteArrayInputStream(content.getBytes(Charsets.UTF_8)))
+            .flags(new Flags())
+            .propertyBuilder(propertyBuilder)
+            .build();
     }
 
     private MessageWithoutAttachment toMessage(CompletableFuture<Stream<CassandraMessageDAOV2.MessageResult>> readOptional) throws InterruptedException, java.util.concurrent.ExecutionException {

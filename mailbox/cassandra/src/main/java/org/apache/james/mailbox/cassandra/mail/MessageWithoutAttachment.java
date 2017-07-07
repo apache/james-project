@@ -37,7 +37,7 @@ public class MessageWithoutAttachment {
     private final MessageId messageId;
     private final Date internalDate;
     private final Long size;
-    private final Integer boduSize;
+    private final Integer bodySize;
     private final SharedByteArrayInputStream content;
     private final Flags flags;
     private final PropertyBuilder propertyBuilder;
@@ -45,12 +45,12 @@ public class MessageWithoutAttachment {
     private final MessageUid messageUid;
     private final long modSeq;
 
-    public MessageWithoutAttachment(MessageId messageId, Date internalDate, Long size, Integer boduSize, SharedByteArrayInputStream content,
+    public MessageWithoutAttachment(MessageId messageId, Date internalDate, Long size, Integer bodySize, SharedByteArrayInputStream content,
                                     Flags flags, PropertyBuilder propertyBuilder, MailboxId mailboxId, MessageUid messageUid, long modSeq) {
         this.messageId = messageId;
         this.internalDate = internalDate;
         this.size = size;
-        this.boduSize = boduSize;
+        this.bodySize = bodySize;
         this.content = content;
         this.flags = flags;
         this.propertyBuilder = propertyBuilder;
@@ -60,11 +60,19 @@ public class MessageWithoutAttachment {
     }
 
     public SimpleMailboxMessage toMailboxMessage(List<MessageAttachment> attachments) {
-        SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, internalDate, size, boduSize,
-                content, flags, propertyBuilder, mailboxId, attachments);
-        simpleMailboxMessage.setUid(messageUid);
-        simpleMailboxMessage.setModSeq(modSeq);
-        return simpleMailboxMessage;
+        return SimpleMailboxMessage.builder()
+            .messageId(messageId)
+            .mailboxId(mailboxId)
+            .uid(messageUid)
+            .modseq(modSeq)
+            .internalDate(internalDate)
+            .bodyStartOctet(bodySize)
+            .size(size)
+            .content(content)
+            .flags(flags)
+            .propertyBuilder(propertyBuilder)
+            .addAttachments(attachments)
+            .build();
     }
 
     public MailboxId getMailboxId() {

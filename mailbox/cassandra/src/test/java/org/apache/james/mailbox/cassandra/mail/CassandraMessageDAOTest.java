@@ -43,6 +43,7 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
@@ -142,22 +143,24 @@ public class CassandraMessageDAOTest {
     }
 
     private SimpleMailboxMessage createMessage(
-        MessageId messageId,
-        String content,
-        int bodyStart,
-        PropertyBuilder propertyBuilder,
-        List<MessageAttachment> attachments
-    ) {
-        return new SimpleMailboxMessage(
-            messageId,
-            new Date(),
-            content.length(),
-            bodyStart,
-            new SharedByteArrayInputStream(content.getBytes()),
-            new Flags(),
-            propertyBuilder,
-            MAILBOX_ID,
-            attachments);
+            MessageId messageId,
+            String content,
+            int bodyStart,
+            PropertyBuilder propertyBuilder,
+            List<MessageAttachment> attachments) {
+
+        return SimpleMailboxMessage.builder()
+            .messageId(messageId)
+            .mailboxId(MAILBOX_ID)
+            .uid(messageUid)
+            .internalDate(new Date())
+            .bodyStartOctet(bodyStart)
+            .size(content.length())
+            .content(new SharedByteArrayInputStream(content.getBytes(Charsets.UTF_8)))
+            .flags(new Flags())
+            .propertyBuilder(propertyBuilder)
+            .addAttachments(attachments)
+            .build();
     }
 
 }
