@@ -267,6 +267,13 @@ public class CassandraMessageMapper implements MessageMapper {
     public MessageMetaData add(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
+        save(mailbox, addUidAndModseq(message, mailboxId))
+            .thenCompose(voidValue -> indexTableHandler.updateIndexOnAdd(message, mailboxId))
+            .join();
+        return new SimpleMessageMetaData(message);
+    }
+
+    private MailboxMessage addUidAndModseq(MailboxMessage message, CassandraId mailboxId) throws MailboxException {
         CompletableFuture<Optional<MessageUid>> uidFuture = uidProvider.nextUid(mailboxId);
         CompletableFuture<Optional<Long>> modseqFuture = modSeqProvider.nextModSeq(mailboxId);
         CompletableFuture.allOf(uidFuture, modseqFuture).join();
@@ -276,10 +283,7 @@ public class CassandraMessageMapper implements MessageMapper {
         message.setModSeq(modseqFuture.join()
             .orElseThrow(() -> new MailboxException("Can not find a MODSEQ to save " + message.getMessageId() + " in " + mailboxId)));
 
-        save(mailbox, message)
-            .thenCompose(voidValue -> indexTableHandler.updateIndexOnAdd(message, mailboxId))
-            .join();
-        return new SimpleMessageMetaData(message);
+        return message;
     }
 
     @Override
@@ -354,7 +358,7 @@ public class CassandraMessageMapper implements MessageMapper {
     @Override
     public MessageMetaData copy(Mailbox mailbox, MailboxMessage original) throws MailboxException {
         original.setFlags(new FlagsBuilder().add(original.createFlags()).add(Flag.RECENT).build());
-        return add(mailbox, original);
+        return setInMailbox(mailbox, original);
     }
 
     @Override
@@ -369,6 +373,15 @@ public class CassandraMessageMapper implements MessageMapper {
                 .join()
                 .orElse(new Flags()))
             .build();
+    }
+
+    private MessageMetaData setInMailbox(Mailbox mailbox, MailboxMessage message) throws MailboxException {
+        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+
+        insertIds(addUidAndModseq(message, mailboxId), mailboxId)
+                .thenCompose(voidValue -> indexTableHandler.updateIndexOnAdd(message, mailboxId))
+                .join();
+        return new SimpleMessageMetaData(message);
     }
 
     private CompletableFuture<Void> save(Mailbox mailbox, MailboxMessage message) throws MailboxException {

@@ -166,6 +166,23 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     @Override
+    public void copyInMailbox(MailboxMessage mailboxMessage) throws MailboxException {
+        CassandraId mailboxId = (CassandraId) mailboxMessage.getMailboxId();
+        mailboxMapper.findMailboxById(mailboxId);
+        CassandraMessageId messageId = (CassandraMessageId) mailboxMessage.getMessageId();
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
+                .composedMessageId(new ComposedMessageId(mailboxId, messageId, mailboxMessage.getUid()))
+                .flags(mailboxMessage.createFlags())
+                .modSeq(mailboxMessage.getModSeq())
+                .build();
+        CompletableFuture.allOf(
+                        imapUidDAO.insert(composedMessageIdWithMetaData),
+                        messageIdDAO.insert(composedMessageIdWithMetaData))
+                .thenCompose(voidValue -> indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId))
+                .join();
+    }
+
+    @Override
     public void delete(MessageId messageId, List<MailboxId> mailboxIds) {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
         mailboxIds.stream()

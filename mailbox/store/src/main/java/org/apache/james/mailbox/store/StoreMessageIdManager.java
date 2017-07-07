@@ -239,7 +239,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         MessageUid uid = mailboxSessionMapperFactory.getUidProvider().nextUid(mailboxSession, mailboxMessage.getMailboxId());
         mailboxMessage.setModSeq(modSeq);
         mailboxMessage.setUid(uid);
-        messageIdMapper.save(mailboxMessage);
+        messageIdMapper.copyInMailbox(mailboxMessage);
     }
 
     private Function<MailboxMessage, MessageResult> messageResultConverter(final MessageResult.FetchGroup fetchGroup) {

@@ -35,6 +35,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.manager.MailboxManagerFixture;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -176,6 +177,11 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
             @Override
             public void save(MailboxMessage mailboxMessage) throws MailboxException {
+                messages.add(mailboxMessage);
+            }
+
+            @Override
+            public void copyInMailbox(MailboxMessage mailboxMessage) throws MailboxNotFoundException, MailboxException {
                 messages.add(mailboxMessage);
             }
 
