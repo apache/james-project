@@ -37,6 +37,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
@@ -58,6 +60,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
 
+    @Inject
     public CassandraAttachmentMapper(Session session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
     }

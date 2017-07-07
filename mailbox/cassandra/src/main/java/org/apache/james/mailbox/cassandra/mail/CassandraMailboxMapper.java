@@ -28,6 +28,8 @@ import java.util.concurrent.CompletionException;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -62,6 +64,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     private final Session session;
     private final CassandraConfiguration cassandraConfiguration;
 
+    @Inject
     public CassandraMailboxMapper(Session session, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAO mailboxPathDAO, CassandraConfiguration cassandraConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.mailboxDAO = mailboxDAO;
