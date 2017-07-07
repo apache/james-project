@@ -1,0 +1,580 @@
+= Inventory for Mailets and matchers
+
+== Mailets
+
+=== /mailet/standard
+
+.Inventory for /mailet/standard
+|===
+|Name |Tested |Documented |Status |Remarks
+
+|AddFooter
+|Yes
+|Yes
+|Supported
+|Can add an OpenPaas footer
+
+|AddHabeasWarrantMark
+|No
+|Yes
+|Unsupported
+|
+
+|AddSubjectPrefix
+|Yes
+|Yes
+|Supported
+|May be useful with an implementation of mailing lists
+
+|ClamAVScan
+|No
+|Yes
+|Experimental
+|Inspecting mails and attachment for virus. Not compulsory
+
+|ClassifyBounces
+|No
+|Yes
+|Unsupported
+|Add a header indicating the kind of Bounce
+
+|HeadersToHttp
+|No
+|Yes
+|Unsupported
+|HTTP call with basic headers values
+
+|LogMessage
+|No
+|Yes
+|Supported
+|Allow the admin to log information. Useful to debug mailetcontainer.xml configuration.
+
+|MailAttrToMimeHeaders
+|Yes
+|Yes
+|Supported
+|Convert Mail Attribute To Headers
+
+|Null
+|No
+|Yes
+|Supported
+|Stop the processing of a mail by Ghosting it
+
+|RecipientToLowerCase
+|No
+|Yes
+|experimental
+|Explicit
+
+|RecoverAttachement
+|No
+|Yes
+|Unsupported
+|Take an attachement in the attibutes and add it to the mime
+
+|RemoveAllMailAttributes
+|Yes
+|Yes
+|Supported
+|
+
+|RemoveMailAttributes
+|Yes
+|Yes
+|Supported
+|
+
+|RemoveMimeHeader
+|Yes
+|Yes
+|Supported
+|
+
+|ReplaceSubject
+|Yes
+|Yes
+|Supported
+|
+
+|SerializeToHttp
+|No
+|Yes
+|Unsupported
+|Sends a full mime message via HTTP
+
+|ServerTime
+|No
+|Yes
+|Unsupported
+|Bounce notification to the sender concerning server time
+
+|SetMailAttribute
+|Yes
+|Yes
+|Supported
+|
+
+|SetMimeHeader
+|Yes
+|Yes
+|Supported
+|
+
+|StripAttachement
+|No
+|Yes
+|Unsupported
+|Remove Attachment. Simple removal / mail attribute / file
+
+|ToProcessor
+|Yes
+|Yes
+|Supported
+|Moves the mail on top of an other processor
+
+|UnWrapText
+|No
+|Yes
+|Unsupported
+|Remove Attachment. Simple removal / mail attribute / file
+
+|UseHeaderRecipient
+|No
+|Yes
+|Unsupported -> Should be deprecated
+|Security problem : We have no warranty about recipient in the headers (even less than in the SMTP envelope, that can be checked by DKIM or SPF).
+
+|WrapText
+|No
+|Yes
+|Unsupported
+|Add break lines at specified width
+|===
+
+
+=== /server/mailet
+
+.Inventory for /server/mailet
+|===
+|Name |Tested |Documented |Status |Remarks
+
+|BayesianAnalysisFeeder
+|No
+|Yes
+|Unsupported
+|(Duplicate in mailet/ai)
+
+|BayesianAnalysis
+|No
+|Yes
+|Unsupported
+|(Duplicate in mailet/ai)
+
+|Bounce
+|(yes, I wrote some, but still incomplete)
+|Yes
+|Supported
+|
+
+|Forward
+|No (integration tests SMTP however)
+|Yes
+|Supported
+|
+
+|FromRepository
+|No
+|Yes
+|Unsupported -> Should be deprecated
+|A received mail sends again all the mails in the repository. Major security flow, IMO, as authenticating SMTP is hard.
+
+|JDBCAlias
+|No
+|Yes
+|Unsupported -> Should be deprecated
+|Duplicate of RRT + should be deprecated
+
+|JDBCRRT
+|No
+|Yes
+|Unsupported -> Should be deprecated
+|Duplicate of RRT + should be deprecated
+
+|LocalDelivery
+|Yes
+|Yes
+|Supported
+|Append mails to users mailboxes after Sieve processing. A SIEVE script is interpreted each time.
+
+|NotifyPostmaster
+|No
+|Yes
+|Supported
+|Send notification to postmaster
+
+|NotifySender
+|No
+|Yes
+|Supported
+|Send notification to sender
+
+|RRT
+|No
+|Yes
+|Supported
+|Official mailet from rewriting addresses. Exploited by local delivery.
+
+|Redirect
+|No
+|Yes
+|Supported
+|Send the message as is and send it to other recipients
+
+|RemoteDelivery
+|No (One SMTP integration test however)
+|Yes
+|Supported
+|Send mails to a remote server using SMTP
+
+|Resend
+|No
+|Yes
+|Supported
+|According to the documentation, very similar to Redirect
+
+|SpamAssassin
+|No
+|Yes
+|Experimental
+|Validate mails with spamAssassin and adds a header if considered as Spam. Can be very nice for Spam handling.
+
+|SPF
+|No
+|Yes
+|Experimental
+|SPF, along with DKIM, is a very classic way to ensure the authenticity of the FROM field of a mail
+
+|ToRecipientFolder
+|No
+|Yes
+|Unsupported
+|Like LocalDelivery, but targets by default an other folder than INBOX
+
+|ToRepository
+|No
+|Yes
+|Supported
+|
+
+|ToSenderFolder
+|No
+|Yes
+|Unsupported
+|
+
+|WhiteListManager
+|No
+|Yes
+|Unsupported
+|Allow a user to customize its white list matcher via mail. Specific JDBC. + security issue linked to FROM authentication
+|===
+
+=== /mailet/ai
+
+.Inventory for /mailet/ai
+|===
+|Name |Tested |Documented |Status |Remarks
+
+|BayesianAnalysisFeeder
+|No
+|No
+|Unsupported
+|(Duplicate in server/mailet/ai)
+
+|BayesianAnalysis
+|No
+|No
+|Unsupported
+|(Duplicate in server/mailet/ai)
+
+|===
+
+=== /mailet/crypto
+
+.Inventory for /mailet/crypto
+|===
+|Name |Tested |Documented |Status |Remarks
+
+|SMIMECheckSignature
+|No
+|No
+|Unsupported
+|Might be cool for later...
+
+|SMIMEDecrypt
+|No
+|No
+|Unsupported
+|
+
+|Sign
+|No
+|No
+|Unsupported
+|Might be cool for later...
+
+|===
+
+== Matchers
+
+=== /mailet/standard
+
+.Inventory for /mailet/standard
+|===
+|Name |Tested Status |Remarks
+
+|All
+|Yes
+|Supported
+|Matches all mails
+
+|AttachementFileNameIs
+|No
+|Unsupported
+|Needs a complete rewrite + no tests
+
+|CommandForListserv
+|No
+|Unsupported
+|Related to Mailing lists
+
+|CommandListservMatcher
+|No
+|Unsupported
+|Related to Mailing lists
+
+|CompareNumHeaderValue
+|No
+|Unsupported
+|Reads a numeric value in the headers
+
+|FileRegexMatcher
+|No
+|Unsupported
+|
+
+|FetchedFrom
+|Yes
+|Unsupported
+|Matches mails header X-fetched-from with specific values. Seems related to FetchPop a POP3 mail client
+
+|HasAttachement
+|No
+|Experimental
+|
+
+|HasHabeas
+|No
+|Unsupported
+|
+
+|HasAttribute
+|Yes
+|Supported
+|
+
+|HasAttributeValue
+|Yes
+|Supported
+|
+
+|HasHeader
+|No
+|Supported
+|
+
+|HasAttributeRegex
+|Yes
+|Supported
+|
+
+|HostIs
+|Yes
+|Supported
+|
+
+|HostIsLocal
+|Yes
+|Supported
+|
+
+|IsSingleRecipient
+|Yes
+|Supported
+|
+
+|NESSpamCheck
+|Yes
+|Unsupported
+|Spam checking with regexp on headers... I am not convinced by tests
+
+|RecipientIs
+|Yes
+|Supported
+|
+
+|RecipientIsRegex
+|Yes
+|Supported
+|
+
+|RecipientIsLocal
+|No
+|Supported
+|We should write these tests. It is used a lot.
+
+|RelayLimit
+|Yes
+|Supported
+|We should write these tests. It is used a lot.
+
+|SenderHostIs
+|No
+|Supported
+|
+
+|SenderHostIsLocal
+|No
+|Supported
+|
+
+|SenderIsNull
+|Yes
+|Supported
+|
+
+|SenderIs
+|Yes
+|Supported
+|
+
+|SenderIsRegex
+|Yes
+|Supported
+|
+
+|SenderIsLocal
+|No
+|Supported
+|
+
+|SizeGreaterThan
+|Yes
+|Supported
+|
+
+|SMTPAuthSuccess
+|Yes (need integration tests)
+|Supported
+|I know the functionnality here do not work. I would be pleased to write some integration tests to demonstrate it. Important as it is linked to Relay policy.
+
+|SMTPAuthUserIs
+|Yes (need integration tests)
+|Supported
+|Important as it is linked to Relay policy.
+
+|SMTPIsAuthNetwork
+|Yes (need integration tests)
+|Supported
+|Important as it is linked to Relay policy.
+
+|SubjectIs
+|Yes
+|Supported
+|
+
+|SubjectStartsWith
+|Yes
+|Supported
+|
+
+|UserIs
+|Yes
+|Supported
+|
+
+|===
+
+=== /server/mailet
+
+.Inventory for /server/mailet
+|===
+|Name |Tested |Status |Remarks
+
+|MailboxQuotaFixed
+|No
+|Unsupported -> deprecated
+|Deprecated since my work on quotas. Read size of all the messages of all the user mailboxes all the time. Known for performance issue...
+
+|IsOverQuota
+|No
+|Experimental
+|I guess a test would be welcomed...
+
+|InSpammerBlacklist
+|Yes
+|Experimental
+|Need a tier service with authentication... But seems interesting
+
+|IsInWhiteList
+|No
+|Unsupported
+|SQL specific stuff !
+
+|NetworkIsInWhiteList
+|No
+|Unsupported
+|SQL specific stuff !
+
+|RemoteAddrInNetwork
+|Yes
+|Supported
+|
+
+|RemoteAddrNotInNetwork
+|Yes
+|Supported
+|
+
+|SenderInFakeDomain
+|No
+|Supported
+|Validate sender's domain with a DNS lookup. Useful for Spam fighting.
+
+|===
+
+=== /mailet/crypto
+
+.Inventory for /mailet/crypto
+|===
+|Name |Tested |Status |Remarks
+
+|IsSMIMEEncrypted
+|No
+|Unsupported
+|
+
+|IsSMIMESigned
+|No
+|Unsupported
+|Might be cool for later...
+
+|IsX509CertifSubject
+|No
+|Unsupported
+|
+
+|===
+
