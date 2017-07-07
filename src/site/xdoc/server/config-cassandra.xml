@@ -111,6 +111,10 @@
         <dd>Optional. Defaults to 100.<br/> Controls the number of messages to be retrieved in parallel.</dd>
         <dt><strong>chunk.size.expunge</strong></dt>
         <dd>Optional. Defaults to 100.<br/> Controls the number of messages to be expunged in parallel.</dd>
+        <dt><strong>mailbox.blob.part.size</strong></dt>
+        <dd>Optional. Defaults to 102400 (100KB).<br/> Controls the size of blob parts used to store messages.</dd>
+        <dt><strong>migration.v1.v2.on.the.fly</strong></dt>
+        <dd>Optional. Defaults to false.<br/> Controls wether v1 to v2 migration should be run on the fly.</dd>
       </dl>
 
 

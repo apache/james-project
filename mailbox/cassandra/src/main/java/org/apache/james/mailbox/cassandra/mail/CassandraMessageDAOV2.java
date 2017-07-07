@@ -53,6 +53,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.BlobId;
@@ -82,10 +83,10 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.primitives.Bytes;
 
 public class CassandraMessageDAOV2 {
-    public static final int CHUNK_SIZE_ON_READ = 100;
     public static final long DEFAULT_LONG_VALUE = 0L;
     public static final String DEFAULT_OBJECT_VALUE = null;
     private static final byte[] EMPTY_BYTE_ARRAY = {};
@@ -93,6 +94,7 @@ public class CassandraMessageDAOV2 {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraTypesProvider typesProvider;
     private final CassandraBlobsDAO blobsDAO;
+    private final CassandraConfiguration configuration;
     private final PreparedStatement insert;
     private final PreparedStatement delete;
     private final PreparedStatement selectMetadata;
@@ -101,16 +103,22 @@ public class CassandraMessageDAOV2 {
     private final PreparedStatement selectBody;
 
     @Inject
-    public CassandraMessageDAOV2(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO) {
+    public CassandraMessageDAOV2(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO, CassandraConfiguration cassandraConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.typesProvider = typesProvider;
         this.blobsDAO = blobsDAO;
+        this.configuration = cassandraConfiguration;
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
         this.selectMetadata = prepareSelect(session, METADATA);
         this.selectHeaders = prepareSelect(session, HEADERS);
         this.selectFields = prepareSelect(session, FIELDS);
         this.selectBody = prepareSelect(session, BODY);
+    }
+
+    @VisibleForTesting
+    public CassandraMessageDAOV2(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO) {
+        this(session, typesProvider, blobsDAO, CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareSelect(Session session, String[] fields) {
@@ -196,7 +204,7 @@ public class CassandraMessageDAOV2 {
     public CompletableFuture<Stream<MessageResult>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
         return CompletableFutureUtil.chainAll(
                 limit.applyOnStream(messageIds.stream().distinct())
-                    .collect(JamesCollectors.chunker(CHUNK_SIZE_ON_READ)),
+                    .collect(JamesCollectors.chunker(configuration.getMessageReadChunkSize())),
             ids -> rowToMessages(fetchType, ids))
             .thenApply(stream -> stream.flatMap(Function.identity()));
     }

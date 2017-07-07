@@ -28,6 +28,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -97,7 +98,9 @@ public class V1ToV2MigrationTest {
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
         messageDAOV2 = new CassandraMessageDAOV2(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO);
         attachmentMapper = new CassandraAttachmentMapper(cassandra.getConf());
-        testee = new V1ToV2Migration(messageDAOV1, messageDAOV2, attachmentMapper);
+        testee = new V1ToV2Migration(messageDAOV1, messageDAOV2, attachmentMapper, CassandraConfiguration.builder()
+            .onTheFlyV1ToV2Migration(true)
+            .build());
 
 
         messageIdFactory = new CassandraMessageId.Factory();

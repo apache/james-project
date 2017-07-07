@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import org.apache.commons.io.Charsets;
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.mailbox.cassandra.ids.BlobId;
 import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
 import org.junit.After;
@@ -35,7 +36,8 @@ import org.junit.Test;
 import com.google.common.base.Strings;
 
 public class CassandraBlobsDAOTest {
-    private static final int MULTIPLE_CHUNK_SIZE = 3 * CassandraBlobsDAO.CHUNK_SIZE;
+    private static final int CHUNK_SIZE = 1024;
+    private static final int MULTIPLE_CHUNK_SIZE = 3;
     private CassandraCluster cassandra;
     private CassandraBlobsDAO testee;
 
@@ -44,7 +46,10 @@ public class CassandraBlobsDAOTest {
         cassandra = CassandraCluster.create(new CassandraBlobModule());
         cassandra.ensureAllTables();
 
-        testee = new CassandraBlobsDAO(cassandra.getConf());
+        testee = new CassandraBlobsDAO(cassandra.getConf(),
+            CassandraConfiguration.builder()
+                .blobPartSize(CHUNK_SIZE)
+                .build());
     }
 
     @After

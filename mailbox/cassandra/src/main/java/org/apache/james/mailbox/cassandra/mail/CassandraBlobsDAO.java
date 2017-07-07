@@ -33,6 +33,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.BlobId;
 import org.apache.james.mailbox.cassandra.mail.utils.DataChunker;
@@ -45,28 +46,34 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
 
 public class CassandraBlobsDAO {
-
-    public static final int CHUNK_SIZE = 1024 * 100;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insert;
     private final PreparedStatement insertPart;
     private final PreparedStatement select;
     private final PreparedStatement selectPart;
     private final DataChunker dataChunker;
+    private final CassandraConfiguration configuration;
 
     @Inject
-    public CassandraBlobsDAO(Session session) {
+    public CassandraBlobsDAO(Session session, CassandraConfiguration cassandraConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
+        this.configuration = cassandraConfiguration;
         this.dataChunker = new DataChunker();
         this.insert = prepareInsert(session);
         this.select = prepareSelect(session);
 
         this.insertPart = prepareInsertPart(session);
         this.selectPart = prepareSelectPart(session);
+    }
+
+    @VisibleForTesting
+    public CassandraBlobsDAO(Session session) {
+        this(session, CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -106,8 +113,8 @@ public class CassandraBlobsDAO {
     }
 
     private CompletableFuture<Integer> saveBlobParts(byte[] data, BlobId blobId) {
-        return FluentFutureStream.of(
-            dataChunker.chunk(data, CHUNK_SIZE)
+        return FluentFutureStream.<Pair<Integer, Void>> of(
+            dataChunker.chunk(data, configuration.getBlobPartSize())
                 .map(pair -> writePart(pair.getRight(), blobId, pair.getKey())
                     .thenApply(partId -> Pair.of(pair.getKey(), partId))))
             .completableFuture()

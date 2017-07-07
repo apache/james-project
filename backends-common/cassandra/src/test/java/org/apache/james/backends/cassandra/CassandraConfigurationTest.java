@@ -202,6 +202,8 @@ public class CassandraConfigurationTest {
         int flagsUpdateChunkSize = 7;
         int messageReadChunkSize = 8;
         int expungeChunkSize = 9;
+        int blobPartSize = 10;
+        boolean onTheFlyV1ToV2Migration = true;
 
         CassandraConfiguration configuration = CassandraConfiguration.builder()
             .aclMaxRetry(aclMaxRetry)
@@ -213,6 +215,8 @@ public class CassandraConfigurationTest {
             .flagsUpdateChunkSize(flagsUpdateChunkSize)
             .messageReadChunkSize(messageReadChunkSize)
             .expungeChunkSize(expungeChunkSize)
+            .blobPartSize(blobPartSize)
+            .onTheFlyV1ToV2Migration(onTheFlyV1ToV2Migration)
             .build();
 
         softly.assertThat(configuration.getAclMaxRetry()).isEqualTo(aclMaxRetry);
@@ -224,6 +228,8 @@ public class CassandraConfigurationTest {
         softly.assertThat(configuration.getFlagsUpdateChunkSize()).isEqualTo(flagsUpdateChunkSize);
         softly.assertThat(configuration.getMessageReadChunkSize()).isEqualTo(messageReadChunkSize);
         softly.assertThat(configuration.getExpungeChunkSize()).isEqualTo(expungeChunkSize);
+        softly.assertThat(configuration.getBlobPartSize()).isEqualTo(blobPartSize);
+        softly.assertThat(configuration.isOnTheFlyV1ToV2Migration()).isEqualTo(onTheFlyV1ToV2Migration);
     }
 
 }

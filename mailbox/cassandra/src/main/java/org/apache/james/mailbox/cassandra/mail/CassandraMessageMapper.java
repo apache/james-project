@@ -55,7 +55,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.streams.JamesCollectors;
 import org.slf4j.Logger;
@@ -109,7 +108,7 @@ public class CassandraMessageMapper implements MessageMapper {
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
         this.applicableFlagDAO = applicableFlagDAO;
         this.deletedMessageDAO = deletedMessageDAO;
-        this.v1ToV2Migration = new V1ToV2Migration(messageDAO, messageDAOV2, attachmentMapper);
+        this.v1ToV2Migration = new V1ToV2Migration(messageDAO, messageDAOV2, attachmentMapper, cassandraConfiguration);
         this.cassandraConfiguration = cassandraConfiguration;
     }
 

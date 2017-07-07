@@ -59,6 +59,8 @@ public class CassandraSessionModuleTest {
                 .flagsUpdateChunkSize(7)
                 .messageReadChunkSize(8)
                 .expungeChunkSize(9)
+                .blobPartSize(10)
+                .onTheFlyV1ToV2Migration(true)
                 .build());
     }
 
