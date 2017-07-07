@@ -140,7 +140,7 @@ public class V1ToV2MigrationTest {
             new PropertyBuilder(), ImmutableList.of());
         messageDAOV1.save(originalMessage).join();
 
-        testee.moveFromV1toV2(CassandraMessageDAOV2.notFound(metaData)).join();
+        testee.getFromV2orElseFromV1AfterMigration(CassandraMessageDAOV2.notFound(metaData)).join();
 
         Optional<CassandraMessageDAOV2.MessageResult> messageResult = messageDAOV2.retrieveMessages(metaDataList, MessageMapper.FetchType.Full, Limit.unlimited())
             .join()
@@ -162,7 +162,7 @@ public class V1ToV2MigrationTest {
 
         messageDAOV1.save(originalMessage).join();
 
-        testee.moveFromV1toV2(CassandraMessageDAOV2.notFound(metaData)).join();
+        testee.getFromV2orElseFromV1AfterMigration(CassandraMessageDAOV2.notFound(metaData)).join();
 
         Optional<CassandraMessageDAOV2.MessageResult> messageResult = messageDAOV2.retrieveMessages(metaDataList, MessageMapper.FetchType.Full, Limit.unlimited())
             .join()

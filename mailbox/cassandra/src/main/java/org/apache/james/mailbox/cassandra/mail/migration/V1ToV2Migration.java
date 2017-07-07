@@ -58,7 +58,7 @@ public class V1ToV2Migration {
     }
 
     public CompletableFuture<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>
-            moveFromV1toV2(CassandraMessageDAOV2.MessageResult result) {
+            getFromV2orElseFromV1AfterMigration(CassandraMessageDAOV2.MessageResult result) {
 
         if (result.isFound()) {
             return CompletableFuture.completedFuture(result.message());

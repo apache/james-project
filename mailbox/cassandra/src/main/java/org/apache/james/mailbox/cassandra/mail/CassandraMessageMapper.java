@@ -239,7 +239,7 @@ public class CassandraMessageMapper implements MessageMapper {
         List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
 
         return FluentFutureStream.of(messageDAOV2.retrieveMessages(messageIds, fetchType, limit))
-            .thenComposeOnAll(v1ToV2Migration::moveFromV1toV2)
+            .thenComposeOnAll(v1ToV2Migration::getFromV2orElseFromV1AfterMigration)
             .completableFuture();
     }
 

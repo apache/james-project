@@ -115,7 +115,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             retrieveMessages(FetchType fetchType, ImmutableList<ComposedMessageIdWithMetaData> composedMessageIds) {
 
         return FluentFutureStream.of(messageDAOV2.retrieveMessages(composedMessageIds, fetchType, Limit.unlimited()))
-            .thenComposeOnAll(v1ToV2Migration::moveFromV1toV2)
+            .thenComposeOnAll(v1ToV2Migration::getFromV2orElseFromV1AfterMigration)
             .completableFuture();
     }
 
