@@ -104,7 +104,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
                 .map(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty())))
             .completableFuture()
             .thenApply(stream -> stream.collect(Guavate.toImmutableList()))
-            .thenCompose(composedMessageIds -> retrieveMessages(fetchType, composedMessageIds))
+            .thenCompose(composedMessageIds -> retrieveMessagesAndDoMigrationIfNeeded(fetchType, composedMessageIds))
             .thenCompose(stream -> attachmentLoader.addAttachmentToMessages(stream, fetchType))
             .thenCompose(this::filterMessagesWithExistingMailbox)
             .join()
@@ -112,7 +112,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     private CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>>
-            retrieveMessages(FetchType fetchType, ImmutableList<ComposedMessageIdWithMetaData> composedMessageIds) {
+            retrieveMessagesAndDoMigrationIfNeeded(FetchType fetchType, ImmutableList<ComposedMessageIdWithMetaData> composedMessageIds) {
 
         return FluentFutureStream.of(messageDAOV2.retrieveMessages(composedMessageIds, fetchType, Limit.unlimited()))
             .thenComposeOnAll(v1ToV2Migration::getFromV2orElseFromV1AfterMigration)
