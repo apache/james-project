@@ -84,6 +84,7 @@ import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
 
 public class CassandraMessageDAOV2 {
@@ -180,16 +181,24 @@ public class CassandraMessageDAOV2 {
             .setString(BODY_CONTENT, pair.getLeft().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
             .setString(HEADER_CONTENT, pair.getRight().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
             .setLong(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getTextualLineCount()).orElse(DEFAULT_LONG_VALUE))
-            .setList(PROPERTIES, message.getProperties().stream()
-                .map(x -> typesProvider.getDefinedUserType(PROPERTIES)
-                    .newValue()
-                    .setString(Properties.NAMESPACE, x.getNamespace())
-                    .setString(Properties.NAME, x.getLocalName())
-                    .setString(Properties.VALUE, x.getValue()))
-                .collect(Collectors.toList()))
-            .setList(ATTACHMENTS, message.getAttachments().stream()
-                .map(this::toUDT)
-                .collect(Guavate.toImmutableList()));
+            .setList(PROPERTIES, buildPropertiesUdt(message))
+            .setList(ATTACHMENTS, buildAttachmentUdt(message));
+    }
+
+    private ImmutableList<UDTValue> buildAttachmentUdt(MailboxMessage message) {
+        return message.getAttachments().stream()
+            .map(this::toUDT)
+            .collect(Guavate.toImmutableList());
+    }
+
+    private List<UDTValue> buildPropertiesUdt(MailboxMessage message) {
+        return message.getProperties().stream()
+            .map(x -> typesProvider.getDefinedUserType(PROPERTIES)
+                .newValue()
+                .setString(Properties.NAMESPACE, x.getNamespace())
+                .setString(Properties.NAME, x.getLocalName())
+                .setString(Properties.VALUE, x.getValue()))
+            .collect(Guavate.toImmutableList());
     }
 
     private UDTValue toUDT(MessageAttachment messageAttachment) {
