@@ -35,7 +35,6 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 
 public class InMemoryMailboxMapper implements MailboxMapper {
     

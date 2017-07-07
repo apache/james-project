@@ -32,6 +32,7 @@ import static org.apache.james.backends.es.NodeMappingFactory.NOT_ANALYZED;
 import static org.apache.james.backends.es.NodeMappingFactory.PROPERTIES;
 import static org.apache.james.backends.es.NodeMappingFactory.RAW;
 import static org.apache.james.backends.es.NodeMappingFactory.SNOWBALL;
+import static org.apache.james.backends.es.NodeMappingFactory.STRING;
 import static org.apache.james.backends.es.NodeMappingFactory.TYPE;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.BCC;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.CC;
@@ -63,9 +64,6 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
 
-import static org.apache.james.backends.es.NodeMappingFactory.STRING;
-
-import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.EMailer;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.Property;

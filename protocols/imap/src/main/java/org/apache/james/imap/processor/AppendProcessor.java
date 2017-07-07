@@ -46,7 +46,6 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
-import org.slf4j.Logger;
 
 public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
 

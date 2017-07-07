@@ -48,7 +48,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
 import javax.mail.Flags;
 
 import org.apache.hadoop.conf.Configuration;

@@ -30,7 +30,6 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.ConnectionFactory;
@@ -49,7 +48,6 @@ import org.apache.james.queue.api.ManageableMailQueue.MailQueueIterator;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;

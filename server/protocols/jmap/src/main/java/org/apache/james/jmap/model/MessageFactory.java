@@ -21,7 +21,6 @@ package org.apache.james.jmap.model;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;

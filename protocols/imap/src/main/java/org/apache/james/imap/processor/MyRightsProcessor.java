@@ -40,7 +40,6 @@ import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;
 import org.apache.james.metrics.api.MetricFactory;
-import org.slf4j.Logger;
 
 /**
  * MYRIGHTS Processor.

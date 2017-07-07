@@ -27,7 +27,6 @@ import org.apache.james.imap.processor.base.AbstractChainedProcessor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.slf4j.Logger;
 
 /**
  * Processes system messages unrelated to IMAP.

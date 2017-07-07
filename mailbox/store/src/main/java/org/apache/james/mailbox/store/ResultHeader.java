@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageResult;
 
 public final class ResultHeader implements MessageResult.Header {

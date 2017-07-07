@@ -337,7 +337,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      * @throws ConfigurationException
      */
     protected void configureHelloName(Configuration handlerConfiguration) throws ConfigurationException {
-        StringBuilder infoBuffer;
         String hostName;
         try {
             hostName = InetAddress.getLocalHost().getHostName();

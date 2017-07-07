@@ -43,7 +43,6 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRangeRequest> extends AbstractMailboxProcessor<M> {
 

@@ -36,7 +36,6 @@ import org.apache.james.mailbox.MessageUid;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 /**
  * <p>

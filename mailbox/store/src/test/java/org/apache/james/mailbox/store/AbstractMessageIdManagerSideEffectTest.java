@@ -30,7 +30,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.mail.Flags;
 
@@ -61,8 +60,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractMessageIdManagerSideEffectTest {
@@ -148,11 +145,6 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         reset(dispatcher);
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
-
-        MessageResult messageResult = FluentIterable
-            .from(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session))
-            .filter(inMailbox(mailbox1.getMailboxId()))
-            .get(0);
 
         verify(dispatcher).added(eq(session), eq(mailbox1), any(MailboxMessage.class));
         verifyNoMoreInteractions(dispatcher);
@@ -323,15 +315,6 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     private void givenUnlimitedQuota() throws MailboxException {
         when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(QuotaImpl.unlimited());
         when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(QuotaImpl.unlimited());
-    }
-
-    private Predicate<MessageResult> inMailbox(final MailboxId mailboxId) {
-        return new Predicate<MessageResult>() {
-            @Override
-            public boolean apply(MessageResult input) {
-                return input.getMailboxId().equals(mailboxId);
-            }
-        };
     }
 
     private SimpleMessageMetaData fromMessageResult(MessageId messageId, MessageResult messageResult) {

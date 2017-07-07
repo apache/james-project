@@ -33,11 +33,9 @@ import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.SIZE;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.TABLE_NAME;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.USER_NAME;
 
-
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
