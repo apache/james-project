@@ -24,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.AttachmentLoader;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
@@ -42,19 +43,21 @@ import com.google.common.collect.EvictingQueue;
 public class V1ToV2MigrationThread implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(V1ToV2MigrationThread.class);
-    public static final int POLL_INTERVAL_IN_MS = 10;
 
     private final EvictingQueue<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> messagesToBeMigrated;
     private final CassandraMessageDAO messageDAOV1;
     private final CassandraMessageDAOV2 messageDAOV2;
     private final AttachmentLoader attachmentLoader;
+    private final CassandraConfiguration cassandraConfiguration;
 
     public V1ToV2MigrationThread(EvictingQueue<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> messagesToBeMigrated,
-                                 CassandraMessageDAO messageDAOV1, CassandraMessageDAOV2 messageDAOV2, AttachmentLoader attachmentLoader) {
+                                 CassandraMessageDAO messageDAOV1, CassandraMessageDAOV2 messageDAOV2, AttachmentLoader attachmentLoader,
+                                 CassandraConfiguration cassandraConfiguration) {
         this.messagesToBeMigrated = messagesToBeMigrated;
         this.messageDAOV1 = messageDAOV1;
         this.messageDAOV2 = messageDAOV2;
         this.attachmentLoader = attachmentLoader;
+        this.cassandraConfiguration = cassandraConfiguration;
     }
 
     @Override
@@ -76,7 +79,7 @@ public class V1ToV2MigrationThread implements Runnable {
                 return poll.get();
             }
             try {
-                Thread.sleep(POLL_INTERVAL_IN_MS);
+                Thread.sleep(cassandraConfiguration.getV1ToV2PollingDelay());
             } catch (InterruptedException e) {
                 Throwables.propagate(e);
             }

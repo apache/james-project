@@ -192,6 +192,54 @@ public class CassandraConfigurationTest {
     }
 
     @Test
+    public void v1toV2ThreadCountShouldThrowOnZero() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        CassandraConfiguration.builder()
+            .v1ToV2ThreadCount(0);
+    }
+
+    @Test
+    public void v1toV2ThreadCountShouldThrowOnNegative() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        CassandraConfiguration.builder()
+            .v1ToV2ThreadCount(-1);
+    }
+
+    @Test
+    public void v1toV2QueueLengthShouldThrowOnZero() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        CassandraConfiguration.builder()
+            .v1ToV2QueueLength(0);
+    }
+
+    @Test
+    public void v1toV2QueueLengthShouldThrowOnNegative() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        CassandraConfiguration.builder()
+            .v1ToV2QueueLength(-1);
+    }
+
+    @Test
+    public void v1toV2PollingDelayShouldThrowOnZero() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        CassandraConfiguration.builder()
+            .v1ToV2PollingDelay(0);
+    }
+
+    @Test
+    public void v1toV2PollingDelayShouldThrowOnNegative() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        CassandraConfiguration.builder()
+            .v1ToV2PollingDelay(-1);
+    }
+
+    @Test
     public void builderShouldCreateTheRightObject() {
         int aclMaxRetry = 1;
         int modSeqMaxRetry = 2;
@@ -204,6 +252,9 @@ public class CassandraConfigurationTest {
         int expungeChunkSize = 9;
         int blobPartSize = 10;
         boolean onTheFlyV1ToV2Migration = true;
+        int v1ToV2ThreadCount = 11;
+        int v1ToV2QueueLength = 12;
+        int v1ToV2PollingDelay = 13;
 
         CassandraConfiguration configuration = CassandraConfiguration.builder()
             .aclMaxRetry(aclMaxRetry)
@@ -217,6 +268,9 @@ public class CassandraConfigurationTest {
             .expungeChunkSize(expungeChunkSize)
             .blobPartSize(blobPartSize)
             .onTheFlyV1ToV2Migration(onTheFlyV1ToV2Migration)
+            .v1ToV2ThreadCount(v1ToV2ThreadCount)
+            .v1ToV2QueueLength(v1ToV2QueueLength)
+            .v1ToV2PollingDelay(v1ToV2PollingDelay)
             .build();
 
         softly.assertThat(configuration.getAclMaxRetry()).isEqualTo(aclMaxRetry);
@@ -230,6 +284,9 @@ public class CassandraConfigurationTest {
         softly.assertThat(configuration.getExpungeChunkSize()).isEqualTo(expungeChunkSize);
         softly.assertThat(configuration.getBlobPartSize()).isEqualTo(blobPartSize);
         softly.assertThat(configuration.isOnTheFlyV1ToV2Migration()).isEqualTo(onTheFlyV1ToV2Migration);
+        softly.assertThat(configuration.getV1ToV2ThreadCount()).isEqualTo(v1ToV2ThreadCount);
+        softly.assertThat(configuration.getV1ToV2QueueLength()).isEqualTo(v1ToV2QueueLength);
+        softly.assertThat(configuration.getV1ToV2PollingDelay()).isEqualTo(v1ToV2PollingDelay);
     }
 
 }

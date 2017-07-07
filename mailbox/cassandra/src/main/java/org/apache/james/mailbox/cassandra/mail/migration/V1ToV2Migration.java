@@ -43,9 +43,6 @@ import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.ImmutableList;
 
 public class V1ToV2Migration {
-    private static final int MIGRATION_THREAD_COUNT = 2;
-    private static final int MIGRATION_QUEUE_LENGTH = 1000;
-
     private final CassandraMessageDAO messageDAOV1;
     private final AttachmentLoader attachmentLoader;
     private final CassandraConfiguration cassandraConfiguration;
@@ -58,10 +55,10 @@ public class V1ToV2Migration {
         this.messageDAOV1 = messageDAOV1;
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
         this.cassandraConfiguration = cassandraConfiguration;
-        this.migrationExecutor = Executors.newFixedThreadPool(MIGRATION_THREAD_COUNT);
-        this.messagesToBeMigrated = EvictingQueue.create(MIGRATION_QUEUE_LENGTH);
-        IntStream.range(0, MIGRATION_THREAD_COUNT)
-            .mapToObj(i -> new V1ToV2MigrationThread(messagesToBeMigrated, messageDAOV1, messageDAOV2, attachmentLoader))
+        this.migrationExecutor = Executors.newFixedThreadPool(cassandraConfiguration.getV1ToV2ThreadCount());
+        this.messagesToBeMigrated = EvictingQueue.create(cassandraConfiguration.getV1ToV2QueueLength());
+        IntStream.range(0, cassandraConfiguration.getV1ToV2ThreadCount())
+            .mapToObj(i -> new V1ToV2MigrationThread(messagesToBeMigrated, messageDAOV1, messageDAOV2, attachmentLoader, cassandraConfiguration))
             .forEach(migrationExecutor::execute);
     }
 
