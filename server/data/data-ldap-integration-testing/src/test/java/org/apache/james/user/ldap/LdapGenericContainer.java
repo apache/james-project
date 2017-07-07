@@ -65,7 +65,8 @@ public class LdapGenericContainer extends ExternalResource {
                 .withAffinityToContainer()
                 .withEnv("SLAPD_DOMAIN", domain)
                 .withEnv("SLAPD_PASSWORD", password)
-                .withEnv("SLAPD_CONFIG_PASSWORD", password);
+                .withEnv("SLAPD_CONFIG_PASSWORD", password)
+                .withExposedPorts(LdapGenericContainer.DEFAULT_LDAP_PORT);
         }
     }
 
