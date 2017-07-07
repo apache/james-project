@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.mail.Flags;
 
@@ -52,6 +53,7 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.quota.QuotaImpl;
 import org.junit.After;
 import org.junit.Before;
@@ -151,9 +153,8 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
             .from(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session))
             .filter(inMailbox(mailbox1.getMailboxId()))
             .get(0);
-        SimpleMessageMetaData simpleMessageMetaData = fromMessageResult(messageId, messageResult);
 
-        verify(dispatcher).added(session, simpleMessageMetaData, mailbox1);
+        verify(dispatcher).added(eq(session), eq(mailbox1), any(MailboxMessage.class));
         verifyNoMoreInteractions(dispatcher);
     }
 
@@ -165,20 +166,10 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()), session);
 
-        List<MessageResult> messageResults = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
-        MessageResult messageResultMailbox1 = FluentIterable
-            .from(messageResults)
-            .filter(inMailbox(mailbox1.getMailboxId()))
-            .get(0);
-        SimpleMessageMetaData metadataMailbox1 = fromMessageResult(messageId, messageResultMailbox1);
-        MessageResult messageResultMailbox3 = FluentIterable
-            .from(messageResults)
-            .filter(inMailbox(mailbox3.getMailboxId()))
-            .get(0);
-        SimpleMessageMetaData metadataMailbox3 = fromMessageResult(messageId, messageResultMailbox3);
+        messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
 
-        verify(dispatcher).added(session, metadataMailbox1, mailbox1);
-        verify(dispatcher).added(session, metadataMailbox3, mailbox3);
+        verify(dispatcher).added(eq(session), eq(mailbox1), any(MailboxMessage.class));
+        verify(dispatcher).added(eq(session), eq(mailbox3), any(MailboxMessage.class));
         verifyNoMoreInteractions(dispatcher);
     }
 
@@ -207,7 +198,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox3.getMailboxId()), session);
 
         verify(dispatcher).expunged(eq(session), any(SimpleMessageMetaData.class), eq(mailbox2));
-        verify(dispatcher).added(eq(session), any(SimpleMessageMetaData.class), eq(mailbox3));
+        verify(dispatcher).added(eq(session), eq(mailbox3), any(MailboxMessage.class));
         verifyNoMoreInteractions(dispatcher);
     }
 

@@ -91,6 +91,7 @@ import org.apache.james.mime4j.stream.EntityState;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
+import org.apache.james.util.IteratorWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,6 +99,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Base class for {@link org.apache.james.mailbox.MessageManager}
@@ -171,9 +173,12 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     
     private BatchSizes batchSizes = BatchSizes.defaultValues();
 
+    private final ImmutableMailboxMessage.Factory immutableMailboxMessageFactory;
+
     public StoreMessageManager(MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher, 
             MailboxPathLocker locker, Mailbox mailbox, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
-            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes) 
+            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes,
+            ImmutableMailboxMessage.Factory immutableMailboxMessageFactory) 
                     throws MailboxException {
         this.mailbox = mailbox;
         this.dispatcher = dispatcher;
@@ -187,6 +192,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         this.messageParser = messageParser;
         this.messageIdFactory = messageIdFactory;
         this.batchSizes = batchSizes;
+        this.immutableMailboxMessageFactory = immutableMailboxMessageFactory;
     }
 
     protected Factory getMessageIdFactory() {
@@ -427,12 +433,9 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
                 public ComposedMessageId execute() throws MailboxException {
                     MessageMetaData data = appendMessageToStore(message, attachments, mailboxSession);
 
-                    SortedMap<MessageUid, MessageMetaData> uids = new TreeMap<MessageUid, MessageMetaData>();
-                    MessageUid messageUid = data.getUid();
-                    MailboxId mailboxId = getMailboxEntity().getMailboxId();
-                    uids.put(messageUid, data);
-                    dispatcher.added(mailboxSession, uids, getMailboxEntity());
-                    return new ComposedMessageId(mailboxId, data.getMessageId(), messageUid);
+                    Mailbox mailbox = getMailboxEntity();
+                    dispatcher.added(mailboxSession, mailbox, message);
+                    return new ComposedMessageId(mailbox.getMailboxId(), data.getMessageId(), data.getUid());
                 }
             }, true);
 
@@ -632,7 +635,6 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             @Override
             public List<MessageRange> execute() throws MailboxException {
                 SortedMap<MessageUid, MessageMetaData> copiedUids = copy(set, toMailbox, session);
-                dispatcher.added(session, copiedUids, toMailbox.getMailboxEntity());
                 return MessageRange.toRanges(new ArrayList<MessageUid>(copiedUids.keySet()));
             }
         }, true);
@@ -660,7 +662,6 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             @Override
             public List<MessageRange> execute() throws MailboxException {
                 SortedMap<MessageUid, MessageMetaData> movedUids = move(set, toMailbox, session);
-                dispatcher.added(session, movedUids, toMailbox.getMailboxEntity());
                 return MessageRange.toRanges(new ArrayList<MessageUid>(movedUids.keySet()));
             }
         }, true);
@@ -795,15 +796,32 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
 
     private SortedMap<MessageUid, MessageMetaData> copy(MessageRange set, StoreMessageManager to, MailboxSession session) throws MailboxException {
-        Iterator<MailboxMessage> originalRows = retrieveOriginalRows(set, session);
-        return collectMetadata(to.copy(originalRows, session));
+        IteratorWrapper<MailboxMessage> originalRows = new IteratorWrapper<MailboxMessage>(retrieveOriginalRows(set, session));
+
+        SortedMap<MessageUid, MessageMetaData> copiedUids = collectMetadata(to.copy(originalRows, session));
+
+        ImmutableMap.Builder<MessageUid, MailboxMessage> messagesMap = ImmutableMap.builder();
+        for(MailboxMessage message: originalRows.getEntriesSeen()) {
+            messagesMap.put(message.getUid(), immutableMailboxMessageFactory.from(to.getMailboxEntity().getMailboxId(), message));
+        }
+        dispatcher.added(session, copiedUids, to.getMailboxEntity(), messagesMap.build());
+
+        return copiedUids;
     }
 
     private SortedMap<MessageUid, MessageMetaData> move(MessageRange set, StoreMessageManager to, MailboxSession session) throws MailboxException {
-        Iterator<MailboxMessage> originalRows = retrieveOriginalRows(set, session);
+        IteratorWrapper<MailboxMessage> originalRows = new IteratorWrapper<MailboxMessage>(retrieveOriginalRows(set, session));
+
         MoveResult moveResult = to.move(originalRows, session);
+        SortedMap<MessageUid, MessageMetaData> moveUids = collectMetadata(moveResult.getMovedMessages());
+
+        ImmutableMap.Builder<MessageUid, MailboxMessage> messagesMap = ImmutableMap.builder();
+        for(MailboxMessage message: originalRows.getEntriesSeen()) {
+            messagesMap.put(message.getUid(), immutableMailboxMessageFactory.from(to.getMailboxEntity().getMailboxId(), message));
+        }
+        dispatcher.added(session, moveUids, to.getMailboxEntity(), messagesMap.build());
         dispatcher.expunged(session, collectMetadata(moveResult.getOriginalMessages()), getMailboxEntity());
-        return collectMetadata(moveResult.getMovedMessages());
+        return moveUids;
     }
 
     private Iterator<MailboxMessage> retrieveOriginalRows(MessageRange set, MailboxSession session) throws MailboxException {

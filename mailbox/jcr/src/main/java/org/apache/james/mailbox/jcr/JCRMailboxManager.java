@@ -77,7 +77,8 @@ public class JCRMailboxManager extends StoreMailboxManager implements JCRImapCon
             getQuotaRootResolver(),
             getMessageParser(),
             getMessageIdFactory(),
-            getBatchSizes());
+            getBatchSizes(),
+            getImmutableMailboxMessageFactory());
     }
 
     @Override

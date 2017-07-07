@@ -50,6 +50,7 @@ import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,6 +60,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 
 public class SelectedMailboxImplTest {
@@ -169,6 +171,6 @@ public class SelectedMailboxImplTest {
     private void emitEvent(MailboxListener mailboxListener) {
         TreeMap<MessageUid, MessageMetaData> result = new TreeMap<MessageUid, MessageMetaData>();
         result.put(EMITTED_EVENT_UID, new SimpleMessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
-        mailboxListener.event(new EventFactory().added(mock(MailboxSession.class), result, mailbox));
+        mailboxListener.event(new EventFactory().added(mock(MailboxSession.class), result, mailbox, ImmutableMap.<MessageUid, MailboxMessage> of()));
     }
 }

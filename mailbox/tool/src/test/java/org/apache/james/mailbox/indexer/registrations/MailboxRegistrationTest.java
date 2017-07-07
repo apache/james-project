@@ -37,10 +37,12 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 public class MailboxRegistrationTest {
@@ -73,7 +75,7 @@ public class MailboxRegistrationTest {
     public void AddedEventsShouldNotBeReported() {
         TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<MessageUid, MessageMetaData>();
         treeMap.put(UID, new SimpleMessageMetaData(UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
-        MailboxListener.Event event = eventFactory.added(session, treeMap, MAILBOX);
+        MailboxListener.Event event = eventFactory.added(session, treeMap, MAILBOX, ImmutableMap.<MessageUid, MailboxMessage> of());
         mailboxRegistration.event(event);
         assertThat(mailboxRegistration.getImpactingEvents(UID)).isEmpty();
     }

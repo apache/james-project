@@ -42,8 +42,11 @@ import org.apache.james.mailbox.store.json.event.dto.MailboxSessionDataTransferO
 import org.apache.james.mailbox.store.json.event.dto.MessageMetaDataDataTransferObject;
 import org.apache.james.mailbox.store.json.event.dto.UpdatedFlagsDataTransferObject;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableMap;
 
 public class EventConverter {
 
@@ -98,7 +101,8 @@ public class EventConverter {
             case ADDED:
                 return eventFactory.added(eventDataTransferObject.getSession().getMailboxSession(),
                     retrieveMetadata(eventDataTransferObject.getMetaDataProxyMap()),
-                    mailbox);
+                    mailbox,
+                    ImmutableMap.<MessageUid, MailboxMessage>of());
             case DELETED:
                 return eventFactory.expunged(eventDataTransferObject.getSession().getMailboxSession(),
                     retrieveMetadata(eventDataTransferObject.getMetaDataProxyMap()),

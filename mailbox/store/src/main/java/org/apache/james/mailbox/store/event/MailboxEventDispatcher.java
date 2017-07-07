@@ -31,7 +31,9 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -69,15 +71,23 @@ public class MailboxEventDispatcher {
      * @param uids Sorted map with uids and message meta data
      * @param mailbox The mailbox
      */
-    public void added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        listener.event(eventFactory.added(session, uids, mailbox));
+    public void added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox, Map<MessageUid, MailboxMessage> cachedMessages) {
+        listener.event(eventFactory.added(session, uids, mailbox, cachedMessages));
+    }
+
+    public void added(MailboxSession session, Mailbox mailbox, MailboxMessage mailboxMessage) {
+        SimpleMessageMetaData messageMetaData = new SimpleMessageMetaData(mailboxMessage);
+        SortedMap<MessageUid, MessageMetaData> metaDataMap = ImmutableSortedMap.<MessageUid, MessageMetaData>naturalOrder()
+                .put(messageMetaData.getUid(), messageMetaData)
+                .build();
+        added(session, metaDataMap, mailbox, ImmutableMap.of(mailboxMessage.getUid(), mailboxMessage));
     }
 
     public void added(MailboxSession session, MessageMetaData messageMetaData, Mailbox mailbox) {
         SortedMap<MessageUid, MessageMetaData> metaDataMap = ImmutableSortedMap.<MessageUid, MessageMetaData>naturalOrder()
-                .put(messageMetaData.getUid(), messageMetaData)
-                .build();
-        added(session, metaDataMap, mailbox);
+            .put(messageMetaData.getUid(), messageMetaData)
+            .build();
+        added(session, metaDataMap, mailbox, ImmutableMap.<MessageUid, MailboxMessage>of());
     }
 
     /**

@@ -229,18 +229,17 @@ public class StoreMessageIdManager implements MessageIdManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
         for (MailboxId mailboxId : mailboxIds) {
             SimpleMailboxMessage copy = SimpleMailboxMessage.copy(mailboxId, mailboxMessage);
-            MessageMetaData metaData = save(mailboxSession, messageIdMapper, copy);
-            dispatcher.added(mailboxSession, metaData, mailboxMapper.findMailboxById(mailboxId));
+            save(mailboxSession, messageIdMapper, copy);
+            dispatcher.added(mailboxSession, mailboxMapper.findMailboxById(mailboxId), copy);
         }
     }
 
-    private MessageMetaData save(MailboxSession mailboxSession, MessageIdMapper messageIdMapper, MailboxMessage mailboxMessage) throws MailboxException {
+    private void save(MailboxSession mailboxSession, MessageIdMapper messageIdMapper, MailboxMessage mailboxMessage) throws MailboxException {
         long modSeq = mailboxSessionMapperFactory.getModSeqProvider().nextModSeq(mailboxSession, mailboxMessage.getMailboxId());
         MessageUid uid = mailboxSessionMapperFactory.getUidProvider().nextUid(mailboxSession, mailboxMessage.getMailboxId());
         mailboxMessage.setModSeq(modSeq);
         mailboxMessage.setUid(uid);
         messageIdMapper.save(mailboxMessage);
-        return new SimpleMessageMetaData(uid, modSeq, mailboxMessage.createFlags(), mailboxMessage.getFullContentOctets(), mailboxMessage.getInternalDate(), mailboxMessage.getMessageId());
     }
 
     private Function<MailboxMessage, MessageResult> messageResultConverter(final MessageResult.FetchGroup fetchGroup) {
