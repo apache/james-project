@@ -260,6 +260,12 @@
                     <artifactId>throwing-lambdas</artifactId>
                     <version>0.5.0</version>
                 </dependency>
+                <dependency>
+                    <groupId>com.jayway.awaitility</groupId>
+                    <artifactId>awaitility</artifactId>
+                    <version>1.6.5</version>
+                    <scope>test</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>

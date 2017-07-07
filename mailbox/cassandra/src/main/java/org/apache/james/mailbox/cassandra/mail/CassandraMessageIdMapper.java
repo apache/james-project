@@ -77,7 +77,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
                                     CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO,
                                     CassandraMessageDAO messageDAOV1, CassandraMessageDAOV2 messageDAOV2,
                                     CassandraIndexTableHandler indexTableHandler, ModSeqProvider modSeqProvider, MailboxSession mailboxSession,
-                                    CassandraConfiguration cassandraConfiguration) {
+                                    V1ToV2Migration v1ToV2Migration, CassandraConfiguration cassandraConfiguration) {
 
         this.mailboxMapper = mailboxMapper;
         this.mailboxDAO = mailboxDAO;
@@ -89,7 +89,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         this.mailboxSession = mailboxSession;
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
         this.cassandraConfiguration = cassandraConfiguration;
-        this.v1ToV2Migration = new V1ToV2Migration(messageDAOV1, messageDAOV2, attachmentMapper, cassandraConfiguration);
+        this.v1ToV2Migration = v1ToV2Migration;
     }
 
     @Override

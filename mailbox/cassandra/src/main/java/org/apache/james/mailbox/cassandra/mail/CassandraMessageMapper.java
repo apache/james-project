@@ -87,14 +87,14 @@ public class CassandraMessageMapper implements MessageMapper {
     private final V1ToV2Migration v1ToV2Migration;
     private final CassandraConfiguration cassandraConfiguration;
 
-
-
     public CassandraMessageMapper(CassandraUidProvider uidProvider, CassandraModSeqProvider modSeqProvider,
                                   MailboxSession mailboxSession, CassandraAttachmentMapper attachmentMapper,
-                                  CassandraMessageDAO messageDAO, CassandraMessageDAOV2 messageDAOV2,
-                                  CassandraMessageIdDAO messageIdDAO, CassandraMessageIdToImapUidDAO imapUidDAO,
-                                  CassandraMailboxCounterDAO mailboxCounterDAO, CassandraMailboxRecentsDAO mailboxRecentDAO, CassandraApplicableFlagDAO applicableFlagDAO,
-                                  CassandraIndexTableHandler indexTableHandler, CassandraFirstUnseenDAO firstUnseenDAO, CassandraDeletedMessageDAO deletedMessageDAO, CassandraConfiguration cassandraConfiguration) {
+                                  CassandraMessageDAOV2 messageDAOV2, CassandraMessageIdDAO messageIdDAO,
+                                  CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMailboxCounterDAO mailboxCounterDAO,
+                                  CassandraMailboxRecentsDAO mailboxRecentDAO, CassandraApplicableFlagDAO applicableFlagDAO,
+                                  CassandraIndexTableHandler indexTableHandler, CassandraFirstUnseenDAO firstUnseenDAO,
+                                  CassandraDeletedMessageDAO deletedMessageDAO, V1ToV2Migration v1ToV2Migration,
+                                  CassandraConfiguration cassandraConfiguration) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
         this.mailboxSession = mailboxSession;
@@ -108,7 +108,7 @@ public class CassandraMessageMapper implements MessageMapper {
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
         this.applicableFlagDAO = applicableFlagDAO;
         this.deletedMessageDAO = deletedMessageDAO;
-        this.v1ToV2Migration = new V1ToV2Migration(messageDAO, messageDAOV2, attachmentMapper, cassandraConfiguration);
+        this.v1ToV2Migration = v1ToV2Migration;
         this.cassandraConfiguration = cassandraConfiguration;
     }
 

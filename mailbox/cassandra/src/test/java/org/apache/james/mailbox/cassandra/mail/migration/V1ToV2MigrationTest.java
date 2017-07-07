@@ -22,6 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
@@ -33,12 +35,12 @@ import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraBlobsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV2;
 import org.apache.james.mailbox.cassandra.mail.MessageAttachmentRepresentation;
+import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
@@ -61,6 +63,9 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
+import com.jayway.awaitility.core.ConditionFactory;
 
 public class V1ToV2MigrationTest {
     private static final int BODY_START = 16;
@@ -85,6 +90,7 @@ public class V1ToV2MigrationTest {
     
     @Rule
     public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+    private ConditionFactory awaitability;
 
     @Before
     public void setUp() {
@@ -126,10 +132,18 @@ public class V1ToV2MigrationTest {
             .isInline(true)
             .name("toto.png")
             .build();
+
+        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
+        awaitability = Awaitility
+            .with()
+            .pollInterval(slowPacedPollInterval)
+            .and()
+            .pollDelay(slowPacedPollInterval).await();
     }
 
     @After
     public void tearDown() {
+        testee.stop();
         cassandra.clearAllTables();
         cassandra.close();
     }
@@ -142,15 +156,13 @@ public class V1ToV2MigrationTest {
 
         testee.getFromV2orElseFromV1AfterMigration(CassandraMessageDAOV2.notFound(metaData)).join();
 
-        Optional<CassandraMessageDAOV2.MessageResult> messageResult = messageDAOV2.retrieveMessages(metaDataList, MessageMapper.FetchType.Full, Limit.unlimited())
-            .join()
-            .findAny();
+        awaitMigration();
 
-        assertThat(messageResult.isPresent()).isTrue();
-        softly.assertThat(messageResult.get().message().getLeft().getMessageId()).isEqualTo(messageId);
-        softly.assertThat(IOUtils.toString(messageResult.get().message().getLeft().getContent(), Charsets.UTF_8))
+        CassandraMessageDAOV2.MessageResult messageResult = retrieveMessageOnV2().get();
+        softly.assertThat(messageResult.message().getLeft().getMessageId()).isEqualTo(messageId);
+        softly.assertThat(IOUtils.toString(messageResult.message().getLeft().getContent(), Charsets.UTF_8))
             .isEqualTo(CONTENT);
-        softly.assertThat(messageResult.get().message().getRight().findAny().isPresent()).isFalse();
+        softly.assertThat(messageResult.message().getRight().findAny().isPresent()).isFalse();
     }
 
     @Test
@@ -164,20 +176,39 @@ public class V1ToV2MigrationTest {
 
         testee.getFromV2orElseFromV1AfterMigration(CassandraMessageDAOV2.notFound(metaData)).join();
 
-        Optional<CassandraMessageDAOV2.MessageResult> messageResult = messageDAOV2.retrieveMessages(metaDataList, MessageMapper.FetchType.Full, Limit.unlimited())
-            .join()
-            .findAny();
+        awaitMigration();
 
-        assertThat(messageResult.isPresent()).isTrue();
-        softly.assertThat(messageResult.get().message().getLeft().getMessageId()).isEqualTo(messageId);
-        softly.assertThat(IOUtils.toString(messageResult.get().message().getLeft().getContent(), Charsets.UTF_8))
+        CassandraMessageDAOV2.MessageResult messageResult = retrieveMessageOnV2().get();
+        softly.assertThat(messageResult.message().getLeft().getMessageId()).isEqualTo(messageId);
+        softly.assertThat(IOUtils.toString(messageResult.message().getLeft().getContent(), Charsets.UTF_8))
             .isEqualTo(CONTENT);
-        softly.assertThat(messageResult.get().message().getRight().findAny().get()).isEqualTo(MessageAttachmentRepresentation.builder()
+        softly.assertThat(messageResult.message().getRight().findAny().get()).isEqualTo(MessageAttachmentRepresentation.builder()
             .attachmentId(attachment.getAttachmentId())
             .cid(OptionalConverter.fromGuava(messageAttachment.getCid()))
             .isInline(messageAttachment.isInline())
             .name(messageAttachment.getName().get())
             .build());
+    }
+
+    private void awaitMigration() {
+        awaitability.atMost(1, TimeUnit.MINUTES)
+            .until(() -> {
+                try {
+                    retrieveMessageOnV2();
+                    return true;
+                } catch(AssertionError e) {
+                    return false;
+                }
+            });
+    }
+
+    private Optional<CassandraMessageDAOV2.MessageResult> retrieveMessageOnV2() {
+        Optional<CassandraMessageDAOV2.MessageResult> messageResult = messageDAOV2.retrieveMessages(metaDataList, MessageMapper.FetchType.Full, Limit.unlimited())
+            .join()
+            .findAny();
+
+        assertThat(messageResult.isPresent()).isTrue();
+        return messageResult;
     }
 
     private SimpleMailboxMessage createMessage(MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) {
