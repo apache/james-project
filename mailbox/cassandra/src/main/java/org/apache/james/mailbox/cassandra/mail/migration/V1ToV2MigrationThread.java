@@ -20,11 +20,11 @@
 package org.apache.james.mailbox.cassandra.mail.migration;
 
 import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.AttachmentLoader;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
@@ -37,27 +37,21 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
-import com.google.common.collect.EvictingQueue;
-
 public class V1ToV2MigrationThread implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(V1ToV2MigrationThread.class);
 
-    private final EvictingQueue<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> messagesToBeMigrated;
+    private final BlockingQueue<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> messagesToBeMigrated;
     private final CassandraMessageDAO messageDAOV1;
     private final CassandraMessageDAOV2 messageDAOV2;
     private final AttachmentLoader attachmentLoader;
-    private final CassandraConfiguration cassandraConfiguration;
 
-    public V1ToV2MigrationThread(EvictingQueue<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> messagesToBeMigrated,
-                                 CassandraMessageDAO messageDAOV1, CassandraMessageDAOV2 messageDAOV2, AttachmentLoader attachmentLoader,
-                                 CassandraConfiguration cassandraConfiguration) {
+    public V1ToV2MigrationThread(BlockingQueue<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> messagesToBeMigrated,
+                                 CassandraMessageDAO messageDAOV1, CassandraMessageDAOV2 messageDAOV2, AttachmentLoader attachmentLoader) {
         this.messagesToBeMigrated = messagesToBeMigrated;
         this.messageDAOV1 = messageDAOV1;
         this.messageDAOV2 = messageDAOV2;
         this.attachmentLoader = attachmentLoader;
-        this.cassandraConfiguration = cassandraConfiguration;
     }
 
     @Override
@@ -77,11 +71,6 @@ public class V1ToV2MigrationThread implements Runnable {
             Optional<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> poll = poll();
             if (poll.isPresent()) {
                 return poll.get();
-            }
-            try {
-                Thread.sleep(cassandraConfiguration.getV1ToV2PollingDelay());
-            } catch (InterruptedException e) {
-                Throwables.propagate(e);
             }
         }
     }

@@ -63,7 +63,6 @@ public class CassandraSessionModuleTest {
                 .onTheFlyV1ToV2Migration(true)
                 .v1ToV2ThreadCount(11)
                 .v1ToV2QueueLength(12)
-                .v1ToV2PollingDelay(13)
                 .build());
     }
 

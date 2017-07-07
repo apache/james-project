@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.migration;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,15 +41,19 @@ import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.ImmutableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class V1ToV2Migration {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(V1ToV2MigrationThread.class);
+
     private final CassandraMessageDAO messageDAOV1;
     private final AttachmentLoader attachmentLoader;
     private final CassandraConfiguration cassandraConfiguration;
     private final ExecutorService migrationExecutor;
-    private final EvictingQueue<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> messagesToBeMigrated;
+    private final ArrayBlockingQueue<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> messagesToBeMigrated;
 
     @Inject
     public V1ToV2Migration(CassandraMessageDAO messageDAOV1, CassandraMessageDAOV2 messageDAOV2,
@@ -57,9 +62,10 @@ public class V1ToV2Migration {
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
         this.cassandraConfiguration = cassandraConfiguration;
         this.migrationExecutor = Executors.newFixedThreadPool(cassandraConfiguration.getV1ToV2ThreadCount());
-        this.messagesToBeMigrated = EvictingQueue.create(cassandraConfiguration.getV1ToV2QueueLength());
+        boolean ensureFifoOrder = false;
+        this.messagesToBeMigrated = new ArrayBlockingQueue<>(cassandraConfiguration.getV1ToV2QueueLength(), ensureFifoOrder);
         IntStream.range(0, cassandraConfiguration.getV1ToV2ThreadCount())
-            .mapToObj(i -> new V1ToV2MigrationThread(messagesToBeMigrated, messageDAOV1, messageDAOV2, attachmentLoader, cassandraConfiguration))
+            .mapToObj(i -> new V1ToV2MigrationThread(messagesToBeMigrated, messageDAOV1, messageDAOV2, attachmentLoader))
             .forEach(migrationExecutor::execute);
     }
 
@@ -85,7 +91,9 @@ public class V1ToV2Migration {
     private Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> submitMigration(Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> messageV1) {
         if (cassandraConfiguration.isOnTheFlyV1ToV2Migration()) {
             synchronized (messagesToBeMigrated) {
-                messagesToBeMigrated.add(messageV1);
+                if (!messagesToBeMigrated.offer(messageV1)) {
+                    LOGGER.info("Migration queue is full message {} is ignored", messageV1.getLeft().getMessageId());
+                }
             }
         }
         return messageV1;

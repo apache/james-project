@@ -119,8 +119,6 @@
         <dd>Optional. Defaults to 2.<br/> Controls the number of threads used to asynchronously migrate from v1 to v2.</dd>
         <dt><strong>migration.v1.v2.queue.length</strong></dt>
         <dd>Optional. Defaults to 1000.<br/> Controls the queue size of v1 to v2 migration task. Drops when full.</dd>
-        <dt><strong>migration.v1.v2.polling.delay.in.ms</strong></dt>
-        <dd>Optional. Defaults to 10.<br/> Controls the polling delay for v1 to v2 migration threads.</dd>
       </dl>
 
 

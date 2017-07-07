@@ -155,16 +155,14 @@ public class CassandraMessageDAOV2 {
 
     private CompletableFuture<Pair<Optional<BlobId>, Optional<BlobId>>> saveContent(MailboxMessage message) throws MailboxException {
         try {
-            CompletableFuture<Optional<BlobId>> bodyContent = blobsDAO.save(
-                IOUtils.toByteArray(
-                    message.getBodyContent()));
-            CompletableFuture<Optional<BlobId>> headerContent = blobsDAO.save(
-                IOUtils.toByteArray(
-                    message.getHeaderContent()));
-
-            return bodyContent.thenCompose(bodyContentId ->
-                headerContent.thenApply(headerContentId ->
-                    Pair.of(bodyContentId, headerContentId)));
+            return CompletableFutureUtil.combine(
+                blobsDAO.save(
+                    IOUtils.toByteArray(
+                        message.getHeaderContent())),
+                blobsDAO.save(
+                    IOUtils.toByteArray(
+                        message.getBodyContent())),
+                Pair::of);
         } catch (IOException e) {
             throw new MailboxException("Error saving mail content", e);
         }
@@ -178,8 +176,8 @@ public class CassandraMessageDAOV2 {
             .setInt(BODY_START_OCTET, (int) (message.getHeaderOctets()))
             .setLong(FULL_CONTENT_OCTETS, message.getFullContentOctets())
             .setLong(BODY_OCTECTS, message.getBodyOctets())
-            .setString(BODY_CONTENT, pair.getLeft().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
-            .setString(HEADER_CONTENT, pair.getRight().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
+            .setString(BODY_CONTENT, pair.getRight().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
+            .setString(HEADER_CONTENT, pair.getLeft().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
             .setLong(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getTextualLineCount()).orElse(DEFAULT_LONG_VALUE))
             .setList(PROPERTIES, buildPropertiesUdt(message))
             .setList(ATTACHMENTS, buildAttachmentUdt(message));
