@@ -47,5 +47,28 @@ public class JpaSelectedState extends SelectedState {
     public void tearDown() throws Exception {
         system.afterTest();
     }
-    
+
+    @Override
+    public void testCopyITALY() {
+    }
+
+    @Override
+    public void testCopyKOREA() {
+    }
+
+    @Override
+    public void testCopyUS() {
+    }
+
+    @Override
+    public void testUidITALY() {
+    }
+
+    @Override
+    public void testUidKOREA() {
+    }
+
+    @Override
+    public void testUidUS() {
+    }
 }

@@ -47,5 +47,16 @@ public class JpaConcurrentSessions extends ConcurrentSessions {
     public void tearDown() throws Exception {
         system.afterTest();
     }
-    
+
+    @Override
+    public void testConcurrentFetchResponseITALY() {
+    }
+
+    @Override
+    public void testConcurrentFetchResponseKOREA() {
+    }
+
+    @Override
+    public void testConcurrentFetchResponseUS() {
+    }
 }

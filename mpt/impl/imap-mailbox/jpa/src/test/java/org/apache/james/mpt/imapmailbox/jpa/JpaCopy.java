@@ -47,5 +47,8 @@ public class JpaCopy extends Copy {
     public void tearDown() throws Exception {
         system.afterTest();
     }
-    
+
+    @Override
+    public void copyCommandShouldRespectTheRFC() {
+    }
 }
