@@ -19,31 +19,51 @@
 
 package org.apache.james.mpt.testsuite;
 
-import com.google.inject.Inject;
+import java.util.Locale;
+
+import org.apache.james.mpt.api.HostSystem;
 import org.apache.james.mpt.host.ManageSieveHostSystem;
+import org.apache.james.mpt.script.GenericSimpleScriptedTestProtocol.PrepareCommand;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Locale;
+public abstract class HaveSpaceTest {
 
-public class HaveSpaceTest extends ManageSieveMPTTest {
-
-    @Inject
-    private static ManageSieveHostSystem hostSystem;
-
-    public HaveSpaceTest() throws Exception {
-        super(hostSystem);
-    }
+    public static final String USER = "user";
+    public static final String PASSWORD = "password";
+    
+    protected abstract ManageSieveHostSystem createManageSieveHostSystem();
+    
+    private ManageSieveHostSystem hostSystem;
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
-        hostSystem.setMaxQuota(USER, 50);
+        hostSystem = createManageSieveHostSystem();
+        hostSystem.beforeTest();
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/managesieve/scripts/", hostSystem)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US)
+                .withPreparedCommand(new PrepareCommand<HostSystem>() {
+                    @Override
+                    public void prepare(HostSystem system) throws Exception {
+                        ((ManageSieveHostSystem) system).setMaxQuota(USER, 50);
+                    }
+                });
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        hostSystem.afterTest();
     }
 
     @Test
     public void haveSpaceShouldWork() throws Exception {
-        scriptTest("havespace", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("havespace");
     }
 
 }

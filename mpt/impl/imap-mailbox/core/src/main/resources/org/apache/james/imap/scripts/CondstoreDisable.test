@@ -17,7 +17,8 @@
 # under the License.                                           #
 ################################################################
 C: A0 CAPABILITY
-S: \* CAPABILITY NAMESPACE QUOTA IMAP4rev1 QRESYNC UNSELECT WITHIN SASL-IR ACL ENABLE SEARCHRES UIDPLUS CHILDREN AUTH=PLAIN LITERAL\+ MOVE ANNOTATION ESEARCH IDLE I18NLEVEL\=1
+# This regex ensure the response string do not contain CONDSTORE string
+S: ^((?!CONDSTORE).)*$
 S: A0 OK CAPABILITY completed.
 
 C: A1 ENABLE CONDSTORE

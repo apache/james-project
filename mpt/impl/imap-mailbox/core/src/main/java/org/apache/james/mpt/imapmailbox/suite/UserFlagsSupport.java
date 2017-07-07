@@ -19,28 +19,40 @@
 
 package org.apache.james.mpt.imapmailbox.suite;
 
-import com.google.inject.Inject;
 import java.util.Locale;
 
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseAuthenticatedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 
-public class UserFlagsSupport extends BaseAuthenticatedState {
+public abstract class UserFlagsSupport implements ImapTestConstants {
 
-    @Inject
-    private static ImapHostSystem system;
+    protected abstract ImapHostSystem createImapHostSystem();
+    
+    private ImapHostSystem system;
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
-    public UserFlagsSupport() throws Exception {
-        super(system);
+    @Before
+    public void setUp() throws Exception {
+        system = createImapHostSystem();
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
     }
-
+    
     @Test
     public void testUserFlagsSupport() throws Exception {
         Assume.assumeTrue(system.supports(ImapFeatures.Feature.USER_FLAGS_SUPPORT));
-        scriptTest("UserFlagsSupport", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("UserFlagsSupport");
     }
 
 }

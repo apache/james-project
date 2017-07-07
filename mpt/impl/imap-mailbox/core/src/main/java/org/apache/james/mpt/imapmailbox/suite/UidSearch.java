@@ -21,49 +21,70 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
-import javax.inject.Inject;
-
-import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseAuthenticatedState;
+import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.Before;
 import org.junit.Test;
 
-public class UidSearch extends BaseAuthenticatedState {
+public abstract class UidSearch implements ImapTestConstants {
 
-    @Inject
-    private static HostSystem system;
+    protected abstract ImapHostSystem createImapHostSystem();
     
-    public UidSearch() throws Exception {
-        super(system);
+    private ImapHostSystem system;
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+
+    @Before
+    public void setUp() throws Exception {
+        system = createImapHostSystem();
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
     }
 
     @Test
     public void testSearchAtomsUS() throws Exception {
-        scriptTest("UidSearchAtoms", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("UidSearchAtoms");
     }
 
     @Test
     public void testSearchAtomsITALY() throws Exception {
-        scriptTest("UidSearchAtoms", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("UidSearchAtoms");
     }
 
     @Test
     public void testSearchAtomsKOREA() throws Exception {
-        scriptTest("UidSearchAtoms", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("UidSearchAtoms");
     }
 
     @Test
     public void testSearchCombinationsUS() throws Exception {
-        scriptTest("UidSearchCombinations", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("UidSearchCombinations");
     }
 
     @Test
     public void testSearchCombinationsITALY() throws Exception {
-        scriptTest("UidSearchCombinations", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("UidSearchCombinations");
     }
 
     @Test
     public void testSearchCombinationsKOREA() throws Exception {
-        scriptTest("UidSearchCombinations", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("UidSearchCombinations");
     }
 }
 

@@ -44,7 +44,6 @@
         <module>impl/managesieve</module>
         <module>impl/smtp</module>
         <module>mavenplugin</module>
-        <module>onami-test</module>
     </modules>
 
     <issueManagement>
@@ -116,11 +115,6 @@
                 <artifactId>apache-james-mpt-core</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>apache-james-mpt-onami-test</artifactId>
-                <version>${project.version}</version>
             </dependency>
             <!-- Other Apache James sub projects -->
             <dependency>

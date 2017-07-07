@@ -21,37 +21,47 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
-import javax.inject.Inject;
-
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseAuthenticatedState;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.Before;
 import org.junit.Test;
 
-public class Condstore extends BaseAuthenticatedState {
+public abstract class Condstore implements ImapTestConstants {
 
-    @Inject
-    private static JamesImapHostSystem system;
+    protected abstract JamesImapHostSystem createJamesImapHostSystem();
+    
+    private JamesImapHostSystem system;
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
-    public Condstore() throws Exception {
-        super(system);
+    @Before
+    public void setUp() throws Exception {
+        system = createJamesImapHostSystem();
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
     }
+    
 
     @Test
     public void condstoreShouldBeDisableByDefault() throws Exception {
         system.configure(ImapConfiguration.builder().build());
-        scriptTest("CondstoreDisable", Locale.US);
+        simpleScriptedTestProtocol.run("CondstoreDisable");
     }
 
     @Test
     public void condstoreShouldBeDisableWhenGivenAndFalse() throws Exception {
         system.configure(ImapConfiguration.builder().isCondstoreEnable(false).build());
-        scriptTest("CondstoreDisable", Locale.US);
+        simpleScriptedTestProtocol.run("CondstoreDisable");
     }
 
     @Test
     public void condstoreShouldBeEnableWhenGivenAndTrue() throws Exception {
         system.configure(ImapConfiguration.builder().isCondstoreEnable(true).build());
-        scriptTest("CondstoreEnable", Locale.US);
+        simpleScriptedTestProtocol.run("CondstoreEnable");
     }
 }
