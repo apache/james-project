@@ -40,7 +40,6 @@ import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.util.CompletableFutureUtil;
-import org.apache.james.util.FluentFutureStream;
 import org.joda.time.DateTime;
 
 public class CassandraSieveRepository implements SieveRepository {
@@ -242,11 +241,10 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public boolean hasQuota(String user) {
-        return FluentFutureStream.ofFutures(
-                cassandraSieveQuotaDAO.getQuota(user).thenApply(Optional::isPresent),
-                cassandraSieveQuotaDAO.getQuota().thenApply(Optional::isPresent))
-            .reduce((b1, b2) -> b1 || b2)
-            .thenApply(Optional::get)
+        return CompletableFutureUtil.combine(
+            cassandraSieveQuotaDAO.getQuota(user).thenApply(Optional::isPresent),
+            cassandraSieveQuotaDAO.getQuota().thenApply(Optional::isPresent),
+            (b1, b2) -> b1 || b2)
             .join();
     }
 
