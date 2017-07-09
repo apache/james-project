@@ -31,6 +31,7 @@ import org.apache.james.jmap.api.vacation.RecipientId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.utils.MimeMessageBodyGenerator;
+import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -38,6 +39,8 @@ import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Functions;
 
 public class VacationMailet extends GenericMailet {
 
@@ -77,16 +80,22 @@ public class VacationMailet extends GenericMailet {
 
     public CompletableFuture<Void> manageVacation(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate) {
         AccountId accountId = AccountId.fromString(recipient.toString());
-        CompletableFuture<Vacation> vacationFuture = vacationRepository.retrieveVacation(accountId);
-        CompletableFuture<Boolean> hasAlreadyBeenSent = notificationRegistry.isRegistered(
-            AccountId.fromString(recipient.toString()),
-            RecipientId.fromMailAddress(processedMail.getSender()));
 
-        return vacationFuture.thenAcceptBoth(hasAlreadyBeenSent, (vacation, alreadySent) -> {
-            if (shouldSendNotification(vacation, processingDate, alreadySent)) {
-                sendNotification(recipient, processedMail, vacation);
-            }
-        });
+        return CompletableFutureUtil.combine(
+                vacationRepository.retrieveVacation(accountId),
+                notificationRegistry.isRegistered(
+                    AccountId.fromString(recipient.toString()),
+                    RecipientId.fromMailAddress(processedMail.getSender())),
+                (vacation, alreadySent) ->
+                    sendNotificationIfRequired(recipient, processedMail, processingDate, vacation, alreadySent))
+            .thenCompose(f -> f);
+    }
+
+    private CompletableFuture<Void> sendNotificationIfRequired(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate, Vacation vacation, Boolean alreadySent) {
+        if (shouldSendNotification(vacation, processingDate, alreadySent)) {
+            return sendNotification(recipient, processedMail, vacation);
+        }
+        return CompletableFuture.completedFuture(null);
     }
 
     private boolean shouldSendNotification(Vacation vacation, ZonedDateTime processingDate, boolean alreadySent) {
@@ -94,18 +103,19 @@ public class VacationMailet extends GenericMailet {
             && ! alreadySent;
     }
 
-    private void sendNotification(MailAddress recipient, Mail processedMail, Vacation vacation) {
+    private CompletableFuture<Void> sendNotification(MailAddress recipient, Mail processedMail, Vacation vacation) {
         try {
             VacationReply vacationReply = VacationReply.builder(processedMail)
                 .receivedMailRecipient(recipient)
                 .vacation(vacation)
                 .build(mimeMessageBodyGenerator);
             sendNotification(vacationReply);
-            notificationRegistry.register(AccountId.fromString(recipient.toString()),
+            return notificationRegistry.register(AccountId.fromString(recipient.toString()),
                 RecipientId.fromMailAddress(processedMail.getSender()),
                 vacation.getToDate());
         } catch (MessagingException e) {
             LOGGER.warn("Failed to send JMAP vacation notification from {} to {}", recipient, processedMail.getSender(), e);
+            return CompletableFuture.completedFuture(null);
         }
     }
 

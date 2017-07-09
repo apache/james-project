@@ -102,7 +102,7 @@ public class SetVacationResponseMethod implements Method {
     private Stream<JmapResponse> process(ClientId clientId, AccountId accountId, VacationResponse vacationResponse) {
         if (vacationResponse.isValid()) {
             vacationRepository.modifyVacation(accountId, vacationResponse.getPatch()).join();
-            notificationRegistry.flush(accountId);
+            notificationRegistry.flush(accountId).join();
             return Stream.of(JmapResponse.builder()
                 .clientId(clientId)
                 .responseName(RESPONSE_NAME)
