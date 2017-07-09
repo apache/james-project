@@ -52,7 +52,8 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
         return configuration;
     }
 
-    private SwarmGenericContainer cassandraContainer = new SwarmGenericContainer("cassandra:2.2");
+    private SwarmGenericContainer cassandraContainer = new SwarmGenericContainer("cassandra:2.2")
+        .withExposedPorts(CASSANDRA_PORT);
 
     @Override
     public Statement apply(Statement base, Description description) {

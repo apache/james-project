@@ -53,7 +53,8 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
         return configuration;
     }
 
-    private SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer("elasticsearch:2.2.2");
+    private SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer("elasticsearch:2.2.2")
+        .withExposedPorts(ELASTIC_SEARCH_HTTP_PORT, ELASTIC_SEARCH_PORT);
 
     @Override
     public Statement apply(Statement base, Description description) {
