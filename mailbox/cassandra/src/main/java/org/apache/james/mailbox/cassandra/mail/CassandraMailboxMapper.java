@@ -119,7 +119,6 @@ public class CassandraMailboxMapper implements MailboxMapper {
             .filter(idAndPath -> regex.matcher(idAndPath.getMailboxPath().getName()).matches())
             .map(CassandraMailboxPathDAO.CassandraIdAndPath::getCassandraId)
             .thenFlatComposeOnOptional(mailboxDAO::retrieveMailbox)
-            .completableFuture()
             .join()
             .collect(Guavate.toImmutableList());
     }
