@@ -148,11 +148,10 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public void storeAttachments(Collection<Attachment> attachments) throws MailboxException {
         try {
-            CompletableFuture.allOf(
-                    attachments.stream()
-                        .map(Throwing.function(this::asyncStoreAttachment))
-                        .toArray(CompletableFuture[]::new)
-                ).join();
+            FluentFutureStream.of(
+                attachments.stream()
+                    .map(Throwing.function(this::asyncStoreAttachment)))
+                .join();
         } catch (ThrownByLambdaException e) {
             throw new MailboxException(e.getCause().getMessage(), e.getCause());
         }
