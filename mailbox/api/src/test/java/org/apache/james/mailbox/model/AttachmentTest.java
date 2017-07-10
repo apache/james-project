@@ -23,7 +23,9 @@ package org.apache.james.mailbox.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
+import java.nio.charset.Charset;
 
+import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.model.Attachment;
 
@@ -31,43 +33,45 @@ import org.junit.Test;
 
 public class AttachmentTest {
 
+    private static Charset CHARSET = Charsets.UTF_8;
+
     @Test
     public void streamShouldBeConsumedOneTime() throws Exception {
         String input = "mystream";
         Attachment attachment = Attachment.builder()
-                .bytes(input.getBytes())
+                .bytes(input.getBytes(CHARSET))
                 .type("content")
                 .build();
 
         InputStream stream = attachment.getStream();
         assertThat(stream).isNotNull();
-        assertThat(IOUtils.toString(stream)).isEqualTo(input);
+        assertThat(IOUtils.toString(stream, CHARSET)).isEqualTo(input);
     }
 
     @Test
     public void getByteShouldReturnByteArrayRepresentingTheAttachment() throws Exception {
         String input = "mystream";
         Attachment attachment = Attachment.builder()
-            .bytes(input.getBytes())
+            .bytes(input.getBytes(CHARSET))
             .type("content")
             .build();
 
         byte[] bytes = attachment.getBytes();
-        assertThat(new String(bytes)).isEqualTo(input);
+        assertThat(new String(bytes, CHARSET)).isEqualTo(input);
     }
 
     @Test
     public void streamShouldBeConsumedMoreThanOneTime() throws Exception {
         String input = "mystream";
         Attachment attachment = Attachment.builder()
-                .bytes(input.getBytes())
+                .bytes(input.getBytes(CHARSET))
                 .type("content")
                 .build();
 
         attachment.getStream();
         InputStream stream = attachment.getStream();
         assertThat(stream).isNotNull();
-        assertThat(IOUtils.toString(stream)).isEqualTo(input);
+        assertThat(IOUtils.toString(stream, CHARSET)).isEqualTo(input);
     }
 
     @Test (expected = IllegalArgumentException.class)
@@ -102,21 +106,21 @@ public class AttachmentTest {
     @Test (expected = IllegalStateException.class)
     public void buildShouldThrowWhenBytesIsNotProvided() {
         Attachment.builder()
-            .attachmentId(AttachmentId.forPayload("mystream".getBytes()))
+            .attachmentId(AttachmentId.forPayload("mystream".getBytes(CHARSET)))
             .build();
     }
 
     @Test (expected = IllegalStateException.class)
     public void buildShouldThrowWhenTypeIsNotProvided() {
         Attachment.builder()
-            .attachmentId(AttachmentId.forPayload("mystream".getBytes()))
-            .bytes("mystream".getBytes())
+            .attachmentId(AttachmentId.forPayload("mystream".getBytes(CHARSET)))
+            .bytes("mystream".getBytes(CHARSET))
             .build();
     }
 
     @Test
     public void buildShouldSetTheAttachmentId() throws Exception {
-        byte[] bytes = "mystream".getBytes();
+        byte[] bytes = "mystream".getBytes(CHARSET);
         Attachment attachment = Attachment.builder()
                 .bytes(bytes)
                 .type("content")
@@ -130,10 +134,10 @@ public class AttachmentTest {
     public void buildShouldSetTheSize() throws Exception {
         String input = "mystream";
         Attachment attachment = Attachment.builder()
-                .bytes(input.getBytes())
+                .bytes(input.getBytes(CHARSET))
                 .type("content")
                 .build();
 
-        assertThat(attachment.getSize()).isEqualTo(input.getBytes().length);
+        assertThat(attachment.getSize()).isEqualTo(input.getBytes(CHARSET).length);
     }
 }
