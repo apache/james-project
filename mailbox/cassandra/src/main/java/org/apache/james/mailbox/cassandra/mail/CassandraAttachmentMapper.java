@@ -139,7 +139,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         return cassandraAsyncExecutor.executeVoid(
             insertInto(TABLE_NAME)
                 .value(ID, attachment.getAttachmentId().getId())
-                .value(PAYLOAD, ByteBuffer.wrap(IOUtils.toByteArray(attachment.getStream())))
+                .value(PAYLOAD, ByteBuffer.wrap(attachment.getBytes()))
                 .value(TYPE, attachment.getType())
                 .value(SIZE, attachment.getSize())
         );

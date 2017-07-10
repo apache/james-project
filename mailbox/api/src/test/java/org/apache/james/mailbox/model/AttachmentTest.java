@@ -45,6 +45,18 @@ public class AttachmentTest {
     }
 
     @Test
+    public void getByteShouldReturnByteArrayRepresentingTheAttachment() throws Exception {
+        String input = "mystream";
+        Attachment attachment = Attachment.builder()
+            .bytes(input.getBytes())
+            .type("content")
+            .build();
+
+        byte[] bytes = attachment.getBytes();
+        assertThat(new String(bytes)).isEqualTo(input);
+    }
+
+    @Test
     public void streamShouldBeConsumedMoreThanOneTime() throws Exception {
         String input = "mystream";
         Attachment attachment = Attachment.builder()
