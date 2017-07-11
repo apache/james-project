@@ -22,6 +22,7 @@ package org.apache.james.webadmin.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 import spark.ResponseTransformer;
 
@@ -32,6 +33,7 @@ public class JsonTransformer implements ResponseTransformer {
     public JsonTransformer() {
         objectMapper = new ObjectMapper();
         objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        objectMapper.registerModule(new Jdk8Module());
     }
 
     @Override
