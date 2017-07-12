@@ -58,26 +58,11 @@ public class V1ToV2MigrationThread implements Runnable {
     public void run() {
         while (true) {
             try {
-                Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> message = dequeue();
+                Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> message = messagesToBeMigrated.take();
                 performV1ToV2Migration(message).join();
             } catch (Exception e) {
                 LOGGER.error("Error occured in migration thread", e);
             }
-        }
-    }
-
-    private Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> dequeue() {
-        while (true) {
-            Optional<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> poll = poll();
-            if (poll.isPresent()) {
-                return poll.get();
-            }
-        }
-    }
-
-    private Optional<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> poll() {
-        synchronized (messagesToBeMigrated) {
-            return Optional.ofNullable(messagesToBeMigrated.poll());
         }
     }
 

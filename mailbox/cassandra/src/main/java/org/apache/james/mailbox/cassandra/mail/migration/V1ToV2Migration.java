@@ -39,11 +39,11 @@ import org.apache.james.mailbox.cassandra.mail.MessageAttachmentRepresentation;
 import org.apache.james.mailbox.cassandra.mail.MessageWithoutAttachment;
 import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class V1ToV2Migration {
 
@@ -64,9 +64,15 @@ public class V1ToV2Migration {
         this.migrationExecutor = Executors.newFixedThreadPool(cassandraConfiguration.getV1ToV2ThreadCount());
         boolean ensureFifoOrder = false;
         this.messagesToBeMigrated = new ArrayBlockingQueue<>(cassandraConfiguration.getV1ToV2QueueLength(), ensureFifoOrder);
-        IntStream.range(0, cassandraConfiguration.getV1ToV2ThreadCount())
-            .mapToObj(i -> new V1ToV2MigrationThread(messagesToBeMigrated, messageDAOV1, messageDAOV2, attachmentLoader))
-            .forEach(migrationExecutor::execute);
+        executeMigrationThread(messageDAOV1, messageDAOV2, cassandraConfiguration);
+    }
+
+    private void executeMigrationThread(CassandraMessageDAO messageDAOV1, CassandraMessageDAOV2 messageDAOV2, CassandraConfiguration cassandraConfiguration) {
+        if (cassandraConfiguration.isOnTheFlyV1ToV2Migration()) {
+            IntStream.range(0, cassandraConfiguration.getV1ToV2ThreadCount())
+                .mapToObj(i -> new V1ToV2MigrationThread(messagesToBeMigrated, messageDAOV1, messageDAOV2, attachmentLoader))
+                .forEach(migrationExecutor::execute);
+        }
     }
 
     @PreDestroy
