@@ -18,25 +18,31 @@
  ****************************************************************/
 package org.apache.james.adapter.mailbox;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.mail.Flags;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
-import com.google.common.base.Preconditions;
 import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.slf4j.Logger;
+
+import com.google.common.base.Preconditions;
 
 /**
  * JMX managmenent for Mailboxes
@@ -142,6 +148,25 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
         }
     }
 
+    @Override
+    public void importEmlFileToMailbox(String namespace, String user, String name, String emlpath) {
+        checkMailboxArguments(namespace, user, name, emlpath);
+        MailboxSession session = null;
+        try {
+            session = mailboxManager.createSystemSession(user, log);
+            mailboxManager.startProcessingRequest(session);
+            MessageManager messageManager = mailboxManager.getMailbox(new MailboxPath(namespace, user, name), session);
+            InputStream emlFileAsStream = new FileInputStream(emlpath);
+            boolean isRecent = true;
+            messageManager.appendMessage(emlFileAsStream, new Date(),
+                    session, isRecent, new Flags());
+        } catch (Exception e) {
+            log.error("Unable to create mailbox", e);
+        } finally {
+            closeSession(session);
+        }
+    }
+
     private void closeSession(MailboxSession session) {
         if (session != null) {
             mailboxManager.endProcessingRequest(session);
@@ -166,6 +191,13 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
         checkString(user, "mailbox path user");
         checkString(name, "mailbox name");
     }
+
+	private void checkMailboxArguments(String namespace, String user, String name, String emlpath) {
+		checkString(namespace, "mailbox path namespace");
+		checkString(user, "mailbox path user");
+		checkString(name, "mailbox name");
+		checkString(emlpath, "email file path name");
+	}
 
     private void checkString(String argument, String role) {
         Preconditions.checkNotNull(argument, "Provided " + role + " should not be null.");

@@ -21,18 +21,26 @@ package org.apache.james.adapter.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Iterator;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
@@ -40,11 +48,14 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Charsets;
+
 public class MailboxManagementTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxManagementTest.class);
     public static final String USER = "user";
     public static final int UID_VALIDITY = 10;
+    public static final int LIMIT = 1;
 
     private MailboxManagerManagement mailboxManagerManagement;
     private InMemoryMailboxSessionMapperFactory inMemoryMapperFactory;
@@ -236,6 +247,38 @@ public class MailboxManagementTest {
         assertThat(inMemoryMapperFactory.createMailboxMapper(session).list()).containsOnly(mailbox);
     }
 
+    @Test
+    public void importEmlFileToMailboxShouldImportEmlFileToGivenMailbox() throws Exception {
+        Mailbox mailbox = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, USER, "name"),
+                UID_VALIDITY);
+        inMemoryMapperFactory.createMailboxMapper(session).save(mailbox);
+        String emlpath = ClassLoader.getSystemResource("eml/frnog.eml").getFile();
+        mailboxManagerManagement.importEmlFileToMailbox(MailboxConstants.USER_NAMESPACE, USER, "name", emlpath);
+
+        assertThat(inMemoryMapperFactory.getMessageMapper(session).countMessagesInMailbox(mailbox)).isEqualTo(1);
+        Iterator<MailboxMessage> iterator = inMemoryMapperFactory.getMessageMapper(session).findInMailbox(mailbox,
+                MessageRange.all(), MessageMapper.FetchType.Full, LIMIT);
+        MailboxMessage mailboxMessage = iterator.next();
+
+        assertThat(IOUtils.toString(new FileInputStream(new File(emlpath)), Charsets.UTF_8))
+                .isEqualTo(IOUtils.toString(mailboxMessage.getFullContent(), Charsets.UTF_8));
+    }
+
+    @Test
+    public void importEmlFileToMailboxShouldNotImportEmlFileWithWrongPathToGivenMailbox() throws Exception {
+        Mailbox mailbox = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, USER, "name"),
+                UID_VALIDITY);
+        inMemoryMapperFactory.createMailboxMapper(session).save(mailbox);
+        String emlpath = ClassLoader.getSystemResource("eml/frnog.eml").getFile();
+        mailboxManagerManagement.importEmlFileToMailbox(MailboxConstants.USER_NAMESPACE, USER, "name", "wrong_path" + emlpath);
+
+        assertThat(inMemoryMapperFactory.getMessageMapper(session).countMessagesInMailbox(mailbox)).isEqualTo(0);
+        Iterator<MailboxMessage> iterator = inMemoryMapperFactory.getMessageMapper(session).findInMailbox(mailbox,
+                MessageRange.all(), MessageMapper.FetchType.Full, LIMIT);
+        assertThat(iterator.hasNext()).isFalse();
+    }
+
+	
     @Test(expected = NullPointerException.class)
     public void deleteMailboxShouldThrowOnNullNamespace() {
         mailboxManagerManagement.deleteMailbox(null, "a", "a");

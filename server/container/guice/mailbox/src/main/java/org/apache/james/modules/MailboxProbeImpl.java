@@ -19,6 +19,7 @@
 
 package org.apache.james.modules;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
@@ -144,6 +145,17 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         }
     }
 
+    @Override
+    public void importEmlFileToMailbox(String namespace, String user, String name, String emlpath) throws Exception{
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(user, LOGGER);
+        mailboxManager.startProcessingRequest(mailboxSession);
+        MessageManager messageManager = mailboxManager.getMailbox(new MailboxPath(namespace, user, name),
+                mailboxSession);
+        InputStream emlFileAsStream = new FileInputStream(emlpath);
+        boolean isRecent = true;
+        messageManager.appendMessage(emlFileAsStream, new Date(), mailboxSession, isRecent, new Flags());
+    }
+    
     @Override
     public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
             throws MailboxException {
