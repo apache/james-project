@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
-public class V1ToV2Migration {
+public class V1ToV2Migration implements Migration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(V1ToV2MigrationThread.class);
 
@@ -103,5 +103,10 @@ public class V1ToV2Migration {
             }
         }
         return messageV1;
+    }
+
+    @Override
+    public boolean run() {
+        return false;
     }
 }
