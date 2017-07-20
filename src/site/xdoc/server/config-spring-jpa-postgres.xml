@@ -42,7 +42,7 @@
 
         <p>Example to install it on Debian:</p>
         <source>
-          sudo apt-get update && sudo apt-get install postgresql-9.4 postgresql-client-9.4
+          sudo apt-get update &amp;&amp; sudo apt-get install postgresql-9.4 postgresql-client-9.4
         </source>
         <p>Example to pull and launch Postgres on docker</p>
         <source>
