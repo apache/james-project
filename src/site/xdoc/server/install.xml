@@ -206,7 +206,7 @@ $ telnet 127.0.0.1 25
 Trying 127.0.0.1...
 Connected to localhost.
 Escape character is '^]'.
-220 172.16.1.131 SMTP Server (JAMES SMTP Server 3.0-beta4) ready Sat, 6 Nov 2010 17:31:33 +0100 (CET)
+220 172.16.1.131 SMTP Server (JAMES SMTP Server 3.0.0) ready Wed, 20 Jul 2017 17:31:33 +0100 (CET)
 ehlo test
 250-172.16.1.131 Hello test (aoscommunity.com [127.0.0.1])
 250-PIPELINING

@@ -99,9 +99,6 @@
             Component Oriented Programming and  Inversion of Control. The stable and robust
             Spring container provides a strong foundation for the Apache James Server.</p>
 
-          <p>The internal and exposed APIs for this 3.0-beta4 release are under current validation and are
-            expected to be subject to change - <a href="dev.html">read more</a>.</p>
-
           <p><img src="images/uml/org.apache.james-package-small.png" width="400px" /></p>
 
         </subsection>

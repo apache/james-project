@@ -40,19 +40,16 @@
 	      <a href="manage.html">manage</a>, <a href="monitor.html">monitor</a> 
 	      and <a href="dev.html">develop</a> Apache James Server.</p>
 
-        <p>Download Apache James Mail Server 3.0-RC1 and <a href="quick-start.html">quick-start</a> it!</p>
+        <p>Download Apache James Mail Server 3.0.0 and <a href="quick-start.html">quick-start</a> it!</p>
         <p>
           <span class="minibutton btn-download">
             <a href="http://james.apache.org/download.cgi#Apache_James_Server">
-              <span><span class="icon"></span>Early Apache James Server 3.0-RC1</span>
+              <span><span class="icon"></span>Apache James Server 3.0.0</span>
             </a>
           </span>
         </p>
          <p>You can also have a look to the last stable version</p>
 
-         <p>The James team is working hard to release version 3.0. We currently do load testing, write more tests, rework the website,
-             and started using James 3.0 in production.</p>
-	
         <p>Apache James Server 3.0 represents the leading edge of development. This code stream has many more
           features than the 2.3 code, but is not be as well tested in production. Reasonable
           configuration compatibility has been retained with 2.3.2.</p>

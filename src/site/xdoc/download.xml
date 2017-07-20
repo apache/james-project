@@ -141,7 +141,7 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
 
   <section name='Apache James Server'>
 
-    <subsection name="Apache James 3.0-RC1 is for early adopters">
+    <subsection name="Apache James 3.0.0 is the stable version">
 
       <div class="ui-widget">
         <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
@@ -160,17 +160,17 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       </div>
 
       <ul>
-        <li>Source code <a href="https://github.com/apache/james-project/releases/tag/james-project-3.0.0-RC1">on GitHub</a></li>
+        <li>Source code <a href="https://github.com/apache/james-project/releases/tag/james-project-3.0.0">on GitHub</a></li>
 
         <li>Binary (ZIP Format): <a
-                href="http://www.apache.org/dist/james/server/james-server-app-3.0.0-RC1-app.zip">apache-james-3.0.0-RC1-app.zip</a> [<a
-                href="http://www.apache.org/dist/james/server/james-server-app-3.0.0-RC1-app.zip.asc">PGP</a>]</li>
+                href="http://www.apache.org/dist/james/server/3.0.0/james-server-app-3.0.0-app.zip">apache-james-3.0.0-app.zip</a> [<a
+                href="http://www.apache.org/dist/james/server/3.0.0/james-server-app-3.0.0-app.zip.md5.sig">PGP</a>]</li>
 
       </ul>
 
     </subsection>
     
-    <subsection name="Apache James 2.3.2.1 is the stable version">
+    <subsection name="Apache James 2.3.2.1 is the previous stable version">
     
       <p>This release has many enhancements and bug fixes over the previous
       release.  See the <a
