@@ -1,0 +1,13 @@
+---
+layout: post
+title:  "Apache James Server 3.0.0"
+date:   2017-07-20 16:13:22 +0200
+categories: james update
+---
+
+James server 3.0.0 has been released !
+
+You are welcome to [download it][download], any issue can be reported on our issue [tracker][tracker].
+
+[tracker]: https://issues.apache.org/jira/browse/JAMES
+[download]: http://james.apache.org/download.cgi#Apache_James_Server
