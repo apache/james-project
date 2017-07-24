@@ -117,8 +117,10 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
     private Stream<MailboxException> updateFlags(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession, MessageResult messageResult) {
         try {
-            Flags newState = updateMessagePatch.applyToState(messageResult.getFlags());
-            messageIdManager.setFlags(newState, MessageManager.FlagsUpdateMode.REPLACE, messageId, ImmutableList.of(messageResult.getMailboxId()), mailboxSession);
+            if (!updateMessagePatch.isFlagsIdentity()) {
+                Flags newState = updateMessagePatch.applyToState(messageResult.getFlags());
+                messageIdManager.setFlags(newState, MessageManager.FlagsUpdateMode.REPLACE, messageId, ImmutableList.of(messageResult.getMailboxId()), mailboxSession);
+            }
             return Stream.of();
         } catch (MailboxException e) {
             return Stream.of(e);

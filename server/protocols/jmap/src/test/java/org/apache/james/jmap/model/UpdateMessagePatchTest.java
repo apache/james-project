@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.model;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
@@ -78,6 +77,40 @@ public class UpdateMessagePatchTest {
         Flags isSeen = new Flags(Flags.Flag.SEEN);
         List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(isSeen).getSystemFlags());
         assertThat(updatedFlags).containsExactly(Flags.Flag.SEEN);
+    }
+
+    @Test
+    public void isIdentityShouldReturnTrueWhenNoFlags() {
+        UpdateMessagePatch messagePatch = UpdateMessagePatch.builder().build();
+
+        assertThat(messagePatch.isFlagsIdentity()).isTrue();
+    }
+
+    @Test
+    public void isIdentityShouldReturnFalseWhenFlagsAnsweredUpdated() {
+        UpdateMessagePatch messagePatch = UpdateMessagePatch.builder()
+            .isAnswered(true)
+            .build();
+
+        assertThat(messagePatch.isFlagsIdentity()).isFalse();
+    }
+
+    @Test
+    public void isIdentityShouldReturnFalseWhenFlagsUnreadUpdated() {
+        UpdateMessagePatch messagePatch = UpdateMessagePatch.builder()
+            .isUnread(true)
+            .build();
+
+        assertThat(messagePatch.isFlagsIdentity()).isFalse();
+    }
+
+    @Test
+    public void isIdentityShouldReturnFalseWhenFlagsFlaggedUpdated() {
+        UpdateMessagePatch messagePatch = UpdateMessagePatch.builder()
+            .isFlagged(true)
+            .build();
+
+        assertThat(messagePatch.isFlagsIdentity()).isFalse();
     }
 
 }
