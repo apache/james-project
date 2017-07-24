@@ -177,7 +177,15 @@ public class StoreMessageIdManager implements MessageIdManager {
                 addMessageToMailboxes(messageIdMapper, mailboxMessage, mailboxesToAdd, mailboxSession);
             }
             if (!mailboxesToRemove.isEmpty()) {
-                delete(messageId, mailboxesToRemove, mailboxSession);
+                messageIdMapper.delete(messageId, mailboxesToRemove);
+
+                for (MailboxMessage message: mailboxMessages) {
+                    if (mailboxesToRemove.contains(message.getMailboxId())) {
+                        dispatcher.expunged(mailboxSession,
+                            new SimpleMessageMetaData(message),
+                            mailboxMapper.findMailboxById(message.getMailboxId()));
+                    }
+                }
             }
         }
     }
