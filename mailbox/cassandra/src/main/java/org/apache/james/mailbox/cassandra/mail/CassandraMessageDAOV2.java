@@ -69,6 +69,7 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.util.CompletableFutureUtil;
@@ -189,6 +190,49 @@ public class CassandraMessageDAOV2 {
             .collect(Guavate.toImmutableList());
     }
 
+    private List<UDTValue> buildPropertiesUdt(List<Property> properties) {
+        return properties.stream()
+            .map(property -> typesProvider.getDefinedUserType(PROPERTIES)
+                .newValue()
+                .setString(Properties.NAMESPACE, property.getNamespace())
+                .setString(Properties.NAME, property.getLocalName())
+                .setString(Properties.VALUE, property.getValue()))
+            .collect(Guavate.toImmutableList());
+    }
+
+    private UDTValue toUDT(MessageAttachment messageAttachment) {
+        return typesProvider.getDefinedUserType(ATTACHMENTS)
+            .newValue()
+            .setString(Attachments.ID, messageAttachment.getAttachmentId().getId())
+            .setString(Attachments.NAME, messageAttachment.getName().orNull())
+            .setString(Attachments.CID, messageAttachment.getCid().transform(Cid::getValue).orNull())
+            .setBool(Attachments.IS_INLINE, messageAttachment.isInline());
+    }
+
+    public CompletableFuture<Void> save(CassandraMessageDAO.RawMessage rawMessage) {
+        return CompletableFutureUtil.combine(
+            blobsDAO.save(rawMessage.getHeaderContent()),
+            blobsDAO.save(rawMessage.getBodyContent()),
+            Pair::of)
+            .thenCompose(pair ->
+                cassandraAsyncExecutor.executeVoid(boundWriteStatement(rawMessage, pair)));
+    }
+
+    private BoundStatement boundWriteStatement(CassandraMessageDAO.RawMessage message, Pair<Optional<BlobId>, Optional<BlobId>> pair) {
+        CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
+        return insert.bind()
+            .setUUID(MESSAGE_ID, messageId.get())
+            .setTimestamp(INTERNAL_DATE, message.getInternalDate())
+            .setInt(BODY_START_OCTET, message.getBodyStartOctet())
+            .setLong(FULL_CONTENT_OCTETS, message.getFullContentOctet())
+            .setLong(BODY_OCTECTS, message.getFullContentOctet() - message.getBodyStartOctet())
+            .setString(BODY_CONTENT, pair.getRight().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
+            .setString(HEADER_CONTENT, pair.getLeft().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
+            .setLong(TEXTUAL_LINE_COUNT, message.getTextuaLineCount())
+            .setList(PROPERTIES, buildPropertiesUdt(message.getPropertyBuilder().toProperties()))
+            .setList(ATTACHMENTS, buildAttachmentUdt(message));
+    }
+
     private List<UDTValue> buildPropertiesUdt(MailboxMessage message) {
         return message.getProperties().stream()
             .map(x -> typesProvider.getDefinedUserType(PROPERTIES)
@@ -199,12 +243,18 @@ public class CassandraMessageDAOV2 {
             .collect(Guavate.toImmutableList());
     }
 
-    private UDTValue toUDT(MessageAttachment messageAttachment) {
+    private ImmutableList<UDTValue> buildAttachmentUdt(CassandraMessageDAO.RawMessage message) {
+        return message.getAttachments().stream()
+            .map(this::toUDT)
+            .collect(Guavate.toImmutableList());
+    }
+
+    private UDTValue toUDT(MessageAttachmentRepresentation messageAttachment) {
         return typesProvider.getDefinedUserType(ATTACHMENTS)
             .newValue()
             .setString(Attachments.ID, messageAttachment.getAttachmentId().getId())
-            .setString(Attachments.NAME, messageAttachment.getName().orNull())
-            .setString(Attachments.CID, messageAttachment.getCid().transform(Cid::getValue).orNull())
+            .setString(Attachments.NAME, messageAttachment.getName().orElse(null))
+            .setString(Attachments.CID, messageAttachment.getCid().map(Cid::getValue).orElse(null))
             .setBool(Attachments.IS_INLINE, messageAttachment.isInline());
     }
 
