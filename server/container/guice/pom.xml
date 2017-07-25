@@ -112,6 +112,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-webadmin-swagger</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-jpa-common-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -140,8 +145,9 @@
         <module>protocols/smtp</module>
         <module>protocols/webadmin</module>
         <module>protocols/webadmin-cassandra</module>
-        <module>protocols/webadmin-mailbox</module>
         <module>protocols/webadmin-data</module>
+        <module>protocols/webadmin-mailbox</module>
+        <module>protocols/webadmin-swagger</module>
     </modules>
 </project>
 

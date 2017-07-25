@@ -42,6 +42,7 @@ import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.ESMetricReporterModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
+import org.apache.james.modules.server.SwaggerRoutesModules;
 import org.apache.james.modules.server.WebAdminServerModule;
 
 import com.google.inject.Module;
@@ -59,8 +60,9 @@ public class CassandraJamesServerMain {
             new WebAdminServerModule(),
             new DataRoutesModules(),
             new MailboxRoutesModule(),
-            new CassandraRoutesModule());
-    
+            new CassandraRoutesModule(),
+            new SwaggerRoutesModules());
+
     public static final Module cassandraServerModule = Modules.combine(
         new JMAPServerModule(),
         new CassandraUsersRepositoryModule(),
