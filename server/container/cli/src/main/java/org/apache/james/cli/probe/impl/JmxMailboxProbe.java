@@ -84,6 +84,11 @@ public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
     }
 
     @Override
+    public void importEmlFileToMailbox(String namespace, String user, String name, String emlpath) {
+        mailboxManagerManagement.importEmlFileToMailbox(namespace, user, name, emlpath);
+    }
+
+    @Override
     public void reIndexMailbox(String namespace, String user, String name) throws Exception {
         reIndexerManagement.reIndex(namespace, user, name);
     }

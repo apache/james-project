@@ -140,8 +140,19 @@ He can list the mailboxes of a specific user:
 And finally can create a specific mailbox:
 
 ```
-{cli} CreateMailbox #private user@domain.tld INBO.newFolder
+{cli} CreateMailbox #private user@domain.tld INBOX.newFolder
 ```
+
+## Adding a message in a mailbox
+
+The administrator can use the CLI to add a message in a mailbox. this can be done using:
+
+```
+{cli} ImportEml #private user@domain.tld INBOX.newFolder /full/path/to/file.eml
+```
+
+This command will add a message having the content specified in file.eml (that needs to be at the EML format). It will get added
+in the INBOX.subFolder mailbox belonging to user user@domain.tld.
 
 ## Managing mappings
 

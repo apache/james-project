@@ -18,25 +18,31 @@
  ****************************************************************/
 package org.apache.james.adapter.mailbox;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.mail.Flags;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
-import com.google.common.base.Preconditions;
 import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.slf4j.Logger;
+
+import com.google.common.base.Preconditions;
 
 /**
  * JMX managmenent for Mailboxes
@@ -45,6 +51,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
 
     private MailboxManager mailboxManager;
     private Logger log;
+    private static final boolean RECENT = true;
 
     @Inject
     public void setMailboxManager(@Named("mailboxmanager") MailboxManager mailboxManager) {
@@ -135,6 +142,26 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
             session = mailboxManager.createSystemSession(user, log);
             mailboxManager.startProcessingRequest(session);
             mailboxManager.deleteMailbox(new MailboxPath(namespace, user, name), session);
+        } catch (Exception e) {
+            log.error("Unable to create mailbox", e);
+        } finally {
+            closeSession(session);
+        }
+    }
+
+    @Override
+    public void importEmlFileToMailbox(String namespace, String user, String name, String emlPath) {
+        checkMailboxArguments(namespace, user, name);
+        checkString(emlPath, "email file path name");
+
+        MailboxSession session = null;
+        try {
+            session = mailboxManager.createSystemSession(user, log);
+            mailboxManager.startProcessingRequest(session);
+            MessageManager messageManager = mailboxManager.getMailbox(new MailboxPath(namespace, user, name), session);
+            InputStream emlFileAsStream = new FileInputStream(emlPath);
+            messageManager.appendMessage(emlFileAsStream, new Date(),
+                    session, RECENT, new Flags());
         } catch (Exception e) {
             log.error("Unable to create mailbox", e);
         } finally {

@@ -19,6 +19,7 @@
 
 package org.apache.james.modules;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
@@ -55,6 +56,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
     private final MailboxManager mailboxManager;
     private final MailboxMapperFactory mailboxMapperFactory;
     private final SubscriptionManager subscriptionManager;
+    public static final boolean RECENT = true;
 
     @Inject
     private MailboxProbeImpl(MailboxManager mailboxManager, MailboxMapperFactory mailboxMapperFactory, SubscriptionManager subscriptionManager) {
@@ -144,6 +146,19 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         }
     }
 
+    @Override
+    public void importEmlFileToMailbox(String namespace, String user, String name, String emlPath) throws Exception {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(user, LOGGER);
+        mailboxManager.startProcessingRequest(mailboxSession);
+
+        MessageManager messageManager = mailboxManager.getMailbox(new MailboxPath(namespace, user, name), mailboxSession);
+        InputStream emlFileAsStream = new FileInputStream(emlPath);
+        messageManager.appendMessage(emlFileAsStream, new Date(), mailboxSession, RECENT, new Flags());
+
+        mailboxManager.endProcessingRequest(mailboxSession);
+        mailboxSession.close();
+    }
+    
     @Override
     public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
             throws MailboxException {
