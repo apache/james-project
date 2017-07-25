@@ -24,7 +24,11 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.stringContainsInOrder;
 
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.GuiceJamesServer;
@@ -36,7 +40,7 @@ import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.routes.DomainRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
-import org.apache.james.webadmin.service.CassandraMigrationService;
+import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 
 import org.junit.After;
 import org.junit.Before;
@@ -44,8 +48,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
-import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
@@ -250,4 +252,22 @@ public class WebAdminServerIntegrationTest {
             .statusCode(200)
             .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
     }
+
+    @Test
+    public void getSwaggerShouldReturnJsonDataForSwagger() throws Exception {
+        given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+        .when()
+            .get(SwaggerRoutes.SWAGGER_ENDPOINT)
+        .then()
+            .statusCode(200)
+            .body(containsString("\"swagger\":\"2.0\""))
+            .body(containsString("\"info\":{\"description\":\"All the web administration API for JAMES\",\"version\":\"V1.0\",\"title\":\"JAMES Web Admin API\"}"))
+            .body(containsString("\"tags\":[\"User's Mailbox\"]"))
+            .body(containsString("\"tags\":[\"GlobalQuota\"]"))
+            .body(containsString("\"tags\":[\"Domains\"]"))
+            .body(containsString("\"tags\":[\"Users\"]"))
+        ;
+    }
+
 }
