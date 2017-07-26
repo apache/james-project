@@ -122,6 +122,12 @@ public class UpdateMessagePatch {
         return isAnswered;
     }
 
+    public boolean isFlagsIdentity() {
+        return !isAnswered.isPresent()
+            && !isFlagged.isPresent()
+            && !isUnread.isPresent();
+    }
+
     public ImmutableList<ValidationResult> getValidationErrors() {
         return validationErrors;
     }
