@@ -41,7 +41,7 @@ public class SwaggerParser {
 	private static final String API_DOC_VERSION = "V1.0";
 	private static final String API_DOC_TITLE = "JAMES Web Admin API";
 	private static final String API_DOC_DESCRIPTION = "All the web administration API for JAMES";
-	private static final String JAMES_WEBADMIN_HOST = "localhost:";
+	public static final String HOST_PORT_SEPARATOR = ":";
 
 	@Inject
 	public static String getSwaggerJson(String packageName, WebAdminConfiguration configuration) throws JsonProcessingException {
@@ -68,7 +68,7 @@ public class SwaggerParser {
 		beanConfig.setVersion(API_DOC_VERSION);
 		beanConfig.setTitle(API_DOC_TITLE);
 		beanConfig.setDescription(API_DOC_DESCRIPTION);
-		beanConfig.setHost(JAMES_WEBADMIN_HOST + configuration.getPort().toInt());
+		beanConfig.setHost(configuration.getHost() + HOST_PORT_SEPARATOR + configuration.getPort().toInt());
 		beanConfig.setSchemes(SCHEMES);
 		beanConfig.setScan(true);
 		beanConfig.scanAndRead();
