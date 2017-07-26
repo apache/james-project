@@ -54,8 +54,6 @@ public class CassandraMigrationServiceTest {
     private static final int LATEST_VERSION = 3;
     private static final int CURRENT_VERSION = 2;
     private static final int OLDER_VERSION = 1;
-    private static final boolean MIGRATED = true;
-    private static final boolean MIGRATION_FAILED = false;
     private CassandraMigrationService testee;
     private CassandraSchemaVersionDAO schemaVersionDAO;
     private ExecutorService executorService;
@@ -68,7 +66,7 @@ public class CassandraMigrationServiceTest {
     public void setUp() throws Exception {
         schemaVersionDAO = mock(CassandraSchemaVersionDAO.class);
         successfulMigration = mock(Migration.class);
-        when(successfulMigration.run()).thenReturn(MIGRATED);
+        when(successfulMigration.run()).thenReturn(Migration.MigrationResult.COMPLETED);
         Map<Integer, Migration> allMigrationClazz = ImmutableMap.<Integer, Migration>builder()
             .put(OLDER_VERSION, successfulMigration)
             .put(CURRENT_VERSION, successfulMigration)
@@ -169,7 +167,7 @@ public class CassandraMigrationServiceTest {
         Migration wait1SecondMigration = mock(Migration.class);
         doAnswer(invocation -> {
             Thread.sleep(1000);
-            return MIGRATED;
+            return Migration.MigrationResult.COMPLETED;
         }).when(wait1SecondMigration).run();
         Map<Integer, Migration> allMigrationClazz = ImmutableMap.<Integer, Migration>builder()
             .put(OLDER_VERSION, wait1SecondMigration)
@@ -203,7 +201,7 @@ public class CassandraMigrationServiceTest {
     @Test
     public void partialMigrationShouldThrow() throws Exception {
         Migration migration1 = mock(Migration.class);
-        when(migration1.run()).thenReturn(MIGRATION_FAILED);
+        when(migration1.run()).thenReturn(Migration.MigrationResult.PARTIAL);
         Migration migration2 = successfulMigration;
 
         Map<Integer, Migration> allMigrationClazz = ImmutableMap.<Integer, Migration>builder()
@@ -220,9 +218,9 @@ public class CassandraMigrationServiceTest {
     @Test
     public void partialMigrationShouldAbortMigrations() throws Exception {
         Migration migration1 = mock(Migration.class);
-        when(migration1.run()).thenReturn(MIGRATION_FAILED);
+        when(migration1.run()).thenReturn(Migration.MigrationResult.PARTIAL);
         Migration migration2 = mock(Migration.class);
-        when(migration2.run()).thenReturn(MIGRATED);
+        when(migration2.run()).thenReturn(Migration.MigrationResult.COMPLETED);
 
         Map<Integer, Migration> allMigrationClazz = ImmutableMap.<Integer, Migration>builder()
             .put(OLDER_VERSION, migration1)

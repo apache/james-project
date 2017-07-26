@@ -20,10 +20,24 @@
 package org.apache.james.mailbox.cassandra.mail.migration;
 
 public interface Migration {
+
+    enum MigrationResult {
+        COMPLETED,
+        PARTIAL
+    }
+
+    static MigrationResult combine(MigrationResult result1, MigrationResult result2) {
+        if (result1 == MigrationResult.COMPLETED
+            && result2 == MigrationResult.COMPLETED) {
+            return MigrationResult.COMPLETED;
+        }
+        return MigrationResult.PARTIAL;
+    }
+
     /**
      * Runs the migration
      *
      * @return Return true if fully migrated. Returns false otherwise.
      */
-    boolean run();
+    MigrationResult run();
 }

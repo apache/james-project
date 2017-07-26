@@ -203,12 +203,12 @@ public class V1ToV2MigrationTest {
             new PropertyBuilder(), ImmutableList.of());
         messageDAOV1.save(originalMessage).join();
 
-        assertThat(testee.run()).isTrue();
+        assertThat(testee.run()).isEqualTo(Migration.MigrationResult.COMPLETED);
     }
 
     @Test
     public void runShouldSucceedWhenNoMessages() throws Exception {
-        assertThat(testee.run()).isTrue();
+        assertThat(testee.run()).isEqualTo(Migration.MigrationResult.COMPLETED);
     }
 
     @Test

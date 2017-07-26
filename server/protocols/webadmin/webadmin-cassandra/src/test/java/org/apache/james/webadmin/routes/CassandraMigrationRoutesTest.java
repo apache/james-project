@@ -55,17 +55,16 @@ import org.junit.Test;
 
 public class CassandraMigrationRoutesTest {
 
-    public static final boolean MIGRATED = true;
     private static final Integer LATEST_VERSION = 3;
     private static final Integer CURRENT_VERSION = 2;
     private static final Integer OLDER_VERSION = 1;
     private WebAdminServer webAdminServer;
     private CassandraSchemaVersionDAO schemaVersionDAO;
-    private Migration successfulMigration;
 
     private void createServer() throws Exception {
-        successfulMigration = mock(Migration.class);
-        when(successfulMigration.run()).thenReturn(MIGRATED);
+        Migration successfulMigration = mock(Migration.class);
+        when(successfulMigration.run()).thenReturn(Migration.MigrationResult.COMPLETED);
+
         Map<Integer, Migration> allMigrationClazz = ImmutableMap.<Integer, Migration>builder()
             .put(OLDER_VERSION, successfulMigration)
             .put(CURRENT_VERSION, successfulMigration)

@@ -109,13 +109,13 @@ public class V1ToV2Migration implements Migration {
     }
 
     @Override
-    public boolean run() {
+    public MigrationResult run() {
         return messageDAOV1.readAll()
             .map(this::migrate)
-            .reduce(true, (b1, b2) -> b1 && b2);
+            .reduce(MigrationResult.COMPLETED, Migration::combine);
     }
 
-    private boolean migrate(CassandraMessageDAO.RawMessage rawMessage) {
+    private MigrationResult migrate(CassandraMessageDAO.RawMessage rawMessage) {
         try {
             CassandraMessageId messageId = (CassandraMessageId) rawMessage.getMessageId();
 
@@ -125,11 +125,11 @@ public class V1ToV2Migration implements Migration {
 
             LOGGER.debug("{} migrated", rawMessage.getMessageId());
 
-            return true;
+            return MigrationResult.COMPLETED;
         } catch (Exception e) {
             LOGGER.warn("Error while migrating {}", rawMessage.getMessageId(), e);
 
-            return false;
+            return MigrationResult.PARTIAL;
         }
     }
 }
