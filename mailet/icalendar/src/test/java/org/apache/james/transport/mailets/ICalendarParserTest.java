@@ -25,6 +25,7 @@ import java.util.Map;
 
 import javax.mail.MessagingException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -221,5 +222,29 @@ public class ICalendarParserTest {
     @Test
     public void getMailetInfoShouldReturn() throws MessagingException {
         assertThat(mailet.getMailetInfo()).isEqualTo("Calendar Parser");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void parsingShouldBeLenient() throws Exception {
+        FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
+            .mailetName("ICalendarParser")
+            .setProperty(SOURCE_ATTRIBUTE, SOURCE_CUSTOM_ATTRIBUTE)
+            .setProperty(DESTINATION_ATTRIBUTE, DESTINATION_CUSTOM_ATTRIBUTE)
+            .build();
+        mailet.init(mailetConfiguration);
+
+        Map<String, byte[]> attachments = ImmutableMap.<String, byte[]>builder()
+            .put("key", IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("ics/ics_with_error.ics")))
+            .build();
+
+        Mail mail = FakeMail.builder()
+            .attribute(SOURCE_CUSTOM_ATTRIBUTE, (Serializable) attachments)
+            .build();
+
+        mailet.service(mail);
+
+        Map<String, Calendar> expectedCalendars = (Map<String, Calendar>)mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE);
+        assertThat(expectedCalendars).hasSize(1);
     }
 }
