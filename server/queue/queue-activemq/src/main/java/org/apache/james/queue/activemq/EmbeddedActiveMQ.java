@@ -49,6 +49,7 @@ public class EmbeddedActiveMQ {
         private EmbeddedActiveMQ(FileSystem fileSystem, PersistenceAdapter persistenceAdapter) {
         this.persistenceAdapter = persistenceAdapter;
         try {
+            persistenceAdapter.setDirectory(fileSystem.getFile("file://var/store/activemq/brokers/KahaDB"));
             launchEmbeddedBroker(fileSystem);
         } catch (Exception e) {
             throw Throwables.propagate(e);
