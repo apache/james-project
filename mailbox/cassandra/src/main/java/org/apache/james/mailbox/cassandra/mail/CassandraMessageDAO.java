@@ -42,6 +42,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV1Table.T
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -56,6 +57,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV1Table.Attachments;
@@ -65,6 +67,7 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -80,6 +83,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Bytes;
@@ -93,10 +97,13 @@ public class CassandraMessageDAO {
     private final PreparedStatement selectHeaders;
     private final PreparedStatement selectFields;
     private final PreparedStatement selectBody;
+    private final PreparedStatement selectAll;
+    private CassandraUtils cassandraUtils;
     private final CassandraConfiguration cassandraConfiguration;
 
     @Inject
-    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraConfiguration cassandraConfiguration) {
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraConfiguration cassandraConfiguration,
+                               CassandraUtils cassandraUtils) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.typesProvider = typesProvider;
         this.insert = prepareInsert(session);
@@ -106,11 +113,17 @@ public class CassandraMessageDAO {
         this.selectFields = prepareSelect(session, FIELDS);
         this.selectBody = prepareSelect(session, BODY);
         this.cassandraConfiguration = cassandraConfiguration;
+        this.selectAll = prepareSelectAll(session);
+        this.cassandraUtils = cassandraUtils;
     }
 
     @VisibleForTesting
     public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider) {
-        this(session, typesProvider, CassandraConfiguration.DEFAULT_CONFIGURATION);
+        this(session, typesProvider, CassandraConfiguration.DEFAULT_CONFIGURATION, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+    }
+
+    private PreparedStatement prepareSelectAll(Session session) {
+        return session.prepare(select().from(TABLE_NAME));
     }
 
     private PreparedStatement prepareSelect(Session session, String[] fields) {
@@ -137,6 +150,13 @@ public class CassandraMessageDAO {
         return session.prepare(QueryBuilder.delete()
                 .from(TABLE_NAME)
                 .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
+    }
+
+    public Stream<RawMessage> readAll() {
+        return cassandraUtils.convertToStream(
+            cassandraAsyncExecutor.execute(selectAll.bind())
+                .join())
+            .map(this::fromRow);
     }
 
     public CompletableFuture<Void> save(MailboxMessage message) throws MailboxException {
@@ -223,14 +243,14 @@ public class CassandraMessageDAO {
                 row.getInt(BODY_START_OCTET),
                 buildContent(row, fetchType),
                 messageIdWithMetaData.getFlags(),
-                getPropertyBuilder(row),
+                retrievePropertyBuilder(row),
                 messageId.getMailboxId(),
                 messageId.getUid(),
                 messageIdWithMetaData.getModSeq());
-        return Pair.of(messageWithoutAttachment, getAttachments(row, fetchType));
+        return Pair.of(messageWithoutAttachment, retrieveAttachments(row, fetchType));
     }
 
-    private PropertyBuilder getPropertyBuilder(Row row) {
+    private PropertyBuilder retrievePropertyBuilder(Row row) {
         PropertyBuilder property = new PropertyBuilder(
             row.getList(PROPERTIES, UDTValue.class).stream()
                 .map(x -> new SimpleProperty(x.getString(Properties.NAMESPACE), x.getString(Properties.NAME), x.getString(Properties.VALUE)))
@@ -239,7 +259,7 @@ public class CassandraMessageDAO {
         return property;
     }
 
-    private Stream<MessageAttachmentRepresentation> getAttachments(Row row, FetchType fetchType) {
+    private Stream<MessageAttachmentRepresentation> retrieveAttachments(Row row, FetchType fetchType) {
         switch (fetchType) {
         case Full:
         case Body:
@@ -312,5 +332,80 @@ public class CassandraMessageDAO {
         byte[] headerContent = new byte[row.getBytes(field).remaining()];
         row.getBytes(field).get(headerContent);
         return headerContent;
+    }
+
+    private RawMessage fromRow(Row row) {
+        return new RawMessage(
+            row.getTimestamp(INTERNAL_DATE),
+            new CassandraMessageId.Factory().of(row.getUUID(MESSAGE_ID)),
+            row.getInt(BODY_START_OCTET),
+            row.getLong(FULL_CONTENT_OCTETS),
+            getFieldContent(BODY_CONTENT, row),
+            getFieldContent(HEADER_CONTENT, row),
+            retrievePropertyBuilder(row),
+            row.getLong(TEXTUAL_LINE_COUNT),
+            retrieveAttachments(row, FetchType.Full).collect(Guavate.toImmutableList()));
+    }
+
+    public static class RawMessage {
+        private final Date internalDate;
+        private final MessageId messageId;
+        private final int bodyStartOctet;
+        private final long fullContentOctet;
+        private final byte[] bodyContent;
+        private final byte[] headerContent;
+        private final PropertyBuilder propertyBuilder;
+        private final long textuaLineCount;
+        private final List<MessageAttachmentRepresentation> attachments;
+
+        private RawMessage(Date internalDate, MessageId messageId, int bodyStartOctet, long fullContentOctet, byte[] bodyContent,
+                          byte[] headerContent, PropertyBuilder propertyBuilder, long textuaLineCount,
+                          List<MessageAttachmentRepresentation> attachments) {
+            this.internalDate = internalDate;
+            this.messageId = messageId;
+            this.bodyStartOctet = bodyStartOctet;
+            this.fullContentOctet = fullContentOctet;
+            this.bodyContent = bodyContent;
+            this.headerContent = headerContent;
+            this.propertyBuilder = propertyBuilder;
+            this.textuaLineCount = textuaLineCount;
+            this.attachments = attachments;
+        }
+
+        public Date getInternalDate() {
+            return internalDate;
+        }
+
+        public MessageId getMessageId() {
+            return messageId;
+        }
+
+        public int getBodyStartOctet() {
+            return bodyStartOctet;
+        }
+
+        public long getFullContentOctet() {
+            return fullContentOctet;
+        }
+
+        public byte[] getBodyContent() {
+            return bodyContent;
+        }
+
+        public byte[] getHeaderContent() {
+            return headerContent;
+        }
+
+        public PropertyBuilder getPropertyBuilder() {
+            return propertyBuilder;
+        }
+
+        public long getTextuaLineCount() {
+            return textuaLineCount;
+        }
+
+        public List<MessageAttachmentRepresentation> getAttachments() {
+            return attachments;
+        }
     }
 }

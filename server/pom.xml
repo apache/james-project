@@ -102,6 +102,7 @@
         <module>protocols/protocols-managesieve</module>
         <module>protocols/protocols-pop3</module>
         <module>protocols/protocols-smtp</module>
+        <module>protocols/webadmin/webadmin-cassandra</module>
         <module>protocols/webadmin/webadmin-core</module>
         <module>protocols/webadmin/webadmin-data</module>
         <module>protocols/webadmin/webadmin-mailbox</module>
@@ -675,6 +676,11 @@
                 <groupId>org.apache.james</groupId>
                 <artifactId>james-server-jmap-integration-testing</artifactId>
                 <type>test-jar</type>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-webadmin-cassandra</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -332,3 +332,96 @@ Response codes:
  - 204: Success
  - 400: Invalid JSON, or numbers are less than -1.
  - 500: Internal error
+
+## Cassandra Schema upgrades
+
+Cassandra upgrades implies the creation of a new table. Thus restarting James is needed, as new tables are created on restart.
+
+Once done, we ship code that tries to read from new tables, and if not possible backs up to old tables. You can thus safely run
+without running additional migrations.
+
+On the fly migration can be enabled. However, one might want to force the migration in a controlled fashion, and update
+automatically current schema version used (assess in the database old versions is no more used, as the corresponding tables are empty).
+Note that this process is safe: we ensure the service is not running concurrently on this James instance, that it does not bump
+version upon partial failures, that race condition in version upgrades will be idempotent, etc...
+
+These schema updates can be triggered by webadmin using the Cassandra backend.
+
+Note that currently the progress can be tracked by logs.
+
+### Retrieving current Cassandra schema version
+
+```
+curl -XGET http://ip:port/cassandra/version
+```
+
+Will return:
+
+```
+2
+```
+
+Where the number corresponds to the current schema version of the database you are using.
+
+Response codes:
+
+ - 200: Success
+ - 500: Internal error
+
+### Retrieving latest available Cassandra schema version
+
+```
+curl -XGET http://ip:port/cassandra/version
+```
+
+Will return:
+
+```
+3
+```
+
+Where the number corresponds to the latest available schema version of the database you are using. This means you can be
+migrating to this schema version.
+
+Response codes:
+
+ - 200: Success
+ - 500: Internal error
+
+### Upgrading to a specific version
+
+```
+curl -XPOST http://ip:port/cassandra/version/upgrade -d '3'
+```
+
+Will run the migrations you need to reach schema version 3.
+
+Response codes:
+
+ - 204: Success
+ - 400: The version is invalid. The version should be a strictly positive number.
+ - 410: Error running the migration. This resource is gone away. Reason is mentionned in the body.
+ - 500: Internal error. This can result from a partial migration, in which case the reason is contained in the body.
+
+Note that several calls to this endpoint will be run in a sequential pattern.
+
+If the server restarts during the migration, the migration is silently aborted.
+
+### Upgrading to the latest version
+
+```
+curl -XPOST http://ip:port/cassandra/version/upgrade/latest
+```
+
+Will run the migrations you need to reach the latest schema version.
+
+Response codes:
+
+ - 204: Success
+ - 410: Error running the migration. This resource is gone away. Reason is mentionned in the body.
+ - 500: Internal error. This can result from a partial migration, in which case the reason is contained in the body.
+
+Note that several calls to this endpoint will be run in a sequential pattern.
+
+If the server restarts during the migration, the migration is silently aborted.
+

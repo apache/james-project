@@ -31,6 +31,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraConfiguration;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.AttachmentLoader;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
@@ -45,11 +46,12 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
-public class V1ToV2Migration {
+public class V1ToV2Migration implements Migration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(V1ToV2MigrationThread.class);
 
     private final CassandraMessageDAO messageDAOV1;
+    private final CassandraMessageDAOV2 messageDAOV2;
     private final AttachmentLoader attachmentLoader;
     private final CassandraConfiguration cassandraConfiguration;
     private final ExecutorService migrationExecutor;
@@ -59,6 +61,7 @@ public class V1ToV2Migration {
     public V1ToV2Migration(CassandraMessageDAO messageDAOV1, CassandraMessageDAOV2 messageDAOV2,
                            CassandraAttachmentMapper attachmentMapper, CassandraConfiguration cassandraConfiguration) {
         this.messageDAOV1 = messageDAOV1;
+        this.messageDAOV2 = messageDAOV2;
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
         this.cassandraConfiguration = cassandraConfiguration;
         this.migrationExecutor = Executors.newFixedThreadPool(cassandraConfiguration.getV1ToV2ThreadCount());
@@ -103,5 +106,30 @@ public class V1ToV2Migration {
             }
         }
         return messageV1;
+    }
+
+    @Override
+    public MigrationResult run() {
+        return messageDAOV1.readAll()
+            .map(this::migrate)
+            .reduce(MigrationResult.COMPLETED, Migration::combine);
+    }
+
+    private MigrationResult migrate(CassandraMessageDAO.RawMessage rawMessage) {
+        try {
+            CassandraMessageId messageId = (CassandraMessageId) rawMessage.getMessageId();
+
+            messageDAOV2.save(rawMessage)
+                .thenCompose(any -> messageDAOV1.delete(messageId))
+                .join();
+
+            LOGGER.debug("{} migrated", rawMessage.getMessageId());
+
+            return MigrationResult.COMPLETED;
+        } catch (Exception e) {
+            LOGGER.warn("Error while migrating {}", rawMessage.getMessageId(), e);
+
+            return MigrationResult.PARTIAL;
+        }
     }
 }

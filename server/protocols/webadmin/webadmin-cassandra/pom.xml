@@ -27,10 +27,10 @@
         <relativePath>../../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-webadmin-core</artifactId>
+    <artifactId>james-server-webadmin-cassandra</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: Web Admin :: Core</name>
+    <name>Apache James :: Server :: Web Admin :: Cassandra</name>
 
     <profiles>
         <profile>
@@ -149,45 +149,22 @@
             <dependencies>
                 <dependency>
                     <groupId>org.apache.james</groupId>
-                    <artifactId>james-server-util-java8</artifactId>
+                    <artifactId>apache-james-mailbox-cassandra</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
-                    <artifactId>james-server-lifecycle-api</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.james</groupId>
-                    <artifactId>james-server-jwt</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.james</groupId>
-                    <artifactId>metrics-api</artifactId>
+                    <artifactId>james-server-webadmin-core</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
                     <artifactId>metrics-logger</artifactId>
                     <scope>test</scope>
                 </dependency>
+
                 <dependency>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>com.fasterxml.jackson.datatype</groupId>
-                    <artifactId>jackson-datatype-jdk8</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>com.github.fge</groupId>
-                    <artifactId>throwing-lambdas</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>com.sparkjava</groupId>
-                    <artifactId>spark-core</artifactId>
-                    <version>2.5.5</version>
+                    <groupId>com.jayway.restassured</groupId>
+                    <artifactId>rest-assured</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>javax.inject</groupId>
@@ -212,17 +189,6 @@
                 <dependency>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>nl.jqno.equalsverifier</groupId>
-                    <artifactId>equalsverifier</artifactId>
-                    <version>1.7.6</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <build>

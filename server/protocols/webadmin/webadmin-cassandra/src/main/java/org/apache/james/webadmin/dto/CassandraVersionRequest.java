@@ -17,27 +17,24 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.utils;
+package org.apache.james.webadmin.dto;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.google.common.base.Preconditions;
 
-import spark.ResponseTransformer;
-
-public class JsonTransformer implements ResponseTransformer {
-
-    private final ObjectMapper objectMapper;
-
-    public JsonTransformer() {
-        objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        objectMapper.registerModule(new Jdk8Module());
+public class CassandraVersionRequest {
+    public static CassandraVersionRequest parse(String version) {
+        Preconditions.checkNotNull(version, "Version is mandatory");
+        return new CassandraVersionRequest(Integer.valueOf(version));
     }
 
-    @Override
-    public String render(Object o) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(o);
+    private final int value;
+
+    private CassandraVersionRequest(int value) {
+        Preconditions.checkArgument(value >= 0);
+        this.value = value;
+    }
+
+    public int getValue() {
+        return value;
     }
 }

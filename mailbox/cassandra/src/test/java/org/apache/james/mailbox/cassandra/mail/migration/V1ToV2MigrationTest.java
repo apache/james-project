@@ -166,6 +166,52 @@ public class V1ToV2MigrationTest {
     }
 
     @Test
+    public void runShouldMigrateMessages() throws Exception {
+        SimpleMailboxMessage originalMessage = createMessage(messageId, CONTENT, BODY_START,
+            new PropertyBuilder(), ImmutableList.of());
+        messageDAOV1.save(originalMessage).join();
+
+        testee.run();
+
+        CassandraMessageDAOV2.MessageResult messageResult = retrieveMessageOnV2().get();
+        softly.assertThat(messageResult.message().getLeft().getMessageId()).isEqualTo(messageId);
+        softly.assertThat(IOUtils.toString(messageResult.message().getLeft().getContent(), Charsets.UTF_8))
+            .isEqualTo(CONTENT);
+        softly.assertThat(messageResult.message().getRight().findAny().isPresent()).isFalse();
+    }
+
+    @Test
+    public void runShouldBeIdempotent() throws Exception {
+        SimpleMailboxMessage originalMessage = createMessage(messageId, CONTENT, BODY_START,
+            new PropertyBuilder(), ImmutableList.of());
+        messageDAOV1.save(originalMessage).join();
+
+        testee.run();
+
+        testee.run();
+
+        CassandraMessageDAOV2.MessageResult messageResult = retrieveMessageOnV2().get();
+        softly.assertThat(messageResult.message().getLeft().getMessageId()).isEqualTo(messageId);
+        softly.assertThat(IOUtils.toString(messageResult.message().getLeft().getContent(), Charsets.UTF_8))
+            .isEqualTo(CONTENT);
+        softly.assertThat(messageResult.message().getRight().findAny().isPresent()).isFalse();
+    }
+
+    @Test
+    public void runShouldSucceedWhenOneMessage() throws Exception {
+        SimpleMailboxMessage originalMessage = createMessage(messageId, CONTENT, BODY_START,
+            new PropertyBuilder(), ImmutableList.of());
+        messageDAOV1.save(originalMessage).join();
+
+        assertThat(testee.run()).isEqualTo(Migration.MigrationResult.COMPLETED);
+    }
+
+    @Test
+    public void runShouldSucceedWhenNoMessages() throws Exception {
+        assertThat(testee.run()).isEqualTo(Migration.MigrationResult.COMPLETED);
+    }
+
+    @Test
     public void migrationShouldWorkWithAttachments() throws Exception {
         SimpleMailboxMessage originalMessage = createMessage(messageId, CONTENT, BODY_START,
             new PropertyBuilder(), ImmutableList.of(messageAttachment));
