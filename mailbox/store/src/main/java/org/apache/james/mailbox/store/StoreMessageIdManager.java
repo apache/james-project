@@ -206,9 +206,11 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         Map<QuotaRoot, Integer> messageCountByQuotaRoot = buildMapQuotaRoot(mailboxIdsToBeAdded, mailboxIdsToBeRemove, mailboxMapper);
         for (Map.Entry<QuotaRoot, Integer> entry : messageCountByQuotaRoot.entrySet()) {
-            if (entry.getValue() > 0) {
+            Integer additionalCopyCount = entry.getValue();
+            if (additionalCopyCount > 0) {
+                long additionalOccupiedSpace = additionalCopyCount * mailboxMessage.getFullContentOctets();
                 new QuotaChecker(quotaManager.getMessageQuota(entry.getKey()), quotaManager.getStorageQuota(entry.getKey()), entry.getKey())
-                    .tryAddition(entry.getValue(), mailboxMessage.getFullContentOctets());
+                    .tryAddition(additionalCopyCount, additionalOccupiedSpace);
             }
         }
     }
