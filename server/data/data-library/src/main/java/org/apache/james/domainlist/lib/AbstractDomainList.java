@@ -118,6 +118,12 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     }
 
     @Override
+    public boolean containsDomain(String domain) throws DomainListException {
+        boolean internalAnswer = containsDomainInternal(domain);
+        return internalAnswer || getDomains().contains(domain);
+    }
+
+    @Override
     public List<String> getDomains() throws DomainListException {
         List<String> domains = getDomainListInternal();
 
@@ -153,7 +159,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
             }
 
             getLogger().info("Local host is: " + hostName);
-            if (!hostName.equals("localhost")) {
+            if (hostName != null && !hostName.equals("localhost")) {
                 return ImmutableList.of(hostName.toLowerCase(Locale.US));
             }
         }
@@ -241,5 +247,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
      * @return List
      */
     protected abstract List<String> getDomainListInternal() throws DomainListException;
+
+    protected abstract boolean containsDomainInternal(String domain) throws DomainListException;
 
 }

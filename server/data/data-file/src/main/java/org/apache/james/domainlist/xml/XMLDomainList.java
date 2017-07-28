@@ -59,7 +59,7 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
     }
 
     @Override
-    public boolean containsDomain(String domains) throws DomainListException {
+    protected boolean containsDomainInternal(String domains) throws DomainListException {
         return domainNames.contains(domains.toLowerCase(Locale.US));
     }
 

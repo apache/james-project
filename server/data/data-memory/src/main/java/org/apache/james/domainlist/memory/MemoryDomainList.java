@@ -42,7 +42,7 @@ public class MemoryDomainList extends AbstractDomainList {
     }
 
     @Override
-    public boolean containsDomain(String domain) throws DomainListException {
+    protected boolean containsDomainInternal(String domain) throws DomainListException {
         return domains.contains(domain.toLowerCase(Locale.US));
     }
 

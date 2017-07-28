@@ -86,7 +86,7 @@ public class JPADomainList extends AbstractDomainList {
     }
 
     @Override
-    public boolean containsDomain(String domain) throws DomainListException {
+    protected boolean containsDomainInternal(String domain) throws DomainListException {
         String lowerCasedDomain = domain.toLowerCase(Locale.US);
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();

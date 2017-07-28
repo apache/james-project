@@ -100,7 +100,7 @@ public class CassandraDomainList extends AbstractDomainList {
     }
 
     @Override
-    public boolean containsDomain(String domain) throws DomainListException {
+    protected boolean containsDomainInternal(String domain) throws DomainListException {
         return executor.executeSingleRow(readStatement.bind()
                 .setString(DOMAIN, domain.toLowerCase(Locale.US)))
             .join()

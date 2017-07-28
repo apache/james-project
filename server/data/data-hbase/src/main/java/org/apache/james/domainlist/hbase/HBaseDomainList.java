@@ -52,7 +52,7 @@ public class HBaseDomainList extends AbstractDomainList {
      * @see org.apache.james.domainlist.api.DomainList#containsDomain(String)
      */
     @Override
-    public boolean containsDomain(String domain) throws DomainListException {
+    protected boolean containsDomainInternal(String domain) throws DomainListException {
         HTableInterface table = null;
         try {
             table = TablePool.getInstance().getDomainlistTable();

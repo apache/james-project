@@ -63,7 +63,7 @@ public class AbstractDomainListPrivateMethodsTest {
         }
 
         @Override
-        public boolean containsDomain(String domain) throws DomainListException {
+        protected boolean containsDomainInternal(String domain) throws DomainListException {
             return domains.contains(domain);
         }
 
@@ -145,7 +145,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void setDefaultDomainNotFailWhenDomainContained() throws Exception {
+    public void setDefaultDomainShouldNotFailWhenDomainContained() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
         String expectedDefaultDomain = "myDomain.org";
         when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, AbstractDomainList.LOCALHOST))
@@ -238,4 +238,82 @@ public class AbstractDomainListPrivateMethodsTest {
 
         assertThat(domainList.getDomains()).containsOnly(detected, detectedIp1, added, detectedIp2);
     }
+
+    @Test
+    public void getDomainsShouldListAddedDomain() throws Exception {
+        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
+
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
+        String domain = "added.tld";
+        domainList.addDomain(domain);
+        domainList.configure(configuration);
+
+        assertThat(domainList.getDomains()).containsOnly(domain);
+    }
+
+    @Test
+    public void containsDomainShouldReturnDetectedIp() throws Exception {
+        String detected = "detected.tld";
+        String detectedIp = "148.25.32.1";
+        when(dnsService.getHostName(any(InetAddress.class))).thenReturn(detected);
+        InetAddress detectedAddress = mock(InetAddress.class);
+        when(detectedAddress.getHostAddress()).thenReturn(detectedIp);
+        when(dnsService.getAllByName(detected)).thenReturn(ImmutableList.of(detectedAddress));
+
+        assertThat(domainList.containsDomain(detectedIp)).isTrue();
+    }
+
+    @Test
+    public void containsDomainShouldReturnTrueWhenDomainIsContained() throws Exception {
+        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
+
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
+        String domain = "added.tld";
+        domainList.addDomain(domain);
+        domainList.configure(configuration);
+
+        assertThat(domainList.containsDomain(domain)).isTrue();
+    }
+
+    @Test
+    public void containsDomainShouldReturnFalseWhenDomainIsNotContained() throws Exception {
+        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
+
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
+        String domain = "added.tld";
+        domainList.configure(configuration);
+
+        assertThat(domainList.containsDomain(domain)).isFalse();
+    }
+
+    @Test
+    public void containsDomainShouldNotInteractWithDNSWhenDisabled () throws Exception {
+        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
+
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
+        domainList.configure(configuration);
+        domainList.containsDomain("added.tld");
+
+        verifyZeroInteractions(dnsService);
+    }
+
+    @Test
+    public void containsDomainShouldReturnDetectedDomains() throws Exception {
+        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
+
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(true);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
+        domainList.setLog(LOGGER);
+        domainList.configure(configuration);
+
+        String detected = "detected.tld";
+        when(dnsService.getHostName(any(InetAddress.class))).thenReturn(detected);
+
+        assertThat(domainList.containsDomain(detected)).isTrue();
+    }
+
 }
