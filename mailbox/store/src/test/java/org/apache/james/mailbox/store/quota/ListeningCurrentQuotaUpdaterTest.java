@@ -54,9 +54,7 @@ public class ListeningCurrentQuotaUpdaterTest {
     public void setUp() throws Exception {
         mockedQuotaRootResolver = mock(QuotaRootResolver.class);
         mockedCurrentQuotaManager = mock(StoreCurrentQuotaManager.class);
-        testee = new ListeningCurrentQuotaUpdater();
-        testee.setCurrentQuotaManager(mockedCurrentQuotaManager);
-        testee.setQuotaRootResolver(mockedQuotaRootResolver);
+        testee = new ListeningCurrentQuotaUpdater(mockedCurrentQuotaManager, mockedQuotaRootResolver);
     }
 
     @Test

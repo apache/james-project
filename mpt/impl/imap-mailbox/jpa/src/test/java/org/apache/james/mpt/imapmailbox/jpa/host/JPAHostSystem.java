@@ -98,12 +98,8 @@ public class JPAHostSystem extends JamesImapHostSystem {
         DefaultQuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(mapperFactory);
         JpaCurrentQuotaManager currentQuotaManager = new JpaCurrentQuotaManager(entityManagerFactory);
         maxQuotaManager = new JPAPerUserMaxQuotaManager(entityManagerFactory);
-        StoreQuotaManager storeQuotaManager = new StoreQuotaManager();
-        storeQuotaManager.setCurrentQuotaManager(currentQuotaManager);
-        storeQuotaManager.setMaxQuotaManager(maxQuotaManager);
-        ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater();
-        quotaUpdater.setCurrentQuotaManager(currentQuotaManager);
-        quotaUpdater.setQuotaRootResolver(quotaRootResolver);
+        StoreQuotaManager storeQuotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
+        ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver);
 
         mailboxManager.setQuotaManager(storeQuotaManager);
         mailboxManager.setQuotaUpdater(quotaUpdater);

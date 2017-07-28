@@ -30,17 +30,13 @@ import javax.inject.Inject;
 
 public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdater {
 
-    private StoreCurrentQuotaManager currentQuotaManager;
-    private QuotaRootResolver quotaRootResolver;
+    private final StoreCurrentQuotaManager currentQuotaManager;
+    private final QuotaRootResolver quotaRootResolver;
 
     @Inject
-    public void setQuotaRootResolver(QuotaRootResolver quotaRootResolver) {
-        this.quotaRootResolver = quotaRootResolver;
-    }
-
-    @Inject
-    public void setCurrentQuotaManager(StoreCurrentQuotaManager currentQuotaManager) {
+    public ListeningCurrentQuotaUpdater(StoreCurrentQuotaManager currentQuotaManager, QuotaRootResolver quotaRootResolver) {
         this.currentQuotaManager = currentQuotaManager;
+        this.quotaRootResolver = quotaRootResolver;
     }
 
     @Override

@@ -76,8 +76,6 @@ public class InMemoryIntegrationResources implements IntegrationResources {
     
     @Override
     public QuotaManager createQuotaManager(MaxQuotaManager maxQuotaManager, MailboxManager mailboxManager) throws Exception {
-        StoreQuotaManager quotaManager = new StoreQuotaManager();
-        quotaManager.setCalculateWhenUnlimited(false);
 
         QuotaRootResolver quotaRootResolver =  createQuotaRootResolver(mailboxManager);
 
@@ -86,12 +84,9 @@ public class InMemoryIntegrationResources implements IntegrationResources {
             mailboxManager
         );
 
-        ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater();
-        listeningCurrentQuotaUpdater.setQuotaRootResolver(quotaRootResolver);
-        listeningCurrentQuotaUpdater.setCurrentQuotaManager(currentQuotaManager);
-
-        quotaManager.setCurrentQuotaManager(currentQuotaManager);
-        quotaManager.setMaxQuotaManager(maxQuotaManager);
+        ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver);
+        StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
+        quotaManager.setCalculateWhenUnlimited(false);
         ((StoreMailboxManager) mailboxManager).setQuotaManager(quotaManager);
         mailboxManager.addGlobalListener(listeningCurrentQuotaUpdater, null);
         return quotaManager;

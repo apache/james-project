@@ -34,22 +34,18 @@ import javax.inject.Inject;
  * Relies on the CurrentQuotaManager and MaxQuotaManager provided.
  */
 public class StoreQuotaManager implements QuotaManager {
-    private CurrentQuotaManager currentQuotaManager;
-    private MaxQuotaManager maxQuotaManager;
+    private final CurrentQuotaManager currentQuotaManager;
+    private final MaxQuotaManager maxQuotaManager;
     private boolean calculateWhenUnlimited = false;
 
-    public void setCalculateWhenUnlimited(boolean calculateWhenUnlimited) {
-        this.calculateWhenUnlimited = calculateWhenUnlimited;
-    }
-
     @Inject
-    public void setMaxQuotaManager(MaxQuotaManager maxQuotaManager) {
+    public StoreQuotaManager(CurrentQuotaManager currentQuotaManager, MaxQuotaManager maxQuotaManager) {
+        this.currentQuotaManager = currentQuotaManager;
         this.maxQuotaManager = maxQuotaManager;
     }
 
-    @Inject
-    public void setCurrentQuotaManager(CurrentQuotaManager currentQuotaManager) {
-        this.currentQuotaManager = currentQuotaManager;
+    public void setCalculateWhenUnlimited(boolean calculateWhenUnlimited) {
+        this.calculateWhenUnlimited = calculateWhenUnlimited;
     }
 
     public Quota getMessageQuota(QuotaRoot quotaRoot) throws MailboxException {

@@ -68,10 +68,9 @@ public class IsOverQuotaTest {
             new InMemoryMessageId.Factory());
 
         quotaRootResolver = new DefaultQuotaRootResolver(factory);
-        StoreQuotaManager quotaManager = new StoreQuotaManager();
         maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
-        quotaManager.setMaxQuotaManager(maxQuotaManager);
-        quotaManager.setCurrentQuotaManager(new InMemoryCurrentQuotaManager(new CurrentQuotaCalculator(factory, quotaRootResolver), mailboxManager));
+        InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(new CurrentQuotaCalculator(factory, quotaRootResolver), mailboxManager);
+        StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
         usersRepository = mock(UsersRepository.class);
         testee = new IsOverQuota(quotaRootResolver, quotaManager, mailboxManager, usersRepository);
 
