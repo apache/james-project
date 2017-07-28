@@ -119,4 +119,29 @@ public class AbstractDomainListPrivateMethodsTest {
 
         assertThat(domainList.getDomainListInternal()).containsOnlyOnce(expectedDefaultDomain);
     }
+
+    @Test
+    public void setDefaultDomainShouldAddDomainWhenNotContained() throws Exception {
+        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
+        String expectedDefaultDomain = "myDomain.org";
+        when(configuration.getString("defaultDomain", AbstractDomainList.LOCALHOST))
+            .thenReturn(expectedDefaultDomain);
+
+        domainList.configureDefaultDomain(configuration);
+
+        assertThat(domainList.getDomainListInternal()).contains(expectedDefaultDomain);
+    }
+
+    @Test
+    public void setDefaultDomainNotFailWhenDomainContained() throws Exception {
+        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
+        String expectedDefaultDomain = "myDomain.org";
+        when(configuration.getString("defaultDomain", AbstractDomainList.LOCALHOST))
+            .thenReturn(expectedDefaultDomain);
+
+        domainList.addDomain(expectedDefaultDomain);
+        domainList.configureDefaultDomain(configuration);
+
+        assertThat(domainList.getDomainListInternal()).contains(expectedDefaultDomain);
+    }
 }

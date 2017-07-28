@@ -81,7 +81,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     @VisibleForTesting void configureDefaultDomain(HierarchicalConfiguration config) throws ConfigurationException {
         
         try {
-            defaultDomain = config.getString("defaultDomain", LOCALHOST);
+            setDefaultDomain(config.getString("defaultDomain", LOCALHOST));
 
             String hostName = InetAddress.getLocalHost().getHostName();
             if (mayChangeDefaultDomain()) {
