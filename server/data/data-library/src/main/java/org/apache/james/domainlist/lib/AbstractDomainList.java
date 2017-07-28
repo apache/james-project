@@ -50,6 +50,9 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainList.class);
 
     protected static final String LOCALHOST = "localhost";
+    public static final String CONFIGURE_AUTODETECT = "autodetect";
+    public static final String CONFIGURE_AUTODETECT_IP = "autodetectIP";
+    public static final String CONFIGURE_DEFAULT_DOMAIN = "defaultDomain";
 
     private DNSService dns;
     private boolean autoDetect = true;
@@ -74,14 +77,14 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         configureDefaultDomain(config);
 
-        setAutoDetect(config.getBoolean("autodetect", true));
-        setAutoDetectIP(config.getBoolean("autodetectIP", true));
+        setAutoDetect(config.getBoolean(CONFIGURE_AUTODETECT, true));
+        setAutoDetectIP(config.getBoolean(CONFIGURE_AUTODETECT_IP, true));
     }
 
     @VisibleForTesting void configureDefaultDomain(HierarchicalConfiguration config) throws ConfigurationException {
         
         try {
-            setDefaultDomain(config.getString("defaultDomain", LOCALHOST));
+            setDefaultDomain(config.getString(CONFIGURE_DEFAULT_DOMAIN, LOCALHOST));
 
             String hostName = InetAddress.getLocalHost().getHostName();
             if (mayChangeDefaultDomain()) {
@@ -99,7 +102,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     }
 
     private void setDefaultDomain(String defaultDomain) throws DomainListException {
-        if (!containsDomain(defaultDomain)) {
+        if (defaultDomain != null && !containsDomain(defaultDomain)) {
             addDomain(defaultDomain);
         }
         this.defaultDomain = defaultDomain;
@@ -117,11 +120,31 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     @Override
     public List<String> getDomains() throws DomainListException {
         List<String> domains = getDomainListInternal();
-        if (domains != null) {
 
-            // create mutable copy, some subclasses return ImmutableList
-            ArrayList<String> mutableDomains = new ArrayList<String>(domains);
+        // create mutable copy, some subclasses return ImmutableList
+        ArrayList<String> mutableDomains = new ArrayList<String>(domains);
+        List<String> detectedDomains = detectDomains();
+        mutableDomains.addAll(detectedDomains);
+        mutableDomains.addAll(detectIps(mutableDomains));
 
+        if (getLogger().isInfoEnabled()) {
+            for (String domain : mutableDomains) {
+                getLogger().debug("Handling mail for: " + domain);
+            }
+        }
+
+        return ImmutableList.copyOf(mutableDomains);
+    }
+
+    private List<String> detectIps(ArrayList<String> mutableDomains) {
+        if (autoDetectIP) {
+            return getDomainsIP(mutableDomains, dns, getLogger());
+        }
+        return ImmutableList.of();
+    }
+
+    private List<String> detectDomains() {
+        if (autoDetect) {
             String hostName;
             try {
                 hostName = getDNSServer().getHostName(getDNSServer().getLocalHost());
@@ -130,24 +153,11 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
             }
 
             getLogger().info("Local host is: " + hostName);
-
-            if (autoDetect && (!hostName.equals("localhost"))) {
-                mutableDomains.add(hostName.toLowerCase(Locale.US));
+            if (!hostName.equals("localhost")) {
+                return ImmutableList.of(hostName.toLowerCase(Locale.US));
             }
-
-            if (autoDetectIP) {
-                mutableDomains.addAll(getDomainsIP(mutableDomains, dns, getLogger()));
-            }
-
-            if (getLogger().isInfoEnabled()) {
-                for (String domain : mutableDomains) {
-                    getLogger().debug("Handling mail for: " + domain);
-                }
-            }
-
-            return ImmutableList.copyOf(mutableDomains);
         }
-        return ImmutableList.of();// empty list
+        return ImmutableList.of();
     }
 
     /**
