@@ -182,8 +182,9 @@
                     <artifactId>guava</artifactId>
                 </dependency>
                 <dependency>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-lang3</artifactId>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>junit</groupId>
@@ -207,6 +208,10 @@
                     <artifactId>equalsverifier</artifactId>
                     <version>1.7.5</version>
                     <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>org.assertj</groupId>
