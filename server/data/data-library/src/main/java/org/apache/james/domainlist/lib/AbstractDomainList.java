@@ -22,6 +22,7 @@ package org.apache.james.domainlist.lib;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -55,6 +56,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     public static final String CONFIGURE_AUTODETECT = "autodetect";
     public static final String CONFIGURE_AUTODETECT_IP = "autodetectIP";
     public static final String CONFIGURE_DEFAULT_DOMAIN = "defaultDomain";
+    public static final String CONFIGURE_DOMAIN_NAMES = "domainnames.domainname";
     public static final String ENV_DOMAIN = "DOMAIN";
 
     private final DNSService dns;
@@ -83,9 +85,25 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
         configureDefaultDomain(config);
 
         addEnvDomain();
+        addConfiguredDomains(config);
 
         setAutoDetect(config.getBoolean(CONFIGURE_AUTODETECT, true));
         setAutoDetectIP(config.getBoolean(CONFIGURE_AUTODETECT_IP, true));
+    }
+
+    protected void addConfiguredDomains(HierarchicalConfiguration config) {
+        String[] configuredDomainNames = config.getStringArray(CONFIGURE_DOMAIN_NAMES);
+        try {
+            if (configuredDomainNames != null) {
+                for (String domain : Arrays.asList(configuredDomainNames)) {
+                    if (!containsDomainInternal(domain)) {
+                        addDomain(domain.toLowerCase(Locale.US));
+                    }
+                }
+            }
+        } catch (DomainListException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     private void addEnvDomain() {

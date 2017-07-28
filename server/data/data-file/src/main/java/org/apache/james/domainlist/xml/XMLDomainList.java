@@ -51,13 +51,6 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         super.configure(config);
-        for (String serverNameConf : config.getStringArray("domainnames.domainname")) {
-            try {
-                addToServedDomains(serverNameConf);
-            } catch (DomainListException e) {
-                throw new ConfigurationException("Unable to add domain to memory", e);
-            }
-        }
         isConfigured = true;
     }
 
@@ -87,10 +80,4 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
         domainNames.remove(domain);
     }
 
-    private void addToServedDomains(String domain) throws DomainListException {
-        String newDomain = domain.toLowerCase(Locale.US);
-        if (!containsDomain(newDomain)) {
-            domainNames.add(newDomain);
-        }
-    }
 }

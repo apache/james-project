@@ -27,6 +27,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -328,6 +329,20 @@ public class AbstractDomainListPrivateMethodsTest {
         domainList.configure(configuration);
 
         assertThat(domainList.containsDomain(envDomain)).isTrue();
+    }
+
+    @Test
+    public void configuredDomainShouldBeAddedUponConfiguration() throws Exception {
+        String[] configuredDomain = new String[] {"conf1.tld", "conf2.tld"};
+
+        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(true);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
+        when(configuration.getStringArray(AbstractDomainList.CONFIGURE_DOMAIN_NAMES)).thenReturn(configuredDomain);
+        domainList.configure(configuration);
+
+        assertThat(domainList.getDomains())
+            .containsOnlyElementsOf(Arrays.asList(configuredDomain));
     }
 
 }
