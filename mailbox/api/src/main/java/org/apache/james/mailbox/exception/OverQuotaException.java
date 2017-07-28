@@ -36,6 +36,8 @@ public class OverQuotaException extends MailboxException{
 
     public OverQuotaException(String msg, long max, long used) {
         super(msg);
+        this.used = used;
+        this.max = max;
     }
     public OverQuotaException(long max, long used) {
         this(null, max, used);
