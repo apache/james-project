@@ -45,12 +45,13 @@ public class AbstractDomainListPrivateMethodsTest {
     public static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainListPrivateMethodsTest.class);
     private MyDomainList domainList;
     private DNSService dnsService;
+    private EnvDetector envDetector;
 
     @Before
     public void setup() {
-        domainList = new MyDomainList();
         dnsService = mock(DNSService.class);
-        domainList.setDNSService(dnsService);
+        envDetector = mock(EnvDetector.class);
+        domainList = new MyDomainList(dnsService, envDetector);
         domainList.setLog(LOGGER);
     }
 
@@ -58,8 +59,9 @@ public class AbstractDomainListPrivateMethodsTest {
 
         private List<String> domains;
 
-        public MyDomainList() {
-            domains = Lists.newArrayList();
+        public MyDomainList(DNSService dns, EnvDetector envDetector) {
+            super(dns, envDetector);
+            this.domains = Lists.newArrayList();
         }
 
         @Override
@@ -307,13 +309,25 @@ public class AbstractDomainListPrivateMethodsTest {
 
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(true);
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
-        domainList.setLog(LOGGER);
         domainList.configure(configuration);
 
         String detected = "detected.tld";
         when(dnsService.getHostName(any(InetAddress.class))).thenReturn(detected);
 
         assertThat(domainList.containsDomain(detected)).isTrue();
+    }
+
+    @Test
+    public void envDomainShouldBeAddedUponConfiguration() throws Exception {
+        String envDomain = "env.tld";
+        when(envDetector.getEnv(AbstractDomainList.ENV_DOMAIN)).thenReturn(envDomain);
+
+        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(true);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
+        domainList.configure(configuration);
+
+        assertThat(domainList.containsDomain(envDomain)).isTrue();
     }
 
 }

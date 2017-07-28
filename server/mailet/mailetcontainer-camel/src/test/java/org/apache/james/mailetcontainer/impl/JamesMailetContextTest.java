@@ -26,6 +26,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.lib.EnvDetector;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.MailAddress;
@@ -41,6 +43,7 @@ public class JamesMailetContextTest {
     public static final String USERNAME = "user";
     public static final String USERMAIL = USERNAME + "@" + DOMAIN_COM;
     public static final String PASSWORD = "password";
+    public static final DNSService DNS_SERVICE = null;
 
     private MemoryDomainList domainList;
     private MemoryUsersRepository usersRepository;
@@ -49,7 +52,7 @@ public class JamesMailetContextTest {
 
     @Before
     public void setUp() throws Exception {
-        domainList = new MemoryDomainList();
+        domainList = new MemoryDomainList(DNS_SERVICE, new EnvDetector());
         domainList.setLog(LOGGER);
         usersRepository = MemoryUsersRepository.withVirtualHosting();
         usersRepository.setDomainList(domainList);

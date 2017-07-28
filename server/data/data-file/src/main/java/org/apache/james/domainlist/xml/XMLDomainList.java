@@ -23,12 +23,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.apache.james.domainlist.lib.EnvDetector;
 import org.apache.james.lifecycle.api.Configurable;
 
 /**
@@ -39,6 +42,11 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
 
     private final List<String> domainNames = new ArrayList<String>();
     private boolean isConfigured = false;
+
+    @Inject
+    public XMLDomainList(DNSService dns, EnvDetector envDetector) {
+        super(dns, envDetector);
+    }
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {

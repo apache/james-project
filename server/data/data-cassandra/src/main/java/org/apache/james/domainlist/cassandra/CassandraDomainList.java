@@ -35,8 +35,10 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.apache.james.domainlist.lib.EnvDetector;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
@@ -52,7 +54,8 @@ public class CassandraDomainList extends AbstractDomainList {
     private final PreparedStatement removeStatement;
 
     @Inject
-    public CassandraDomainList(Session session, CassandraUtils cassandraUtils) {
+    public CassandraDomainList(DNSService dnsService, EnvDetector envDetector, Session session, CassandraUtils cassandraUtils) {
+        super(dnsService, envDetector);
         this.executor = new CassandraAsyncExecutor(session);
         this.cassandraUtils = cassandraUtils;
         this.readAllStatement = prepareReadAllStatement(session);
@@ -86,8 +89,8 @@ public class CassandraDomainList extends AbstractDomainList {
     }
 
     @VisibleForTesting
-    CassandraDomainList(Session session) {
-        this(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+    CassandraDomainList(DNSService dnsService, Session session) {
+        this(dnsService, new EnvDetector(), session, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     @Override

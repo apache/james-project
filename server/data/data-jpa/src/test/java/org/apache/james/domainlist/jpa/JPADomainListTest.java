@@ -22,6 +22,7 @@ import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.domainlist.lib.AbstractDomainListTest;
+import org.apache.james.domainlist.lib.EnvDetector;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -33,12 +34,12 @@ public class JPADomainListTest extends AbstractDomainListTest {
 
     @Override
     protected DomainList createDomainList() {
-        JPADomainList jpaDomainList = new JPADomainList();
+        JPADomainList jpaDomainList = new JPADomainList(getDNSServer("localhost"),
+            new EnvDetector(),
+            JPA_TEST_CLUSTER.getEntityManagerFactory());
         jpaDomainList.setLog(LoggerFactory.getLogger("JPADomainListMockLog"));
-        jpaDomainList.setDNSService(getDNSServer("localhost"));
         jpaDomainList.setAutoDetect(false);
         jpaDomainList.setAutoDetectIP(false);
-        jpaDomainList.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
         
         return jpaDomainList;
     }

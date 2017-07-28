@@ -31,9 +31,8 @@ public class CassandraDomainListTest extends AbstractDomainListTest {
     @Override
     protected DomainList createDomainList() {
         cassandra = CassandraCluster.create(new CassandraDomainListModule());
-        CassandraDomainList testee = new CassandraDomainList(cassandra.getConf());
+        CassandraDomainList testee = new CassandraDomainList(getDNSServer("localhost"), cassandra.getConf());
         testee.setLog(LoggerFactory.getLogger(getClass()));
-        testee.setDNSService(getDNSServer("localhost"));
         testee.setAutoDetect(false);
         testee.setAutoDetectIP(false);
         return testee;

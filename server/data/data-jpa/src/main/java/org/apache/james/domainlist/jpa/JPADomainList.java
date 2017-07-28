@@ -31,9 +31,11 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnit;
 
+import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.apache.james.domainlist.lib.EnvDetector;
 
 import com.google.common.collect.ImmutableList;
 
@@ -48,6 +50,12 @@ public class JPADomainList extends AbstractDomainList {
      * The entity manager to access the database.
      */
     private EntityManagerFactory entityManagerFactory;
+
+    @Inject
+    public JPADomainList(DNSService dns, EnvDetector envDetector, EntityManagerFactory entityManagerFactory) {
+        super(dns, envDetector);
+        this.entityManagerFactory = entityManagerFactory;
+    }
 
     /**
      * Set the entity manager to use.

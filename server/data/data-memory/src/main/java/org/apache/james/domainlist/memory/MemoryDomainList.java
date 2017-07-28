@@ -23,8 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.inject.Inject;
+
+import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.apache.james.domainlist.lib.EnvDetector;
 
 import com.google.common.collect.ImmutableList;
 
@@ -32,7 +36,9 @@ public class MemoryDomainList extends AbstractDomainList {
 
     private final List<String> domains;
 
-    public MemoryDomainList() {
+    @Inject
+    public MemoryDomainList(DNSService dns, EnvDetector envDetector) {
+        super(dns, envDetector);
         this.domains = new ArrayList<String>();
     }
 

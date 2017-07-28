@@ -39,6 +39,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -53,16 +55,19 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     public static final String CONFIGURE_AUTODETECT = "autodetect";
     public static final String CONFIGURE_AUTODETECT_IP = "autodetectIP";
     public static final String CONFIGURE_DEFAULT_DOMAIN = "defaultDomain";
+    public static final String ENV_DOMAIN = "DOMAIN";
 
-    private DNSService dns;
+    private final DNSService dns;
+    private final EnvDetector envDetector;
     private boolean autoDetect = true;
     private boolean autoDetectIP = true;
     private Logger logger;
     private String defaultDomain;
 
     @Inject
-    public void setDNSService(DNSService dns) {
+    public AbstractDomainList(DNSService dns, EnvDetector envDetector) {
         this.dns = dns;
+        this.envDetector = envDetector;
     }
 
     public void setLog(Logger logger) {
@@ -77,12 +82,25 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         configureDefaultDomain(config);
 
+        addEnvDomain();
+
         setAutoDetect(config.getBoolean(CONFIGURE_AUTODETECT, true));
         setAutoDetectIP(config.getBoolean(CONFIGURE_AUTODETECT_IP, true));
     }
 
+    private void addEnvDomain() {
+        String envDomain = envDetector.getEnv(ENV_DOMAIN);
+        if (!Strings.isNullOrEmpty(envDomain)) {
+            try {
+                LOGGER.info("Adding environment defined domain {}", envDomain);
+                addDomain(envDomain);
+            } catch (DomainListException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+    }
+
     @VisibleForTesting void configureDefaultDomain(HierarchicalConfiguration config) throws ConfigurationException {
-        
         try {
             setDefaultDomain(config.getString(CONFIGURE_DEFAULT_DOMAIN, LOCALHOST));
 
@@ -133,7 +151,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
         mutableDomains.addAll(detectedDomains);
         mutableDomains.addAll(detectIps(mutableDomains));
 
-        if (getLogger().isInfoEnabled()) {
+        if (getLogger().isDebugEnabled()) {
             for (String domain : mutableDomains) {
                 getLogger().debug("Handling mail for: " + domain);
             }

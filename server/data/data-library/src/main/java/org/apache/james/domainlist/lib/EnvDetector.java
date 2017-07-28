@@ -17,22 +17,10 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.domainlist.memory;
+package org.apache.james.domainlist.lib;
 
-import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.lib.AbstractDomainListTest;
-import org.apache.james.domainlist.lib.EnvDetector;
-import org.slf4j.LoggerFactory;
-
-public class MemoryDomainListTest extends AbstractDomainListTest {
-
-    @Override
-    protected DomainList createDomainList() {
-        MemoryDomainList testee = new MemoryDomainList(getDNSServer("localhost"), new EnvDetector());
-        testee.setLog(LoggerFactory.getLogger(getClass()));
-        testee.setAutoDetect(false);
-        testee.setAutoDetectIP(false);
-        return testee;
+public class EnvDetector {
+    public String getEnv(String variableName) {
+        return System.getenv(variableName);
     }
-
 }

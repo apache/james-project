@@ -316,4 +316,6 @@
 
     <bean id="jspfLogger" class="org.apache.james.smtpserver.fastfail.SPFHandler.SPFLogger"/>
 
+    <bean id="envDetector" class="org.apache.james.domainlist.lib.EnvDetector"/>
+
 </beans>
