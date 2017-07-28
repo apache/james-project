@@ -104,4 +104,9 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
         when(mailboxMessage.createFlags()).thenReturn(flags);
         return mailboxMessage;
     }
+
+    @Override
+    public int getConstantMessageSize() {
+        throw new NotImplementedException();
+    }
 }

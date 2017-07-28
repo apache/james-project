@@ -37,6 +37,7 @@ import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
@@ -47,6 +48,7 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
     private static final MessageId FIRST_MESSAGE_ID = InMemoryMessageId.of(1);
     private static final long ONE_HUNDRED = 100;
     private static final int UID_VALIDITY = 1024;
+    public static final byte[] CONTENT = "Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8);
 
     private final MailboxManager mailboxManager;
     private Optional<MessageId> lastMessageIdUsed;
@@ -68,7 +70,7 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
     public MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags, MailboxSession session) {
         try {
             MessageManager messageManager = mailboxManager.getMailbox(mailboxId, session);
-            MessageId messageId = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), session, false, flags)
+            MessageId messageId = messageManager.appendMessage(new ByteArrayInputStream(CONTENT), new Date(), session, false, flags)
                     .getMessageId();
             lastMessageIdUsed = Optional.of(messageId);
             return messageId;
@@ -112,4 +114,8 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
 
     }
 
+    @Override
+    public int getConstantMessageSize() {
+        return CONTENT.length;
+    }
 }

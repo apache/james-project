@@ -50,7 +50,12 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
+import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
+import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
+import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
@@ -59,10 +64,25 @@ import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 
 public class CassandraTestSystemFixture {
     
     public static final int MOD_SEQ = 452;
+    public static final CassandraModuleComposite BASE_MAILBOX_MODULES = new CassandraModuleComposite(
+        new CassandraAclModule(),
+        new CassandraMailboxModule(),
+        new CassandraMessageModule(),
+        new CassandraBlobModule(),
+        new CassandraMailboxCounterModule(),
+        new CassandraMailboxRecentsModule(),
+        new CassandraFirstUnseenModule(),
+        new CassandraDeletedMessageModule(),
+        new CassandraUidModule(),
+        new CassandraModSeqModule(),
+        new CassandraAttachmentModule(),
+        new CassandraAnnotationModule(),
+        new CassandraApplicableFlagsModule());
     private static CassandraCluster cassandra;
     
     public static CassandraMailboxSessionMapperFactory createMapperFactory() {
@@ -115,26 +135,31 @@ public class CassandraTestSystemFixture {
             new DefaultQuotaRootResolver(mapperFactory));
     }
 
+    public static MaxQuotaManager createMaxQuotaManager() {
+        return new CassandraPerUserMaxQuotaManager(cassandra.getConf());
+    }
+
+    public static CurrentQuotaManager createCurrentQuotaManager() {
+        return new CassandraCurrentQuotaManager(cassandra.getConf());
+    }
+
+    public static QuotaManager createQuotaManager(MaxQuotaManager maxQuotaManager) {
+        return new StoreQuotaManager(new CassandraCurrentQuotaManager(cassandra.getConf()), maxQuotaManager);
+    }
+
     public static void clean() {
         cassandra.clearAllTables();
     }
 
     public static void init() {
+        cassandra = CassandraCluster.create(BASE_MAILBOX_MODULES);
+    }
+
+    public static void initWithQuota() {
         cassandra = CassandraCluster.create(
-                new CassandraModuleComposite(
-                    new CassandraAclModule(),
-                    new CassandraMailboxModule(),
-                    new CassandraMessageModule(),
-                    new CassandraBlobModule(),
-                    new CassandraMailboxCounterModule(),
-                    new CassandraMailboxRecentsModule(),
-                    new CassandraFirstUnseenModule(),
-                    new CassandraDeletedMessageModule(),
-                    new CassandraUidModule(),
-                    new CassandraModSeqModule(),
-                    new CassandraAttachmentModule(),
-                    new CassandraAnnotationModule(),
-                    new CassandraApplicableFlagsModule()));
+            new CassandraModuleComposite(
+                BASE_MAILBOX_MODULES,
+                new CassandraQuotaModule()));
     }
 
     public static void stop() {

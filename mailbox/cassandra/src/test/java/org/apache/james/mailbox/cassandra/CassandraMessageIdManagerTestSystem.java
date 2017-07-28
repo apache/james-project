@@ -32,18 +32,27 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
+import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
+import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 
 public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSystem {
+
+    private static final byte[] MESSAGE_CONTENT = "subject: any\n\nbody".getBytes(Charsets.UTF_8);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageIdManagerTestSystem.class);
 
     public static MessageIdManagerTestSystem createTestingData(QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
         CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory();
@@ -52,6 +61,20 @@ public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSys
             new CassandraMessageId.Factory(),
             mapperFactory,
             CassandraTestSystemFixture.createMailboxManager(mapperFactory));
+    }
+
+    public static MessageIdManagerTestSystem createTestingDataWithQuota(QuotaManager quotaManager, CurrentQuotaManager currentQuotaManager) throws Exception {
+        CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory();
+
+        CassandraMailboxManager mailboxManager = CassandraTestSystemFixture.createMailboxManager(mapperFactory);
+        ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(
+            (StoreCurrentQuotaManager) currentQuotaManager,
+            mailboxManager.getQuotaRootResolver());
+        mailboxManager.addGlobalListener(listeningCurrentQuotaUpdater, mailboxManager.createSystemSession("System", LOGGER));
+        return new CassandraMessageIdManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, mailboxManager.getEventDispatcher()),
+            new CassandraMessageId.Factory(),
+            mapperFactory,
+            mailboxManager);
     }
 
     private final CassandraMessageId.Factory messageIdFactory;
@@ -76,7 +99,9 @@ public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSys
         try {
             CassandraMessageId messageId = messageIdFactory.generate();
             Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
-            mapperFactory.getMessageMapper(mailboxSession).add(mailbox, createMessage(mailboxId, flags, messageId, uid));
+            MailboxMessage message = createMessage(mailboxId, flags, messageId, uid);
+            mapperFactory.getMessageMapper(mailboxSession).add(mailbox, message);
+            cassandraMailboxManager.getEventDispatcher().added(mailboxSession, new SimpleMessageMetaData(message), mailbox);
             return messageId;
         } catch (Exception e) {
             throw Throwables.propagate(e);
@@ -104,8 +129,8 @@ public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSys
     }
 
     private static MailboxMessage createMessage(MailboxId mailboxId, Flags flags, MessageId messageId, MessageUid uid) {
-        MailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, new Date(), 1596, 1256,
-            new SharedByteArrayInputStream("subject: any\n\nbody".getBytes(Charsets.UTF_8)), flags, new PropertyBuilder(), mailboxId);
+        MailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, new Date(), MESSAGE_CONTENT.length, 1256,
+            new SharedByteArrayInputStream(MESSAGE_CONTENT), flags, new PropertyBuilder(), mailboxId);
         mailboxMessage.setModSeq(CassandraTestSystemFixture.MOD_SEQ);
         mailboxMessage.setUid(uid);
         return mailboxMessage;
@@ -115,9 +140,16 @@ public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSys
         CassandraTestSystemFixture.init();
     }
 
+    public static void initWithQuota() {
+        CassandraTestSystemFixture.initWithQuota();
+    }
+
     public static void stop() {
         CassandraTestSystemFixture.stop();
     }
 
-
+    @Override
+    public int getConstantMessageSize() {
+        return MESSAGE_CONTENT.length;
+    }
 }
