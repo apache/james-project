@@ -2,7 +2,7 @@
 #
 # VERSION	1.0
 
-FROM java:openjdk-6-jdk
+FROM java:openjdk-8-jdk
 
 # Ports that are used
 #
