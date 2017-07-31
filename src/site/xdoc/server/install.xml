@@ -134,11 +134,9 @@
       </div>
   -->
     <p>After unpacking the binary, the next step is to adjust the initial configuration.  
-       All configuration files are embedded in jars. We ship in the conf folder template configuration files.
+       All configuration files are embedded in jars. We ship in the conf folder the configuration files that can be edited to match your needs.
     </p>
-    
-    <p>You can override the default configuration : copy the conf folder any ...-template... you need and update according to your needs.</p>
-    
+
     <p>Additional system files reside under the./conf/META-INF folder.</p>
     
     <p>The out of the box configuration makes certain assumptions and has some default 

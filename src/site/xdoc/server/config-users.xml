@@ -31,7 +31,7 @@
   
       <p>User repositories are required to store James user information and authentication data</p>
   
-      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/usersrepository-template.xml">usersrepository.xml</a> in GIT to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/usersrepository.xml">usersrepository.xml</a> in GIT to get some examples and hints.</p>
       
     </subsection>
     

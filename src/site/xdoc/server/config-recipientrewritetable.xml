@@ -27,7 +27,7 @@
 
   <section name="Recipient Rewrite Table Configuration">
 
-    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/recipientrewritetable-template.xml">recipientrewritetable-template.xml</a> in GIT to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/recipientrewritetable.xml">recipientrewritetable.xml</a> in GIT to get some examples and hints.</p>
 
     <subsection name="JPA Recipient Rewrite Table">
     

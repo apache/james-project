@@ -34,7 +34,7 @@
 
       <p>Apache James Server includes a number of pre-packaged <a href="dev-provided-mailets.html">Mailets and Matchers</a>.</p>
 
-      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailetcontainer-template.xml">mailetcontainer-template.xml</a> in GIT to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailetcontainer.xml">mailetcontainer.xml</a> in GIT to get some examples and hints.</p>
 
       <p>This configuration block is defined by the <strong>mailserver</strong> tag.  All administrators 
       need to adjust the <strong>mailserver</strong> block upon installation.</p>

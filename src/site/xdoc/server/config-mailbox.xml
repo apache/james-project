@@ -29,7 +29,7 @@
 
       This configuration applies only to Spring wiring.
 
-    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailbox-template.xml">mailbox-template.xml</a> in GIT to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailbox.xml">mailbox.xml</a> in GIT to get some examples and hints.</p>
     
     <p>Use this configuration to define the type of mailbox storage used to persist the user's mails.</p>
     

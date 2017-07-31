@@ -83,9 +83,8 @@ Step 4: Configure
 #################
 
   * All configuration files are embedded in jars.
-  * We ship in the conf folder template configuration files.
-  * You can override the default configuration : 
-      Copy the conf folder any ...-template... you need and update according to your needs.
+  * We ship in the conf folder the configuration files.
+  * You can override the default configuration by editing these files
 
 database.properties
 META-INF/persistence.xml

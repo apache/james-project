@@ -27,7 +27,7 @@
 
   <section name="DomainList Configuration">
 
-    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/domainlist-template.xml">domainlist-template.xml</a> in GIT to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/domainlist.xml">domainlist.xml</a> in GIT to get some examples and hints.</p>
     
       <p>This configuration block is defined by the <strong>domainlist</strong> tag.</p>
       

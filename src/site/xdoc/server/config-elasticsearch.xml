@@ -29,7 +29,7 @@
 
       This configuration applies only to Guice wiring.
 
-    <p>Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/elasticsearch.properties">elasticsearch-template.properties</a> to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/elasticsearch.properties">elasticsearch.properties</a> to get some examples and hints.</p>
 
       Connection to a cluster :
 

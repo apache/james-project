@@ -29,7 +29,7 @@
 
     This configuration file requires Spring wiring.
 
-    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/fetchmail-template.xml">fetchmail-template.xml</a> in GIT to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/fetchmail.xml">fetchmail.xml</a> in GIT to get some examples and hints.</p>
 
     <p>Fetchmail acts as a gateway between an external message store such as an IMAP
     or POP3 server and James. Mail is fetched from the external message store and

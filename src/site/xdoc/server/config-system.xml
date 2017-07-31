@@ -56,7 +56,7 @@
 
                 <p>This configuration file is only relevant when using JPA, with Spring or Guice.</p>
 
-                <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/james-database-template.properties">james-database.properties</a> in GIT to get some examples and hints.</p>
+                <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/james-database.properties">james.properties</a> in GIT to get some examples and hints.</p>
 
                 <p>The database connection in database.properties</p>
 
@@ -112,7 +112,7 @@
 
             <subsection name="jmx.properties">
 
-                <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/jmx-template.properties">jmx.properties</a> in GIT to get some examples and hints.</p>
+                <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/jmx.properties">jmx.properties</a> in GIT to get some examples and hints.</p>
 
                 <p>This is used to configure the JMX MBean server via which all management is achieved (also used by via the james-cli).</p>
 
@@ -151,7 +151,7 @@
 
             <subsection name="JCR Repository Configuration">
 
-                <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/jcr-repository-template.xml">jcr-repository.xml</a> in GIT to get some examples and hints.</p>
+                <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/jcr-repository.xml">jcr-repository.xml</a> in GIT to get some examples and hints.</p>
 
                 <p>Used to configure the JCR mailbox (if configure in mailbox.xml).</p>
 

@@ -29,7 +29,7 @@
 
     Note: Cassandra is only available with Guice wiring (cassandra-guice and cassandra-guice-ldap).
 
-    <p>Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/cassandra.properties">cassandra-template.properties</a> to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/cassandra.properties">cassandra.properties</a> to get some examples and hints.</p>
 
       <dl>
         <dt><strong>cassandra.nodes</strong></dt>
