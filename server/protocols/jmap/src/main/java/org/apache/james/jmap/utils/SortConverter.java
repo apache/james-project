@@ -38,9 +38,15 @@ public class SortConverter {
     private static final String DESC_ORDERING = "desc";
     private static final String ASC_ORDERING = "asc";
 
-    private static final Map<String, SortClause> SORT_CLAUSE_MAP = ImmutableMap.of(
-        "date", SortClause.SentDate,
-        "id", SortClause.Id);
+    private static final Map<String, SortClause> SORT_CLAUSE_MAP =
+        ImmutableMap.<String, SortClause>builder()
+            .put("date", SortClause.SentDate)
+            .put("id", SortClause.Id)
+            .put("subject", SortClause.BaseSubject)
+            .put("from", SortClause.MailboxFrom)
+            .put("to", SortClause.MailboxTo)
+            .put("size", SortClause.Size)
+            .build();
 
 
     public static List<Sort> convertToSorts(List<String> jmapSorts) {

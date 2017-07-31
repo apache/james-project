@@ -111,4 +111,28 @@ public class SortConverterTest {
             .containsExactly(new Sort(SortClause.SentDate, Order.NATURAL),
                 new Sort(SortClause.Id, Order.REVERSE));
     }
+
+    @Test
+    public void convertToSortsShouldSupportSubject() {
+        assertThat(SortConverter.convertToSorts(ImmutableList.of("subject desc")))
+                .containsExactly(new Sort(SortClause.BaseSubject, Order.REVERSE));
+    }
+
+    @Test
+    public void convertToSortsShouldSupportFrom() {
+        assertThat(SortConverter.convertToSorts(ImmutableList.of("from desc")))
+                .containsExactly(new Sort(SortClause.MailboxFrom, Order.REVERSE));
+    }
+
+    @Test
+    public void convertToSortsShouldSupportTo() {
+        assertThat(SortConverter.convertToSorts(ImmutableList.of("to desc")))
+                .containsExactly(new Sort(SortClause.MailboxTo, Order.REVERSE));
+    }
+
+    @Test
+    public void convertToSortsShouldSupportSize() {
+        assertThat(SortConverter.convertToSorts(ImmutableList.of("size desc")))
+                .containsExactly(new Sort(SortClause.Size, Order.REVERSE));
+    }
 }
