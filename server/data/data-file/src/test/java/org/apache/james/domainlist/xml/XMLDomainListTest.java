@@ -85,7 +85,7 @@ public class XMLDomainListTest {
         dom.setLog(LoggerFactory.getLogger("MockLog"));
         dom.configure(setUpConfiguration(false, false, domains));
 
-        assertThat(dom.getDomains()).describedAs("No domain found").containsOnly(DEFAULT_DOMAIN);
+        assertThat(dom.getDomains()).containsOnly(DEFAULT_DOMAIN);
     }
 
     @Test
@@ -98,7 +98,7 @@ public class XMLDomainListTest {
         dom.setLog(LoggerFactory.getLogger("MockLog"));
         dom.configure(setUpConfiguration(false, false, domains));
 
-        assertThat(dom.getDomains()).describedAs("Three domain found").hasSize(3);
+        assertThat(dom.getDomains()).hasSize(3);
     }
 
     @Test
@@ -110,7 +110,7 @@ public class XMLDomainListTest {
         dom.setLog(LoggerFactory.getLogger("MockLog"));
         dom.configure(setUpConfiguration(true, false, domains));
 
-        assertThat(dom.getDomains()).describedAs("Two domains found").hasSize(3);
+        assertThat(dom.getDomains()).hasSize(3);
     }
 
     @Test
@@ -123,7 +123,7 @@ public class XMLDomainListTest {
         dom.configure(setUpConfiguration(true, false, domains));
 
 
-        assertThat(dom.getDomains()).describedAs("One domain found").hasSize(2);
+        assertThat(dom.getDomains()).hasSize(2);
     }
 
     @Test
