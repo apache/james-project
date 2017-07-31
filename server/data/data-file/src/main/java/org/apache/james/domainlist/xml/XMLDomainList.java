@@ -31,7 +31,6 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
-import org.apache.james.domainlist.lib.EnvDetector;
 import org.apache.james.lifecycle.api.Configurable;
 
 /**
@@ -44,8 +43,8 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
     private boolean isConfigured = false;
 
     @Inject
-    public XMLDomainList(DNSService dns, EnvDetector envDetector) {
-        super(dns, envDetector);
+    public XMLDomainList(DNSService dns) {
+        super(dns);
     }
 
     @Override

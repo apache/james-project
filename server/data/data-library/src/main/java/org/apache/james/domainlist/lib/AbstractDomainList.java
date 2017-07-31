@@ -27,8 +27,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
-import javax.inject.Inject;
-
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
@@ -66,10 +64,13 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     private Logger logger;
     private String defaultDomain;
 
-    @Inject
     public AbstractDomainList(DNSService dns, EnvDetector envDetector) {
         this.dns = dns;
         this.envDetector = envDetector;
+    }
+
+    public AbstractDomainList(DNSService dns) {
+        this(dns, new EnvDetector());
     }
 
     public void setLog(Logger logger) {

@@ -37,7 +37,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.hbase.def.HDomainList;
 import org.apache.james.domainlist.lib.AbstractDomainList;
-import org.apache.james.domainlist.lib.EnvDetector;
 import org.apache.james.system.hbase.TablePool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,8 +52,8 @@ public class HBaseDomainList extends AbstractDomainList {
     private static final Logger log = LoggerFactory.getLogger(HBaseDomainList.class.getName());
 
     @Inject
-    public HBaseDomainList(DNSService dns, EnvDetector envDetector) {
-        super(dns, envDetector);
+    public HBaseDomainList(DNSService dns) {
+        super(dns);
     }
 
     /**

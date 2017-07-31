@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.lib.EnvDetector;
+import org.apache.james.domainlist.lib.AbstractDomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.MailAddress;
@@ -52,8 +52,13 @@ public class JamesMailetContextTest {
 
     @Before
     public void setUp() throws Exception {
-        domainList = new MemoryDomainList(DNS_SERVICE, new EnvDetector());
+        domainList = new MemoryDomainList(DNS_SERVICE);
         domainList.setLog(LOGGER);
+        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
+        domainList.configure(configuration);
+
         usersRepository = MemoryUsersRepository.withVirtualHosting();
         usersRepository.setDomainList(domainList);
         testee = new JamesMailetContext();
@@ -94,7 +99,6 @@ public class JamesMailetContextTest {
             .thenReturn(DOMAIN_COM);
 
         domainList.configure(configuration);
-        domainList.addDomain(DOMAIN_COM);
         usersRepository.addUser(USERMAIL, PASSWORD);
 
         assertThat(testee.isLocalUser(USERNAME)).isTrue();

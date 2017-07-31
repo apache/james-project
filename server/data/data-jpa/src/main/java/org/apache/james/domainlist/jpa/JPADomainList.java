@@ -35,7 +35,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.domainlist.lib.AbstractDomainList;
-import org.apache.james.domainlist.lib.EnvDetector;
 
 import com.google.common.collect.ImmutableList;
 
@@ -52,8 +51,8 @@ public class JPADomainList extends AbstractDomainList {
     private EntityManagerFactory entityManagerFactory;
 
     @Inject
-    public JPADomainList(DNSService dns, EnvDetector envDetector, EntityManagerFactory entityManagerFactory) {
-        super(dns, envDetector);
+    public JPADomainList(DNSService dns, EntityManagerFactory entityManagerFactory) {
+        super(dns);
         this.entityManagerFactory = entityManagerFactory;
     }
 

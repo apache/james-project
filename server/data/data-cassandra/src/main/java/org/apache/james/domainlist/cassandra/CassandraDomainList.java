@@ -19,14 +19,13 @@
 
 package org.apache.james.domainlist.cassandra;
 
-import static org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable.TABLE_NAME;
-import static org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable.DOMAIN;
-
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable.DOMAIN;
+import static org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable.TABLE_NAME;
 
 import java.util.List;
 import java.util.Locale;
@@ -38,7 +37,6 @@ import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
-import org.apache.james.domainlist.lib.EnvDetector;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
@@ -54,8 +52,8 @@ public class CassandraDomainList extends AbstractDomainList {
     private final PreparedStatement removeStatement;
 
     @Inject
-    public CassandraDomainList(DNSService dnsService, EnvDetector envDetector, Session session, CassandraUtils cassandraUtils) {
-        super(dnsService, envDetector);
+    public CassandraDomainList(DNSService dnsService, Session session, CassandraUtils cassandraUtils) {
+        super(dnsService);
         this.executor = new CassandraAsyncExecutor(session);
         this.cassandraUtils = cassandraUtils;
         this.readAllStatement = prepareReadAllStatement(session);
@@ -90,7 +88,7 @@ public class CassandraDomainList extends AbstractDomainList {
 
     @VisibleForTesting
     CassandraDomainList(DNSService dnsService, Session session) {
-        this(dnsService, new EnvDetector(), session, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        this(dnsService, session, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     @Override

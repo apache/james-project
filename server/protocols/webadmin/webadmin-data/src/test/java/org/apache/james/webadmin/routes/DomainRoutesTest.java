@@ -38,7 +38,6 @@ import java.net.InetAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.domainlist.lib.EnvDetector;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
@@ -95,7 +94,7 @@ public class DomainRoutesTest {
             when(dnsService.getHostName(any())).thenReturn("localhost");
             when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("localhost"));
 
-            MemoryDomainList domainList = new MemoryDomainList(dnsService, new EnvDetector());
+            MemoryDomainList domainList = new MemoryDomainList(dnsService);
             domainList.setLog(LOGGER);
             domainList.setAutoDetectIP(false);
             createServer(domainList);
