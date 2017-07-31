@@ -29,14 +29,11 @@
 
   <subsection name="Java Virtual Machine">
   
-    <p>James requires a Java Runtime Environment. Java version 1.6 or higher is required to run the 
+    <p>James 3.0 requires a Java Runtime Environment. Java version 1.6 or higher is required to run the
        James application. The exact JREs available depends on the platform. In addition, the environment variable JAVA_HOME should be set to
        the JRE home directory before running James.</p>
-       
-    <p>If you run JDK7, James will not start due to a bug in JAXB. As temporary workaround, you can
-       download the latest 2.1 version of JAXB from <a href="http://jaxb.java.net/2.1.13/JAXB2_20100510.jar">
-       http://jaxb.java.net/2.1.13/JAXB2_20100510.jar</a>
-       and copy the extracted jaxb-impl.jar into conf/lib.</p>
+
+    <p>After James 3.0 release, James requires Java version 1.8 or higher.</p>
     
     <p>James 3.0 has been successfully tested on OpenJDK, Sun JDK and IBM JDK</p>
   
