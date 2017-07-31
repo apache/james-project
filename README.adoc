@@ -82,30 +82,7 @@ Don't forget to add your key to http://www.apache.org/dist/james/KEYS
 
 === How to check the compilation
 
-In order to have a standard compilation environment, we introduce Dockerfiles.
-We need to check the compilation in both Java 6 & Java 8:
-
-- Java 6 is the historical Java release used in James.
-- Java 8 is used to compile the Cassandra backend.
-
-==== Java 6
-
-First step, you have to build the Docker image
-
-    $ docker build -t james/project dockerfiles/compilation/java-6
-
-In order to run the build, you have to launch the following command:
-
-    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project -s SHA1
-
-Where:
-
-- $PWD/.m2:/root/.m2: is the first volume used to share the maven repository,
-as we don't want to download all dependencies on each build
-- $PWD/dockerfiles/run/spring/destination:/destination: is the third volume used to get the compiled elements,
-as it is needed by the container that will run James.
-- SHA1 (optional): is the given git SHA1 of the james-project repository to build or master if none.
-- -s option: given tests will not be played while building. Not specifying means play tests.
+In order to have a standard compilation environment, we introduce Dockerfiles, using java-8.
 
 ==== Java 8
 
@@ -115,16 +92,21 @@ First step, you have to build the Docker image
 
 In order to run the build, you have to launch the following command:
 
-    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project -s SHA1
+    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -t james/project -s SHA1
 
 Where:
 
 - $PWD/.m2:/root/.m2: is the first volume used to share the maven repository,
 as we don't want to download all dependencies on each build
-- $PWD/dockerfiles/run/spring/destination:/destination: is the third volume used to get the compiled elements,
-as it is needed by the container that will run James.
+
 - SHA1 (optional): is the given git SHA1 of the james-project repository to build or master if none.
 - -s option: given tests will not be played while building. Not specifying means play tests.
+
+To retrieve compiled artifacts, one might mount these volumes:
+
+- --volume $PWD/dockerfiles/run/spring/destination:/spring/destination : is the volume used to get the compiled elements for Spring packaging.
+- --volume $PWD/dockerfiles/run/guice/cassandra/destination:/cassandra/destination : is the volume used to get the compiled elements for Guice Cassandra packaging and Cassandra-LDAP packaging.
+- --volume $PWD/dockerfiles/run/guice/cassandra/destination:/jpa/destination : is the volume used to get the compiled elements for Guice JPA packaging.
 
 Some tests needs a DOCKER_HOST environment variable in order to be played, they will be ignored if you don't provide this variable.
 If you wish to play them, you may use a command like the following (depending on your docker configuration):
@@ -142,7 +124,7 @@ This feature is available for three configurations :
 
  * Java 8 + Guice + Cassandra + ElasticSearch
  * Java 8 + Guice + JPA + Lucene
- * Java 6 + Spring + JPA
+ * Java 8 + Spring + JPA
 
 
 ==== Run James with Java 8 + Guice + Cassandra + ElasticSearch
@@ -236,11 +218,18 @@ You can add an optional port binding to port 8000, to expose the webadmin server
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
 
-==== Run James with Java 6 + Spring + JPA
+==== Run James with Java 8 + Spring + JPA
 
 ===== Requirements
 
-Built artifacts should be in ./dockerfiles/run/spring/destination folder.
+Built artifacts should be in ./dockerfiles/run/spring/destination folder for Spring.
+If you haven't already:
+
+    $ docker build -t james/project dockerfiles/compilation/java-8
+    $ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
+  -v $PWD/dockerfiles/run/spring/destination:/spring/destination \
+  -t james/project -s HEAD
+
 
 ===== Howto ?
 
