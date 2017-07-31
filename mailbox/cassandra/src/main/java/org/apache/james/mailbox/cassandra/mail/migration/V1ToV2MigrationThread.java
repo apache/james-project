@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.migration;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -41,12 +42,12 @@ public class V1ToV2MigrationThread implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(V1ToV2MigrationThread.class);
 
-    private final BlockingQueue<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> messagesToBeMigrated;
+    private final BlockingQueue<Pair<MessageWithoutAttachment, List<MessageAttachmentRepresentation>>> messagesToBeMigrated;
     private final CassandraMessageDAO messageDAOV1;
     private final CassandraMessageDAOV2 messageDAOV2;
     private final AttachmentLoader attachmentLoader;
 
-    public V1ToV2MigrationThread(BlockingQueue<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> messagesToBeMigrated,
+    public V1ToV2MigrationThread(BlockingQueue<Pair<MessageWithoutAttachment, List<MessageAttachmentRepresentation>>> messagesToBeMigrated,
                                  CassandraMessageDAO messageDAOV1, CassandraMessageDAOV2 messageDAOV2, AttachmentLoader attachmentLoader) {
         this.messagesToBeMigrated = messagesToBeMigrated;
         this.messageDAOV1 = messageDAOV1;
@@ -58,8 +59,8 @@ public class V1ToV2MigrationThread implements Runnable {
     public void run() {
         while (true) {
             try {
-                Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> message = messagesToBeMigrated.take();
-                performV1ToV2Migration(message).join();
+                Pair<MessageWithoutAttachment, List<MessageAttachmentRepresentation>> message = messagesToBeMigrated.take();
+                performV1ToV2Migration(Pair.of(message.getLeft(), message.getRight().stream())).join();
             } catch (Exception e) {
                 LOGGER.error("Error occured in migration thread", e);
             }

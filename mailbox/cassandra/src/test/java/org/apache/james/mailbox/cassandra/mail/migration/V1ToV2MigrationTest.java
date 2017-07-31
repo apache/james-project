@@ -24,11 +24,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
@@ -40,6 +43,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraBlobsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV2;
 import org.apache.james.mailbox.cassandra.mail.MessageAttachmentRepresentation;
+import org.apache.james.mailbox.cassandra.mail.MessageWithoutAttachment;
 import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
@@ -61,6 +65,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.jayway.awaitility.Awaitility;
@@ -234,6 +239,42 @@ public class V1ToV2MigrationTest {
             .isInline(messageAttachment.isInline())
             .name(messageAttachment.getName().get())
             .build());
+    }
+
+    @Test
+    public void migratedDataShouldBeRetrievedNoAttachment() throws Exception {
+        SimpleMailboxMessage originalMessage = createMessage(messageId, CONTENT, BODY_START,
+            new PropertyBuilder(), ImmutableList.of());
+
+        messageDAOV1.save(originalMessage).join();
+
+        Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> migratedData =
+            testee.getFromV2orElseFromV1AfterMigration(CassandraMessageDAOV2.notFound(metaData)).join();
+
+        awaitMigration();
+
+        softly.assertThat(migratedData.getLeft().getMessageId()).isEqualTo(messageId);
+        softly.assertThat(migratedData.getRight().collect(Guavate.toImmutableList()))
+            .isEmpty();
+    }
+
+    @Test
+    public void migratedDataShouldBeRetrievedWhenAttachment() throws Exception {
+        SimpleMailboxMessage originalMessage = createMessage(messageId, CONTENT, BODY_START,
+            new PropertyBuilder(), ImmutableList.of(messageAttachment));
+
+        attachmentMapper.storeAttachment(attachment);
+
+        messageDAOV1.save(originalMessage).join();
+
+        Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> migratedData =
+            testee.getFromV2orElseFromV1AfterMigration(CassandraMessageDAOV2.notFound(metaData)).join();
+
+        awaitMigration();
+
+        softly.assertThat(migratedData.getLeft().getMessageId()).isEqualTo(messageId);
+        softly.assertThat(migratedData.getRight().collect(Guavate.toImmutableList()))
+            .containsOnly(MessageAttachmentRepresentation.fromAttachment(messageAttachment));
     }
 
     private void awaitMigration() {

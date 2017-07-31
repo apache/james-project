@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.migration;
 
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -44,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class V1ToV2Migration implements Migration {
@@ -55,7 +57,7 @@ public class V1ToV2Migration implements Migration {
     private final AttachmentLoader attachmentLoader;
     private final CassandraConfiguration cassandraConfiguration;
     private final ExecutorService migrationExecutor;
-    private final ArrayBlockingQueue<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> messagesToBeMigrated;
+    private final ArrayBlockingQueue<Pair<MessageWithoutAttachment, List<MessageAttachmentRepresentation>>> messagesToBeMigrated;
 
     @Inject
     public V1ToV2Migration(CassandraMessageDAO messageDAOV1, CassandraMessageDAOV2 messageDAOV2,
@@ -99,11 +101,15 @@ public class V1ToV2Migration implements Migration {
 
     private Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> submitMigration(Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> messageV1) {
         if (cassandraConfiguration.isOnTheFlyV1ToV2Migration()) {
+            Pair<MessageWithoutAttachment, List<MessageAttachmentRepresentation>> messageV1WithAttachmentCopied =
+                Pair.of(messageV1.getLeft(), messageV1.getRight().collect(Guavate.toImmutableList()));
             synchronized (messagesToBeMigrated) {
-                if (!messagesToBeMigrated.offer(messageV1)) {
+
+                if (!messagesToBeMigrated.offer(messageV1WithAttachmentCopied)) {
                     LOGGER.info("Migration queue is full message {} is ignored", messageV1.getLeft().getMessageId());
                 }
             }
+            return Pair.of(messageV1.getLeft(), messageV1WithAttachmentCopied.getRight().stream());
         }
         return messageV1;
     }
