@@ -42,6 +42,7 @@ public class CassandraConfiguration {
     public static final int DEFAULT_BLOB_PART_SIZE = 100 * 1024;
     public static final int DEFAULT_MIGRATION_V1_TO_V2_QUEUE_LENGTH = 1000;
     public static final int DEFAULT_MIGRATION_V1_TO_V2_THREAD_COUNT = 2;
+    public static final int DEFAULT_MIGRATION_V1_READ_FETCH_SIZE = 10;
 
     public static class Builder {
         private Optional<Integer> messageReadChunkSize = Optional.empty();
@@ -57,6 +58,7 @@ public class CassandraConfiguration {
         private Optional<Boolean> onTheFlyV1ToV2Migration = Optional.empty();
         private Optional<Integer> v1ToV2QueueLength = Optional.empty();
         private Optional<Integer> v1ToV2ThreadCount = Optional.empty();
+        private Optional<Integer> v1ReadFetchSize = Optional.empty();
 
         public Builder messageReadChunkSize(int value) {
             Preconditions.checkArgument(value > 0, "messageReadChunkSize needs to be strictly positive");
@@ -130,6 +132,12 @@ public class CassandraConfiguration {
             return this;
         }
 
+        public Builder v1ReadFetchSize(int value) {
+            Preconditions.checkArgument(value > 0, "v1ReadFetchSize needs to be strictly positive");
+            this.v1ReadFetchSize = Optional.of(value);
+            return this;
+        }
+
         public Builder onTheFlyV1ToV2Migration(boolean value) {
             this.onTheFlyV1ToV2Migration = Optional.of(value);
             return this;
@@ -200,6 +208,11 @@ public class CassandraConfiguration {
             return this;
         }
 
+        public Builder v1ReadFetchSize(Optional<Integer> value) {
+            value.ifPresent(this::v1ReadFetchSize);
+            return this;
+        }
+
         public CassandraConfiguration build() {
             return new CassandraConfiguration(aclMaxRetry.orElse(DEFAULT_ACL_MAX_RETRY),
                 messageReadChunkSize.orElse(DEFAULT_MESSAGE_CHUNK_SIZE_ON_READ),
@@ -213,7 +226,8 @@ public class CassandraConfiguration {
                 blobPartSize.orElse(DEFAULT_BLOB_PART_SIZE),
                 onTheFlyV1ToV2Migration.orElse(DEFAULT_ON_THE_FLY_MIGRATION_V1_TO_V2),
                 v1ToV2QueueLength.orElse(DEFAULT_MIGRATION_V1_TO_V2_QUEUE_LENGTH),
-                v1ToV2ThreadCount.orElse(DEFAULT_MIGRATION_V1_TO_V2_THREAD_COUNT));
+                v1ToV2ThreadCount.orElse(DEFAULT_MIGRATION_V1_TO_V2_THREAD_COUNT),
+                v1ReadFetchSize.orElse(DEFAULT_MIGRATION_V1_READ_FETCH_SIZE));
         }
     }
 
@@ -234,13 +248,14 @@ public class CassandraConfiguration {
     private final boolean onTheFlyV1ToV2Migration;
     private final int v1ToV2QueueLength;
     private final int v1ToV2ThreadCount;
+    private final int v1ReadFetchSize;
 
     @VisibleForTesting
     CassandraConfiguration(int aclMaxRetry, int messageReadChunkSize, int expungeChunkSize,
                            int flagsUpdateChunkSize, int flagsUpdateMessageIdMaxRetry, int flagsUpdateMessageMaxRetry,
                            int modSeqMaxRetry, int uidMaxRetry, int fetchNextPageInAdvanceRow,
                            int blobPartSize, boolean onTheFlyV1ToV2Migration, int v1ToV2QueueLength,
-                           int v1ToV2ThreadCount
+                           int v1ToV2ThreadCount, int v1ReadFetchSize
     ) {
         this.aclMaxRetry = aclMaxRetry;
         this.messageReadChunkSize = messageReadChunkSize;
@@ -255,6 +270,7 @@ public class CassandraConfiguration {
         this.onTheFlyV1ToV2Migration = onTheFlyV1ToV2Migration;
         this.v1ToV2QueueLength = v1ToV2QueueLength;
         this.v1ToV2ThreadCount = v1ToV2ThreadCount;
+        this.v1ReadFetchSize = v1ReadFetchSize;
     }
 
     public int getBlobPartSize() {
@@ -309,6 +325,10 @@ public class CassandraConfiguration {
         return v1ToV2ThreadCount;
     }
 
+    public int getV1ReadFetchSize() {
+        return v1ReadFetchSize;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof CassandraConfiguration) {
@@ -326,7 +346,8 @@ public class CassandraConfiguration {
                 && Objects.equals(this.blobPartSize, that.blobPartSize)
                 && Objects.equals(this.onTheFlyV1ToV2Migration, that.onTheFlyV1ToV2Migration)
                 && Objects.equals(this.v1ToV2ThreadCount, that.v1ToV2ThreadCount)
-                && Objects.equals(this.v1ToV2QueueLength, that.v1ToV2QueueLength);
+                && Objects.equals(this.v1ToV2QueueLength, that.v1ToV2QueueLength)
+                && Objects.equals(this.v1ReadFetchSize, that.v1ReadFetchSize);
         }
         return false;
     }
@@ -335,7 +356,7 @@ public class CassandraConfiguration {
     public final int hashCode() {
         return Objects.hash(aclMaxRetry, messageReadChunkSize, expungeChunkSize, flagsUpdateMessageIdMaxRetry,
             flagsUpdateMessageMaxRetry, modSeqMaxRetry, uidMaxRetry, fetchNextPageInAdvanceRow, flagsUpdateChunkSize,
-            blobPartSize, onTheFlyV1ToV2Migration, v1ToV2ThreadCount, v1ToV2QueueLength);
+            blobPartSize, onTheFlyV1ToV2Migration, v1ToV2ThreadCount, v1ToV2QueueLength, v1ReadFetchSize);
     }
 
     @Override
@@ -354,6 +375,7 @@ public class CassandraConfiguration {
             .add("onTheFlyV1ToV2Migration", onTheFlyV1ToV2Migration)
             .add("v1ToV2ThreadCount", v1ToV2ThreadCount)
             .add("v1ToV2QueueLength", v1ToV2QueueLength)
+            .add("v1ReadFetchSize", v1ReadFetchSize)
             .toString();
     }
 }

@@ -154,7 +154,7 @@ public class CassandraMessageDAO {
 
     public Stream<RawMessage> readAll() {
         return cassandraUtils.convertToStream(
-            cassandraAsyncExecutor.execute(selectAll.bind())
+            cassandraAsyncExecutor.execute(selectAll.bind().setFetchSize(cassandraConfiguration.getV1ReadFetchSize()))
                 .join())
             .map(this::fromRow);
     }

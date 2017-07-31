@@ -98,6 +98,7 @@ public class CassandraSessionModule extends AbstractModule {
     private static final String MIGRATION_V1_V2_ON_THE_FLY = "migration.v1.v2.on.the.fly";
     private static final String MIGRATION_V1_V2_THREAD_COUNT = "migration.v1.v2.thread.count";
     private static final String MIGRATION_V1_V2_QUEUE_LENGTH = "migration.v1.v2.queue.length";
+    public static final String MIGRATION_V1_READ_SIZE = "migration.v1.read.fetch.size";
 
     @Override
     protected void configure() {
@@ -303,6 +304,8 @@ public class CassandraSessionModule extends AbstractModule {
                 propertiesConfiguration.getInteger(MIGRATION_V1_V2_THREAD_COUNT, null)))
             .v1ToV2QueueLength(Optional.ofNullable(
                 propertiesConfiguration.getInteger(MIGRATION_V1_V2_QUEUE_LENGTH, null)))
+            .v1ReadFetchSize(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MIGRATION_V1_READ_SIZE, null)))
             .build();
     }
 

@@ -119,6 +119,8 @@
         <dd>Optional. Defaults to 2.<br/> Controls the number of threads used to asynchronously migrate from v1 to v2.</dd>
         <dt><strong>migration.v1.v2.queue.length</strong></dt>
         <dd>Optional. Defaults to 1000.<br/> Controls the queue size of v1 to v2 migration task. Drops when full.</dd>
+        <dt><strong>migration.v1.read.fetch.size</strong></dt>
+        <dd>Optional. Defaults to 10.<br/> Controls the fetch size of the request to retrieve all messages stored in V1 during the migration process.</dd>
       </dl>
 
 
