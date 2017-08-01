@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.store.event.distributed;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -29,19 +28,19 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Sets;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.publisher.Topic;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.google.common.collect.Sets;
 
 public class DistantMailboxPathRegisterTest {
 
@@ -66,13 +65,8 @@ public class DistantMailboxPathRegisterTest {
 
     @Test
     public void getTopicsShouldWork() {
-        final HashSet<String> result = Sets.newHashSet(TOPIC);
-        when(mockedMapper.getTopics(MAILBOX_PATH)).thenAnswer(new Answer<Set<String>>() {
-            @Override
-            public Set<String> answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return result;
-            }
-        });
+        final Set<Topic> result = Sets.newHashSet(new Topic(TOPIC));
+        when(mockedMapper.getTopics(MAILBOX_PATH)).thenReturn(result);
         assertThat(register.getTopics(MAILBOX_PATH)).isEqualTo(result);
     }
 
@@ -255,18 +249,15 @@ public class DistantMailboxPathRegisterTest {
         final long increments = 100;
         ExecutorService executorService = Executors.newFixedThreadPool(numTask);
         for (int i = 0; i < numTask; i++) {
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        int j = 0;
-                        while (j < increments) {
-                            register.register(MAILBOX_PATH);
-                            j++;
-                        }
-                    } catch (Exception e) {
-                        fail("Exception caught in thread", e);
+            executorService.submit(() -> {
+                try {
+                    int j = 0;
+                    while (j < increments) {
+                        register.register(MAILBOX_PATH);
+                        j++;
                     }
+                } catch (Exception e) {
+                    fail("Exception caught in thread", e);
                 }
             });
         }
@@ -284,18 +275,15 @@ public class DistantMailboxPathRegisterTest {
         }
         ExecutorService executorService = Executors.newFixedThreadPool(numTask);
         for (int i = 0; i < numTask; i++) {
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        int j = 0;
-                        while (j < increments) {
-                            register.unregister(MAILBOX_PATH);
-                            j++;
-                        }
-                    } catch (Exception e) {
-                        fail("Exception caught in thread", e);
+            executorService.submit(() -> {
+                try {
+                    int j = 0;
+                    while (j < increments) {
+                        register.unregister(MAILBOX_PATH);
+                        j++;
                     }
+                } catch (Exception e) {
+                    fail("Exception caught in thread", e);
                 }
             });
         }
@@ -313,32 +301,26 @@ public class DistantMailboxPathRegisterTest {
         }
         ExecutorService executorService = Executors.newFixedThreadPool(2* numTask);
         for (int i = 0; i < numTask; i++) {
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        int j = 0;
-                        while (j < increments) {
-                            register.register(MAILBOX_PATH);
-                            j++;
-                        }
-                    } catch (Exception e) {
-                        fail("Exception caught in thread", e);
+            executorService.submit(() -> {
+                try {
+                    int j = 0;
+                    while (j < increments) {
+                        register.register(MAILBOX_PATH);
+                        j++;
                     }
+                } catch (Exception e) {
+                    fail("Exception caught in thread", e);
                 }
             });
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        int j = 0;
-                        while (j < increments) {
-                            register.unregister(MAILBOX_PATH);
-                            j++;
-                        }
-                    } catch (Exception e) {
-                        fail("Exception caught in thread", e);
+            executorService.submit(() -> {
+                try {
+                    int j = 0;
+                    while (j < increments) {
+                        register.unregister(MAILBOX_PATH);
+                        j++;
                     }
+                } catch (Exception e) {
+                    fail("Exception caught in thread", e);
                 }
             });
         }

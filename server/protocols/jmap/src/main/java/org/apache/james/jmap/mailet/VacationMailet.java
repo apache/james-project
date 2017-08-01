@@ -21,6 +21,7 @@ package org.apache.james.jmap.mailet;
 
 import java.time.ZonedDateTime;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -39,8 +40,6 @@ import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Functions;
 
 public class VacationMailet extends GenericMailet {
 
@@ -88,7 +87,7 @@ public class VacationMailet extends GenericMailet {
                     RecipientId.fromMailAddress(processedMail.getSender())),
                 (vacation, alreadySent) ->
                     sendNotificationIfRequired(recipient, processedMail, processingDate, vacation, alreadySent))
-            .thenCompose(f -> f);
+            .thenCompose(Function.identity());
     }
 
     private CompletableFuture<Void> sendNotificationIfRequired(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate, Vacation vacation, Boolean alreadySent) {

@@ -19,7 +19,6 @@
 package org.apache.james.mailbox.maildir.mail;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -317,12 +316,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             
             // List all INBOX sub folders.
             
-            File[] mailboxes = user.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File pathname) {
-                    return pathname.getName().startsWith(".");
-                }
-            });
+            File[] mailboxes = user.listFiles(pathname -> pathname.getName().startsWith("."));
             
             for (File mailbox: mailboxes) {
                

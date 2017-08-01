@@ -29,7 +29,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.AuthenticateRequest;
@@ -70,18 +69,14 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                     doPlainAuth(irRequest.getInitialClientResponse(), session, tag, command, responder);
                 } else {
                     responder.respond(new AuthenticateResponse());
-                    session.pushLineHandler(new ImapLineHandler() {
-                
-                        public void onLine(ImapSession session, byte[] data) {
-                            // cut of the CRLF
-                            String initialClientResponse = new String(data, 0, data.length - 2, Charset.forName("US-ASCII"));
+                    session.pushLineHandler((requestSession, data) -> {
+                        // cut of the CRLF
+                        String initialClientResponse = new String(data, 0, data.length - 2, Charset.forName("US-ASCII"));
 
-                            doPlainAuth(initialClientResponse, session, tag, command, responder);
-                            
-                            // remove the handler now
-                            session.popLineHandler();
-                    
-                        }
+                        doPlainAuth(initialClientResponse, requestSession, tag, command, responder);
+
+                        // remove the handler now
+                        requestSession.popLineHandler();
                     });
                 }
             }

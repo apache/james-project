@@ -24,20 +24,10 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 
 public class ApplicableFlagCalculator {
-
-    private static Function<MailboxMessage, Flags> toFlags() {
-        return new Function<MailboxMessage, Flags>() {
-            @Override
-            public Flags apply(MailboxMessage mailboxMessage) {
-                return mailboxMessage.createFlags();
-            }
-        };
-    }
 
     private final Iterable<MailboxMessage> mailboxMessages;
 
@@ -49,7 +39,7 @@ public class ApplicableFlagCalculator {
     public Flags computeApplicableFlags() {
         return ApplicableFlagBuilder.builder()
                 .add(FluentIterable.from(mailboxMessages)
-                    .transform(toFlags())
+                    .transform(MailboxMessage::createFlags)
                     .toArray(Flags.class))
                 .build();
     }

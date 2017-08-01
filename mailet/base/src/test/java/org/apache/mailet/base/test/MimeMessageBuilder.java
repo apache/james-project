@@ -176,14 +176,11 @@ public class MimeMessageBuilder {
         }
     }
 
-    public static final Function<String, InternetAddress> TO_INTERNET_ADDRESS = new Function<String, InternetAddress>() {
-        @Override
-        public InternetAddress apply(String input) {
-            try {
-                return new InternetAddress(input);
-            } catch (AddressException e) {
-                throw Throwables.propagate(e);
-            }
+    public static final Function<String, InternetAddress> TO_INTERNET_ADDRESS = value -> {
+        try {
+            return new InternetAddress(value);
+        } catch (AddressException e) {
+            throw Throwables.propagate(e);
         }
     };
 

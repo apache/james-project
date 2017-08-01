@@ -32,8 +32,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.util.EventCollector;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 public class DefaultDelegatingMailboxListenerTest {
 
@@ -191,14 +189,11 @@ public class DefaultDelegatingMailboxListenerTest {
         MailboxSession session = new MockMailboxSession("benwa");
         MailboxListener.Event event = new MailboxListener.Event(session, MAILBOX_PATH) {};
         MailboxListener mockedListener = mock(MailboxListener.class);
-        when(mockedListener.getType()).thenAnswer(new Answer<MailboxListener.ListenerType>() {
-            @Override
-            public MailboxListener.ListenerType answer(InvocationOnMock invocation) throws Throwable {
-                return MailboxListener.ListenerType.ONCE;
-            }
-        });
+        when(mockedListener.getType()).thenReturn(MailboxListener.ListenerType.ONCE);
         doThrow(new RuntimeException()).when(mockedListener).event(event);
+
         defaultDelegatingMailboxListener.addGlobalListener(mockedListener, null);
+
         defaultDelegatingMailboxListener.event(event);
     }
 

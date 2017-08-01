@@ -19,6 +19,8 @@
 
 package org.apache.james.protocols.api;
 
+import static junit.framework.Assert.assertEquals;
+
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
@@ -32,8 +34,6 @@ import java.util.concurrent.CountDownLatch;
 import org.apache.james.protocols.api.future.FutureResponseImpl;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.junit.Test;
-
-import static junit.framework.Assert.*;
 
 /**
  * Test-case for PROTOCOLS-62
@@ -105,27 +105,24 @@ public class AbstractProtocolTransportTest {
     }
     
     private void notifyFutureResponses(final List<Response> messages, final boolean reverse) {
-        new Thread(new Runnable() {
-            
-            public void run() {
-                try {
-                    Thread.sleep(200);
-                    List<Response> responses = new ArrayList<Response>(messages);
-                    if (reverse) {
-                        Collections.reverse(responses);
-                    }
-
-                    for (Response r : responses) {
-                        if (r instanceof FutureResponseImpl) {
-                            ((FutureResponseImpl) r).setResponse(new TestResponse());
-                        }
-                    }
-
-                } catch (InterruptedException e) {
-                    throw new RuntimeException();
+        new Thread(() -> {
+            try {
+                Thread.sleep(200);
+                List<Response> responses = new ArrayList<>(messages);
+                if (reverse) {
+                    Collections.reverse(responses);
                 }
-                
+
+                for (Response r : responses) {
+                    if (r instanceof FutureResponseImpl) {
+                        ((FutureResponseImpl) r).setResponse(new TestResponse());
+                    }
+                }
+
+            } catch (InterruptedException e) {
+                throw new RuntimeException();
             }
+
         }).start();
     }
     private void checkWrittenResponses(List<Response> messages) throws InterruptedException, UnsupportedEncodingException {

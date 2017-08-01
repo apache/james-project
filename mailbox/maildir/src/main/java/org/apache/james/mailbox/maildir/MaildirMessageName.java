@@ -453,12 +453,9 @@ public class MaildirMessageName {
     }
     
     public static FilenameFilter createRegexFilter(final Pattern pattern) {
-        return new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                Matcher matcher = pattern.matcher(name);
-                return matcher.matches();
-            }
+        return (dir, name) -> {
+            Matcher matcher = pattern.matcher(name);
+            return matcher.matches();
         };
     }
     

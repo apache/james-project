@@ -58,32 +58,10 @@ public abstract class AbstractMessageIdManagerStorageTest {
     private static final MessageUid messageUid1 = MessageUid.of(111);
     private static final MessageUid messageUid2 = MessageUid.of(222);
 
-    private static final Function<MessageResult, Flags> getFlags() {
-        return new Function<MessageResult, Flags>() {
-            @Override
-            public Flags apply(MessageResult input) {
-                return input.getFlags();
-            }
-        };
-    }
-
     private static final Function<MessageResult, Map.Entry<MessageId, Flags>> toMapEntryOfFlags() {
-        return new Function<MessageResult, Map.Entry<MessageId, Flags>>() {
-            @Override
-            public Map.Entry<MessageId, Flags> apply(MessageResult input) {
-                return new AbstractMap.SimpleEntry<MessageId, Flags>(input.getMessageId(), input.getFlags());
-            }
-        };
+        return messageResult -> new AbstractMap.SimpleEntry<>(messageResult.getMessageId(), messageResult.getFlags());
     }
 
-    private static Function<MessageResult, MailboxId> getMailboxId() {
-        return new Function<MessageResult, MailboxId>() {
-            @Override
-            public MailboxId apply(MessageResult input) {
-                return input.getMailboxId();
-            }
-        };
-    }
 
     private MessageIdManagerTestSystem testingData;
     private MessageIdManager messageIdManager;
@@ -252,7 +230,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox3.getMailboxId()), session);
 
         List<MailboxId> messageMailboxIds = FluentIterable.from(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session))
-            .transform(getMailboxId())
+            .transform(MessageResult::getMailboxId)
             .toList();
 
         assertThat(messageMailboxIds).containsOnly(mailbox1.getMailboxId(), mailbox3.getMailboxId());
@@ -414,7 +392,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         
         List<Flags> flags = FluentIterable
                 .from(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session))
-                .transform(getFlags())
+                .transform(MessageResult::getFlags)
                 .toList();
 
         assertThat(flags).hasSize(2);
@@ -432,7 +410,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         
         List<Flags> flags = FluentIterable
                 .from(messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session))
-                .transform(getFlags())
+                .transform(MessageResult::getFlags)
                 .toList();
 
         assertThat(flags).hasSize(1);
@@ -448,7 +426,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
 
         List<Flags> flags = FluentIterable
             .from(messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session))
-            .transform(getFlags())
+            .transform(MessageResult::getFlags)
             .toList();
 
         assertThat(flags).hasSize(1);
@@ -464,7 +442,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
 
         List<Flags> flags = FluentIterable
             .from(messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session))
-            .transform(getFlags())
+            .transform(MessageResult::getFlags)
             .toList();
 
         assertThat(flags).hasSize(1);
@@ -545,12 +523,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
     }
 
     private Predicate<MessageResult> inMailbox(final MailboxId mailboxId) {
-        return new Predicate<MessageResult>() {
-            @Override
-            public boolean apply(MessageResult input) {
-                return input.getMailboxId().equals(mailboxId);
-            }
-        };
+        return messageResult -> messageResult.getMailboxId().equals(mailboxId);
     }
 
 }

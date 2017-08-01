@@ -19,18 +19,18 @@
 
 package org.apache.james.mailbox.store.json.event.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.store.SimpleMailboxSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
 
 public class MailboxSessionDataTransferObject {
     @JsonProperty()
@@ -61,11 +61,7 @@ public class MailboxSessionDataTransferObject {
         separator = session.getPathDelimiter();
         sessionType = extractSessionType(session);
         sessionId = session.getSessionId();
-        locales = Lists.transform(session.getUser().getLocalePreferences(), new Function<Locale, LocaleDataTransferObject>() {
-            public LocaleDataTransferObject apply(Locale locale) {
-                return new LocaleDataTransferObject(locale);
-            }
-        });
+        locales = Lists.transform(session.getUser().getLocalePreferences(), LocaleDataTransferObject::new);
     }
 
     @JsonIgnore
@@ -83,11 +79,7 @@ public class MailboxSessionDataTransferObject {
 
     private List<Locale> retrieveLocales() {
         if (locales != null) {
-            return Lists.transform(locales, new Function<LocaleDataTransferObject, Locale>() {
-                public Locale apply(LocaleDataTransferObject localeDataTransferObject) {
-                    return localeDataTransferObject.getLocale();
-                }
-            });
+            return Lists.transform(locales, LocaleDataTransferObject::getLocale);
         } else {
             return new ArrayList<Locale>();
         }

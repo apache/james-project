@@ -39,10 +39,8 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.thoughtworks.qdox.JavaDocBuilder;
-import com.thoughtworks.qdox.model.Annotation;
 import com.thoughtworks.qdox.model.JavaClass;
 
 /**
@@ -196,14 +194,8 @@ public class DefaultDescriptorsExtractor {
 
     private boolean isExperimental(JavaClass javaClass) {
         return FluentIterable.of(javaClass.getAnnotations())
-            .anyMatch(new Predicate<Annotation>() {
-
-                @Override
-                public boolean apply(Annotation annotation) {
-                    return annotation.getType().getValue()
-                            .equals(Experimental.class.getName());
-                }
-            });
+            .anyMatch(annotation -> annotation.getType().getValue()
+                    .equals(Experimental.class.getName()));
     }
 
     private void handleInfoLoadFailure(Log log, String nameOfClass,

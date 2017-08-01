@@ -49,12 +49,7 @@ public class TransactionalMailboxMapper implements MailboxMapper {
 
     @Override
     public MailboxId save(final Mailbox mailbox) throws MailboxException {
-        return wrapped.execute(new Transaction<MailboxId>() {
-                @Override
-                public MailboxId run() throws MailboxException {
-                    return wrapped.save(mailbox);
-                }
-            });
+        return wrapped.execute(() -> wrapped.save(mailbox));
     }
 
     @Override

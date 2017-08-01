@@ -49,12 +49,8 @@ public class MessageMetaDataDataTransferObject {
 
     private static final Logger LOG = LoggerFactory.getLogger(MessageMetaDataDataTransferObject.class);
 
-    private static final ThreadLocal<SimpleDateFormat> simpleDateFormat = new ThreadLocal<SimpleDateFormat>(){
-        protected SimpleDateFormat initialValue()
-        {
-            return new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        }
-    };
+    private static final ThreadLocal<SimpleDateFormat> simpleDateFormat = ThreadLocal.withInitial(
+        () -> new SimpleDateFormat("yyyy/MM/dd HH:mm:ss"));
 
     private static Date parse(String date) throws ParseException {
         if (date != null) {

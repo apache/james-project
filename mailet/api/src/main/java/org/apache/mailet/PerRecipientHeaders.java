@@ -18,10 +18,10 @@
  ****************************************************************/
 
 package org.apache.mailet;
+
 import java.util.Collection;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -30,13 +30,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Multimap;
 
 public class PerRecipientHeaders {
-    public static final Function<Header, String> GET_HEADER_NAME = new Function<Header, String>() {
-        @Override
-        public String apply(Header input) {
-            return input.getName();
-        }
-    };
-
     private Multimap<MailAddress, Header> headersByRecipient;
 
     public PerRecipientHeaders() {
@@ -53,7 +46,7 @@ public class PerRecipientHeaders {
 
     public Collection<String> getHeaderNamesForRecipient(MailAddress recipient) {
         return FluentIterable.from(headersByRecipient.get(recipient))
-            .transform(GET_HEADER_NAME)
+            .transform(Header::getName)
             .toSet();
     }
 

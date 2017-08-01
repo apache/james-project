@@ -47,7 +47,7 @@ public class ConfigurationsPerformer {
 
     private Set<ConfigurationPerformer> processConfigurables() {
         return configurables.get().stream()
-            .flatMap(configurable -> configurationPerformerFor(configurable))
+            .flatMap(this::configurationPerformerFor)
             .distinct()
             .peek(ConfigurationPerformer::initModule)
             .collect(Collectors.toSet());

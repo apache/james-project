@@ -19,8 +19,11 @@
 
 package org.apache.james.user.memory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -28,10 +31,7 @@ import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.model.DefaultUser;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
+import com.google.common.base.Optional;
 
 public class MemoryUsersRepository extends AbstractUsersRepository {
 
@@ -104,11 +104,8 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
     @Override
     public boolean test(String name, final String password) throws UsersRepositoryException {
         return Optional.fromNullable(userByName.get(name))
-            .transform(new Function<User, Boolean>() {
-                public Boolean apply(User user) {
-                    return user.verifyPassword(password);
-                }
-            }).or(false);
+            .transform(user -> user.verifyPassword(password))
+            .or(false);
     }
 
     @Override

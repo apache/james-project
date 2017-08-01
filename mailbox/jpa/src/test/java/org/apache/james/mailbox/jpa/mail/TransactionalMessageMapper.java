@@ -77,12 +77,8 @@ public class TransactionalMessageMapper implements MessageMapper {
     @Override
     public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(final Mailbox mailbox, final MessageRange set)
             throws MailboxException {
-        Map<MessageUid, MessageMetaData> data = messageMapper.execute(new Transaction<Map<MessageUid, MessageMetaData>>() {
-            @Override
-            public Map<MessageUid, MessageMetaData> run() throws MailboxException {
-                return messageMapper.expungeMarkedForDeletionInMailbox(mailbox, set);
-            }
-        });
+        Map<MessageUid, MessageMetaData> data = messageMapper.execute(
+            () -> messageMapper.expungeMarkedForDeletionInMailbox(mailbox, set));
         return data;
     }
 
@@ -118,35 +114,23 @@ public class TransactionalMessageMapper implements MessageMapper {
 
     @Override
     public MessageMetaData add(final Mailbox mailbox, final MailboxMessage message) throws MailboxException {
-        MessageMetaData data = messageMapper.execute(new Transaction<MessageMetaData>() {
-            @Override
-            public MessageMetaData run() throws MailboxException {
-                return messageMapper.add(mailbox, message);
-            }
-        });
+        MessageMetaData data = messageMapper.execute(
+            () -> messageMapper.add(mailbox, message));
         return data;
     }
 
     @Override
     public Iterator<UpdatedFlags> updateFlags(final Mailbox mailbox, final FlagsUpdateCalculator flagsUpdateCalculator,
             final MessageRange set) throws MailboxException {
-        Iterator<UpdatedFlags> data = messageMapper.execute(new Transaction<Iterator<UpdatedFlags>>() {
-            @Override
-            public Iterator<UpdatedFlags> run() throws MailboxException {
-                return messageMapper.updateFlags(mailbox, flagsUpdateCalculator, set);
-            }
-        });
+        Iterator<UpdatedFlags> data = messageMapper.execute(
+            () -> messageMapper.updateFlags(mailbox, flagsUpdateCalculator, set));
         return data;
     }
 
     @Override
     public MessageMetaData copy(final Mailbox mailbox, final MailboxMessage original) throws MailboxException {
-        MessageMetaData data = messageMapper.execute(new Transaction<MessageMetaData>() {
-            @Override
-            public MessageMetaData run() throws MailboxException {
-                return messageMapper.copy(mailbox, original);
-            }
-        });
+        MessageMetaData data = messageMapper.execute(
+            () -> messageMapper.copy(mailbox, original));
         return data;
     }
 

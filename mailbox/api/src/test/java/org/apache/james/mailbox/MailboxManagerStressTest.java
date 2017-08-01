@@ -93,37 +93,34 @@ public abstract class MailboxManagerStressTest {
 
         // fire of 1000 append operations
         for (int i = 0; i < APPEND_OPERATIONS; i++) {
-            pool.execute(new Runnable() {
-
-                public void run() {
-                    if (fail.get()) {
-                        latch.countDown();
-                        return;
-                    }
-
-
-                    try {
-                        MailboxSession session = mailboxManager.createSystemSession(username, LoggerFactory.getLogger("Test"));
-
-                        mailboxManager.startProcessingRequest(session);
-                        MessageManager m = mailboxManager.getMailbox(path, session);
-                        ComposedMessageId messageId = m.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), session, false, new Flags());
-
-                        System.out.println("Append message with uid=" + messageId.getUid());
-                        if (uids.put(messageId.getUid(), new Object()) != null) {
-                            fail.set(true);
-                        }
-                        mailboxManager.endProcessingRequest(session);
-                        mailboxManager.logout(session, false);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        fail.set(true);
-                    } finally {
-                        latch.countDown();
-                    }
-
-
+            pool.execute(() -> {
+                if (fail.get()) {
+                    latch.countDown();
+                    return;
                 }
+
+
+                try {
+                    MailboxSession mailboxSession = mailboxManager.createSystemSession(username, LoggerFactory.getLogger("Test"));
+
+                    mailboxManager.startProcessingRequest(mailboxSession);
+                    MessageManager m = mailboxManager.getMailbox(path, mailboxSession);
+                    ComposedMessageId messageId = m.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, new Flags());
+
+                    System.out.println("Append message with uid=" + messageId.getUid());
+                    if (uids.put(messageId.getUid(), new Object()) != null) {
+                        fail.set(true);
+                    }
+                    mailboxManager.endProcessingRequest(mailboxSession);
+                    mailboxManager.logout(mailboxSession, false);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    fail.set(true);
+                } finally {
+                    latch.countDown();
+                }
+
+
             });
         }
 

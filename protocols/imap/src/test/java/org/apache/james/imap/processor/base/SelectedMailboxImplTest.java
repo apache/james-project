@@ -54,7 +54,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,34 +136,25 @@ public class SelectedMailboxImplTest {
     }
 
     private Answer<Iterator<MessageUid>> delayedSearchAnswer() {
-        return new Answer<Iterator<MessageUid>>() {
-            @Override
-            public Iterator<MessageUid> answer(InvocationOnMock invocation) throws Throwable {
-                Thread.sleep(1000);
-                return ImmutableList.of(MessageUid.of(1), MessageUid.of(3)).iterator();
-            }
+        return invocation -> {
+            Thread.sleep(1000);
+            return ImmutableList.of(MessageUid.of(1), MessageUid.of(3)).iterator();
         };
     }
 
     private Answer<Iterator<MessageUid>> generateEmitEventAnswer(final AtomicInteger success) {
-        return new Answer<Iterator<MessageUid>>() {
-            @Override
-            public Iterator<MessageUid> answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                final MailboxListener mailboxListener = (MailboxListener) args[1];
-                executorService.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            emitEvent(mailboxListener);
-                            success.incrementAndGet();
-                        } catch (Exception e) {
-                            LOGGER.error("Error while processing event on a concurrent thread", e);
-                        }
-                    }
-                });
-                return null;
-            }
+        return invocation -> {
+            Object[] args = invocation.getArguments();
+            final MailboxListener mailboxListener = (MailboxListener) args[1];
+            executorService.submit(() -> {
+                try {
+                    emitEvent(mailboxListener);
+                    success.incrementAndGet();
+                } catch (Exception e) {
+                    LOGGER.error("Error while processing event on a concurrent thread", e);
+                }
+            });
+            return null;
         };
     }
 

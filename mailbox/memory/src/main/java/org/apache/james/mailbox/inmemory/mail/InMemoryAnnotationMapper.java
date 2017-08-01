@@ -20,8 +20,6 @@
 package org.apache.james.mailbox.inmemory.mail;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -34,7 +32,6 @@ import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
@@ -65,12 +62,7 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
         try {
             return Iterables.transform(
                 mailboxesAnnotations.row(mailboxId).entrySet(),
-                new Function<Map.Entry<String, String>, MailboxAnnotation>() {
-                    @Override
-                    public MailboxAnnotation apply(Entry<String, String> input) {
-                        return MailboxAnnotation.newInstance(new MailboxAnnotationKey(input.getKey()), input.getValue());
-                    }
-                });
+                input -> MailboxAnnotation.newInstance(new MailboxAnnotationKey(input.getKey()), input.getValue()));
         } finally {
             lock.readLock().unlock();
         }
@@ -85,12 +77,7 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
     public List<MailboxAnnotation> getAnnotationsByKeys(MailboxId mailboxId, final Set<MailboxAnnotationKey> keys) {
         return ImmutableList.copyOf(
             Iterables.filter(retrieveAllAnnotations((InMemoryId)mailboxId),
-                new Predicate<MailboxAnnotation>() {
-                    @Override
-                    public boolean apply(MailboxAnnotation input) {
-                        return keys.contains(input.getKey());
-                    }
-            }));
+                input -> keys.contains(input.getKey())));
     }
 
     @Override
@@ -104,39 +91,19 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
     }
 
     private Predicate<MailboxAnnotation> getPredicateFilterByAll(final Set<MailboxAnnotationKey> keys) {
-        return new Predicate<MailboxAnnotation>() {
-            @Override
-            public boolean apply(final MailboxAnnotation input) {
-                return Iterables.tryFind(keys, filterAnnotationsByPrefix(input)).isPresent();
-            }
-        };
+        return input -> Iterables.tryFind(keys, filterAnnotationsByPrefix(input)).isPresent();
     }
 
     private Predicate<MailboxAnnotation> getPredicateFilterByOne(final Set<MailboxAnnotationKey> keys) {
-        return new Predicate<MailboxAnnotation>() {
-            @Override
-            public boolean apply(final MailboxAnnotation input) {
-                return Iterables.tryFind(keys, filterAnnotationsByParentKey(input.getKey())).isPresent();
-            }
-        };
+        return input -> Iterables.tryFind(keys, filterAnnotationsByParentKey(input.getKey())).isPresent();
     }
 
     private Predicate<MailboxAnnotationKey> filterAnnotationsByParentKey(final MailboxAnnotationKey input) {
-        return new Predicate<MailboxAnnotationKey>() {
-            @Override
-            public boolean apply(MailboxAnnotationKey key) {
-                return input.countComponents() <= (key.countComponents() + 1);
-            }
-        };
+        return key -> input.countComponents() <= (key.countComponents() + 1);
     }
 
     private Predicate<MailboxAnnotationKey> filterAnnotationsByPrefix(final MailboxAnnotation input) {
-        return new Predicate<MailboxAnnotationKey>() {
-            @Override
-            public boolean apply(MailboxAnnotationKey key) {
-                return key.equals(input.getKey()) || StringUtils.startsWith(input.getKey().asString(), key.asString() + "/");
-            }
-        };
+        return key -> key.equals(input.getKey()) || StringUtils.startsWith(input.getKey().asString(), key.asString() + "/");
     }
 
     @Override

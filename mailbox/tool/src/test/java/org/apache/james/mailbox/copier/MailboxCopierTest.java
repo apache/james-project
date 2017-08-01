@@ -37,7 +37,6 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.mock.MockMailboxManager;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -54,7 +53,8 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class MailboxCopierTest {
-    
+
+    public static final boolean AUTHENTIC = true;
     /**
      * The instance for the test mailboxCopier.
      */
@@ -161,18 +161,9 @@ public class MailboxCopierTest {
         MessageParser messageParser = new MessageParser();
 
         return new StoreMailboxManager(
-            new InMemoryMailboxSessionMapperFactory(), 
-            new Authenticator() {
-                public boolean isAuthentic(String userid, CharSequence passwd) {
-                    return true;
-                }
-            },
-            new Authorizator() {
-                @Override
-                public AuthorizationState canLoginAsOtherUser(String userId, String otherUserId) {
-                    return AuthorizationState.NOT_ADMIN;
-                }
-            },
+            new InMemoryMailboxSessionMapperFactory(),
+            (userid, passwd) -> AUTHENTIC,
+            (userId, otherUserId) -> Authorizator.AuthorizationState.NOT_ADMIN,
             aclResolver,
             groupMembershipResolver,
             messageParser,

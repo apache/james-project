@@ -36,7 +36,6 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.Iterators;
 
@@ -46,12 +45,6 @@ import com.google.common.collect.Iterators;
  *
  */
 public abstract class AbstractMessageMapper extends TransactionalMapper implements MessageMapper {
-    private static final Function<MailboxMessage, MessageUid> TO_UID = new Function<MailboxMessage, MessageUid>() {
-        @Override
-        public MessageUid apply(MailboxMessage input) {
-            return input.getUid();
-        }
-    };
 
     private static final int UNLIMITED = -1;
 
@@ -159,6 +152,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
 
     @Override
     public Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) throws MailboxException {
-        return Iterators.transform(findInMailbox(mailbox, MessageRange.all(), FetchType.Metadata, UNLIMITED), TO_UID);
+        return Iterators.transform(findInMailbox(mailbox, MessageRange.all(), FetchType.Metadata, UNLIMITED),
+            MailboxMessage::getUid);
     }
 }

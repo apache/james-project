@@ -36,8 +36,6 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 public class RemoteDeliveryRunningTest {
 
@@ -59,13 +57,10 @@ public class RemoteDeliveryRunningTest {
 
     @Test
     public void remoteDeliveryShouldStart() throws Exception {
-        when(mailQueue.deQueue()).thenAnswer(new Answer<MailQueue.MailQueueItem>() {
-            @Override
-            public MailQueue.MailQueueItem answer(InvocationOnMock invocation) throws Throwable {
-                countDownLatch.countDown();
-                Thread.sleep(TimeUnit.SECONDS.toMillis(20));
-                return null;
-            }
+        when(mailQueue.deQueue()).thenAnswer(invocation -> {
+            countDownLatch.countDown();
+            Thread.sleep(TimeUnit.SECONDS.toMillis(20));
+            return null;
         });
         remoteDelivery.init(FakeMailetConfig.builder()
             .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")

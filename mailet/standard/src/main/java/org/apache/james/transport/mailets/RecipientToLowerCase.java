@@ -27,7 +27,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 
-import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 
@@ -38,22 +37,19 @@ import com.google.common.collect.FluentIterable;
  */
 public class RecipientToLowerCase extends GenericMailet{
 
-    public static final Function<MailAddress, MailAddress> TO_LOWERCASE = new Function<MailAddress, MailAddress>() {
-        @Override
-        public MailAddress apply(MailAddress input) {
-            try {
-                return new MailAddress(input.asString().toLowerCase(Locale.US));
-            } catch (AddressException e) {
-                throw Throwables.propagate(e);
-            }
-        }
-    };
-
     @Override
     public void service(Mail mail) throws MessagingException {
         mail.setRecipients(FluentIterable.from(mail.getRecipients())
-            .transform(TO_LOWERCASE)
+            .transform(this::toLowerCase)
             .toList());
+    }
+
+    private MailAddress toLowerCase(MailAddress mailAddress) {
+        try {
+            return new MailAddress(mailAddress.asString().toLowerCase(Locale.US));
+        } catch (AddressException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
 }

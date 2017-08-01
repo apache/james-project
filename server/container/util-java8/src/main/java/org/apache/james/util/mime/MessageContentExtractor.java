@@ -155,7 +155,7 @@ public class MessageContentExtractor {
 
     private Optional<String> getFirstMatchingTextBody(Multipart multipart, String mimeType, Predicate<Entity> condition) {
         Function<TextBody, Optional<String>> textBodyOptionalFunction = Throwing
-            .<TextBody, Optional<String>>function(textBody ->  asString(textBody)).sneakyThrow();
+            .function(this::asString).sneakyThrow();
 
         return multipart.getBodyParts()
             .stream()

@@ -26,7 +26,6 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.james.protocols.api.future.FutureResponse;
-import org.apache.james.protocols.api.future.FutureResponse.ResponseListener;
 
 
 /**
@@ -113,14 +112,12 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport{
         return !(response instanceof FutureResponse) || ((FutureResponse) response).isReady();
     }
     
-    private void addDequeuerListener(Response response, final ProtocolSession session) {
-        ((FutureResponse) response).addListener(new ResponseListener() {
-                
-            public void onResponse(FutureResponse response) {
+    private void addDequeuerListener(Response responseFuture, final ProtocolSession session) {
+        ((FutureResponse) responseFuture).addListener(
+            response -> {
                 writeResponseToClient(response, session);
                 writeQueuedResponses(session);
-            }
-        });
+            });
     }
     
     /**

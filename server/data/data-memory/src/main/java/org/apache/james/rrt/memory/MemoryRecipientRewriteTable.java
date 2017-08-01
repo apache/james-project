@@ -29,10 +29,8 @@ import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -124,39 +122,26 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
             return null;
         }
         Map<String, Collection<Mappings>> userMappingsMap = Multimaps.transformEntries(
-            Multimaps.index(mappingEntries, new Function<InMemoryMappingEntry, String>() {
-                public String apply(InMemoryMappingEntry mappingEntry) {
-                    return mappingEntry.asKey();
-                }
-            }), new Maps.EntryTransformer<String, InMemoryMappingEntry, Mappings>() {
-                public Mappings transformEntry(String s, InMemoryMappingEntry mappingEntry) {
-                    return MappingsImpl.fromRawString(mappingEntry.getMapping());
-                }
-            }).asMap();
-        return Maps.transformEntries(userMappingsMap, new Maps.EntryTransformer<String, Collection<Mappings>, Mappings>() {
-            public Mappings transformEntry(String s, Collection<Mappings> mappingsList) {
+            Multimaps.index(mappingEntries, InMemoryMappingEntry::asKey),
+            (Maps.EntryTransformer<String, InMemoryMappingEntry, Mappings>)
+                (s, mappingEntry) -> MappingsImpl.fromRawString(mappingEntry.getMapping()))
+            .asMap();
+        return Maps.transformEntries(userMappingsMap,
+            (s, mappingsList) -> {
                 Mappings result = MappingsImpl.empty();
                 for (Mappings mappings : mappingsList) {
                     result = result.union(mappings);
                 }
                 return result;
-            }
-        });
+            });
     }
 
     private Optional<Mappings> retrieveMappings(final String user, final String domain) {
         List<String> userEntries = Lists.newArrayList(
             Iterables.transform(
-                Iterables.filter(mappingEntries, new Predicate<InMemoryMappingEntry>() {
-                    public boolean apply(InMemoryMappingEntry mappingEntry) {
-                        return user.equals(mappingEntry.getUser()) && domain.equals(mappingEntry.getDomain());
-                    }
-                }), new Function<InMemoryMappingEntry, String>() {
-                    @Override
-                    public String apply(InMemoryMappingEntry mappingEntry) {
-                        return mappingEntry.getMapping();
-                    }
-                }));
+                Iterables.filter(mappingEntries,
+                    mappingEntry -> user.equals(mappingEntry.getUser()) && domain.equals(mappingEntry.getDomain())),
+                InMemoryMappingEntry::getMapping));
         return MappingsImpl.fromCollection(userEntries).toOptional();
     }
 

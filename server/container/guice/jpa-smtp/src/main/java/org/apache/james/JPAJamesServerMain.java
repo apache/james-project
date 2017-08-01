@@ -47,7 +47,7 @@ public class JPAJamesServerMain {
     
     public static final Module jpaServerModule = Modules.combine(
         new JPADataModule(),
-        (binder) -> binder.bind(EntityManagerFactory.class).toProvider(() -> OpenJPAPersistence.getEntityManagerFactory()),
+        (binder) -> binder.bind(EntityManagerFactory.class).toProvider(OpenJPAPersistence::getEntityManagerFactory),
         new ActiveMQQueueModule(),
         new RawPostDequeueDecoratorModule());
 

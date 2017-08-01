@@ -38,7 +38,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -48,7 +47,6 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.assertj.core.api.iterable.Extractor;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
@@ -199,12 +197,8 @@ public class StoreMailboxMessageResultIteratorTest {
         BatchSizes batchSize = BatchSizes.uniqueBatchSize(3);
         StoreMessageResultIterator it = new StoreMessageResultIterator(new TestMessageMapper(MessageRange.all()), null, range, batchSize, new TestFetchGroup());
 
-        assertThat(it).extracting(new Extractor<MessageResult, Long>(){
-            @Override
-            public Long extract(MessageResult input) {
-                return input.getUid().asLong();
-            }
-        }).containsExactly(1l, 2l, 3l, 4l, 5l, 6l, 7l, 8l, 9l, 10l);
+        assertThat(it).extracting(input -> input.getUid().asLong())
+            .containsExactly(1l, 2l, 3l, 4l, 5l, 6l, 7l, 8l, 9l, 10l);
     }
 
     @Test

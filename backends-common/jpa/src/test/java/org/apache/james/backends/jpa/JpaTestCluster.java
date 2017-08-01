@@ -27,7 +27,6 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.openjpa.persistence.OpenJPAPersistence;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -52,18 +51,9 @@ public class JpaTestCluster {
         properties.put("openjpa.MetaDataFactory", "jpa(Types=" +
             Joiner.on(";").join(
                 FluentIterable.from(clazz)
-                    .transform(toFQDN()))
+                    .transform(Class::getName))
             + ")");
         return new JpaTestCluster(OpenJPAPersistence.getEntityManagerFactory(properties));
-    }
-
-    private static Function<Class<?>, String> toFQDN() {
-        return new Function<Class<?>, String>() {
-            @Override
-            public String apply(Class<?> input) {
-                return input.getName();
-            }
-        };
     }
 
     private final EntityManagerFactory entityManagerFactory;

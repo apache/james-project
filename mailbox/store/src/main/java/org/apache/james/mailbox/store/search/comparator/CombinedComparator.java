@@ -44,12 +44,7 @@ public class CombinedComparator implements Comparator<MailboxMessage>{
     }
 
     private static Function<Sort, Comparator<MailboxMessage>> toComparator() {
-        return new Function<Sort, Comparator<MailboxMessage>>() {
-            @Override
-            public Comparator<MailboxMessage> apply(Sort input) {
-                return optionalResverse(toComparator(input), input.isReverse());
-            }
-        };
+        return sort -> optionalResverse(toComparator(sort), sort.isReverse());
     }
 
     private static Comparator<MailboxMessage> toComparator(Sort sort) {

@@ -69,7 +69,7 @@ public class CassandraStepdefs {
 
     @After
     public void tearDown() {
-        ignoreFailures(() -> mainStepdefs.tearDown(),
+        ignoreFailures(mainStepdefs::tearDown,
                 () -> embeddedElasticSearch.after(),
                 () -> temporaryFolder.delete());
     }

@@ -50,7 +50,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -728,23 +727,20 @@ public class POP3ServerTest {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
-        mailboxManager = new StoreMailboxManager(factory, new Authenticator() {
-    
-            @Override
-            public boolean isAuthentic(String userid, CharSequence passwd) {
-                try {
-                    return usersRepository.test(userid, passwd.toString());
-                } catch (UsersRepositoryException e) {
-                    e.printStackTrace();
-                    return false;
-                }
+        mailboxManager = new StoreMailboxManager(factory, (userid, passwd) -> {
+            try {
+                return usersRepository.test(userid, passwd.toString());
+            } catch (UsersRepositoryException e) {
+                e.printStackTrace();
+                return false;
             }
-        }, new Authorizator() {
-            @Override
-            public AuthorizationState canLoginAsOtherUser(String userId, String otherUserId) {
-                return AuthorizationState.NOT_ADMIN;
-            }
-        }, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory(), MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+        }, (userId, otherUserId) -> Authorizator.AuthorizationState.NOT_ADMIN,
+            aclResolver,
+            groupMembershipResolver,
+            messageParser,
+            new DefaultMessageId.Factory(),
+            MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
+            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
         mailboxManager.init();
 
         protocolHandlerChain.put("mailboxmanager", MailboxManager.class, mailboxManager);

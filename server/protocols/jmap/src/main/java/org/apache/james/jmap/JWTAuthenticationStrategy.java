@@ -69,7 +69,7 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
 
         return mailboxSessionStream
                 .findFirst()
-                .orElseThrow(() -> new NoValidAuthHeaderException());
+                .orElseThrow(NoValidAuthHeaderException::new);
     }
 
     private Stream<String> extractTokensFromAuthHeaders(Stream<String> authHeaders) {

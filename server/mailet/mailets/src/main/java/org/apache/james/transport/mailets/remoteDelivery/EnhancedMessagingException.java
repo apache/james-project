@@ -70,12 +70,7 @@ public class EnhancedMessagingException {
     }
 
     private Function<String, Boolean> startWith5() {
-        return new Function<String, Boolean>() {
-            @Override
-            public Boolean apply(String input) {
-                return input.startsWith("5");
-            }
-        };
+        return message -> message.startsWith("5");
     }
 
     private Optional<Integer> computeReturnCode() {

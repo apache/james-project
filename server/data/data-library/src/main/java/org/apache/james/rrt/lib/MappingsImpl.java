@@ -28,7 +28,6 @@ import java.util.StringTokenizer;
 
 import org.apache.james.rrt.lib.Mapping.Type;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -126,12 +125,7 @@ public class MappingsImpl implements Mappings, Serializable {
     
     @Override
     public Iterable<String> asStrings() {
-        return FluentIterable.from(mappings).transform(new Function<Mapping, String>() {
-            @Override
-            public String apply(Mapping input) {
-                return input.asString();
-            }
-        });
+        return FluentIterable.from(mappings).transform(Mapping::asString);
     }
 
     @Override
@@ -171,12 +165,7 @@ public class MappingsImpl implements Mappings, Serializable {
     }
     
     private Predicate<Mapping> hasType(final Mapping.Type type) {
-        return new Predicate<Mapping>() {
-            @Override
-            public boolean apply(Mapping input) {
-                return input.getType().equals(type);
-            }
-        };
+        return mapping -> mapping.getType().equals(type);
     }
     
     @Override

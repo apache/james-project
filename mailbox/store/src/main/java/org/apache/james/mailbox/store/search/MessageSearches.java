@@ -70,7 +70,6 @@ import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.mime4j.utils.search.MessageMatcher;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -123,15 +122,10 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         List<MailboxMessage> sortedResults = FluentIterable.from(builder.build())
             .toSortedList(CombinedComparator.create(query.getSorts()));
         return FluentIterable.from(sortedResults)
-            .transform(new Function<MailboxMessage, SimpleMessageSearchIndex.SearchResult>() {
-                @Override
-                public SimpleMessageSearchIndex.SearchResult apply(MailboxMessage input) {
-                    return new SimpleMessageSearchIndex.SearchResult(
-                        Optional.of(input.getMessageId()),
-                        input.getMailboxId(),
-                        input.getUid());
-                }
-            })
+            .transform(mailboxMessage -> new SimpleMessageSearchIndex.SearchResult(
+                Optional.of(mailboxMessage.getMessageId()),
+                mailboxMessage.getMailboxId(),
+                mailboxMessage.getUid()))
             .iterator();
     }
 

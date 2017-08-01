@@ -28,7 +28,6 @@ import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
-import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
@@ -43,13 +42,7 @@ public class MailSpoolTest {
     public void setup() {
         myQueue = new MyQueue();
 
-        mailSpool = new MailSpool(new MailQueueFactory() {
-
-            @Override
-            public MailQueue getQueue(String name) {
-                return myQueue;
-            }
-        });
+        mailSpool = new MailSpool(name -> myQueue);
     }
 
     @Test

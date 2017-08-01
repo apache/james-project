@@ -159,7 +159,7 @@ public class GetMessagesMethodStepdefs {
 
     private String serialize(Optional<Map<String,String>> headers) {
         return headers
-                .map(map -> map.entrySet())
+                .map(Map::entrySet)
                 .map(entriesToString())
                 .orElse("");
     }

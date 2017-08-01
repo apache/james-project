@@ -84,7 +84,7 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
         return Integer.valueOf(
                 Arrays.stream(bindings)
                     .filter(DockerCassandraRule::isBindingToEveryThing)
-                    .map(binding -> binding.getHostPortSpec())
+                    .map(Ports.Binding::getHostPortSpec)
                     .findFirst().get());
     }
 

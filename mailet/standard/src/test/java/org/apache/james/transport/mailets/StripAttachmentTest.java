@@ -54,7 +54,6 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 
 public class StripAttachmentTest {
@@ -239,13 +238,7 @@ public class StripAttachmentTest {
 
     private String retrieveFilenameStartingWith(Collection<String> savedAttachments, final String filename) {
         return FluentIterable.from(savedAttachments)
-                .filter(new Predicate<String>() {
-
-                    @Override
-                    public boolean apply(String attachmentFilename) {
-                        return attachmentFilename.startsWith(filename);
-                    }
-                })
+                .filter(attachmentFilename -> attachmentFilename.startsWith(filename))
                 .first()
                 .get();
     }

@@ -69,20 +69,17 @@ public abstract class LifeCycleModule extends AbstractModule {
         bindListener(typeMatcher, new AbstractMethodTypeListener(annotations) {
             @Override
             protected <I> void hear(final Method method, TypeLiteral<I> parentType, TypeEncounter<I> encounter, final Class<? extends Annotation> annotationType) {
-                encounter.register(new InjectionListener<I>() {
-                    @Override
-                    public void afterInjection(I injectee) {
-                        try {
-                            method.invoke(injectee);
-                        } catch (IllegalArgumentException e) {
-                            // should not happen, anyway...
-                            throw new ProvisionException(format("Method @%s %s requires arguments", annotationType.getName(), method), e);
-                        } catch (IllegalAccessException e) {
-                            throw new ProvisionException(format("Impossible to access to @%s %s on %s", annotationType.getName(), method, injectee), e);
-                        } catch (InvocationTargetException e) {
-                            throw new ProvisionException(
-                                format("An error occurred while invoking @%s %s on %s", annotationType.getName(), method, injectee), e.getCause());
-                        }
+                encounter.register((InjectionListener<I>) injectee -> {
+                    try {
+                        method.invoke(injectee);
+                    } catch (IllegalArgumentException e) {
+                        // should not happen, anyway...
+                        throw new ProvisionException(format("Method @%s %s requires arguments", annotationType.getName(), method), e);
+                    } catch (IllegalAccessException e) {
+                        throw new ProvisionException(String.format("Impossible to access to @%s %s on %s", annotationType.getName(), method, injectee), e);
+                    } catch (InvocationTargetException e) {
+                        throw new ProvisionException(
+                            String.format("An error occurred while invoking @%s %s on %s", annotationType.getName(), method, injectee), e.getCause());
                     }
                 });
             }

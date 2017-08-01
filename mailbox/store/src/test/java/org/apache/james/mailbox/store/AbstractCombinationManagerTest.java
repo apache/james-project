@@ -474,12 +474,7 @@ public abstract class AbstractCombinationManagerTest {
     }
 
     private Predicate<MessageResult> messageInMailbox2() {
-        return new Predicate<MessageResult>() {
-            @Override
-            public boolean apply(MessageResult input) {
-                return input.getMailboxId().equals(mailbox2.getMailboxId());
-            }
-        };
+        return messageResult -> messageResult.getMailboxId().equals(mailbox2.getMailboxId());
     }
 
 }

@@ -120,7 +120,6 @@ import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.Version;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -465,12 +464,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             .build();
 
         return FluentIterable.from(searchMultimap(multimailboxesSearchQuery, session))
-            .transform(new Function<SearchResult, MessageUid>() {
-                @Override
-                public MessageUid apply(SearchResult input) {
-                    return input.getMessageUid();
-                }
-            })
+            .transform(SearchResult::getMessageUid)
             .iterator();
     }
 
@@ -478,12 +472,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     public List<MessageId> search(MailboxSession session, MultimailboxesSearchQuery searchQuery, long limit) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         return FluentIterable.from(searchMultimap(searchQuery, session))
-            .transform(new Function<SearchResult, MessageId>() {
-                @Override
-                public MessageId apply(SearchResult input) {
-                    return input.getMessageId().get();
-                }
-            })
+            .transform(searchResult -> searchResult.getMessageId().get())
             .filter(SearchUtil.distinct())
             .limit(Long.valueOf(limit).intValue())
             .toList();

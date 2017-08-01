@@ -373,14 +373,11 @@ public class UidMsnConverterTest {
 
         int threadCount = 2;
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, initialCount,
-            new ConcurrentTestRunner.BiConsumer() {
-                @Override
-                public void consume(int threadNumber, int step) throws Exception {
-                    if (threadNumber == 0) {
-                        testee.remove(MessageUid.of(step + 1));
-                    } else {
-                        testee.addUid(MessageUid.of(initialCount + step + 1));
-                    }
+            (threadNumber, step) -> {
+                if (threadNumber == 0) {
+                    testee.remove(MessageUid.of(step + 1));
+                } else {
+                    testee.addUid(MessageUid.of(initialCount + step + 1));
                 }
             });
         concurrentTestRunner.run();
@@ -400,12 +397,7 @@ public class UidMsnConverterTest {
         int threadCount = 2;
 
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            new ConcurrentTestRunner.BiConsumer() {
-                @Override
-                public void consume(int threadNumber, int step) throws Exception {
-                    testee.addUid(MessageUid.of((threadNumber * operationCount) + (step + 1)));
-                }
-            });
+            (threadNumber, step) -> testee.addUid(MessageUid.of((threadNumber * operationCount) + (step + 1))));
         concurrentTestRunner.run();
         concurrentTestRunner.awaitTermination(10, TimeUnit.SECONDS);
 
@@ -426,12 +418,7 @@ public class UidMsnConverterTest {
         }
 
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            new ConcurrentTestRunner.BiConsumer() {
-                @Override
-                public void consume(int threadNumber, int step) throws Exception {
-                    testee.remove(MessageUid.of((threadNumber * operationCount) + (step + 1)));
-                }
-            });
+            (threadNumber, step) -> testee.remove(MessageUid.of((threadNumber * operationCount) + (step + 1))));
         concurrentTestRunner.run();
         concurrentTestRunner.awaitTermination(10, TimeUnit.SECONDS);
 

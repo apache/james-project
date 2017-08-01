@@ -39,7 +39,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 
-import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -69,17 +68,6 @@ import com.google.common.collect.ImmutableList;
  */
 @Experimental
 public class UseHeaderRecipients extends GenericMailet {
-
-    public static final Function<Mailbox, MailAddress> TO_MAIL_ADDRESS = new Function<Mailbox, MailAddress>() {
-        @Override
-        public MailAddress apply(Mailbox input) {
-            try {
-                return new MailAddress(input.getAddress());
-            } catch (AddressException e) {
-                throw Throwables.propagate(e);
-            }
-        }
-    };
 
     /**
      * Controls certain log messages
@@ -190,8 +178,16 @@ public class UseHeaderRecipients extends GenericMailet {
         }
 
         return FluentIterable.from(mailboxList.build())
-            .transform(TO_MAIL_ADDRESS)
+            .transform(this::toMailAddress)
             .toList();
+    }
+
+    private MailAddress toMailAddress(Mailbox mailbox) {
+        try {
+            return new MailAddress(mailbox.getAddress());
+        } catch (AddressException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     private Collection<Mailbox> convertAddressToMailboxCollection(Address address) {

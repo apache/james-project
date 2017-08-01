@@ -74,11 +74,7 @@ public class SetAnnotationCommandParser extends AbstractImapCommandParser {
     }
 
     private Function<String, MailboxAnnotation> transforMailboxAnnotation(final String key) {
-        return new Function<String, MailboxAnnotation>() {
-            public MailboxAnnotation apply(String value) {
-                return MailboxAnnotation.newInstance(createAnnotationKey(key), value);
-            }
-        };
+        return value -> MailboxAnnotation.newInstance(createAnnotationKey(key), value);
     }
 
     private MailboxAnnotationKey createAnnotationKey(String key) {

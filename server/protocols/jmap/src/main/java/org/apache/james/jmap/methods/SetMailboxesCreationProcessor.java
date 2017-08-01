@@ -77,7 +77,7 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
         this.metricFactory = metricFactory;
         this.sortingHierarchicalCollections =
             new SortingHierarchicalCollections<>(
-                x -> x.getKey(),
+                Map.Entry::getKey,
                 x -> x.getValue().getParentId());
         this.mailboxFactory = mailboxFactory;
         this.mailboxIdFactory = mailboxIdFactory;

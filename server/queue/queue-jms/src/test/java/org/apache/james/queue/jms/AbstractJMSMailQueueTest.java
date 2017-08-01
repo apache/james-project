@@ -167,19 +167,15 @@ public abstract class AbstractJMSMailQueueTest {
 
         assertEquals(1, queue.getSize());
 
-        Thread flushThread = new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    // wait for 2 seconds then flush the queue
-                    TimeUnit.MILLISECONDS.sleep(4000);
-                    assertEquals(1, queue.flush());
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-
+        Thread flushThread = new Thread(() -> {
+            try {
+                // wait for 2 seconds then flush the queue
+                TimeUnit.MILLISECONDS.sleep(4000);
+                assertEquals(1, queue.flush());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
+
         });
         flushThread.start();
 

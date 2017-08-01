@@ -31,13 +31,9 @@ import org.junit.rules.ExpectedException;
 
 public class ConcurrentTestRunnerTest {
 
-    public static final ConcurrentTestRunner.BiConsumer EMPTY_BI_CONSUMER = new ConcurrentTestRunner.BiConsumer() {
-        @Override
-        public void consume(int threadNumber, int step) throws Exception {
-
-        }
-    };
+    public static final ConcurrentTestRunner.BiConsumer EMPTY_BI_CONSUMER = (threadNumber, step) -> {};
     public static final int DEFAULT_AWAIT_TIME = 100;
+
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
@@ -104,12 +100,7 @@ public class ConcurrentTestRunnerTest {
         final int sleepDelay = 50;
 
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            new ConcurrentTestRunner.BiConsumer() {
-            @Override
-            public void consume(int threadNumber, int step) throws Exception {
-                Thread.sleep(sleepDelay);
-            }
-        })
+            (threadNumber, step) -> Thread.sleep(sleepDelay))
             .run();
 
         assertThat(concurrentTestRunner.awaitTermination(sleepDelay / 2, TimeUnit.MILLISECONDS)).isFalse();
@@ -122,12 +113,7 @@ public class ConcurrentTestRunnerTest {
         final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<String>();
 
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            new ConcurrentTestRunner.BiConsumer() {
-                @Override
-                public void consume(int threadNumber, int step) throws Exception {
-                    queue.add(threadNumber + ":" + step);
-                }
-            })
+            (threadNumber, step) -> queue.add(threadNumber + ":" + step))
             .run();
 
         assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
@@ -140,11 +126,8 @@ public class ConcurrentTestRunnerTest {
         int threadCount = 2;
 
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            new ConcurrentTestRunner.BiConsumer() {
-                @Override
-                public void consume(int threadNumber, int step) throws Exception {
-                    throw new RuntimeException();
-                }
+            (threadNumber, step) -> {
+                throw new RuntimeException();
             })
             .run();
 
@@ -156,13 +139,7 @@ public class ConcurrentTestRunnerTest {
         int operationCount = 2;
         int threadCount = 2;
 
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            new ConcurrentTestRunner.BiConsumer() {
-                @Override
-                public void consume(int threadNumber, int step) throws Exception {
-
-                }
-            })
+        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount, EMPTY_BI_CONSUMER)
             .run();
 
         concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS);
@@ -176,11 +153,8 @@ public class ConcurrentTestRunnerTest {
         int threadCount = 2;
 
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            new ConcurrentTestRunner.BiConsumer() {
-                @Override
-                public void consume(int threadNumber, int step) throws Exception {
-                    throw new RuntimeException();
-                }
+            (threadNumber, step) -> {
+                throw new RuntimeException();
             })
             .run();
         concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS);
@@ -196,12 +170,9 @@ public class ConcurrentTestRunnerTest {
         final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<String>();
 
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            new ConcurrentTestRunner.BiConsumer() {
-                @Override
-                public void consume(int threadNumber, int step) throws Exception {
-                    queue.add(threadNumber + ":" + step);
-                    throw new RuntimeException();
-                }
+            (threadNumber, step) -> {
+                queue.add(threadNumber + ":" + step);
+                throw new RuntimeException();
             })
             .run();
 
@@ -216,13 +187,10 @@ public class ConcurrentTestRunnerTest {
         final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<String>();
 
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            new ConcurrentTestRunner.BiConsumer() {
-                @Override
-                public void consume(int threadNumber, int step) throws Exception {
-                    queue.add(threadNumber + ":" + step);
-                    if ((threadNumber + step) % 2 == 0) {
-                        throw new RuntimeException();
-                    }
+            (threadNumber, step) -> {
+                queue.add(threadNumber + ":" + step);
+                if ((threadNumber + step) % 2 == 0) {
+                    throw new RuntimeException();
                 }
             })
             .run();

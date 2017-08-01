@@ -59,7 +59,7 @@ public class QueryParameterAccessTokenAuthenticationStrategy implements Authenti
             .filter(tokenManager::isValid)
             .map(AttachmentAccessToken::getUsername)
             .map(this::createSystemSession)
-            .orElseThrow(() -> new UnauthorizedException());
+            .orElseThrow(UnauthorizedException::new);
     }
 
     private MailboxSession createSystemSession(String username) {

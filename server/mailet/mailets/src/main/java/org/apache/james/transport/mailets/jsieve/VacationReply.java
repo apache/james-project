@@ -19,12 +19,8 @@
 
 package org.apache.james.transport.mailets.jsieve;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import java.io.IOException;
+import java.util.List;
 
 import javax.activation.DataHandler;
 import javax.mail.MessagingException;
@@ -34,8 +30,13 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
-import java.io.IOException;
-import java.util.List;
+
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 public class VacationReply {
 
@@ -124,11 +125,9 @@ public class VacationReply {
         }
 
         private MailAddress retrieveOriginalSender() throws AddressException {
-            return Optional.fromNullable(from).transform(new Function<String, MailAddress>() {
-                public MailAddress apply(String address) {
-                    return retrieveAddressFromString(address, context);
-                }
-            }).or(context.getRecipient());
+            return Optional.fromNullable(from)
+                .transform(address -> retrieveAddressFromString(address, context))
+                .or(context.getRecipient());
         }
 
         private MailAddress retrieveAddressFromString(String address, ActionContext context) {

@@ -23,9 +23,7 @@ import javax.mail.MessagingException;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionDiscard;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 
 public class DiscardAction extends FileIntoAction implements MailAction {
@@ -39,16 +37,7 @@ public class DiscardAction extends FileIntoAction implements MailAction {
 
     public static void removeRecipient(Mail mail, ActionContext context) {
         mail.setRecipients(FluentIterable.from(mail.getRecipients())
-            .filter(isNot(context.getRecipient()))
+            .filter(mailAddress -> !mailAddress.equals(context.getRecipient()))
             .toList());
-    }
-
-    private static Predicate<MailAddress> isNot(final MailAddress recipient) {
-        return new Predicate<MailAddress>() {
-            @Override
-            public boolean apply(MailAddress input) {
-                return !input.equals(recipient);
-            }
-        };
     }
 }

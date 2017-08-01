@@ -25,7 +25,6 @@ import javax.mail.internet.InternetAddress;
 
 import org.apache.mailet.MailAddress;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 
@@ -33,12 +32,9 @@ public class InternetAddressConverter {
 
     public static InternetAddress[] convert(Collection<MailAddress> recipients) {
         Preconditions.checkNotNull(recipients);
-        return FluentIterable.from(recipients).transform(new Function<MailAddress, InternetAddress>() {
-            @Override
-            public InternetAddress apply(MailAddress input) {
-                return input.toInternetAddress();
-            }
-        }).toArray(InternetAddress.class);
+        return FluentIterable.from(recipients)
+            .transform(MailAddress::toInternetAddress)
+            .toArray(InternetAddress.class);
     }
 
 }

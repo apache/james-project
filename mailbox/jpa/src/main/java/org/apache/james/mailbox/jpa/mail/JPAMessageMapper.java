@@ -66,12 +66,6 @@ import com.google.common.collect.Iterators;
 public class JPAMessageMapper extends JPATransactionalMapper implements MessageMapper {
     private static final int UNLIMIT_MAX_SIZE = -1;
     private static final int UNLIMITED = -1;
-    private static final Function<MailboxMessage, MessageUid> TO_UID = new Function<MailboxMessage, MessageUid>() {
-        @Override
-        public MessageUid apply(MailboxMessage mailboxMessage) {
-            return mailboxMessage.getUid();
-        }
-    };
 
     private final MessageUtils messageMetadataMapper;
 
@@ -90,7 +84,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public Iterator<MessageUid> listAllMessageUids(final Mailbox mailbox) throws MailboxException {
-        return Iterators.transform(findInMailbox(mailbox, MessageRange.all(), FetchType.Full, UNLIMITED), TO_UID);
+        return Iterators.transform(findInMailbox(mailbox, MessageRange.all(), FetchType.Full, UNLIMITED), MailboxMessage::getUid);
     }
 
     /**

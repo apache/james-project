@@ -28,9 +28,7 @@ import javax.mail.internet.AddressException;
 import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
@@ -40,27 +38,20 @@ public class AddressesArrayToMailAddressListConverter {
         if (addresses == null) {
             return ImmutableList.of();
         }
-        return FluentIterable.from(Arrays.asList(addresses)).transform(new Function<Address, Optional<MailAddress>>() {
-            @Override
-            public Optional<MailAddress> apply(Address input) {
-                try {
-                    return Optional.of(new MailAddress(input.toString()));
-                } catch (AddressException e) {
-                    logger.debug("Can't parse unsent address " + input, e);
-                    return Optional.absent();
-                }
-            }
-        }).filter(new Predicate<Optional<MailAddress>>() {
-            @Override
-            public boolean apply(Optional<MailAddress> input) {
-                return input.isPresent();
-            }
-        }).transform(new Function<Optional<MailAddress>, MailAddress>() {
-            @Override
-            public MailAddress apply(Optional<MailAddress> input) {
-                return input.get();
-            }
-        }).toList();
+        return FluentIterable.from(Arrays.asList(addresses))
+            .transform(address -> toMailAddress(logger, address))
+            .filter(Optional::isPresent)
+            .transform(Optional::get)
+            .toList();
+    }
+
+    private static Optional<MailAddress> toMailAddress(Logger logger, Address address) {
+        try {
+            return Optional.of(new MailAddress(address.toString()));
+        } catch (AddressException e) {
+            logger.debug("Can't parse unsent address " + address, e);
+            return Optional.absent();
+        }
     }
 
 }

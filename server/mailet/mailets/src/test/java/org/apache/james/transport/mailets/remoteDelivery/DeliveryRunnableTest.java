@@ -51,12 +51,7 @@ public class DeliveryRunnableTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeliveryRunnableTest.class);
     public static final Date FIXED_DATE = new Date(1159599194961L);
-    public static final Supplier<Date> FIXED_DATE_SUPPLIER = new Supplier<Date>() {
-        @Override
-        public Date get() {
-            return FIXED_DATE;
-        }
-    };
+    public static final Supplier<Date> FIXED_DATE_SUPPLIER = () -> FIXED_DATE;
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();

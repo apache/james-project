@@ -39,7 +39,6 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 
@@ -99,13 +98,7 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
     private Optional<MailboxMetaData> retrieveMailbox(final MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
         MailboxQuery userMailboxesQuery = MailboxQuery.builder(mailboxSession).expression("*").build();
         return FluentIterable.from(mailboxManager.search(userMailboxesQuery, mailboxSession))
-            .filter(new Predicate<MailboxMetaData>() {
-
-                @Override
-                public boolean apply(MailboxMetaData mailboxMetaData) {
-                    return mailboxMetaData.getId().equals(mailboxId);
-                }
-            })
+            .filter(mailboxMetaData -> mailboxMetaData.getId().equals(mailboxId))
             .first();
     }
 

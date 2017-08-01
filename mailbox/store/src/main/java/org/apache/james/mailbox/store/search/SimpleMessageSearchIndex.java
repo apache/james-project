@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -32,7 +31,6 @@ import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
@@ -49,9 +47,7 @@ import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
@@ -103,8 +99,8 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     public Iterator<MessageUid> search(MailboxSession session, final Mailbox mailbox, SearchQuery query) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         return FluentIterable.from(searchResults(session, ImmutableList.of(mailbox), query))
-                .filter(isInMailbox(mailbox))
-                .transform(toMessageUid())
+                .filter(searchResult -> searchResult.getMailboxId().equals(mailbox.getMailboxId()))
+                .transform(SearchResult::getMessageUid)
                 .iterator();
     }
 
@@ -155,8 +151,9 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     public List<MessageId> search(MailboxSession session, final MultimailboxesSearchQuery searchQuery, long limit) throws MailboxException {
         List<Mailbox> allUserMailboxes = mailboxMapperFactory.getMailboxMapper(session)
                 .findMailboxWithPathLike(new MailboxPath(session.getPersonalSpace(), session.getUser().getUserName(), WILDCARD));
-        FluentIterable<Mailbox> filteredMailboxes = FluentIterable.from(allUserMailboxes)
-            .filter(notInMailboxes(searchQuery.getNotInMailboxes()));
+        FluentIterable<Mailbox> filteredMailboxes = FluentIterable
+            .from(allUserMailboxes)
+            .filter(mailbox -> !searchQuery.getNotInMailboxes().contains(mailbox.getMailboxId()));
         if (searchQuery.getInMailboxes().isEmpty()) {
             return getAsMessageIds(searchResults(session, filteredMailboxes, searchQuery.getSearchQuery()), limit);
         }
@@ -169,48 +166,12 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         return getAsMessageIds(searchResults(session, queriedMailboxes, searchQuery.getSearchQuery()), limit);
     }
 
-    private Predicate<Mailbox> notInMailboxes(final Set<MailboxId> mailboxIds) {
-        return new Predicate<Mailbox>() {
-        @Override
-        public boolean apply(Mailbox input) {
-            return !mailboxIds.contains(input.getMailboxId());
-        }
-    };
-    }
-
     private List<MessageId> getAsMessageIds(List<SearchResult> temp, long limit) {
         return FluentIterable.from(temp)
-            .transform(toMessageId())
+            .transform(searchResult -> searchResult.getMessageId().get())
             .filter(SearchUtil.distinct())
             .limit(Long.valueOf(limit).intValue())
             .toList();
-    }
-
-    private Function<SearchResult, MessageId> toMessageId() {
-        return new Function<SearchResult, MessageId>() {
-            @Override
-            public MessageId apply(SearchResult input) {
-                return input.getMessageId().get();
-            }
-        };
-    }
-
-    private Function<SearchResult, MessageUid> toMessageUid() {
-        return new Function<SearchResult, MessageUid>() {
-            @Override
-            public MessageUid apply(SearchResult input) {
-                return input.getMessageUid();
-            }
-        };
-    }
-
-    private Predicate<SearchResult> isInMailbox(final Mailbox mailbox) {
-        return new Predicate<SearchResult>() {
-            @Override
-            public boolean apply(SearchResult input) {
-                return input.getMailboxId().equals(mailbox.getMailboxId());
-            }
-        };
     }
 
 }

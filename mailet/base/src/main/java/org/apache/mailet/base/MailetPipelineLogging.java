@@ -25,32 +25,23 @@ import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 public class MailetPipelineLogging {
 
     public static void logBeginOfMailetProcess(final Mailet mailet, final Mail mail) {
         getLogger(mailet)
-        .transform(new Function<Logger, Boolean>() {
-
-            @Override
-            public Boolean apply(Logger logger) {
-                logger.debug("Entering mailet: {}\n\tmail state {}", mailet.getMailetInfo(), mail.getState());
-                return true;
-            }
+        .transform(logger -> {
+            logger.debug("Entering mailet: {}\n\tmail state {}", mailet.getMailetInfo(), mail.getState());
+            return true;
         });
     }
 
     public static void logEndOfMailetProcess(final Mailet mailet, final Mail mail) {
         getLogger(mailet)
-            .transform(new Function<Logger, Boolean>() {
-
-                @Override
-                public Boolean apply(Logger logger) {
-                    logger.debug("End of mailet: {}\n\tmail state {}", mailet.getMailetInfo(), mail.getState());
-                    return true;
-                }
+            .transform(logger -> {
+                logger.debug("End of mailet: {}\n\tmail state {}", mailet.getMailetInfo(), mail.getState());
+                return true;
             });
     }
 

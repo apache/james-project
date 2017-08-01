@@ -26,8 +26,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Iterator;
-
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -47,8 +45,6 @@ import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
@@ -74,42 +70,23 @@ public class ReIndexerImplTest {
     @Test
     public void test() throws Exception {
         final MockMailboxSession mockMailboxSession = new MockMailboxSession("re-indexing");
-        when(mailboxManager.createSystemSession(any(String.class), any(Logger.class))).thenAnswer(new Answer<MailboxSession>() {
-            @Override
-            public MailboxSession answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return mockMailboxSession;
-            }
-        });
+        when(mailboxManager.createSystemSession(any(String.class), any(Logger.class)))
+            .thenReturn(mockMailboxSession);
         final MessageMapper messageMapper = mock(MessageMapper.class);
         final MailboxMapper mailboxMapper = mock(MailboxMapper.class);
-        when(mailboxSessionMapperFactory.getMessageMapper(any(MailboxSession.class))).thenAnswer(new Answer<MessageMapper>() {
-            @Override
-            public MessageMapper answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return messageMapper;
-            }
-        });
-        when(mailboxSessionMapperFactory.getMailboxMapper(any(MailboxSession.class))).thenAnswer(new Answer<MailboxMapper>() {
-            @Override
-            public MailboxMapper answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return mailboxMapper;
-            }
-        });
+        when(mailboxSessionMapperFactory.getMessageMapper(any(MailboxSession.class)))
+            .thenReturn(messageMapper);
+        when(mailboxSessionMapperFactory.getMailboxMapper(any(MailboxSession.class)))
+            .thenReturn(mailboxMapper);
         final MailboxMessage message = new MessageBuilder().build();
         final SimpleMailbox mailbox = new SimpleMailbox(INBOX, 42);
         mailbox.setMailboxId(message.getMailboxId());
-        when(mailboxMapper.findMailboxByPath(INBOX)).thenAnswer(new Answer<Mailbox>() {
-            @Override
-            public Mailbox answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return mailbox;
-            }
-        });
-        when(messageMapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Full, LIMIT)).thenAnswer(new Answer<Iterator<MailboxMessage>>() {
-            @Override
-            public Iterator<MailboxMessage> answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return Lists.newArrayList(message).iterator();
-            }
-        });
+        when(mailboxMapper.findMailboxByPath(INBOX)).thenReturn(mailbox);
+        when(messageMapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Full, LIMIT))
+            .thenReturn(Lists.newArrayList(message).iterator());
+
         reIndexer.reIndex(INBOX);
+
         verify(mailboxManager).createSystemSession(any(String.class), any(Logger.class));
         verify(mailboxSessionMapperFactory).getMailboxMapper(mockMailboxSession);
         verify(mailboxSessionMapperFactory).getMessageMapper(mockMailboxSession);

@@ -680,15 +680,11 @@ public abstract class MessageIdMapperTest {
 
         int threadCount = 2;
         int updateCount = 10;
-        assertThat(new ConcurrentTestRunner(threadCount, updateCount, new ConcurrentTestRunner.BiConsumer() {
-            @Override
-            public void consume(int threadNumber, int step) throws Exception {
-                sut.setFlags(message1.getMessageId(),
-                    ImmutableList.of(message1.getMailboxId()),
-                    new Flags("custom-" + threadNumber + "-" + step),
-                    FlagsUpdateMode.ADD);
-            }
-        }).run()
+        assertThat(new ConcurrentTestRunner(threadCount, updateCount,
+            (threadNumber, step) -> sut.setFlags(message1.getMessageId(),
+                ImmutableList.of(message1.getMailboxId()),
+                new Flags("custom-" + threadNumber + "-" + step),
+                FlagsUpdateMode.ADD)).run()
             .awaitTermination(1, TimeUnit.MINUTES))
             .isTrue();
 
@@ -705,9 +701,8 @@ public abstract class MessageIdMapperTest {
 
         final int threadCount = 4;
         final int updateCount = 20;
-        assertThat(new ConcurrentTestRunner(threadCount, updateCount, new ConcurrentTestRunner.BiConsumer() {
-            @Override
-            public void consume(int threadNumber, int step) throws Exception {
+        assertThat(new ConcurrentTestRunner(threadCount, updateCount,
+            (threadNumber, step) -> {
                 if (step  < updateCount / 2) {
                     sut.setFlags(message1.getMessageId(),
                         ImmutableList.of(message1.getMailboxId()),
@@ -719,8 +714,7 @@ public abstract class MessageIdMapperTest {
                         new Flags("custom-" + threadNumber + "-" + (updateCount - step - 1)),
                         FlagsUpdateMode.REMOVE);
                 }
-            }
-        }).run()
+            }).run()
             .awaitTermination(1, TimeUnit.MINUTES))
             .isTrue();
 

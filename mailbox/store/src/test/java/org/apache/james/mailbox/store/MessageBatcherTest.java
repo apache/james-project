@@ -21,8 +21,6 @@ package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
-
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
@@ -32,12 +30,10 @@ import com.google.common.collect.Lists;
 
 public class MessageBatcherTest {
 
-    private MessageBatcher.BatchedOperation incrementBatcher = new MessageBatcher.BatchedOperation() {
-        @Override
-        public List<MessageRange> execute(MessageRange messageRange) throws MailboxException {
-            return Lists.<MessageRange>newArrayList(MessageRange.range(messageRange.getUidFrom().next(), messageRange.getUidTo().next()));
-        }
-    };
+    private MessageBatcher.BatchedOperation incrementBatcher =
+        messageRange -> Lists.<MessageRange>newArrayList(MessageRange.range(
+            messageRange.getUidFrom().next(),
+            messageRange.getUidTo().next()));
 
     @Test
     public void batchMessagesShouldWorkOnSingleRangeMode() throws Exception {
@@ -59,11 +55,10 @@ public class MessageBatcherTest {
     public void batchMessagesShouldPropagateExceptions() throws Exception {
         MessageBatcher messageBatcher = new MessageBatcher(0);
 
-        messageBatcher.batchMessages(MessageRange.range(MessageUid.of(1), MessageUid.of(10)), new MessageBatcher.BatchedOperation() {
-            public List<MessageRange> execute(MessageRange messageRange) throws MailboxException {
+        messageBatcher.batchMessages(MessageRange.range(MessageUid.of(1), MessageUid.of(10)),
+            messageRange -> {
                 throw new MailboxException();
-            }
-        });
+            });
     }
 
     @Test(expected = IllegalArgumentException.class)

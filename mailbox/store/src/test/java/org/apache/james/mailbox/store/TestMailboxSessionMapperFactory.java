@@ -171,7 +171,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
             public List<MailboxId> findMailboxes(final MessageId messageId) {
                 return FluentIterable.from(messages)
                     .filter(withMessageId(messageId))
-                    .transform(toMailboxId())
+                    .transform(MailboxMessage::getMailboxId)
                     .toList();
             }
 
@@ -291,73 +291,36 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
         messages.clear();
     }
 
-    private Function<MailboxMessage, MailboxId> toMailboxId() {
-        return new Function<MailboxMessage, MailboxId>() {
-            @Override
-            public MailboxId apply(MailboxMessage input) {
-                return input.getMailboxId();
-            }
-        };
-    }
-
     private Predicate<MailboxMessage> withMessageIdOneOf(final List<MessageId> messageIds) {
-        return new Predicate<MailboxMessage>() {
-            @Override
-            public boolean apply(MailboxMessage input) {
-                return messageIds.contains(input.getMessageId());
-            }
-        };
+        return mailboxMessage -> messageIds.contains(mailboxMessage.getMessageId());
     }
 
     private Predicate<MailboxMessage> inMailbox(final MessageId messageId) {
-        return new Predicate<MailboxMessage>() {
-            @Override
-            public boolean apply(MailboxMessage input) {
-                return input.getMailboxId().equals(messageId);
-            }
-        };
+        return mailboxMessage -> mailboxMessage.getMailboxId().equals(messageId);
     }
 
     private Predicate<MailboxMessage> inMailboxes(final List<MailboxId> mailboxIds) {
-        return new Predicate<MailboxMessage>() {
-            @Override
-            public boolean apply(MailboxMessage input) {
-                return mailboxIds.contains(input.getMailboxId());
-            }
-        };
+        return mailboxMessage -> mailboxIds.contains(mailboxMessage.getMailboxId());
     }
 
     private Predicate<MailboxMessage> withMessageId(final MessageId messageId) {
-        return new Predicate<MailboxMessage>() {
-            @Override
-            public boolean apply(MailboxMessage input) {
-                return input.getMessageId().equals(messageId);
-            }
-        };
+        return mailboxMessage -> mailboxMessage.getMessageId().equals(messageId);
     }
 
     private Predicate<Map.Entry<MailboxId, UpdatedFlags>> isChanged() {
-        return new Predicate<Map.Entry<MailboxId, UpdatedFlags>>() {
-            @Override
-            public boolean apply(Map.Entry<MailboxId, UpdatedFlags> entry) {
-                return entry.getValue().flagsChanged();
-            }
-        };
+        return entry -> entry.getValue().flagsChanged();
     }
 
     private Function<MailboxMessage, Map.Entry<MailboxId, UpdatedFlags>> toMapEntryOfUpdatedFlags(final Flags newState, final MessageManager.FlagsUpdateMode updateMode) {
-        return new Function<MailboxMessage, Map.Entry<MailboxId, UpdatedFlags>>() {
-            @Override
-            public Map.Entry<MailboxId, UpdatedFlags> apply(MailboxMessage input) {
-                Preconditions.checkState(updateMode.equals(MessageManager.FlagsUpdateMode.ADD));
-                return new AbstractMap.SimpleEntry<MailboxId, UpdatedFlags>(input.getMailboxId(),
-                    UpdatedFlags.builder()
-                        .uid(input.getUid())
-                        .modSeq(input.getModSeq())
-                        .newFlags(newState)
-                        .oldFlags(input.createFlags())
-                        .build());
-            }
+        return mailboxMessage -> {
+            Preconditions.checkState(updateMode.equals(MessageManager.FlagsUpdateMode.ADD));
+            return new AbstractMap.SimpleEntry<>(mailboxMessage.getMailboxId(),
+                UpdatedFlags.builder()
+                    .uid(mailboxMessage.getUid())
+                    .modSeq(mailboxMessage.getModSeq())
+                    .newFlags(newState)
+                    .oldFlags(mailboxMessage.createFlags())
+                    .build());
         };
     }
 }

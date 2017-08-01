@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -91,12 +90,7 @@ public class FileMailQueue implements ManageableMailQueue {
             File qDir = new File(queueDir, Integer.toString(i));
             FileUtils.forceMkdir(qDir);
 
-            String[] files = qDir.list(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(OBJECT_EXTENSION);
-                }
-            });
+            String[] files = qDir.list((dir, name) -> name.endsWith(OBJECT_EXTENSION));
 
             for (String name : files) {
 
@@ -129,16 +123,12 @@ public class FileMailQueue implements ManageableMailQueue {
 
                         // Schedule a task which will put the mail in the queue
                         // for processing after a given delay
-                        scheduler.schedule(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                try {
-                                    inmemoryQueue.put(key);
-                                } catch (InterruptedException e) {
-                                    Thread.currentThread().interrupt();
-                                    throw new RuntimeException("Unable to init", e);
-                                }
+                        scheduler.schedule(() -> {
+                            try {
+                                inmemoryQueue.put(key);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                throw new RuntimeException("Unable to init", e);
                             }
                         }, next - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
                     }
@@ -192,17 +182,13 @@ public class FileMailQueue implements ManageableMailQueue {
 
             if (delay > 0) {
                 // The message should get delayed so schedule it for later
-                scheduler.schedule(new Runnable() {
+                scheduler.schedule(() -> {
+                    try {
+                        inmemoryQueue.put(key);
 
-                    @Override
-                    public void run() {
-                        try {
-                            inmemoryQueue.put(key);
-
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            throw new RuntimeException("Unable to init", e);
-                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException("Unable to init", e);
                     }
                 }, delay, unit);
 

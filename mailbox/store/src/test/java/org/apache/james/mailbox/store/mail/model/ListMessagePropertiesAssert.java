@@ -35,12 +35,7 @@ public class ListMessagePropertiesAssert {
     }
 
     private final Function<Property, InnerProperty> propertyToInnerProperty() {
-        return new Function<Property, InnerProperty>() {
-            @Override
-            public InnerProperty apply(Property input) {
-                return new InnerProperty(input.getNamespace(), input.getLocalName(), input.getValue());
-            }
-        };
+        return property -> new InnerProperty(property.getNamespace(), property.getLocalName(), property.getValue());
     }
 
     public static ListMessagePropertiesAssert assertProperties(List<Property> actual) {

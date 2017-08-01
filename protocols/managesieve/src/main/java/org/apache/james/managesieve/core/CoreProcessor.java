@@ -20,13 +20,14 @@
 
 package org.apache.james.managesieve.core;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.james.managesieve.api.AuthenticationException;
 import org.apache.james.managesieve.api.AuthenticationProcessor;
@@ -39,7 +40,6 @@ import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.managesieve.api.UnknownSaslMechanism;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.managesieve.util.ParserUtils;
-import org.apache.james.sieverepository.api.ScriptSummary;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.DuplicateException;
 import org.apache.james.sieverepository.api.exception.IsActiveException;
@@ -49,12 +49,12 @@ import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.user.api.UsersRepository;
 
-import java.io.IOException;
-import javax.inject.Inject;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class CoreProcessor implements CoreCommands {
 
@@ -75,7 +75,7 @@ public class CoreProcessor implements CoreCommands {
         this.sieveRepository = repository;
         this.parser = parser;
         this.capabilitiesBase = precomputedCapabilitiesBase(parser);
-        this.authenticationProcessorMap = new HashMap<SupportedMechanism, AuthenticationProcessor>();
+        this.authenticationProcessorMap = new HashMap<>();
         this.authenticationProcessorMap.put(SupportedMechanism.PLAIN, new PlainAuthenticationProcessor(usersRepository));
     }
 
@@ -91,11 +91,7 @@ public class CoreProcessor implements CoreCommands {
 
     private String convertCapabilityMapToString(Map<Capabilities, String> capabilitiesStringMap) {
         return Joiner.on("\r\n").join(
-            Iterables.transform(capabilitiesStringMap.entrySet(), new Function<Map.Entry<Capabilities,String>, String>() {
-                public String apply(Map.Entry<Capabilities, String> capabilitiesStringEntry) {
-                    return computeCapabilityEntryString(capabilitiesStringEntry);
-                }
-            }));
+            Iterables.transform(capabilitiesStringMap.entrySet(), this::computeCapabilityEntryString));
     }
 
     private Map<Capabilities, String> computeCapabilityMap(Session session) {
@@ -113,21 +109,15 @@ public class CoreProcessor implements CoreCommands {
 
     @Override
     public String checkScript(final Session session, final String content) {
-        return handleCommandExecution(new CommandWrapper() {
-            public String execute() throws ManageSieveException, SieveRepositoryException {
-                authenticationCheck(session);
-                return manageWarnings(parser.parse(content));
-            }
+        return handleCommandExecution(() -> {
+            authenticationCheck(session);
+            return manageWarnings(parser.parse(content));
         }, session);
     }
 
     private String manageWarnings(List<String> warnings) {
         if (!warnings.isEmpty()) {
-            return "OK (WARNINGS) " + Joiner.on(' ').join(Iterables.transform(warnings, new Function<String, String>() {
-                public String apply(String s) {
-                    return '\"' + s + '"';
-                }
-            }));
+            return "OK (WARNINGS) " + Joiner.on(' ').join(Iterables.transform(warnings, s -> '\"' + s + '"'));
         } else {
             return "OK";
         }
@@ -135,55 +125,42 @@ public class CoreProcessor implements CoreCommands {
 
     @Override
     public String deleteScript(final Session session, final String name) {
-        return handleCommandExecution(new CommandWrapper() {
-            public String execute() throws ManageSieveException, SieveRepositoryException {
-                authenticationCheck(session);
-                sieveRepository.deleteScript(session.getUser(), name);
-                return "OK";
-            }
+        return handleCommandExecution(() -> {
+            authenticationCheck(session);
+            sieveRepository.deleteScript(session.getUser(), name);
+            return "OK";
         }, session);
     }
 
     @Override
 
     public String getScript(final Session session, final String name) {
-        return handleCommandExecution(new CommandWrapper() {
-            public String execute() throws ManageSieveException, SieveRepositoryException, IOException {
-                authenticationCheck(session);
-                String scriptContent = IOUtils.toString(sieveRepository.getScript(session.getUser(), name));
-                return "{" + scriptContent.length() + "}" + "\r\n" + scriptContent + "\r\nOK";
-            }
+        return handleCommandExecution(() -> {
+            authenticationCheck(session);
+            String scriptContent = IOUtils.toString(sieveRepository.getScript(session.getUser(), name));
+            return "{" + scriptContent.length() + "}" + "\r\n" + scriptContent + "\r\nOK";
         }, session);
     }
 
     @Override
     public String haveSpace(final Session session, final String name, final long size) {
-        return handleCommandExecution(new CommandWrapper() {
-            public String execute() throws ManageSieveException, SieveRepositoryException {
-                authenticationCheck(session);
-                sieveRepository.haveSpace(session.getUser(), name, size);
-                return "OK";
-            }
+        return handleCommandExecution(() -> {
+            authenticationCheck(session);
+            sieveRepository.haveSpace(session.getUser(), name, size);
+            return "OK";
         }, session);
     }
 
     @Override
     public String listScripts(final Session session) {
-        return handleCommandExecution(new CommandWrapper() {
-            public String execute() throws ManageSieveException, SieveRepositoryException {
-                return listScriptsInternals(session);
-            }
-        }, session);
+        return handleCommandExecution(() -> listScriptsInternals(session), session);
     }
 
     private String listScriptsInternals(Session session) throws AuthenticationRequiredException, StorageException {
         authenticationCheck(session);
         String list = Joiner.on("\r\n").join(
-            Iterables.transform(sieveRepository.listScripts(session.getUser()), new Function<ScriptSummary, String>() {
-                public String apply(ScriptSummary scriptSummary) {
-                    return '"' + scriptSummary.getName() + '"' + (scriptSummary.isActive() ? " ACTIVE" : "");
-                }
-            }));
+            Iterables.transform(sieveRepository.listScripts(session.getUser()),
+                scriptSummary -> '"' + scriptSummary.getName() + '"' + (scriptSummary.isActive() ? " ACTIVE" : "")));
         if (Strings.isNullOrEmpty(list)) {
             return "OK";
         } else {
@@ -193,34 +170,28 @@ public class CoreProcessor implements CoreCommands {
 
     @Override
     public String putScript(final Session session, final String name, final String content) {
-        return handleCommandExecution(new CommandWrapper() {
-            public String execute() throws ManageSieveException, SieveRepositoryException {
-                authenticationCheck(session);
-                sieveRepository.putScript(session.getUser(), name, content);
-                return manageWarnings(parser.parse(content));
-            }
+        return handleCommandExecution(() -> {
+            authenticationCheck(session);
+            sieveRepository.putScript(session.getUser(), name, content);
+            return manageWarnings(parser.parse(content));
         }, session);
     }
 
     @Override
     public String renameScript(final Session session, final String oldName, final String newName) {
-        return handleCommandExecution(new CommandWrapper() {
-            public String execute() throws ManageSieveException, SieveRepositoryException {
-                authenticationCheck(session);
-                sieveRepository.renameScript(session.getUser(), oldName, newName);
-                return "OK";
-            }
+        return handleCommandExecution(() -> {
+            authenticationCheck(session);
+            sieveRepository.renameScript(session.getUser(), oldName, newName);
+            return "OK";
         }, session);
     }
 
     @Override
     public String setActive(final Session session, final String name) {
-        return handleCommandExecution(new CommandWrapper() {
-            public String execute() throws ManageSieveException, SieveRepositoryException {
-                authenticationCheck(session);
-                sieveRepository.setActive(session.getUser(), name);
-                return "OK";
-            }
+        return handleCommandExecution(() -> {
+            authenticationCheck(session);
+            sieveRepository.setActive(session.getUser(), name);
+            return "OK";
         }, session);
     }
 
@@ -362,11 +333,7 @@ public class CoreProcessor implements CoreCommands {
         return Joiner.on(' ')
             .join(Lists.transform(
                 Arrays.asList(SupportedMechanism.values()),
-                new Function<SupportedMechanism, String>() {
-                    public String apply(SupportedMechanism supportedMechanism) {
-                        return supportedMechanism.toString();
-                    }
-                }));
+                Enum::toString));
     }
 
     private String sanitizeString(String message) {

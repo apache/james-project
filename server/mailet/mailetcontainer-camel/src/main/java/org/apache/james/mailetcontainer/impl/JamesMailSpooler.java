@@ -157,48 +157,44 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Log
             final MailQueueItem queueItem;
             try {
                 queueItem = queue.deQueue();
-                workerService.execute(new Runnable() {
+                workerService.execute(() -> {
+                    TimeMetric timeMetric = metricFactory.timer(SPOOL_PROCESSING);
+                    try {
+                        numActive.incrementAndGet();
 
-                    @Override
-                    public void run() {
-                        TimeMetric timeMetric = metricFactory.timer(SPOOL_PROCESSING);
-                        try {
-                            numActive.incrementAndGet();
+                        // increase count
+                        processingActive.incrementAndGet();
 
-                            // increase count
-                            processingActive.incrementAndGet();
-
-                            Mail mail = queueItem.getMail();
-                            if (logger.isDebugEnabled()) {
-                                String debugBuffer = "==== Begin processing mail " + mail.getName() + "====";
-                                logger.debug(debugBuffer);
-                            }
-
-                            try {
-                                mailProcessor.service(mail);
-                                queueItem.done(true);
-                            } catch (Exception e) {
-                                if (active.get() && logger.isErrorEnabled()) {
-                                    logger.error("Exception processing mail while spooling " + e.getMessage(), e);
-                                }
-                                queueItem.done(false);
-
-                            } finally {
-                                LifecycleUtil.dispose(mail);
-                                mail = null;
-                            }
-                        } catch (Throwable e) {
-                            if (active.get() && logger.isErrorEnabled()) {
-                                logger.error("Exception processing mail while spooling " + e.getMessage(), e);
-
-                            }
-                        } finally {
-                            processingActive.decrementAndGet();
-                            numActive.decrementAndGet();
-                            timeMetric.stopAndPublish();
+                        Mail mail = queueItem.getMail();
+                        if (logger.isDebugEnabled()) {
+                            String debugBuffer = "==== Begin processing mail " + mail.getName() + "====";
+                            logger.debug(debugBuffer);
                         }
 
+                        try {
+                            mailProcessor.service(mail);
+                            queueItem.done(true);
+                        } catch (Exception e) {
+                            if (active.get() && logger.isErrorEnabled()) {
+                                logger.error("Exception processing mail while spooling " + e.getMessage(), e);
+                            }
+                            queueItem.done(false);
+
+                        } finally {
+                            LifecycleUtil.dispose(mail);
+                            mail = null;
+                        }
+                    } catch (Throwable e) {
+                        if (active.get() && logger.isErrorEnabled()) {
+                            logger.error("Exception processing mail while spooling " + e.getMessage(), e);
+
+                        }
+                    } finally {
+                        processingActive.decrementAndGet();
+                        numActive.decrementAndGet();
+                        timeMetric.stopAndPublish();
                     }
+
                 });
             } catch (MailQueueException e1) {
                 if (active.get() && logger.isErrorEnabled()) {

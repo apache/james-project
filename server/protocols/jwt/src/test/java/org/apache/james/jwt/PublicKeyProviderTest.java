@@ -62,6 +62,6 @@ public class PublicKeyProviderTest {
 
         PublicKeyProvider sut = new PublicKeyProvider(configWithPEMKey, new PublicKeyReader());
 
-        assertThatThrownBy(() -> sut.get()).isExactlyInstanceOf(MissingOrInvalidKeyException.class);
+        assertThatThrownBy(sut::get).isExactlyInstanceOf(MissingOrInvalidKeyException.class);
     }
 }

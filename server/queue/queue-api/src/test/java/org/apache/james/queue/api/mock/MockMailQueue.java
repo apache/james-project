@@ -27,6 +27,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
 import javax.mail.MessagingException;
 
 import org.apache.commons.io.IOUtils;
@@ -108,16 +109,12 @@ public class MockMailQueue implements MailQueue {
             throw new MailQueueException("Mock");
         }
 
-        scheduler.schedule(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    queue.put(MockMailQueue.this.cloneMail(mail));
-                } catch (InterruptedException e) {
-                    log.error("", e);
-                    throw new RuntimeException("Mock", e);
-                }
+        scheduler.schedule(() -> {
+            try {
+                queue.put(MockMailQueue.this.cloneMail(mail));
+            } catch (InterruptedException e) {
+                log.error("", e);
+                throw new RuntimeException("Mock", e);
             }
         }, delay, unit);
     }

@@ -159,11 +159,7 @@ public class NetMatcher {
      */
     private void initInetNetworks(String[] nets) {
 
-        networks = new TreeSet<InetNetwork>(new Comparator<InetNetwork>() {
-            public int compare(InetNetwork in1, InetNetwork in2) {
-                return in1.toString().compareTo(in2.toString());
-            }
-        });
+        networks = new TreeSet<>(Comparator.comparing(Object::toString));
 
         final InetNetworkBuilder inetNetwork = new InetNetworkBuilder(dnsServer);
 

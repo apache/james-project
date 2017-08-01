@@ -39,12 +39,7 @@ import com.google.common.base.Supplier;
 
 public class DeliveryRunnable implements Runnable {
 
-    public static final Supplier<Date> CURRENT_DATE_SUPPLIER = new Supplier<Date>() {
-        @Override
-        public Date get() {
-            return new Date();
-        }
-    };
+    public static final Supplier<Date> CURRENT_DATE_SUPPLIER = Date::new;
     public static final AtomicBoolean DEFAULT_NOT_STARTED = new AtomicBoolean(false);
     private static final String OUTGOING_MAILS = "outgoingMails";
     public static final String REMOTE_DELIVERY_TRIAL = "RemoteDeliveryTrial";

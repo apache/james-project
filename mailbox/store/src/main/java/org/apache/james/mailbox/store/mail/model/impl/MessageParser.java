@@ -161,28 +161,19 @@ public class MessageParser {
     }
 
     private Optional<String> contentType(Optional<ContentTypeField> contentTypeField) {
-        return contentTypeField.transform(new Function<ContentTypeField, Optional<String>>() {
-            @Override
-            public Optional<String> apply(ContentTypeField field) {
-                return Optional.fromNullable(field.getMimeType());
-            }
-        }).or(Optional.<String> absent());
+        return contentTypeField.transform(field -> Optional.fromNullable(field.getMimeType()))
+            .or(Optional.<String> absent());
     }
 
     private Optional<String> name(Optional<ContentTypeField> contentTypeField) {
-        return contentTypeField.transform(new Function<ContentTypeField, Optional<String>>() {
-            @Override
-            public Optional<String> apply(ContentTypeField field) {
-                return Optional.fromNullable(field.getParameter("name"))
-                  .transform(
-                          new Function<String, String>() {
-                              public String apply(String input) {
-                                  DecodeMonitor monitor = null;
-                                  return DecoderUtil.decodeEncodedWords(input, monitor);
-                              }
-                          });
-            }
-        }).or(Optional.<String> absent());
+        return contentTypeField
+            .transform(field -> Optional.fromNullable(field.getParameter("name"))
+                .transform(
+                    fieldValue -> {
+                        DecodeMonitor monitor = null;
+                        return DecoderUtil.decodeEncodedWords(fieldValue, monitor);
+                    }))
+            .or(Optional.<String> absent());
     }
 
     private Optional<Cid> cid(Optional<ContentIdField> contentIdField) {
@@ -194,12 +185,7 @@ public class MessageParser {
     }
 
     private Function<ContentIdField, Optional<Cid>> toCid() {
-        return new Function<ContentIdField, Optional<Cid>>() {
-            @Override
-            public Optional<Cid> apply(ContentIdField input) {
-                return cidParser.parse(input.getId());
-            }
-        };
+        return contentIdField -> cidParser.parse(contentIdField.getId());
     }
 
     private boolean isMultipart(Entity entity) {
@@ -207,12 +193,8 @@ public class MessageParser {
     }
 
     private boolean isInline(Optional<ContentDispositionField> contentDispositionField) {
-        return contentDispositionField.transform(new Function<ContentDispositionField, Boolean>() {
-            @Override
-            public Boolean apply(ContentDispositionField field) {
-                return field.isInline();
-            }
-        }).or(false);
+        return contentDispositionField.transform(ContentDispositionField::isInline)
+            .or(false);
     }
 
     private boolean isAttachment(Entity part, Context context) {
@@ -220,13 +202,9 @@ public class MessageParser {
             return false;
         }
         return Optional.fromNullable(part.getDispositionType())
-                .transform(new Function<String, Boolean>() {
-
-                    @Override
-                    public Boolean apply(String dispositionType) {
-                        return ATTACHMENT_CONTENT_DISPOSITIONS.contains(dispositionType.toLowerCase(Locale.US));
-                    }
-                }).or(false);
+                .transform(dispositionType -> ATTACHMENT_CONTENT_DISPOSITIONS.contains(
+                    dispositionType.toLowerCase(Locale.US)))
+            .or(false);
     }
 
     private boolean isTextPart(Entity part) {

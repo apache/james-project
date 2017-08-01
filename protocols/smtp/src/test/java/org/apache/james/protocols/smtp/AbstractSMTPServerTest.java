@@ -106,12 +106,8 @@ public abstract class AbstractSMTPServerTest {
             final String mailContent = CharStreams.toString(new InputStreamReader(ClassLoader.getSystemResourceAsStream("a50.eml"), Charsets.US_ASCII));
             int threadCount = 4;
             int updateCount = 1;
-            assertThat(new ConcurrentTestRunner(threadCount, updateCount, new ConcurrentTestRunner.BiConsumer() {
-                @Override
-                public void consume(int threadNumber, int step) throws Exception {
-                    send(finalServer, bindedAddress, mailContent);
-                }
-            }).run()
+            assertThat(new ConcurrentTestRunner(threadCount, updateCount,
+                (threadNumber, step) -> send(finalServer, bindedAddress, mailContent)).run()
                 .awaitTermination(1, TimeUnit.MINUTES))
                 .isTrue();
 

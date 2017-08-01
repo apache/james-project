@@ -19,11 +19,12 @@
 
 package org.apache.james.mailbox.store.event;
 
-import org.apache.james.mailbox.MailboxListener;
-
-import javax.annotation.PreDestroy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import javax.annotation.PreDestroy;
+
+import org.apache.james.mailbox.MailboxListener;
 
 public class AsynchronousEventDelivery implements EventDelivery {
 
@@ -37,12 +38,7 @@ public class AsynchronousEventDelivery implements EventDelivery {
 
     @Override
     public void deliver(final MailboxListener mailboxListener, final MailboxListener.Event event) {
-        threadPoolExecutor.submit(new Runnable() {
-            @Override
-            public void run() {
-                synchronousEventDelivery.deliver(mailboxListener, event);
-            }
-        });
+        threadPoolExecutor.submit(() -> synchronousEventDelivery.deliver(mailboxListener, event));
     }
 
     @PreDestroy

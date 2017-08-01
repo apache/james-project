@@ -42,19 +42,6 @@ public class ImapConfiguration {
     }
 
     public static class Builder {
-        private static final Function<String, String> NORMALIZE_STRING = new Function<String, String>() {
-            @Override
-            public String apply(String disableCap) {
-                return StringUtils.normalizeSpace(disableCap);
-            }
-        };
-        private static final Predicate<String> NO_BLANK = new Predicate<String>() {
-            @Override
-            public boolean apply(String disableCap) {
-                return noBlankString(disableCap);
-            }
-        };
-
         private static boolean noBlankString(String disableCap) {
             return !StringUtils.isBlank(disableCap);
         }
@@ -113,8 +100,8 @@ public class ImapConfiguration {
 
         public ImapConfiguration build() {
             ImmutableSet<String> normalizeDisableCaps = FluentIterable.from(disabledCaps)
-                    .filter(NO_BLANK)
-                    .transform(NORMALIZE_STRING)
+                    .filter(Builder::noBlankString)
+                    .transform(StringUtils::normalizeSpace)
                     .toSet();
             return new ImapConfiguration(
                     enableIdle.or(DEFAULT_ENABLE_IDLE),

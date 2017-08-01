@@ -547,26 +547,23 @@ public class StoreMailboxManager implements MailboxManager {
             final List<MailboxId> mailboxIds = new ArrayList<MailboxId>();
             for (final MailboxPath mailbox : mailboxPath.getHierarchyLevels(getDelimiter()))
 
-                locker.executeWithLock(mailboxSession, mailbox, new LockAwareExecution<Void>() {
+                locker.executeWithLock(mailboxSession, mailbox, (LockAwareExecution<Void>) () -> {
+                    if (!mailboxExists(mailbox, mailboxSession)) {
+                        final Mailbox m = doCreateMailbox(mailbox, mailboxSession);
+                        final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
+                        mapper.execute(new TransactionalMapper.VoidTransaction() {
 
-                    public Void execute() throws MailboxException {
-                        if (!mailboxExists(mailbox, mailboxSession)) {
-                            final org.apache.james.mailbox.store.mail.model.Mailbox m = doCreateMailbox(mailbox, mailboxSession);
-                            final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
-                            mapper.execute(new TransactionalMapper.VoidTransaction() {
+                            public void runVoid() throws MailboxException {
+                                mailboxIds.add(mapper.save(m));
+                            }
 
-                                public void runVoid() throws MailboxException {
-                                    mailboxIds.add(mapper.save(m));
-                                }
+                        });
 
-                            });
-
-                            // notify listeners
-                            dispatcher.mailboxAdded(mailboxSession, m);
-                        }
-                        return null;
-
+                        // notify listeners
+                        dispatcher.mailboxAdded(mailboxSession, m);
                     }
+                    return null;
+
                 }, true);
 
             if (!mailboxIds.isEmpty()) {
@@ -581,21 +578,17 @@ public class StoreMailboxManager implements MailboxManager {
         session.getLog().info("deleteMailbox " + mailboxPath);
         final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
-        Mailbox mailbox = mapper.execute(new Mapper.Transaction<Mailbox>() {
-
-            public Mailbox run() throws MailboxException {
-                final Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
-                if (mailbox == null) {
-                    throw new MailboxNotFoundException("Mailbox not found");
-                }
-
-                // We need to create a copy of the mailbox as maybe we can not refer to the real
-                // mailbox once we remove it 
-                SimpleMailbox m = new SimpleMailbox(mailbox);
-                mapper.delete(mailbox);
-                return m;
+        Mailbox mailbox = mapper.execute((Mapper.Transaction<Mailbox>) () -> {
+            final Mailbox mailbox1 = mapper.findMailboxByPath(mailboxPath);
+            if (mailbox1 == null) {
+                throw new MailboxNotFoundException("Mailbox not found");
             }
 
+            // We need to create a copy of the mailbox as maybe we can not refer to the real
+            // mailbox once we remove it
+            SimpleMailbox m = new SimpleMailbox(mailbox1);
+            mapper.delete(mailbox1);
+            return m;
         });
 
         dispatcher.mailboxDeleted(session, mailbox);
@@ -629,24 +622,21 @@ public class StoreMailboxManager implements MailboxManager {
 
                 // rename submailboxes
                 final MailboxPath children = new MailboxPath(MailboxConstants.USER_NAMESPACE, from.getUser(), from.getName() + getDelimiter() + "%");
-                locker.executeWithLock(session, children, new LockAwareExecution<Void>() {
+                locker.executeWithLock(session, children, (LockAwareExecution<Void>) () -> {
+                    final List<Mailbox> subMailboxes = mapper.findMailboxWithPathLike(children);
+                    for (Mailbox sub : subMailboxes) {
+                        final String subOriginalName = sub.getName();
+                        final String subNewName = to.getName() + subOriginalName.substring(from.getName().length());
+                        final MailboxPath fromPath = new MailboxPath(children, subOriginalName);
+                        sub.setName(subNewName);
+                        mapper.save(sub);
+                        dispatcher.mailboxRenamed(session, fromPath, sub);
 
-                    public Void execute() throws MailboxException {
-                        final List<Mailbox> subMailboxes = mapper.findMailboxWithPathLike(children);
-                        for (Mailbox sub : subMailboxes) {
-                            final String subOriginalName = sub.getName();
-                            final String subNewName = to.getName() + subOriginalName.substring(from.getName().length());
-                            final MailboxPath fromPath = new MailboxPath(children, subOriginalName);
-                            sub.setName(subNewName);
-                            mapper.save(sub);
-                            dispatcher.mailboxRenamed(session, fromPath, sub);
-
-                            if (log.isDebugEnabled())
-                                log.debug("Rename mailbox sub-mailbox " + subOriginalName + " to " + subNewName);
-                        }
-                        return null;
-
+                        if (log.isDebugEnabled())
+                            log.debug("Rename mailbox sub-mailbox " + subOriginalName + " to " + subNewName);
                     }
+                    return null;
+
                 }, true);
             }
         });
@@ -672,11 +662,8 @@ public class StoreMailboxManager implements MailboxManager {
     
     private List<MessageRange> copyMessages(MessageRange set, final MailboxSession session,
             final StoreMessageManager toMailbox, final StoreMessageManager fromMailbox) throws MailboxException {
-        return copyBatcher.batchMessages(set, new MessageBatcher.BatchedOperation() {
-            public List<MessageRange> execute(MessageRange messageRange) throws MailboxException {
-                return fromMailbox.copyTo(messageRange, toMailbox, session);
-            }
-        });
+        return copyBatcher.batchMessages(set,
+            messageRange -> fromMailbox.copyTo(messageRange, toMailbox, session));
     }
 
     @Override
@@ -684,11 +671,8 @@ public class StoreMailboxManager implements MailboxManager {
         final StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
         final StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
 
-        return moveBatcher.batchMessages(set, new MessageBatcher.BatchedOperation() {
-            public List<MessageRange> execute(MessageRange messageRange) throws MailboxException {
-                return fromMailbox.moveTo(messageRange, toMailbox, session);
-            }
-        });
+        return moveBatcher.batchMessages(set,
+            messageRange -> fromMailbox.moveTo(messageRange, toMailbox, session));
     }
 
     @Override
@@ -737,16 +721,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     private boolean hasChildIn(Mailbox parentMailbox, List<Mailbox> mailboxesWithPathLike, MailboxSession mailboxSession) {
         return FluentIterable.from(mailboxesWithPathLike)
-            .anyMatch(isChildren(parentMailbox, mailboxSession));
-    }
-
-    private Predicate<Mailbox> isChildren(final Mailbox parentMailbox, final MailboxSession mailboxSession) {
-        return new Predicate<Mailbox>() {
-            @Override
-            public boolean apply(Mailbox mailbox) {
-                return mailbox.isChildOf(parentMailbox, mailboxSession);
-            }
-        };
+            .anyMatch(mailbox -> mailbox.isChildOf(parentMailbox, mailboxSession));
     }
 
     @Override
@@ -871,12 +846,8 @@ public class StoreMailboxManager implements MailboxManager {
         final AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
         final MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
 
-        return annotationMapper.execute(new Mapper.Transaction<List<MailboxAnnotation>>() {
-            @Override
-            public List<MailboxAnnotation> run() throws MailboxException {
-                return annotationMapper.getAllAnnotations(mailboxId);
-            }
-        });
+        return annotationMapper.execute(
+            () -> annotationMapper.getAllAnnotations(mailboxId));
     }
 
     @Override
@@ -885,12 +856,8 @@ public class StoreMailboxManager implements MailboxManager {
         final AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
         final MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
 
-        return annotationMapper.execute(new Mapper.Transaction<List<MailboxAnnotation>>() {
-            @Override
-            public List<MailboxAnnotation> run() throws MailboxException {
-                return annotationMapper.getAnnotationsByKeys(mailboxId, keys);
-            }
-        });
+        return annotationMapper.execute(
+            () -> annotationMapper.getAnnotationsByKeys(mailboxId, keys));
     }
 
     @Override
@@ -935,12 +902,8 @@ public class StoreMailboxManager implements MailboxManager {
         final AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
         final MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
 
-        return annotationMapper.execute(new Mapper.Transaction<List<MailboxAnnotation>>() {
-            @Override
-            public List<MailboxAnnotation> run() throws MailboxException {
-                return annotationMapper.getAnnotationsByKeysWithOneDepth(mailboxId, keys);
-            }
-        });
+        return annotationMapper.execute(
+            () -> annotationMapper.getAnnotationsByKeysWithOneDepth(mailboxId, keys));
     }
 
     @Override
@@ -949,12 +912,8 @@ public class StoreMailboxManager implements MailboxManager {
         final AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
         final MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
 
-        return annotationMapper.execute(new Mapper.Transaction<List<MailboxAnnotation>>() {
-            @Override
-            public List<MailboxAnnotation> run() throws MailboxException {
-                return annotationMapper.getAnnotationsByKeysWithAllDepth(mailboxId, keys);
-            }
-        });
+        return annotationMapper.execute(
+            () -> annotationMapper.getAnnotationsByKeysWithAllDepth(mailboxId, keys));
     }
 
     @Override

@@ -67,6 +67,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.util.OptionalConverter;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.mailet.Mail;
 import org.junit.Before;
@@ -304,9 +305,9 @@ public class SetMessagesCreationProcessorTest {
         @Override
         public Stream<MessageManager> getMailboxByRole(Role aRole, MailboxSession session) {
             if (aRole.equals(Role.OUTBOX)) {
-                return outboxSupplier.get().map(o -> Stream.of(o)).orElse(Stream.empty());
+                return OptionalConverter.toStream(outboxSupplier.get());
             } else if (aRole.equals(Role.DRAFTS)) {
-                return draftsSupplier.get().map(d -> Stream.of(d)).orElse(Stream.empty());
+                return OptionalConverter.toStream(draftsSupplier.get());
             }
             return Stream.empty();
         }

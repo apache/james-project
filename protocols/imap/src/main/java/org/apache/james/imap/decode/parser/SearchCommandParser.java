@@ -37,11 +37,10 @@ import org.apache.james.imap.api.message.request.SearchKey;
 import org.apache.james.imap.api.message.request.SearchOperation;
 import org.apache.james.imap.api.message.request.SearchResultOption;
 import org.apache.james.imap.api.message.response.StatusResponse;
-import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.imap.decode.ImapRequestLineReader.CharacterValidator;
 import org.apache.james.imap.message.request.SearchRequest;
 import org.apache.james.protocols.imap.DecodingException;
 
@@ -140,16 +139,11 @@ public class SearchCommandParser extends AbstractUidCommandParser {
             // Just consume the [<entry-name> <entry-type-req>] and ignore it
             // See RFC4551 3.4. MODSEQ Search Criterion in SEARCH
             request.consumeQuoted();
-            request.consumeWord(new CharacterValidator() {
-                
-                /*
-                 * (non-Javadoc)
-                 * @see org.apache.james.imap.decode.ImapRequestLineReader.CharacterValidator#isValid(char)
-                 */
-                public boolean isValid(char chr) {
-                    return true;
-                }
-            });
+            /*
+             * (non-Javadoc)
+             * @see org.apache.james.imap.decode.ImapRequestLineReader.CharacterValidator#isValid(char)
+             */
+            request.consumeWord(chr -> true);
             return SearchKey.buildModSeq(request.number());
         }
     }

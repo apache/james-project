@@ -37,7 +37,6 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 public class MaildirStore implements UidProvider, ModSeqProvider {
@@ -246,12 +245,9 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
     @Override
     public MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         try {
-            return createMaildirFolder(mailbox).getLastUid(session).transform(new Function<MessageUid, MessageUid>() {
-                @Override
-                public MessageUid apply(MessageUid input) {
-                    return input.next();
-                }
-            }).or(MessageUid.MIN_VALUE);
+            return createMaildirFolder(mailbox).getLastUid(session)
+                .transform(MessageUid::next)
+                .or(MessageUid.MIN_VALUE);
         } catch (MailboxException e) {
             throw new MailboxException("Unable to generate next uid", e);
         }

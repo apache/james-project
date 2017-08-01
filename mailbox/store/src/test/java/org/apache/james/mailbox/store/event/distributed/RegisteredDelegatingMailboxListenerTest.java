@@ -20,14 +20,12 @@
 package org.apache.james.mailbox.store.event.distributed;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Sets;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -40,10 +38,8 @@ import org.apache.james.mailbox.store.publisher.Topic;
 import org.apache.james.mailbox.util.EventCollector;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
-import java.util.Set;
+import com.google.common.collect.Sets;
 
 public class RegisteredDelegatingMailboxListenerTest {
 
@@ -82,18 +78,8 @@ public class RegisteredDelegatingMailboxListenerTest {
     public void eventShouldBeLocallyDeliveredIfThereIsNoOtherRegisteredServers() throws Exception {
         testee.addListener(MAILBOX_PATH, mailboxEventCollector, mailboxSession);
         verify(mockedMailboxPathRegister).register(MAILBOX_PATH);
-        when(mockedMailboxPathRegister.getTopics(MAILBOX_PATH)).thenAnswer(new Answer<Set<Topic>>() {
-            @Override
-            public Set<Topic> answer(InvocationOnMock invocation) throws Throwable {
-                return Sets.newHashSet(TOPIC);
-            }
-        });
-        when(mockedMailboxPathRegister.getLocalTopic()).thenAnswer(new Answer<Topic>() {
-            @Override
-            public Topic answer(InvocationOnMock invocation) throws Throwable {
-                return TOPIC;
-            }
-        });
+        when(mockedMailboxPathRegister.getTopics(MAILBOX_PATH)).thenReturn(Sets.newHashSet(TOPIC));
+        when(mockedMailboxPathRegister.getLocalTopic()).thenReturn(TOPIC);
         testee.event(event);
         assertThat(mailboxEventCollector.getEvents()).containsOnly(event);
         verify(mockedMailboxPathRegister, times(2)).getLocalTopic();
@@ -107,24 +93,9 @@ public class RegisteredDelegatingMailboxListenerTest {
     public void eventShouldBeRemotelySent() throws Exception {
         testee.addListener(MAILBOX_PATH, mailboxEventCollector, mailboxSession);
         verify(mockedMailboxPathRegister).register(MAILBOX_PATH);
-        when(mockedMailboxPathRegister.getTopics(MAILBOX_PATH)).thenAnswer(new Answer<Set<Topic>>() {
-            @Override
-            public Set<Topic> answer(InvocationOnMock invocation) throws Throwable {
-                return Sets.newHashSet(TOPIC, TOPIC_2);
-            }
-        });
-        when(mockedMailboxPathRegister.getLocalTopic()).thenAnswer(new Answer<Topic>() {
-            @Override
-            public Topic answer(InvocationOnMock invocation) throws Throwable {
-                return TOPIC;
-            }
-        });
-        when(mockedEventSerializer.serializeEvent(event)).thenAnswer(new Answer<byte[]>() {
-            @Override
-            public byte[] answer(InvocationOnMock invocation) throws Throwable {
-                return BYTES;
-            }
-        });
+        when(mockedMailboxPathRegister.getTopics(MAILBOX_PATH)).thenReturn(Sets.newHashSet(TOPIC, TOPIC_2));
+        when(mockedMailboxPathRegister.getLocalTopic()).thenReturn(TOPIC);
+        when(mockedEventSerializer.serializeEvent(event)).thenReturn(BYTES);
         testee.event(event);
         assertThat(mailboxEventCollector.getEvents()).containsOnly(event);
         verify(mockedMailboxPathRegister, times(2)).getLocalTopic();
@@ -140,18 +111,8 @@ public class RegisteredDelegatingMailboxListenerTest {
     public void onceListenersShouldBeTriggered() throws Exception {
         MailboxListener.Event event = new MailboxListener.Event(mailboxSession, MAILBOX_PATH) {};
         testee.addGlobalListener(onceEventCollector, mailboxSession);
-        when(mockedMailboxPathRegister.getTopics(MAILBOX_PATH)).thenAnswer(new Answer<Set<Topic>>() {
-            @Override
-            public Set<Topic> answer(InvocationOnMock invocation) throws Throwable {
-                return Sets.newHashSet(TOPIC);
-            }
-        });
-        when(mockedMailboxPathRegister.getLocalTopic()).thenAnswer(new Answer<Topic>() {
-            @Override
-            public Topic answer(InvocationOnMock invocation) throws Throwable {
-                return TOPIC;
-            }
-        });
+        when(mockedMailboxPathRegister.getTopics(MAILBOX_PATH)).thenReturn(Sets.newHashSet(TOPIC));
+        when(mockedMailboxPathRegister.getLocalTopic()).thenReturn(TOPIC);
         testee.event(event);
         assertThat(onceEventCollector.getEvents()).containsOnly(event);
         verify(mockedMailboxPathRegister, times(2)).getLocalTopic();
@@ -170,12 +131,7 @@ public class RegisteredDelegatingMailboxListenerTest {
     public void distantEventShouldBeLocallyDelivered() throws Exception {
         testee.addListener(MAILBOX_PATH, mailboxEventCollector, mailboxSession);
         verify(mockedMailboxPathRegister).register(MAILBOX_PATH);
-        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenAnswer(new Answer<MailboxListener.Event>() {
-            @Override
-            public MailboxListener.Event answer(InvocationOnMock invocation) throws Throwable {
-                return event;
-            }
-        });
+        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenReturn(event);
         testee.receiveSerializedEvent(BYTES);
         assertThat(mailboxEventCollector.getEvents()).containsOnly(event);
         verify(mockedMailboxPathRegister).getLocalTopic();
@@ -189,12 +145,7 @@ public class RegisteredDelegatingMailboxListenerTest {
     @Test
     public void distantEventShouldNotBeDeliveredToOnceGlobalListeners() throws Exception {
         testee.addGlobalListener(onceEventCollector, mailboxSession);
-        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenAnswer(new Answer<MailboxListener.Event>() {
-            @Override
-            public MailboxListener.Event answer(InvocationOnMock invocation) throws Throwable {
-                return event;
-            }
-        });
+        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenReturn(event);
         testee.receiveSerializedEvent(BYTES);
         assertThat(onceEventCollector.getEvents()).isEmpty();
         verify(mockedMailboxPathRegister).getLocalTopic();
@@ -209,24 +160,9 @@ public class RegisteredDelegatingMailboxListenerTest {
         MailboxListener.Event event = new MailboxListener.MailboxDeletion(mailboxSession, MAILBOX_PATH);
         testee.addListener(MAILBOX_PATH, mailboxEventCollector, mailboxSession);
         verify(mockedMailboxPathRegister).register(MAILBOX_PATH);
-        when(mockedMailboxPathRegister.getTopics(MAILBOX_PATH)).thenAnswer(new Answer<Set<Topic>>() {
-            @Override
-            public Set<Topic> answer(InvocationOnMock invocation) throws Throwable {
-                return Sets.newHashSet(TOPIC, TOPIC_2);
-            }
-        });
-        when(mockedMailboxPathRegister.getLocalTopic()).thenAnswer(new Answer<Topic>() {
-            @Override
-            public Topic answer(InvocationOnMock invocation) throws Throwable {
-                return TOPIC;
-            }
-        });
-        when(mockedEventSerializer.serializeEvent(event)).thenAnswer(new Answer<byte[]>() {
-            @Override
-            public byte[] answer(InvocationOnMock invocation) throws Throwable {
-                return BYTES;
-            }
-        });
+        when(mockedMailboxPathRegister.getTopics(MAILBOX_PATH)).thenReturn(Sets.newHashSet(TOPIC, TOPIC_2));
+        when(mockedMailboxPathRegister.getLocalTopic()).thenReturn(TOPIC);
+        when(mockedEventSerializer.serializeEvent(event)).thenReturn(BYTES);
         testee.event(event);
         assertThat(mailboxEventCollector.getEvents()).containsOnly(event);
         verify(mockedMailboxPathRegister, times(2)).getLocalTopic();
@@ -249,24 +185,9 @@ public class RegisteredDelegatingMailboxListenerTest {
         };
         testee.addListener(MAILBOX_PATH, mailboxEventCollector, mailboxSession);
         verify(mockedMailboxPathRegister).register(MAILBOX_PATH);
-        when(mockedMailboxPathRegister.getTopics(MAILBOX_PATH)).thenAnswer(new Answer<Set<Topic>>() {
-            @Override
-            public Set<Topic> answer(InvocationOnMock invocation) throws Throwable {
-                return Sets.newHashSet(TOPIC, TOPIC_2);
-            }
-        });
-        when(mockedMailboxPathRegister.getLocalTopic()).thenAnswer(new Answer<Topic>() {
-            @Override
-            public Topic answer(InvocationOnMock invocation) throws Throwable {
-                return TOPIC;
-            }
-        });
-        when(mockedEventSerializer.serializeEvent(event)).thenAnswer(new Answer<byte[]>() {
-            @Override
-            public byte[] answer(InvocationOnMock invocation) throws Throwable {
-                return BYTES;
-            }
-        });
+        when(mockedMailboxPathRegister.getTopics(MAILBOX_PATH)).thenReturn(Sets.newHashSet(TOPIC, TOPIC_2));
+        when(mockedMailboxPathRegister.getLocalTopic()).thenReturn(TOPIC);
+        when(mockedEventSerializer.serializeEvent(event)).thenReturn(BYTES);
         testee.event(event);
         assertThat(mailboxEventCollector.getEvents()).containsOnly(event);
         verify(mockedMailboxPathRegister, times(2)).getLocalTopic();

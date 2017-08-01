@@ -66,21 +66,6 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 
 public class StoreMessageIdManager implements MessageIdManager {
-
-    private static final Function<MailboxMessage, MetadataWithMailboxId> EXTRACT_METADATA_FUNCTION = new Function<MailboxMessage, MetadataWithMailboxId>() {
-        @Override
-        public MetadataWithMailboxId apply(MailboxMessage mailboxMessage) {
-            return new MetadataWithMailboxId(new SimpleMessageMetaData(mailboxMessage), mailboxMessage.getMailboxId());
-        }
-    };
-
-    private static final Function<MailboxMessage, MailboxId> EXTRACT_MAILBOX_ID_FUNCTION = new Function<MailboxMessage, MailboxId>() {
-        @Override
-        public MailboxId apply(MailboxMessage input) {
-            return input.getMailboxId();
-        }
-    };
-
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MailboxEventDispatcher dispatcher;
     private final MessageId.Factory messageIdFactory;
@@ -118,7 +103,7 @@ public class StoreMessageIdManager implements MessageIdManager {
             final MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
             List<MailboxMessage> messageList = messageIdMapper.find(messageIds, MessageMapper.FetchType.Full);
             ImmutableSet<MailboxId> mailboxIds = FluentIterable.from(messageList)
-                .transform(EXTRACT_MAILBOX_ID_FUNCTION)
+                .transform(MailboxMessage::getMailboxId)
                 .toSet();
             final ImmutableSet<MailboxId> allowedMailboxIds = FluentIterable.from(mailboxIds)
                 .filter(mailboxBelongsToUser(mailboxSession, mailboxMapper))
@@ -142,7 +127,9 @@ public class StoreMessageIdManager implements MessageIdManager {
         Iterable<MetadataWithMailboxId> metadatasWithMailbox = FluentIterable
             .from(messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata))
             .filter(inMailboxes(mailboxIds))
-            .transform(EXTRACT_METADATA_FUNCTION);
+            .transform(mailboxMessage -> new MetadataWithMailboxId(
+                new SimpleMessageMetaData(mailboxMessage),
+                mailboxMessage.getMailboxId()));
 
         messageIdMapper.delete(messageId, mailboxIds);
 
@@ -164,7 +151,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         if (!mailboxMessages.isEmpty()) {
             ImmutableSet<MailboxId> currentMailboxes = FluentIterable.from(mailboxMessages)
-                .transform(EXTRACT_MAILBOX_ID_FUNCTION)
+                .transform(MailboxMessage::getMailboxId)
                 .toSet();
             HashSet<MailboxId> targetMailboxes = Sets.newHashSet(mailboxIds);
             List<MailboxId> mailboxesToRemove = ImmutableList.copyOf(Sets.difference(currentMailboxes, targetMailboxes));
@@ -253,38 +240,27 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     private Function<MailboxMessage, MessageResult> messageResultConverter(final MessageResult.FetchGroup fetchGroup) {
-        return new Function<MailboxMessage, MessageResult>() {
-            @Override
-            public MessageResult apply(MailboxMessage input) {
-                try {
-                    return ResultUtils.loadMessageResult(input, fetchGroup);
-                } catch (MailboxException e) {
-                    throw new WrappedException(e);
-                }
+        return input -> {
+            try {
+                return ResultUtils.loadMessageResult(input, fetchGroup);
+            } catch (MailboxException e) {
+                throw new WrappedException(e);
             }
         };
     }
 
     private Predicate<MailboxMessage> inMailboxes(final Collection<MailboxId> mailboxIds) {
-        return new Predicate<MailboxMessage>() {
-            @Override
-            public boolean apply(MailboxMessage mailboxMessage) {
-                return mailboxIds.contains(mailboxMessage.getMailboxId());
-            }
-        };
+        return mailboxMessage -> mailboxIds.contains(mailboxMessage.getMailboxId());
     }
 
     private Predicate<MailboxId> mailboxBelongsToUser(final MailboxSession mailboxSession, final MailboxMapper mailboxMapper) {
-        return new Predicate<MailboxId>() {
-            @Override
-            public boolean apply(MailboxId mailboxId) {
-                try {
-                    Mailbox currentMailbox = mailboxMapper.findMailboxById(mailboxId);
-                    return belongsToCurrentUser(currentMailbox, mailboxSession);
-                } catch (MailboxException e) {
-                    mailboxSession.getLog().error(String.format("Can not retrieve mailboxPath associated with %s", mailboxId.serialize()), e);
-                    return false;
-                }
+        return mailboxId -> {
+            try {
+                Mailbox currentMailbox = mailboxMapper.findMailboxById(mailboxId);
+                return belongsToCurrentUser(currentMailbox, mailboxSession);
+            } catch (MailboxException e) {
+                mailboxSession.getLog().error(String.format("Can not retrieve mailboxPath associated with %s", mailboxId.serialize()), e);
+                return false;
             }
         };
     }
@@ -292,7 +268,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     private Predicate<MailboxMessage> messageBelongsToUser(MailboxSession mailboxSession, MailboxMapper mailboxMapper) {
         return Predicates.compose(
             mailboxBelongsToUser(mailboxSession, mailboxMapper),
-            EXTRACT_MAILBOX_ID_FUNCTION);
+            MailboxMessage::getMailboxId);
     }
 
     private void allowOnMailboxSession(List<MailboxId> mailboxIds, MailboxSession mailboxSession, MailboxMapper mailboxMapper) throws MailboxNotFoundException {

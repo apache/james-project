@@ -26,7 +26,6 @@ import javax.mail.internet.InternetAddress;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.MailAddress;
 
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
@@ -56,13 +55,7 @@ public class MailAddressUtils {
 
     private static FluentIterable<InternetAddress> iterableOfInternetAddress(List<MailAddress> mailAddresses) {
         return FluentIterable.from(mailAddresses)
-            .transform(new Function<MailAddress, InternetAddress>() {
-
-                @Override
-                public InternetAddress apply(MailAddress mailAddress) {
-                    return mailAddress.toInternetAddress();
-                }
-            });
+            .transform(MailAddress::toInternetAddress);
     }
 
     public static boolean isUnalteredOrReversePathOrSender(MailAddress mailAddress) {

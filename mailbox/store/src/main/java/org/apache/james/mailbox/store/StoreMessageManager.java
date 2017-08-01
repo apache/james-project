@@ -82,7 +82,6 @@ import org.apache.james.mailbox.store.quota.QuotaChecker;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.streaming.BodyOffsetInputStream;
 import org.apache.james.mailbox.store.streaming.CountingInputStream;
-import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.message.DefaultBodyDescriptorBuilder;
 import org.apache.james.mime4j.message.HeaderImpl;
@@ -95,7 +94,6 @@ import org.apache.james.util.IteratorWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -139,15 +137,6 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(StoreMessageManager.class);
-
-    private static final Predicate<MessageAttachment> NOT_INLINE_ATTACHMENT() {
-        return new Predicate<MessageAttachment>() {
-            @Override
-            public boolean apply(MessageAttachment input) {
-                return !input.isInlinedWithCid();
-            }
-        };
-    }
 
     private final Mailbox mailbox;
 
@@ -427,16 +416,12 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
             new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
 
-            return locker.executeWithLock(mailboxSession, getMailboxPath(), new MailboxPathLocker.LockAwareExecution<ComposedMessageId>() {
+            return locker.executeWithLock(mailboxSession, getMailboxPath(), () -> {
+                MessageMetaData data = appendMessageToStore(message, attachments, mailboxSession);
 
-                @Override
-                public ComposedMessageId execute() throws MailboxException {
-                    MessageMetaData data = appendMessageToStore(message, attachments, mailboxSession);
-
-                    Mailbox mailbox = getMailboxEntity();
-                    dispatcher.added(mailboxSession, mailbox, message);
-                    return new ComposedMessageId(mailbox.getMailboxId(), data.getMessageId(), data.getUid());
-                }
+                Mailbox mailbox = getMailboxEntity();
+                dispatcher.added(mailboxSession, mailbox, message);
+                return new ComposedMessageId(mailbox.getMailboxId(), data.getMessageId(), data.getUid());
             }, true);
 
         } catch (IOException e) {
@@ -462,7 +447,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     }
 
     private boolean hasNonInlinedAttachment(List<MessageAttachment> attachments) {
-        return FluentIterable.from(attachments).anyMatch(NOT_INLINE_ATTACHMENT());
+        return FluentIterable.from(attachments)
+            .anyMatch(messageAttachment -> !messageAttachment.isInlinedWithCid());
     }
 
     private List<MessageAttachment> extractAttachments(SharedFileInputStream contentIn) {
@@ -500,10 +486,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         final Flags permanentFlags = getPermanentFlags(mailboxSession);
         final long uidValidity = getMailboxEntity().getUidValidity();
         MessageUid uidNext = mapperFactory.getMessageMapper(mailboxSession).getLastUid(mailbox)
-                .transform(new Function<MessageUid, MessageUid>() {
-                    public MessageUid apply(MessageUid input) {
-                        return input.next();
-                    }})
+                .transform(MessageUid::next)
                 .or(MessageUid.MIN_VALUE);
         final long highestModSeq = mapperFactory.getMessageMapper(mailboxSession).getHighestModSeq(mailbox);
         final long messageCount;
@@ -597,12 +580,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
 
-        Iterator<UpdatedFlags> it = messageMapper.execute(new Mapper.Transaction<Iterator<UpdatedFlags>>() {
-
-            public Iterator<UpdatedFlags> run() throws MailboxException {
-                return messageMapper.updateFlags(getMailboxEntity(), new FlagsUpdateCalculator(flags, flagsUpdateMode), set);
-            }
-        });
+        Iterator<UpdatedFlags> it = messageMapper.execute(() -> messageMapper.updateFlags(getMailboxEntity(), new FlagsUpdateCalculator(flags, flagsUpdateMode), set));
 
         final SortedMap<MessageUid, UpdatedFlags> uFlags = new TreeMap<MessageUid, UpdatedFlags>();
 
@@ -612,7 +590,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             uFlags.put(flag.getUid(), flag);
         }
 
-        dispatcher.flagsUpdated(mailboxSession, new ArrayList<MessageUid>(uFlags.keySet()), getMailboxEntity(), new ArrayList<UpdatedFlags>(uFlags.values()));
+        dispatcher.flagsUpdated(mailboxSession, new ArrayList<>(uFlags.keySet()), getMailboxEntity(), new ArrayList<UpdatedFlags>(uFlags.values()));
 
         return newFlagsByUid;
     }
@@ -630,13 +608,9 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             throw new ReadOnlyException(new StoreMailboxPath(toMailbox.getMailboxEntity()), session.getPathDelimiter());
         }
 
-        return locker.executeWithLock(session, new StoreMailboxPath(toMailbox.getMailboxEntity()), new MailboxPathLocker.LockAwareExecution<List<MessageRange>>() {
-
-            @Override
-            public List<MessageRange> execute() throws MailboxException {
-                SortedMap<MessageUid, MessageMetaData> copiedUids = copy(set, toMailbox, session);
-                return MessageRange.toRanges(new ArrayList<MessageUid>(copiedUids.keySet()));
-            }
+        return locker.executeWithLock(session, new StoreMailboxPath(toMailbox.getMailboxEntity()), () -> {
+            SortedMap<MessageUid, MessageMetaData> copiedUids = copy(set, toMailbox, session);
+            return MessageRange.toRanges(new ArrayList<>(copiedUids.keySet()));
         }, true);
     }
 
@@ -657,30 +631,22 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         }
 
         //TODO lock the from mailbox too, in a non-deadlocking manner - how?
-        return locker.executeWithLock(session, new StoreMailboxPath(toMailbox.getMailboxEntity()), new MailboxPathLocker.LockAwareExecution<List<MessageRange>>() {
-
-            @Override
-            public List<MessageRange> execute() throws MailboxException {
-                SortedMap<MessageUid, MessageMetaData> movedUids = move(set, toMailbox, session);
-                return MessageRange.toRanges(new ArrayList<MessageUid>(movedUids.keySet()));
-            }
+        return locker.executeWithLock(session, new StoreMailboxPath(toMailbox.getMailboxEntity()), () -> {
+            SortedMap<MessageUid, MessageMetaData> movedUids = move(set, toMailbox, session);
+            return MessageRange.toRanges(new ArrayList<>(movedUids.keySet()));
         }, true);
     }
 
     protected MessageMetaData appendMessageToStore(final MailboxMessage message, final List<MessageAttachment> messageAttachments, MailboxSession session) throws MailboxException {
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
         final AttachmentMapper attachmentMapper = mapperFactory.getAttachmentMapper(session);
-        return mapperFactory.getMessageMapper(session).execute(new Mapper.Transaction<MessageMetaData>() {
-
-            public MessageMetaData run() throws MailboxException {
-                ImmutableList.Builder<Attachment> attachments = ImmutableList.builder();
-                for (MessageAttachment attachment : messageAttachments) {
-                    attachments.add(attachment.getAttachment());
-                }
-                attachmentMapper.storeAttachments(attachments.build());
-                return messageMapper.add(getMailboxEntity(), message);
+        return mapperFactory.getMessageMapper(session).execute(() -> {
+            ImmutableList.Builder<Attachment> attachments = ImmutableList.builder();
+            for (MessageAttachment attachment : messageAttachments) {
+                attachments.add(attachment.getAttachment());
             }
-
+            attachmentMapper.storeAttachments(attachments.build());
+            return messageMapper.add(getMailboxEntity(), message);
         });
     }
 
@@ -713,23 +679,19 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         }
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
 
-        return messageMapper.execute(new Mapper.Transaction<List<MessageUid>>() {
+        return messageMapper.execute(() -> {
+            final List<MessageUid> members = messageMapper.findRecentMessageUidsInMailbox(getMailboxEntity());
 
-            public List<MessageUid> run() throws MailboxException {
-                final List<MessageUid> members = messageMapper.findRecentMessageUidsInMailbox(getMailboxEntity());
-
-                // Convert to MessageRanges so we may be able to optimize the
-                // flag update
-                List<MessageRange> ranges = MessageRange.toRanges(members);
-                for (MessageRange range : ranges) {
-                    if (reset) {
-                        // only call save if we need to
-                        messageMapper.updateFlags(getMailboxEntity(), new FlagsUpdateCalculator(new Flags(Flag.RECENT), FlagsUpdateMode.REMOVE), range);
-                    }
+            // Convert to MessageRanges so we may be able to optimize the
+            // flag update
+            List<MessageRange> ranges = MessageRange.toRanges(members);
+            for (MessageRange range : ranges) {
+                if (reset) {
+                    // only call save if we need to
+                    messageMapper.updateFlags(getMailboxEntity(), new FlagsUpdateCalculator(new Flags(Flag.RECENT), FlagsUpdateMode.REMOVE), range);
                 }
-                return members;
             }
-
+            return members;
         });
 
     }
@@ -738,13 +700,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
-        return messageMapper.execute(new Mapper.Transaction<Map<MessageUid, MessageMetaData>>() {
-
-            public Map<MessageUid, MessageMetaData> run() throws MailboxException {
-                return messageMapper.expungeMarkedForDeletionInMailbox(getMailboxEntity(), range);
-            }
-
-        });
+        return messageMapper.execute(
+            () -> messageMapper.expungeMarkedForDeletionInMailbox(getMailboxEntity(), range));
     }
 
     @Override
@@ -763,13 +720,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         while (originalRows.hasNext()) {
             final MailboxMessage originalMessage = originalRows.next();
             quotaChecker.tryAddition(1, originalMessage.getFullContentOctets());
-            MessageMetaData data = messageMapper.execute(new Mapper.Transaction<MessageMetaData>() {
-                public MessageMetaData run() throws MailboxException {
-                    return messageMapper.copy(getMailboxEntity(), originalMessage);
-
-                }
-
-            });
+            MessageMetaData data = messageMapper.execute(
+                () -> messageMapper.copy(getMailboxEntity(), originalMessage));
             copiedRows.add(data);
         }
         return copiedRows.iterator();
@@ -783,12 +735,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         while (originalRows.hasNext()) {
             final MailboxMessage originalMessage = originalRows.next();
             originalRowsCopy.add(new SimpleMessageMetaData(originalMessage));
-            MessageMetaData data = messageMapper.execute(new Mapper.Transaction<MessageMetaData>() {
-                public MessageMetaData run() throws MailboxException {
-                    return messageMapper.move(getMailboxEntity(), originalMessage);
-                }
-
-            });
+            MessageMetaData data = messageMapper.execute(
+                () -> messageMapper.move(getMailboxEntity(), originalMessage));
             movedRows.add(data);
         }
         return new MoveResult(movedRows.iterator(), originalRowsCopy.iterator());
@@ -897,11 +845,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     private Iterator<MessageUid> listAllMessageUids(MailboxSession session) throws MailboxException {
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
-        return messageMapper.execute(new Mapper.Transaction<Iterator<MessageUid>>() {
-            @Override
-            public Iterator<MessageUid> run() throws MailboxException {
-                return messageMapper.listAllMessageUids(mailbox);
-            }
-        });
+        return messageMapper.execute(
+            () -> messageMapper.listAllMessageUids(mailbox));
     }
 }

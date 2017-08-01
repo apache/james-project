@@ -71,7 +71,7 @@ public class MessageProperties {
     }
 
     private ImmutableSet<MessageProperty> buildOutputMessageProperties() {
-        return this.messageProperties.orElseGet(() -> MessageProperty.allOutputProperties());
+        return this.messageProperties.orElseGet(MessageProperty::allOutputProperties);
     }
 
     private MessageProperties usingProperties(Sets.SetView<MessageProperty> properties) {

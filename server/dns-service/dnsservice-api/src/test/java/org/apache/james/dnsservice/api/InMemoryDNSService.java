@@ -85,12 +85,7 @@ public class InMemoryDNSService implements DNSService {
     }
 
     private DNSRecord hostRecord(final String host) {
-        Predicate<? super Entry<String, DNSRecord>> filterByKey = new Predicate<Entry<String, DNSRecord>>() {
-            @Override
-            public boolean apply(Entry<String, DNSRecord> entry) {
-                return entry.getKey().equals(host);
-            }
-        };
+        Predicate<? super Entry<String, DNSRecord>> filterByKey = entry -> entry.getKey().equals(host);
         return getDNSEntry(filterByKey).getValue();
     }
 
@@ -101,12 +96,7 @@ public class InMemoryDNSService implements DNSService {
 
     @Override
     public String getHostName(final InetAddress addr) {
-        Predicate<? super Entry<String, DNSRecord>> filterByValue = new Predicate<Entry<String, DNSRecord>>() {
-            @Override
-            public boolean apply(Entry<String, DNSRecord> entry) {
-                return entry.getValue().contains(addr);
-            }
-        };
+        Predicate<? super Entry<String, DNSRecord>> filterByValue = entry -> entry.getValue().contains(addr);
 
         return getDNSEntry(filterByValue).getKey();
     }

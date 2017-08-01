@@ -44,7 +44,6 @@ import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -98,28 +97,15 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
 
     private Optional<Integer> getMaxSizeValue(final List<MailboxAnnotation> mailboxAnnotations, Optional<Integer> maxsize) {
         if (maxsize.isPresent()) {
-            return maxsize.transform(new Function<Integer, Optional<Integer>>() {
-                @Override
-                public Optional<Integer> apply(Integer input) {
-                    return getMaxSizeOfOversizedItems(mailboxAnnotations, input);
-                }
-            }).get();
+            return maxsize.transform(value -> getMaxSizeOfOversizedItems(mailboxAnnotations, value)).get();
         }
         return Optional.absent();
     }
 
     private List<MailboxAnnotation> filterItemsBySize(Responder responder, String mailboxName, List<MailboxAnnotation> mailboxAnnotations, final Optional<Integer> maxsize) {
-        Predicate<MailboxAnnotation> lowerPredicate = new Predicate<MailboxAnnotation>() {
-            @Override
-            public boolean apply(final MailboxAnnotation input) {
-                return maxsize.transform(new Function<Integer, Boolean>() {
-                    @Override
-                    public Boolean apply(Integer maxSizeInput) {
-                        return (input.size() <= maxSizeInput);
-                    }
-                }).or(true);
-            }
-        };
+        Predicate<MailboxAnnotation> lowerPredicate = annotation -> maxsize
+            .transform(maxSizeInput -> (annotation.size() <= maxSizeInput))
+            .or(true);
 
         return FluentIterable.from(mailboxAnnotations).filter(lowerPredicate).toList();
     }
@@ -147,28 +133,12 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     }
 
     private Optional<Integer> getMaxSizeOfOversizedItems(List<MailboxAnnotation> mailboxAnnotations, final Integer maxsize) {
-        Predicate<MailboxAnnotation> filterOverSizedAnnotation = new Predicate<MailboxAnnotation>() {
-            @Override
-            public boolean apply(MailboxAnnotation input) {
-                return (input.size() > maxsize);
-            }
-        };
-
-        Function<MailboxAnnotation, Integer> transformToSize = new Function<MailboxAnnotation,Integer>(){
-            public Integer apply(MailboxAnnotation input) {
-                return input.size();
-            }
-        };
+        Predicate<MailboxAnnotation> filterOverSizedAnnotation = annotation -> annotation.size() > maxsize;
 
         ImmutableSortedSet<Integer> overLimitSizes = FluentIterable.from(mailboxAnnotations)
             .filter(filterOverSizedAnnotation)
-            .transform(transformToSize)
-            .toSortedSet(new Comparator<Integer>() {
-                @Override
-                public int compare(Integer annotationSize1, Integer annotationSize2) {
-                    return annotationSize2.compareTo(annotationSize1);
-                }
-            });
+            .transform(MailboxAnnotation::size)
+            .toSortedSet(Comparator.reverseOrder());
 
         if (overLimitSizes.isEmpty()) {
             return Optional.absent();

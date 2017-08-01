@@ -132,7 +132,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         if (serializedMailboxIds.isPresent()) {
             List<MailboxId> mailboxIds = serializedMailboxIds.get()
                 .stream()
-                .map(mailboxId -> mailboxIdFactory.fromString(mailboxId))
+                .map(mailboxIdFactory::fromString)
                 .collect(Guavate.toImmutableList());
 
             messageIdManager.setInMailboxes(messageId, mailboxIds, mailboxSession);

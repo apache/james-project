@@ -61,7 +61,7 @@ public class FilterOperatorTest {
 
     @Test
     public void andFactoryMethodShouldThrowWhenNoArgument() {
-        assertThatThrownBy(() -> FilterOperator.and()).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(FilterOperator::and).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -74,7 +74,7 @@ public class FilterOperatorTest {
 
     @Test
     public void orFactoryMethodShouldThrowWhenNoArgument() {
-        assertThatThrownBy(() -> FilterOperator.or()).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(FilterOperator::or).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -87,7 +87,7 @@ public class FilterOperatorTest {
 
     @Test
     public void notFactoryMethodShouldThrowWhenNoArgument() {
-        assertThatThrownBy(() -> FilterOperator.not()).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(FilterOperator::not).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

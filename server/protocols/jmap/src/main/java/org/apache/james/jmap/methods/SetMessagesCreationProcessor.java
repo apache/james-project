@@ -249,7 +249,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     
     private boolean isAppendToMailboxWithRole(Role role, CreationMessage entry, MailboxSession mailboxSession) throws MailboxException {
         return getMailboxWithRole(mailboxSession, role)
-                .map(box -> entry.isIn(box))
+                .map(entry::isIn)
                 .orElse(false);
     }
 
