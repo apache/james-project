@@ -45,7 +45,6 @@
     </modules>
 
     <properties>
-        <target.jdk>1.6</target.jdk>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <netty.version>3.10.6.Final</netty.version>
         <apache-mime4j.version>0.8.1</apache-mime4j.version>
