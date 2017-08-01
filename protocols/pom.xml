@@ -60,7 +60,6 @@
         <slf4j.version>1.6.3</slf4j.version>
         <jsieve.version>0.7</jsieve.version>
         <mockito-core.version>1.9.0</mockito-core.version>
-        <assertj-1.version>1.7.1</assertj-1.version>
         <assertj-3.version>3.2.0</assertj-3.version>
     </properties>
 
@@ -262,6 +261,11 @@
                 <groupId>com.sun.mail</groupId>
                 <artifactId>javax.mail</artifactId>
                 <version>1.5.4</version>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj-3.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.assertj</groupId>

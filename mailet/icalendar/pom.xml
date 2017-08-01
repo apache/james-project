@@ -216,7 +216,6 @@
                 <dependency>
                     <groupId>org.assertj</groupId>
                     <artifactId>assertj-core</artifactId>
-                    <version>${assertj-3.version}</version><!--$NO-MVN-MAN-VER$-->
                     <scope>test</scope>
                 </dependency>
                 <dependency>

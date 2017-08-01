@@ -22,7 +22,6 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -78,9 +77,8 @@ public class CassandraMailboxPathDAOTest {
     public void saveShouldInsertNewEntry() throws Exception {
         assertThat(testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join()).isTrue();
 
-        Optional<CassandraIdAndPath> cassandraIdAndPath = testee.retrieveId(USER_INBOX_MAILBOXPATH).join();
-        assertThat(cassandraIdAndPath.get())
-            .isEqualTo(INBOX_ID_AND_PATH);
+        assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).join())
+            .contains(INBOX_ID_AND_PATH);
     }
 
     @Test
@@ -100,9 +98,8 @@ public class CassandraMailboxPathDAOTest {
     public void retrieveIdShouldReturnStoredData() throws Exception {
         testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join();
 
-        Optional<CassandraIdAndPath> cassandraIdAndPath = testee.retrieveId(USER_INBOX_MAILBOXPATH).join();
-        assertThat(cassandraIdAndPath.get())
-            .isEqualTo(INBOX_ID_AND_PATH);
+        assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).join())
+            .contains(INBOX_ID_AND_PATH);
     }
 
     @Test
@@ -132,8 +129,7 @@ public class CassandraMailboxPathDAOTest {
 
         testee.delete(USER_INBOX_MAILBOXPATH).join();
 
-        assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).join()
-            .isPresent())
-            .isFalse();
+        assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).join())
+            .isEmpty();
     }
 }

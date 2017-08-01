@@ -62,7 +62,8 @@ public class CassandraBlobsDAOTest {
     public void saveShouldReturnEmptyWhenNullData() throws Exception {
         Optional<BlobId> blobId = testee.save(null).join();
 
-        assertThat(blobId.isPresent()).isFalse();
+
+        assertThat(blobId).isEmpty();
     }
 
     @Test
@@ -71,7 +72,7 @@ public class CassandraBlobsDAOTest {
 
         byte[] bytes = testee.read(blobId.get()).join();
 
-        assertThat(blobId.isPresent()).isTrue();
+        assertThat(blobId).isPresent();
         assertThat(new String(bytes, Charsets.UTF_8)).isEmpty();
     }
 
@@ -81,7 +82,7 @@ public class CassandraBlobsDAOTest {
 
         byte[] bytes = testee.read(blobId.get()).join();
 
-        assertThat(blobId.isPresent()).isTrue();
+        assertThat(blobId).isPresent();
         assertThat(new String(bytes, Charsets.UTF_8)).isEmpty();
     }
 
@@ -89,7 +90,7 @@ public class CassandraBlobsDAOTest {
     public void saveShouldReturnBlobId() throws Exception {
         Optional<BlobId> blobId = testee.save("toto".getBytes(Charsets.UTF_8)).join();
 
-        assertThat(blobId.isPresent()).isTrue();
+        assertThat(blobId).isPresent();
     }
 
     @Test

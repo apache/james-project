@@ -72,8 +72,8 @@ public class CassandraMailboxDAOTest {
 
     @Test
     public void retrieveMailboxShouldReturnEmptyWhenNone() {
-        Optional<SimpleMailbox> mailboxOptional = testee.retrieveMailbox(CASSANDRA_ID_1).join();
-        assertThat(mailboxOptional.isPresent()).isFalse();
+        assertThat(testee.retrieveMailbox(CASSANDRA_ID_1).join())
+            .isEmpty();
     }
 
     @Test
@@ -143,8 +143,8 @@ public class CassandraMailboxDAOTest {
 
         testee.delete(CASSANDRA_ID_1).join();
 
-        Optional<SimpleMailbox> mailboxOptional = testee.retrieveMailbox(CASSANDRA_ID_1).join();
-        assertThat(mailboxOptional.isPresent()).isFalse();
+        assertThat(testee.retrieveMailbox(CASSANDRA_ID_1).join())
+            .isEmpty();
     }
 
     @Test
@@ -161,8 +161,7 @@ public class CassandraMailboxDAOTest {
         mailbox1.setNamespace(NEW_MAILBOX_PATH.getNamespace());
         mailbox1.setUser(NEW_MAILBOX_PATH.getUser());
         mailbox1.setName(NEW_MAILBOX_PATH.getName());
-        Optional<SimpleMailbox> readMailbox = testee.retrieveMailbox(CASSANDRA_ID_1)
-            .join();
+        Optional<SimpleMailbox> readMailbox = testee.retrieveMailbox(CASSANDRA_ID_1).join();
         assertThat(readMailbox.isPresent()).isTrue();
         assertThat(readMailbox.get()).isEqualToComparingFieldByField(mailbox1);
     }

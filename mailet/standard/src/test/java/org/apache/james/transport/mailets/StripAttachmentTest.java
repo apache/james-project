@@ -123,7 +123,7 @@ public class StripAttachmentTest {
 
         mailet.service(mail);
 
-        assertThat(mail).isEqualToComparingFieldByField(expectedMail);
+        assertThat(mail).isEqualToIgnoringGivenFields(expectedMail, "msg");
         assertThat(mail.getMessage().getContent()).isEqualTo("simple text");
     }
     

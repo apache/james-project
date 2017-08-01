@@ -166,7 +166,6 @@
                 <dependency>
                     <groupId>org.assertj</groupId>
                     <artifactId>assertj-core</artifactId>
-                    <version>${assertj-3.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.bouncycastle</groupId>

@@ -32,7 +32,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
@@ -40,7 +39,6 @@ import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.assertj.core.api.JUnitSoftAssertions;
-import org.assertj.core.internal.FieldByFieldComparator;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -113,7 +111,7 @@ public class SimpleMailboxMessageTest {
     }
 
     @Test
-    public void copyShouldReturnFieldByFieldEqualsObject() throws MailboxException {
+    public void copyShouldReturnFieldByFieldEqualsObject() throws Exception {
         long textualLineCount = 42L;
         String text = "text";
         String plain = "plain";
@@ -132,7 +130,11 @@ public class SimpleMailboxMessageTest {
         SimpleMailboxMessage copy = SimpleMailboxMessage.copy(TestId.of(1337), original);
 
         assertThat((Object)copy).isEqualToIgnoringGivenFields(original, "message", "mailboxId").isNotSameAs(original);
-        assertThat(copy.getMessage()).usingComparator(new FieldByFieldComparator()).isEqualTo(original.getMessage());
+        assertThat(copy.getMessage())
+            .isEqualToIgnoringGivenFields(original.getMessage(), "content")
+            .isNotSameAs(original.getMessage());
+        assertThat(IOUtils.toString(copy.getMessage().getFullContent(), Charsets.UTF_8))
+            .isEqualTo(IOUtils.toString(original.getMessage().getFullContent(), Charsets.UTF_8));
         assertThat(SimpleMailboxMessage.copy(TEST_ID, original).getTextualLineCount()).isEqualTo(textualLineCount);
         assertThat(SimpleMailboxMessage.copy(TEST_ID, original).getMediaType()).isEqualTo(text);
         assertThat(SimpleMailboxMessage.copy(TEST_ID, original).getSubType()).isEqualTo(plain);
