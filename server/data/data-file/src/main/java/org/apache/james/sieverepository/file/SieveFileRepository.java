@@ -178,12 +178,10 @@ public class SieveFileRepository implements SieveRepository {
      */
     @Override
     public void haveSpace(String user, String name, long size) throws QuotaExceededException, StorageException {
-        long usedSpace = 0;
-        for (File file : getUserDirectory(user).listFiles()) {
-            if (!(file.getName().equals(name) || SYSTEM_FILES.contains(file.getName()))) {
-                usedSpace = usedSpace + file.length();
-            }
-        }
+        long usedSpace = Arrays.stream(getUserDirectory(user).listFiles())
+            .filter(file -> !(file.getName().equals(name) || SYSTEM_FILES.contains(file.getName())))
+            .mapToLong(File::length)
+            .sum();
 
         long quota = Long.MAX_VALUE;
         File file = getQuotaFile(user);

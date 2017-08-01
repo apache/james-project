@@ -86,19 +86,16 @@ public class FetchGroupImpl implements MessageResult.FetchGroup {
      */
     public void addPartContent(MimePath path, int content) {
         if (partContentDescriptors == null) {
-            partContentDescriptors = new HashSet<PartContentDescriptor>();
+            partContentDescriptors = new HashSet<>();
         }
-        PartContentDescriptorImpl currentDescriptor = null;
-        for (PartContentDescriptor descriptor : partContentDescriptors) {
-            if (path.equals(descriptor.path())) {
-                currentDescriptor = (PartContentDescriptorImpl) descriptor;
-                break;
-            }
-        }
-        if (currentDescriptor == null) {
-            currentDescriptor = new PartContentDescriptorImpl(path);
-            partContentDescriptors.add(currentDescriptor);
-        }
+        PartContentDescriptorImpl currentDescriptor = (PartContentDescriptorImpl) partContentDescriptors.stream()
+            .filter(descriptor -> path.equals(descriptor.path()))
+            .findFirst()
+            .orElseGet(() -> {
+                PartContentDescriptorImpl result = new PartContentDescriptorImpl(path);
+                partContentDescriptors.add(result);
+                return result;
+            });
 
         currentDescriptor.or(content);
     }

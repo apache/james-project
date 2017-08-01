@@ -175,11 +175,7 @@ public class AddressExtractor {
     }
 
     private boolean isAllowed(String addressString, List<String> allowedSpecials) {
-        for (String allowedSpecial : allowedSpecials) {
-            if (addressString.equals(allowedSpecial.toLowerCase(Locale.US).trim())) {
-                return true;
-            }
-        }
-        return false;
+        return allowedSpecials.stream()
+            .anyMatch(allowedSpecial -> addressString.equals(allowedSpecial.toLowerCase(Locale.US).trim()));
     }
 }

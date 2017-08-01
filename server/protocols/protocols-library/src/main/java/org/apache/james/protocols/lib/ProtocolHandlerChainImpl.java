@@ -18,6 +18,10 @@
  ****************************************************************/
 package org.apache.james.protocols.lib;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.commons.configuration.CombinedConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.ConfigurationUtils;
@@ -29,9 +33,6 @@ import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
 import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
-
-import java.util.LinkedList;
-import java.util.List;
 
 public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
 
@@ -137,15 +138,10 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
     @SuppressWarnings("unchecked")
     @Override
     public <T> LinkedList<T> getHandlers(Class<T> type) {
-        LinkedList<T> hList = new LinkedList<T>();
-
-        for (Object h : handlers) {
-            if (type.isInstance(h)) {
-                hList.add((T) h);
-
-            }
-        }
-        return hList;
+        return handlers.stream()
+            .filter(type::isInstance)
+            .map(h -> (T) h)
+            .collect(Collectors.toCollection(LinkedList::new));
     }
 
     /**

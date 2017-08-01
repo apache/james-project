@@ -225,15 +225,9 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         mw.saveChanges();
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(mw.getMessageInputStream()));
-        String line;
 
-        boolean headerUpdated = false;
-        while ((line = reader.readLine()) != null) {
-            if (line.equals("X-Test: X-Value")) {
-                headerUpdated = true;
-                break;
-            }
-        }
+        boolean headerUpdated = reader.lines()
+            .anyMatch(line -> line.equals("X-Test: X-Value"));
         reader.close();
         assertTrue(headerUpdated);
     }
@@ -250,15 +244,9 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         mw.saveChanges();
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(mw.getMessageInputStream()));
-        String line;
 
-        boolean contentUpdated = false;
-        while ((line = reader.readLine()) != null) {
-            if (line.equals(newContent)) {
-                contentUpdated = true;
-                break;
-            }
-        }
+        boolean contentUpdated = reader.lines()
+            .anyMatch(line -> line.equals(newContent));
         reader.close();
         assertTrue(contentUpdated);
     }

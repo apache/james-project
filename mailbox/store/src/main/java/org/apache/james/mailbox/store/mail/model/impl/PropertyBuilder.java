@@ -50,6 +50,7 @@ import java.util.TreeMap;
 
 import org.apache.james.mailbox.store.mail.model.Property;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Predicate;
 
 /**
@@ -110,14 +111,11 @@ public class PropertyBuilder {
      * or null when no property has the given name and namespace
      */
     public String getFirstValue(String namespace, String localName) {
-        String result = null;
-        for (SimpleProperty property: properties) {
-            if (property.isNamed(namespace, localName)) {
-                result = property.getValue();
-                break;
-            }
-        }
-        return result;
+        return properties.stream()
+            .filter(property -> property.isNamed(namespace, localName))
+            .findFirst()
+            .map(SimpleProperty::getValue)
+            .orElse(null);
     }
     
     /**
@@ -127,13 +125,10 @@ public class PropertyBuilder {
      * @return not null
      */
     public List<String> getValues(String namespace, String localName) {
-        List<String> results = new ArrayList<String>();
-        for (SimpleProperty property: properties) {
-            if (property.isNamed(namespace, localName)) {
-                results.add(property.getValue());
-            }
-        }
-        return results;
+        return properties.stream()
+            .filter(property -> property.isNamed(namespace, localName))
+            .map(SimpleProperty::getValue)
+            .collect(Guavate.toImmutableList());
     }
     
     /**
@@ -183,7 +178,7 @@ public class PropertyBuilder {
      * @return values indexed by local name
      */
     public SortedMap<String,String> getProperties(String namespace) {
-        final SortedMap<String, String> parameters = new TreeMap<String, String>();
+        final SortedMap<String, String> parameters = new TreeMap<>();
         for (SimpleProperty property : properties) {
             if (property.isInSpace(namespace)) {
                 parameters.put(property.getLocalName(), property.getValue());

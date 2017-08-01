@@ -48,16 +48,13 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
 
     public Subscription findMailboxSubscriptionForUser(String user, String mailbox) {
         final List<Subscription> subscriptions = subscriptionsByUser.get(user);
-        Subscription result = null;
         if (subscriptions != null) {
-            for(Subscription subscription:subscriptions) {
-                if (subscription.getMailbox().equals(mailbox)) {
-                    result = subscription;
-                    break;
-                }
-            }
+            return subscriptions.stream()
+                .filter(subscription -> subscription.getMailbox().equals(mailbox))
+                .findFirst()
+                .orElse(null);
         }
-        return result;
+        return null;
     }
 
     public List<Subscription> findSubscriptionsForUser(String user) {

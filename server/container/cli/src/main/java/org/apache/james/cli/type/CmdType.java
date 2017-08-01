@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.cli.type;
 
+import java.util.Arrays;
+
 /**
  * Enumeration of valid command types.
  */
@@ -92,11 +94,10 @@ public enum CmdType {
      */
     public static CmdType lookup(String command) {
         if (command != null) {
-            for (CmdType cmd : values()) {
-                if (cmd.getCommand().equalsIgnoreCase(command)) {
-                    return cmd;
-                }
-            }
+            return Arrays.stream(values())
+                .filter(cmd -> cmd.getCommand().equalsIgnoreCase(command))
+                .findFirst()
+                .orElse(null);
         }
         return null;
     }

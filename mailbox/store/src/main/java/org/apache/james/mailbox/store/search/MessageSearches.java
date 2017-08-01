@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.io.StringReader;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -358,12 +359,8 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         SearchQuery.UidInOperator operator = criterion.getOperator();
         UidRange[] ranges = operator.getRange();
         MessageUid uid = message.getUid();
-        for (UidRange numericRange : ranges) {
-            if (numericRange.isIn(uid)) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.stream(ranges)
+            .anyMatch(numericRange -> numericRange.isIn(uid));
     }
 
     private boolean matches(SearchQuery.HeaderCriterion criterion, MailboxMessage message)
@@ -429,13 +426,9 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     private boolean exists(String headerName, MailboxMessage message) throws MailboxException, IOException {
         List<Header> headers = ResultUtils.createHeaders(message);
 
-        for (Header header : headers) {
-            String name = header.getName();
-            if (headerName.equalsIgnoreCase(name)) {
-                return true;
-            }
-        }
-        return false;
+        return headers.stream()
+            .map(Header::getName)
+            .anyMatch(headerName::equalsIgnoreCase);
     }
 
     private boolean matches(SearchQuery.ContainsOperator operator, String headerName,

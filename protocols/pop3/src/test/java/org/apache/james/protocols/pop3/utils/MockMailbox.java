@@ -22,7 +22,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +30,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.james.protocols.pop3.mailbox.ImapMailbox;
 import org.apache.james.protocols.pop3.mailbox.ImapMessageMetaData;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
+
+import com.github.steveash.guavate.Guavate;
 
 @SuppressWarnings("deprecation")
 public class MockMailbox extends ImapMailbox {
@@ -75,11 +76,10 @@ public class MockMailbox extends ImapMailbox {
     }
 
     public List<MessageMetaData> getMessages() throws IOException {
-        List<MessageMetaData> meta = new ArrayList<MessageMetaData>();
-        for (Message m: messages.values()) {
-            meta.add(m.meta);
-        }
-        return meta;
+        return messages.values()
+            .stream()
+            .map(m -> m.meta)
+            .collect(Guavate.toImmutableList());
     }
 
     public void remove(long... uids) throws IOException {

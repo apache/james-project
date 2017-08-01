@@ -20,6 +20,7 @@
 package org.apache.james.imap.processor.fetch;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -70,11 +71,9 @@ public class MessageResultUtils {
                 MessageResult.Header header = iterator.next();
                 final String headerName = header.getName();
                 if (headerName != null) {
-                    for (String name : names) {
-                        if (headerName.equalsIgnoreCase(name)) {
-                            results.add(header);
-                            break;
-                        }
+                    if (Arrays.stream(names)
+                        .anyMatch(headerName::equalsIgnoreCase)) {
+                        results.add(header);
                     }
                 }
             }
@@ -114,17 +113,11 @@ public class MessageResultUtils {
     }
 
     private static boolean contains(Collection<String> names, MessageResult.Header header) throws MailboxException {
-        boolean match = false;
         final String headerName = header.getName();
         if (headerName != null) {
-            for (String name : names) {
-                if (name.equalsIgnoreCase(headerName)) {
-                    match = true;
-                    break;
-                }
-            }
+            return names.stream().anyMatch(name -> name.equalsIgnoreCase(headerName));
         }
-        return match;
+        return false;
     }
 
     /**
@@ -189,13 +182,8 @@ public class MessageResultUtils {
                 MessageResult.Header header = iterator.next();
                 final String headerName = header.getName();
                 if (headerName != null) {
-                    boolean match = false;
-                    for (String name : names) {
-                        if (headerName.equalsIgnoreCase(name)) {
-                            match = true;
-                            break;
-                        }
-                    }
+                    boolean match = Arrays.stream(names)
+                        .anyMatch(headerName::equalsIgnoreCase);
                     if (!match) {
                         results.add(header);
                     }

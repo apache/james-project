@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Properties;
 
@@ -148,12 +149,9 @@ public class NettyStartTlsSMTPServerTest {
         }
 
         public boolean isStartTLSAnnounced() {
-            for (String reply: client.getReplyStrings()) {
-                if (reply.toUpperCase(Locale.US).endsWith("STARTTLS")) {
-                    return true;
-                }
-            }
-            return false;
+            return Arrays.stream(client.getReplyStrings())
+                .anyMatch(reply -> reply.toUpperCase(Locale.US)
+                    .endsWith("STARTTLS"));
         }
     }
 

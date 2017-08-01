@@ -20,6 +20,7 @@
 package org.apache.james.protocols.pop3.core;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.pop3.POP3Session;
@@ -56,12 +57,7 @@ public class MessageMetaDataUtils {
             return false;
         }
 
-        for (int i = 0; i < uid.length(); i++) {
-            if ((uid.charAt(i) >= 0x21 && uid.charAt(i) <= 0x7E) == false) {
-                return false;
-            }
-        }
-
-        return true;
+        return IntStream.range(0, uid.length())
+            .allMatch(i -> uid.charAt(i) >= 0x21 && uid.charAt(i) <= 0x7E);
     }
 }

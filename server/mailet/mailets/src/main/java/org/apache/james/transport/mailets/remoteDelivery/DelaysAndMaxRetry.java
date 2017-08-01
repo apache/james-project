@@ -97,11 +97,9 @@ public class DelaysAndMaxRetry {
     }
 
     private static int computeTotalAttempts(List<Delay> delayList) {
-        int sum = 0;
-        for (Delay delay : delayList) {
-            sum += delay.getAttempts();
-        }
-        return sum;
+        return delayList.stream()
+            .mapToInt(Delay::getAttempts)
+            .sum();
     }
 
     private final int maxRetries;

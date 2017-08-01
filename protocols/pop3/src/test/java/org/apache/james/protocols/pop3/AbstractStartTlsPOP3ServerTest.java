@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 
 import org.apache.commons.net.pop3.POP3Reply;
 import org.apache.commons.net.pop3.POP3SClient;
@@ -78,13 +79,8 @@ public abstract class AbstractStartTlsPOP3ServerTest {
             assertEquals(POP3Reply.OK, client.sendCommand("CAPA"));
             client.getAdditionalReply();
 
-            boolean startTlsCapa = false;
-            for (String cap: client.getReplyStrings()) {
-                if (cap.equalsIgnoreCase("STLS")) {
-                    startTlsCapa = true;
-                    break;
-                }
-            }
+            boolean startTlsCapa = Arrays.stream(client.getReplyStrings())
+                .anyMatch(cap -> cap.equalsIgnoreCase("STLS"));
             assertTrue(startTlsCapa);
             
             assertTrue(client.execTLS());

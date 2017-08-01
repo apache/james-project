@@ -138,22 +138,12 @@ public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
 
     @Override
     public boolean addAll(Collection<? extends ProtocolHandler> c) {
-        for (ProtocolHandler handler: c) {
-            if (!checkForAuth(handler)) {
-                return false;
-            }
-        }
-        return super.addAll(c);
+        return c.stream().allMatch(this::checkForAuth) && super.addAll(c);
     }
 
     @Override
     public boolean addAll(int index, Collection<? extends ProtocolHandler> c) {
-        for (ProtocolHandler handler: c) {
-            if (!checkForAuth(handler)) {
-                return false;
-            }
-        }
-        return super.addAll(index, c);
+        return c.stream().allMatch(this::checkForAuth) && super.addAll(index, c);
     }
 
     @Override

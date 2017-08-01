@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -36,6 +35,10 @@ import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
+
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public class MaildirSubscriptionMapper extends NonTransactionalMapper implements SubscriptionMapper {
 
@@ -53,10 +56,11 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
     public void delete(Subscription subscription) throws SubscriptionException {
      // TODO: we need some kind of file locking here
         Set<String> subscriptionNames = readSubscriptionsForUser(subscription.getUser());
-        boolean changed = subscriptionNames.remove(subscription.getMailbox());
+        Set<String> newSubscriptions = Sets.difference(subscriptionNames, ImmutableSet.of(subscription.getMailbox()));
+        boolean changed = subscriptionNames.size() != newSubscriptions.size();
         if (changed) {
             try {
-                writeSubscriptions(new File(store.userRoot(subscription.getUser())), subscriptionNames);
+                writeSubscriptions(new File(store.userRoot(subscription.getUser())), newSubscriptions);
             } catch (IOException e) {
                 throw new SubscriptionException(e);
             }
@@ -69,11 +73,9 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
     @Override
     public List<Subscription> findSubscriptionsForUser(String user) throws SubscriptionException {
         Set<String> subscriptionNames = readSubscriptionsForUser(user);
-        ArrayList<Subscription> subscriptions = new ArrayList<Subscription>();
-        for (String subscription : subscriptionNames) {
-            subscriptions.add(new SimpleSubscription(user, subscription));
-        }
-        return subscriptions;
+        return subscriptionNames.stream()
+            .map(subscription -> new SimpleSubscription(user, subscription))
+            .collect(Guavate.toImmutableList());
     }
 
     /**
@@ -100,10 +102,14 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
     public void save(Subscription subscription) throws SubscriptionException {
         // TODO: we need some kind of file locking here
         Set<String> subscriptionNames = readSubscriptionsForUser(subscription.getUser());
-        boolean changed = subscriptionNames.add(subscription.getMailbox());
+        Set<String> newSubscriptions = ImmutableSet.<String>builder()
+            .addAll(subscriptionNames)
+            .add(subscription.getMailbox())
+            .build();
+        boolean changed = subscriptionNames.size() != newSubscriptions.size();
         if (changed) {
             try {
-                writeSubscriptions(new File(store.userRoot(subscription.getUser())), subscriptionNames);
+                writeSubscriptions(new File(store.userRoot(subscription.getUser())), newSubscriptions);
             } catch (IOException e) {
                 throw new SubscriptionException(e);
             }
@@ -127,13 +133,11 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
      */
     private Set<String> readSubscriptionsForUser(String user) throws SubscriptionException { 
         File userRoot = new File(store.userRoot(user));
-        Set<String> subscriptionNames;
         try {
-            subscriptionNames = readSubscriptions(userRoot);
+            return readSubscriptions(userRoot);
         } catch (IOException e) {
             throw new SubscriptionException(e);
         }
-        return subscriptionNames;
     }
 
     /**
@@ -144,16 +148,14 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
      */
     private Set<String> readSubscriptions(File mailboxFolder) throws IOException {
         File subscriptionFile = new File(mailboxFolder, FILE_SUBSCRIPTION);
-        HashSet<String> subscriptions = new HashSet<String>();
         if (!subscriptionFile.exists()) {
-            return subscriptions;
+            return ImmutableSet.of();
         }
         FileReader fileReader = new FileReader(subscriptionFile);
         BufferedReader reader = new BufferedReader(fileReader);
-        String subscription;
-        while ((subscription = reader.readLine()) != null)
-            if (!subscription.equals(""))
-                subscriptions.add(subscription);
+        Set<String> subscriptions = reader.lines()
+            .filter(subscription -> !subscription.equals(""))
+            .collect(Guavate.toImmutableSet());
         reader.close();
         fileReader.close();
         return subscriptions;

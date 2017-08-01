@@ -34,6 +34,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
 
 public class InMemoryMailboxMapper implements MailboxMapper {
@@ -84,13 +85,11 @@ public class InMemoryMailboxMapper implements MailboxMapper {
      */
     public List<Mailbox> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
         final String regex = path.getName().replace("%", ".*");
-        List<Mailbox> results = new ArrayList<Mailbox>();
-        for (Mailbox mailbox: mailboxesByPath.values()) {
-            if (mailboxMatchesRegex(mailbox, path, regex)) {
-                results.add(new SimpleMailbox(mailbox));
-            }
-        }
-        return results;
+        return mailboxesByPath.values()
+            .stream()
+            .filter(mailbox -> mailboxMatchesRegex(mailbox, path, regex))
+            .map(SimpleMailbox::new)
+            .collect(Guavate.toImmutableList());
     }
 
     private boolean mailboxMatchesRegex(Mailbox mailbox, MailboxPath path, String regex) {
@@ -134,12 +133,9 @@ public class InMemoryMailboxMapper implements MailboxMapper {
      */
     public boolean hasChildren(Mailbox mailbox, char delimiter) throws MailboxException {
         String mailboxName = mailbox.getName() + delimiter;
-        for (Mailbox box: mailboxesByPath.values()) {
-            if (belongsToSameUser(mailbox, box) && box.getName().startsWith(mailboxName)) {
-                return true;
-            }
-        }
-        return false;
+        return mailboxesByPath.values()
+            .stream()
+            .anyMatch(box -> belongsToSameUser(mailbox, box) && box.getName().startsWith(mailboxName));
     }
 
     private boolean belongsToSameUser(Mailbox mailbox, Mailbox otherMailbox) {

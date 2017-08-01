@@ -318,11 +318,7 @@ public class HBaseMailboxMessage implements MailboxMessage {
      * This implementation supports user flags
      */
     public String[] createUserFlags() {
-        String[] flags = new String[userFlags.size()];
-        for (int i = 0; i < userFlags.size(); i++) {
-            flags[i] = userFlags.get(i);
-        }
-        return flags;
+        return userFlags.toArray(new String[userFlags.size()]);
     }
 
     @Override

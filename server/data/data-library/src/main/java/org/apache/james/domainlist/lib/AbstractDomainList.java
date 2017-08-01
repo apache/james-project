@@ -23,7 +23,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
@@ -37,6 +36,7 @@ import org.apache.james.lifecycle.api.LogEnabled;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -211,38 +211,25 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
      * @return domainIP List of ipaddress for domains
      */
     private static List<String> getDomainsIP(List<String> domains, DNSService dns, Logger log) {
-        List<String> domainIP = new ArrayList<String>();
-        if (domains.size() > 0) {
-            for (String domain : domains) {
-                List<String> domList = getDomainIP(domain, dns, log);
-
-                for (String aDomList : domList) {
-                    if (!domainIP.contains(aDomList)) {
-                        domainIP.add(aDomList);
-                    }
-                }
-            }
-        }
-        return domainIP;
+        return domains.stream()
+            .flatMap(domain -> getDomainIP(domain, dns, log).stream())
+            .distinct()
+            .collect(Guavate.toImmutableList());
     }
 
     /**
      * @see #getDomainsIP(List, DNSService, Logger)
      */
     private static List<String> getDomainIP(String domain, DNSService dns, Logger log) {
-        List<String> domainIP = new ArrayList<String>();
         try {
-            Collection<InetAddress> addrs = dns.getAllByName(domain);
-            for (InetAddress addr : addrs) {
-                String ip = addr.getHostAddress();
-                if (!domainIP.contains(ip)) {
-                    domainIP.add(ip);
-                }
-            }
+            return dns.getAllByName(domain).stream()
+                .map(InetAddress::getHostAddress)
+                .distinct()
+                .collect(Guavate.toImmutableList());
         } catch (UnknownHostException e) {
             log.error("Cannot get IP address(es) for " + domain);
+            return ImmutableList.of();
         }
-        return domainIP;
     }
 
     /**

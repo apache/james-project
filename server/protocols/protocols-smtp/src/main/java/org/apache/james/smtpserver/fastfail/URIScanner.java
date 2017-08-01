@@ -23,8 +23,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.james.smtpserver.TLDLookup;
 
@@ -186,18 +188,12 @@ public class URIScanner {
      * @return newDomains the domains which were extracted
      */
     static public HashSet<String> scanContentForDomains(HashSet<String> domains, CharSequence content) {
-        HashSet<String> newDomains = new HashSet<String>();
         HashSet<String> hosts = scanContentForHosts(content);
-        for (String host : hosts) {
-            final String domain = domainFromHost(host);
-
-            if (null != domain) {
-                if (!domains.contains(domain)) {
-                    newDomains.add(domain);
-                }
-            }
-        }
-        return newDomains;
+        return hosts.stream()
+            .map(URIScanner::domainFromHost)
+            .filter(Objects::nonNull)
+            .filter(domain -> !domains.contains(domain))
+            .collect(Collectors.toCollection(HashSet::new));
     }
 
     /**

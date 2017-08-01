@@ -20,20 +20,21 @@
 
 package org.apache.james.transport.matchers;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.StringTokenizer;
 
 /**
  * use: <pre><code>&lt;mailet match="HasHeader={&lt;header&gt;[=value]}+" class="..." /&gt;</code></pre>
@@ -83,11 +84,8 @@ public class HasHeader extends GenericMatcher {
         public boolean isMatching(MimeMessage mimeMessage) throws MessagingException {
             String[] headerArray = mimeMessage.getHeader(headerName);
             if (headerArray != null && headerArray.length > 0) {
-                for (String value : headerArray) {
-                    if (headerValue.equals(sanitizeHeaderField(value))) {
-                        return true;
-                    }
-                }
+                return Arrays.stream(headerArray)
+                    .anyMatch(value -> headerValue.equals(sanitizeHeaderField(value)));
             }
             return false;
         }
@@ -96,7 +94,7 @@ public class HasHeader extends GenericMatcher {
     private List<HeaderCondition> headerConditions;
 
     public void init() throws MessagingException {
-        headerConditions = new ArrayList<HeaderCondition>();
+        headerConditions = new ArrayList<>();
         StringTokenizer conditionTokenizer = new StringTokenizer(getCondition(), CONDITION_SEPARATOR);
         while (conditionTokenizer.hasMoreTokens()) {
             headerConditions.add(parseHeaderCondition(conditionTokenizer.nextToken().trim()));

@@ -27,9 +27,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -294,14 +293,10 @@ public abstract class AbstractFileRepository implements Repository, Configurable
     public Iterator<String> list() {
         final File storeDir = new File(m_baseDirectory.getAbsolutePath());
         final String[] names = storeDir.list(m_filter);
-        final List<String> list = new ArrayList<String>();
 
-        for (String name : names) {
-            String decoded = decode(name);
-            list.add(decoded);
-        }
-
-        return list.iterator();
+        return Arrays.stream(names)
+            .map(this::decode)
+            .iterator();
     }
 
     /**

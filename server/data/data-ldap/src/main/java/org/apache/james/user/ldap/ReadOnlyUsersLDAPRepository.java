@@ -54,6 +54,7 @@ import org.apache.james.util.retry.naming.ldap.RetryingLdapContext;
 import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Optional;
 
 /**
@@ -715,19 +716,17 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      * @see UsersRepository#list()
      */
     public Iterator<String> list() throws UsersRepositoryException {
-        List<String> result = new ArrayList<String>();
         try {
-
-            for (ReadOnlyLDAPUser readOnlyLDAPUser : buildUserCollection(getValidUsers())) {
-                result.add(readOnlyLDAPUser.getUserName());
-            }
+            return buildUserCollection(getValidUsers())
+                .stream()
+                .map(ReadOnlyLDAPUser::getUserName)
+                .collect(Guavate.toImmutableList())
+                .iterator();
         } catch (NamingException namingException) {
             throw new UsersRepositoryException(
                     "Unable to retrieve users list from LDAP due to unknown naming error.",
                     namingException);
         }
-
-        return result.iterator();
     }
 
     private Collection<String> getValidUsers() throws NamingException {

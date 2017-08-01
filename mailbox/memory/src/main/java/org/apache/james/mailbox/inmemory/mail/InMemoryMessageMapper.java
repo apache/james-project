@@ -45,6 +45,8 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 
+import com.github.steveash.guavate.Guavate;
+
 public class InMemoryMessageMapper extends AbstractMessageMapper {
     private final Map<InMemoryId, Map<MessageUid, MailboxMessage>> mailboxByUid;
     private static final int INITIAL_SIZE = 256;
@@ -75,13 +77,10 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
 
     @Override
     public long countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
-        long count = 0;
-        for (MailboxMessage member : getMembershipByUidForMailbox(mailbox).values()) {
-            if (!member.isSeen()) {
-                count++;
-            }
-        }
-        return count;
+        return getMembershipByUidForMailbox(mailbox).values()
+            .stream()
+            .filter(member -> !member.isSeen())
+            .count();
     }
 
     @Override
@@ -118,27 +117,23 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
 
     @Override
     public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
-        final List<MessageUid> results = new ArrayList<MessageUid>();
-        for (MailboxMessage member : getMembershipByUidForMailbox(mailbox).values()) {
-            if (member.isRecent()) {
-                results.add(member.getUid());
-            }
-        }
-        Collections.sort(results);
-
-        return results;
+        return getMembershipByUidForMailbox(mailbox).values()
+            .stream()
+            .filter(MailboxMessage::isRecent)
+            .map(MailboxMessage::getUid)
+            .sorted()
+            .collect(Guavate.toImmutableList());
     }
 
     @Override
     public MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
         List<MailboxMessage> memberships = new ArrayList<MailboxMessage>(getMembershipByUidForMailbox(mailbox).values());
         Collections.sort(memberships);
-        for (MailboxMessage m : memberships) {
-            if (m.isSeen() == false) {
-                return m.getUid();
-            }
-        }
-        return null;
+        return memberships.stream()
+            .filter(m -> !m.isSeen())
+            .findFirst()
+            .map(MailboxMessage::getUid)
+            .orElse(null);
     }
 
     @Override

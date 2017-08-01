@@ -21,7 +21,6 @@ package org.apache.james.adapter.mailbox;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -42,6 +41,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.slf4j.Logger;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 
 /**
@@ -107,10 +107,10 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
             session = mailboxManager.createSystemSession(username, log);
             mailboxManager.startProcessingRequest(session);
             List<MailboxMetaData> mList = retrieveAllUserMailboxes(username, session);
-            for (MailboxMetaData aMList : mList) {
-                boxes.add(aMList.getPath().getName());
-            }
-            Collections.sort(boxes);
+            boxes = mList.stream()
+                .map(aMList -> aMList.getPath().getName())
+                .sorted()
+                .collect(Guavate.toImmutableList());
         } catch (MailboxException e) {
             log.error("Error list mailboxes for user " + username, e);
         } finally {

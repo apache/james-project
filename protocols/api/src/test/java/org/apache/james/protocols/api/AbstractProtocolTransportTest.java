@@ -30,10 +30,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.IntStream;
 
 import org.apache.james.protocols.api.future.FutureResponseImpl;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.junit.Test;
+
+import com.github.steveash.guavate.Guavate;
 
 /**
  * Test-case for PROTOCOLS-62
@@ -45,11 +48,10 @@ public class AbstractProtocolTransportTest {
     
     @Test
     public void testWriteOrder() throws InterruptedException, UnsupportedEncodingException {
-        final List<Response> messages = new ArrayList<Response>();
-        for (int i = 0; i < 2000; i++) {
-            messages.add(new TestResponse());
-        }
-        
+        final List<Response> messages = IntStream.range(0, 2000)
+            .mapToObj(i -> new TestResponse())
+            .collect(Guavate.toImmutableList());
+
         checkWrittenResponses(messages);
     }
     
@@ -67,22 +69,21 @@ public class AbstractProtocolTransportTest {
        
     @Test
     public void testWriteOrderFutureResponse() throws InterruptedException, UnsupportedEncodingException {
-        final List<Response> messages = new ArrayList<Response>();
-        for (int i = 0; i < 2000; i++) {
-            messages.add(new FutureResponseImpl());
-        }
-        notifyFutureResponses(messages, false);
+        final List<Response> messages = IntStream.range(0, 2000)
+            .mapToObj(i -> new FutureResponseImpl())
+            .collect(Guavate.toImmutableList());
 
+        notifyFutureResponses(messages, false);
         
         checkWrittenResponses(messages);
     }
 
     @Test
     public void testWriteOrderFutureResponseReverseNotify() throws InterruptedException, UnsupportedEncodingException {
-        final List<Response> messages = new ArrayList<Response>();
-        for (int i = 0; i < 2000; i++) {
-            messages.add(new FutureResponseImpl());
-        }
+        final List<Response> messages = IntStream.range(0, 2000)
+            .mapToObj(i -> new FutureResponseImpl())
+            .collect(Guavate.toImmutableList());
+
         notifyFutureResponses(messages, true);
 
         checkWrittenResponses(messages);

@@ -18,16 +18,33 @@
  ****************************************************************/
 package org.apache.james.smtpserver.mock;
 
-import java.io.*;
-import java.util.*;
-import java.util.Map.Entry;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
 
 import javax.activation.DataHandler;
-import javax.mail.*;
+import javax.mail.Address;
+import javax.mail.Flags;
+import javax.mail.Folder;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeMessage;
 import javax.mail.search.SearchTerm;
+
+import com.github.steveash.guavate.Guavate;
 
 public class MockMimeMessage extends MimeMessage {
 
@@ -446,12 +463,11 @@ public class MockMimeMessage extends MimeMessage {
         return Collections.enumeration(getHeadersAsStrings(contentHeaders));
     }
 
-    private ArrayList<String> getHeadersAsStrings(HashMap<String, String> contentHeaders) {
-        ArrayList<String> headerLines = new ArrayList<String>();
-        for (Entry<String, String> entry : contentHeaders.entrySet()) {
-            headerLines.add(entry.getKey() + ":" + entry.getValue());
-        }
-        return headerLines;
+    private List<String> getHeadersAsStrings(HashMap<String, String> contentHeaders) {
+        return contentHeaders.entrySet()
+            .stream()
+            .map(entry -> entry.getKey() + ":" + entry.getValue())
+            .collect(Guavate.toImmutableList());
     }
 
     @Override

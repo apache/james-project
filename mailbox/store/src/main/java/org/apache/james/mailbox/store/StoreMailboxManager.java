@@ -84,6 +84,7 @@ import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 import org.slf4j.Logger;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -775,13 +776,11 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public List<MailboxPath> list(MailboxSession session) throws MailboxException {
-        List<MailboxPath> mList = new ArrayList<MailboxPath>();
-        List<Mailbox> mailboxes = mailboxSessionMapperFactory.getMailboxMapper(session).list();
-        for (Mailbox m : mailboxes) {
-            mList.add(m.generateAssociatedPath());
-        }
-        return Collections.unmodifiableList(mList);
-
+        return mailboxSessionMapperFactory.getMailboxMapper(session)
+            .list()
+            .stream()
+            .map(Mailbox::generateAssociatedPath)
+            .collect(Guavate.toImmutableList());
     }
 
     @Override

@@ -259,10 +259,7 @@ public class ProtocolHandlerChainImpl extends AbstractProtocolHandlerChain imple
      * @see java.util.List#subList(int, int)
      */
     public List<ProtocolHandler> subList(int fromIndex, int toIndex) {
-        List<ProtocolHandler> sList = new ArrayList<ProtocolHandler>();
-        for (Object handler : handlers.subList(fromIndex, toIndex)) {
-            sList.add((ProtocolHandler) handler);
-        }
+        List<ProtocolHandler> sList = new ArrayList<>(handlers.subList(fromIndex, toIndex));
         if (readyOnly) {
             return Collections.unmodifiableList(sList);
         }

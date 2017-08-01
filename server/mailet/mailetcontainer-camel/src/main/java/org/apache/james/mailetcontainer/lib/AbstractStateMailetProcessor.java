@@ -54,6 +54,8 @@ import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.MatcherInverter;
 import org.slf4j.Logger;
 
+import com.github.steveash.guavate.Guavate;
+
 /**
  * Abstract base class for {@link MailProcessor} implementations which want to
  * process {@link Mail} via {@link Matcher} and {@link Mailet}
@@ -179,11 +181,9 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
      * @return mailets
      */
     public List<Mailet> getMailets() {
-        List<Mailet> mailets = new ArrayList<Mailet>();
-        for (MatcherMailetPair pair : pairs) {
-            mailets.add(pair.getMailet());
-        }
-        return Collections.unmodifiableList(mailets);
+        return pairs.stream()
+            .map(MatcherMailetPair::getMailet)
+            .collect(Guavate.toImmutableList());
     }
 
     /**
@@ -192,11 +192,9 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
      * @return matchers
      */
     public List<Matcher> getMatchers() {
-        List<Matcher> matchers = new ArrayList<Matcher>();
-        for (MatcherMailetPair pair : pairs) {
-            matchers.add(pair.getMatcher());
-        }
-        return Collections.unmodifiableList(matchers);
+        return pairs.stream()
+            .map(MatcherMailetPair::getMatcher)
+            .collect(Guavate.toImmutableList());
     }
 
     public void addListener(MailetProcessorListener listener) {

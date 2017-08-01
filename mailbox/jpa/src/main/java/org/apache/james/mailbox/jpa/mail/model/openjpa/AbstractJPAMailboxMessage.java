@@ -463,11 +463,9 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     }
 
     protected String[] createUserFlags() {
-        String[] flags = new String[userFlags.size()];
-        for (int i = 0; i < userFlags.size(); i++) {
-            flags[i] = userFlags.get(i).getName();
-        }
-        return flags;
+        return userFlags.stream()
+            .map(JPAUserFlag::getName)
+            .toArray(String[]::new);
     }
 
     /**

@@ -23,12 +23,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.MailetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -123,11 +125,12 @@ public class RemoteDeliveryConfiguration {
     private Properties computeJavaxProperties(MailetConfig mailetConfig) {
         Properties result = new Properties();
         // deal with <mail.*> attributes, passing them to javamail
-        for (String propertyName : ImmutableList.copyOf(mailetConfig.getInitParameterNames())) {
-            if (propertyName.startsWith(JAVAX_PREFIX)) {
-                result.put(propertyName, mailetConfig.getInitParameter(propertyName));
-            }
-        }
+        result.putAll(
+            ImmutableList.copyOf(mailetConfig.getInitParameterNames())
+                .stream()
+                .filter(propertyName -> propertyName.startsWith(JAVAX_PREFIX))
+                .map(propertyName -> Pair.of(propertyName, mailetConfig.getInitParameter(propertyName)))
+                .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)));
         return result;
     }
 

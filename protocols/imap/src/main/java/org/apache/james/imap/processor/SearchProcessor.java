@@ -134,7 +134,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                 for (long id : ids) {
                     idList.add(id);
                 }
-                
+
                 List<IdRange> idsAsRanges = new ArrayList<IdRange>();
                 for (Long id: idList) {
                     idsAsRanges.add(new IdRange(id));
@@ -219,13 +219,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     }
     
     private long[] toArray(Collection<Long> results) {
-        final Iterator<Long> it = results.iterator();
-        final int length = results.size();
-        long[] ids = new long[length];
-        for (int i = 0; i < length; i++) {
-            ids[i] = ((Long) it.next()).longValue();
-        }
-        return ids;
+        return results.stream().mapToLong(x -> x).toArray();
     }
 
     /**

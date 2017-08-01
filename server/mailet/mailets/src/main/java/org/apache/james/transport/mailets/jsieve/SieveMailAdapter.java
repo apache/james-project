@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.mail.Header;
@@ -332,13 +333,12 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      */
     public String getEnvelopeTo()
     {
-        for (MailAddress mailAddress : getMail().getRecipients()) {
-            String recipient = mailAddress.toInternetAddress().getAddress();
-            if (recipient != null) {
-                return recipient;
-            }
-        }
-        return null;
+        return getMail().getRecipients()
+            .stream()
+            .map(mailAddress -> mailAddress.toInternetAddress().getAddress())
+            .filter(Objects::nonNull)
+            .findFirst()
+            .orElse(null);
     }
     
     /**

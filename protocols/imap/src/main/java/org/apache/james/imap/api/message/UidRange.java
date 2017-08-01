@@ -22,6 +22,7 @@ package org.apache.james.imap.api.message;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MessageRange;
@@ -80,11 +81,9 @@ public final class UidRange implements Iterable<MessageUid> {
 
 
     private static LinkedList<UidRange> toUidRanges(List<Range<MessageUid>> mergedRanges) {
-        LinkedList<UidRange> result = new LinkedList<UidRange>();
-        for (Range<MessageUid> range: mergedRanges) {
-            result.add(new UidRange(range.lowerEndpoint(), range.upperEndpoint()));
-        }
-        return result;
+        return mergedRanges.stream()
+            .map(range -> new UidRange(range.lowerEndpoint(), range.upperEndpoint()))
+            .collect(Collectors.toCollection(LinkedList::new));
     }
     
     private final MessageRange range;

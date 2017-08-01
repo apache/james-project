@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.store.json.event;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +45,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableMap;
 
 public class EventConverter {
@@ -150,10 +150,9 @@ public class EventConverter {
                                                                MailboxDataTransferObject mailboxIntermediate,
                                                                List<MessageUid> uids,
                                                                List<UpdatedFlags> updatedFlagsList) {
-        ArrayList<UpdatedFlagsDataTransferObject> updatedFlagsDataTransferObjects = new ArrayList<UpdatedFlagsDataTransferObject>();
-        for(UpdatedFlags updatedFlags : updatedFlagsList) {
-            updatedFlagsDataTransferObjects.add(new UpdatedFlagsDataTransferObject(updatedFlags));
-        }
+        List<UpdatedFlagsDataTransferObject> updatedFlagsDataTransferObjects = updatedFlagsList.stream()
+            .map(UpdatedFlagsDataTransferObject::new)
+            .collect(Guavate.toImmutableList());
         return EventDataTransferObject.builder()
             .type(EventType.FLAGS)
             .session(new MailboxSessionDataTransferObject(session))
@@ -198,11 +197,9 @@ public class EventConverter {
     }
 
     private List<UpdatedFlags> retrieveUpdatedFlags(List<UpdatedFlagsDataTransferObject> updatedFlagsDataTransferObject) {
-        List<UpdatedFlags> result = new ArrayList<UpdatedFlags>();
-        for(UpdatedFlagsDataTransferObject proxy : updatedFlagsDataTransferObject) {
-            result.add(proxy.retrieveUpdatedFlags());
-        }
-        return result;
+        return updatedFlagsDataTransferObject.stream()
+            .map(UpdatedFlagsDataTransferObject::retrieveUpdatedFlags)
+            .collect(Guavate.toImmutableList());
     }
 
 }

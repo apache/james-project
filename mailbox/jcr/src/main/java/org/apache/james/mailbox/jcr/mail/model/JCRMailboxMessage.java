@@ -53,6 +53,8 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.comparator.UidComparator;
 import org.slf4j.Logger;
 
+import com.github.steveash.guavate.Guavate;
+
 public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Persistent {
 
     private static final Comparator<MailboxMessage> MESSAGE_UID_COMPARATOR = new UidComparator();
@@ -304,10 +306,9 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
 
 
             List<Property> currentProperties = getProperties();
-            List<Property> newProperties = new ArrayList<Property>();
-            for (Property prop : currentProperties) {
-                newProperties.add(new JCRProperty(prop, logger));
-            }
+            List<Property> newProperties = currentProperties.stream()
+                .map(prop -> new JCRProperty(prop, logger))
+                .collect(Guavate.toImmutableList());
             // remove old properties, we will add a bunch of new ones
             NodeIterator iterator = node.getNodes("messageProperty");
             while (iterator.hasNext()) {

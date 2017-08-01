@@ -20,7 +20,7 @@ package org.apache.james.mailbox.store;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -88,13 +88,11 @@ public class StoreSubscriptionManager implements SubscriptionManager {
      * @see org.apache.james.mailbox.SubscriptionManager#subscriptions(org.apache.james.mailbox.MailboxSession)
      */
     public Collection<String> subscriptions(MailboxSession session) throws SubscriptionException {
-        final SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
-        final List<Subscription> subscriptions = mapper.findSubscriptionsForUser(session.getUser().getUserName());
-        final Collection<String> results = new HashSet<String>(INITIAL_SIZE);
-        for (Subscription subscription:subscriptions) {
-            results.add(subscription.getMailbox());
-        }        
-        return results;
+        return mapperFactory.getSubscriptionMapper(session)
+            .findSubscriptionsForUser(session.getUser().getUserName())
+            .stream()
+            .map(Subscription::getMailbox)
+            .collect(Collectors.toCollection(() -> new HashSet<>(INITIAL_SIZE)));
     }
 
     /**

@@ -19,7 +19,7 @@
 package org.apache.james.smtpserver.fastfail;
 
 import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -40,6 +40,8 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.steveash.guavate.Guavate;
 
 /**
  * This class can be used to reject email with bogus MX which is send from a
@@ -149,10 +151,9 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
 
         if (networks.length == 0) {
 
-            Collection<String> bannedNetworks = new ArrayList<String>();
-            for (String network : networks) {
-                bannedNetworks.add(network.trim());
-            }
+            Collection<String> bannedNetworks = Arrays.stream(networks)
+                .map(String::trim)
+                .collect(Guavate.toImmutableList());
 
             setBannedNetworks(bannedNetworks, dnsService);
 

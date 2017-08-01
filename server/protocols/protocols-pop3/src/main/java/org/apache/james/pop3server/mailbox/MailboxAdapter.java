@@ -21,6 +21,7 @@ package org.apache.james.pop3server.mailbox;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -39,6 +40,8 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
+
+import com.github.steveash.guavate.Guavate;
 
 public class MailboxAdapter implements Mailbox {
 
@@ -167,11 +170,9 @@ public class MailboxAdapter implements Mailbox {
 
     @Override
     public void remove(String... uids) throws IOException {
-        List<MessageUid> uidList = new ArrayList<MessageUid>();
-
-        for (String uid : uids) {
-            uidList.add(MessageUid.of(Long.valueOf(uid)));
-        }
+        List<MessageUid> uidList = Arrays.stream(uids)
+            .map(uid -> MessageUid.of(Long.valueOf(uid)))
+            .collect(Guavate.toImmutableList());
 
         List<MessageRange> ranges = MessageRange.toRanges(uidList);
         try {

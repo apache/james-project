@@ -301,13 +301,10 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
             for (int i = 0; i < rcptCount; i++) {
                 replies.add(getReply());
             }
-            
-            for (int code: replies) {
-                if (SMTPReply.isPositiveCompletion(code)) {
-                    return true;
-                }
-            }
-            return false;
+
+            return replies.stream()
+                .mapToInt(code -> code)
+                .anyMatch(SMTPReply::isPositiveCompletion);
         }
 
         

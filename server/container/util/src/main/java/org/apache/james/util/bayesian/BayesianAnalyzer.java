@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.IntStream;
 
 /**
  * <p>
@@ -707,11 +708,7 @@ public class BayesianAnalyzer {
     }
 
     private boolean allDigits(String s) {
-        for (int i = 0; i < s.length(); i++) {
-            if (!Character.isDigit(s.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
+        return IntStream.range(0, s.length())
+            .allMatch(i -> Character.isDigit(s.charAt(i)));
     }
 }
