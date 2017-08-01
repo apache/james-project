@@ -116,7 +116,20 @@ public class V1ToV2Migration implements Migration {
 
     @Override
     public MigrationResult run() {
-        return messageDAOV1.readAll()
+        boolean allResultFetched = false;
+        MigrationResult result = MigrationResult.COMPLETED;
+
+        while (!allResultFetched) {
+            List<CassandraMessageDAO.RawMessage> batch = messageDAOV1.readBatch();
+            allResultFetched = batch.isEmpty();
+            result = Migration.combine(result, migrateBatch(batch));
+        }
+        return result;
+    }
+
+    private MigrationResult migrateBatch(List<CassandraMessageDAO.RawMessage> batch) {
+        return batch
+            .stream()
             .map(this::migrate)
             .reduce(MigrationResult.COMPLETED, Migration::combine);
     }
