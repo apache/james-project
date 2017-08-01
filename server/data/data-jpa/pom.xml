@@ -136,9 +136,9 @@
         <plugins>
 
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
+                <groupId>org.apache.openjpa</groupId>
                 <artifactId>openjpa-maven-plugin</artifactId>
-                <version>1.2</version>
+                <version>2.4.2</version>
                 <configuration>
                     <includes>
                         org/apache/james/user/jpa/model/JPAUser.class,org/apache/james/rrt/jpa/model/JPARecipientRewrite.class,org/apache/james/domainlist/jpa/model/JPADomain.class
@@ -178,7 +178,7 @@
                 <artifactId>animal-sniffer-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>check_java_6</id>
+                        <id>check_java_8</id>
                         <phase>none</phase>
                     </execution>
                 </executions>
