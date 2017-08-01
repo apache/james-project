@@ -565,7 +565,7 @@
             otherwise the set values are used by default.
         -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <target.jdk>1.6</target.jdk>
+        <target.jdk>1.8</target.jdk>
         <james-skin.version>1.8</james-skin.version>
         <!--
             This property contains the directory where to deploy when running using "-Psite-reports" profile
@@ -1123,13 +1123,13 @@
                 <configuration>
                     <signature>
                         <groupId>org.codehaus.mojo.signature</groupId>
-                        <artifactId>java16</artifactId>
-                        <version>1.1</version>
+                        <artifactId>java18</artifactId>
+                        <version>1.0</version>
                     </signature>
                 </configuration>
                 <executions>
                     <execution>
-                        <id>check_java_6</id>
+                        <id>check_java_8</id>
                         <phase>test</phase>
                         <goals>
                             <goal>check</goal>

@@ -78,7 +78,7 @@
                 <artifactId>animal-sniffer-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>check_java_6</id>
+                        <id>check_java_8</id>
                         <phase>none</phase>
                     </execution>
                 </executions>
