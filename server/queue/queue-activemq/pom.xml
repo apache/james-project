@@ -63,8 +63,8 @@
           <version>${activemq.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-jms_1.1_spec</artifactId>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>artemis-jms-client</artifactId>
         </dependency>
         <dependency>
             <groupId>com.sun.mail</groupId>
