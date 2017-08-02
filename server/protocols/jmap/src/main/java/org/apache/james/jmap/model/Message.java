@@ -235,18 +235,14 @@ public class Message {
     }
 
     private static Predicate<BlobId> inAttachments(ImmutableList<Attachment> attachments) {
-        return (key) -> {
-            return attachments.stream()
-                .map(Attachment::getBlobId)
-                .anyMatch(blobId -> blobId.equals(key));
-        };
+        return (key) -> attachments.stream()
+            .map(Attachment::getBlobId)
+            .anyMatch(blobId -> blobId.equals(key));
     }
 
     private static boolean hasAttachment(List<Attachment> attachments) {
         return attachments.stream()
-                .filter(attachment -> !attachment.isInlinedWithCid())
-                .findAny()
-                .isPresent();
+                .anyMatch(attachment -> !attachment.isInlinedWithCid());
     }
 
     private final MessageId id;

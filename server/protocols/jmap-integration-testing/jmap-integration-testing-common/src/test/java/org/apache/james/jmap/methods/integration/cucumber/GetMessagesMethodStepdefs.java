@@ -505,7 +505,6 @@ public class GetMessagesMethodStepdefs {
 
     private void assertAttachment(String attachment, DataTable attachmentProperties) {
         attachmentProperties.asList(TableRow.class)
-            .stream()
             .forEach(entry -> assertThat(jsonPath.<Object>read(attachment + "." + entry.getKey())).isEqualTo(entry.getValue()));
     }
 }

@@ -82,7 +82,7 @@ public class TemporaryFilesystemModule extends AbstractModule {
     }
 
     private void copyResources(Path resourcesFolder) throws FileNotFoundException, IOException {
-        CONFIGURATION_FILE_NAMES.stream()
+        CONFIGURATION_FILE_NAMES
             .forEach(resourceName -> copyResource(resourcesFolder, resourceName));
     }
 

@@ -97,7 +97,7 @@ public class CassandraUidProviderTest {
         int nbEntries = 100;
         long nbValues = LongStream.range(0, nbEntries)
             .parallel()
-            .mapToObj(x -> x)
+            .boxed()
             .map(Throwing.function(x -> uidProvider.nextUid(null, mailbox)))
             .distinct()
             .count();
