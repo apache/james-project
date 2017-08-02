@@ -81,13 +81,13 @@ public class MatcherSplitter {
                             @Property(METRIC_FACTORY) MetricFactory metricFactory,
                             @Body Mail mail) throws MessagingException {
         Collection<MailAddress> matchedRcpts = null;
-        Collection<MailAddress> origRcpts = new ArrayList<MailAddress>(mail.getRecipients());
+        Collection<MailAddress> origRcpts = new ArrayList<>(mail.getRecipients());
         long start = System.currentTimeMillis();
         MessagingException ex = null;
         TimeMetric timeMetric = metricFactory.timer(matcher.getClass().getSimpleName());
 
         try {
-            List<Mail> mails = new ArrayList<Mail>();
+            List<Mail> mails = new ArrayList<>();
             boolean fullMatch = false;
 
             try {
@@ -97,7 +97,7 @@ public class MatcherSplitter {
                 if (matchedRcpts == null) {
                     // In case the matcher returned null, create an empty
                     // Collection
-                    matchedRcpts = new ArrayList<MailAddress>(0);
+                    matchedRcpts = new ArrayList<>(0);
                 } else if (matchedRcpts != mail.getRecipients()) {
                     // Make sure all the objects are MailAddress objects
                     ProcessorUtil.verifyMailAddresses(matchedRcpts);
@@ -113,7 +113,7 @@ public class MatcherSplitter {
                 if (onMatchException.compareTo("nomatch") == 0) {
                     // In case the matcher returned null, create an empty
                     // Collection
-                    matchedRcpts = new ArrayList<MailAddress>(0);
+                    matchedRcpts = new ArrayList<>(0);
                 } else if (onMatchException.compareTo("matchall") == 0) {
                     matchedRcpts = mail.getRecipients();
                     // no need to verify addresses
@@ -124,7 +124,7 @@ public class MatcherSplitter {
 
             // check if the matcher matched
             if (matchedRcpts != null && !matchedRcpts.isEmpty()) {
-                List<MailAddress> rcpts = new ArrayList<MailAddress>(mail.getRecipients());
+                List<MailAddress> rcpts = new ArrayList<>(mail.getRecipients());
 
                 for (MailAddress matchedRcpt : matchedRcpts) {
                     // loop through the recipients and remove the recipients

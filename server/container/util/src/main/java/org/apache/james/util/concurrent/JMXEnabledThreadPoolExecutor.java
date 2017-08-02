@@ -38,7 +38,7 @@ public class JMXEnabledThreadPoolExecutor extends ThreadPoolExecutor implements 
 
     private final String jmxPath;
     private final List<Runnable> inProgress = Collections.synchronizedList(new ArrayList<Runnable>());
-    private final ThreadLocal<Long> startTime = new ThreadLocal<Long>();
+    private final ThreadLocal<Long> startTime = new ThreadLocal<>();
     private long totalTime;
     private int totalTasks;
     private MBeanServer mbeanServer;
@@ -163,7 +163,7 @@ public class JMXEnabledThreadPoolExecutor extends ThreadPoolExecutor implements 
      * 
      */
     public static JMXEnabledThreadPoolExecutor newCachedThreadPool(String jmxPath, String name) {
-        return new JMXEnabledThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new NamedThreadFactory(name), jmxPath);
+        return new JMXEnabledThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(), new NamedThreadFactory(name), jmxPath);
 
     }
 
@@ -176,11 +176,11 @@ public class JMXEnabledThreadPoolExecutor extends ThreadPoolExecutor implements 
      * @return pool
      */
     public static JMXEnabledThreadPoolExecutor newCachedThreadPool(String jmxPath, NamedThreadFactory factory) {
-        return new JMXEnabledThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), factory, jmxPath);
+        return new JMXEnabledThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(), factory, jmxPath);
     }
     
     public static JMXEnabledThreadPoolExecutor newFixedThreadPool(String jmxPath, int nThreads, NamedThreadFactory threadFactory) {
-        return new JMXEnabledThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), threadFactory, jmxPath);
+        return new JMXEnabledThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), threadFactory, jmxPath);
     }
     
     public static JMXEnabledThreadPoolExecutor newFixedThreadPool(String jmxPath, String name, int nThreads) {

@@ -987,7 +987,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         IndexSearcher searcher = null;
 
         try {
-            Set<MessageUid> uids = new HashSet<MessageUid>();
+            Set<MessageUid> uids = new HashSet<>();
             searcher = new IndexSearcher(IndexReader.open(writer, true));
             
             // query for all the documents sorted by uid
@@ -1007,7 +1007,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 }
             }
             
-            List<MessageRange> ranges = MessageRange.toRanges(new ArrayList<MessageUid>(uids));
+            List<MessageRange> ranges = MessageRange.toRanges(new ArrayList<>(uids));
             UidRange[] nRanges = new UidRange[ranges.size()];
             for (int i = 0; i < ranges.size(); i++) {
                 MessageRange range = ranges.get(i);
@@ -1028,7 +1028,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
     
     private Sort createSort(List<SearchQuery.Sort> sorts) {
-        List<SortField> fields = new ArrayList<SortField>();
+        List<SortField> fields = new ArrayList<>();
 
         for (SearchQuery.Sort sort : sorts) {
             boolean reverse = sort.isReverse();
@@ -1336,7 +1336,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * @param f
      */
     private void indexFlags(Document doc, Flags f) {
-        List<String> fString = new ArrayList<String>();
+        List<String> fString = new ArrayList<>();
         Flag[] flags = f.getSystemFlags();
         for (Flag flag : flags) {
             fString.add(toString(flag));

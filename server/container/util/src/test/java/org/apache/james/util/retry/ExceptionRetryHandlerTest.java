@@ -19,14 +19,17 @@
  */
 package org.apache.james.util.retry;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.naming.Context;
 
 import org.apache.james.util.retry.api.ExceptionRetryingProxy;
 import org.apache.james.util.retry.api.RetryHandler;
 import org.apache.james.util.retry.api.RetrySchedule;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -133,7 +136,7 @@ public class ExceptionRetryHandlerTest {
      */
     @Test
     public final void testPostFailure() {
-	final List<Exception> results = new ArrayList<Exception>();
+	final List<Exception> results = new ArrayList<>();
 	RetryHandler handler = new ExceptionRetryHandler(
 		_exceptionClasses, _proxy, _schedule, 7) {
 

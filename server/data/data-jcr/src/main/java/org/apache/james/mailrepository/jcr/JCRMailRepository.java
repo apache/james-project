@@ -119,7 +119,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
         try {
             Session session = login();
             try {
-                Collection<String> keys = new ArrayList<String>();
+                Collection<String> keys = new ArrayList<>();
                 QueryManager manager = session.getWorkspace().getQueryManager();
                 @SuppressWarnings("deprecation")
                 Query query = manager.createQuery("/jcr:root/" + MAIL_PATH + "//element(*,james:mail)", Query.XPATH);
@@ -435,7 +435,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
     private Collection<MailAddress> getRecipients(Node node) throws MessagingException, RepositoryException {
         try {
             Value[] values = node.getProperty("james:recipients").getValues();
-            Collection<MailAddress> recipients = new ArrayList<MailAddress>(values.length);
+            Collection<MailAddress> recipients = new ArrayList<>(values.length);
             for (Value value : values) {
                 recipients.add(new MailAddress(value.getString()));
             }

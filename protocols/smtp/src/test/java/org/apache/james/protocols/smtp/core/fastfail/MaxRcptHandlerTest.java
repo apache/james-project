@@ -22,16 +22,14 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import static junit.framework.Assert.assertEquals;
+
 import java.util.HashMap;
 import java.util.Map;
-
-
-import static junit.framework.Assert.*;
 
 import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.MailAddressException;
 import org.apache.james.protocols.smtp.SMTPSession;
-import org.apache.james.protocols.smtp.core.fastfail.MaxRcptHandler;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.junit.Test;
@@ -42,7 +40,7 @@ public class MaxRcptHandlerTest {
     
     private SMTPSession setupMockedSession(final int rcptCount) {
         return new BaseFakeSMTPSession() {
-            HashMap<String,Object> state = new HashMap<String,Object>();
+            HashMap<String,Object> state = new HashMap<>();
 
             public Map<String,Object> getState() {
                 return state;

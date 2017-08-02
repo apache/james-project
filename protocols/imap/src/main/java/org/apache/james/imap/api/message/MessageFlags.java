@@ -79,7 +79,7 @@ public class MessageFlags {
      *         flags.
      */
     public static Collection<String> names(Flags flags) {
-        final Collection<String> results = new ArrayList<String>();
+        final Collection<String> results = new ArrayList<>();
         if (flags.contains(Flags.Flag.ANSWERED)) {
             results.add(ANSWERED_OUTPUT_CAPITALISED);
         }

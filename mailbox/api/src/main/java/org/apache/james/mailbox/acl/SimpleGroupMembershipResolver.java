@@ -68,7 +68,7 @@ public class SimpleGroupMembershipResolver implements GroupMembershipResolver {
 
     }
 
-    private final Set<Membership> memberships = new HashSet<SimpleGroupMembershipResolver.Membership>(32);
+    private final Set<Membership> memberships = new HashSet<>(32);
 
     public void addMembership(String group, String user) {
         memberships.add(new Membership(user, group));

@@ -55,7 +55,7 @@ public class MailboxCopierImpl implements MailboxCopier {
 
         @Override
         public Set<PartContentDescriptor> getPartContentDescriptors() {
-            return new HashSet<PartContentDescriptor>();
+            return new HashSet<>();
         }
         
     };

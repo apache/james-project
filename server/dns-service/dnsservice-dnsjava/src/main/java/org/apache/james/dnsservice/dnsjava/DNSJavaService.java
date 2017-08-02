@@ -18,7 +18,18 @@
  ****************************************************************/
 package org.apache.james.dnsservice.dnsjava;
 
-import com.google.common.collect.ImmutableList;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
@@ -46,17 +57,7 @@ import org.xbill.DNS.TXTRecord;
 import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Provides DNS client functionality to services running inside James
@@ -88,7 +89,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
     /**
      * The DNS servers to be used by this service
      */
-    private final List<String> dnsServers = new ArrayList<String>();
+    private final List<String> dnsServers = new ArrayList<>();
 
     private final MetricFactory metricFactory;
 
@@ -130,7 +131,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
 
         boolean autodiscover = configuration.getBoolean("autodiscover", true);
 
-        List<Name> sPaths = new ArrayList<Name>();
+        List<Name> sPaths = new ArrayList<>();
         if (autodiscover) {
             logger.info("Autodiscovery is enabled - trying to discover your system's DNS Servers");
             String[] serversArray = ResolverConfig.getCurrentConfig().servers();
@@ -263,7 +264,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
      */
     private List<String> findMXRecordsRaw(String hostname) throws TemporaryResolutionException {
         Record answers[] = lookup(hostname, Type.MX, "MX");
-        List<String> servers = new ArrayList<String>();
+        List<String> servers = new ArrayList<>();
         if (answers == null) {
             return servers;
         }
@@ -280,7 +281,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
         // now add the mx records to the right list and take care of shuffle
         // mx records with the same priority
         int currentPrio = -1;
-        List<String> samePrio = new ArrayList<String>();
+        List<String> samePrio = new ArrayList<>();
         for (int i = 0; i < mxAnswers.length; i++) {
             boolean same = false;
             boolean lastItem = i + 1 == mxAnswers.length;
@@ -319,7 +320,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
     @Override
     public Collection<String> findMXRecords(String hostname) throws TemporaryResolutionException {
         TimeMetric timeMetric = metricFactory.timer("findMXRecords");
-        List<String> servers = new ArrayList<String>();
+        List<String> servers = new ArrayList<>();
         try {
             servers = findMXRecordsRaw(hostname);
             return Collections.unmodifiableCollection(servers);
@@ -493,7 +494,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
     @Override
     public Collection<String> findTXTRecords(String hostname) {
         TimeMetric timeMetric = metricFactory.timer("findTXTRecords");
-        List<String> txtR = new ArrayList<String>();
+        List<String> txtR = new ArrayList<>();
         Record[] records = lookupNoException(hostname, Type.TXT, "TXT");
 
         try {

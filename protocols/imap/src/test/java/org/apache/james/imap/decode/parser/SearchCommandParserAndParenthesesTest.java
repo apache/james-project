@@ -54,7 +54,7 @@ public class SearchCommandParserAndParenthesesTest {
             on(), unanswered() };
 
     public static Input and(Input[] parts, boolean parens) {
-        List<SearchKey> keys = new ArrayList<SearchKey>();
+        List<SearchKey> keys = new ArrayList<>();
         StringBuffer buffer = new StringBuffer();
         if (parens) {
             buffer.append("(");

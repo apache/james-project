@@ -146,7 +146,7 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
                     session.REINIT(sessionNumber);
                 }
                 else if (next.startsWith(OPEN_UNORDERED_BLOCK_TAG)) {
-                    List<String> unorderedLines = new ArrayList<String>(5);
+                    List<String> unorderedLines = new ArrayList<>(5);
                     next = reader.readLine();
 
                     if (next == null)

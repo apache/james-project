@@ -35,7 +35,7 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
     private final Map<String, List<Subscription>> subscriptionsByUser;
     
     public InMemorySubscriptionMapper() {
-        subscriptionsByUser = new ConcurrentHashMap<String, List<Subscription>>(INITIAL_SIZE);
+        subscriptionsByUser = new ConcurrentHashMap<>(INITIAL_SIZE);
     }
 
     public synchronized void delete(Subscription subscription) {
@@ -72,7 +72,7 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
         final String user = subscription.getUser();
         final List<Subscription> subscriptions = subscriptionsByUser.get(user);
         if (subscriptions == null) {
-            final List<Subscription> newSubscriptions  = new ArrayList<Subscription>();
+            final List<Subscription> newSubscriptions  = new ArrayList<>();
             newSubscriptions.add(subscription);
             subscriptionsByUser.put(user, newSubscriptions);
         } else {

@@ -626,7 +626,7 @@ class ParsedConfiguration {
      */
     protected void setBlacklist(String blacklistValue) throws ConfigurationException {
         StringTokenizer st = new StringTokenizer(blacklistValue, ", \t", false);
-        Set<MailAddress> blacklist = new HashSet<MailAddress>();
+        Set<MailAddress> blacklist = new HashSet<>();
         String token = null;
         while (st.hasMoreTokens()) {
             try {

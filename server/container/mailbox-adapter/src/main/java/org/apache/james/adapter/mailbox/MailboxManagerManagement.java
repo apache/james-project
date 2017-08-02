@@ -101,7 +101,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
     @Override
     public List<String> listMailboxes(String username) {
         checkString(username, "Username");
-        List<String> boxes = new ArrayList<String>();
+        List<String> boxes = new ArrayList<>();
         MailboxSession session = null;
         try {
             session = mailboxManager.createSystemSession(username, log);

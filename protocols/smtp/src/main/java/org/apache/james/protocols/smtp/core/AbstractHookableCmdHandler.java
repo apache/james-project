@@ -260,7 +260,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
      * @see org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
      */
     public List<Class<?>> getMarkerInterfaces() {
-        List<Class<?>> classes = new ArrayList<Class<?>>(2);
+        List<Class<?>> classes = new ArrayList<>(2);
         classes.add(getHookInterface());
         classes.add(HookResultHook.class);
         return classes;

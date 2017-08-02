@@ -153,7 +153,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      */
     protected List<Action> computeActions()
     {
-        return new ArrayList<Action>();
+        return new ArrayList<>();
     }
     /**
      * Returns the List of actions.
@@ -217,7 +217,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         try
         {
             String[] headers = getMessage().getHeader(name);
-            return (headers == null ? new ArrayList<String>(0) : Arrays.asList(headers));
+            return (headers == null ? new ArrayList<>(0) : Arrays.asList(headers));
         }
         catch (MessagingException ex)
         {
@@ -230,14 +230,14 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      */
     public List<String> getHeaderNames() throws SieveMailException
     {
-        Set<String> headerNames = new HashSet<String>();
+        Set<String> headerNames = new HashSet<>();
         try
         {
             Enumeration<?> allHeaders = getMessage().getAllHeaders();
             while (allHeaders.hasMoreElements()) {
                 headerNames.add(((Header) allHeaders.nextElement()).getName());
             }
-            return new ArrayList<String>(headerNames);
+            return new ArrayList<>(headerNames);
         }
         catch (MessagingException ex)
         {
@@ -275,7 +275,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      */
     protected Map<String, String> getEnvelopes()
     {
-        Map<String, String> envelopes = new HashMap<String, String>(2);
+        Map<String, String> envelopes = new HashMap<>(2);
         if (null != getEnvelopeFrom())
             envelopes.put("From", getEnvelopeFrom());
         if (null != getEnvelopeTo())
@@ -287,7 +287,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      */
     public List<String> getEnvelope(String name) throws SieveMailException
     {
-        List<String> values = new ArrayList<String>(1);
+        List<String> values = new ArrayList<>(1);
         String value = getEnvelopes().get(name);
         if (null != value)
             values.add(value);
@@ -299,7 +299,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      */
     public List<String> getEnvelopeNames() throws SieveMailException
     {
-        return new ArrayList<String>(getEnvelopes().keySet());
+        return new ArrayList<>(getEnvelopes().keySet());
     }
     
     /**
@@ -307,7 +307,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      */
     public List<String> getMatchingEnvelope(String name) throws SieveMailException
     {
-        final List<String> matchedEnvelopeValues = new ArrayList<String>(32);
+        final List<String> matchedEnvelopeValues = new ArrayList<>(32);
         for (String envelopeName: getEnvelopeNames()) {
             if (envelopeName.trim().equalsIgnoreCase(name))
                 matchedEnvelopeValues.addAll(getEnvelope(envelopeName));
@@ -413,7 +413,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     public Address[] parseAddresses(String arg) throws SieveMailException, InternetAddressException {
         try {
             List<String> headerValues = getHeader(arg);
-            List<MailboxList> mailboxes = new ArrayList<MailboxList>();
+            List<MailboxList> mailboxes = new ArrayList<>();
             int size = 0;
             for(String headerValue : headerValues) {
                 MailboxList mailboxList = new AddressList(DefaultAddressParser.DEFAULT.parseAddressList(headerValue), true).flatten();

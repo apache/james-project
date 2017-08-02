@@ -42,7 +42,7 @@ public class MailderMailboxMessageNameTest {
 
     @Parameterized.Parameters
     public static List<Object[]> testData() {
-        List<Object[]> args = new ArrayList<Object[]>();
+        List<Object[]> args = new ArrayList<>();
         // no size, two flags
         Parts parts = Parts.fullName("1328026049.19146_0.km1111:2,RS").timeSeconds(1328026049)
                 .baseName("1328026049.19146_0.km1111").flagAnswered().flagSeen();

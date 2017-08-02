@@ -89,7 +89,7 @@ public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
     }
     
     protected List<ProtocolHandler> initDefaultHandlers() {
-        List<ProtocolHandler> defaultHandlers = new ArrayList<ProtocolHandler>();
+        List<ProtocolHandler> defaultHandlers = new ArrayList<>();
         defaultHandlers.add(new CommandDispatcher<SMTPSession>());
         defaultHandlers.add(new ExpnCmdHandler());
         defaultHandlers.add(new EhloCmdHandler(metricFactory));

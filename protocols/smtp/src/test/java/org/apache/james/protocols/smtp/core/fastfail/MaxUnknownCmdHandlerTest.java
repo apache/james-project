@@ -20,9 +20,10 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import static junit.framework.Assert.assertEquals;
+
 import java.util.HashMap;
 import java.util.Map;
-
 
 import org.apache.james.protocols.smtp.MailAddressException;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -30,15 +31,13 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.junit.Test;
 
-import static junit.framework.Assert.*;
-
 public class MaxUnknownCmdHandlerTest {
 
     
     @Test
     public void testRejectAndClose() throws MailAddressException {
         SMTPSession session = new BaseFakeSMTPSession() {
-            private final HashMap<String,Object> map = new HashMap<String,Object>();
+            private final HashMap<String,Object> map = new HashMap<>();
 
             public Map<String,Object> getState() {
                 return map;

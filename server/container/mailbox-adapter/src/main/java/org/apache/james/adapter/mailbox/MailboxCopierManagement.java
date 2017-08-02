@@ -60,7 +60,7 @@ public class MailboxCopierManagement implements MailboxCopierManagementMBean {
      * #getMailboxManagerBeans()
      */
     public Map<String, String> getMailboxManagerBeans() {
-        Map<String, String> bMap = new HashMap<String, String>();
+        Map<String, String> bMap = new HashMap<>();
         Map<String, MailboxManager> beans = resolver.getMailboxManagerBeans();
 
         for (Map.Entry<String, MailboxManager> entry : beans.entrySet()) {

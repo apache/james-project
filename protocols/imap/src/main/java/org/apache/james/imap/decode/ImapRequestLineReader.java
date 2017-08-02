@@ -668,7 +668,7 @@ public abstract class ImapRequestLineReader {
             return new IdRange[] { parseRange(nextWord) };
         }
 
-        ArrayList<IdRange> rangeList = new ArrayList<IdRange>();
+        ArrayList<IdRange> rangeList = new ArrayList<>();
         int pos = 0;
         while (commaPos != -1) {
             String range = nextWord.substring(pos, commaPos);
@@ -701,7 +701,7 @@ public abstract class ImapRequestLineReader {
             return new UidRange[] { parseUidRange(nextWord) };
         }
 
-        ArrayList<UidRange> rangeList = new ArrayList<UidRange>();
+        ArrayList<UidRange> rangeList = new ArrayList<>();
         int pos = 0;
         while (commaPos != -1) {
             String range = nextWord.substring(pos, commaPos);

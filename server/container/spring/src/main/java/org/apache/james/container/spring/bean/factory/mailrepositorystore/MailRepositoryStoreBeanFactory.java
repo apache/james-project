@@ -18,6 +18,13 @@
  ****************************************************************/
 package org.apache.james.container.spring.bean.factory.mailrepositorystore;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.commons.configuration.CombinedConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -30,13 +37,6 @@ import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-
-import javax.annotation.PostConstruct;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Provides a registry of mail repositories. A mail repository is uniquely
@@ -83,8 +83,8 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
         getLogger().info("JamesMailStore init...");
 
         repositories = new ReferenceMap();
-        classes = new HashMap<String, String>();
-        defaultConfigs = new HashMap<String, HierarchicalConfiguration>();
+        classes = new HashMap<>();
+        defaultConfigs = new HashMap<>();
         List<HierarchicalConfiguration> registeredClasses = configuration.configurationsAt("mailrepositories.mailrepository");
         for (HierarchicalConfiguration registeredClass : registeredClasses) {
             registerRepository(registeredClass);
@@ -227,7 +227,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
      * @see org.apache.james.mailrepository.api.MailRepositoryStore#getUrls()
      */
     public synchronized List<String> getUrls() {
-        return new ArrayList<String>(repositories.keySet());
+        return new ArrayList<>(repositories.keySet());
     }
 
     public void setLog(Logger logger) {

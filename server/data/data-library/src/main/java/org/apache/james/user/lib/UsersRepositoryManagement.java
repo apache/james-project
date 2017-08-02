@@ -18,18 +18,19 @@
  ****************************************************************/
 package org.apache.james.user.lib;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.management.NotCompliantMBeanException;
+import javax.management.StandardMBean;
+
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryManagementMBean;
 import org.apache.james.user.api.model.JamesUser;
 import org.apache.james.user.api.model.User;
-
-import javax.inject.Inject;
-import javax.management.NotCompliantMBeanException;
-import javax.management.StandardMBean;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 @SuppressWarnings("deprecation")
 public class UsersRepositoryManagement extends StandardMBean implements UsersRepositoryManagementMBean {
@@ -96,7 +97,7 @@ public class UsersRepositoryManagement extends StandardMBean implements UsersRep
 
     @Override
     public String[] listAllUsers() throws Exception {
-        List<String> userNames = new ArrayList<String>();
+        List<String> userNames = new ArrayList<>();
         try {
             for (Iterator<String> it = usersRepository.list(); it.hasNext(); ) {
                 userNames.add(it.next());

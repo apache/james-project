@@ -56,7 +56,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     /**
      * A request-scoped list of mailboxes in order to refer to them via id
      */
-    private final ArrayList<Mailbox> mailboxCache = new ArrayList<Mailbox>();
+    private final ArrayList<Mailbox> mailboxCache = new ArrayList<>();
 
     private final MailboxSession session;
     
@@ -133,7 +133,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         FilenameFilter filter = MaildirMessageName.createRegexFilter(searchPattern);
         File root = maildirStore.getMailboxRootForUser(mailboxPath.getUser());
         File[] folders = root.listFiles(filter);
-        ArrayList<Mailbox> mailboxList = new ArrayList<Mailbox>();
+        ArrayList<Mailbox> mailboxList = new ArrayList<>();
         for (File folder : folders)
             if (folder.isDirectory()) {
                 Mailbox mailbox = maildirStore.loadMailbox(session, root, mailboxPath.getNamespace(), mailboxPath.getUser(), folder.getName());
@@ -242,7 +242,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     public List<Mailbox> list() throws MailboxException {
         
        File maildirRoot = maildirStore.getMaildirRoot();
-       List<Mailbox> mailboxList = new ArrayList<Mailbox>();
+       List<Mailbox> mailboxList = new ArrayList<>();
         
        if (maildirStore.getMaildirLocation().endsWith("/" + MaildirStore.PATH_FULLUSER)) {
            File[] users = maildirRoot.listFiles();

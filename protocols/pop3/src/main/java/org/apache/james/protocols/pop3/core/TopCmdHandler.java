@@ -42,7 +42,7 @@ import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
  */
 public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
     private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("TOP"));
-    private static final Set<String> CAPS = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList("TOP")));
+    private static final Set<String> CAPS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("TOP")));
     
     private static final Response SYNTAX_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Usage: TOP [mail number] [Line number]").immutable();
     private static final Response ERROR_MESSAGE_RETR = new POP3Response(POP3Response.ERR_RESPONSE, "Error while retrieving message.").immutable();

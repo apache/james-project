@@ -39,7 +39,7 @@ import org.apache.james.lifecycle.api.Configurable;
 @Singleton
 public class XMLDomainList extends AbstractDomainList implements Configurable {
 
-    private final List<String> domainNames = new ArrayList<String>();
+    private final List<String> domainNames = new ArrayList<>();
     private boolean isConfigured = false;
 
     @Inject
@@ -55,7 +55,7 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
 
     @Override
     protected List<String> getDomainListInternal() {
-        return new ArrayList<String>(domainNames);
+        return new ArrayList<>(domainNames);
     }
 
     @Override

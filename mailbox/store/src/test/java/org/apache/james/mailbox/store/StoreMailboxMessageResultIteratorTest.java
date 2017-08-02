@@ -57,7 +57,7 @@ public class StoreMailboxMessageResultIteratorTest {
     private final class TestFetchGroup implements FetchGroup {
         @Override
         public Set<PartContentDescriptor> getPartContentDescriptors() {
-            return new HashSet<PartContentDescriptor>();
+            return new HashSet<>();
         }
 
         @Override
@@ -103,7 +103,7 @@ public class StoreMailboxMessageResultIteratorTest {
                                                               org.apache.james.mailbox.store.mail.MessageMapper.FetchType type, int limit)
                 throws MailboxException {
             
-            List<MailboxMessage> messages = new ArrayList<MailboxMessage>();
+            List<MailboxMessage> messages = new ArrayList<>();
             for (MessageUid uid: Iterables.limit(set, limit)) {
                 if (messageRange.includes(uid)) {
                     messages.add(createMessage(uid));

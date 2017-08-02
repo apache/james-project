@@ -48,7 +48,7 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
     private final static List<String> CAPS;
     
     static {
-        List<String> caps = new ArrayList<String>();
+        List<String> caps = new ArrayList<>();
         caps.add(VERSION);
         caps.add(SUPPORTS_LITERAL_PLUS);
         caps.add(SUPPORTS_RFC3348);
@@ -61,8 +61,8 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
         CAPS = Collections.unmodifiableList(caps);
     }
     
-    private final List<CapabilityImplementingProcessor> capabilities = new ArrayList<CapabilityImplementingProcessor>();
-    private final Set<String> disabledCaps = new HashSet<String>();
+    private final List<CapabilityImplementingProcessor> capabilities = new ArrayList<>();
+    private final Set<String> disabledCaps = new HashSet<>();
     
     public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, List<CapabilityImplementingProcessor> capabilities,
             MetricFactory metricFactory) {
@@ -132,7 +132,7 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
      * @return supported
      */
     public Set<String> getSupportedCapabilities(ImapSession session) {
-        Set<String> caps = new HashSet<String>();
+        Set<String> caps = new HashSet<>();
         for (CapabilityImplementingProcessor capability : capabilities) {
             caps.addAll(capability.getImplementedCapabilities(session));
         }

@@ -18,25 +18,25 @@
  ****************************************************************/
 package org.apache.james.queue.file;
 
-import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.lifecycle.api.LogEnabled;
-import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
-import org.apache.james.queue.api.MailQueue;
-import org.apache.james.queue.api.MailQueueFactory;
-import org.slf4j.Logger;
-
-import javax.inject.Inject;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.lifecycle.api.LogEnabled;
+import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.slf4j.Logger;
 
 /**
  * {@link MailQueueFactory} implementation which returns {@link FileMailQueue} instances
  */
 public class FileMailQueueFactory implements MailQueueFactory, LogEnabled {
 
-    private final Map<String, MailQueue> queues = new HashMap<String, MailQueue>();
+    private final Map<String, MailQueue> queues = new HashMap<>();
     private MailQueueItemDecoratorFactory mailQueueActionItemDecoratorFactory;
     private FileSystem fs;
     private Logger log;

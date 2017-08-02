@@ -54,7 +54,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     public InMemoryMessageMapper(MailboxSession session, UidProvider uidProvider,
             ModSeqProvider modSeqProvider) {
         super(session, uidProvider, modSeqProvider);
-        this.mailboxByUid = new ConcurrentHashMap<InMemoryId, Map<MessageUid, MailboxMessage>>(INITIAL_SIZE);
+        this.mailboxByUid = new ConcurrentHashMap<>(INITIAL_SIZE);
     }
 
     private Map<MessageUid, MailboxMessage> getMembershipByUidForMailbox(Mailbox mailbox) {
@@ -64,7 +64,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     private Map<MessageUid, MailboxMessage> getMembershipByUidForId(InMemoryId id) {
         Map<MessageUid, MailboxMessage> membershipByUid = mailboxByUid.get(id);
         if (membershipByUid == null) {
-            membershipByUid = new ConcurrentHashMap<MessageUid, MailboxMessage>(INITIAL_SIZE);
+            membershipByUid = new ConcurrentHashMap<>(INITIAL_SIZE);
             mailboxByUid.put(id, membershipByUid);
         }
         return membershipByUid;
@@ -100,7 +100,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     @Override
     public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange set, FetchType ftype, int max)
             throws MailboxException {
-        List<MailboxMessage> results = new ArrayList<MailboxMessage>(getMembershipByUidForMailbox(mailbox).values());
+        List<MailboxMessage> results = new ArrayList<>(getMembershipByUidForMailbox(mailbox).values());
         for (Iterator<MailboxMessage> it = results.iterator(); it.hasNext();) {
             if (!set.includes(it.next().getUid())) {
                 it.remove();
@@ -127,7 +127,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
 
     @Override
     public MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
-        List<MailboxMessage> memberships = new ArrayList<MailboxMessage>(getMembershipByUidForMailbox(mailbox).values());
+        List<MailboxMessage> memberships = new ArrayList<>(getMembershipByUidForMailbox(mailbox).values());
         Collections.sort(memberships);
         return memberships.stream()
             .filter(m -> !m.isSeen())
@@ -139,7 +139,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     @Override
     public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange set)
             throws MailboxException {
-        final Map<MessageUid, MessageMetaData> filteredResult = new HashMap<MessageUid, MessageMetaData>();
+        final Map<MessageUid, MessageMetaData> filteredResult = new HashMap<>();
 
         Iterator<MailboxMessage> it = findInMailbox(mailbox, set, FetchType.Metadata, -1);
         while (it.hasNext()) {

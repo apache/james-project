@@ -89,7 +89,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         Collection<MailAddress> rcptColl = (Collection<MailAddress>) session.getAttachment(
                 SMTPSession.RCPT_LIST, State.Transaction);
         if (rcptColl == null) {
-            rcptColl = new ArrayList<MailAddress>();
+            rcptColl = new ArrayList<>();
         }
         MailAddress recipientAddress = (MailAddress) session.getAttachment(
                 CURRENT_RECIPIENT, State.Transaction);

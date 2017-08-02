@@ -19,20 +19,20 @@
 
 package org.apache.james.util.scanner;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-
-import com.google.common.io.Closeables;
-
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
+import com.google.common.io.Closeables;
 
 /**
  * Sends the message through daemonized SpamAssassin (spamd), visit <a
@@ -54,7 +54,7 @@ public class SpamAssassinInvoker {
 
     private String required = "?";
 
-    private final Map<String, String> headers = new HashMap<String, String>();
+    private final Map<String, String> headers = new HashMap<>();
 
     /**
      * Init the spamassassin invoker

@@ -75,7 +75,7 @@ public class RecipientRewriteTableUtil {
         Matcher match = pattern.matcher(address.toString());
 
         if (match.matches()) {
-            Map<String, String> parameters = new HashMap<String, String>(match.groupCount());
+            Map<String, String> parameters = new HashMap<>(match.groupCount());
             for (int i = 1; i < match.groupCount(); i++) {
                 parameters.put(Integer.toString(i), match.group(i));
             }
@@ -196,7 +196,7 @@ public class RecipientRewriteTableUtil {
      * @return Map which contains the mappings
      */
     public static Map<String, String> getXMLMappings(String mapping) {
-        Map<String, String> mappings = new HashMap<String, String>();
+        Map<String, String> mappings = new HashMap<>();
         StringTokenizer tokenizer = new StringTokenizer(mapping, ",");
         while (tokenizer.hasMoreTokens()) {
             String mappingItem = tokenizer.nextToken();

@@ -158,8 +158,8 @@ public class MessageRange implements Iterable<MessageUid>{
      * @return ranges
      */
     public static List<MessageRange> toRanges(Collection<MessageUid> uidsCol) {
-        List<MessageRange> ranges = new ArrayList<MessageRange>();
-        List<MessageUid> uids = new ArrayList<MessageUid>(uidsCol);
+        List<MessageRange> ranges = new ArrayList<>();
+        List<MessageUid> uids = new ArrayList<>(uidsCol);
         Collections.sort(uids);
         
         long firstUid = 0;
@@ -241,7 +241,7 @@ public class MessageRange implements Iterable<MessageUid>{
      * {@link Type#RANGE}.
      */
     public List<MessageRange> split(int maxItems) {
-        List<MessageRange> ranges = new ArrayList<MessageRange>();
+        List<MessageRange> ranges = new ArrayList<>();
         if (getType() == Type.RANGE) {
             long from = getUidFrom().asLong();
             long to = getUidTo().asLong();

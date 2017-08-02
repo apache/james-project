@@ -81,7 +81,7 @@ public class PropertyBuilder {
     
     public PropertyBuilder() {
         textualLineCount = null;
-        properties = new ArrayList<SimpleProperty>(INITIAL_CAPACITY);
+        properties = new ArrayList<>(INITIAL_CAPACITY);
     }
 
     /**
@@ -466,7 +466,7 @@ public class PropertyBuilder {
      * @return not null
      */
     public List<Property> toProperties() {
-        return new ArrayList<Property>(properties);
+        return new ArrayList<>(properties);
     }
 
     /**

@@ -94,7 +94,7 @@ public abstract class AbstractUsersRepositoryTest {
     @Test
     public void countUsersShouldReturnNumberOfUsersWhenNotEmptyRepository() throws UsersRepositoryException {
         //Given
-        ArrayList<String> keys = new ArrayList<String>(3);
+        ArrayList<String> keys = new ArrayList<>(3);
         keys.add(user1);
         keys.add(user2);
         keys.add(user3);
@@ -118,7 +118,7 @@ public abstract class AbstractUsersRepositoryTest {
     @Test
     public void listShouldReturnExactlyUsersInRepository() throws UsersRepositoryException {
         //Given
-        ArrayList<String> keys = new ArrayList<String>(3);
+        ArrayList<String> keys = new ArrayList<>(3);
         keys.add(user1);
         keys.add(user2);
         keys.add(user3);

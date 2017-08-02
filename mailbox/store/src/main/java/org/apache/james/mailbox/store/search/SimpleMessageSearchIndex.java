@@ -119,7 +119,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         }
         MessageMapper mapper = messageMapperFactory.getMessageMapper(session);
 
-        final SortedSet<MailboxMessage> hitSet = new TreeSet<MailboxMessage>();
+        final SortedSet<MailboxMessage> hitSet = new TreeSet<>();
 
         UidCriterion uidCrit = findConjugatedUidCriterion(query.getCriterias());
         if (uidCrit != null) {
@@ -157,7 +157,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         if (searchQuery.getInMailboxes().isEmpty()) {
             return getAsMessageIds(searchResults(session, filteredMailboxes, searchQuery.getSearchQuery()), limit);
         }
-        List<Mailbox> queriedMailboxes = new ArrayList<Mailbox>();
+        List<Mailbox> queriedMailboxes = new ArrayList<>();
         for (Mailbox mailbox: filteredMailboxes) {
             if (searchQuery.getInMailboxes().contains(mailbox.getMailboxId())) {
                 queriedMailboxes.add(mailbox);

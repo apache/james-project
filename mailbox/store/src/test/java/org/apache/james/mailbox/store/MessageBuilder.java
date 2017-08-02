@@ -38,7 +38,7 @@ public class MessageBuilder {
     public int size = 8867;
     public Flags flags = new Flags();
     public byte[] body = {};
-    public final Map<String, String> headers = new HashMap<String, String>();
+    public final Map<String, String> headers = new HashMap<>();
     public int lineNumber = 0;
     
     public MailboxMessage build() throws Exception {

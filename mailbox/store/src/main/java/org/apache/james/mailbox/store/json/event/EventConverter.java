@@ -167,7 +167,7 @@ public class EventConverter {
                                                                        MailboxDataTransferObject mailboxIntermediate,
                                                                        List<MessageUid> uids,
                                                                        MailboxListener.MetaDataHoldingEvent event) {
-        HashMap<MessageUid, MessageMetaDataDataTransferObject> metaDataProxyMap = new HashMap<MessageUid, MessageMetaDataDataTransferObject>();
+        HashMap<MessageUid, MessageMetaDataDataTransferObject> metaDataProxyMap = new HashMap<>();
         for(MessageUid uid : uids) {
             metaDataProxyMap.put(uid, new MessageMetaDataDataTransferObject(
                 event.getMetaData(uid)
@@ -184,7 +184,7 @@ public class EventConverter {
 
     private SortedMap<MessageUid, MessageMetaData> retrieveMetadata(Map<MessageUid, MessageMetaDataDataTransferObject> metaDataProxyMap) {
         if(metaDataProxyMap != null) {
-            TreeMap<MessageUid, MessageMetaData> result = new TreeMap<MessageUid, MessageMetaData>();
+            TreeMap<MessageUid, MessageMetaData> result = new TreeMap<>();
             Set<Map.Entry<MessageUid, MessageMetaDataDataTransferObject>> entrySet = metaDataProxyMap.entrySet();
             for (Map.Entry<MessageUid, MessageMetaDataDataTransferObject> entry : entrySet) {
                 result.put(entry.getKey(), entry.getValue().getMetadata());

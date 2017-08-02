@@ -31,7 +31,7 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class InMemoryModSeqProvider implements ModSeqProvider {
-    private final ConcurrentMap<InMemoryId, AtomicLong> map = new ConcurrentHashMap<InMemoryId, AtomicLong>();
+    private final ConcurrentMap<InMemoryId, AtomicLong> map = new ConcurrentHashMap<>();
 
     @Override
     public long nextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {

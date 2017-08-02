@@ -28,7 +28,7 @@ public class Lock {
     /**
      * An internal hash table of keys to locks
      */
-    private final Hashtable<Object, Object> locks = new Hashtable<Object, Object>();
+    private final Hashtable<Object, Object> locks = new Hashtable<>();
 
     /**
      * Check to see if the object is locked

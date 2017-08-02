@@ -335,7 +335,7 @@ public class FetchPartPathDecoder {
     }
 
     private void readHeaderNames(int at, CharSequence sectionSpecification) throws DecodingException {
-        names = new ArrayList<String>();
+        names = new ArrayList<>();
         int firstWordStart = skipSpaces(at, sectionSpecification);
         readHeaderNames(firstWordStart, firstWordStart, sectionSpecification);
     }

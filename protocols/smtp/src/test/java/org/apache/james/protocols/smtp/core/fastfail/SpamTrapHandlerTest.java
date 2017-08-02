@@ -20,18 +20,18 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.fail;
+
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 
 import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.MailAddressException;
 import org.apache.james.protocols.smtp.SMTPSession;
-import org.apache.james.protocols.smtp.core.fastfail.SpamTrapHandler;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.junit.Test;
-
-import static junit.framework.Assert.*;
 
 public class SpamTrapHandlerTest {
     private static final String SPAM_TRAP_RECIP1 = "spamtrap1@localhost";
@@ -57,7 +57,7 @@ public class SpamTrapHandlerTest {
         String ip2 = "192.168.100.2";
         long blockTime = 2000;
     
-        ArrayList<String> rcpts = new ArrayList<String>();
+        ArrayList<String> rcpts = new ArrayList<>();
         rcpts.add(SPAM_TRAP_RECIP1);
     
         SpamTrapHandler handler = new SpamTrapHandler();

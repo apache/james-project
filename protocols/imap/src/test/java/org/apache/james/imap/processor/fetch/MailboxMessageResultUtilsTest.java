@@ -79,7 +79,7 @@ public class MailboxMessageResultUtilsTest {
         headerOne = new Header("One");
         headerTwo = new Header("Two");
         headerThree = new Header("Three");
-        headers = new ArrayList<MessageResult.Header>();
+        headers = new ArrayList<>();
         headers.add(headerOne);
         headers.add(headerTwo);
         headers.add(headerThree);

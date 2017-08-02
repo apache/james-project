@@ -123,8 +123,8 @@ public class JDBCAlias extends GenericMailet {
         ResultSet mappingRS = null;
 
         Collection<MailAddress> recipients = mail.getRecipients();
-        Collection<MailAddress> recipientsToRemove = new Vector<MailAddress>();
-        Collection<MailAddress> recipientsToAdd = new Vector<MailAddress>();
+        Collection<MailAddress> recipientsToRemove = new Vector<>();
+        Collection<MailAddress> recipientsToAdd = new Vector<>();
         try {
             conn = datasource.getConnection();
             mappingStmt = conn.prepareStatement(query);

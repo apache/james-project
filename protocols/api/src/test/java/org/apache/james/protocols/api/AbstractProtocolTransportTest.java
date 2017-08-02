@@ -57,7 +57,7 @@ public class AbstractProtocolTransportTest {
     
     @Test
     public void testWriteOrderFutureResponseAllReady() throws InterruptedException, UnsupportedEncodingException {
-        final List<Response> messages = new ArrayList<Response>();
+        final List<Response> messages = new ArrayList<>();
         for (int i = 0; i < 2000; i++) {
                 FutureResponseImpl r = new FutureResponseImpl();
                 r.setResponse(new TestResponse());
@@ -91,7 +91,7 @@ public class AbstractProtocolTransportTest {
     
     @Test
     public void testWriteOrderMixedResponse() throws InterruptedException, UnsupportedEncodingException {
-        final List<Response> messages = new ArrayList<Response>();
+        final List<Response> messages = new ArrayList<>();
         for (int i = 0; i < 2000; i++) {
             if (i % 2 == 0) {
                 messages.add(new TestResponse());
@@ -127,7 +127,7 @@ public class AbstractProtocolTransportTest {
         }).start();
     }
     private void checkWrittenResponses(List<Response> messages) throws InterruptedException, UnsupportedEncodingException {
-        final List<byte[]> writtenMessages = new ArrayList<byte[]>();
+        final List<byte[]> writtenMessages = new ArrayList<>();
 
         final CountDownLatch latch = new CountDownLatch(messages.size());
 

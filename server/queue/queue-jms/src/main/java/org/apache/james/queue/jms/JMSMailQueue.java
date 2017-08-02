@@ -288,7 +288,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      * @throws MessagingException
      */
     protected Map<String, Object> getJMSProperties(Mail mail, long delayInMillis) throws MessagingException {
-        Map<String, Object> props = new HashMap<String, Object>();
+        Map<String, Object> props = new HashMap<>();
         long nextDelivery = -1;
         if (delayInMillis > 0) {
             nextDelivery = System.currentTimeMillis() + delayInMillis;
@@ -389,7 +389,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         mail.setLastUpdated(new Date(message.getLongProperty(JAMES_MAIL_LAST_UPDATED)));
         mail.setName(message.getStringProperty(JAMES_MAIL_NAME));
 
-        List<MailAddress> rcpts = new ArrayList<MailAddress>();
+        List<MailAddress> rcpts = new ArrayList<>();
         String recipients = message.getStringProperty(JAMES_MAIL_RECIPIENTS);
         StringTokenizer recipientTokenizer = new StringTokenizer(recipients, JAMES_MAIL_SEPARATOR);
         while (recipientTokenizer.hasMoreTokens()) {
@@ -579,7 +579,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         Message message = null;
         MessageConsumer consumer = null;
         boolean first = true;
-        List<Message> messages = new ArrayList<Message>();
+        List<Message> messages = new ArrayList<>();
 
         try {
             session = connection.createSession(true, Session.SESSION_TRANSACTED);

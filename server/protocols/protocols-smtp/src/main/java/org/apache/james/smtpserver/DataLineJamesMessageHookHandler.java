@@ -19,6 +19,17 @@
 
 package org.apache.james.smtpserver;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailImpl;
@@ -46,17 +57,6 @@ import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.apache.james.smtpserver.model.MailetMailAddressAdapter;
 import org.apache.james.smtpserver.model.ProtocolMailAddressAdapter;
 import org.apache.mailet.Mail;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Handles the calling of JamesMessageHooks
@@ -99,7 +99,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
                 List<MailAddress> recipientCollection = (List<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction);
                 MailAddress mailAddress = (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction);
 
-                List<org.apache.mailet.MailAddress> rcpts = new ArrayList<org.apache.mailet.MailAddress>();
+                List<org.apache.mailet.MailAddress> rcpts = new ArrayList<>();
                 for (MailAddress address : recipientCollection) {
                     rcpts.add(new MailetMailAddressAdapter(address));
                 }
@@ -238,7 +238,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
 
     @Override
     public List<Class<?>> getMarkerInterfaces() {
-        List<Class<?>> classes = new LinkedList<Class<?>>();
+        List<Class<?>> classes = new LinkedList<>();
         classes.add(JamesMessageHook.class);
         classes.add(MessageHook.class);
         classes.add(HookResultHook.class);
@@ -271,7 +271,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
         @Override
         public List<MailAddress> getRecipients() {
             //TODO: not sure this MailAddress transformation code does the right thing
-            List<MailAddress> mailAddressList = new ArrayList<MailAddress>();
+            List<MailAddress> mailAddressList = new ArrayList<>();
             for (org.apache.mailet.MailAddress address : mail.getRecipients()) {
                 try {
                     mailAddressList.add(new MailAddress(address.getLocalPart(), address.getDomain()));

@@ -41,7 +41,7 @@ import org.apache.james.protocols.pop3.POP3StartTlsResponse;
 public class StlsCmdHandler implements CommandHandler<POP3Session>, CapaCapability {
 
     private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("STLS"));
-    private static final Set<String> CAPS = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList("STLS")));
+    private static final Set<String> CAPS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("STLS")));
 
     private static final Response BEGIN_TLS = new POP3StartTlsResponse(POP3Response.OK_RESPONSE, "Begin TLS negotiation").immutable();
 

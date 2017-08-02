@@ -75,7 +75,7 @@ public final class MailetManagement extends StandardMBean implements MailetManag
      * @see org.apache.james.mailetcontainer.api.jmx.MailetManagementMBean#getMailetParameters()
      */
     public String[] getMailetParameters() {
-        List<String> parameterList = new ArrayList<String>();
+        List<String> parameterList = new ArrayList<>();
         Iterator<String> iterator = config.getInitParameterNames();
         while (iterator.hasNext()) {
             String name = iterator.next();

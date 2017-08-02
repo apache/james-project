@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 @SuppressWarnings("deprecation")
 public class RecordingMailContext implements MailetContext {
 
-    private final List<SendMailEvent> sendmails = new LinkedList<SendMailEvent>();
+    private final List<SendMailEvent> sendmails = new LinkedList<>();
     private final FakeMailContext context;
 
     public RecordingMailContext() {

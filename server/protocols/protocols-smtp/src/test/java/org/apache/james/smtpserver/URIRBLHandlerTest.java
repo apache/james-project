@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -25,12 +27,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -41,7 +45,6 @@ import org.apache.james.smtpserver.fastfail.URIRBLHandler;
 import org.apache.james.smtpserver.mock.MockMimeMessage;
 import org.apache.james.smtpserver.mock.mailet.MockMail;
 import org.apache.mailet.Mail;
-import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 public class URIRBLHandlerTest {
@@ -59,8 +62,8 @@ public class URIRBLHandlerTest {
 
             private boolean relayingAllowed;
 
-            private final HashMap<String, Object> sstate = new HashMap<String, Object>();
-            private final HashMap<String, Object> connectionState = new HashMap<String, Object>();
+            private final HashMap<String, Object> sstate = new HashMap<>();
+            private final HashMap<String, Object> connectionState = new HashMap<>();
 
             @Override
             public Object setAttachment(String key, Object value, State state) {
@@ -142,7 +145,7 @@ public class URIRBLHandlerTest {
 
             @Override
             public Collection<String> findTXTRecords(String hostname) {
-                List<String> res = new ArrayList<String>();
+                List<String> res = new ArrayList<>();
                 if (hostname == null) {
                     return res;
                 }
@@ -170,7 +173,7 @@ public class URIRBLHandlerTest {
     @Test
     public void testNotBlocked() throws IOException, MessagingException {
 
-        ArrayList<String> servers = new ArrayList<String>();
+        ArrayList<String> servers = new ArrayList<>();
         servers.add(URISERVER);
 
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(
@@ -188,7 +191,7 @@ public class URIRBLHandlerTest {
     @Test
     public void testBlocked() throws IOException, MessagingException {
 
-        ArrayList<String> servers = new ArrayList<String>();
+        ArrayList<String> servers = new ArrayList<>();
         servers.add(URISERVER);
 
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(
@@ -206,7 +209,7 @@ public class URIRBLHandlerTest {
     @Test
     public void testBlockedMultiPart() throws IOException, MessagingException {
 
-        ArrayList<String> servers = new ArrayList<String>();
+        ArrayList<String> servers = new ArrayList<>();
         servers.add(URISERVER);
 
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessageMP(

@@ -300,14 +300,14 @@ public final class SearchKey {
 
     // NOT
     public static SearchKey buildNot(SearchKey key) {
-        final List<SearchKey> keys = new ArrayList<SearchKey>();
+        final List<SearchKey> keys = new ArrayList<>();
         keys.add(key);
         return new SearchKey(TYPE_NOT, null, keys, 0, null, null, null, null, -1, -1);
     }
 
     // OR
     public static SearchKey buildOr(SearchKey keyOne, SearchKey keyTwo) {
-        final List<SearchKey> keys = new ArrayList<SearchKey>();
+        final List<SearchKey> keys = new ArrayList<>();
         keys.add(keyOne);
         keys.add(keyTwo);
         return new SearchKey(TYPE_OR, null, keys, 0, null, null, null, null, -1, -1);

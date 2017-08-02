@@ -39,7 +39,7 @@ import org.apache.james.protocols.pop3.POP3Session;
 public class UserCmdHandler implements CommandHandler<POP3Session>, CapaCapability {
 
     private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("USER"));
-    private static final Set<String> CAPS = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList("USER")));
+    private static final Set<String> CAPS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("USER")));
 
     @Override
     public void init(Configuration config) throws ConfigurationException {

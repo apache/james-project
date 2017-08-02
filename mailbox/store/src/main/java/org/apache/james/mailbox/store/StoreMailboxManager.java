@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
 
@@ -397,7 +396,7 @@ public class StoreMailboxManager implements MailboxManager {
      * @return session
      */
     protected MailboxSession createSession(String userName, String password, Logger log, SessionType type) {
-        return new SimpleMailboxSession(randomId(), userName, password, log, new ArrayList<Locale>(), getDelimiter(), type);
+        return new SimpleMailboxSession(randomId(), userName, password, log, new ArrayList<>(), getDelimiter(), type);
     }
 
     /**
@@ -545,7 +544,7 @@ public class StoreMailboxManager implements MailboxManager {
             // Create parents first
             // If any creation fails then the mailbox will not be created
             // TODO: transaction
-            final List<MailboxId> mailboxIds = new ArrayList<MailboxId>();
+            final List<MailboxId> mailboxIds = new ArrayList<>();
             for (final MailboxPath mailbox : mailboxPath.getHierarchyLevels(getDelimiter()))
 
                 locker.executeWithLock(mailboxSession, mailbox, (LockAwareExecution<Void>) () -> {
@@ -696,7 +695,7 @@ public class StoreMailboxManager implements MailboxManager {
 
         List<Mailbox> mailboxes = mailboxSessionMapperFactory.getMailboxMapper(session)
             .findMailboxWithPathLike(search);
-        List<MailboxMetaData> results = new ArrayList<MailboxMetaData>(mailboxes.size());
+        List<MailboxMetaData> results = new ArrayList<>(mailboxes.size());
         for (Mailbox mailbox : mailboxes) {
             final String name = mailbox.getName();
             if(belongsToNamespaceAndUser(mailboxExpression.getBase(), mailbox)) {

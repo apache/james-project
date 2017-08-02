@@ -26,7 +26,7 @@ import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
 
 public class TestPassCmdHandler extends AbstractPassCmdHandler {
-    private final Map<String, Mailbox> mailboxes = new HashMap<String, Mailbox>();
+    private final Map<String, Mailbox> mailboxes = new HashMap<>();
    
     public void add(String username, Mailbox mailbox) {
         mailboxes.put(username, mailbox);

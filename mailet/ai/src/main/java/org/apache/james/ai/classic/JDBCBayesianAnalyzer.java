@@ -64,7 +64,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer implements Log {
     private String sqlFileName;
 
     /** Holds value of property sqlParameters. */
-    private Map<String, String> sqlParameters = new HashMap<String, String>();
+    private Map<String, String> sqlParameters = new HashMap<>();
 
     /** Holds value of property lastDatabaseUpdateTime. */
     private static long lastDatabaseUpdateTime;

@@ -122,7 +122,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                 }
                 // Get the mailbox for the reference name.
                 final MailboxPath rootPath = new MailboxPath(referenceRoot, "", "");
-                results = new ArrayList<MailboxMetaData>(1);
+                results = new ArrayList<>(1);
                 results.add(new MailboxMetaData() {
 
                     public Children inferiors() {

@@ -66,8 +66,8 @@ public class DiscardProtocol {
 
     public DiscardProtocol() {
         super();
-        queue = new LinkedList<Server>();
-        runningServers = new LinkedList<Server>();
+        queue = new LinkedList<>();
+        runningServers = new LinkedList<>();
     }
     
     /**

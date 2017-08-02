@@ -56,7 +56,7 @@ public class FetchScheduler implements FetchSchedulerMBean, LogEnabled, Configur
      */
     private volatile boolean enabled = false;
 
-    private final List<ScheduledFuture<?>> schedulers = new ArrayList<ScheduledFuture<?>>();
+    private final List<ScheduledFuture<?>> schedulers = new ArrayList<>();
 
     private DNSService dns;
 

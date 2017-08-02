@@ -19,10 +19,10 @@
 
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.james.imap.api.ImapCommand;
 
 /**
  * SETQUOTA request
@@ -53,7 +53,7 @@ public class SetQuotaRequest extends AbstractImapRequest {
     public SetQuotaRequest(String tag, ImapCommand command, String quotaRoot) {
         super(tag, command);
         this.quotaRoot = quotaRoot;
-        this.resourceLimits = new ArrayList<ResourceLimit>();
+        this.resourceLimits = new ArrayList<>();
     }
 
     public void addResourceLimit(String resource, long limit) {
@@ -61,7 +61,7 @@ public class SetQuotaRequest extends AbstractImapRequest {
     }
 
     public List<ResourceLimit> getResourceLimits() {
-        return new ArrayList<ResourceLimit>(resourceLimits);
+        return new ArrayList<>(resourceLimits);
     }
 
     public String getQuotaRoot() {

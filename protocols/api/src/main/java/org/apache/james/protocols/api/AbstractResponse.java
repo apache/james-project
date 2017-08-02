@@ -31,7 +31,7 @@ public abstract class AbstractResponse implements Response{
 
 
     private String retCode = null;
-    protected final List<CharSequence> lines = new LinkedList<CharSequence>();
+    protected final List<CharSequence> lines = new LinkedList<>();
     private boolean endSession = false;
     
     protected AbstractResponse() {

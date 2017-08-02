@@ -45,7 +45,7 @@ import org.slf4j.Logger;
 public abstract class AbstractStateCompositeProcessor implements MailProcessor, Configurable, LogEnabled {
 
     private final List<CompositeProcessorListener> listeners = Collections.synchronizedList(new ArrayList<CompositeProcessorListener>());
-    private final Map<String, MailProcessor> processors = new HashMap<String, MailProcessor>();
+    private final Map<String, MailProcessor> processors = new HashMap<>();
     protected Logger logger;
     protected HierarchicalConfiguration config;
 

@@ -49,7 +49,7 @@ public class MailboxMetaData implements MessageManager.MetaData {
     public MailboxMetaData(List<MessageUid> recent, Flags premanentFlags, long uidValidity, MessageUid uidNext, long highestModSeq, long messageCount, long unseenCount, MessageUid firstUnseen, boolean writeable, boolean modSeqPermanent, MailboxACL acl) {
         super();
         if (recent == null) {
-            this.recent = new ArrayList<MessageUid>();
+            this.recent = new ArrayList<>();
         } else {
             this.recent = recent;
 

@@ -41,7 +41,6 @@ import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.mailbox.store.probe.QuotaProbe;
 import org.apache.james.mailbox.store.probe.SieveProbe;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.easymock.IMocksControl;
 import org.junit.Before;
@@ -172,7 +171,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTMAPPINGS.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(dataProbe.listMappings()).andReturn(new HashMap<String, Mappings>());
+        expect(dataProbe.listMappings()).andReturn(new HashMap<>());
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -356,7 +355,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERMAILBOXES.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(mailboxProbe.listUserMailboxes(user)).andReturn(new ArrayList<String>());
+        expect(mailboxProbe.listUserMailboxes(user)).andReturn(new ArrayList<>());
 
         control.replay();
         testee.executeCommandLine(commandLine);

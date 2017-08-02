@@ -19,6 +19,10 @@
 
 package org.apache.james.managesieveserver.netty;
 
+import java.net.InetSocketAddress;
+
+import javax.net.ssl.SSLContext;
+
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
@@ -39,9 +43,6 @@ import org.jboss.netty.handler.codec.frame.TooLongFrameException;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.slf4j.Logger;
 
-import javax.net.ssl.SSLContext;
-import java.net.InetSocketAddress;
-
 @SuppressWarnings("deprecation")
 public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
 
@@ -57,7 +58,7 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     public ManageSieveChannelUpstreamHandler(ManageSieveProcessor manageSieveProcessor, SSLContext sslContext,
                                              String[] enabledCipherSuites, boolean sslServer, Logger logger) {
         this.logger = logger;
-        this.attributes = new ChannelLocal<Session>();
+        this.attributes = new ChannelLocal<>();
         this.manageSieveProcessor = manageSieveProcessor;
         this.sslContext = sslContext;
         this.enabledCipherSuites = enabledCipherSuites;

@@ -34,7 +34,7 @@ public class IteratorWrapper<U> implements Iterator<U> {
     public IteratorWrapper(Iterator<U> underlying) {
         Preconditions.checkNotNull(underlying);
         this.underlying = underlying;
-        this.entriesSeen = new ArrayList<U>();
+        this.entriesSeen = new ArrayList<>();
     }
 
     public List<U> getEntriesSeen() {

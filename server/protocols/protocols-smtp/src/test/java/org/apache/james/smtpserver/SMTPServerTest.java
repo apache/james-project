@@ -42,7 +42,6 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.commons.net.ProtocolCommandEvent;
 import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.smtp.SMTPClient;
@@ -78,6 +77,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+
 @SuppressWarnings("deprecation")
 public class SMTPServerTest {
 
@@ -87,7 +88,7 @@ public class SMTPServerTest {
 
         @Override
         public Collection<String> findMXRecords(String hostname) {
-            List<String> res = new ArrayList<String>();
+            List<String> res = new ArrayList<>();
             if (hostname == null) {
                 return res;
             }
@@ -136,7 +137,7 @@ public class SMTPServerTest {
 
         @Override
         public Collection<String> findTXTRecords(String hostname) {
-            List<String> res = new ArrayList<String>();
+            List<String> res = new ArrayList<>();
             if (hostname == null) {
                 return res;
             }
@@ -449,7 +450,7 @@ public class SMTPServerTest {
         smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
-        List<String> capabilitieslist = new ArrayList<String>();
+        List<String> capabilitieslist = new ArrayList<>();
         for (int i = 1; i < capabilityRes.length; i++) {
             capabilitieslist.add(capabilityRes[i].substring(4));
         }
@@ -565,7 +566,7 @@ public class SMTPServerTest {
         smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
-        List<String> capabilitieslist = new ArrayList<String>();
+        List<String> capabilitieslist = new ArrayList<>();
         for (int i = 1; i < capabilityRes.length; i++) {
             capabilitieslist.add(capabilityRes[i].substring(4));
         }
@@ -1313,7 +1314,7 @@ public class SMTPServerTest {
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
-        List<String> capabilitieslist = new ArrayList<String>();
+        List<String> capabilitieslist = new ArrayList<>();
         for (int i = 1; i < capabilityRes.length; i++) {
             capabilitieslist.add(capabilityRes[i].substring(4));
         }
@@ -1598,7 +1599,7 @@ public class SMTPServerTest {
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
-        List<String> capabilitieslist = new ArrayList<String>();
+        List<String> capabilitieslist = new ArrayList<>();
         for (int i = 1; i < capabilityRes.length; i++) {
             capabilitieslist.add(capabilityRes[i].substring(4));
         }

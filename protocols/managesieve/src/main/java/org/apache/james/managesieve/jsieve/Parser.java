@@ -34,7 +34,7 @@ import org.apache.jsieve.parser.generated.ParseException;
 
 public class Parser implements SieveParser {
     
-    private static final List<String> EMPTY_WARNINGS = new ArrayList<String>(0);
+    private static final List<String> EMPTY_WARNINGS = new ArrayList<>(0);
     
     private SieveFactory sieveFactory;
 

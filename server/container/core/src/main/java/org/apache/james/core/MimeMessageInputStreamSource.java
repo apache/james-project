@@ -42,7 +42,7 @@ import org.apache.james.lifecycle.api.Disposable;
  */
 public class MimeMessageInputStreamSource extends MimeMessageSource implements Disposable {
 
-    private final List<InputStream> streams = new ArrayList<InputStream>();
+    private final List<InputStream> streams = new ArrayList<>();
 
     /**
      * A temporary file used to hold the message stream

@@ -131,7 +131,7 @@ public class KeyStoreHolder {
             .build();
         SignerInformationStore siginfo = signed.getSignerInfos();
         Collection<SignerInformation> sigCol = siginfo.getSigners();
-        List<SMIMESignerInfo> result = new ArrayList<SMIMESignerInfo>(sigCol.size());
+        List<SMIMESignerInfo> result = new ArrayList<>(sigCol.size());
         // I iterate over the signer collection 
         // checking if the signatures put
         // on the message are valid.

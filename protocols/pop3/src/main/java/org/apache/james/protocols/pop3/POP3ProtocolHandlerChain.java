@@ -28,11 +28,11 @@ import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChainImpl;
 import org.apache.james.protocols.api.handler.WiringException;
+import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
 import org.apache.james.protocols.pop3.core.CapaCmdHandler;
 import org.apache.james.protocols.pop3.core.DeleCmdHandler;
 import org.apache.james.protocols.pop3.core.ListCmdHandler;
 import org.apache.james.protocols.pop3.core.NoopCmdHandler;
-import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
 import org.apache.james.protocols.pop3.core.QuitCmdHandler;
 import org.apache.james.protocols.pop3.core.RetrCmdHandler;
 import org.apache.james.protocols.pop3.core.RsetCmdHandler;
@@ -70,7 +70,7 @@ public class POP3ProtocolHandlerChain extends ProtocolHandlerChainImpl{
     }
     
     protected List<ProtocolHandler> initDefaultHandlers(AbstractPassCmdHandler... authHandlers) {
-        List<ProtocolHandler> handlers = new ArrayList<ProtocolHandler>();
+        List<ProtocolHandler> handlers = new ArrayList<>();
         // add all pass handlers
         Collections.addAll(handlers, authHandlers);
         

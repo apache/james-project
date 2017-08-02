@@ -50,7 +50,7 @@ public class StagingOrderTestCase {
         Stageable stageable2 = stageHandler -> order.add(2);
         Stageable stageable3 = stageHandler -> order.add(3);
 
-        DefaultStager<TestAnnotationA> stager = new DefaultStager<TestAnnotationA>(TestAnnotationA.class, stagingOrder);
+        DefaultStager<TestAnnotationA> stager = new DefaultStager<>(TestAnnotationA.class, stagingOrder);
         stager.register(stageable1);
         stager.register(stageable2);
         stager.register(stageable3);

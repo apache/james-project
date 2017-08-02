@@ -205,7 +205,7 @@ public class URIScanner {
      * @return a HashSet containing host strings
      */
     static protected HashSet<String> scanContentForHosts(CharSequence content) {
-        HashSet<String> set = new HashSet<String>();
+        HashSet<String> set = new HashSet<>();
 
         // look for URIs
         Matcher mat = uriPattern.matcher(content);

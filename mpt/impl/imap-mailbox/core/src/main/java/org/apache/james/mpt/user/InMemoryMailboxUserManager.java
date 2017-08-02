@@ -35,7 +35,7 @@ public class InMemoryMailboxUserManager implements SubscriptionManager {
     private final Map<String, MailboxUser> users;
 
     public InMemoryMailboxUserManager() {
-        this.users = new HashMap<String, MailboxUser>();
+        this.users = new HashMap<>();
     }
 
     public boolean isAuthentic(String userid, CharSequence password) {

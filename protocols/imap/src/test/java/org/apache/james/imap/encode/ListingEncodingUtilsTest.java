@@ -21,14 +21,13 @@ package org.apache.james.imap.encode;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Assert;
-
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.ListResponse;
-
 import org.junit.Before;
 import org.junit.Test;
+
+import junit.framework.Assert;
 
 public class ListingEncodingUtilsTest  {
 
@@ -42,7 +41,7 @@ public class ListingEncodingUtilsTest  {
     
     @Before
     public void setUp() throws Exception {
-        attributesOutput = new ArrayList<String>();
+        attributesOutput = new ArrayList<>();
       
     }
 

@@ -318,7 +318,7 @@ public class CoreProcessor implements CoreCommands {
 
     private Map<Capabilities, String> precomputedCapabilitiesBase(SieveParser parser) {
         String extensions = buildExtensions(parser);
-        Map<Capabilities, String> capabilitiesBase = new HashMap<Capabilities, String>();
+        Map<Capabilities, String> capabilitiesBase = new HashMap<>();
         capabilitiesBase.put(Capabilities.IMPLEMENTATION, IMPLEMENTATION_DESCRIPTION);
         capabilitiesBase.put(Capabilities.VERSION, MANAGE_SIEVE_VERSION);
         capabilitiesBase.put(Capabilities.SASL, constructSaslSupportedAuthenticationMechanisms());

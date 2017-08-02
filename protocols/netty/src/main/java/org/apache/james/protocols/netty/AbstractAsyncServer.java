@@ -57,7 +57,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer{
 
     private volatile int ioWorker = DEFAULT_IO_WORKER_COUNT;
     
-    private List<InetSocketAddress> addresses = new ArrayList<InetSocketAddress>();
+    private List<InetSocketAddress> addresses = new ArrayList<>();
     
     public synchronized void setListenAddresses(InetSocketAddress... addresses) {
         if (started) throw new IllegalStateException("Can only be set when the server is not running");

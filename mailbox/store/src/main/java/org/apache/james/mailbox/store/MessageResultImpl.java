@@ -51,7 +51,7 @@ import com.google.common.base.Objects;
  */
 public class MessageResultImpl implements MessageResult {
 
-    private final Map<MimePath, PartContent> partsByPath = new HashMap<MimePath, PartContent>();
+    private final Map<MimePath, PartContent> partsByPath = new HashMap<>();
 
     private MimeDescriptor mimeDescriptor;
 

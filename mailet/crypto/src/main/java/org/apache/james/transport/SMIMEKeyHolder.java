@@ -164,7 +164,7 @@ public class SMIMEKeyHolder implements KeyHolder{
             throw new KeyStoreException("The \"" + keyAlias + "\" X509Certificate alias was not found in keystore.");
         }
         java.security.cert.Certificate[] certificateChain = keyStore.getCertificateChain(keyAlias);
-        ArrayList<java.security.cert.Certificate> certList = new ArrayList<java.security.cert.Certificate>();
+        ArrayList<java.security.cert.Certificate> certList = new ArrayList<>();
         if (certificateChain == null) {
             certList.add(this.certificate);
         } else {

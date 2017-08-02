@@ -78,7 +78,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
 
     @Override
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) throws MailboxException {
-        final List<UpdatedFlags> updatedFlags = new ArrayList<UpdatedFlags>();
+        final List<UpdatedFlags> updatedFlags = new ArrayList<>();
         Iterator<MailboxMessage> messages = findInMailbox(mailbox, set, FetchType.Metadata, -1);
         
         long modSeq = -1;

@@ -127,7 +127,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxWithPathLike(org.apache.james.imap.api.MailboxPath)
      */
     public List<Mailbox> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
-        List<Mailbox> mailboxList = new ArrayList<Mailbox>();
+        List<Mailbox> mailboxList = new ArrayList<>();
         try {
             String name = Text.escapeIllegalXpathSearchChars(path.getName());
             String user = path.getUser();
@@ -235,7 +235,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
      */
     public List<Mailbox> list() throws MailboxException {
         try {
-            List<Mailbox> mList = new ArrayList<Mailbox>();
+            List<Mailbox> mList = new ArrayList<>();
             QueryManager manager = getSession().getWorkspace().getQueryManager();
 
             String queryString = "/jcr:root/" + MAILBOXES_PATH + "//element(*,jamesMailbox:mailbox)";

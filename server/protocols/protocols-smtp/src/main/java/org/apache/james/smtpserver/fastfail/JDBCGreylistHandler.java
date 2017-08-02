@@ -89,7 +89,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
     private String sqlFileUrl;
 
     /** Holds value of property sqlParameters. */
-    private final Map<String, String> sqlParameters = new HashMap<String, String>();
+    private final Map<String, String> sqlParameters = new HashMap<>();
 
     private DNSService dnsService;
 
@@ -182,7 +182,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
      *      java.lang.String, java.lang.String)
      */
     protected Iterator<String> getGreyListData(String ipAddress, String sender, String recip) throws SQLException {
-        Collection<String> data = new ArrayList<String>(2);
+        Collection<String> data = new ArrayList<>(2);
         PreparedStatement mappingStmt = null;
         Connection conn = datasource.getConnection();
         try {
@@ -420,7 +420,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
         String nets = handlerConfiguration.getString("whitelistedNetworks");
         if (nets != null) {
             String[] whitelistArray = nets.split(",");
-            List<String> wList = new ArrayList<String>(whitelistArray.length);
+            List<String> wList = new ArrayList<>(whitelistArray.length);
             for (String aWhitelistArray : whitelistArray) {
                 wList.add(aWhitelistArray.trim());
             }

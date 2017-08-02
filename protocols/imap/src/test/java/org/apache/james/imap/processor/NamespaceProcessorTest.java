@@ -69,7 +69,7 @@ public class NamespaceProcessorTest {
     
     @Before
     public void setUp() throws Exception {
-        sharedSpaces = new ArrayList<String>();
+        sharedSpaces = new ArrayList<>();
         statusResponseStub = mockery.mock(StatusResponseFactory.class);
         mailboxManagerStub = mockery.mock(MailboxManager.class);
         subject = new NamespaceProcessor(mockery.mock(ImapProcessor.class), mailboxManagerStub, statusResponseStub, new NoopMetricFactory());
@@ -134,7 +134,7 @@ public class NamespaceProcessorTest {
         this.sharedSpaces.add(sharedSpaceStub);
         
         
-        final List<NamespaceResponse.Namespace> sharedSpaces = new ArrayList<NamespaceResponse.Namespace>();
+        final List<NamespaceResponse.Namespace> sharedSpaces = new ArrayList<>();
         sharedSpaces.add(new NamespaceResponse.Namespace(SHARED_PREFIX, MailboxConstants.DEFAULT_DELIMITER));
         final NamespaceResponse response = buildResponse(sharedSpaces);
         
@@ -145,9 +145,9 @@ public class NamespaceProcessorTest {
 
     private NamespaceResponse buildResponse(List<NamespaceResponse.Namespace> sharedSpaces) {
        
-        final List<NamespaceResponse.Namespace> personalSpaces = new ArrayList<NamespaceResponse.Namespace>();
+        final List<NamespaceResponse.Namespace> personalSpaces = new ArrayList<>();
         personalSpaces.add(new NamespaceResponse.Namespace(PERSONAL_PREFIX, MailboxConstants.DEFAULT_DELIMITER));
-        final List<NamespaceResponse.Namespace> otherUsersSpaces = new ArrayList<NamespaceResponse.Namespace>();
+        final List<NamespaceResponse.Namespace> otherUsersSpaces = new ArrayList<>();
         otherUsersSpaces.add(new NamespaceResponse.Namespace(USERS_PREFIX, MailboxConstants.DEFAULT_DELIMITER));
 
         return new NamespaceResponse(personalSpaces, otherUsersSpaces, sharedSpaces);

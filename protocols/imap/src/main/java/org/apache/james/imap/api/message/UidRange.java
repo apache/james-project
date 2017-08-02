@@ -53,7 +53,7 @@ public final class UidRange implements Iterable<MessageUid> {
     }
 
     private static LinkedList<Range<MessageUid>> mergeContiguousRanges(RangeSet<MessageUid> rangeSet) {
-        LinkedList<Range<MessageUid>> mergedRanges = new LinkedList<Range<MessageUid>>();
+        LinkedList<Range<MessageUid>> mergedRanges = new LinkedList<>();
         
         for (Range<MessageUid> range: rangeSet.asRanges()) {
             Range<MessageUid> previous = mergedRanges.peekLast();

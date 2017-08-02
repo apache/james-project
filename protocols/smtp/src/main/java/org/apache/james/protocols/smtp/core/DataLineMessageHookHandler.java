@@ -182,7 +182,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
      * @see org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
      */
     public List<Class<?>> getMarkerInterfaces() {
-        List<Class<?>> classes = new LinkedList<Class<?>>();
+        List<Class<?>> classes = new LinkedList<>();
         classes.add(MessageHook.class);
         classes.add(HookResultHook.class);
         return classes;

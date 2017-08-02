@@ -36,7 +36,7 @@ import com.github.steveash.guavate.Guavate;
 @SuppressWarnings("deprecation")
 public class MockMailbox extends ImapMailbox {
 
-    private final Map<Long, Message> messages = new HashMap<Long, Message>();
+    private final Map<Long, Message> messages = new HashMap<>();
     private final String identifier;
 
     public MockMailbox(String identifier, Message... messages) {

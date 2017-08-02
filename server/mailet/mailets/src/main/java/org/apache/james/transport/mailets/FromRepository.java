@@ -95,7 +95,7 @@ public class FromRepository extends GenericMailet {
      */
     public void service(Mail trigger) throws MessagingException {
         trigger.setState(Mail.GHOST);
-        Collection<String> processed = new ArrayList<String>();
+        Collection<String> processed = new ArrayList<>();
         Iterator<String> list = repository.list();
         while (list.hasNext()) {
             String key = (String) list.next();

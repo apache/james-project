@@ -33,7 +33,7 @@ import org.apache.james.user.lib.model.DefaultUser;
 @SuppressWarnings("deprecation")
 public class InMemoryUsersRepository extends AbstractJamesUsersRepository {
 
-    private final HashMap<String, User> m_users = new HashMap<String, User>();
+    private final HashMap<String, User> m_users = new HashMap<>();
     /**
      * force the repository to hold implementations of JamesUser interface,
      * instead of User JamesUser is _not_ required as of the UsersRepository
@@ -104,7 +104,7 @@ public class InMemoryUsersRepository extends AbstractJamesUsersRepository {
 
     protected List<String> listUserNames() {
         Iterator<User> users = m_users.values().iterator();
-        List<String> userNames = new LinkedList<String>();
+        List<String> userNames = new LinkedList<>();
         while (users.hasNext()) {
             User user = users.next();
             userNames.add(user.getUserName());

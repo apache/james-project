@@ -27,9 +27,9 @@ import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
@@ -64,7 +64,7 @@ public class StatCmdHandler implements CommandHandler<POP3Session> {
             long size = 0;
             int count = 0;
             if (uidList.isEmpty() == false) {
-                List<MessageMetaData> validResults = new ArrayList<MessageMetaData>();
+                List<MessageMetaData> validResults = new ArrayList<>();
                 for (MessageMetaData data : uidList) {
                     if (deletedUidList.contains(data.getUid()) == false) {
                         size += data.getSize();

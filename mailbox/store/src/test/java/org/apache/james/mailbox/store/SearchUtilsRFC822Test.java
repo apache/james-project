@@ -54,7 +54,7 @@ public class SearchUtilsRFC822Test {
 
     @Before
     public void setUp() throws Exception {
-        recent = new ArrayList<MessageUid>();
+        recent = new ArrayList<>();
         MessageBuilder builder = new MessageBuilder();
         builder.header("From", "Alex <alex@example.org");
         builder.header("To", FROM_ADDRESS);

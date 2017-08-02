@@ -377,7 +377,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
     }
 
     private static MailboxACLRights[] toListRightsArray(MailboxACLRights implicitRights) throws UnsupportedRightException {
-        List<MailboxACLRights> result = new ArrayList<MailboxACL.MailboxACLRights>(Rfc4314Rights.FIELD_COUNT);
+        List<MailboxACLRights> result = new ArrayList<>(Rfc4314Rights.FIELD_COUNT);
         result.add(implicitRights);
         for (MailboxACLRight right : SimpleMailboxACL.FULL_RIGHTS) {
             if (!implicitRights.contains(right)) {

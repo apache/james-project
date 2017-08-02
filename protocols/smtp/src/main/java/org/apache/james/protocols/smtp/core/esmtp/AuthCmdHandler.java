@@ -520,7 +520,7 @@ public class AuthCmdHandler
      * @see org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
      */
     public List<Class<?>> getMarkerInterfaces() {
-        List<Class<?>> classes = new ArrayList<Class<?>>(1);
+        List<Class<?>> classes = new ArrayList<>(1);
         classes.add(AuthHook.class);
         return classes;
     }

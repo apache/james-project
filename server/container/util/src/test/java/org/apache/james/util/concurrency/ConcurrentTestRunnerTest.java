@@ -110,7 +110,7 @@ public class ConcurrentTestRunnerTest {
     public void runShouldPerformAllOperations() throws Exception {
         int operationCount = 2;
         int threadCount = 2;
-        final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<String>();
+        final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
             (threadNumber, step) -> queue.add(threadNumber + ":" + step))
@@ -167,7 +167,7 @@ public class ConcurrentTestRunnerTest {
     public void runShouldPerformAllOperationsEvenOnExceptions() throws Exception {
         int operationCount = 2;
         int threadCount = 2;
-        final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<String>();
+        final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
             (threadNumber, step) -> {
@@ -184,7 +184,7 @@ public class ConcurrentTestRunnerTest {
     public void runShouldPerformAllOperationsEvenOnOccasionalExceptions() throws Exception {
         int operationCount = 2;
         int threadCount = 2;
-        final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<String>();
+        final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
             (threadNumber, step) -> {

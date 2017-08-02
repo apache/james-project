@@ -27,14 +27,18 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.handler.*;
+import org.apache.james.protocols.api.handler.CommandHandler;
+import org.apache.james.protocols.api.handler.ExtensibleHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandlerResultHandler;
+import org.apache.james.protocols.api.handler.WiringException;
 
 /**
  * Expose JMX statistics for {@link CommandHandler}
  */
 public abstract class AbstractCommandHandlerResultJMXMonitor<S extends ProtocolSession> implements ProtocolHandlerResultHandler<Response, S>, ExtensibleHandler, ProtocolHandler {
 
-    private final Map<String, AbstractCommandHandlerStats> cStats = new HashMap<String, AbstractCommandHandlerStats>();
+    private final Map<String, AbstractCommandHandlerStats> cStats = new HashMap<>();
     private String jmxName;
 
     /**
@@ -60,7 +64,7 @@ public abstract class AbstractCommandHandlerResultJMXMonitor<S extends ProtocolS
      * org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
      */
     public List<Class<?>> getMarkerInterfaces() {
-        List<Class<?>> marker = new ArrayList<Class<?>>();
+        List<Class<?>> marker = new ArrayList<>();
         marker.add(CommandHandler.class);
         return marker;
     }

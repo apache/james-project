@@ -19,19 +19,6 @@
 
 package org.apache.james.core;
 
-import org.apache.james.lifecycle.api.Disposable;
-import org.apache.james.lifecycle.api.LifecycleUtil;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
-import org.apache.mailet.PerRecipientHeaders;
-import org.apache.mailet.PerRecipientHeaders.Header;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.ParseException;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -48,6 +35,19 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.ParseException;
+
+import org.apache.james.lifecycle.api.Disposable;
+import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.PerRecipientHeaders;
+import org.apache.mailet.PerRecipientHeaders.Header;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -127,7 +127,7 @@ public class MailImpl implements Disposable, Mail {
      */
     public MailImpl() {
         setState(Mail.DEFAULT);
-        attributes = new HashMap<String, Object>();
+        attributes = new HashMap<>();
         perRecipientSpecificHeaders = new PerRecipientHeaders();
     }
 
@@ -147,7 +147,7 @@ public class MailImpl implements Disposable, Mail {
 
         // Copy the recipient list
         if (recipients != null) {
-            this.recipients = new ArrayList<MailAddress>();
+            this.recipients = new ArrayList<>();
             this.recipients.addAll(recipients);
         }
     }
@@ -177,7 +177,7 @@ public class MailImpl implements Disposable, Mail {
             if (mail instanceof MailImpl) {
                 setAttributesRaw((HashMap<String, Object>) cloneSerializableObject(((MailImpl) mail).getAttributesRaw()));
             } else {
-                HashMap<String, Object> attribs = new HashMap<String, Object>();
+                HashMap<String, Object> attribs = new HashMap<>();
                 for (Iterator<String> i = mail.getAttributeNames(); i.hasNext(); ) {
                     String hashKey = i.next();
                     attribs.put(hashKey, cloneSerializableObject(mail.getAttribute(hashKey)));
@@ -186,10 +186,10 @@ public class MailImpl implements Disposable, Mail {
             }
         } catch (IOException e) {
             LOGGER.error("Error while deserializing attributes", e);
-            setAttributesRaw(new HashMap<String, Object>());
+            setAttributesRaw(new HashMap<>());
         } catch (ClassNotFoundException e) {
             LOGGER.error("Error while deserializing attributes", e);
-            setAttributesRaw(new HashMap<String, Object>());
+            setAttributesRaw(new HashMap<>());
         }
     }
 
@@ -520,7 +520,7 @@ public class MailImpl implements Disposable, Mail {
             attributes = (HashMap<String, Object>) in.readObject();
         } catch (OptionalDataException ode) {
             if (ode.eof) {
-                attributes = new HashMap<String, Object>();
+                attributes = new HashMap<>();
             } else {
                 throw ode;
             }
@@ -582,7 +582,7 @@ public class MailImpl implements Disposable, Mail {
      * @since 2.2.0
      */
     public void setAttributesRaw(HashMap<String, Object> attr) {
-        this.attributes = (attr == null) ? new HashMap<String, Object>() : attr;
+        this.attributes = (attr == null) ? new HashMap<>() : attr;
     }
 
     @Override

@@ -121,7 +121,7 @@ public class MailboxPath {
         if (name == null) {
             return ImmutableList.of(this);
         }
-        ArrayList<MailboxPath> levels = new ArrayList<MailboxPath>();
+        ArrayList<MailboxPath> levels = new ArrayList<>();
         int index = name.indexOf(delimiter);
         while (index >= 0) {
             final String levelname = name.substring(0, index);

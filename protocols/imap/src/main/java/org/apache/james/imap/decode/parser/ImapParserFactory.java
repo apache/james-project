@@ -41,7 +41,7 @@ public class ImapParserFactory implements ImapCommandParserFactory {
 
     public ImapParserFactory(StatusResponseFactory statusResponseFactory) {
         this.statusResponseFactory = statusResponseFactory;
-        _imapCommands = new HashMap<String, Class<?>>();
+        _imapCommands = new HashMap<>();
 
         // Commands valid in any state
         // CAPABILITY, NOOP, and LOGOUT

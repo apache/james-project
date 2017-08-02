@@ -19,16 +19,16 @@
 
 package org.apache.james.container.spring.mailbox;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class MaxQuotaConfigurationReader implements Configurable {
 
@@ -56,7 +56,7 @@ public class MaxQuotaConfigurationReader implements Configurable {
 
     private  Map<String, Long> parseMaxMessageConfiguration(HierarchicalConfiguration config, String entry) {
         List<HierarchicalConfiguration> maxMessageConfiguration = config.configurationAt("maxQuotaManager").configurationsAt(entry);
-        Map<String, Long> result = new HashMap<String, Long>();
+        Map<String, Long> result = new HashMap<>();
         for (HierarchicalConfiguration conf : maxMessageConfiguration) {
             result.put(conf.getString("quotaRoot"), conf.getLong("value"));
         }

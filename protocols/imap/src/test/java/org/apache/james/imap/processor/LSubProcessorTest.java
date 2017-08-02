@@ -98,7 +98,7 @@ public class LSubProcessorTest {
     
     @Before
     public void setUp() throws Exception {
-        subscriptions = new ArrayList<String>();
+        subscriptions = new ArrayList<>();
         serverResponseFactory = mockery.mock(StatusResponseFactory.class);
         session = mockery.mock(ImapSession.class);
         command = ImapCommand.anyStateCommand("Command");
@@ -248,7 +248,7 @@ public class LSubProcessorTest {
                  * @see org.apache.james.mailbox.MailboxSession.User#getLocalePreferences()
                  */
                 public List<Locale> getLocalePreferences() {
-                    return new ArrayList<Locale>();
+                    return new ArrayList<>();
                 }
 
                 /**

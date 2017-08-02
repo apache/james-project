@@ -130,7 +130,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
                     for (KeyValue keyValue : keyValues) {
                         String email = Bytes.toString(keyValue.getRow());
                         if (map == null) {
-                            map = new HashMap<String, Mappings>();
+                            map = new HashMap<>();
                         }
                         Mappings mappings = 
                                 MappingsImpl.from(

@@ -52,7 +52,7 @@ import com.google.common.base.Preconditions;
 public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
 
     private final ListeningMessageSearchIndex index;
-    private final ConcurrentHashMap<MailboxId, Object> indexed = new ConcurrentHashMap<MailboxId, Object>();
+    private final ConcurrentHashMap<MailboxId, Object> indexed = new ConcurrentHashMap<>();
     
     
     public LazyMessageSearchIndex(ListeningMessageSearchIndex index) {

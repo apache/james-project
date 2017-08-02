@@ -42,7 +42,7 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
  */
 public class DataLineMessageHookHandler extends org.apache.james.protocols.smtp.core.DataLineMessageHookHandler{
 
-    private final List<DeliverToRecipientHook> handlers = new ArrayList<DeliverToRecipientHook>();
+    private final List<DeliverToRecipientHook> handlers = new ArrayList<>();
 
     
     @Override
@@ -75,7 +75,7 @@ public class DataLineMessageHookHandler extends org.apache.james.protocols.smtp.
 
     @Override
     public List<Class<?>> getMarkerInterfaces() {
-        List<Class<?>> markers = new ArrayList<Class<?>>();
+        List<Class<?>> markers = new ArrayList<>();
         markers.add(DeliverToRecipientHook.class);
         return markers;
     }

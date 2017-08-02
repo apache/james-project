@@ -43,7 +43,7 @@ public class MessageResultUtils {
      * @throws MessagingException
      */
     public static List<MessageResult.Header> getAll(Iterator<MessageResult.Header> iterator) {
-        final List<MessageResult.Header> results = new ArrayList<MessageResult.Header>();
+        final List<MessageResult.Header> results = new ArrayList<>();
         if (iterator != null) {
             while (iterator.hasNext()) {
                 results.add(iterator.next());
@@ -65,7 +65,7 @@ public class MessageResultUtils {
      * @throws MessagingException
      */
     public static List<MessageResult.Header> getMatching(String[] names, Iterator<MessageResult.Header> iterator) throws MailboxException {
-        final List<MessageResult.Header> results = new ArrayList<MessageResult.Header>(20);
+        final List<MessageResult.Header> results = new ArrayList<>(20);
         if (iterator != null) {
             while (iterator.hasNext()) {
                 MessageResult.Header header = iterator.next();
@@ -98,7 +98,7 @@ public class MessageResultUtils {
     }
 
     private static List<MessageResult.Header> matching(Collection<String> names, Iterator<MessageResult.Header> iterator, boolean not) throws MailboxException {
-        final List<MessageResult.Header> results = new ArrayList<MessageResult.Header>(names.size());
+        final List<MessageResult.Header> results = new ArrayList<>(names.size());
         if (iterator != null) {
             while (iterator.hasNext()) {
                 final MessageResult.Header header = iterator.next();
@@ -176,7 +176,7 @@ public class MessageResultUtils {
      * @throws MessagingException
      */
     public static List<MessageResult.Header> getNotMatching(String[] names, Iterator<MessageResult.Header> iterator) throws MailboxException {
-        final List<MessageResult.Header> results = new ArrayList<MessageResult.Header>(20);
+        final List<MessageResult.Header> results = new ArrayList<>(20);
         if (iterator != null) {
             while (iterator.hasNext()) {
                 MessageResult.Header header = iterator.next();

@@ -19,15 +19,15 @@
 
 package org.apache.james.mailbox.store;
 
-import org.apache.james.mailbox.MailboxPathLocker;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxPath;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.apache.james.mailbox.MailboxPathLocker;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxPath;
 
 /**
  * {@link MailboxPathLocker} implementation which helps to synchronize the access the
@@ -36,7 +36,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public final class JVMMailboxPathLocker extends AbstractMailboxPathLocker {
 
-    private final ConcurrentHashMap<MailboxPath, ReadWriteLock> paths = new ConcurrentHashMap<MailboxPath, ReadWriteLock>();
+    private final ConcurrentHashMap<MailboxPath, ReadWriteLock> paths = new ConcurrentHashMap<>();
 
 
     @Override

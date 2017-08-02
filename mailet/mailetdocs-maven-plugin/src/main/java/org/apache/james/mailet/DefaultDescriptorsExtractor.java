@@ -55,7 +55,7 @@ public class DefaultDescriptorsExtractor {
     private final List<MailetMatcherDescriptor> descriptors;
     
     public DefaultDescriptorsExtractor() {
-        descriptors = new ArrayList<MailetMatcherDescriptor> ();
+        descriptors = new ArrayList<>();
     }
 
     /**
@@ -298,7 +298,7 @@ public class DefaultDescriptorsExtractor {
 
 
     private List<JavaClass> getAllInterfacesQdox(JavaClass javaClass) {
-        List<JavaClass> res = new LinkedList<JavaClass>();
+        List<JavaClass> res = new LinkedList<>();
         if (javaClass.getImplementedInterfaces() != null) {
             JavaClass[] interfaces = javaClass.getImplementedInterfaces();
             Collections.addAll(res, interfaces);
@@ -310,7 +310,7 @@ public class DefaultDescriptorsExtractor {
     }
 
     private List<Class<?>> getAllInterfaces(Class<?> klass) {
-        List<Class<?>> res = new LinkedList<Class<?>>();
+        List<Class<?>> res = new LinkedList<>();
         if (klass.getInterfaces() != null) {
             Class<?>[] interfaces = klass.getInterfaces();
             for (Class<?> anInterface : interfaces) {

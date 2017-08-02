@@ -39,7 +39,7 @@ public class EnableCommandParser extends AbstractImapCommandParser {
 
     @Override
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
-        List<String> caps = new ArrayList<String>();
+        List<String> caps = new ArrayList<>();
         String cap = request.astring();
         caps.add(cap.toUpperCase(Locale.US));
         while (request.nextChar() == ' ') {

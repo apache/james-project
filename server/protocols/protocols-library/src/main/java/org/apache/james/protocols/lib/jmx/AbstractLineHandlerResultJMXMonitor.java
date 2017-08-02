@@ -27,7 +27,11 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.handler.*;
+import org.apache.james.protocols.api.handler.ExtensibleHandler;
+import org.apache.james.protocols.api.handler.LineHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandlerResultHandler;
+import org.apache.james.protocols.api.handler.WiringException;
 
 /**
  * Handler which will gather statistics for {@link LineHandler}'s
@@ -36,7 +40,7 @@ import org.apache.james.protocols.api.handler.*;
  */
 public abstract class AbstractLineHandlerResultJMXMonitor<R extends Response, S extends ProtocolSession> implements ProtocolHandlerResultHandler<R, S>, ExtensibleHandler, ProtocolHandler {
 
-    private final Map<String, LineHandlerStats> lStats = new HashMap<String, LineHandlerStats>();
+    private final Map<String, LineHandlerStats> lStats = new HashMap<>();
     private String jmxName;
 
     /**
@@ -57,7 +61,7 @@ public abstract class AbstractLineHandlerResultJMXMonitor<R extends Response, S 
      * org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
      */
     public List<Class<?>> getMarkerInterfaces() {
-        List<Class<?>> marker = new ArrayList<Class<?>>();
+        List<Class<?>> marker = new ArrayList<>();
         marker.add(LineHandler.class);
         return marker;
     }

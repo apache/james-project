@@ -165,7 +165,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
         List<String> domains = getDomainListInternal();
 
         // create mutable copy, some subclasses return ImmutableList
-        ArrayList<String> mutableDomains = new ArrayList<String>(domains);
+        ArrayList<String> mutableDomains = new ArrayList<>(domains);
         List<String> detectedDomains = detectDomains();
         mutableDomains.addAll(detectedDomains);
         mutableDomains.addAll(detectIps(mutableDomains));

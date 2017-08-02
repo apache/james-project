@@ -70,7 +70,7 @@ public class FutureResponseImpl implements FutureResponse{
             listener.onResponse(this);
         } else {
             if (listeners == null) {
-                listeners = new ArrayList<ResponseListener>();
+                listeners = new ArrayList<>();
             }
             listeners.add(listener);
         }

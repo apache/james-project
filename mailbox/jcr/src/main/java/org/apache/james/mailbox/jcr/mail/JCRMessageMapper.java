@@ -339,7 +339,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         try {
 
-            List<MessageUid> list = new ArrayList<MessageUid>();
+            List<MessageUid> list = new ArrayList<>();
             String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                     + JCRMailboxMessage.RECENT_PROPERTY + "='true'] order by @" + JCRMailboxMessage.UID_PROPERTY;
 
@@ -404,7 +404,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
                 results = findDeletedMessagesInMailboxBetweenUIDs(mailbox, from, to);
                 break;
             }
-            Map<MessageUid, MessageMetaData> uids = new HashMap<MessageUid, MessageMetaData>();
+            Map<MessageUid, MessageMetaData> uids = new HashMap<>();
             for (MailboxMessage m : results) {
                 MessageUid uid = m.getUid();
                 uids.put(uid, new SimpleMessageMetaData(m));
@@ -555,7 +555,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
     private List<MailboxMessage> findMessagesInMailboxAfterUID(Mailbox mailbox, MessageUid from, int batchSize)
             throws RepositoryException {
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                 + JCRMailboxMessage.UID_PROPERTY + ">=" + from + "] order by @" + JCRMailboxMessage.UID_PROPERTY;
 
@@ -574,7 +574,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
     private List<MailboxMessage> findMessageInMailboxWithUID(Mailbox mailbox, MessageUid from)
             throws RepositoryException {
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                 + JCRMailboxMessage.UID_PROPERTY + "=" + from + "]";
 
@@ -591,7 +591,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
     private List<MailboxMessage> findMessagesInMailboxBetweenUIDs(Mailbox mailbox, MessageUid from, MessageUid to,
                                                                          int batchSize) throws RepositoryException {
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                 + JCRMailboxMessage.UID_PROPERTY + ">=" + from + " and @" + JCRMailboxMessage.UID_PROPERTY + "<=" + to
                 + "] order by @" + JCRMailboxMessage.UID_PROPERTY;
@@ -611,7 +611,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
     private List<MailboxMessage> findMessagesInMailbox(Mailbox mailbox, int batchSize)
             throws RepositoryException {
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
 
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message) order by @"
                 + JCRMailboxMessage.UID_PROPERTY;
@@ -630,7 +630,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
     private List<MailboxMessage> findDeletedMessagesInMailboxAfterUID(Mailbox mailbox, MessageUid from)
             throws RepositoryException {
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                 + JCRMailboxMessage.UID_PROPERTY + ">=" + from + " and @" + JCRMailboxMessage.DELETED_PROPERTY + "='true'] order by @"
                 + JCRMailboxMessage.UID_PROPERTY;
@@ -647,7 +647,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
     private List<MailboxMessage> findDeletedMessageInMailboxWithUID(Mailbox mailbox, MessageUid from)
             throws RepositoryException {
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                 + JCRMailboxMessage.UID_PROPERTY + "=" + from + " and @" + JCRMailboxMessage.DELETED_PROPERTY + "='true']";
         QueryManager manager = getSession().getWorkspace().getQueryManager();
@@ -665,7 +665,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
     private List<MailboxMessage> findDeletedMessagesInMailboxBetweenUIDs(Mailbox mailbox, MessageUid from, MessageUid to)
             throws RepositoryException {
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                 + JCRMailboxMessage.UID_PROPERTY + ">=" + from + " and @" + JCRMailboxMessage.UID_PROPERTY + "<=" + to + " and @"
                 + JCRMailboxMessage.DELETED_PROPERTY + "='true'] order by @" + JCRMailboxMessage.UID_PROPERTY;
@@ -682,7 +682,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
     private List<MailboxMessage> findDeletedMessagesInMailbox(Mailbox mailbox) throws RepositoryException {
 
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                 + JCRMailboxMessage.DELETED_PROPERTY + "='true'] order by @" + JCRMailboxMessage.UID_PROPERTY;
 

@@ -21,14 +21,15 @@
 
 package org.apache.james.transport.matchers;
 
-import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Collection;
+
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Experimental;
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.MailAddress;
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMatcher;
 
 /**
  * <P>Abstract matcher checking whether a recipient has exceeded a maximum allowed quota.</P>
@@ -53,7 +54,7 @@ abstract public class AbstractQuotaMatcher extends GenericMatcher {
     public final Collection<MailAddress> match(Mail mail) throws MessagingException {
         Collection<MailAddress> matching = null;
         if (isSenderChecked(mail.getSender())) {
-            matching = new ArrayList<MailAddress>();
+            matching = new ArrayList<>();
             for (MailAddress recipient : mail.getRecipients()) {
                 if (isRecipientChecked(recipient) && isOverQuota(recipient, mail)) {
                     matching.add(recipient);

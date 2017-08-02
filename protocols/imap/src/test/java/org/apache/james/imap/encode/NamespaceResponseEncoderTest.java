@@ -18,7 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.encode;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +77,7 @@ public class NamespaceResponseEncoderTest {
                 oneOf(mockComposer).end(); inSequence(sequence);
             }
         });
-        List<NamespaceResponse.Namespace> namespaces = new ArrayList<NamespaceResponse.Namespace>();
+        List<NamespaceResponse.Namespace> namespaces = new ArrayList<>();
         namespaces.add(new NamespaceResponse.Namespace(aPrefix, aDeliminator
                 .charAt(0)));
         subject.doEncode(new NamespaceResponse(null, null, namespaces),
@@ -104,7 +105,7 @@ public class NamespaceResponseEncoderTest {
                 oneOf(mockComposer).end(); inSequence(sequence);
             }
         });
-        List<NamespaceResponse.Namespace> namespaces = new ArrayList<NamespaceResponse.Namespace>();
+        List<NamespaceResponse.Namespace> namespaces = new ArrayList<>();
         namespaces.add(new NamespaceResponse.Namespace(aPrefix, aDeliminator
                 .charAt(0)));
         subject.doEncode(new NamespaceResponse(null, namespaces, null),
@@ -132,7 +133,7 @@ public class NamespaceResponseEncoderTest {
                 oneOf(mockComposer).end(); inSequence(sequence);
             }
         });
-        List<NamespaceResponse.Namespace> namespaces = new ArrayList<NamespaceResponse.Namespace>();
+        List<NamespaceResponse.Namespace> namespaces = new ArrayList<>();
         namespaces.add(new NamespaceResponse.Namespace(aPrefix, aDeliminator
                 .charAt(0)));
         subject.doEncode(new NamespaceResponse(namespaces, null, null),
@@ -166,7 +167,7 @@ public class NamespaceResponseEncoderTest {
                 oneOf(mockComposer).end(); inSequence(sequence);
             }
         });
-        List<NamespaceResponse.Namespace> namespaces = new ArrayList<NamespaceResponse.Namespace>();
+        List<NamespaceResponse.Namespace> namespaces = new ArrayList<>();
         namespaces.add(new NamespaceResponse.Namespace(aPrefix, aDeliminator
                 .charAt(0)));
         namespaces.add(new NamespaceResponse.Namespace(anotherPrefix,

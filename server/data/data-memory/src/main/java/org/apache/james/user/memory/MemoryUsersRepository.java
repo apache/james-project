@@ -48,7 +48,7 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
     private String algo;
 
     private MemoryUsersRepository(boolean supportVirtualHosting) {
-        this.userByName = new HashMap<String, User>();
+        this.userByName = new HashMap<>();
         this.algo = "MD5";
         this.supportVirtualHosting = supportVirtualHosting;
     }

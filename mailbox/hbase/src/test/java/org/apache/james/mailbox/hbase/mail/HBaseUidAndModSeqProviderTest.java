@@ -18,17 +18,29 @@
  ****************************************************************/
 package org.apache.james.mailbox.hbase.mail;
 
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES;
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOX_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES_META_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_BODY_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_HEADERS_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
-import static org.apache.james.mailbox.hbase.HBaseNames.*;
 import org.apache.james.mailbox.hbase.mail.model.HBaseMailbox;
 import org.apache.james.mailbox.model.MailboxPath;
-import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -83,8 +95,8 @@ public class HBaseUidAndModSeqProviderTest {
     }
 
     private static void fillMailboxList() {
-        mailboxList = new ArrayList<HBaseMailbox>();
-        pathsList = new ArrayList<MailboxPath>();
+        mailboxList = new ArrayList<>();
+        pathsList = new ArrayList<>();
         MailboxPath path;
         String name;
         for (int i = 0; i < NAMESPACES; i++) {

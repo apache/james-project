@@ -42,7 +42,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
 
     private ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;
     private SelectedMailbox selectedMailbox;
-    private final Map<String, Object> attributesByKey = new HashMap<String, Object>();
+    private final Map<String, Object> attributesByKey = new HashMap<>();
     private final SSLContext sslContext;
     private final String[] enabledCipherSuites;
     private final boolean compress;

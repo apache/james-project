@@ -48,7 +48,7 @@ public class MailboxAdapter implements Mailbox {
     private static abstract class POP3FetchGroup implements FetchGroup {
         @Override
         public Set<PartContentDescriptor> getPartContentDescriptors() {
-            return new HashSet<PartContentDescriptor>();
+            return new HashSet<>();
         }
     }
 
@@ -154,7 +154,7 @@ public class MailboxAdapter implements Mailbox {
         try {
             mailboxManager.startProcessingRequest(session);
             Iterator<MessageResult> results = manager.getMessages(MessageRange.all(), METADATA_GROUP, session);
-            List<MessageMetaData> mList = new ArrayList<MessageMetaData>();
+            List<MessageMetaData> mList = new ArrayList<>();
             while (results.hasNext()) {
                 MessageResult result = results.next();
                 MessageMetaData metaData = new MessageMetaData(String.valueOf(result.getUid().asLong()), result.getSize());

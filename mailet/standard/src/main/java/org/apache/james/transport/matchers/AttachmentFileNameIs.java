@@ -21,23 +21,24 @@
  
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.Experimental;
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Locale;
+import java.util.StringTokenizer;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.StringTokenizer;
-import java.util.Locale;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipEntry;
-import java.io.UnsupportedEncodingException;
+
+import org.apache.mailet.Experimental;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMatcher;
 
 
 /**
@@ -97,7 +98,7 @@ public class AttachmentFileNameIs extends GenericMatcher {
         /* sets up fileNameMasks variable by parsing the condition */
         
         StringTokenizer st = new StringTokenizer(getCondition(), ", ", false);
-        ArrayList<Mask> theMasks = new ArrayList<Mask>(20);
+        ArrayList<Mask> theMasks = new ArrayList<>(20);
         while (st.hasMoreTokens()) {
             String fileName = st.nextToken();
             

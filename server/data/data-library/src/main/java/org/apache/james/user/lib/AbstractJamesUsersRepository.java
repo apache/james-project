@@ -182,7 +182,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
      * @see org.apache.james.rrt.api.RecipientRewriteTable#getAllMappings()
      */
     public Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException {
-        Map<String, Mappings> mappings = new HashMap<String, Mappings>();
+        Map<String, Mappings> mappings = new HashMap<>();
         if (enableAliases || enableForwarding) {
             try {
                 Iterator<String> users = list();

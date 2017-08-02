@@ -21,14 +21,15 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.mailet.base.GenericMailet;
+import java.util.Collection;
+import java.util.Vector;
+
+import javax.mail.MessagingException;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
-
-import javax.mail.MessagingException;
-import java.util.Collection;
-import java.util.Vector;
+import org.apache.mailet.base.GenericMailet;
 
 /**
  * Rewrites recipient addresses to make sure email for the postmaster is
@@ -59,7 +60,7 @@ public class PostmasterAlias extends GenericMailet {
                 //Should remove this address... we want to replace it with
                 //  the server's postmaster address
                 if (recipientsToRemove == null) {
-                    recipientsToRemove = new Vector<MailAddress>();
+                    recipientsToRemove = new Vector<>();
                 }
                 recipientsToRemove.add(addr);
                 //Flag this as having found the postmaster

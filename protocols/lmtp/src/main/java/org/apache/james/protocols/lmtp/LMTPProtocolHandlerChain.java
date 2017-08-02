@@ -27,8 +27,8 @@ import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.lmtp.core.DataLineMessageHookHandler;
-import org.apache.james.protocols.lmtp.core.ReceivedDataLineFilter;
 import org.apache.james.protocols.lmtp.core.LhloCmdHandler;
+import org.apache.james.protocols.lmtp.core.ReceivedDataLineFilter;
 import org.apache.james.protocols.lmtp.core.WelcomeMessageHandler;
 import org.apache.james.protocols.smtp.SMTPProtocolHandlerChain;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -67,7 +67,7 @@ public class LMTPProtocolHandlerChain extends SMTPProtocolHandlerChain{
 
     @Override
     protected List<ProtocolHandler> initDefaultHandlers() {
-        List<ProtocolHandler> defaultHandlers = new ArrayList<ProtocolHandler>();
+        List<ProtocolHandler> defaultHandlers = new ArrayList<>();
         defaultHandlers.add(new CommandDispatcher<SMTPSession>());
         defaultHandlers.add(new ExpnCmdHandler());
         defaultHandlers.add(new LhloCmdHandler(new NoopMetricFactory()));

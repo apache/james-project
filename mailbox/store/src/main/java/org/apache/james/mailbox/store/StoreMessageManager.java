@@ -522,7 +522,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             if (resetRecent) {
                 recent(resetRecent, mailboxSession);
             }
-            recent = new ArrayList<MessageUid>();
+            recent = new ArrayList<>();
             break;
         }
         MailboxACL resolvedAcl = getResolvedMailboxACL(mailboxSession);
@@ -574,7 +574,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         if (!isWriteable(mailboxSession)) {
             throw new ReadOnlyException(getMailboxPath(), mailboxSession.getPathDelimiter());
         }
-        final SortedMap<MessageUid, Flags> newFlagsByUid = new TreeMap<MessageUid, Flags>();
+        final SortedMap<MessageUid, Flags> newFlagsByUid = new TreeMap<>();
 
         trimFlags(flags, mailboxSession);
 
@@ -582,7 +582,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
         Iterator<UpdatedFlags> it = messageMapper.execute(() -> messageMapper.updateFlags(getMailboxEntity(), new FlagsUpdateCalculator(flags, flagsUpdateMode), set));
 
-        final SortedMap<MessageUid, UpdatedFlags> uFlags = new TreeMap<MessageUid, UpdatedFlags>();
+        final SortedMap<MessageUid, UpdatedFlags> uFlags = new TreeMap<>();
 
         while (it.hasNext()) {
             UpdatedFlags flag = it.next();
@@ -590,7 +590,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             uFlags.put(flag.getUid(), flag);
         }
 
-        dispatcher.flagsUpdated(mailboxSession, new ArrayList<>(uFlags.keySet()), getMailboxEntity(), new ArrayList<UpdatedFlags>(uFlags.values()));
+        dispatcher.flagsUpdated(mailboxSession, new ArrayList<>(uFlags.keySet()), getMailboxEntity(), new ArrayList<>(uFlags.values()));
 
         return newFlagsByUid;
     }
@@ -713,7 +713,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     }
 
     private Iterator<MessageMetaData> copy(Iterator<MailboxMessage> originalRows, MailboxSession session) throws MailboxException {
-        final List<MessageMetaData> copiedRows = new ArrayList<MessageMetaData>();
+        final List<MessageMetaData> copiedRows = new ArrayList<>();
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
         QuotaChecker quotaChecker = new QuotaChecker(quotaManager, quotaRootResolver, mailbox);
 
@@ -728,8 +728,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     }
 
     private MoveResult move(Iterator<MailboxMessage> originalRows, MailboxSession session) throws MailboxException {
-        final List<MessageMetaData> movedRows = new ArrayList<MessageMetaData>();
-        final List<MessageMetaData> originalRowsCopy = new ArrayList<MessageMetaData>();
+        final List<MessageMetaData> movedRows = new ArrayList<>();
+        final List<MessageMetaData> originalRowsCopy = new ArrayList<>();
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
         while (originalRows.hasNext()) {
@@ -744,7 +744,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
 
     private SortedMap<MessageUid, MessageMetaData> copy(MessageRange set, StoreMessageManager to, MailboxSession session) throws MailboxException {
-        IteratorWrapper<MailboxMessage> originalRows = new IteratorWrapper<MailboxMessage>(retrieveOriginalRows(set, session));
+        IteratorWrapper<MailboxMessage> originalRows = new IteratorWrapper<>(retrieveOriginalRows(set, session));
 
         SortedMap<MessageUid, MessageMetaData> copiedUids = collectMetadata(to.copy(originalRows, session));
 
@@ -758,7 +758,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     }
 
     private SortedMap<MessageUid, MessageMetaData> move(MessageRange set, StoreMessageManager to, MailboxSession session) throws MailboxException {
-        IteratorWrapper<MailboxMessage> originalRows = new IteratorWrapper<MailboxMessage>(retrieveOriginalRows(set, session));
+        IteratorWrapper<MailboxMessage> originalRows = new IteratorWrapper<>(retrieveOriginalRows(set, session));
 
         MoveResult moveResult = to.move(originalRows, session);
         SortedMap<MessageUid, MessageMetaData> moveUids = collectMetadata(moveResult.getMovedMessages());
@@ -778,7 +778,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     }
 
     private SortedMap<MessageUid, MessageMetaData> collectMetadata(Iterator<MessageMetaData> ids) {
-        final SortedMap<MessageUid, MessageMetaData> copiedMessages = new TreeMap<MessageUid, MessageMetaData>();
+        final SortedMap<MessageUid, MessageMetaData> copiedMessages = new TreeMap<>();
         while (ids.hasNext()) {
             MessageMetaData data = ids.next();
             copiedMessages.put(data.getUid(), data);

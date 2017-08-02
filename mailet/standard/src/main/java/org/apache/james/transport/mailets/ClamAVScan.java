@@ -527,7 +527,7 @@ public class ClamAVScan extends GenericMailet {
 
         InetAddress address;
 
-        Set<InetAddress> usedAddresses = new HashSet<InetAddress>(getAddressesCount());
+        Set<InetAddress> usedAddresses = new HashSet<>(getAddressesCount());
         for (; ; ) {
             // this do-while loop is needed because other threads could in the meantime
             // calling getNextAddress(), and because of that the current thread may skip

@@ -44,7 +44,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     private final AtomicLong mailboxIdGenerator = new AtomicLong();
 
     public InMemoryMailboxMapper() {
-        mailboxesByPath = new ConcurrentHashMap<MailboxPath, Mailbox>(INITIAL_SIZE);
+        mailboxesByPath = new ConcurrentHashMap<>(INITIAL_SIZE);
     }
 
     /**
@@ -147,7 +147,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#list()
      */
     public List<Mailbox> list() throws MailboxException {
-        return new ArrayList<Mailbox>(mailboxesByPath.values());
+        return new ArrayList<>(mailboxesByPath.values());
     }
 
     public <T> T execute(Transaction<T> transaction) throws MailboxException {

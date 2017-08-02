@@ -41,7 +41,7 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport{
 
     
     // TODO: Should we limit the size ?
-    private final Queue<Response> responses = new LinkedBlockingQueue<Response>();
+    private final Queue<Response> responses = new LinkedBlockingQueue<>();
     private volatile boolean isAsync = false;
     
     /**

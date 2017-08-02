@@ -66,7 +66,7 @@ public class CoreCmdHandlerLoader implements HandlersPackage {
     private final static String COMMANDHANDLERRESULTLOGGER = CommandHandlerResultLogger.class.getName();
 
 
-    private final List<String> commands = new LinkedList<String>();
+    private final List<String> commands = new LinkedList<>();
 
     public CoreCmdHandlerLoader() {
         // Insert the base commands in the Map

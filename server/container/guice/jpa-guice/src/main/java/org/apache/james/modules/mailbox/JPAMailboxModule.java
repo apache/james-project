@@ -123,7 +123,7 @@ public class JPAMailboxModule extends AbstractModule {
     @Provides
     @Singleton
     public EntityManagerFactory provideEntityManagerFactory(JPAConfiguration jpaConfiguration) {
-        HashMap<String, String> properties = new HashMap<String, String>();
+        HashMap<String, String> properties = new HashMap<>();
         
         properties.put("openjpa.ConnectionDriverName", jpaConfiguration.getDriverName());
         properties.put("openjpa.ConnectionURL", jpaConfiguration.getDriverURL());

@@ -46,7 +46,7 @@ public abstract class MultiLineHandler<S extends ProtocolSession> implements Lin
     public Response onLine(S session, ByteBuffer line) {
         Collection<ByteBuffer> lines = (List<ByteBuffer>) session.getAttachment(BUFFERED_LINES, State.Transaction);
         if (lines == null)  {
-            lines = new ArrayList<ByteBuffer>();
+            lines = new ArrayList<>();
             session.setAttachment(BUFFERED_LINES, lines, State.Transaction);
         }
         lines.add(line);

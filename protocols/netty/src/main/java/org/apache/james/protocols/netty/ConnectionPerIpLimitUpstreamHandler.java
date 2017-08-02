@@ -39,7 +39,7 @@ import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
  */
 public class ConnectionPerIpLimitUpstreamHandler extends SimpleChannelUpstreamHandler{
 
-    private final ConcurrentMap<String, AtomicInteger> connections = new ConcurrentHashMap<String, AtomicInteger>();    
+    private final ConcurrentMap<String, AtomicInteger> connections = new ConcurrentHashMap<>();
     private volatile int maxConnectionsPerIp = -1;
     
     public ConnectionPerIpLimitUpstreamHandler(int maxConnectionsPerIp) {

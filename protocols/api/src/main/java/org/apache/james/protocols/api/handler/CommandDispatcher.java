@@ -48,9 +48,9 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
     /**
      * The list of available command handlers
      */
-    private final HashMap<String, List<CommandHandler<Session>>> commandHandlerMap = new HashMap<String, List<CommandHandler<Session>>>();
+    private final HashMap<String, List<CommandHandler<Session>>> commandHandlerMap = new HashMap<>();
 
-    private final List<ProtocolHandlerResultHandler<Response, Session>> rHandlers = new ArrayList<ProtocolHandlerResultHandler<Response, Session>>();
+    private final List<ProtocolHandlerResultHandler<Response, Session>> rHandlers = new ArrayList<>();
 
     private final Collection<String> mandatoryCommands;
     
@@ -81,7 +81,7 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
     protected void addToMap(String commandName, CommandHandler<Session> cmdHandler) {
         List<CommandHandler<Session>> handlers = commandHandlerMap.get(commandName);
         if(handlers == null) {
-            handlers = new ArrayList<CommandHandler<Session>>();
+            handlers = new ArrayList<>();
             commandHandlerMap.put(commandName, handlers);
         }
         handlers.add(cmdHandler);

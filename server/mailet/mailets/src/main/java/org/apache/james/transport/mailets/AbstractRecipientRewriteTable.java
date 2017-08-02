@@ -80,12 +80,12 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
             return;
         }
 
-        Collection<MailAddress> recipientsToRemove = new HashSet<MailAddress>();
-        Collection<MailAddress> recipientsToAddLocal = new ArrayList<MailAddress>();
-        Collection<MailAddress> recipientsToAddForward = new ArrayList<MailAddress>();
+        Collection<MailAddress> recipientsToRemove = new HashSet<>();
+        Collection<MailAddress> recipientsToAddLocal = new ArrayList<>();
+        Collection<MailAddress> recipientsToAddForward = new ArrayList<>();
 
         Collection<MailAddress> recipients = mail.getRecipients();
-        Map<MailAddress, String> recipientsMap = new HashMap<MailAddress, String>(recipients.size());
+        Map<MailAddress, String> recipientsMap = new HashMap<>(recipients.size());
 
         for (MailAddress address : recipients) {
             // Assume all addresses are non-virtual at start

@@ -512,7 +512,7 @@ public abstract class AbstractPOP3ServerTest {
     }
 
     private final class TestApopCmdHandler extends AbstractApopCmdHandler {
-        private final Map<String, Mailbox> mailboxes = new HashMap<String, Mailbox>();
+        private final Map<String, Mailbox> mailboxes = new HashMap<>();
        
         public void add(String username, Mailbox mailbox) {
             mailboxes.put(username, mailbox);

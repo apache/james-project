@@ -43,8 +43,8 @@ public class JMXStateCompositeProcessorListener implements CompositeProcessorLis
 
     private final AbstractStateCompositeProcessor mList;
     private final MBeanServer mbeanserver;
-    private final List<ObjectName> mbeans = new ArrayList<ObjectName>();
-    private final Map<MailProcessor, MailProcessorManagement> mMap = new HashMap<MailProcessor, MailProcessorManagement>();
+    private final List<ObjectName> mbeans = new ArrayList<>();
+    private final Map<MailProcessor, MailProcessorManagement> mMap = new HashMap<>();
 
     public JMXStateCompositeProcessorListener(AbstractStateCompositeProcessor mList) throws JMException {
         this.mList = mList;
@@ -57,7 +57,7 @@ public class JMXStateCompositeProcessorListener implements CompositeProcessorLis
      * Unregister all JMX MBeans
      */
     private void unregisterMBeans() {
-        List<ObjectName> unregistered = new ArrayList<ObjectName>();
+        List<ObjectName> unregistered = new ArrayList<>();
         for (ObjectName name : mbeans) {
             try {
                 mbeanserver.unregisterMBean(name);

@@ -53,9 +53,9 @@ import org.apache.james.util.sql.SqlResources;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
-import org.apache.mailet.base.DateFormats;
 
 /**
  * <p>
@@ -157,7 +157,7 @@ public class WhiteListManager extends GenericMailet {
     private final SqlResources sqlQueries = new SqlResources();
 
     /** Holds value of property sqlParameters. */
-    private final Map<String, String> sqlParameters = new HashMap<String, String>();
+    private final Map<String, String> sqlParameters = new HashMap<>();
 
     @Inject
     public void setDataSource(DataSource datasource) {
@@ -698,7 +698,7 @@ public class WhiteListManager extends GenericMailet {
             reply.setHeader(RFC2822Headers.CONTENT_TYPE, multipart.getContentType());
 
             // Create the list of recipients in our MailAddress format
-            Set<MailAddress> recipients = new HashSet<MailAddress>();
+            Set<MailAddress> recipients = new HashSet<>();
             recipients.add(senderMailAddress);
 
             // Set additional headers

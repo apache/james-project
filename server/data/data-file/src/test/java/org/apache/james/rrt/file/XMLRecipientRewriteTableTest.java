@@ -128,7 +128,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     }
 
     private void removeMappingsFromConfig(String user, String domain, Mappings mappings) {
-        List<String> stored = new ArrayList<String>();
+        List<String> stored = new ArrayList<>();
         for (String c : defaultConfiguration.getStringArray("mapping")) {
             String mapping = user + "@" + domain + "=" + mappings.serialize();
             if (!c.equalsIgnoreCase(mapping)) {

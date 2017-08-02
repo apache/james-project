@@ -500,7 +500,7 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
             if (initialCapacity > Integer.MAX_VALUE) {
                 initialCapacity = Integer.MAX_VALUE - 1;
             }
-            this.mList = new Hashtable<String, Long>((int) initialCapacity);
+            this.mList = new Hashtable<>((int) initialCapacity);
             this.parseMboxFile(ins, new MessageAction() {
                 public boolean isComplete() {
                     return false;
@@ -523,7 +523,7 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
             // System.out.println("Done Load keys!");
         } catch (FileNotFoundException e) {
             getLogger().error("Unable to save(open) file (File not found) " + mboxFile, e);
-            this.mList = new Hashtable<String, Long>((int) DEFAULTMLISTCAPACITY);
+            this.mList = new Hashtable<>((int) DEFAULTMLISTCAPACITY);
         } catch (IOException e) {
             getLogger().error("Unable to write file (General I/O problem) " + mboxFile, e);
         } finally {
@@ -585,7 +585,7 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
      */
     public Iterator<String> list() {
         loadKeys();
-        ArrayList<String> keys = new ArrayList<String>(mList.keySet());
+        ArrayList<String> keys = new ArrayList<>(mList.keySet());
 
         if (!keys.isEmpty()) {
             // find the first message. This is a trick to make sure that if
@@ -632,7 +632,7 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
      * @see org.apache.james.mailrepository.api.MailRepository#remove(Mail)
      */
     public void remove(Mail mail) {
-        ArrayList<Mail> remArray = new ArrayList<Mail>();
+        ArrayList<Mail> remArray = new ArrayList<>();
         remArray.add(mail);
         remove(remArray);
     }
@@ -779,7 +779,7 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
             getLogger().error("Lock failed!", e);
             return; // No lock, so exit
         }
-        ArrayList<Mail> keys = new ArrayList<Mail>();
+        ArrayList<Mail> keys = new ArrayList<>();
         keys.add(retrieve(key));
 
         this.remove(keys);

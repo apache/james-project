@@ -95,7 +95,7 @@ public class DNSRBLHandlerTest {
 
             @Override
             protected Collection<String> resolveTXTRecords(String hostname) {
-                List<String> res = new ArrayList<String>();
+                List<String> res = new ArrayList<>();
                 if (hostname == null) {
                     return res;
                 }
@@ -115,8 +115,8 @@ public class DNSRBLHandlerTest {
      */
     private void setupMockedSMTPSession(MailAddress rcpt) {
         mockedSMTPSession = new BaseFakeSMTPSession() {
-            HashMap<String,Object> sessionState = new HashMap<String,Object>();
-            HashMap<String,Object> connectionState = new HashMap<String,Object>();
+            HashMap<String,Object> sessionState = new HashMap<>();
+            HashMap<String,Object> connectionState = new HashMap<>();
             
             @Override
             public InetSocketAddress getRemoteAddress() {

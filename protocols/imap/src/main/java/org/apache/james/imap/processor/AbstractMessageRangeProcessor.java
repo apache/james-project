@@ -76,7 +76,7 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
 
                 final MessageManager mailbox = mailboxManager.getMailbox(targetMailbox, mailboxSession);
 
-                List<IdRange> resultRanges = new ArrayList<IdRange>();
+                List<IdRange> resultRanges = new ArrayList<>();
                 for (IdRange range : idSet) {
                     MessageRange messageSet = messageRange(currentMailbox, range, useUids);
                     if (messageSet != null) {

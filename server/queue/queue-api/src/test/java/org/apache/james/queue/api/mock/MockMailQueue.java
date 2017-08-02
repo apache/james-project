@@ -41,7 +41,7 @@ public class MockMailQueue implements MailQueue {
 
     private static final Logger log = LoggerFactory.getLogger(MockMailQueue.class.getName());
 
-    private final LinkedBlockingQueue<Mail> queue = new LinkedBlockingQueue<Mail>();
+    private final LinkedBlockingQueue<Mail> queue = new LinkedBlockingQueue<>();
     private boolean throwException;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 

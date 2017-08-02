@@ -18,19 +18,20 @@
  ****************************************************************/
 package org.apache.james.user.ldap;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
-
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.ldap.LdapContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.ldap.LdapContext;
+
+import org.apache.commons.configuration.HierarchicalConfiguration;
 
 /**
  * <p>
@@ -71,7 +72,7 @@ public class ReadOnlyLDAPGroupRestriction {
      *          element.
      */
     public ReadOnlyLDAPGroupRestriction(HierarchicalConfiguration configuration) {
-        groupDNs = new ArrayList<String>();
+        groupDNs = new ArrayList<>();
 
         if (configuration != null) {
             memberAttribute = configuration.getString("[@memberAttribute]");
@@ -113,7 +114,7 @@ public class ReadOnlyLDAPGroupRestriction {
      * @throws NamingException Propagated from underlying LDAP communication layer.
      */
     protected Map<String, Collection<String>> getGroupMembershipLists(LdapContext ldapContext) throws NamingException {
-        Map<String, Collection<String>> result = new HashMap<String, Collection<String>>();
+        Map<String, Collection<String>> result = new HashMap<>();
 
         for (String groupDN : groupDNs) {
             result.put(groupDN, extractMembers(ldapContext.getAttributes(groupDN)));
@@ -134,7 +135,7 @@ public class ReadOnlyLDAPGroupRestriction {
      * @throws NamingException Propagated from underlying LDAP communication layer.
      */
     private Collection<String> extractMembers(Attributes groupAttributes) throws NamingException {
-        Collection<String> result = new ArrayList<String>();
+        Collection<String> result = new ArrayList<>();
         Attribute members = groupAttributes.get(memberAttribute);
         NamingEnumeration<?> memberDNs = members.getAll();
 

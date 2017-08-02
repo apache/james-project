@@ -39,7 +39,7 @@ public class FakeImapSession implements ImapSession {
     private final Map<String, Object> attributesByKey;
 
     public FakeImapSession() {
-        this.attributesByKey = new ConcurrentHashMap<String, Object>();
+        this.attributesByKey = new ConcurrentHashMap<>();
     }
 
     public void logout() {

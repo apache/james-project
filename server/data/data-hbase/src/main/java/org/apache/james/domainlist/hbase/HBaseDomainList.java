@@ -141,7 +141,7 @@ public class HBaseDomainList extends AbstractDomainList {
      */
     @Override
     protected List<String> getDomainListInternal() throws DomainListException {
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         HTableInterface table = null;
         ResultScanner resultScanner = null;
         try {

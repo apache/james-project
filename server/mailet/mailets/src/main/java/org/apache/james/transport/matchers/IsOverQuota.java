@@ -19,6 +19,13 @@
 
 package org.apache.james.transport.matchers;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.mail.MessagingException;
+
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -33,12 +40,6 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import javax.mail.MessagingException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * This matcher will check if the incoming email will make recipients exceed their quotas.
@@ -75,7 +76,7 @@ public class IsOverQuota extends GenericMatcher {
     @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         try {
-            List<MailAddress> result = new ArrayList<MailAddress>();
+            List<MailAddress> result = new ArrayList<>();
             for (MailAddress mailAddress : mail.getRecipients()) {
                 String userName = usersRepository.getUser(mailAddress);
                 MailboxSession mailboxSession = mailboxManager.createSystemSession(userName, LOGGER);

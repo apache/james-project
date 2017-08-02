@@ -44,7 +44,7 @@ public class DNSRBLHandler extends org.apache.james.protocols.smtp.core.fastfail
     public void init(Configuration config) throws ConfigurationException {
         boolean validConfig = false;
         HierarchicalConfiguration handlerConfiguration = (HierarchicalConfiguration) config;
-        ArrayList<String> rblserverCollection = new ArrayList<String>();
+        ArrayList<String> rblserverCollection = new ArrayList<>();
 
         Collections.addAll(rblserverCollection, handlerConfiguration.getStringArray("rblservers.whitelist"));
         if (rblserverCollection.size() > 0) {

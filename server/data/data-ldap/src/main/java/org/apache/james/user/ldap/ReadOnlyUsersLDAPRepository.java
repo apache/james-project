@@ -523,7 +523,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      *             Propagated from the LDAP communication layer.
      */
     private Set<String> getAllUsersFromLDAP() throws NamingException {
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
 
         SearchControls sc = new SearchControls();
         sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
@@ -554,7 +554,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      */
     private Collection<ReadOnlyLDAPUser> buildUserCollection(Collection<String> userDNs)
             throws NamingException {
-        List<ReadOnlyLDAPUser> results = new ArrayList<ReadOnlyLDAPUser>();
+        List<ReadOnlyLDAPUser> results = new ArrayList<>();
 
         for (String userDN : userDNs) {
             ReadOnlyLDAPUser user = buildUser(userDN);
@@ -736,7 +736,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         if (restriction.isActivated()) {
             Map<String, Collection<String>> groupMembershipList = restriction
                     .getGroupMembershipLists(ldapContext);
-            validUserDNs = new ArrayList<String>();
+            validUserDNs = new ArrayList<>();
 
             Iterator<String> userDNIterator = userDNs.iterator();
             String userDN;

@@ -193,7 +193,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
             scan.setFilter(filters);
             scanner = mailboxes.getScanner(scan);
             
-            List<Mailbox> mailboxList = new ArrayList<Mailbox>();
+            List<Mailbox> mailboxList = new ArrayList<>();
             
             for (Result result : scanner) {
                 mailboxList.add(mailboxFromResult(result));
@@ -225,7 +225,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
             scan.setCaching(mailboxes.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
             scan.setMaxVersions(1);
             scanner = mailboxes.getScanner(scan);
-            List<Mailbox> mailboxList = new ArrayList<Mailbox>();
+            List<Mailbox> mailboxList = new ArrayList<>();
             
             Result result;
             while ((result = scanner.next()) != null) {
@@ -361,7 +361,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
             scan.addColumn(MESSAGES_META_CF, MESSAGE_INTERNALDATE);
             scanner = messages.getScanner(scan);
             Result result;
-            List<Delete> deletes = new ArrayList<Delete>();
+            List<Delete> deletes = new ArrayList<>();
             while ((result = scanner.next()) != null) {
                 deletes.add(new Delete(result.getRow()));
             }
@@ -372,7 +372,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
                 System.out.println("Just " + deletes.size() + " out of " + totalDeletes + " messages have been deleted");
                 //throw new RuntimeException("Just " + deletes.size() + " out of " + totalDeletes + " messages have been deleted");
             }
-            List<Put> puts = new ArrayList<Put>();
+            List<Put> puts = new ArrayList<>();
             scan = new Scan();
             scan.setMaxVersions(1);
             scan.addColumn(MAILBOX_CF, MAILBOX_MESSAGE_COUNT);
@@ -401,7 +401,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
             scan.addColumn(MAILBOX_CF, MAILBOX_NAME);
             scanner = mailboxes.getScanner(scan);
             Result result;
-            List<Delete> deletes = new ArrayList<Delete>();
+            List<Delete> deletes = new ArrayList<>();
             while ((result = scanner.next()) != null) {
                 deletes.add(new Delete(result.getRow()));
             }

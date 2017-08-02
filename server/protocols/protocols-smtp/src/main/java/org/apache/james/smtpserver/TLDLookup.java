@@ -87,7 +87,7 @@ public class TLDLookup {
      * @return a HashSet containing all known two-part TLDs
      */
     static private HashSet<String> initTwoPartTLDs() {
-        HashSet<String> set = new HashSet<String>(900);
+        HashSet<String> set = new HashSet<>(900);
         for (String multiPartTLD : multiPartTLDs) {
             try {
                 if (multiPartTLD.matches("^" + tld2 + "$")) {
@@ -107,7 +107,7 @@ public class TLDLookup {
      * @return a HashSet containing all known three-part TLDs
      */
     static private HashSet<String> initThreePartTLDs() {
-        HashSet<String> set = new HashSet<String>();
+        HashSet<String> set = new HashSet<>();
         for (String multiPartTLD : multiPartTLDs) {
             try {
                 if (multiPartTLD.matches("^" + tld3 + "$")) {

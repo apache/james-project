@@ -162,7 +162,7 @@ public class HeadersToHTTP extends GenericMailet {
         // reply to
         // subject
 
-        HashSet<NameValuePair> pairs = new HashSet<NameValuePair>();
+        HashSet<NameValuePair> pairs = new HashSet<>();
 
         if (message!=null) {
             if (message.getSender()!=null) {

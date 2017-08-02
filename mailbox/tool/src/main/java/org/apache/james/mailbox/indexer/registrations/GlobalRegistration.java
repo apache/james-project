@@ -19,11 +19,12 @@
 
 package org.apache.james.mailbox.indexer.registrations;
 
-import com.google.common.base.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.model.MailboxPath;
 
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.base.Optional;
 
 public class GlobalRegistration implements MailboxListener {
 
@@ -31,8 +32,8 @@ public class GlobalRegistration implements MailboxListener {
     private final ConcurrentHashMap<MailboxPath, MailboxPath> nameCorrespondence;
 
     public GlobalRegistration() {
-        this.isPathDeleted = new ConcurrentHashMap<MailboxPath, Boolean>();
-        this.nameCorrespondence = new ConcurrentHashMap<MailboxPath, MailboxPath>();
+        this.isPathDeleted = new ConcurrentHashMap<>();
+        this.nameCorrespondence = new ConcurrentHashMap<>();
     }
 
     public Optional<MailboxPath> getPathToIndex(MailboxPath mailboxPath) {

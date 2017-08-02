@@ -19,15 +19,15 @@
 
 package org.apache.james.mailetcontainer.impl;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.mailet.MailetConfig;
-import org.apache.mailet.MailetContext;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.mailet.MailetConfig;
+import org.apache.mailet.MailetContext;
 
 /**
  * Implements the configuration object for a Mailet.
@@ -73,7 +73,7 @@ public class MailetConfigImpl implements MailetConfig {
      */
     public Iterator<String> getInitParameterNames() {
         Iterator<String> it = configuration.getKeys();
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
         while (it.hasNext()) {
             String param = it.next();
             // Remove all attributes

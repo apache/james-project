@@ -61,7 +61,7 @@ public abstract class MailboxManagerStressTest {
 
         final CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);
         final ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 2);
-        final List<MessageUid> uList = new ArrayList<MessageUid>();
+        final List<MessageUid> uList = new ArrayList<>();
         final String username = "username";
         MailboxSession session = mailboxManager.createSystemSession(username, LoggerFactory.getLogger("Test"));
         mailboxManager.startProcessingRequest(session);
@@ -89,7 +89,7 @@ public abstract class MailboxManagerStressTest {
         mailboxManager.logout(session, false);
 
         final AtomicBoolean fail = new AtomicBoolean(false);
-        final ConcurrentHashMap<MessageUid, Object> uids = new ConcurrentHashMap<MessageUid, Object>();
+        final ConcurrentHashMap<MessageUid, Object> uids = new ConcurrentHashMap<>();
 
         // fire of 1000 append operations
         for (int i = 0; i < APPEND_OPERATIONS; i++) {

@@ -31,7 +31,7 @@ import org.apache.james.protocols.api.Response;
  */
 public class LMTPMultiResponse implements Response {
 
-    private final List<Response> responses = new ArrayList<Response>();
+    private final List<Response> responses = new ArrayList<>();
 
     public LMTPMultiResponse(Response response) {
         addResponse(response);
@@ -55,7 +55,7 @@ public class LMTPMultiResponse implements Response {
      * @see org.apache.james.protocols.api.Response#getLines()
      */
     public List<CharSequence> getLines() {
-        List<CharSequence> lines = new ArrayList<CharSequence>();
+        List<CharSequence> lines = new ArrayList<>();
         for (Response response: responses) {
             lines.addAll(response.getLines());
         }

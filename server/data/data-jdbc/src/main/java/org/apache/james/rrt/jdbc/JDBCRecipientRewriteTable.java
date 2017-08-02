@@ -108,7 +108,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             }
 
             // Build the statement parameters
-            Map<String, String> sqlParameters = new HashMap<String, String>();
+            Map<String, String> sqlParameters = new HashMap<>();
             if (tableName != null) {
                 sqlParameters.put("table", tableName);
             }
@@ -165,7 +165,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
         // Parse the DestinationURL for the name of the datasource,
         // the table to use, and the (optional) repository Key.
         // Split on "/", starting after "db://"
-        List<String> urlParams = new ArrayList<String>();
+        List<String> urlParams = new ArrayList<>();
         int start = 5;
 
         int end = destination.indexOf('/', start);
@@ -282,7 +282,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     protected Map<String, Mappings> getAllMappingsInternal() throws RecipientRewriteTableException {
         Connection conn = null;
         PreparedStatement mappingStmt = null;
-        Map<String, Mappings> mapping = new HashMap<String, Mappings>();
+        Map<String, Mappings> mapping = new HashMap<>();
         try {
             conn = dataSource.getConnection();
             mappingStmt = conn.prepareStatement(sqlQueries.getSqlString("selectAllMappings", true));

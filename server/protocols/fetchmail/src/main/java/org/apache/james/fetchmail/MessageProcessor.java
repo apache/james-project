@@ -19,12 +19,11 @@
 
 package org.apache.james.fetchmail;
 
-import org.apache.james.core.MailImpl;
-import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
-import org.apache.mailet.base.RFC2822Headers;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.StringTokenizer;
 
 import javax.mail.Address;
 import javax.mail.Flags;
@@ -33,11 +32,12 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
 
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.StringTokenizer;
+import org.apache.james.core.MailImpl;
+import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.RFC2822Headers;
 
 /**
  * <p>
@@ -591,7 +591,7 @@ public class MessageProcessor extends ProcessorAbstract {
      * @throws MessagingException
      */
     protected Mail createMail(MimeMessage message, MailAddress recipient) throws MessagingException, UnknownHostException {
-        Collection<MailAddress> recipients = new ArrayList<MailAddress>(1);
+        Collection<MailAddress> recipients = new ArrayList<>(1);
         recipients.add(recipient);
         MailImpl mail = new MailImpl(MailImpl.getId(), getSender(), recipients, message);
 

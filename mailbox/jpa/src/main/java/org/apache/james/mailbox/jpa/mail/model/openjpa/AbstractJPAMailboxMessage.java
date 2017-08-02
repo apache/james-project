@@ -240,7 +240,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
             int bodyStartOctet, PropertyBuilder propertyBuilder) {
         this.mailbox = mailbox;
         this.internalDate = internalDate;
-        userFlags = new ArrayList<JPAUserFlag>();
+        userFlags = new ArrayList<>();
 
         setFlags(flags);
         this.contentOctets = contentOctets;
@@ -249,7 +249,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         this.mediaType = propertyBuilder.getMediaType();
         this.subType = propertyBuilder.getSubType();
         final List<Property> properties = propertyBuilder.toProperties();
-        this.properties = new ArrayList<JPAProperty>(properties.size());
+        this.properties = new ArrayList<>(properties.size());
         int order = 0;
         for (Property property : properties) {
             this.properties.add(new JPAProperty(property, order++));
@@ -276,7 +276,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         this.mailbox = mailbox;
         this.uid = uid.asLong();
         this.modSeq = modSeq;
-        this.userFlags = new ArrayList<JPAUserFlag>();
+        this.userFlags = new ArrayList<>();
         setFlags(original.createFlags());
 
         // A copy of a message is recent
@@ -292,7 +292,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         this.mediaType = original.getMediaType();
         this.subType = original.getSubType();
         final List<Property> properties = pBuilder.toProperties();
-        this.properties = new ArrayList<JPAProperty>(properties.size());
+        this.properties = new ArrayList<>(properties.size());
         int order = 0;
         for (Property property : properties) {
             this.properties.add(new JPAProperty(property, order++));
@@ -354,7 +354,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
      * @return unmodifiable list of meta-data, not null
      */
     public List<Property> getProperties() {
-        return new ArrayList<Property>(properties);
+        return new ArrayList<>(properties);
     }
 
     /**

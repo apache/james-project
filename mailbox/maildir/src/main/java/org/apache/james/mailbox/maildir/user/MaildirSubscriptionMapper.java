@@ -168,7 +168,7 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
      * @throws IOException
      */
     private void writeSubscriptions(File mailboxFolder, Set<String> subscriptions) throws IOException {
-        List<String> sortedSubscriptions = new ArrayList<String>(subscriptions);
+        List<String> sortedSubscriptions = new ArrayList<>(subscriptions);
         Collections.sort(sortedSubscriptions);
         if (!mailboxFolder.exists())
             if (!mailboxFolder.mkdirs())

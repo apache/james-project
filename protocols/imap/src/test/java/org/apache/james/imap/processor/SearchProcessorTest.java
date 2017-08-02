@@ -39,7 +39,6 @@ import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.message.request.SearchKey;
 import org.apache.james.imap.api.message.request.SearchOperation;
-import org.apache.james.imap.api.message.request.SearchResultOption;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -343,11 +342,11 @@ public class SearchProcessorTest {
     @Test
     public void testAND() throws Exception {
         expectsGetSelectedMailbox();
-        List<SearchKey> keys = new ArrayList<SearchKey>();
+        List<SearchKey> keys = new ArrayList<>();
         keys.add(SearchKey.buildOn(DAY_MONTH_YEAR));
         keys.add(SearchKey.buildOld());
         keys.add(SearchKey.buildLarger(SIZE));
-        List<Criterion> criteria = new ArrayList<Criterion>();
+        List<Criterion> criteria = new ArrayList<>();
         criteria.add(SearchQuery.internalDateOn(getDate(DAY, MONTH, YEAR), DateResolution.Day));
         criteria.add(SearchQuery.flagIsUnSet(Flag.RECENT));
         criteria.add(SearchQuery.sizeGreaterThan(SIZE));
@@ -506,7 +505,7 @@ public class SearchProcessorTest {
             allowing(selectedMailbox).hasNewApplicableFlags(); will(returnValue(false));
           
         }});
-        SearchRequest message = new SearchRequest(command, new SearchOperation(key, new ArrayList<SearchResultOption>()), false, TAG);
+        SearchRequest message = new SearchRequest(command, new SearchOperation(key, new ArrayList<>()), false, TAG);
         processor.doProcess(message, session, TAG, command, responder);
     }
 

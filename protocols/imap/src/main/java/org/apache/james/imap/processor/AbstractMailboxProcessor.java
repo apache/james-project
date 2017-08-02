@@ -558,7 +558,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         if (metaData.getHighestModSeq() > changedSince) {
             SearchQuery searchQuery = new SearchQuery();
             SearchQuery.UidRange[] nRanges = new SearchQuery.UidRange[ranges.size()];
-            Set<MessageUid> vanishedUids = new HashSet<MessageUid>();
+            Set<MessageUid> vanishedUids = new HashSet<>();
             for (int i = 0; i < ranges.size(); i++) {
                 MessageRange r = ranges.get(i);
                 SearchQuery.UidRange nr;

@@ -59,8 +59,8 @@ import org.slf4j.Logger;
  */
 public class FileMailQueue implements ManageableMailQueue {
 
-    private final ConcurrentHashMap<String, FileItem> keyMappings = new ConcurrentHashMap<String, FileMailQueue.FileItem>();
-    private final BlockingQueue<String> inmemoryQueue = new LinkedBlockingQueue<String>();
+    private final ConcurrentHashMap<String, FileItem> keyMappings = new ConcurrentHashMap<>();
+    private final BlockingQueue<String> inmemoryQueue = new LinkedBlockingQueue<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final static AtomicLong COUNTER = new AtomicLong();
     private final String queueDirName;

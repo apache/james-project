@@ -172,7 +172,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
         // Parse the DestinationURL for the name of the datasource,
         // the table to use, and the (optional) repository Key.
         // Split on "/", starting after "db://"
-        List<String> urlParams = new ArrayList<String>();
+        List<String> urlParams = new ArrayList<>();
         int start = 5;
         if (destination.startsWith("dbfile")) {
             // this is dbfile:// instead of db://
@@ -295,7 +295,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
             }
 
             // Build the statement parameters
-            Map<String, String> sqlParameters = new HashMap<String, String>();
+            Map<String, String> sqlParameters = new HashMap<>();
             if (tableName != null) {
                 sqlParameters.put("table", tableName);
             }
@@ -493,7 +493,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                             if (mc instanceof MailImpl) {
                                 oos.writeObject(((MailImpl) mc).getAttributesRaw());
                             } else {
-                                HashMap<String, Serializable> temp = new HashMap<String, Serializable>();
+                                HashMap<String, Serializable> temp = new HashMap<>();
                                 for (Iterator<String> i = mc.getAttributeNames(); i.hasNext();) {
                                     String hashKey = i.next();
                                     temp.put(hashKey, mc.getAttribute(hashKey));
@@ -575,7 +575,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                             if (mc instanceof MailImpl) {
                                 oos.writeObject(((MailImpl) mc).getAttributesRaw());
                             } else {
-                                HashMap<String, Serializable> temp = new HashMap<String, Serializable>();
+                                HashMap<String, Serializable> temp = new HashMap<>();
                                 for (Iterator<String> i = mc.getAttributeNames(); i.hasNext();) {
                                     String hashKey = i.next();
                                     temp.put(hashKey, mc.getAttribute(hashKey));
@@ -706,7 +706,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                 mc.setSender(new MailAddress(sender));
             }
             StringTokenizer st = new StringTokenizer(rsMessage.getString(4), "\r\n", false);
-            Set<MailAddress> recipients = new HashSet<MailAddress>();
+            Set<MailAddress> recipients = new HashSet<>();
             while (st.hasMoreTokens()) {
                 recipients.add(new MailAddress(st.nextToken()));
             }
@@ -771,7 +771,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
             listMessages.setString(1, repositoryName);
             rsListMessages = listMessages.executeQuery();
 
-            List<String> messageList = new ArrayList<String>();
+            List<String> messageList = new ArrayList<>();
             while (rsListMessages.next() && !Thread.currentThread().isInterrupted()) {
                 messageList.add(rsListMessages.getString(1));
             }

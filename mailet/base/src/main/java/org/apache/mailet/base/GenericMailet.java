@@ -280,8 +280,8 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
             return;
         }
         
-        Collection<String> allowed = new HashSet<String>();
-        Collection<String> bad = new ArrayList<String>();
+        Collection<String> allowed = new HashSet<>();
+        Collection<String> bad = new ArrayList<>();
 
         Collections.addAll(allowed, allowedArray);
         

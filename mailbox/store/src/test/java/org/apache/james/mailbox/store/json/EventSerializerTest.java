@@ -80,7 +80,7 @@ public abstract class EventSerializerTest {
 
     @Test
     public void addedEventShouldBeWellConverted() throws Exception {
-        TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<MessageUid, MessageMetaData>();
+        TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<>();
         treeMap.put(UID, MESSAGE_META_DATA);
         MailboxListener.Event event = eventFactory.added(mailboxSession, treeMap, mailbox, ImmutableMap.<MessageUid, MailboxMessage>of());
         byte[] serializedEvent = serializer.serializeEvent(event);
@@ -96,7 +96,7 @@ public abstract class EventSerializerTest {
 
     @Test
     public void expungedEventShouldBeWellConverted() throws Exception {
-        TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<MessageUid, MessageMetaData>();
+        TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<>();
         treeMap.put(UID, MESSAGE_META_DATA);
         MailboxListener.Event event = eventFactory.expunged(mailboxSession, treeMap, mailbox);
         byte[] serializedEvent = serializer.serializeEvent(event);

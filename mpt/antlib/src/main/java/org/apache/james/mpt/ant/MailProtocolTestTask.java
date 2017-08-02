@@ -59,7 +59,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
     private String host = "127.0.0.1";
     private boolean skip = false;
     private String shabang = null;
-    private final Collection<AddUser> users = new ArrayList<AddUser>();
+    private final Collection<AddUser> users = new ArrayList<>();
     private String errorProperty;
     
     /**

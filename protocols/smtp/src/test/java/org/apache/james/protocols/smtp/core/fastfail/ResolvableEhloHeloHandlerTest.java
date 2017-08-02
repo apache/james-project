@@ -21,19 +21,19 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNull;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
-
-import static junit.framework.Assert.*;
-
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.MailAddressException;
 import org.apache.james.protocols.smtp.SMTPSession;
-import org.apache.james.protocols.smtp.core.fastfail.ResolvableEhloHeloHandler;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.junit.Test;
@@ -50,8 +50,8 @@ public class ResolvableEhloHeloHandlerTest {
 
         return new BaseFakeSMTPSession() {
 
-            HashMap<String,Object> connectionMap = new HashMap<String,Object>();
-            HashMap<String,Object> map = new HashMap<String,Object>();
+            HashMap<String,Object> connectionMap = new HashMap<>();
+            HashMap<String,Object> map = new HashMap<>();
 
             public boolean isAuthSupported() {
                 return authRequired;

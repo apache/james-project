@@ -72,7 +72,7 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SELF extend
         this.scriptDirectory = scriptDirectory;
         this.hostSystem = hostSystem;
         this.locale = Locale.getDefault();
-        this.prepareCommands = new ArrayList<PrepareCommand<? super T>>();
+        this.prepareCommands = new ArrayList<>();
     }
 
     @SuppressWarnings("unchecked")

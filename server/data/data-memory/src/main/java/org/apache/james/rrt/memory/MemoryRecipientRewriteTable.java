@@ -87,7 +87,7 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
     private final List<InMemoryMappingEntry> mappingEntries;
 
     public MemoryRecipientRewriteTable() {
-        mappingEntries = new ArrayList<InMemoryMappingEntry>();
+        mappingEntries = new ArrayList<>();
     }
 
     @Override

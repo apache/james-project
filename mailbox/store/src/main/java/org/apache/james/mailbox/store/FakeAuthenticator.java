@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class FakeAuthenticator implements Authenticator{
 
-    private final Map<String, String> users = new HashMap<String, String>();
+    private final Map<String, String> users = new HashMap<>();
 
     public boolean isAuthentic(String userid, CharSequence passwd) {
         String pass = users.get(userid);

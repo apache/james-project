@@ -41,7 +41,7 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
     private final String jmxName;
     private final String coreHandlersPackage;
     private final String jmxHandlersPackage;
-    private final List<Object> handlers = new LinkedList<Object>();
+    private final List<Object> handlers = new LinkedList<>();
 
     public ProtocolHandlerChainImpl(ProtocolHandlerLoader loader, HierarchicalConfiguration handlerchainConfig, String jmxName, Class<? extends HandlersPackage> coreHandlersPackage, Class<? extends HandlersPackage> jmxHandlersPackage) {
         this.loader = loader;

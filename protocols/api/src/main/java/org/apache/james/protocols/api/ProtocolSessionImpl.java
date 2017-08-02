@@ -24,8 +24,6 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
-
-import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.api.logger.ContextualLogger;
 import org.apache.james.protocols.api.logger.Logger;
@@ -49,8 +47,8 @@ public class ProtocolSessionImpl implements ProtocolSession {
     public ProtocolSessionImpl(Logger logger, ProtocolTransport transport, ProtocolConfiguration config) {
         this.transport = transport;
         this.pLog = new ContextualLogger(this, logger);
-        this.connectionState = new HashMap<String, Object>();
-        this.sessionState = new HashMap<String, Object>();
+        this.connectionState = new HashMap<>();
+        this.sessionState = new HashMap<>();
         this.config = config;
 
     }

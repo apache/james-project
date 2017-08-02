@@ -28,7 +28,7 @@ public class DefaultStagerTestCase {
 
     @Test
     public void stagerShouldStageObjectsRegisteredWhileStaging() {
-        final Stager<TestAnnotationA> stager = new DefaultStager<TestAnnotationA>(TestAnnotationA.class);
+        final Stager<TestAnnotationA> stager = new DefaultStager<>(TestAnnotationA.class);
         final AtomicBoolean staged = new AtomicBoolean();
         stager.register(stageHandler1 -> stager
             .register(stageHandler2 ->
@@ -48,7 +48,7 @@ public class DefaultStagerTestCase {
     @Test
     public void stagerShouldNotDeadlockWhileStagingObjectChains() {
         final AtomicBoolean staged = new AtomicBoolean();
-        final Stager<TestAnnotationA> stager = new DefaultStager<TestAnnotationA>(TestAnnotationA.class);
+        final Stager<TestAnnotationA> stager = new DefaultStager<>(TestAnnotationA.class);
         stager.register(stageHandler1 -> {
             Thread thread = new Thread(
                 () -> stager.register(stageHandler2 -> staged.set(true)));

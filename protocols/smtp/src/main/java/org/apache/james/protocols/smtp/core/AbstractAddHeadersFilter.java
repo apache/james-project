@@ -103,7 +103,7 @@ public abstract class AbstractAddHeadersFilter extends SeparatingDataLineFilter{
         public static final String MULTI_LINE_PREFIX = "          ";
         
         public final String name;
-        public final List<String> values = new ArrayList<String>();
+        public final List<String> values = new ArrayList<>();
                 
         public Header(String name, String value) {
             this.name = name;

@@ -35,7 +35,7 @@ import com.google.common.base.Optional;
 
 public class InMemoryUidProvider implements UidProvider{
 
-    private final ConcurrentMap<InMemoryId, AtomicLong> map = new ConcurrentHashMap<InMemoryId, AtomicLong>();
+    private final ConcurrentMap<InMemoryId, AtomicLong> map = new ConcurrentHashMap<>();
     
     @Override
     public MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {

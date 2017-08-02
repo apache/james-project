@@ -156,7 +156,7 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
      *         extracted
      */
     private HashSet<String> scanMailForDomains(MimePart part, SMTPSession session) throws MessagingException, IOException {
-        HashSet<String> domains = new HashSet<String>();
+        HashSet<String> domains = new HashSet<>();
         session.getLogger().debug("mime type is: \"" + part.getContentType() + "\"");
 
         if (part.isMimeType("text/plain") || part.isMimeType("text/html")) {
@@ -234,7 +234,7 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
     @Override
     public void init(Configuration config) throws ConfigurationException {
         String[] servers = config.getStringArray("uriRblServers.server");
-        Collection<String> serverCollection = new ArrayList<String>();
+        Collection<String> serverCollection = new ArrayList<>();
         for (String rblServerName : servers) {
             serverCollection.add(rblServerName);
             if (serviceLog.isInfoEnabled()) {

@@ -116,7 +116,7 @@ public class MailDispatcher {
     }
 
     private Collection<MailAddress> deliver(Mail mail, MimeMessage message) {
-        Collection<MailAddress> errors = new Vector<MailAddress>();
+        Collection<MailAddress> errors = new Vector<>();
         for (MailAddress recipient : mail.getRecipients()) {
             try {
                 Map<String, List<String>> savedHeaders = saveHeaders(mail, recipient);

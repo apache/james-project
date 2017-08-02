@@ -133,7 +133,7 @@ public final class EnvelopeBuilder {
 
                 AddressList addressList = LenientAddressParser.DEFAULT.parseAddressList(value);
                 final int size = addressList.size();
-                final List<FetchResponse.Envelope.Address> addresses = new ArrayList<FetchResponse.Envelope.Address>(size);
+                final List<FetchResponse.Envelope.Address> addresses = new ArrayList<>(size);
                 for (Address address : addressList) {
                     if (address instanceof Group) {
                         final Group group = (Group) address;

@@ -112,8 +112,8 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 }
               
             } 
-            final List<MessageUid> failed = new ArrayList<MessageUid>();
-            List<Long> failedMsns = new ArrayList<Long>();
+            final List<MessageUid> failed = new ArrayList<>();
+            List<Long> failedMsns = new ArrayList<>();
             final List<String> userFlags = Arrays.asList(flags.getUserFlags());
             for (IdRange range : idSet) {
                 final SelectedMailbox selected = session.getSelected();
@@ -124,7 +124,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                         // Ok we have a CONDSTORE option so use the CONDSTORE_COMMAND
                         imapCommand = CONDSTORE_COMMAND;
 
-                        List<MessageUid> uids = new ArrayList<MessageUid>();
+                        List<MessageUid> uids = new ArrayList<>();
 
                         MessageResultIterator results = mailbox.getMessages(messageSet, FetchGroupImpl.MINIMAL, mailboxSession);
                         while (results.hasNext()) {
@@ -199,7 +199,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                     final StatusResponse response = getStatusResponseFactory().taggedOk(tag, command, HumanReadableText.FAILED, ResponseCode.condStore(idRanges));
                     responder.respond(response);
                 } else {
-                    List<IdRange> ranges = new ArrayList<IdRange>();
+                    List<IdRange> ranges = new ArrayList<>();
                     for (long msn: failedMsns) {
                         ranges.add(new IdRange(msn));
                     }
@@ -267,7 +267,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         boolean condstoreEnabled = enabled.contains(ImapConstants.SUPPORTS_CONDSTORE);
         
         if (!silent || unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
-            final Map<MessageUid, Long> modSeqs = new HashMap<MessageUid, Long>();
+            final Map<MessageUid, Long> modSeqs = new HashMap<>();
            
             // Check if we need to also send the the mod-sequences back to the client
             //

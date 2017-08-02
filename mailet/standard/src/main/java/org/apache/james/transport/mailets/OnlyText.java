@@ -19,18 +19,19 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.mailet.Experimental;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailetException;
-import org.apache.mailet.base.GenericMailet;
+import java.io.IOException;
+import java.util.HashMap;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.internet.ContentType;
-import java.io.IOException;
-import java.util.HashMap;
+
+import org.apache.mailet.Experimental;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailetException;
+import org.apache.mailet.base.GenericMailet;
 
 /**
  * Keep only the text part of a message.
@@ -45,7 +46,7 @@ public class OnlyText extends GenericMailet {
     private static final String PARAMETER_NAME_NOTEXT_PROCESSOR = "NoTextProcessor";
 
     private String optionsNotextProcessor = null;
-    private final HashMap<String, String> charMap = new HashMap<String, String>();
+    private final HashMap<String, String> charMap = new HashMap<>();
 
     /**
      * returns a String describing this mailet.

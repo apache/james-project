@@ -169,7 +169,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         }
 
         String listen[] = config.getString("bind", "0.0.0.0:" + getDefaultPort()).split(",");
-        List<InetSocketAddress> bindAddresses = new ArrayList<InetSocketAddress>();
+        List<InetSocketAddress> bindAddresses = new ArrayList<>();
         for (String aListen : listen) {
             String bind[] = aListen.split(":");
 

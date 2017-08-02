@@ -18,13 +18,21 @@
  ****************************************************************/
 package org.apache.james.mailrepository;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
+
 import org.apache.james.core.MailImpl;
 import org.apache.james.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.core.MimeMessageInputStreamSource;
@@ -33,7 +41,6 @@ import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.junit.After;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,7 +63,7 @@ public abstract class AbstractMailRepositoryTest {
         MimeMessageInputStreamSource mmis = new MimeMessageInputStreamSource("test",
             new SharedByteArrayInputStream((content + sep + body).getBytes()));
         mimeMessage = new MimeMessageCopyOnWriteProxy(mmis);
-        Collection<MailAddress> recipients = new ArrayList<MailAddress>();
+        Collection<MailAddress> recipients = new ArrayList<>();
         recipients.add(new MailAddress("rec1", "domain.com"));
         recipients.add(new MailAddress("rec2", "domain.com"));
         mail = new MailImpl("mail1", new MailAddress("sender", "domain.com"), recipients, mimeMessage);

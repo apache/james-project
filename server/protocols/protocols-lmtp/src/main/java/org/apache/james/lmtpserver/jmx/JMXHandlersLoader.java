@@ -27,7 +27,7 @@ import org.apache.james.protocols.lib.handler.HandlersPackage;
 
 public class JMXHandlersLoader implements HandlersPackage {
 
-    private final List<String> handlers = new ArrayList<String>();
+    private final List<String> handlers = new ArrayList<>();
 
     public JMXHandlersLoader() {
         handlers.add(ConnectHandlerResultJMXMonitor.class.getName());

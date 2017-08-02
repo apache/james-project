@@ -19,7 +19,9 @@
 
 package org.apache.james.imap.encode;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,9 +31,6 @@ import java.util.Map;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapMessage;
-import org.apache.james.imap.encode.FetchResponseEncoder;
-import org.apache.james.imap.encode.ImapEncoder;
-import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.FetchResponse;
@@ -108,9 +107,9 @@ public class FetchResponseEncoderNoExtensionsTest  {
     public void testShouldNotAddExtensionsWithEncodingBodyStructure() throws Exception {
         FetchResponse message = new FetchResponse(100, flags, MessageUid.of(72), null,
                 null, null, null, null, stubStructure, null);
-        final Map<String, String> parameters = new HashMap<String, String>();
+        final Map<String, String> parameters = new HashMap<>();
         parameters.put("CHARSET", "US-ASCII");
-        final List<String> parameterList= new ArrayList<String>();
+        final List<String> parameterList= new ArrayList<>();
         parameterList.add("CHARSET");
         parameterList.add("US-ASCII");
         

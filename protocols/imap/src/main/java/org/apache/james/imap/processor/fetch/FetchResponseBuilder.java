@@ -152,7 +152,7 @@ public final class FetchResponseBuilder {
 
         // BODY part responses.
         Collection<BodyFetchElement> elements = fetch.getBodyElements();
-        this.elements = new ArrayList<FetchResponse.BodyElement>();
+        this.elements = new ArrayList<>();
         for (BodyFetchElement fetchElement : elements) {
             final FetchResponse.BodyElement element = bodyFetch(result, fetchElement);
             if (element != null) {

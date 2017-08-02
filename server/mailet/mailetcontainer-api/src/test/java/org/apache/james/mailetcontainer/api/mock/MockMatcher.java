@@ -22,7 +22,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
 import javax.mail.MessagingException;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
@@ -55,7 +57,7 @@ public class MockMatcher implements Matcher {
 
     @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        List<MailAddress> match = new ArrayList<MailAddress>();
+        List<MailAddress> match = new ArrayList<>();
 
         Iterator<MailAddress> rcpts = mail.getRecipients().iterator();
         while (rcpts.hasNext() && match.size() < matchCount) {

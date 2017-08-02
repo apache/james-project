@@ -38,7 +38,7 @@ public class ImapSessionImpl implements ImapSession {
     private final Logger log;
 
     public ImapSessionImpl(Logger log) {
-        this.attributesByKey = new ConcurrentHashMap<String, Object>();
+        this.attributesByKey = new ConcurrentHashMap<>();
         this.log = log;
     }
 

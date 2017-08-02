@@ -73,7 +73,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
     private final SimpleMailbox mailbox3;
     private final SimpleMailbox mailbox4;
 
-    private final List<MailboxMessage> messages = new ArrayList<MailboxMessage>();
+    private final List<MailboxMessage> messages = new ArrayList<>();
     private final MailboxMapper mailboxMapper;
     private final MessageIdMapper messageIdMapper;
 

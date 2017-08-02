@@ -211,7 +211,7 @@ public class SieveFileRepository implements SieveRepository {
 
     public List<ScriptSummary> listScripts(String user) throws StorageException {
         File[] files = getUserDirectory(user).listFiles();
-        List<ScriptSummary> summaries = new ArrayList<ScriptSummary>(files.length);
+        List<ScriptSummary> summaries = new ArrayList<>(files.length);
         File activeFile = null;
         try {
             activeFile = getActiveFile(user);

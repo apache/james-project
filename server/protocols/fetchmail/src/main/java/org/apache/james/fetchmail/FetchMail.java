@@ -19,6 +19,18 @@
 
 package org.apache.james.fetchmail;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.mail.MessagingException;
+import javax.mail.Session;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -31,17 +43,6 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.slf4j.Logger;
-
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * <p>
@@ -474,7 +475,7 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
             // sort the accounts so they are in the order
             // they were entered in config.xml
             updateDynamicAccounts();
-            ArrayList<Account> mergedAccounts = new ArrayList<Account>(getDynamicAccounts().size() + getStaticAccounts().size());
+            ArrayList<Account> mergedAccounts = new ArrayList<>(getDynamicAccounts().size() + getStaticAccounts().size());
             mergedAccounts.addAll(getDynamicAccounts().values());
             mergedAccounts.addAll(getStaticAccounts());
             Collections.sort(mergedAccounts);
@@ -646,14 +647,14 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
      * Computes the staticAccounts.
      */
     protected List<Account> computeStaticAccounts() {
-        return new ArrayList<Account>();
+        return new ArrayList<>();
     }
 
     /**
      * Computes the ParsedDynamicAccountParameters.
      */
     protected List<ParsedDynamicAccountParameters> computeParsedDynamicAccountParameters() {
-        return new ArrayList<ParsedDynamicAccountParameters>();
+        return new ArrayList<>();
     }
 
     /**
@@ -662,13 +663,13 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
     protected Map<DynamicAccountKey, DynamicAccount> computeDynamicAccounts() throws ConfigurationException {
         Map<DynamicAccountKey, DynamicAccount> newAccounts;
         try {
-            newAccounts = new HashMap<DynamicAccountKey, DynamicAccount>(getLocalUsers().countUsers() * getParsedDynamicAccountParameters().size());
+            newAccounts = new HashMap<>(getLocalUsers().countUsers() * getParsedDynamicAccountParameters().size());
         } catch (UsersRepositoryException e) {
             throw new ConfigurationException("Unable to acces UsersRepository", e);
         }
         Map<DynamicAccountKey, DynamicAccount> oldAccounts = getDynamicAccountsBasic();
         if (null == oldAccounts)
-            oldAccounts = new HashMap<DynamicAccountKey, DynamicAccount>(0);
+            oldAccounts = new HashMap<>(0);
 
         // Process each ParsedDynamicParameters
         for (ParsedDynamicAccountParameters parsedDynamicAccountParameters : getParsedDynamicAccountParameters()) {
@@ -732,7 +733,7 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
         Map<DynamicAccountKey, DynamicAccount> accounts;
         Iterator<String> usersIterator;
         try {
-            accounts = new HashMap<DynamicAccountKey, DynamicAccount>(getLocalUsers().countUsers());
+            accounts = new HashMap<>(getLocalUsers().countUsers());
             usersIterator = getLocalUsers().list();
 
         } catch (UsersRepositoryException e) {

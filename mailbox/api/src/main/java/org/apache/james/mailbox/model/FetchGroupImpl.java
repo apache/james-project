@@ -42,11 +42,11 @@ public class FetchGroupImpl implements MessageResult.FetchGroup {
     private Set<PartContentDescriptor> partContentDescriptors;
 
     public FetchGroupImpl() {
-        this(0, new HashSet<PartContentDescriptor>());
+        this(0, new HashSet<>());
     }
 
     public FetchGroupImpl(int content) {
-        this(content, new HashSet<PartContentDescriptor>());
+        this(content, new HashSet<>());
     }
 
     public FetchGroupImpl(int content, Set<PartContentDescriptor> partContentDescriptors) {

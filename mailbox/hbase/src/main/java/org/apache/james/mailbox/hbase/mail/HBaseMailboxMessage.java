@@ -106,7 +106,7 @@ public class HBaseMailboxMessage implements MailboxMessage {
         this.uid = uid;
         this.messageId = messageId;
         this.modSeq = modSeq;
-        this.userFlags = new ArrayList<String>();
+        this.userFlags = new ArrayList<>();
         setFlags(original.createFlags());
 
         // A copy of a message is recent
@@ -130,7 +130,7 @@ public class HBaseMailboxMessage implements MailboxMessage {
         this.mailboxId = mailboxId;
         this.messageId = messageId;
         this.internalDate = internalDate;
-        userFlags = new ArrayList<String>();
+        userFlags = new ArrayList<>();
 
         setFlags(flags);
         this.contentOctets = contentOctets;
@@ -214,7 +214,7 @@ public class HBaseMailboxMessage implements MailboxMessage {
      */
     @Override
     public List<Property> getProperties() {
-        return new ArrayList<Property>(properties);
+        return new ArrayList<>(properties);
     }
 
     /**

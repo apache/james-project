@@ -73,7 +73,7 @@ public class ManageSieveServerFactory extends AbstractServerFactory {
 
     @Override
     protected List<AbstractConfigurableAsyncServer> createServers(Logger log, HierarchicalConfiguration config) throws Exception {
-        List<AbstractConfigurableAsyncServer> servers = new ArrayList<AbstractConfigurableAsyncServer>();
+        List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration> configs = config.configurationsAt("managesieveserver");
 
         for (HierarchicalConfiguration serverConfig: configs) {

@@ -48,12 +48,12 @@ import com.github.steveash.guavate.Guavate;
 
 public class MockMimeMessage extends MimeMessage {
 
-    private final List<Address> fromAddresses = new ArrayList<Address>();
+    private final List<Address> fromAddresses = new ArrayList<>();
     private Address senderAddress;
-    private final List<Address> toRecepients = new ArrayList<Address>();
-    private final List<Address> ccRecepients = new ArrayList<Address>();
-    private final List<Address> bccRecepients = new ArrayList<Address>();
-    private final List<Address> replyToAddresses = new ArrayList<Address>();
+    private final List<Address> toRecepients = new ArrayList<>();
+    private final List<Address> ccRecepients = new ArrayList<>();
+    private final List<Address> bccRecepients = new ArrayList<>();
+    private final List<Address> replyToAddresses = new ArrayList<>();
     private String subject;
     private int messageNumber;
     private boolean isExpunged;
@@ -62,7 +62,7 @@ public class MockMimeMessage extends MimeMessage {
     private String[] contentLanguage;
     private String fileName;
     private DataHandler dataHandler;
-    private final HashMap<String, String> contentHeaders = new HashMap<String, String>();
+    private final HashMap<String, String> contentHeaders = new HashMap<>();
     private final Flags setFlags = new Flags();
     private boolean doMatch;
 
@@ -132,7 +132,7 @@ public class MockMimeMessage extends MimeMessage {
 
     @Override
     public Address[] getAllRecipients() throws MessagingException {
-        List<Address> allRecipients = new ArrayList<Address>();
+        List<Address> allRecipients = new ArrayList<>();
         allRecipients.addAll(toRecepients);
         allRecipients.addAll(ccRecepients);
         allRecipients.addAll(bccRecepients);
@@ -418,7 +418,7 @@ public class MockMimeMessage extends MimeMessage {
 
     @Override
     public Enumeration<String> getMatchingHeaders(String[] names) throws MessagingException {
-        ArrayList<String> matchingHeaders = new ArrayList<String>();
+        ArrayList<String> matchingHeaders = new ArrayList<>();
         for (String name : names) {
             String value = getHeader(name, null);
             if (value == null) {
@@ -433,7 +433,7 @@ public class MockMimeMessage extends MimeMessage {
     public Enumeration<String> getNonMatchingHeaders(String[] names) throws MessagingException {
         List<String> existingHeaders = Arrays.asList(names);
 
-        ArrayList<String> nonMatchingHeaders = new ArrayList<String>();
+        ArrayList<String> nonMatchingHeaders = new ArrayList<>();
 
         for (String name : contentHeaders.keySet()) {
             if (existingHeaders.contains(name)) {
@@ -472,7 +472,7 @@ public class MockMimeMessage extends MimeMessage {
 
     @Override
     public Enumeration<String> getMatchingHeaderLines(String[] names) throws MessagingException {
-        ArrayList<String> matchingHeaders = new ArrayList<String>();
+        ArrayList<String> matchingHeaders = new ArrayList<>();
         for (String name : names) {
             String value = getHeader(name, null);
             if (value == null) {
@@ -487,7 +487,7 @@ public class MockMimeMessage extends MimeMessage {
     public Enumeration<String> getNonMatchingHeaderLines(String[] names) throws MessagingException {
         List<String> existingHeaders = names != null ? Arrays.asList(names) : null;
 
-        ArrayList<String> nonMatchingHeaders = new ArrayList<String>();
+        ArrayList<String> nonMatchingHeaders = new ArrayList<>();
 
         for (String name : contentHeaders.keySet()) {
             if (existingHeaders != null && existingHeaders.contains(name)) {

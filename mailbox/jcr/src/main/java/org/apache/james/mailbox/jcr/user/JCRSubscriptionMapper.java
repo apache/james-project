@@ -71,7 +71,7 @@ public class JCRSubscriptionMapper extends AbstractJCRScalingMapper implements S
             if (node != null) {
                 Property prop = node.getProperty(JCRSubscription.MAILBOXES_PROPERTY);
                 Value[] values = prop.getValues();
-                List<String> newValues = new ArrayList<String>();
+                List<String> newValues = new ArrayList<>();
                 for (Value value : values) {
                     String m = value.getString();
                     if (m.equals(sub.getMailbox()) == false) {
@@ -127,7 +127,7 @@ public class JCRSubscriptionMapper extends AbstractJCRScalingMapper implements S
      * (java.lang.String)
      */
     public List<Subscription> findSubscriptionsForUser(String user) throws SubscriptionException {
-        List<Subscription> subList = new ArrayList<Subscription>();
+        List<Subscription> subList = new ArrayList<>();
         try {
             String queryString = "/jcr:root/" + MAILBOXES_PATH + "//element(*,jamesMailbox:user)[@" + JCRSubscription.USERNAME_PROPERTY + "='" + user + "']";
 

@@ -148,7 +148,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
      * #getImplementedCapabilities(org.apache.james.imap.api.process.ImapSession)
      */
     public List<String> getImplementedCapabilities(ImapSession session) {
-        List<String> caps = new ArrayList<String>();
+        List<String> caps = new ArrayList<>();
         // Only ounce AUTH=PLAIN if the session does allow plain auth or TLS is active.
         // See IMAP-304
         if (session.isPlainAuthDisallowed()  == false || session.isTLSActive()) {

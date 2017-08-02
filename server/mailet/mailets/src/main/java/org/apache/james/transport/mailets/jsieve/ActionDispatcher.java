@@ -19,6 +19,11 @@
 
 package org.apache.james.transport.mailets.jsieve;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import javax.mail.MessagingException;
+
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionDiscard;
 import org.apache.jsieve.mail.ActionFileInto;
@@ -27,10 +32,6 @@ import org.apache.jsieve.mail.ActionRedirect;
 import org.apache.jsieve.mail.ActionReject;
 import org.apache.jsieve.mail.optional.ActionVacation;
 import org.apache.mailet.Mail;
-
-import javax.mail.MessagingException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Dynamically dispatches an Action depending on the type of Action received at runtime.
@@ -84,7 +85,7 @@ public class ActionDispatcher {
      * @return Map
      */
     private ConcurrentMap<Class<?>, MailAction> defaultMethodMap() {
-        final ConcurrentMap<Class<?>, MailAction> actionMap = new ConcurrentHashMap<Class<?>, MailAction>(4);
+        final ConcurrentMap<Class<?>, MailAction> actionMap = new ConcurrentHashMap<>(4);
         actionMap.put(ActionFileInto.class, new FileIntoAction());
         actionMap.put(ActionKeep.class, new KeepAction());
         actionMap.put(ActionRedirect.class, new RedirectAction());

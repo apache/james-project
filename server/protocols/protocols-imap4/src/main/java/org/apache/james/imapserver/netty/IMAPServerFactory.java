@@ -56,7 +56,7 @@ public class IMAPServerFactory extends AbstractServerFactory {
     
     @Override
     protected List<AbstractConfigurableAsyncServer> createServers(Logger log, HierarchicalConfiguration config) throws Exception {
-        List<AbstractConfigurableAsyncServer> servers = new ArrayList<AbstractConfigurableAsyncServer>();
+        List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration> configs = config.configurationsAt("imapserver");
         
         for (HierarchicalConfiguration serverConfig: configs) {

@@ -22,7 +22,7 @@ import java.util.LinkedList;
 
 public class UidConstraint {
     
-    private final LinkedList<Constraint> constraints = new LinkedList<Constraint>();
+    private final LinkedList<Constraint> constraints = new LinkedList<>();
     
     public UidConstraint append(Constraint constraint) {
         constraints.add(constraint);

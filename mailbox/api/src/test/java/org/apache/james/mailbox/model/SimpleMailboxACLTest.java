@@ -69,7 +69,7 @@ public class SimpleMailboxACLTest {
     @Test
     public void testUnionACLNew() throws UnsupportedRightException {
 
-        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<MailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>(u1u2g1g2ACL.getEntries());
+        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.put(SimpleMailboxACL.OWNER_KEY, SimpleMailboxACL.FULL_RIGHTS);
 
         MailboxACL toAdd = SimpleMailboxACL.OWNER_FULL_ACL;
@@ -83,7 +83,7 @@ public class SimpleMailboxACLTest {
     @Test
     public void testUnionEntryNew() throws UnsupportedRightException {
 
-        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<MailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>(u1u2g1g2ACL.getEntries());
+        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.put(SimpleMailboxACL.OWNER_KEY, SimpleMailboxACL.FULL_RIGHTS);
 
         MailboxACL result = u1u2g1g2ACL.union(SimpleMailboxACL.OWNER_KEY, SimpleMailboxACL.FULL_RIGHTS);
@@ -96,7 +96,7 @@ public class SimpleMailboxACLTest {
     @Test
     public void testUnionACLExisting() throws UnsupportedRightException {
 
-        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<MailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>(u1u2g1g2ACL.getEntries());
+        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.put(new SimpleMailboxACLEntryKey(USER_1), new Rfc4314Rights(aeik + lprs));
 
         MailboxACL toAdd = new SimpleMailboxACL(new SimpleMailboxACL.SimpleMailboxACLEntry[] { new SimpleMailboxACL.SimpleMailboxACLEntry(USER_1, lprs) });
@@ -110,7 +110,7 @@ public class SimpleMailboxACLTest {
     @Test
     public void testUnionEntryExisting() throws UnsupportedRightException {
 
-        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<MailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>(u1u2g1g2ACL.getEntries());
+        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.put(new SimpleMailboxACLEntryKey(USER_1), new Rfc4314Rights(aeik + lprs));
 
         MailboxACL result = u1u2g1g2ACL.union(new SimpleMailboxACLEntryKey(USER_1), new Rfc4314Rights(lprs));
@@ -134,7 +134,7 @@ public class SimpleMailboxACLTest {
     public void testExceptACLNew() throws UnsupportedRightException {
 
         /* actually no change expected */
-        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<MailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>(u1u2g1g2ACL.getEntries());
+        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
 
         MailboxACL toRemove = SimpleMailboxACL.OWNER_FULL_ACL;
         MailboxACL result = u1u2g1g2ACL.except(toRemove);
@@ -148,7 +148,7 @@ public class SimpleMailboxACLTest {
     public void testExceptEntryNew() throws UnsupportedRightException {
 
         /* actually no change expected */
-        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<MailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>(u1u2g1g2ACL.getEntries());
+        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
 
         MailboxACL result = u1u2g1g2ACL.except(SimpleMailboxACL.OWNER_KEY, SimpleMailboxACL.FULL_RIGHTS);
 
@@ -160,7 +160,7 @@ public class SimpleMailboxACLTest {
     @Test
     public void testExceptACLExisting() throws UnsupportedRightException {
 
-        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<MailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>(u1u2g1g2ACL.getEntries());
+        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.put(new SimpleMailboxACLEntryKey(USER_1), new Rfc4314Rights(ik));
 
         MailboxACL toRemove = new SimpleMailboxACL(new SimpleMailboxACL.SimpleMailboxACLEntry[] { new SimpleMailboxACL.SimpleMailboxACLEntry(USER_1, ae) });
@@ -174,7 +174,7 @@ public class SimpleMailboxACLTest {
     @Test
     public void testExceptEntryExisting() throws UnsupportedRightException {
 
-        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<MailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>(u1u2g1g2ACL.getEntries());
+        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.put(new SimpleMailboxACLEntryKey(USER_1), new Rfc4314Rights(ik));
 
         MailboxACL result = u1u2g1g2ACL.except(new SimpleMailboxACLEntryKey(USER_1), new Rfc4314Rights(ae));
@@ -187,7 +187,7 @@ public class SimpleMailboxACLTest {
     @Test
     public void testExceptACLFull() throws UnsupportedRightException {
 
-        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<MailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>(u1u2g1g2ACL.getEntries());
+        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.remove(new SimpleMailboxACLEntryKey(USER_1));
 
         MailboxACL toRemove = new SimpleMailboxACL(new SimpleMailboxACL.SimpleMailboxACLEntry[] { new SimpleMailboxACL.SimpleMailboxACLEntry(USER_1, SimpleMailboxACL.FULL_RIGHTS.serialize()) });
@@ -201,7 +201,7 @@ public class SimpleMailboxACLTest {
     @Test
     public void testExceptEntryFull() throws UnsupportedRightException {
 
-        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<MailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>(u1u2g1g2ACL.getEntries());
+        Map<MailboxACLEntryKey, MailboxACLRights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.remove(new SimpleMailboxACLEntryKey(USER_1));
 
         MailboxACL result = u1u2g1g2ACL.except(new SimpleMailboxACLEntryKey(USER_1), SimpleMailboxACL.FULL_RIGHTS);

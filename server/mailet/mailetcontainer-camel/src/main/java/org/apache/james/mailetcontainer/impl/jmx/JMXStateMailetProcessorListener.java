@@ -48,9 +48,9 @@ public class JMXStateMailetProcessorListener implements MailetProcessorListener,
 
     private final AbstractStateMailetProcessor processor;
     private final MBeanServer mbeanserver;
-    private final List<ObjectName> mbeans = new ArrayList<ObjectName>();
-    private final Map<Mailet, MailetManagement> mailetMap = new HashMap<Mailet, MailetManagement>();
-    private final Map<Matcher, MatcherManagement> matcherMap = new HashMap<Matcher, MatcherManagement>();
+    private final List<ObjectName> mbeans = new ArrayList<>();
+    private final Map<Mailet, MailetManagement> mailetMap = new HashMap<>();
+    private final Map<Matcher, MatcherManagement> matcherMap = new HashMap<>();
 
     private final String name;
 
@@ -177,7 +177,7 @@ public class JMXStateMailetProcessorListener implements MailetProcessorListener,
      * Unregister all JMX MBeans
      */
     private void unregisterMBeans() {
-        List<ObjectName> unregistered = new ArrayList<ObjectName>();
+        List<ObjectName> unregistered = new ArrayList<>();
         for (ObjectName name : mbeans) {
             try {
                 mbeanserver.unregisterMBean(name);

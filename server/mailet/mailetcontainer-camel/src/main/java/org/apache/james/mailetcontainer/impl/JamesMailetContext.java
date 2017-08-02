@@ -69,7 +69,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
     /**
      * A hash table of server attributes These are the MailetContext attributes
      */
-    private final Hashtable<String, Object> attributes = new Hashtable<String, Object>();
+    private final Hashtable<String, Object> attributes = new Hashtable<>();
     protected DNSService dns;
 
     protected Logger log;
@@ -130,7 +130,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
 
     @Override
     public Iterator<String> getAttributeNames() {
-        Vector<String> names = new Vector<String>();
+        Vector<String> names = new Vector<>();
         for (Enumeration<String> e = attributes.keys(); e.hasMoreElements(); ) {
             names.add(e.nextElement());
         }
@@ -223,7 +223,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
         MimeMessage reply = (MimeMessage) original.reply(false);
         reply.setSubject("Re: " + original.getSubject());
         reply.setSentDate(new Date());
-        Collection<MailAddress> recipients = new HashSet<MailAddress>();
+        Collection<MailAddress> recipients = new HashSet<>();
         recipients.add(mail.getSender());
         InternetAddress addr[] = {new InternetAddress(mail.getSender().toString())};
         reply.setRecipients(Message.RecipientType.TO, addr);
@@ -380,7 +380,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
     @Override
     public void sendMail(MimeMessage message) throws MessagingException {
         MailAddress sender = new MailAddress((InternetAddress) message.getFrom()[0]);
-        Collection<MailAddress> recipients = new HashSet<MailAddress>();
+        Collection<MailAddress> recipients = new HashSet<>();
         Address addresses[] = message.getAllRecipients();
         if (addresses != null) {
             for (Address address : addresses) {

@@ -29,7 +29,6 @@ import javax.annotation.PreDestroy;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.queue.api.MailQueue;
@@ -37,6 +36,8 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueManagementMBean;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.slf4j.Logger;
+
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * {@link MailQueueFactory} abstract base class which take care of register the
@@ -46,11 +47,11 @@ public abstract class AbstractMailQueueFactory implements MailQueueFactory, LogE
 
     public static final String MBEAN_NAME_QUEUE_PREFIX = "org.apache.james:type=component,name=queue,queue=";
 
-    protected final Map<String, MailQueue> queues = new HashMap<String, MailQueue>();
+    protected final Map<String, MailQueue> queues = new HashMap<>();
     protected Logger log;
     private boolean useJMX = true;
     private MBeanServer mbeanServer;
-    private final List<String> mbeans = new ArrayList<String>();
+    private final List<String> mbeans = new ArrayList<>();
 
     public void setUseJMX(boolean useJMX) {
         this.useJMX = useJMX;

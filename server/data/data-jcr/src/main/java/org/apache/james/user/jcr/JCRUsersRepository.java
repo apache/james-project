@@ -328,7 +328,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
      * @throws UsersRepositoryException
      */
     public Iterator<String> list() throws UsersRepositoryException {
-        final Collection<String> userNames = new ArrayList<String>();
+        final Collection<String> userNames = new ArrayList<>();
         try {
             final Session session = login();
             try {

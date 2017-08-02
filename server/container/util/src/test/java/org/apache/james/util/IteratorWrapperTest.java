@@ -35,7 +35,7 @@ public class IteratorWrapperTest {
     @Test
     public void getEntriesSeenShouldReturnEmptyWhenNotConsumed() {
         ImmutableList<Integer> originalData = ImmutableList.of(1, 2, 3);
-        IteratorWrapper<Integer> integerIteratorWrapper = new IteratorWrapper<Integer>(originalData.iterator());
+        IteratorWrapper<Integer> integerIteratorWrapper = new IteratorWrapper<>(originalData.iterator());
 
         assertThat(integerIteratorWrapper.getEntriesSeen()).isEmpty();
     }
@@ -43,7 +43,7 @@ public class IteratorWrapperTest {
     @Test
     public void getEntriesSeenShouldReturnViewOfConsumedData() {
         ImmutableList<Integer> originalData = ImmutableList.of(1, 2, 3);
-        IteratorWrapper<Integer> integerIteratorWrapper = new IteratorWrapper<Integer>(originalData.iterator());
+        IteratorWrapper<Integer> integerIteratorWrapper = new IteratorWrapper<>(originalData.iterator());
 
         consume(integerIteratorWrapper);
 
@@ -54,7 +54,7 @@ public class IteratorWrapperTest {
     @Test
     public void getEntriesSeenShouldReturnViewOfConsumedDataWhenPartiallyConsumed() {
         ImmutableList<Integer> originalData = ImmutableList.of(1, 2, 3);
-        IteratorWrapper<Integer> integerIteratorWrapper = new IteratorWrapper<Integer>(originalData.iterator());
+        IteratorWrapper<Integer> integerIteratorWrapper = new IteratorWrapper<>(originalData.iterator());
 
         integerIteratorWrapper.next();
         integerIteratorWrapper.next();
@@ -66,7 +66,7 @@ public class IteratorWrapperTest {
     @Test
     public void getEntriesSeenShouldReturnEmptyWhenSuppliedEmpty() {
         ImmutableList<Integer> originalData = ImmutableList.of();
-        IteratorWrapper<Integer> integerIteratorWrapper = new IteratorWrapper<Integer>(originalData.iterator());
+        IteratorWrapper<Integer> integerIteratorWrapper = new IteratorWrapper<>(originalData.iterator());
 
         consume(integerIteratorWrapper);
 

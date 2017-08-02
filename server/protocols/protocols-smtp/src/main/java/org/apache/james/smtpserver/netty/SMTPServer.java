@@ -105,7 +105,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         super.preInit();
         if (authorizedAddresses != null) {
             java.util.StringTokenizer st = new java.util.StringTokenizer(authorizedAddresses, ", ", false);
-            java.util.Collection<String> networks = new java.util.ArrayList<String>();
+            java.util.Collection<String> networks = new java.util.ArrayList<>();
             while (st.hasMoreTokens()) {
                 String addr = st.nextToken();
                 networks.add(addr);

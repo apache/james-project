@@ -37,7 +37,7 @@ public class MailboxListenerRegistry {
     private final ConcurrentLinkedQueue<MailboxListener> globalListeners;
 
     public MailboxListenerRegistry() {
-        this.globalListeners = new ConcurrentLinkedQueue<MailboxListener>();
+        this.globalListeners = new ConcurrentLinkedQueue<>();
         this.listeners = Multimaps.synchronizedMultimap(HashMultimap.<MailboxPath, MailboxListener>create());
     }
 

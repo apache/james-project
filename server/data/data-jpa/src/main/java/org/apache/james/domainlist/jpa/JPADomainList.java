@@ -75,7 +75,7 @@ public class JPADomainList extends AbstractDomainList {
     @SuppressWarnings("unchecked")
     @Override
     protected List<String> getDomainListInternal() throws DomainListException {
-        List<String> domains = new ArrayList<String>();
+        List<String> domains = new ArrayList<>();
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {

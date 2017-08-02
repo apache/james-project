@@ -407,7 +407,7 @@ public class MaildirFolder {
     public SortedMap<MessageUid, MaildirMessageName> getUidMap(MailboxSession session, FilenameFilter filter, MessageUid from, MessageUid to)
     throws MailboxException {
         SortedMap<MessageUid, MaildirMessageName> allUids = getUidMap(session, from, to);
-        SortedMap<MessageUid, MaildirMessageName> filteredUids = new TreeMap<MessageUid, MaildirMessageName>();
+        SortedMap<MessageUid, MaildirMessageName> filteredUids = new TreeMap<>();
         for (Entry<MessageUid, MaildirMessageName> entry : allUids.entrySet()) {
             if (filter.accept(null, entry.getValue().getFullName()))
                 filteredUids.put(entry.getKey(), entry.getValue());
@@ -430,7 +430,7 @@ public class MaildirFolder {
     public SortedMap<MessageUid, MaildirMessageName> getUidMap(MailboxSession session, FilenameFilter filter, int limit) throws MailboxException {
         MessageUid to = null;
         SortedMap<MessageUid, MaildirMessageName> allUids = getUidMap(session, MessageUid.MIN_VALUE, to);
-        SortedMap<MessageUid, MaildirMessageName> filteredUids = new TreeMap<MessageUid, MaildirMessageName>();
+        SortedMap<MessageUid, MaildirMessageName> filteredUids = new TreeMap<>();
         int theLimit = limit;
         if (limit < 1)
             theLimit = allUids.size();
@@ -538,7 +538,7 @@ public class MaildirFolder {
      * @return The uid map
      */
     private Map<MessageUid, MaildirMessageName> createUidFile() throws MailboxException {
-        final Map<MessageUid, MaildirMessageName> uidMap = new TreeMap<MessageUid, MaildirMessageName>();
+        final Map<MessageUid, MaildirMessageName> uidMap = new TreeMap<>();
         File uidList = uidFile;
         PrintWriter pw = null;
         try {
@@ -565,12 +565,12 @@ public class MaildirFolder {
     }
     
     private Map<MessageUid, MaildirMessageName> updateUidFile() throws MailboxException {
-        final Map<MessageUid, MaildirMessageName> uidMap = new TreeMap<MessageUid, MaildirMessageName>();
+        final Map<MessageUid, MaildirMessageName> uidMap = new TreeMap<>();
         File uidList = uidFile;
         String[] curFiles = curFolder.list();
         String[] newFiles = newFolder.list();
         messageCount = curFiles.length + newFiles.length;
-        HashMap<String, MessageUid> reverseUidMap = new HashMap<String, MessageUid>(messageCount);
+        HashMap<String, MessageUid> reverseUidMap = new HashMap<>(messageCount);
         FileReader fileReader = null;
         BufferedReader reader = null;
         PrintWriter pw = null;
@@ -617,7 +617,7 @@ public class MaildirFolder {
     }
 
     private Map<MessageUid, MaildirMessageName> readUidFile(MailboxSession session, MessageUid from, MessageUid to) throws MailboxException {
-        final Map<MessageUid, MaildirMessageName> uidMap = new HashMap<MessageUid, MaildirMessageName>();
+        final Map<MessageUid, MaildirMessageName> uidMap = new HashMap<>();
 
         File uidList = uidFile;
         FileReader fileReader = null;
@@ -672,7 +672,7 @@ public class MaildirFolder {
     private SortedMap<MessageUid, MaildirMessageName> truncateMap(Map<MessageUid, MaildirMessageName> map, MessageUid from, MessageUid to) {
         TreeMap<MessageUid, MaildirMessageName> sortedMap;
         if (map instanceof TreeMap<?, ?>) sortedMap = (TreeMap<MessageUid, MaildirMessageName>) map;
-        else sortedMap = new TreeMap<MessageUid, MaildirMessageName>(map);
+        else sortedMap = new TreeMap<>(map);
         if (to != null)
             return sortedMap.subMap(from, to.next());
         return sortedMap.tailMap(from);
@@ -745,7 +745,7 @@ public class MaildirFolder {
                     // the first line in the file contains the next uid and message count
                     if (line != null)
                         readUidListHeader(line);
-                    ArrayList<String> lines = new ArrayList<String>();
+                    ArrayList<String> lines = new ArrayList<>();
                     while ((line = reader.readLine()) != null)
                         lines.add(line);
                     uid = getNextUid();
@@ -763,7 +763,7 @@ public class MaildirFolder {
                     String[] curFiles = curFolder.list();
                     String[] newFiles = newFolder.list();
                     messageCount = curFiles.length + newFiles.length;
-                    ArrayList<String> lines = new ArrayList<String>();
+                    ArrayList<String> lines = new ArrayList<>();
                     String[] allFiles = (String[]) ArrayUtils.addAll(curFiles, newFiles);
                     for (String file : allFiles) {
                         MessageUid theUid = getNextUid();
@@ -811,7 +811,7 @@ public class MaildirFolder {
                 reader = new BufferedReader(fileReader);
                 String line = reader.readLine();
                 readUidListHeader(line);
-                ArrayList<String> lines = new ArrayList<String>();
+                ArrayList<String> lines = new ArrayList<>();
                 while ((line = reader.readLine()) != null) {
                     if (uid.equals(MessageUid.of(Long.valueOf(line.substring(0, line.indexOf(" ")))))) {
                         line = String.valueOf(uid.asLong()) + " " + messageName;
@@ -854,7 +854,7 @@ public class MaildirFolder {
                 readUidListHeader(reader.readLine());
 
                 // It may be possible that message count is 0 so we should better not try to calculate the size of the ArrayList
-                ArrayList<String> lines = new ArrayList<String>();
+                ArrayList<String> lines = new ArrayList<>();
                 String line;
                 int lineNumber = 1;
                 while ((line = reader.readLine()) != null) {

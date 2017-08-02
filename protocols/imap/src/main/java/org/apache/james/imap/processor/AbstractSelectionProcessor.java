@@ -217,7 +217,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                     if (knownSequences != null && knownUids != null) {
                         
                         // Add all uids which are contained in the knownuidsset to a List so we can later access them via the index
-                        List<MessageUid> knownUidsList = new ArrayList<MessageUid>();
+                        List<MessageUid> knownUidsList = new ArrayList<>();
                         for (UidRange range : knownUids) {
                             for (MessageUid uid : range) {
                                 knownUidsList.add(uid);
@@ -258,7 +258,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                                 firstUid = firstUid.next();
 
                                 // Ok now its time to filter out the IdRanges which we are not interested in
-                                List<UidRange> filteredUidSet = new ArrayList<UidRange>();
+                                List<UidRange> filteredUidSet = new ArrayList<>();
                                 for (UidRange r : uidSet) {
                                     if (r.getLowVal().compareTo(firstUid) < 0) {
                                         if (r.getHighVal().compareTo(firstUid) > 0) {
@@ -277,7 +277,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                         
                     }
                     
-                    List<MessageRange> ranges = new ArrayList<MessageRange>();
+                    List<MessageRange> ranges = new ArrayList<>();
                     for (UidRange range : uidSet) {
                         MessageRange messageSet = range.toMessageRange();
                         if (messageSet != null) {

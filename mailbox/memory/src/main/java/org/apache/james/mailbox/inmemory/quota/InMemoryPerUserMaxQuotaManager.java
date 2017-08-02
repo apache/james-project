@@ -21,18 +21,18 @@ package org.apache.james.mailbox.inmemory.quota;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.MaxQuotaManager;
 
 public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
 
     private long maxMessage = Quota.UNLIMITED;
     private long maxStorage = Quota.UNLIMITED;
 
-    private final Map<String, Long> userMaxStorage = new ConcurrentHashMap<String, Long>();
-    private final Map<String, Long> userMaxMessage = new ConcurrentHashMap<String, Long>();
+    private final Map<String, Long> userMaxStorage = new ConcurrentHashMap<>();
+    private final Map<String, Long> userMaxMessage = new ConcurrentHashMap<>();
 
     @Override
     public void setDefaultMaxStorage(long maxStorage) throws MailboxException {

@@ -80,7 +80,7 @@ public class XMLDomainListTest {
     // See https://issues.apache.org/jira/browse/JAMES-998
     @Test
     public void testNoConfiguredDomains() throws Exception {
-        List<String> domains = new ArrayList<String>();
+        List<String> domains = new ArrayList<>();
         XMLDomainList dom = new XMLDomainList(setUpDNSServer("localhost"));
         dom.setLog(LoggerFactory.getLogger("MockLog"));
         dom.configure(setUpConfiguration(false, false, domains));
@@ -90,7 +90,7 @@ public class XMLDomainListTest {
 
     @Test
     public void testGetDomains() throws Exception {
-        List<String> domains = new ArrayList<String>();
+        List<String> domains = new ArrayList<>();
         domains.add("domain1.");
         domains.add("domain2.");
 
@@ -103,7 +103,7 @@ public class XMLDomainListTest {
 
     @Test
     public void testGetDomainsAutoDetectNotLocalHost() throws Exception {
-        List<String> domains = new ArrayList<String>();
+        List<String> domains = new ArrayList<>();
         domains.add("domain1.");
 
         XMLDomainList dom = new XMLDomainList(setUpDNSServer("local"));
@@ -115,7 +115,7 @@ public class XMLDomainListTest {
 
     @Test
     public void testGetDomainsAutoDetectLocalHost() throws Exception {
-        List<String> domains = new ArrayList<String>();
+        List<String> domains = new ArrayList<>();
         domains.add("domain1.");
 
         XMLDomainList dom = new XMLDomainList(setUpDNSServer("localhost"));
@@ -130,7 +130,7 @@ public class XMLDomainListTest {
     public void addDomainShouldFailWhenAlreadyConfigured() throws Exception {
         expectedException.expect(DomainListException.class);
 
-        List<String> domains = new ArrayList<String>();
+        List<String> domains = new ArrayList<>();
         domains.add("domain1");
 
         XMLDomainList testee = new XMLDomainList(setUpDNSServer("hostname"));
@@ -144,7 +144,7 @@ public class XMLDomainListTest {
     public void removeDomainShouldFailWhenAlreadyConfigured() throws Exception {
         expectedException.expect(DomainListException.class);
 
-        List<String> domains = new ArrayList<String>();
+        List<String> domains = new ArrayList<>();
         domains.add("domain1");
 
         XMLDomainList testee = new XMLDomainList(setUpDNSServer("localhost"));

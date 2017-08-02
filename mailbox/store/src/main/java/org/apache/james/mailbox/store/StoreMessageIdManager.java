@@ -203,7 +203,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     private Map<QuotaRoot, Integer> buildMapQuotaRoot(Collection<MailboxId> mailboxIdsToBeAdded, Collection<MailboxId> mailboxIdsToBeRemove, MailboxMapper mailboxMapper) throws MailboxException {
-        Map<QuotaRoot, Integer> messageCountByQuotaRoot = new HashMap<QuotaRoot, Integer>();
+        Map<QuotaRoot, Integer> messageCountByQuotaRoot = new HashMap<>();
         for (MailboxId mailboxId : mailboxIdsToBeAdded) {
             QuotaRoot quotaRoot = retrieveQuotaRoot(mailboxMapper, mailboxId);
             int currentCount = Optional.fromNullable(messageCountByQuotaRoot.get(quotaRoot)).or(0);

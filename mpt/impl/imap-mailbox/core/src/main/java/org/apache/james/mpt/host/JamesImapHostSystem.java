@@ -59,7 +59,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem {
 
     public JamesImapHostSystem() {
         super();
-        users = new HashSet<User>();
+        users = new HashSet<>();
         memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting();
         try {
             memoryUsersRepository.configure(userRepositoryConfiguration());

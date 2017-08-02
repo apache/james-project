@@ -62,7 +62,7 @@ public class MailSpoolTest {
         private ConcurrentLinkedQueue<Mail> queue;
 
         public MyQueue() {
-            queue = new ConcurrentLinkedQueue<Mail>();
+            queue = new ConcurrentLinkedQueue<>();
         }
 
         @Override

@@ -71,7 +71,7 @@ public class SimpleMailboxMembership implements MailboxMessage {
         this.size = size;
         this.body = body;
         if (headers == null) {
-            this.headers = new HashMap<String,String>();
+            this.headers = new HashMap<>();
         } else {
             this.headers = headers;
         }

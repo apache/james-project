@@ -19,21 +19,19 @@
 
 package org.apache.james.util.bayesian;
 
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import java.io.File;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.DatabaseMetaData;
 
 /**
  * Manages the persistence of the spam bayesian analysis corpus using a JDBC
@@ -79,7 +77,7 @@ abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
     private String sqlFileName;
 
     /** Holds value of property sqlParameters. */
-    private Map<String, String> sqlParameters = new HashMap<String, String>();
+    private Map<String, String> sqlParameters = new HashMap<>();
 
     /** Holds value of property lastDatabaseUpdateTime. */
     private static long lastDatabaseUpdateTime;

@@ -42,8 +42,8 @@ public class MockMailetContext implements MailetContext {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MockMailetContext.class);
 
-    private final Map<String, Object> attributes = new HashMap<String, Object>();
-    private final List<Mail> mails = new ArrayList<Mail>();
+    private final Map<String, Object> attributes = new HashMap<>();
+    private final List<Mail> mails = new ArrayList<>();
 
     @Override
     public void bounce(Mail arg0, String arg1) throws MessagingException {
@@ -76,7 +76,7 @@ public class MockMailetContext implements MailetContext {
      */
     @Override
     public Collection<String> getMailServers(String host) {
-        List<String> servers = new ArrayList<String>();
+        List<String> servers = new ArrayList<>();
         if ("localhost".equalsIgnoreCase(host)) {
             servers.add("mx.localhost");
         }

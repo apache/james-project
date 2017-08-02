@@ -563,7 +563,7 @@ public class SearchQuery implements Serializable {
      * @return <code>Criterion</code>, not null
      */
     public static Criterion or(Criterion one, Criterion two) {
-        final List<Criterion> criteria = new ArrayList<Criterion>();
+        final List<Criterion> criteria = new ArrayList<>();
         criteria.add(one);
         criteria.add(two);
         return new ConjunctionCriterion(Conjunction.OR, criteria);
@@ -590,7 +590,7 @@ public class SearchQuery implements Serializable {
      * @return <code>Criterion</code>, not null
      */
     public static Criterion and(Criterion one, Criterion two) {
-        final List<Criterion> criteria = new ArrayList<Criterion>();
+        final List<Criterion> criteria = new ArrayList<>();
         criteria.add(one);
         criteria.add(two);
         return new ConjunctionCriterion(Conjunction.AND, criteria);
@@ -615,7 +615,7 @@ public class SearchQuery implements Serializable {
      * @return <code>Criterion</code>, not null
      */
     public static Criterion not(Criterion criterion) {
-        final List<Criterion> criteria = new ArrayList<Criterion>();
+        final List<Criterion> criteria = new ArrayList<>();
         criteria.add(criterion);
         return new ConjunctionCriterion(Conjunction.NOR, criteria);
     }
@@ -748,18 +748,18 @@ public class SearchQuery implements Serializable {
         return AllCriterion.all();
     }
 
-    private final Set<MessageUid> recentMessageUids = new HashSet<MessageUid>();
+    private final Set<MessageUid> recentMessageUids = new HashSet<>();
 
     private final List<Criterion> criterias;
 
     private List<Sort> sorts = Collections.singletonList(new Sort(Sort.SortClause.Uid, Sort.Order.NATURAL));
 
     public SearchQuery(Criterion... criterias) {
-        this(new ArrayList<Criterion>(Arrays.asList(criterias)));
+        this(new ArrayList<>(Arrays.asList(criterias)));
     }
 
     public SearchQuery() {
-        this(new ArrayList<Criterion>());
+        this(new ArrayList<>());
     }
 
     private SearchQuery(List<Criterion> criterias) {

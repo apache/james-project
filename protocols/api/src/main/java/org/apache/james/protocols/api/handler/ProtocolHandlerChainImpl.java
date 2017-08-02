@@ -36,7 +36,7 @@ import java.util.ListIterator;
  */
 public class ProtocolHandlerChainImpl extends AbstractProtocolHandlerChain implements List<ProtocolHandler> {
 
-    private final List<ProtocolHandler> handlers = new ArrayList<ProtocolHandler>();
+    private final List<ProtocolHandler> handlers = new ArrayList<>();
     private volatile boolean readyOnly = false;
 
     /**

@@ -53,7 +53,7 @@ public class ProtocolSession implements ProtocolInteractor {
 
     private int maxSessionNumber;
 
-    protected List<ProtocolElement> testElements = new ArrayList<ProtocolElement>();
+    protected List<ProtocolElement> testElements = new ArrayList<>();
 
     private Iterator<ProtocolElement> elementsIterator;
 
@@ -63,7 +63,7 @@ public class ProtocolSession implements ProtocolInteractor {
 
     private boolean continueAfterFailure = false;
 
-    private Map<String, Stopwatch> timers = new HashMap<String, Stopwatch>();
+    private Map<String, Stopwatch> timers = new HashMap<>();
 
     public final boolean isContinueAfterFailure() {
         return continueAfterFailure;
@@ -392,7 +392,7 @@ public class ProtocolSession implements ProtocolInteractor {
      * non-specified order.
      */
     private class ServerUnorderedBlockResponse extends ServerResponse {
-        private List<String> expectedLines = new ArrayList<String>();
+        private List<String> expectedLines = new ArrayList<>();
 
         /**
          * Sets up a ServerUnorderedBlockResponse with the list of expected
@@ -439,7 +439,7 @@ public class ProtocolSession implements ProtocolInteractor {
          *             expected lines.
          */
         protected void checkResponse(Session session, boolean continueAfterFailure) throws Exception {
-            List<String> testLines = new ArrayList<String>(expectedLines);
+            List<String> testLines = new ArrayList<>(expectedLines);
             while (testLines.size() > 0) {
                 String actualLine = readLine(session);
 

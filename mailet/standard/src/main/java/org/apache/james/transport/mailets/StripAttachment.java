@@ -342,7 +342,7 @@ public class StripAttachment extends GenericMailet {
         @SuppressWarnings("unchecked")
         List<String> attributeValues = (List<String>) mail.getAttribute(attributeName);
         if (attributeValues == null) {
-            attributeValues = new ArrayList<String>();
+            attributeValues = new ArrayList<>();
             mail.setAttribute(attributeName, (Serializable) attributeValues);
         }
         attributeValues.add(filename);
@@ -358,7 +358,7 @@ public class StripAttachment extends GenericMailet {
         @SuppressWarnings("unchecked")
         Map<String, byte[]> fileNamesToPartContent = (Map<String, byte[]>) mail.getAttribute(attributeName);
         if (fileNamesToPartContent == null) {
-            fileNamesToPartContent = new LinkedHashMap<String, byte[]>();
+            fileNamesToPartContent = new LinkedHashMap<>();
             mail.setAttribute(attributeName, (Serializable) fileNamesToPartContent);
         }
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();

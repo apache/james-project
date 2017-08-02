@@ -390,7 +390,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     }
 
     private Map<MessageUid, MessageMetaData> createMetaData(List<MailboxMessage> uids) {
-        final Map<MessageUid, MessageMetaData> data = new HashMap<MessageUid, MessageMetaData>();
+        final Map<MessageUid, MessageMetaData> data = new HashMap<>();
         for (MailboxMessage m : uids) {
             data.put(m.getUid(), new SimpleMessageMetaData(m));
         }

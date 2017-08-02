@@ -43,7 +43,7 @@ public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest{
 
     protected final class LMTPSClient extends SMTPSClient implements LMTPClient{
 
-        private final List<Integer> replies = new ArrayList<Integer>();
+        private final List<Integer> replies = new ArrayList<>();
         private int rcptCount = 0;
         
 

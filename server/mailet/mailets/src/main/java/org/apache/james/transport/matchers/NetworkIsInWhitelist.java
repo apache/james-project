@@ -93,7 +93,7 @@ public class NetworkIsInWhitelist extends AbstractSQLWhitelistMatcher {
                 conn = datasource.getConnection();
             }
 
-            List<String> nets = new ArrayList<String>();
+            List<String> nets = new ArrayList<>();
             try {
                 if (selectStmt == null) {
                     selectStmt = conn.prepareStatement(selectNetworks);
@@ -117,7 +117,7 @@ public class NetworkIsInWhitelist extends AbstractSQLWhitelistMatcher {
                     selectStmt.setString(1, "*");
                     selectStmt.setString(2, recipientHost);
                     selectRS = selectStmt.executeQuery();
-                    nets = new ArrayList<String>();
+                    nets = new ArrayList<>();
                     while (selectRS.next()) {
                         nets.add(selectRS.getString(1));
                     }

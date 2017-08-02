@@ -62,7 +62,7 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
     protected JDBCUtil jdbcUtil;
 
     /** Holds value of property sqlParameters. */
-    private final Map<String, String> sqlParameters = new HashMap<String, String>();
+    private final Map<String, String> sqlParameters = new HashMap<>();
 
 
     @Inject
@@ -151,7 +151,7 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
 
         Collection<MailAddress> recipients = mail.getRecipients();
 
-        Collection<MailAddress> inWhiteList = new java.util.HashSet<MailAddress>();
+        Collection<MailAddress> inWhiteList = new java.util.HashSet<>();
 
         for (MailAddress recipientMailAddress : recipients) {
             String recipientUser = recipientMailAddress.getLocalPart().toLowerCase(Locale.US);

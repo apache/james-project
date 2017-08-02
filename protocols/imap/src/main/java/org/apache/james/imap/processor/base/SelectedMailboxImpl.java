@@ -51,7 +51,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
 
-    private final Set<MessageUid> recentUids = new TreeSet<MessageUid>();
+    private final Set<MessageUid> recentUids = new TreeSet<>();
 
     private boolean recentUidRemoved = false;
 
@@ -62,9 +62,9 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
     private final ImapSession session;
 
     private final long sessionId;
-    private final Set<MessageUid> flagUpdateUids = new TreeSet<MessageUid>();
+    private final Set<MessageUid> flagUpdateUids = new TreeSet<>();
     private final Flags.Flag uninterestingFlag = Flags.Flag.RECENT;
-    private final Set<MessageUid> expungedUids = new TreeSet<MessageUid>();
+    private final Set<MessageUid> expungedUids = new TreeSet<>();
     private final UidMsnConverter uidMsnConverter;
 
     private boolean isDeletedByOtherSession = false;
@@ -148,7 +148,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
     @Override
     public synchronized Collection<MessageUid> getRecent() {
         checkExpungedRecents();
-        return new ArrayList<MessageUid>(recentUids);
+        return new ArrayList<>(recentUids);
     }
 
     @Override
@@ -275,7 +275,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
         // copy the TreeSet to fix possible
         // java.util.ConcurrentModificationException
         // See IMAP-278
-        return Collections.unmodifiableSet(new TreeSet<MessageUid>(flagUpdateUids));
+        return Collections.unmodifiableSet(new TreeSet<>(flagUpdateUids));
         
     }
 
@@ -284,7 +284,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
         // copy the TreeSet to fix possible
         // java.util.ConcurrentModificationException
         // See IMAP-278
-        return Collections.unmodifiableSet(new TreeSet<MessageUid>(expungedUids));
+        return Collections.unmodifiableSet(new TreeSet<>(expungedUids));
         
     }
 

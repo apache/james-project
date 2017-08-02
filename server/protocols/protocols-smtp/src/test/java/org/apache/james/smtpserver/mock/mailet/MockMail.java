@@ -19,7 +19,11 @@
 package org.apache.james.smtpserver.mock.mailet;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -33,13 +37,13 @@ import org.apache.mailet.PerRecipientHeaders.Header;
 public class MockMail implements Mail {
 
     private MimeMessage msg = null;
-    private Collection<MailAddress> recipients = new ArrayList<MailAddress>();
+    private Collection<MailAddress> recipients = new ArrayList<>();
     private String name = null;
     private final MailAddress sender = null;
     private String state = null;
     private String errorMessage;
     private Date lastUpdated;
-    private final HashMap<String, Serializable> attributes = new HashMap<String, Serializable>();
+    private final HashMap<String, Serializable> attributes = new HashMap<>();
     private static final long serialVersionUID = 1L;
     private long size = 0;
     private String remoteAddr = "127.0.0.1";

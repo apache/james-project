@@ -111,11 +111,11 @@ public class FileMailRepository extends AbstractMailRepository {
                 keys = Collections.synchronizedSet(new HashSet<String>());
 
             // Finds non-matching pairs and deletes the extra files
-            HashSet<String> streamKeys = new HashSet<String>();
+            HashSet<String> streamKeys = new HashSet<>();
             for (Iterator<String> i = streamRepository.list(); i.hasNext(); ) {
                 streamKeys.add(i.next());
             }
-            HashSet<String> objectKeys = new HashSet<String>();
+            HashSet<String> objectKeys = new HashSet<>();
             for (Iterator<String> i = objectRepository.list(); i.hasNext(); ) {
                 objectKeys.add(i.next());
             }
@@ -264,10 +264,10 @@ public class FileMailRepository extends AbstractMailRepository {
         final ArrayList<String> clone;
         if (keys != null)
             synchronized (lock) {
-                clone = new ArrayList<String>(keys);
+                clone = new ArrayList<>(keys);
             }
         else {
-            clone = new ArrayList<String>();
+            clone = new ArrayList<>();
             for (Iterator<String> i = objectRepository.list(); i.hasNext(); ) {
                 clone.add(i.next());
             }

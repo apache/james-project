@@ -126,7 +126,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
         this.mediaType = propertyBuilder.getMediaType();
         this.subType = propertyBuilder.getSubType();
         final List<Property> properties = propertyBuilder.toProperties();
-        this.properties = new ArrayList<JCRProperty>(properties.size());
+        this.properties = new ArrayList<>(properties.size());
         for (Property property:properties) {
             this.properties.add(new JCRProperty(property,logger));
         }
@@ -158,7 +158,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
         this.mediaType = message.getMediaType();
         this.subType = message.getSubType();
         final List<Property> properties = pBuilder.toProperties();
-        this.properties = new ArrayList<JCRProperty>(properties.size());
+        this.properties = new ArrayList<>(properties.size());
         for (Property property:properties) {
             this.properties.add(new JCRProperty(property,  logger));
         }
@@ -195,7 +195,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
     public List<Property> getProperties() {
         if (isPersistent()) {
             try {
-                List<Property> properties = new ArrayList<Property>();
+                List<Property> properties = new ArrayList<>();
                 NodeIterator nodeIt = node.getNodes("messageProperty");
                 while (nodeIt.hasNext()) {
                     properties.add(new JCRProperty(nodeIt.nextNode(), logger));
@@ -205,7 +205,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
                 logger.error("Unable to retrieve nodes messageProperty", e);
             }
         }
-        return new ArrayList<Property>(properties);
+        return new ArrayList<>(properties);
     }
 
     @Override

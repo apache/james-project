@@ -34,7 +34,7 @@ public class MockMailboxSession implements MailboxSession{
 
     private final User user;
     private boolean close;
-    private final Map<Object, Object> attrs = new HashMap<Object, Object>();
+    private final Map<Object, Object> attrs = new HashMap<>();
     private final Logger log = LoggerFactory.getLogger("MockLog");
     private final static Random RANDOM = new Random();
 
@@ -53,7 +53,7 @@ public class MockMailboxSession implements MailboxSession{
             }
             
             public List<Locale> getLocalePreferences() {
-                return new ArrayList<Locale>();
+                return new ArrayList<>();
             }
 
             @Override
@@ -95,7 +95,7 @@ public class MockMailboxSession implements MailboxSession{
     }
 
     public Collection<String> getSharedSpaces() {
-        return new ArrayList<String>();
+        return new ArrayList<>();
     }
 
     public User getUser() {

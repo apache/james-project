@@ -39,5 +39,5 @@ public interface NettyConstants {
     String EXECUTION_HANDLER = "executionHandler";
     String HEARTBEAT_HANDLER = "heartbeatHandler";
 
-    ChannelLocal<Object> attributes = new ChannelLocal<Object>();
+    ChannelLocal<Object> attributes = new ChannelLocal<>();
 }

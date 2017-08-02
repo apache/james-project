@@ -158,7 +158,7 @@ public class SMIMEDecrypt extends GenericMailet {
             // behavior of the SMIMEVerifySignature mailet. In that way
             // it is possible to reuse the same matchers to analyze
             // the result of the operation.
-            ArrayList<X509Certificate> list = new ArrayList<X509Certificate>(1);
+            ArrayList<X509Certificate> list = new ArrayList<>(1);
             list.add(keyHolder.getCertificate());
             mail.setAttribute(mailAttribute, list);
 

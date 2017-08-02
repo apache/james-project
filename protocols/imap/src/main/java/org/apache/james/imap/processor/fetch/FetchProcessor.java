@@ -99,7 +99,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 condstoreEnablingCommand(session, responder,  metaData, true);
             }
             
-            List<MessageRange> ranges = new ArrayList<MessageRange>();
+            List<MessageRange> ranges = new ArrayList<>();
 
             for (IdRange range : idSet) {
                 MessageRange messageSet = messageRange(session.getSelected(), range, useUids);

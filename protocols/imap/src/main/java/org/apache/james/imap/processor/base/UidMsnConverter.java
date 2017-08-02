@@ -41,7 +41,7 @@ public class UidMsnConverter {
     }
 
     public synchronized void addAll(List<MessageUid> addedUids) {
-        TreeSet<MessageUid> tmp = new TreeSet<MessageUid>();
+        TreeSet<MessageUid> tmp = new TreeSet<>();
         tmp.addAll(uids);
         tmp.addAll(addedUids);
         uids.clear();

@@ -475,7 +475,7 @@ public class SearchUtil {
 
     public static Predicate<MessageId> distinct() {
         return new Predicate<MessageId>() {
-            private final Set<MessageId> set = new HashSet<MessageId>();
+            private final Set<MessageId> set = new HashSet<>();
 
             @Override
             public boolean apply(MessageId input) {

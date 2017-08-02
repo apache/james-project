@@ -39,7 +39,7 @@ public class ConfigurationProviderImpl implements ConfigurationProvider, Resourc
     /**
      * A map of loaded configuration per bean.
      */
-    private final Map<String, HierarchicalConfiguration> configurations = new HashMap<String, HierarchicalConfiguration>();
+    private final Map<String, HierarchicalConfiguration> configurations = new HashMap<>();
 
     /**
      * Mappings for bean names associated with their related

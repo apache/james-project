@@ -896,7 +896,7 @@ public class SimpleMailboxACL implements MailboxACL {
      */
     public SimpleMailboxACL(Map.Entry<MailboxACLEntryKey, MailboxACLRights>[] entries) {
         if (entries != null) {
-            Map<MailboxACLEntryKey, MailboxACLRights> m = new HashMap<MailboxACLEntryKey, MailboxACLRights>(entries.length + entries.length / 2 + 1);
+            Map<MailboxACLEntryKey, MailboxACLRights> m = new HashMap<>(entries.length + entries.length / 2 + 1);
             for (Entry<MailboxACLEntryKey, MailboxACLRights> en : entries) {
                 m.put(en.getKey(), en.getValue());
             }
@@ -914,7 +914,7 @@ public class SimpleMailboxACL implements MailboxACL {
      */
     public SimpleMailboxACL(Map<MailboxACLEntryKey, MailboxACLRights> entries) {
         if (entries != null && entries.size() > 0) {
-            Map<MailboxACLEntryKey, MailboxACLRights> m = new HashMap<MailboxACLEntryKey, MailboxACLRights>(entries.size() + entries.size() / 2 + 1);
+            Map<MailboxACLEntryKey, MailboxACLRights> m = new HashMap<>(entries.size() + entries.size() / 2 + 1);
             for (Entry<MailboxACLEntryKey, MailboxACLRights> en : entries.entrySet()) {
                 m.put(en.getKey(), en.getValue());
             }
@@ -949,7 +949,7 @@ public class SimpleMailboxACL implements MailboxACL {
     public SimpleMailboxACL(Properties props) throws UnsupportedRightException {
         super();
 
-        Map<MailboxACLEntryKey, MailboxACLRights> m = new HashMap<MailboxACLEntryKey, MailboxACLRights>(props.size() + props.size() / 2 + 1);
+        Map<MailboxACLEntryKey, MailboxACLRights> m = new HashMap<>(props.size() + props.size() / 2 + 1);
 
         if (props != null) {
             for (Map.Entry<Object, Object> prop : props.entrySet()) {
@@ -995,7 +995,7 @@ public class SimpleMailboxACL implements MailboxACL {
             return this;
         } else {
             Map<MailboxACLEntryKey, MailboxACLRights> otherEntries = other.getEntries();
-            Map<MailboxACLEntryKey, MailboxACLRights> resultEntries = new HashMap<MailboxACLEntryKey, MailboxACLRights>(this.entries);
+            Map<MailboxACLEntryKey, MailboxACLRights> resultEntries = new HashMap<>(this.entries);
             for (Entry<MailboxACLEntryKey, MailboxACLRights> otherEntry : otherEntries.entrySet()) {
                 MailboxACLEntryKey key = otherEntry.getKey();
                 MailboxACLRights thisRights = resultEntries.get(key);
@@ -1020,7 +1020,7 @@ public class SimpleMailboxACL implements MailboxACL {
      * @see org.apache.james.mailbox.model.MailboxACL#except(org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey, org.apache.james.mailbox.model.MailboxACL.MailboxACLRights)
      */
     public MailboxACL except(MailboxACLEntryKey key, MailboxACLRights mailboxACLRights) throws UnsupportedRightException {
-        Map<MailboxACLEntryKey, MailboxACLRights> resultEntries = new HashMap<MailboxACLEntryKey, MailboxACLRights>(this.entries);
+        Map<MailboxACLEntryKey, MailboxACLRights> resultEntries = new HashMap<>(this.entries);
         MailboxACLRights thisRights = resultEntries.get(key);
         if (thisRights == null) {
             /* nothing to diff */
@@ -1058,7 +1058,7 @@ public class SimpleMailboxACL implements MailboxACL {
      */
     @Override
     public MailboxACL replace(MailboxACLEntryKey key, MailboxACLRights replacement) throws UnsupportedRightException {
-        Map<MailboxACLEntryKey, MailboxACLRights> resultEntries = new HashMap<MailboxACLEntryKey, MailboxACLRights>(this.entries);
+        Map<MailboxACLEntryKey, MailboxACLRights> resultEntries = new HashMap<>(this.entries);
         if (replacement == null || replacement.isEmpty()) {
             resultEntries.remove(key);
         } else {
@@ -1087,7 +1087,7 @@ public class SimpleMailboxACL implements MailboxACL {
             return other;
         } else {
             int cnt = otherEntries.size() + entries.size();
-            Map<MailboxACLEntryKey, MailboxACLRights> resultEntries = new HashMap<MailboxACLEntryKey, MailboxACLRights>(cnt + cnt / 2 + 1);
+            Map<MailboxACLEntryKey, MailboxACLRights> resultEntries = new HashMap<>(cnt + cnt / 2 + 1);
             for (Entry<MailboxACLEntryKey, MailboxACLRights> otherEntry : otherEntries.entrySet()) {
                 MailboxACLEntryKey key = otherEntry.getKey();
                 MailboxACLRights thisRights = entries.get(key);
@@ -1114,7 +1114,7 @@ public class SimpleMailboxACL implements MailboxACL {
      * @see org.apache.james.mailbox.model.MailboxACL#union(org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey, org.apache.james.mailbox.model.MailboxACL.MailboxACLRights)
      */
     public MailboxACL union(MailboxACLEntryKey key, MailboxACLRights mailboxACLRights) throws UnsupportedRightException {
-        Map<MailboxACLEntryKey, MailboxACLRights> resultEntries = new HashMap<MailboxACLEntryKey, MailboxACLRights>(this.entries);
+        Map<MailboxACLEntryKey, MailboxACLRights> resultEntries = new HashMap<>(this.entries);
         MailboxACLRights thisRights = resultEntries.get(key);
         if (thisRights == null) {
             /* nothing to union */

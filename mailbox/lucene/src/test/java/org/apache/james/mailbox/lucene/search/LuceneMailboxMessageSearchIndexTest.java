@@ -44,8 +44,8 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.mailbox.model.SearchQuery.Sort;
-import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
 import org.apache.james.mailbox.model.SearchQuery.Sort.Order;
+import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
@@ -106,18 +106,18 @@ public class LuceneMailboxMessageSearchIndexTest {
         id5 = factory.generate();
         index = new LuceneMessageSearchIndex(null, new TestId.Factory(), new RAMDirectory(), true, useLenient(), factory);
         index.setEnableSuffixMatch(true);
-        Map<String, String> headersSubject = new HashMap<String, String>();
+        Map<String, String> headersSubject = new HashMap<>();
         headersSubject.put("Subject", "test (fwd)");
         headersSubject.put("From", "test99 <test99@localhost>");
         headersSubject.put("To", "test2 <test2@localhost>, test3 <test3@localhost>");
 
-        Map<String, String> headersTest = new HashMap<String, String>();
+        Map<String, String> headersTest = new HashMap<>();
         headersTest.put("Test", "test");
         headersTest.put("From", "test1 <test1@localhost>");
         headersTest.put("To", "test3 <test3@localhost>, test4 <test4@localhost>");
         headersTest.put("Cc", "test21 <test21@localhost>, test6 <test6@foobar>");
 
-        Map<String, String> headersTestSubject =  new HashMap<String, String>();
+        Map<String, String> headersTestSubject = new HashMap<>();
         headersTestSubject.put("Test", "test");
         headersTestSubject.put("Subject", "test2");
         headersTestSubject.put("Date", "Thu, 14 Feb 1990 12:00:00 +0000 (GMT)");

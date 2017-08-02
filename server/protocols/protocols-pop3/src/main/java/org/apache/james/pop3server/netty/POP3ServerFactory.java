@@ -34,7 +34,7 @@ public class POP3ServerFactory extends AbstractServerFactory{
     @Override
     protected List<AbstractConfigurableAsyncServer> createServers(Logger log, HierarchicalConfiguration config) throws Exception{
 
-        List<AbstractConfigurableAsyncServer> servers = new ArrayList<AbstractConfigurableAsyncServer>();
+        List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration> configs = config.configurationsAt("pop3server");
         
         for (HierarchicalConfiguration serverConfig: configs) {

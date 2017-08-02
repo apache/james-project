@@ -71,7 +71,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
     private Logger logger;
     private HierarchicalConfiguration config;
     private MailetLoader mailetLoader;
-    private final List<MatcherMailetPair> pairs = new ArrayList<MatcherMailetPair>();
+    private final List<MatcherMailetPair> pairs = new ArrayList<>();
     private String state;
 
     public void setMatcherLoader(MatcherLoader matcherLoader) {
@@ -260,7 +260,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
      * @throws NotCompliantMBeanException
      */
     private List<Matcher> loadCompositeMatchers(String state, Map<String, Matcher> compMap, List<HierarchicalConfiguration> compMatcherConfs) throws ConfigurationException, MessagingException {
-        List<Matcher> matchers = new ArrayList<Matcher>();
+        List<Matcher> matchers = new ArrayList<>();
 
         for (HierarchicalConfiguration c : compMatcherConfs) {
             String compName = c.getString("[@name]", null);
@@ -310,7 +310,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
     private void parseConfiguration() throws MessagingException, ConfigurationException {
 
         // load composite matchers if there are any
-        Map<String, Matcher> compositeMatchers = new HashMap<String, Matcher>();
+        Map<String, Matcher> compositeMatchers = new HashMap<>();
         loadCompositeMatchers(getState(), compositeMatchers, config.configurationsAt("matcher"));
 
         final List<HierarchicalConfiguration> mailetConfs = config.configurationsAt("mailet");

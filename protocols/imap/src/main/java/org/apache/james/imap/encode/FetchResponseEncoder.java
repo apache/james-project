@@ -196,7 +196,7 @@ public class FetchResponseEncoder extends AbstractChainedImapEncoder {
         } else {
             composer.openParen();
             final Set<String> keySet = params.keySet();
-            final Collection<String> names = new TreeSet<String>(keySet);
+            final Collection<String> names = new TreeSet<>(keySet);
             for (String name : names) {
                 final String value = params.get(name);
                 if (value == null) {

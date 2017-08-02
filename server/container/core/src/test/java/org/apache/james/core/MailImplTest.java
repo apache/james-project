@@ -18,17 +18,22 @@
  ****************************************************************/
 package org.apache.james.core;
 
-import org.apache.mailet.base.test.MailUtil;
-import org.apache.mailet.MailAddress;
-import org.apache.mailet.Mail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
-import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import static org.junit.Assert.*;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.test.MailUtil;
 import org.junit.Test;
 
 public class MailImplTest extends MailTestAllImplementations {
@@ -53,7 +58,7 @@ public class MailImplTest extends MailTestAllImplementations {
 
     @Test
     public void testConstr2() throws MessagingException {
-        ArrayList<MailAddress> recepients = new ArrayList<MailAddress>();
+        ArrayList<MailAddress> recepients = new ArrayList<>();
         String name = MailUtil.newId();
         String sender = "sender@localhost";
         MailAddress senderMailAddress = new MailAddress(sender);
@@ -71,7 +76,7 @@ public class MailImplTest extends MailTestAllImplementations {
 
     @Test
     public void testConstr3() throws MessagingException {
-        ArrayList<MailAddress> recepients = new ArrayList<MailAddress>();
+        ArrayList<MailAddress> recepients = new ArrayList<>();
         String name = MailUtil.newId();
         String sender = "sender@localhost";
         MailAddress senderMailAddress = new MailAddress(sender);

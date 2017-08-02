@@ -21,7 +21,6 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Locale;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -49,7 +48,7 @@ public class ContinuationResponseEncoder extends AbstractChainedImapEncoder {
 
     private String asString(HumanReadableText text, ImapSession session) {
         // TODO: calculate locales
-        return localizer.localize(text, new Locales(new ArrayList<Locale>(), null));
+        return localizer.localize(text, new Locales(new ArrayList<>(), null));
     }
 
     protected boolean isAcceptable(ImapMessage message) {

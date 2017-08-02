@@ -86,7 +86,7 @@ public class ConcurrentTestRunner {
         this.countDownLatch = new CountDownLatch(threadCount);
         this.biConsumer = biConsumer;
         this.executorService = Executors.newFixedThreadPool(threadCount);
-        this.futures = new ArrayList<Future<?>>();
+        this.futures = new ArrayList<>();
     }
 
     public ConcurrentTestRunner run() {

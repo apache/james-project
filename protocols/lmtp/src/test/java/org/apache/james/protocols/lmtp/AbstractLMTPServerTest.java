@@ -58,7 +58,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
     @Override
     protected Protocol createProtocol(ProtocolHandler... handlers) throws WiringException {
         LMTPProtocolHandlerChain chain = new LMTPProtocolHandlerChain();
-        List<ProtocolHandler> hList = new ArrayList<ProtocolHandler>();
+        List<ProtocolHandler> hList = new ArrayList<>();
 
         for (ProtocolHandler handler : handlers) {
             if (handler instanceof MessageHook) {
@@ -256,7 +256,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
     
     private final class LMTPClientImpl extends SMTPClient implements LMTPClient {
 
-        private final List<Integer> replies = new ArrayList<Integer>();
+        private final List<Integer> replies = new ArrayList<>();
         private int rcptCount = 0;
         
         
@@ -343,7 +343,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
     
     private final class TestDeliverHook implements DeliverToRecipientHook {
         
-        private final List<MailEnvelope> delivered = new ArrayList<MailEnvelope>();
+        private final List<MailEnvelope> delivered = new ArrayList<>();
         
         /*
          * (non-Javadoc)

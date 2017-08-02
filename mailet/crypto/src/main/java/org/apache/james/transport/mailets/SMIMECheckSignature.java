@@ -34,9 +34,9 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.james.transport.KeyStoreHolder;
 import org.apache.james.transport.SMIMESignerInfo;
-import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
+import org.apache.mailet.base.GenericMailet;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.mail.smime.SMIMEException;
 import org.bouncycastle.mail.smime.SMIMESigned;
@@ -189,7 +189,7 @@ public class SMIMECheckSignature extends GenericMailet {
         // If at least one mail signer is found 
         // the mail attributes are set.
         if (signers != null) {
-            ArrayList<X509Certificate> signerinfolist = new ArrayList<X509Certificate>();
+            ArrayList<X509Certificate> signerinfolist = new ArrayList<>();
 
             for (SMIMESignerInfo info : signers) {
                 if (info.isSignValid()

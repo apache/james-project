@@ -62,7 +62,7 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
     
     public SimpleMailboxSession(long sessionId, String userName, String password,
             final Logger log, List<Locale> localePreferences, char pathSeparator, SessionType type) {
-        this(sessionId, userName, password, log, localePreferences, new ArrayList<String>(), null, pathSeparator, type);
+        this(sessionId, userName, password, log, localePreferences, new ArrayList<>(), null, pathSeparator, type);
     }
 
     public SimpleMailboxSession(long sessionId, String userName, String password,
@@ -81,7 +81,7 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
         }
 
         this.localePreferences = localePreferences;
-        this.attributes = new HashMap<Object, Object>();
+        this.attributes = new HashMap<>();
         this.pathSeparator = pathSeparator;
     }
     

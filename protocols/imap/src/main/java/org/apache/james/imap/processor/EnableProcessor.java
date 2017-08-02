@@ -43,7 +43,7 @@ import org.apache.james.metrics.api.MetricFactory;
 
 public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> implements CapabilityImplementingProcessor {
 
-    private final static List<PermitEnableCapabilityProcessor> capabilities = new ArrayList<PermitEnableCapabilityProcessor>();
+    private final static List<PermitEnableCapabilityProcessor> capabilities = new ArrayList<>();
     public final static String ENABLED_CAPABILITIES = "ENABLED_CAPABILITIES";
     private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_ENABLE));
     private final CapabilityProcessor capabilityProcessor;
@@ -86,7 +86,7 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
     }
    
     public Set<String> enable(ImapRequest request, Responder responder, ImapSession session, Iterator<String> caps) throws EnableException {
-        Set<String> enabledCaps = new HashSet<String>();
+        Set<String> enabledCaps = new HashSet<>();
         while(caps.hasNext()) {
             String cap = caps.next();
             // Check if the CAPABILITY is supported at all
@@ -123,7 +123,7 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
         Set<String> caps = (Set<String>) session.getAttribute(ENABLED_CAPABILITIES);
         
         if (caps == null) {
-            caps = new HashSet<String>();
+            caps = new HashSet<>();
             session.setAttribute(ENABLED_CAPABILITIES, caps);
         } 
         return caps;

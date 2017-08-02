@@ -377,7 +377,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             destUrl += "/";
         }
         // Split on "/", starting after "db://"
-        List<String> urlParams = new ArrayList<String>();
+        List<String> urlParams = new ArrayList<>();
         int start = 5;
         int end = destUrl.indexOf('/', start);
         while (end > -1) {
@@ -387,7 +387,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
         }
 
         // Build SqlParameters and get datasource name from URL parameters
-        m_sqlParameters = new HashMap<String, String>();
+        m_sqlParameters = new HashMap<>();
         switch (urlParams.size()) {
         case 3:
             m_sqlParameters.put("key", urlParams.get(2));
@@ -427,7 +427,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      */
     protected List<String> listUserNames() throws UsersRepositoryException {
         Collection<User> users = getAllUsers();
-        List<String> userNames = new ArrayList<String>(users.size());
+        List<String> userNames = new ArrayList<>(users.size());
         for (User user : users) {
             userNames.add(user.getUserName());
         }
@@ -451,7 +451,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      * @throws UsersRepositoryException
      */
     private Collection<User> getAllUsers() throws UsersRepositoryException {
-        List<User> userList = new ArrayList<User>(); // Build the users into
+        List<User> userList = new ArrayList<>(); // Build the users into
                                                      // this list.
 
         Connection conn = null;

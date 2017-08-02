@@ -315,7 +315,7 @@ class Account implements Comparable<Account> {
      * @return List
      */
     protected List<String> computeDeferredRecipientNotFoundMessageIDs() {
-        return new ArrayList<String>(DEFAULT_INITIAL_SIZE_OF_DEFERRED_RECIPIENT_ARRAY);
+        return new ArrayList<>(DEFAULT_INITIAL_SIZE_OF_DEFERRED_RECIPIENT_ARRAY);
     }
 
     /**

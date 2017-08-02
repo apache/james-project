@@ -310,7 +310,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void wireExtensions(Class interfaceName, List extension) {
         if (MailParametersHook.class.equals(interfaceName)) {
-            this.paramHooks = new HashMap<String, MailParametersHook>();
+            this.paramHooks = new HashMap<>();
             for (MailParametersHook hook : (Iterable<MailParametersHook>) extension) {
                 String[] params = hook.getMailParamNames();
                 for (String param : params) {

@@ -144,7 +144,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
     protected Map<String, Mappings> getAllMappingsInternal() throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
-        Map<String, Mappings> mapping = new HashMap<String, Mappings>();
+        Map<String, Mappings> mapping = new HashMap<>();
         try {
             transaction.begin();
             @SuppressWarnings("unchecked")

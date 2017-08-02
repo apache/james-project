@@ -68,7 +68,7 @@ public class FakeMailContext implements MailetContext {
     }
 
     private static ImmutableMap<String, Serializable> buildAttributesMap(Mail mail) {
-        Map<String, Serializable> result = new HashMap<String, Serializable>();
+        Map<String, Serializable> result = new HashMap<>();
         List<String> attributesNames = Lists.newArrayList(mail.getAttributeNames());
         for (String attributeName: attributesNames) {
             result.put(attributeName, mail.getAttribute(attributeName));
@@ -110,7 +110,7 @@ public class FakeMailContext implements MailetContext {
             private MailAddress sender;
             private Optional<Collection<MailAddress>> recipients = Optional.absent();
             private MimeMessage msg;
-            private Map<String, Serializable> attributes = new HashMap<String, Serializable>();
+            private Map<String, Serializable> attributes = new HashMap<>();
             private Optional<String> state = Optional.absent();
             private Optional<Boolean> fromMailet = Optional.absent();
 
@@ -298,9 +298,9 @@ public class FakeMailContext implements MailetContext {
     private final MailAddress postmaster;
 
     private FakeMailContext(Optional<Logger> logger, MailAddress postmaster) {
-        attributes = new HashMap<String, Object>();
-        sentMails = new ArrayList<SentMail>();
-        bouncedMails = new ArrayList<BouncedMail>();
+        attributes = new HashMap<>();
+        sentMails = new ArrayList<>();
+        bouncedMails = new ArrayList<>();
         this.logger = logger;
         this.postmaster = postmaster;
     }

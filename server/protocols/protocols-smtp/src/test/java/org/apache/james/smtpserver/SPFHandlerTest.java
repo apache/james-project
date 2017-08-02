@@ -18,9 +18,12 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
 import org.apache.james.jspf.core.DNSRequest;
 import org.apache.james.jspf.core.DNSService;
 import org.apache.james.jspf.core.exceptions.TimeoutException;
@@ -29,7 +32,6 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.smtpserver.fastfail.SPFHandler;
-import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -88,7 +90,7 @@ public class SPFHandlerTest {
                 switch (req.getRecordType()) {
                     case DNSRequest.TXT:
                     case DNSRequest.SPF:
-                        List<String> l = new ArrayList<String>();
+                        List<String> l = new ArrayList<>();
                         if (req.getHostname().equals("spf1.james.apache.org")) {
                             // pass
                             l.add("v=spf1 +all");
@@ -124,8 +126,8 @@ public class SPFHandlerTest {
     private void setupMockedSMTPSession(String ip, final String helo) {
         mockedSMTPSession = new BaseFakeSMTPSession() {
 
-            private final HashMap<String, Object> sstate = new HashMap<String, Object>();
-            private final HashMap<String, Object> connectionState = new HashMap<String, Object>();
+            private final HashMap<String, Object> sstate = new HashMap<>();
+            private final HashMap<String, Object> connectionState = new HashMap<>();
 
             @Override
             public Object setAttachment(String key, Object value, State state) {

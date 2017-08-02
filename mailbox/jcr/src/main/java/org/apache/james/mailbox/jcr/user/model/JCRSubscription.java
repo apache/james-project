@@ -111,7 +111,7 @@ public class JCRSubscription implements Subscription, Persistent, JCRImapConstan
         node.setProperty(USERNAME_PROPERTY, getUser());
         if (node.hasProperty(MAILBOXES_PROPERTY)) {
             Value[] mailboxes = node.getProperty(MAILBOXES_PROPERTY).getValues();
-            List<String>newMailboxes = new ArrayList<String>();
+            List<String>newMailboxes = new ArrayList<>();
             for (Value mailbox : mailboxes) {
                 String m = mailbox.getString();
                 newMailboxes.add(m);

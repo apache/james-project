@@ -150,7 +150,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
 
     private SearchKey paren(ImapSession session, ImapRequestLineReader request, Charset charset) throws DecodingException {
         request.consume();
-        List<SearchKey> keys = new ArrayList<SearchKey>();
+        List<SearchKey> keys = new ArrayList<>();
         addUntilParen(session, request, keys, charset);
         return SearchKey.buildAnd(keys);
     }
@@ -884,7 +884,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         final SearchKey firstKey = searchKey(session, request, null, true);
         final SearchKey result;
         if (request.nextChar() == ' ') {
-            List<SearchKey> keys = new ArrayList<SearchKey>();
+            List<SearchKey> keys = new ArrayList<>();
             keys.add(firstKey);
             while (request.nextChar() == ' ') {
                 request.nextWordChar();
@@ -909,7 +909,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
      * Parse the {@link SearchResultOption}'s which are used for ESEARCH
      */
     private List<SearchResultOption> parseOptions(ImapRequestLineReader reader) throws DecodingException {
-        List<SearchResultOption> options = new ArrayList<SearchResultOption>();
+        List<SearchResultOption> options = new ArrayList<>();
         reader.consumeChar('(');
         reader.nextWordChar();
         
@@ -1017,7 +1017,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
             
             
             if (options == null) {
-                options = new ArrayList<SearchResultOption>();
+                options = new ArrayList<>();
             }
 
             return new SearchRequest(command, new SearchOperation(finalKey, options), useUids, tag);

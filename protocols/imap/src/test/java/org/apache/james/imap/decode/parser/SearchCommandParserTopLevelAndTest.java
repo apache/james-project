@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -173,7 +173,7 @@ public class SearchCommandParserTopLevelAndTest {
     }
 
     private void permute(int mutations, Input[] inputs) throws Exception {
-        permute(mutations, new ArrayList<SearchKey>(), new StringBuffer(), inputs);
+        permute(mutations, new ArrayList<>(), new StringBuffer(), inputs);
     }
 
     private void permute(int mutations, List<SearchKey> keys, StringBuffer buffer,
@@ -188,7 +188,7 @@ public class SearchCommandParserTopLevelAndTest {
                     nextBuffer.append(' ');
                 }
                 nextBuffer.append(input.input);
-                List<SearchKey> nextKeys = new ArrayList<SearchKey>(keys);
+                List<SearchKey> nextKeys = new ArrayList<>(keys);
                 nextKeys.add(input.key);
                 permute(mutations, nextKeys, nextBuffer, inputs);
             }
