@@ -56,7 +56,7 @@
         <qdox.version>1.12.1</qdox.version>
         <assertj-3.version>3.3.0</assertj-3.version>
         <assertj-3-guava.version>3.1.0</assertj-3-guava.version>
-        <slf4j.version>1.7.7</slf4j.version>
+        <slf4j.version>1.7.25</slf4j.version>
         <jackson-data.version>2.6.3</jackson-data.version>
         <ical4j.version>2.0.2</ical4j.version>
         <guavate.version>1.0.0</guavate.version>
