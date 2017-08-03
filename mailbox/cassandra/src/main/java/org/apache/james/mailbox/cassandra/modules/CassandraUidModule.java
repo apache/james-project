@@ -46,6 +46,7 @@ public class CassandraUidModule implements CassandraModule {
                     .addPartitionKey(CassandraMessageUidTable.MAILBOX_ID, timeuuid())
                     .addColumn(CassandraMessageUidTable.NEXT_UID, bigint())
                     .withOptions()
+                    .comment("Holds and is used to generate UID. A monotic counter is implemented on top of this table.")
                     .compactionOptions(SchemaBuilder.leveledStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));

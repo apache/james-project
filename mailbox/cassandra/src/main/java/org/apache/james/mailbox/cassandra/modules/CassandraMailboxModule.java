@@ -50,6 +50,7 @@ public class CassandraMailboxModule implements CassandraModule {
                     .addColumn(CassandraMailboxTable.NAME, text())
                     .addColumn(CassandraMailboxTable.UIDVALIDITY, bigint())
                     .withOptions()
+                    .comment("Holds the mailboxes information.")
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))),
             new CassandraTable(CassandraMailboxPathTable.TABLE_NAME,
@@ -59,6 +60,8 @@ public class CassandraMailboxModule implements CassandraModule {
                     .addClusteringColumn(CassandraMailboxPathTable.MAILBOX_NAME, text())
                     .addColumn(CassandraMailboxPathTable.MAILBOX_ID, timeuuid())
                     .withOptions()
+                    .comment("Denormalisation table. Allow to retrieve mailboxes belonging to a certain user. This is a " +
+                        "LIST optimisation.")
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
         types = ImmutableList.of(

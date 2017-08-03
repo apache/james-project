@@ -46,7 +46,9 @@ public class CassandraAttachmentModule implements CassandraModule {
                     .addPartitionKey(CassandraAttachmentTable.ID, text())
                     .addColumn(CassandraAttachmentTable.PAYLOAD, blob())
                     .addColumn(CassandraAttachmentTable.TYPE, text())
-                    .addColumn(CassandraAttachmentTable.SIZE, bigint())));
+                    .addColumn(CassandraAttachmentTable.SIZE, bigint())
+                    .withOptions()
+                    .comment("Holds attachment for fast attachment retrieval")));
         types = ImmutableList.of();
     }
 

@@ -68,6 +68,7 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(Flag.USER, cboolean())
                     .addColumn(Flag.USER_FLAGS, set(text()))
                     .withOptions()
+                    .comment("Holds mailbox and flags for each message, lookup by message ID")
                     .compactionOptions(SchemaBuilder.leveledStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CACHED_IMAP_UID_ROWS))),
@@ -87,6 +88,7 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(Flag.USER, cboolean())
                     .addColumn(Flag.USER_FLAGS, set(text()))
                     .withOptions()
+                    .comment("Holds mailbox and flags for each message, lookup by mailbox ID + UID")
                     .compactionOptions(SchemaBuilder.leveledStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CACHED_MESSAGE_ID_ROWS))),
@@ -102,7 +104,9 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(CassandraMessageV1Table.BODY_CONTENT, blob())
                     .addColumn(CassandraMessageV1Table.HEADER_CONTENT, blob())
                     .addUDTListColumn(CassandraMessageV1Table.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageV1Table.ATTACHMENTS))
-                    .addUDTListColumn(CassandraMessageV1Table.PROPERTIES, SchemaBuilder.frozen(CassandraMessageV1Table.PROPERTIES))),
+                    .addUDTListColumn(CassandraMessageV1Table.PROPERTIES, SchemaBuilder.frozen(CassandraMessageV1Table.PROPERTIES))
+                    .withOptions()
+                    .comment("Deprecated table. Was used to store messages. See `messagev2` instead.")),
             new CassandraTable(CassandraMessageV2Table.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraMessageV2Table.TABLE_NAME)
                     .ifNotExists()
@@ -115,7 +119,10 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(CassandraMessageV2Table.BODY_CONTENT, text())
                     .addColumn(CassandraMessageV2Table.HEADER_CONTENT, text())
                     .addUDTListColumn(CassandraMessageV2Table.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageV2Table.ATTACHMENTS))
-                    .addUDTListColumn(CassandraMessageV2Table.PROPERTIES, SchemaBuilder.frozen(CassandraMessageV2Table.PROPERTIES))));
+                    .addUDTListColumn(CassandraMessageV2Table.PROPERTIES, SchemaBuilder.frozen(CassandraMessageV2Table.PROPERTIES))
+                    .withOptions()
+                    .comment("Holds message metadata, independently of any mailboxes. Content of messages is stored " +
+                        "in `blobs` and `blobparts` tables.")));
         types = ImmutableList.of(
             new CassandraType(CassandraMessageV1Table.PROPERTIES,
                 SchemaBuilder.createType(CassandraMessageV1Table.PROPERTIES)

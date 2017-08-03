@@ -52,6 +52,7 @@ public class CassandraVacationModule implements CassandraModule {
                     .addColumn(CassandraVacationTable.SUBJECT, text())
                     .addColumn(CassandraVacationTable.HTML, text())
                     .withOptions()
+                    .comment("Holds vacation definition. Allow one to automatically respond to emails with a custom message.")
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
         types = ImmutableList.of();

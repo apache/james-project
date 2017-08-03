@@ -46,6 +46,7 @@ public class CassandraAccessModule implements CassandraModule {
                     .addPartitionKey(CassandraAccessTokenTable.TOKEN, uuid())
                     .addColumn(CassandraAccessTokenTable.USERNAME, text())
                     .withOptions()
+                    .comment("Holds JMAP access token required to process to authentication.")
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
         types = ImmutableList.of();

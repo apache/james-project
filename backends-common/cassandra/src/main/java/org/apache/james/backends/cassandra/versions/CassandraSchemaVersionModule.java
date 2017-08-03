@@ -42,7 +42,9 @@ public class CassandraSchemaVersionModule implements CassandraModule {
                 SchemaBuilder.createTable(CassandraSchemaVersionTable.TABLE_NAME)
                     .ifNotExists()
                     .addPartitionKey(CassandraSchemaVersionTable.KEY, timeuuid())
-                    .addClusteringColumn(CassandraSchemaVersionTable.VALUE, cint())));
+                    .addClusteringColumn(CassandraSchemaVersionTable.VALUE, cint())
+                    .withOptions()
+                    .comment("Holds the history of the versions of the schema used.")));
     }
 
 

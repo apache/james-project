@@ -46,6 +46,7 @@ public class CassandraRRTModule implements CassandraModule {
                     .addClusteringColumn(CassandraRecipientRewriteTableTable.DOMAIN, text())
                     .addClusteringColumn(CassandraRecipientRewriteTableTable.MAPPING, text())
                     .withOptions()
+                    .comment("Holds address re-writing rules.")
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
         types = ImmutableList.of();

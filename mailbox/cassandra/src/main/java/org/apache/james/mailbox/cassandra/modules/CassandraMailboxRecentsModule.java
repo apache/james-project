@@ -46,6 +46,8 @@ public class CassandraMailboxRecentsModule implements CassandraModule {
                     .addPartitionKey(CassandraMailboxRecentsTable.MAILBOX_ID, timeuuid())
                     .addClusteringColumn(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, bigint())
                     .withOptions()
+                    .comment("Denormalisation table. This table holds for each mailbox the messages marked as RECENT. This" +
+                        " is a SELECT optimisation.")
                     .compactionOptions(SchemaBuilder.leveledStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));

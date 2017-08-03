@@ -45,6 +45,7 @@ public class CassandraNotificationRegistryModule implements CassandraModule {
                     .addPartitionKey(CassandraNotificationTable.ACCOUNT_ID, text())
                     .addClusteringColumn(CassandraNotificationTable.RECIPIENT_ID, text())
                     .withOptions()
+                    .comment("Stores registry of vacation notification being sent.")
                     .compactionOptions(SchemaBuilder.dateTieredStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
