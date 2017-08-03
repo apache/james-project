@@ -59,6 +59,7 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.BlobId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.utils.Limit;
+import org.apache.james.mailbox.cassandra.table.CassandraMessageV1Table;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Attachments;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Properties;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -74,6 +75,7 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
+import org.apache.james.util.OptionalConverter;
 import org.apache.james.util.streams.JamesCollectors;
 
 import com.datastax.driver.core.BoundStatement;
@@ -103,6 +105,7 @@ public class CassandraMessageDAOV2 {
     private final PreparedStatement selectHeaders;
     private final PreparedStatement selectFields;
     private final PreparedStatement selectBody;
+    private final Cid.CidParser cidParser;
 
     @Inject
     public CassandraMessageDAOV2(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO, CassandraConfiguration cassandraConfiguration) {
@@ -116,6 +119,7 @@ public class CassandraMessageDAOV2 {
         this.selectHeaders = prepareSelect(session, HEADERS);
         this.selectFields = prepareSelect(session, FIELDS);
         this.selectBody = prepareSelect(session, BODY);
+        this.cidParser = Cid.parser().relaxed();
     }
 
     @VisibleForTesting
@@ -340,7 +344,8 @@ public class CassandraMessageDAOV2 {
         return MessageAttachmentRepresentation.builder()
             .attachmentId(AttachmentId.from(udtValue.getString(Attachments.ID)))
             .name(udtValue.getString(Attachments.NAME))
-            .cid(Optional.ofNullable(udtValue.getString(Attachments.CID)).map(Cid::from))
+            .cid(OptionalConverter.fromGuava(
+                cidParser.parse(udtValue.getString(CassandraMessageV1Table.Attachments.CID))))
             .isInline(udtValue.getBool(Attachments.IS_INLINE))
             .build();
     }

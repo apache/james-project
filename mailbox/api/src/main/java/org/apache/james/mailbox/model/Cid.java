@@ -23,32 +23,120 @@ package org.apache.james.mailbox.model;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 public class Cid {
 
-    public static Cid from(String cidAsString) {
-        Preconditions.checkArgument(!StringUtils.isBlank(cidAsString), "'cidAsString' is mandatory");
-        return new Cid(normalizedCid(cidAsString));
+    public static final StrictCidValidator DEFAULT_VALIDATOR = new StrictCidValidator();
+
+    public interface CidTransformation {
+        Optional<Cid> apply(CidValidator cidValidator, String value);
     }
 
-    private static String normalizedCid(String input) {
-        if (isWrappedWithAngleBrackets(input)) {
-            return unwrap(input);
+    public static class Identity implements CidTransformation {
+        @Override
+        public Optional<Cid> apply(CidValidator cidValidator, String value) {
+            return toCid(cidValidator, value);
         }
-        return input;
-    }
-    
-    private static String unwrap(String cidAsString) {
-        String unwrapCid = cidAsString.substring(1, cidAsString.length() - 1);
-        if (StringUtils.isBlank(unwrapCid)) {
-            throw new IllegalArgumentException("'cidAsString' is mandatory");
-        }
-        return unwrapCid;
     }
 
-    private static boolean isWrappedWithAngleBrackets(String cidAsString) {
-        return cidAsString.startsWith("<") && cidAsString.endsWith(">");
+    public static class Unwrap implements CidTransformation {
+        @Override
+        public  Optional<Cid> apply(CidValidator cidValidator, String value) {
+            cidValidator.validate(value);
+            if (isWrappedWithAngleBrackets(value)) {
+                return unwrap(value, cidValidator);
+            }
+            return toCid(cidValidator, value);
+        }
+
+
+        private Optional<Cid> unwrap(String cidAsString, CidValidator cidValidator) {
+            String unwrapCid = cidAsString.substring(1, cidAsString.length() - 1);
+            return toCid(cidValidator, unwrapCid);
+        }
+
+        private boolean isWrappedWithAngleBrackets(String cidAsString) {
+            return cidAsString != null
+                && cidAsString.startsWith("<")
+                && cidAsString.endsWith(">");
+        }
+    }
+
+    public interface CidValidator {
+        void validate(String cidValue);
+    }
+
+    public static class StrictCidValidator implements CidValidator {
+        @Override
+        public void validate(String cidValue) {
+            Preconditions.checkArgument(!Strings.isNullOrEmpty(cidValue));
+            Preconditions.checkArgument(!StringUtils.isBlank(cidValue), "'cidAsString' is mandatory");
+        }
+    }
+
+    public static class RelaxedCidValidator implements CidValidator {
+        @Override
+        public void validate(String cidValue) {
+
+        }
+    }
+
+    public static class CidParser {
+        private Optional<CidValidator> validator;
+        private Optional<CidTransformation> transformation;
+
+        private CidParser() {
+            validator = Optional.absent();
+            transformation = Optional.absent();
+        }
+
+        public CidParser relaxed() {
+            validator = Optional.<CidValidator>of(new RelaxedCidValidator());
+            return this;
+        }
+
+        public CidParser strict() {
+            validator = Optional.<CidValidator>of(new StrictCidValidator());
+            return this;
+        }
+
+        public CidParser unwrap() {
+            transformation = Optional.<CidTransformation>of(new Unwrap());
+            return this;
+        }
+
+        public Optional<Cid> parse(String value) {
+            CidValidator cidValidator = validator.or(DEFAULT_VALIDATOR);
+            CidTransformation cidTransformation = transformation.or(new Identity());
+            return cidTransformation.apply(cidValidator, value);
+        }
+    }
+
+    public static CidParser parser() {
+        return new CidParser();
+    }
+
+    public static Cid from(String value) {
+        return parser()
+            .strict()
+            .unwrap()
+            .parse(value)
+            .get();
+    }
+
+    private static Optional<Cid> toCid(CidValidator cidValidator, String value) {
+        cidValidator.validate(value);
+        return toCid(value);
+    }
+
+    private static Optional<Cid> toCid(String cidAsString) {
+        if (Strings.isNullOrEmpty(cidAsString) || StringUtils.isBlank(cidAsString)) {
+            return Optional.absent();
+        }
+        return Optional.of(new Cid(cidAsString));
     }
 
     private final String value;

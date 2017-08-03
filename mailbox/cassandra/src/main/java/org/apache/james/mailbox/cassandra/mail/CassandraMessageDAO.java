@@ -74,6 +74,7 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
+import org.apache.james.util.OptionalConverter;
 import org.apache.james.util.streams.JamesCollectors;
 
 import com.datastax.driver.core.BoundStatement;
@@ -100,6 +101,7 @@ public class CassandraMessageDAO {
     private final PreparedStatement selectByBatch;
     private CassandraUtils cassandraUtils;
     private final CassandraConfiguration cassandraConfiguration;
+    private final Cid.CidParser cidParser;
 
     @Inject
     public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraConfiguration cassandraConfiguration,
@@ -115,6 +117,7 @@ public class CassandraMessageDAO {
         this.cassandraConfiguration = cassandraConfiguration;
         this.selectByBatch = prepareSelectBatch(session, cassandraConfiguration);
         this.cassandraUtils = cassandraUtils;
+        this.cidParser = Cid.parser().relaxed();
     }
 
     @VisibleForTesting
@@ -283,7 +286,8 @@ public class CassandraMessageDAO {
         return MessageAttachmentRepresentation.builder()
                 .attachmentId(AttachmentId.from(udtValue.getString(Attachments.ID)))
                 .name(udtValue.getString(Attachments.NAME))
-                .cid(Optional.ofNullable(udtValue.getString(Attachments.CID)).map(Cid::from))
+                .cid(OptionalConverter.fromGuava(
+                    cidParser.parse(udtValue.getString(Attachments.CID))))
                 .isInline(udtValue.getBool(Attachments.IS_INLINE))
                 .build();
     }
