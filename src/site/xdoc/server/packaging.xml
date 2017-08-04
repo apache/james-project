@@ -20,21 +20,21 @@
 <document>
 
     <properties>
-        <title>Apache James Server 3 - Wiring</title>
+        <title>Apache James Server 3 - Packaging</title>
     </properties>
 
     <body>
 
-        <section name="Available wiring options">
-            <p>James components are assembled in various way, called wiring.</p>
+        <section name="Available packaging options">
+            <p>James components are assembled in various way, called packaging.</p>
 
-            <ul>The wiring you choose will influence:
+            <ul>The packaging you choose will influence:
                 <li>Your java requirement</li>
                 <li>The protocol the mail server supports</li>
                 <li>The components you can use</li>
             </ul>
 
-            <p>Thus, one must carefully choose his wiring.</p>
+            <p>Thus, one must carefully choose his packaging.</p>
 
             <ul>To help you doing this, here is a list of available packages:
                 <li><a href="https://github.com/apache/james-project/tree/master/server/app">Spring</a>: Allows you to
@@ -58,7 +58,7 @@
             <p>
                 <table>
                     <tr>
-                        <th>wiring</th>
+                        <th>Packaging</th>
                         <th>Spring</th>
                         <th>Cassandra-guice</th>
                         <th>Cassandra-ldap-guice</th>
