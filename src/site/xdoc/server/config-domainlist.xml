@@ -37,7 +37,7 @@
         <dt><strong>domainnames</strong></dt>
         <dd>Domainnames identifies the DNS namespace served by this instance of James. 
 These domainnames are used for both matcher/mailet processing and SMTP auth 
-to determine when a mail is intended for local delivery - Only applicable for XMLDomainList.</dd>
+to determine when a mail is intended for local delivery - Only applicable for XMLDomainList. The entries mentionned here will be created upon start.</dd>
         <dt><strong>autodetect</strong></dt>
         <dd>true or false - If autodetect is true, James wil attempt to discover its own host name AND 
 use any explicitly specified servernames. 
@@ -47,8 +47,10 @@ If autodetect is false, James will use only the specified domainnames.</dd>
 The automatic IP detection is to support RFC 2821, Sec 4.1.3, address literals.</dd>
         <dt><strong>defaultDomain</strong></dt>
         <dd>Set the default domain which will be used if an email is send to a recipient without a domain part.
-            If not defaultdomain is set the first domain of the DomainList get used.</dd>
+            If not defaultdomain is set the first domain of the DomainList get used. If the default is not yet contained by the Domain List, the domain will be created upon start.</dd>
       </dl>
+
+      <p>Please note that you can expose the <b>DOMAIN</b> variable to create a domain upon start without requiring further configuration.</p>
 
 <p>To override autodetected domainames names simply add explicit domainname elements.
 In most cases this will be necessary. By default, the domainname 'localhost' is specified. This can be removed, if required.</p>

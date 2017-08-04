@@ -279,6 +279,11 @@ The base command is different whether you choose guice flavor or spring :
 
 DOMAIN: is the domain you want to add.
 
+Note: Using docker, one can add an environment variable holding the domain to be created. This
+domain will be created upon James start:
+
+    $ --environment DOMAIN=domain.tld
+
 ==== How to add a user ?
 
     $ <your-command-here> -h 127.0.0.1 -p 9999 adduser USER_MAIL_ADDRESS PASSWORD
