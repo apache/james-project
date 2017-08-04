@@ -83,13 +83,13 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+        setAutoDetect(config.getBoolean(CONFIGURE_AUTODETECT, true));
+        setAutoDetectIP(config.getBoolean(CONFIGURE_AUTODETECT_IP, true));
+
         configureDefaultDomain(config);
 
         addEnvDomain();
         addConfiguredDomains(config);
-
-        setAutoDetect(config.getBoolean(CONFIGURE_AUTODETECT, true));
-        setAutoDetectIP(config.getBoolean(CONFIGURE_AUTODETECT_IP, true));
     }
 
     protected void addConfiguredDomains(HierarchicalConfiguration config) {

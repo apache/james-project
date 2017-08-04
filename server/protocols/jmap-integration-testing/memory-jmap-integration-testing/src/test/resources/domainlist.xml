@@ -19,10 +19,6 @@
  -->
 
 <domainlist>
-    <domainnames>
-        <domainname>mydomain.tld</domainname>
-    </domainnames>
     <autodetect>false</autodetect>
     <autodetectIP>false</autodetectIP>
-    <defaultDomain>localhost</defaultDomain>
 </domainlist>
