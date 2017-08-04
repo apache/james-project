@@ -193,6 +193,14 @@
                         <td>Experimental</td>
                         <td>No</td>
                     </tr>
+                    <tr>
+                        <td>Installation instructions</td>
+                        <td><a href="install.html">Here</a></td>
+                        <td><a href="install/guice-cassandra.html">Here</a></td>
+                        <td><a href="install/guice-cassandra.html">Here</a></td>
+                        <td><a href="install/guice-jpa.html">Here</a></td>
+                        <td><a href="install/guice-jpa-smtp.html">Here</a></td>
+                    </tr>
                 </table>
             </p>
         </section>
