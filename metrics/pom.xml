@@ -39,7 +39,7 @@
     </modules>
 
     <properties>
-        <assertj-3.version>3.3.0</assertj-3.version>
+        <assertj.version>3.3.0</assertj.version>
         <es.version>2.2.1</es.version>
         <es-reporter.version>2.2.0</es-reporter.version>
         <guava.version>18.0</guava.version>

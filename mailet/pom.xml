@@ -54,8 +54,8 @@
         <maven-reporting-api.version>3.0</maven-reporting-api.version>
         <mime4j.version>0.8.1</mime4j.version>
         <qdox.version>1.12.1</qdox.version>
-        <assertj-3.version>3.3.0</assertj-3.version>
-        <assertj-3-guava.version>3.1.0</assertj-3-guava.version>
+        <assertj.version>3.3.0</assertj.version>
+        <assertj-guava.version>3.1.0</assertj-guava.version>
         <slf4j.version>1.7.25</slf4j.version>
         <jackson-data.version>2.6.3</jackson-data.version>
         <ical4j.version>2.0.2</ical4j.version>
@@ -186,13 +186,13 @@
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
-                <version>${assertj-3.version}</version>
+                <version>${assertj.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-guava</artifactId>
-                <version>${assertj-3-guava.version}</version>
+                <version>${assertj-guava.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.thoughtworks.qdox</groupId>

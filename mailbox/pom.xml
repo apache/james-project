@@ -106,7 +106,7 @@
         <guava.version>18.0</guava.version>
         <jackson-databinding.version>2.6.3</jackson-databinding.version>
         <cassandra-unit.version>2.1.9.2</cassandra-unit.version>
-        <assertj-3.version>3.2.0</assertj-3.version>
+        <assertj.version>3.2.0</assertj.version>
         <logback.version>1.1.7</logback.version>
     </properties>
 
@@ -484,7 +484,7 @@
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
-                <version>${assertj-3.version}</version>
+                <version>${assertj.version}</version>
             </dependency>
             <!--
                 END Testing
