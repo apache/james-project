@@ -20,7 +20,7 @@ two artifacts into server/container/guice/jpa-smtp/target directory :
 
 ### James Launch
 
-To run james, you have to create a directory containing required configuration files.
+To run james, you have to create a directory containing required configuration files names **conf**.
 
 A [sample directory](https://github.com/apache/james-project/tree/master/server/container/guice/jpa-smtp/sample-configuration) is provided with some default value you may need to replace.
 
@@ -33,5 +33,5 @@ $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 Once everything is set up, you just have to run the jar with :
 
 ```bash
-$ java -Dworking.directory=sample-configuration -jar target/james-server-jpa-smtp-${version}.jar
+$ java -Dworking.directory=. -jar target/james-server-jpa-smtp-${version}.jar
 ```
