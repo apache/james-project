@@ -209,12 +209,11 @@ public class CassandraMessageIdToImapUidDAO {
     }
 
     private CompletableFuture<ResultSet> selectStatement(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
-        if (mailboxId.isPresent()) {
-            return cassandraAsyncExecutor.execute(select.bind()
+        return mailboxId
+            .map(cassandraId -> cassandraAsyncExecutor.execute(select.bind()
                 .setUUID(MESSAGE_ID, messageId.get())
-                .setUUID(MAILBOX_ID, mailboxId.get().asUuid()));
-        }
-        return cassandraAsyncExecutor.execute(selectAll.bind()
-                .setUUID(MESSAGE_ID, messageId.get()));
+                .setUUID(MAILBOX_ID, cassandraId.asUuid())))
+            .orElseGet(() -> cassandraAsyncExecutor.execute(selectAll.bind()
+                .setUUID(MESSAGE_ID, messageId.get())));
     }
 }
