@@ -30,7 +30,6 @@ import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
@@ -48,7 +47,7 @@ public abstract class AbstractStartTlsPOP3ServerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractStartTlsPOP3ServerTest.class);
 
     private POP3Protocol createProtocol(AbstractPassCmdHandler handler) throws WiringException {
-        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration(), new ProtocolLoggerAdapter(LOGGER));
+        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration(), LOGGER);
     }
     
     protected POP3SClient createClient() {

@@ -43,7 +43,6 @@ import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.api.handler.DisconnectHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -1104,7 +1103,7 @@ public abstract class AbstractSMTPServerTest {
         SMTPProtocolHandlerChain chain = new SMTPProtocolHandlerChain(new NoopMetricFactory());
         chain.addAll(0, Arrays.asList(handlers));
         chain.wireExtensibleHandlers();
-        return new SMTPProtocol(chain, new SMTPConfigurationImpl(), new ProtocolLoggerAdapter(LOGGER));
+        return new SMTPProtocol(chain, new SMTPConfigurationImpl(), LOGGER);
     }
     
     protected static void checkEnvelope(MailEnvelope env, String sender, List<String> recipients, String msg) throws IOException {

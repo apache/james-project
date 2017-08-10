@@ -23,9 +23,7 @@ import java.util.Collection;
 import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.logger.Logger;
-import org.apache.james.protocols.smtp.SMTPConfiguration;
-import org.apache.james.protocols.smtp.SMTPSession;
+import org.slf4j.Logger;
 
 /**
  * {@link SMTPSession} implementation

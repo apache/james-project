@@ -29,8 +29,6 @@ import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.util.SettableSession;
 import org.apache.james.protocols.api.logger.ContextualLogger;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
-import org.apache.james.protocols.lib.Slf4jLoggerAdapter;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFutureListener;
@@ -127,10 +125,9 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     }
 
     private Logger getLogger(final ChannelHandlerContext ctx) {
-        return new Slf4jLoggerAdapter(
-            new ContextualLogger(getUserSupplier(ctx),
-                "" + ctx.getChannel().getId(),
-                new ProtocolLoggerAdapter(logger)));
+        return new ContextualLogger(getUserSupplier(ctx),
+            Integer.toString(ctx.getChannel().getId()),
+            logger);
     }
 
     private Supplier<String> getUserSupplier(final ChannelHandlerContext ctx) {

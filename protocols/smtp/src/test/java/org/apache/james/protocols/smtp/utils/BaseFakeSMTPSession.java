@@ -27,10 +27,9 @@ import java.util.Map;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
-import org.apache.james.protocols.api.logger.Logger;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -38,7 +37,7 @@ import org.slf4j.LoggerFactory;
  */
 public class BaseFakeSMTPSession implements SMTPSession {
 
-    private static final Logger log = new ProtocolLoggerAdapter(LoggerFactory.getLogger(BaseFakeSMTPSession.class));
+    private static final Logger log = LoggerFactory.getLogger(BaseFakeSMTPSession.class);
 
     @Override
     public boolean needsCommandInjectionDetection() {

@@ -35,7 +35,6 @@ import org.apache.james.protocols.api.handler.DisconnectHandler;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
 import org.apache.james.protocols.api.handler.ProtocolHandlerResultHandler;
-import org.apache.james.protocols.api.logger.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandler.Sharable;
@@ -46,6 +45,7 @@ import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.handler.codec.frame.TooLongFrameException;
+import org.slf4j.Logger;
 
 /**
  * {@link ChannelUpstreamHandler} which is used by the SMTPServer and other line based protocols

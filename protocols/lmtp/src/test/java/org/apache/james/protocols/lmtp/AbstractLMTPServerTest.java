@@ -38,7 +38,6 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lmtp.hook.DeliverToRecipientHook;
 import org.apache.james.protocols.smtp.AbstractSMTPServerTest;
@@ -72,7 +71,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
         }
         chain.addAll(0, hList);
         chain.wireExtensibleHandlers();
-        return new SMTPProtocol(chain, new LMTPConfigurationImpl(), new ProtocolLoggerAdapter(LOGGER));
+        return new SMTPProtocol(chain, new LMTPConfigurationImpl(), LOGGER);
     }
     
 

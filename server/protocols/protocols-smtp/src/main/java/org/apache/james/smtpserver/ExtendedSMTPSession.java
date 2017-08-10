@@ -19,7 +19,6 @@
 package org.apache.james.smtpserver;
 
 import org.apache.james.protocols.api.ProtocolTransport;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.smtpserver.netty.SMTPServer.SMTPHandlerConfigurationDataImpl;
@@ -33,7 +32,7 @@ public class ExtendedSMTPSession extends org.apache.james.protocols.smtp.SMTPSes
     private final SMTPConfiguration smtpConfiguration;
 
     public ExtendedSMTPSession(SMTPConfiguration smtpConfiguration, Logger logger, ProtocolTransport transport) {
-        super(new ProtocolLoggerAdapter(logger), transport, smtpConfiguration);
+        super(logger, transport, smtpConfiguration);
         this.smtpConfiguration = smtpConfiguration;
     }
 

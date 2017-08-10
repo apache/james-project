@@ -21,7 +21,6 @@ package org.apache.james.pop3server.netty;
 import org.apache.james.pop3server.core.CoreCmdHandlerLoader;
 import org.apache.james.pop3server.jmx.JMXHandlersLoader;
 import org.apache.james.protocols.api.ProtocolConfiguration;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
 import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
@@ -79,7 +78,7 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
     @Override
     protected void preInit() throws Exception {
         super.preInit();
-        POP3Protocol protocol = new POP3Protocol(getProtocolHandlerChain(), theConfigData, new ProtocolLoggerAdapter(getLogger()));
+        POP3Protocol protocol = new POP3Protocol(getProtocolHandlerChain(), theConfigData, getLogger());
         coreHandler = new BasicChannelUpstreamHandler(protocol, getEncryption());
     }
 

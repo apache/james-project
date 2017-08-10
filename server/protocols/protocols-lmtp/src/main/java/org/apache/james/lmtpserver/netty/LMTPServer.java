@@ -23,7 +23,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lmtpserver.CoreCmdHandlerLoader;
 import org.apache.james.lmtpserver.jmx.JMXHandlersLoader;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
 import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.lmtp.LMTPConfiguration;
@@ -144,7 +143,7 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
 
     @Override
     protected ChannelUpstreamHandler createCoreHandler() {
-        SMTPProtocol protocol = new SMTPProtocol(getProtocolHandlerChain(), lmtpConfig, new ProtocolLoggerAdapter(getLogger()));
+        SMTPProtocol protocol = new SMTPProtocol(getProtocolHandlerChain(), lmtpConfig, getLogger());
         return new SMTPChannelUpstreamHandler(protocol, getLogger(), lmtpMetrics);
     }
 

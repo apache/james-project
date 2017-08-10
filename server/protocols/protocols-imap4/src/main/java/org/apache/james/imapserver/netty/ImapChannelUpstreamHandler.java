@@ -35,9 +35,7 @@ import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.main.ResponseEncoder;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.protocols.api.logger.ContextualLogger;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.imap.IMAPSession;
-import org.apache.james.protocols.lib.Slf4jLoggerAdapter;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFutureListener;
@@ -97,11 +95,10 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
     }
 
     private Logger getLogger(final ChannelHandlerContext ctx) {
-        return new Slf4jLoggerAdapter(
-            new ContextualLogger(
+        return new ContextualLogger(
                 getUserSupplier(ctx),
-                "" + ctx.getChannel().getId(),
-                new ProtocolLoggerAdapter(logger)));
+                String.valueOf(ctx.getChannel().getId()),
+                logger);
     }
 
     private Supplier<String> getUserSupplier(final ChannelHandlerContext ctx) {

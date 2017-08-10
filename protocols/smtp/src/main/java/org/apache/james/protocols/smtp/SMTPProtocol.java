@@ -23,9 +23,7 @@ import org.apache.james.protocols.api.ProtocolImpl;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
-import org.apache.james.protocols.api.logger.Logger;
-import org.apache.james.protocols.smtp.SMTPConfiguration;
-import org.apache.james.protocols.smtp.SMTPSessionImpl;
+import org.slf4j.Logger;
 
 /**
  * {@link ProtocolImpl} which creates {@link SMTPSessionImpl} instances

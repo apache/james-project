@@ -24,7 +24,7 @@ import java.nio.charset.Charset;
 import java.util.Map;
 
 import org.apache.james.protocols.api.handler.LineHandler;
-import org.apache.james.protocols.api.logger.Logger;
+import org.slf4j.Logger;
 
 /**
  * Session for a protocol. Every new connection generates a new session

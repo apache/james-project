@@ -39,7 +39,6 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.api.utils.BogusSSLSocketFactory;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
@@ -102,7 +101,7 @@ public class NettyStartTlsSMTPServerTest {
             chain.add(handler.get());
         }
         chain.wireExtensibleHandlers();
-        return new SMTPProtocol(chain, new SMTPConfigurationImpl(), new ProtocolLoggerAdapter(LOGGER));
+        return new SMTPProtocol(chain, new SMTPConfigurationImpl(), LOGGER);
     }
 
     @Test

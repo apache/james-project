@@ -24,8 +24,7 @@ import java.util.List;
 
 import org.apache.james.protocols.api.AbstractResponse;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.logger.Logger;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -38,7 +37,7 @@ public class FutureResponseImpl implements FutureResponse{
     private final Logger logger;
 
     public FutureResponseImpl() {
-        this(new ProtocolLoggerAdapter(LoggerFactory.getLogger(FutureResponseImpl.class)));
+        this(LoggerFactory.getLogger(FutureResponseImpl.class));
     }
     
     public FutureResponseImpl(Logger logger) {

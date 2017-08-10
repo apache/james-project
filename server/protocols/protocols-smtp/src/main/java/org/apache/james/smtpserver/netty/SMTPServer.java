@@ -28,7 +28,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolTransport;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
 import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
@@ -112,7 +111,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             }
             authorizedNetworks = new NetMatcher(networks, dns);
         }
-        SMTPProtocol transport = new SMTPProtocol(getProtocolHandlerChain(), theConfigData, new ProtocolLoggerAdapter(getLogger())) {
+        SMTPProtocol transport = new SMTPProtocol(getProtocolHandlerChain(), theConfigData, getLogger()) {
 
             @Override
             public ProtocolSession newSession(ProtocolTransport transport) {

@@ -31,7 +31,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.protocols.lib.Slf4jLoggerAdapter;
 import org.apache.james.protocols.lmtp.hook.DeliverToRecipientHook;
 import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.MailEnvelope;
@@ -76,7 +75,7 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
                 username = recipient.getLocalPart();
             }
 
-            MailboxSession mailboxSession = mailboxManager.createSystemSession(username, new Slf4jLoggerAdapter(session.getLogger()));
+            MailboxSession mailboxSession = mailboxManager.createSystemSession(username, session.getLogger());
             MailboxPath inbox = MailboxPath.inbox(mailboxSession);
 
             mailboxManager.startProcessingRequest(mailboxSession);

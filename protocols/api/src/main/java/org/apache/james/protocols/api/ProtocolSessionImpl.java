@@ -26,7 +26,7 @@ import java.util.Map;
 
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.api.logger.ContextualLogger;
-import org.apache.james.protocols.api.logger.Logger;
+import org.slf4j.Logger;
 
 /**
  * Basic implementation of {@link ProtocolSession}

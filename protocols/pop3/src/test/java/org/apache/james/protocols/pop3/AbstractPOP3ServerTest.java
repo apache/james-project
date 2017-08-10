@@ -34,7 +34,6 @@ import org.apache.commons.net.pop3.POP3Reply;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.pop3.core.AbstractApopCmdHandler;
 import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
@@ -53,7 +52,7 @@ public abstract class AbstractPOP3ServerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractPOP3ServerTest.class);
 
     private POP3Protocol createProtocol(AbstractPassCmdHandler handler) throws WiringException {
-        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration(), new ProtocolLoggerAdapter(LOGGER));
+        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration(), LOGGER);
     }
     
     protected abstract ProtocolServer createServer(Protocol protocol);

@@ -33,7 +33,6 @@ import org.apache.james.pop3server.mailbox.MailboxAdapter;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
-import org.apache.james.protocols.lib.Slf4jLoggerAdapter;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
@@ -66,7 +65,7 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
     protected Mailbox auth(POP3Session session, String username, String password) throws Exception {
         MailboxSession mSession = null;
         try {
-            mSession = manager.login(session.getUser(), password, new Slf4jLoggerAdapter(session.getLogger()));
+            mSession = manager.login(session.getUser(), password, session.getLogger());
             manager.startProcessingRequest(mSession);
             MailboxPath inbox = MailboxPath.inbox(mSession);
             

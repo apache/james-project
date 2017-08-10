@@ -20,7 +20,7 @@
 package org.apache.james.protocols.api;
 
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
-import org.apache.james.protocols.api.logger.Logger;
+import org.slf4j.Logger;
 
 /**
  * Basic {@link Protocol} implementation 
