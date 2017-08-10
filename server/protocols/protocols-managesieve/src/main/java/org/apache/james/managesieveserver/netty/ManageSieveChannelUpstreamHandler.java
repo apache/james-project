@@ -20,6 +20,7 @@
 package org.apache.james.managesieveserver.netty;
 
 import java.net.InetSocketAddress;
+import java.util.function.Supplier;
 
 import javax.net.ssl.SSLContext;
 
@@ -27,8 +28,8 @@ import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.util.SettableSession;
+import org.apache.james.protocols.api.logger.ContextualLogger;
 import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
-import org.apache.james.protocols.api.logger.ProtocolSessionLogger;
 import org.apache.james.protocols.lib.Slf4jLoggerAdapter;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -43,7 +44,6 @@ import org.jboss.netty.handler.codec.frame.TooLongFrameException;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.slf4j.Logger;
 
-@SuppressWarnings("deprecation")
 public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
 
     final static String SSL_HANDLER = "sslHandler";
@@ -80,7 +80,7 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        getLogger(ctx.getChannel()).warn("Error while processing ManageSieve request", e.getCause());
+        getLogger(ctx).warn("Error while processing ManageSieve request", e.getCause());
 
         if (e.getCause() instanceof TooLongFrameException) {
             // Max line length exceeded
@@ -105,7 +105,7 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
-        getLogger(ctx.getChannel()).info("Connection established from " + address.getAddress().getHostAddress());
+        getLogger(ctx).info("Connection established from " + address.getAddress().getHostAddress());
 
         Session session = new SettableSession();
         if (sslServer) {
@@ -120,14 +120,27 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
-        getLogger(ctx.getChannel()).info("Connection closed for " + address.getAddress().getHostAddress());
+        getLogger(ctx).info("Connection closed for " + address.getAddress().getHostAddress());
 
         attributes.remove(ctx.getChannel());
         super.channelClosed(ctx, e);
     }
 
-    private Logger getLogger(Channel channel) {
-        return new Slf4jLoggerAdapter(new ProtocolSessionLogger("" + channel.getId(), new ProtocolLoggerAdapter(logger)));
+    private Logger getLogger(final ChannelHandlerContext ctx) {
+        return new Slf4jLoggerAdapter(
+            new ContextualLogger(getUserSupplier(ctx),
+                "" + ctx.getChannel().getId(),
+                new ProtocolLoggerAdapter(logger)));
+    }
+
+    private Supplier<String> getUserSupplier(final ChannelHandlerContext ctx) {
+        return () -> {
+            Session session = attributes.get(ctx.getChannel());
+            if (session != null) {
+                return session.getUser();
+            }
+            return null;
+        };
     }
 
     private void turnSSLon(Channel channel) {

@@ -20,6 +20,7 @@ package org.apache.james.imapserver.netty;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.net.ssl.SSLContext;
 
@@ -27,9 +28,6 @@ import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
-import org.apache.james.protocols.api.logger.ProtocolSessionLogger;
-import org.apache.james.protocols.lib.Slf4jLoggerAdapter;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.compression.ZlibDecoder;
 import org.jboss.netty.handler.codec.compression.ZlibEncoder;
@@ -37,7 +35,6 @@ import org.jboss.netty.handler.codec.compression.ZlibWrapper;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.slf4j.Logger;
 
-@SuppressWarnings("deprecation")
 public class NettyImapSession implements ImapSession, NettyConstants {
 
     private ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;
@@ -46,14 +43,14 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     private final SSLContext sslContext;
     private final String[] enabledCipherSuites;
     private final boolean compress;
-    private final ProtocolSessionLogger log;
+    private final Supplier<Logger> log;
     private final Channel channel;
     private int handlerCount;
     private final boolean plainAuthDisallowed;
 
-    public NettyImapSession(Channel channel, Logger log, SSLContext sslContext, String[] enabledCipherSuites, boolean compress, boolean plainAuthDisallowed) {
+    public NettyImapSession(Channel channel, Supplier<Logger> log, SSLContext sslContext, String[] enabledCipherSuites, boolean compress, boolean plainAuthDisallowed) {
         this.channel = channel;
-        this.log = new ProtocolSessionLogger(channel.getId() + "", new ProtocolLoggerAdapter(log));
+        this.log = log;
         this.sslContext = sslContext;
         this.enabledCipherSuites = enabledCipherSuites;
         this.compress = compress;
@@ -230,7 +227,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
      * @see org.apache.james.imap.api.process.ImapSession#getLog()
      */
     public Logger getLog() {
-        return new Slf4jLoggerAdapter(log);
+        return log.get();
     }
 
     /**

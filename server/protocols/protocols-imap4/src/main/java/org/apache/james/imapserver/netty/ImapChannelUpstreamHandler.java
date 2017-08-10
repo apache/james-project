@@ -20,6 +20,7 @@ package org.apache.james.imapserver.netty;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.function.Supplier;
 
 import javax.net.ssl.SSLContext;
 
@@ -33,8 +34,9 @@ import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.main.ResponseEncoder;
 import org.apache.james.metrics.api.Metric;
+import org.apache.james.protocols.api.logger.ContextualLogger;
 import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
-import org.apache.james.protocols.api.logger.ProtocolSessionLogger;
+import org.apache.james.protocols.imap.IMAPSession;
 import org.apache.james.protocols.lib.Slf4jLoggerAdapter;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -51,7 +53,6 @@ import org.slf4j.Logger;
 /**
  * {@link SimpleChannelUpstreamHandler} which handles IMAP
  */
-@SuppressWarnings("deprecation")
 public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler implements NettyConstants{
 
     private final Logger logger;
@@ -95,22 +96,41 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
         this.imapCommandsMetric = imapMetrics.getCommandsMetric();
     }
 
-    private Logger getLogger(Channel channel) {
-        return new Slf4jLoggerAdapter(new ProtocolSessionLogger("" + channel.getId(), new ProtocolLoggerAdapter(logger)));
+    private Logger getLogger(final ChannelHandlerContext ctx) {
+        return new Slf4jLoggerAdapter(
+            new ContextualLogger(
+                getUserSupplier(ctx),
+                "" + ctx.getChannel().getId(),
+                new ProtocolLoggerAdapter(logger)));
+    }
+
+    private Supplier<String> getUserSupplier(final ChannelHandlerContext ctx) {
+        return () -> {
+            Object o = attributes.get(ctx.getChannel());
+            if (o instanceof IMAPSession) {
+                IMAPSession session = (IMAPSession) o;
+                return session.getUser();
+            }
+            return null;
+        };
     }
 
     @Override
-    public void channelBound(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        ImapSession imapsession = new NettyImapSession(ctx.getChannel(), logger, context, enabledCipherSuites, compress, plainAuthDisallowed);
+    public void channelBound(final ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        ImapSession imapsession = new NettyImapSession(ctx.getChannel(), toLogSupplier(ctx), context, enabledCipherSuites, compress, plainAuthDisallowed);
         attributes.set(ctx.getChannel(), imapsession);
         super.channelBound(ctx, e);
+    }
+
+    private Supplier<Logger> toLogSupplier(final ChannelHandlerContext ctx) {
+        return () -> getLogger(ctx);
     }
 
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         
         InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
-        getLogger(ctx.getChannel()).info("Connection closed for " + address.getAddress().getHostAddress());
+        getLogger(ctx).info("Connection closed for " + address.getAddress().getHostAddress());
 
         // remove the stored attribute for the channel to free up resources
         // See JAMES-1195
@@ -126,7 +146,7 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         
         InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
-        getLogger(ctx.getChannel()).info("Connection established from " + address.getAddress().getHostAddress());
+        getLogger(ctx).info("Connection established from " + address.getAddress().getHostAddress());
         imapConnectionsMetric.increment();
 
         ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.getChannel()));
@@ -141,7 +161,7 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
         
-        getLogger(ctx.getChannel()).warn("Error while processing imap request", e.getCause());
+        getLogger(ctx).warn("Error while processing imap request", e.getCause());
 
         if (e.getCause() instanceof TooLongFrameException) {
 

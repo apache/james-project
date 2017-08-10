@@ -19,26 +19,34 @@
 
 package org.apache.james.protocols.api.logger;
 
+import java.util.function.Supplier;
+
 import org.apache.james.protocols.api.ProtocolSession;
 
 /**
  * {@link Logger} which adds context informations to the logged message.
  *
  */
-public class ContextualLogger implements Logger{
+public class ContextualLogger implements Logger {
 
-    private final ProtocolSession session;
+    private final Supplier<String> userSupplier;
+    private final String sessionId;
     private final Logger logger;
 
-    public ContextualLogger(ProtocolSession session, Logger logger) {
-        this.session = session;
+    public ContextualLogger(final ProtocolSession session, Logger logger) {
+        this(session::getUser, session.getSessionID(), logger);
+    }
+
+    public ContextualLogger(Supplier<String> userSupplier, String sessionId, Logger logger) {
+        this.userSupplier = userSupplier;
+        this.sessionId = sessionId;
         this.logger = logger;
     }
-    
+
     private String getText(String str) {
-        String user = session.getUser();
+        String user = userSupplier.get();
         StringBuilder sb = new StringBuilder();
-        sb.append("Id='").append(session.getSessionID());
+        sb.append("Id='").append(sessionId);
         sb.append("' User='");
         if (user != null) {
             sb.append(user);
