@@ -30,22 +30,25 @@ import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.handler.WiringException;
+import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
-import org.apache.james.protocols.api.utils.MockLogger;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
 import org.apache.james.protocols.pop3.utils.MockMailbox;
 import org.apache.james.protocols.pop3.utils.TestPassCmdHandler;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractStartTlsPOP3ServerTest {
 
     private static final String LOCALHOST_IP = "127.0.0.1";
     private static final int RANDOM_PORT = 0;
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractStartTlsPOP3ServerTest.class);
 
     private POP3Protocol createProtocol(AbstractPassCmdHandler handler) throws WiringException {
-        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration(), new MockLogger());
+        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration(), new ProtocolLoggerAdapter(LOGGER));
     }
     
     protected POP3SClient createClient() {

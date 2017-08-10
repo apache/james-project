@@ -38,7 +38,7 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.api.utils.MockLogger;
+import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lmtp.hook.DeliverToRecipientHook;
 import org.apache.james.protocols.smtp.AbstractSMTPServerTest;
@@ -52,8 +52,12 @@ import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractLMTPServerTest.class);
 
     @Override
     protected Protocol createProtocol(ProtocolHandler... handlers) throws WiringException {
@@ -68,7 +72,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
         }
         chain.addAll(0, hList);
         chain.wireExtensibleHandlers();
-        return new SMTPProtocol(chain, new LMTPConfigurationImpl(), new MockLogger());
+        return new SMTPProtocol(chain, new LMTPConfigurationImpl(), new ProtocolLoggerAdapter(LOGGER));
     }
     
 

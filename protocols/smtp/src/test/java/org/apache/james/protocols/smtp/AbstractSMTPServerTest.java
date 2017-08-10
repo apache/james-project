@@ -43,7 +43,7 @@ import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.api.handler.DisconnectHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.api.utils.MockLogger;
+import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -54,18 +54,20 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 
 public abstract class AbstractSMTPServerTest {
-    
+
     protected final static String MSG1 = "Subject: Testmessage\r\n\r\nThis is a message\r\n";
     protected final static String SENDER = "me@sender";
     protected final static String RCPT1 ="rpct1@domain";
     protected final static String RCPT2 ="rpct2@domain";
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSMTPServerTest.class);
 
-    
     @Test
     public void testSimpleDelivery() throws Exception {
         TestMessageHook hook = new TestMessageHook();
@@ -1102,7 +1104,7 @@ public abstract class AbstractSMTPServerTest {
         SMTPProtocolHandlerChain chain = new SMTPProtocolHandlerChain(new NoopMetricFactory());
         chain.addAll(0, Arrays.asList(handlers));
         chain.wireExtensibleHandlers();
-        return new SMTPProtocol(chain, new SMTPConfigurationImpl(), new MockLogger());
+        return new SMTPProtocol(chain, new SMTPConfigurationImpl(), new ProtocolLoggerAdapter(LOGGER));
     }
     
     protected static void checkEnvelope(MailEnvelope env, String sender, List<String> recipients, String msg) throws IOException {

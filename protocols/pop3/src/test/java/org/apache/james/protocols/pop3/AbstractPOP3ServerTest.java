@@ -34,7 +34,7 @@ import org.apache.commons.net.pop3.POP3Reply;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.api.utils.MockLogger;
+import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.pop3.core.AbstractApopCmdHandler;
 import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
@@ -43,14 +43,17 @@ import org.apache.james.protocols.pop3.utils.MockMailbox;
 import org.apache.james.protocols.pop3.utils.MockMailbox.Message;
 import org.apache.james.protocols.pop3.utils.TestPassCmdHandler;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractPOP3ServerTest {
 
     private static final Message MESSAGE1 = new Message("Subject: test\r\nX-Header: value\r\n", "My Body\r\n");
     private static final Message MESSAGE2 = new Message("Subject: test2\r\nX-Header: value2\r\n", "My Body with a DOT.\r\n.\r\n");
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractPOP3ServerTest.class);
 
     private POP3Protocol createProtocol(AbstractPassCmdHandler handler) throws WiringException {
-        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration(), new MockLogger());
+        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration(), new ProtocolLoggerAdapter(LOGGER));
     }
     
     protected abstract ProtocolServer createServer(Protocol protocol);

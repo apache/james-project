@@ -39,10 +39,10 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.WiringException;
+import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.api.utils.BogusSSLSocketFactory;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
-import org.apache.james.protocols.api.utils.MockLogger;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.NettyServer;
@@ -54,6 +54,8 @@ import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.assertj.core.api.AssertDelegateTarget;
 import org.junit.After;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.sun.mail.smtp.SMTPTransport;
@@ -62,6 +64,7 @@ public class NettyStartTlsSMTPServerTest {
 
     private static final String LOCALHOST_IP = "127.0.0.1";
     private static final int RANDOM_PORT = 0;
+    private static final Logger LOGGER = LoggerFactory.getLogger(NettyStartTlsSMTPServerTest.class);
 
     private SMTPSClient smtpsClient = null;
     private ProtocolServer server = null;
@@ -99,7 +102,7 @@ public class NettyStartTlsSMTPServerTest {
             chain.add(handler.get());
         }
         chain.wireExtensibleHandlers();
-        return new SMTPProtocol(chain, new SMTPConfigurationImpl(), new MockLogger());
+        return new SMTPProtocol(chain, new SMTPConfigurationImpl(), new ProtocolLoggerAdapter(LOGGER));
     }
 
     @Test
