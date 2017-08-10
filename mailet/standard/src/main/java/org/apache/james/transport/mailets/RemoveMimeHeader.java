@@ -40,8 +40,7 @@ import com.google.common.collect.ImmutableList;
  * 
  * <pre><code>
  * &lt;mailet match="All" class="RemoveMimeHeader"&gt;
- * &lt;name&gt;header1&lt;/name&gt;
- * &lt;name&gt;header2&lt;/name&gt;
+ * &lt;name&gt;header1,header2&lt;/name&gt;
  * &lt;/mailet&gt;
  * </code></pre>
  * 
