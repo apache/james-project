@@ -28,6 +28,7 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
@@ -151,5 +152,27 @@ public class MimeMessageUtilsTest {
 
         String expectedHeaders = "first: value\r\nsecond: value2\r\n";
         assertThat(messageHeaders).isEqualTo(expectedHeaders);
+    }
+
+    @Test
+    public void toHeaderListShouldReturnMessageIdAndMimeVersionByDefault() throws Exception {
+        assertThat(
+            new MimeMessageUtils(MimeMessageBuilder.mimeMessageBuilder()
+                .build())
+                .toHeaderList())
+            .extracting("name")
+            .containsOnly("Message-Id", "MIME-Version");
+    }
+
+    @Test
+    public void toHeaderListShouldReturnAllMessageHeaders() throws Exception {
+        String headerName = "X-OPENPAAS-FEATURE-1";
+        assertThat(
+            new MimeMessageUtils(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader(headerName, "value")
+                .build())
+                .toHeaderList())
+            .extracting("name")
+            .containsOnly("Message-Id", "MIME-Version", headerName);
     }
 }
