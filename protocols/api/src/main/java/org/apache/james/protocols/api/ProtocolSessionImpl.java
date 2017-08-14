@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.james.protocols.api.handler.LineHandler;
-import org.apache.james.protocols.api.logger.ContextualLogger;
 import org.slf4j.Logger;
 
 /**
@@ -46,7 +45,7 @@ public class ProtocolSessionImpl implements ProtocolSession {
     
     public ProtocolSessionImpl(Logger logger, ProtocolTransport transport, ProtocolConfiguration config) {
         this.transport = transport;
-        this.pLog = new ContextualLogger(this, logger);
+        this.pLog = logger;
         this.connectionState = new HashMap<>();
         this.sessionState = new HashMap<>();
         this.config = config;
