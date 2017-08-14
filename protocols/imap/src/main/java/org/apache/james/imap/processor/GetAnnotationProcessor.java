@@ -45,6 +45,8 @@ import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -53,6 +55,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotationRequest> implements CapabilityImplementingProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GetAnnotationProcessor.class);
+
     public GetAnnotationProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
         super(GetAnnotationRequest.class, next, mailboxManager, factory, metricFactory);
@@ -67,10 +71,10 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
         try {
             proceed(message, session, tag, command, responder);
         } catch (MailboxNotFoundException e) {
-            session.getLog().info("The command: {} is failed because not found mailbox {}", command.getName(), message.getMailboxName());
+            LOGGER.info("The command: {} is failed because not found mailbox {}", command.getName(), message.getMailboxName());
             no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, ResponseCode.tryCreate());
         } catch (MailboxException e) {
-            session.getLog().error("GetAnnotation on mailbox " + message.getMailboxName() + " failed for user " + ImapSessionUtils.getUserName(session), e);
+            LOGGER.error("GetAnnotation on mailbox " + message.getMailboxName() + " failed for user " + ImapSessionUtils.getUserName(session), e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

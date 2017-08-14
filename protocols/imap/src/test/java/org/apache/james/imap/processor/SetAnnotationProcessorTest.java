@@ -57,7 +57,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
-import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 
@@ -78,7 +77,6 @@ public class SetAnnotationProcessorTest {
 
     private List<MailboxAnnotation> MAILBOX_ANNOTATIONS;
     private StatusResponse okResponse;
-    private Logger log;
 
     private MailboxPath inbox; 
 
@@ -92,7 +90,6 @@ public class SetAnnotationProcessorTest {
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
         mockResponder = mock(ImapProcessor.Responder.class);
         mockImapSession = mock(ImapSession.class);
-        log = mock(Logger.class);;
 
         mockMailboxSession = new MockMailboxSession("username");
         inbox = MailboxPath.inbox(mockMailboxSession);
@@ -122,8 +119,6 @@ public class SetAnnotationProcessorTest {
 
     @Test
     public void processShouldResponseNoWithNoSuchMailboxWhenManagerThrowMailboxNotFoundException() throws Exception {
-        when(mockImapSession.getLog()).thenReturn(log);
-
         doThrow(MailboxNotFoundException.class).when(mockMailboxManager).updateAnnotations(eq(inbox),
             eq(mockMailboxSession), eq(MAILBOX_ANNOTATIONS));
 
@@ -137,8 +132,6 @@ public class SetAnnotationProcessorTest {
 
     @Test
     public void processShouldResponseNoWithGenericFailureWhenManagerThrowMailboxException() throws Exception {
-        when(mockImapSession.getLog()).thenReturn(log);
-
         doThrow(MailboxException.class).when(mockMailboxManager).updateAnnotations(eq(inbox), eq(mockMailboxSession), eq(MAILBOX_ANNOTATIONS));
 
         processor.process(request, mockResponder, mockImapSession);
@@ -164,8 +157,6 @@ public class SetAnnotationProcessorTest {
 
     @Test
     public void processShouldResponseNoWhenManagerThrowsAnnotationException() throws Exception {
-        when(mockImapSession.getLog()).thenReturn(log);
-
         doThrow(AnnotationException.class).when(mockMailboxManager).updateAnnotations(eq(inbox), eq(mockMailboxSession), eq(MAILBOX_ANNOTATIONS));
 
         processor.process(request, mockResponder, mockImapSession);

@@ -36,11 +36,14 @@ import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public abstract class AbstractAuthProcessor<M extends ImapRequest> extends AbstractMailboxProcessor<M>{
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractAuthProcessor.class);
 
     private static final String ATTRIBUTE_NUMBER_OF_FAILURES = "org.apache.james.imap.processor.imap4rev1.NUMBER_OF_FAILURES";
 
@@ -76,7 +79,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
                 manageFailureCount(session, tag, command, responder, failed);
             }
         } catch (MailboxException e) {
-            session.getLog().error("Error encountered while login", e);
+            LOGGER.error("Error encountered while login", e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
@@ -106,18 +109,18 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
                 manageFailureCount(session, tag, command, responder, failed);
             }
         } catch (UserDoesNotExistException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("User " + authenticationAttempt.getAuthenticationId() + " does not exist", e);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("User " + authenticationAttempt.getAuthenticationId() + " does not exist", e);
             }
             no(command, tag, responder, HumanReadableText.USER_DOES_NOT_EXIST);
         } catch (NotAdminException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("User " + authenticationAttempt.getDelegateUserName() + " is not an admin", e);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("User " + authenticationAttempt.getDelegateUserName() + " is not an admin", e);
             }
             no(command, tag, responder, HumanReadableText.NOT_AN_ADMIN);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Login failed", e);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Login failed", e);
             }
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
@@ -126,16 +129,16 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
     private void provisionInbox(ImapSession session, MailboxManager mailboxManager, MailboxSession mailboxSession) throws MailboxException {
         final MailboxPath inboxPath = PathConverter.forSession(session).buildFullPath(MailboxConstants.INBOX);
         if (mailboxManager.mailboxExists(inboxPath, mailboxSession)) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("INBOX exists. No need to create it.");
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("INBOX exists. No need to create it.");
             }
         } else {
             try {
-                session.getLog().debug("INBOX does not exist. Creating it.");
+                LOGGER.debug("INBOX does not exist. Creating it.");
                 mailboxManager.createMailbox(inboxPath, mailboxSession);
             } catch (MailboxExistsException e) {
-                if (session.getLog().isDebugEnabled()) {
-                    session.getLog().debug("Mailbox created by concurrent call. Safe to ignore this exception.");
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Mailbox created by concurrent call. Safe to ignore this exception.");
                 }
             }
         }
@@ -153,8 +156,8 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
             session.setAttribute(ATTRIBUTE_NUMBER_OF_FAILURES, failures);
             no(command, tag, responder, failed);
         } else {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Too many authentication failures. Closing connection.");
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Too many authentication failures. Closing connection.");
             }
             bye(responder, HumanReadableText.TOO_MANY_FAILURES);
             session.logout();

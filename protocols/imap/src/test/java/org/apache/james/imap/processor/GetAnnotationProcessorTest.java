@@ -58,7 +58,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockitoAnnotations;
-import org.slf4j.Logger;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -92,7 +91,6 @@ public class GetAnnotationProcessorTest {
 
     private GetAnnotationRequest.Builder annotationRequestBuilder;
     private MailboxPath inbox;
-    private Logger log;
     private ArgumentCaptor<HumanReadableText> humanTextCaptor;
     private ArgumentCaptor<ResponseCode> captorResponsecode;
     private ArgumentCaptor<AnnotationResponse> captorAnnotationResponse;
@@ -104,7 +102,6 @@ public class GetAnnotationProcessorTest {
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
         mockResponder = mock(ImapProcessor.Responder.class);
         mockImapSession = mock(ImapSession.class);
-        log = mock(Logger.class);
 
         mailboxSession = new MockMailboxSession("username");
         inbox = MailboxPath.inbox(mailboxSession);
@@ -119,7 +116,6 @@ public class GetAnnotationProcessorTest {
 
         when(mockImapSession.getState()).thenReturn(ImapSessionState.SELECTED);
         when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
-        when(mockImapSession.getLog()).thenReturn(log);
     }
 
     @Before

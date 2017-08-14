@@ -35,11 +35,13 @@ import org.apache.james.imap.main.AbstractImapRequestHandler;
 import org.apache.james.imap.message.request.SystemMessage;
 import org.apache.james.protocols.imap.DecodingException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
  */
 public final class ImapRequestStreamHandler extends AbstractImapRequestHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ImapRequestStreamHandler.class);
 
     public ImapRequestStreamHandler(ImapDecoder decoder, ImapProcessor processor, ImapEncoder encoder) {
         super(decoder, processor, encoder);
@@ -64,11 +66,10 @@ public final class ImapRequestStreamHandler extends AbstractImapRequestHandler {
         } else {
             ImapRequestLineReader request = new ImapRequestStreamLineReader(input, output);
 
-            final Logger logger = session.getLog();
             try {
                 request.nextChar();
             } catch (DecodingException e) {
-                logger.debug("Unexpected end of line. Cannot handle request: ", e);
+                LOGGER.debug("Unexpected end of line. Cannot handle request: ", e);
                 abandon(output, session);
                 return false;
             }
@@ -84,17 +85,17 @@ public final class ImapRequestStreamHandler extends AbstractImapRequestHandler {
                 } catch (DecodingException e) {
                     // Cannot clean up. No recovery is therefore possible.
                     // Abandon connection.
-                    if (logger.isInfoEnabled()) {
-                        logger.info("Fault during clean up: " + e.getMessage());
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info("Fault during clean up: " + e.getMessage());
                     }
-                    logger.debug("Abandoning after fault in clean up", e);
+                    LOGGER.debug("Abandoning after fault in clean up", e);
                     abandon(output, session);
                     return false;
                 }
 
                 result = !(ImapSessionState.LOGOUT == session.getState());
             } else {
-                logger.debug("Connection was abandoned after request processing failed.");
+                LOGGER.debug("Connection was abandoned after request processing failed.");
                 result = false;
                 abandon(output, session);
             }
@@ -106,8 +107,8 @@ public final class ImapRequestStreamHandler extends AbstractImapRequestHandler {
         try {
             output.write(MAILBOX_DELETED_SIGNOFF);
         } catch (IOException e) {
-            session.getLog().warn("Failed to write signoff");
-            session.getLog().debug("Failed to write signoff:", e);
+            LOGGER.warn("Failed to write signoff");
+            LOGGER.debug("Failed to write signoff:", e);
         }
     }
 
@@ -116,13 +117,13 @@ public final class ImapRequestStreamHandler extends AbstractImapRequestHandler {
             try {
                 session.logout();
             } catch (Throwable t) {
-                session.getLog().warn("Session logout failed. Resources may not be correctly recycled.");
+                LOGGER.warn("Session logout failed. Resources may not be correctly recycled.");
             }
         }
         try {
             out.write(ABANDON_SIGNOFF);
         } catch (Throwable t) {
-            session.getLog().debug("Failed to write ABANDON_SIGNOFF", t);
+            LOGGER.debug("Failed to write ABANDON_SIGNOFF", t);
         }
         processor.process(SystemMessage.FORCE_LOGOUT, new SilentResponder(), session);
     }

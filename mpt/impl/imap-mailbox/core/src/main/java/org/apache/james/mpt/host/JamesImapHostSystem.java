@@ -42,7 +42,6 @@ import org.apache.james.mpt.helper.ByteBufferInputStream;
 import org.apache.james.mpt.helper.ByteBufferOutputStream;
 import org.apache.james.mpt.session.ImapSessionImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 
@@ -116,7 +115,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem {
             out = new ByteBufferOutputStream(continuation);
             in = new ByteBufferInputStream();
             handler = new ImapRequestStreamHandler(decoder, processor, encoder);
-            session = new ImapSessionImpl(LoggerFactory.getLogger("sessionLog"));
+            session = new ImapSessionImpl();
         }
 
         public String readLine() throws Exception {
@@ -133,7 +132,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem {
         }
 
         public void restart() throws Exception {
-            session = new ImapSessionImpl(LoggerFactory.getLogger("sessionLog"));
+            session = new ImapSessionImpl();
         }
 
         public void stop() throws Exception {

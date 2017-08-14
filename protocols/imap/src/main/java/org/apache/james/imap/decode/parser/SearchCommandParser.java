@@ -43,11 +43,14 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.message.request.SearchRequest;
 import org.apache.james.protocols.imap.DecodingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Parse SEARCH commands
  */
 public class SearchCommandParser extends AbstractUidCommandParser {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SearchCommandParser.class);
 
     public SearchCommandParser() {
         super(ImapCommand.selectedStateCommand(ImapConstants.SEARCH_COMMAND_NAME));
@@ -1022,7 +1025,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
 
             return new SearchRequest(command, new SearchOperation(finalKey, options), useUids, tag);
         } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
-            session.getLog().debug("Unable to decode request", e);
+            LOGGER.debug("Unable to decode request", e);
             return unsupportedCharset(tag, command);
         }
     }

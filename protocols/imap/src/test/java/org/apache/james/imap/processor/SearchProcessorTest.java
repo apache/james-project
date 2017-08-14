@@ -63,8 +63,6 @@ import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 
@@ -125,9 +123,7 @@ public class SearchProcessorTest {
     SelectedMailbox selectedMailbox;
 
     private Mockery mockery = new JUnit4Mockery();
-    
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
-    
+
     @Before
     public void setUp() throws Exception {
         serverResponseFactory = mockery.mock(StatusResponseFactory.class);
@@ -495,7 +491,6 @@ public class SearchProcessorTest {
             allowing(session).setAttribute(SearchProcessor.SEARCH_MODSEQ, null);
             allowing(session).getAttribute(
                     with(equal(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))); will(returnValue((MailboxSession) mailboxSession));
-                    allowing(session).getLog(); will(returnValue(logger));
             oneOf(mailbox).search(
                     with(equal(query)),
                     with(equal(mailboxSession)));will(

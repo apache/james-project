@@ -40,12 +40,15 @@ import org.apache.james.imap.processor.PermitEnableCapabilityProcessor.EnableExc
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
 import com.google.common.collect.ImmutableList;
 
 public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> implements CapabilityImplementingProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EnableProcessor.class);
 
     private final static List<PermitEnableCapabilityProcessor> capabilities = new ArrayList<>();
     public final static String ENABLED_CAPABILITIES = "ENABLED_CAPABILITIES";
@@ -82,8 +85,8 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
             unsolicitedResponses(session, responder, false);
             okComplete(command, tag, responder);
         } catch (EnableException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Unable to enable extension", e);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Unable to enable extension", e);
             }
             taggedBad(command, tag, responder, HumanReadableText.FAILED);
         }

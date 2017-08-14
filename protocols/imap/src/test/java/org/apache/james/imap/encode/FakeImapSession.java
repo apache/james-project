@@ -25,13 +25,9 @@ import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class FakeImapSession implements ImapSession {
-    
-    private static final Logger LOG = LoggerFactory.getLogger(FakeImapSession.class);
-    
+
     private ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;
 
     private SelectedMailbox selectedMailbox = null;
@@ -88,11 +84,6 @@ public class FakeImapSession implements ImapSession {
             attributesByKey.put(key, value);
         }
     }
-
-    public Logger getLog() {
-        return LOG;
-    }
-
     
     public boolean startTLS() {
         return false;

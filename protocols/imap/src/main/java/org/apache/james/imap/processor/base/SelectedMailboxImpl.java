@@ -42,6 +42,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -50,6 +52,7 @@ import com.google.common.collect.ImmutableList;
  * Default implementation of {@link SelectedMailbox}
  */
 public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
+    private static final Logger LOGGER = LoggerFactory.getLogger(SelectedMailboxImpl.class);
 
     private final Set<MessageUid> recentUids = new TreeSet<>();
 
@@ -121,7 +124,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
         try {
             mailboxManager.removeListener(path, this, mailboxSession);
         } catch (MailboxException e) {
-            session.getLog().error("Unable to remove listener " + this + " from mailbox while closing it", e);
+            LOGGER.error("Unable to remove listener " + this + " from mailbox while closing it", e);
         }
         
         uidMsnConverter.clear();

@@ -29,11 +29,14 @@ import org.apache.james.imap.decode.ImapCommandParserFactory;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 import org.apache.james.protocols.imap.DecodingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Parse UID commands
  */
 public class UidCommandParser extends AbstractImapCommandParser implements DelegatingImapCommandParser {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UidCommandParser.class);
 
     private ImapCommandParserFactory parserFactory;
 
@@ -73,8 +76,8 @@ public class UidCommandParser extends AbstractImapCommandParser implements Deleg
         if (helperCommand == null || !(helperCommand instanceof AbstractUidCommandParser)) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid UID command: '" + commandName + "'");
         }
-        if (session.getLog().isDebugEnabled()) {
-            session.getLog().debug("Got <command>: UID " + commandName);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Got <command>: UID " + commandName);
         }
         final AbstractUidCommandParser uidEnabled = (AbstractUidCommandParser) helperCommand;
         return uidEnabled.decode(request, tag, true, session);

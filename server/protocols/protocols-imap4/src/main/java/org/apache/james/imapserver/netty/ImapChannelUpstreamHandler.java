@@ -21,7 +21,6 @@ package org.apache.james.imapserver.netty;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.function.Supplier;
 
 import javax.net.ssl.SSLContext;
 
@@ -46,13 +45,13 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.handler.codec.frame.TooLongFrameException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link SimpleChannelUpstreamHandler} which handles IMAP
  */
 public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler implements NettyConstants{
-
-    private final Logger logger;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ImapChannelUpstreamHandler.class);
 
     private final String hello;
 
@@ -73,15 +72,14 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
     private final Metric imapConnectionsMetric;
     private final Metric imapCommandsMetric;
     
-    public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, Logger logger, boolean compress,
+    public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
                                       boolean plainAuthDisallowed, ImapMetrics imapMetrics) {
-        this(hello, processor, encoder, logger, compress, plainAuthDisallowed, null, null, imapMetrics);
+        this(hello, processor, encoder, compress, plainAuthDisallowed, null, null, imapMetrics);
     }
 
-    public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, Logger logger, boolean compress,
+    public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
                                       boolean plainAuthDisallowed, SSLContext context, String[] enabledCipherSuites,
                                       ImapMetrics imapMetrics) {
-        this.logger = logger;
         this.hello = hello;
         this.processor = processor;
         this.encoder = encoder;
@@ -93,28 +91,20 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
         this.imapCommandsMetric = imapMetrics.getCommandsMetric();
     }
 
-    private Logger getLogger(final ChannelHandlerContext ctx) {
-        return logger;
-    }
-
     @Override
     public void channelBound(final ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         try (Closeable closeable = IMAPMDCContext.from(ctx, attributes)) {
-            ImapSession imapsession = new NettyImapSession(ctx.getChannel(), () -> getLogger(ctx), context, enabledCipherSuites, compress, plainAuthDisallowed);
+            ImapSession imapsession = new NettyImapSession(ctx.getChannel(), context, enabledCipherSuites, compress, plainAuthDisallowed);
             attributes.set(ctx.getChannel(), imapsession);
             super.channelBound(ctx, e);
         }
-    }
-
-    private Supplier<Logger> toLogSupplier(final ChannelHandlerContext ctx) {
-        return () -> getLogger(ctx);
     }
 
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         try (Closeable closeable = IMAPMDCContext.from(ctx, attributes)) {
             InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
-            getLogger(ctx).info("Connection closed for " + address.getAddress().getHostAddress());
+            LOGGER.info("Connection closed for " + address.getAddress().getHostAddress());
 
             // remove the stored attribute for the channel to free up resources
             // See JAMES-1195
@@ -131,7 +121,7 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         try (Closeable closeable = IMAPMDCContext.from(ctx, attributes)) {
             InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
-            getLogger(ctx).info("Connection established from " + address.getAddress().getHostAddress());
+            LOGGER.info("Connection established from " + address.getAddress().getHostAddress());
             imapConnectionsMetric.increment();
 
             ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.getChannel()));
@@ -146,7 +136,7 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
         try (Closeable closeable = IMAPMDCContext.from(ctx, attributes)) {
-            getLogger(ctx).warn("Error while processing imap request", e.getCause());
+            LOGGER.warn("Error while processing imap request", e.getCause());
 
             if (e.getCause() instanceof TooLongFrameException) {
 
@@ -213,10 +203,9 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
                 final IOException failure = responseEncoder.getFailure();
 
                 if (failure != null) {
-                    final Logger logger = session.getLog();
-                    logger.info(failure.getMessage());
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Failed to write " + message, failure);
+                    LOGGER.info(failure.getMessage());
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Failed to write " + message, failure);
                     }
                     throw failure;
                 }

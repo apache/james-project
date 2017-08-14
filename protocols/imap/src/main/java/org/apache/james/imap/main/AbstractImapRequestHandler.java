@@ -24,16 +24,18 @@ import java.io.IOException;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
+import org.apache.james.imap.api.process.ImapProcessor.Responder;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
-import org.apache.james.imap.api.process.ImapProcessor.Responder;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.imap.encode.ImapResponseComposer;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractImapRequestHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractImapRequestHandler.class);
 
     protected static final byte[] ABANDON_SIGNOFF = { '*', ' ', 'B', 'Y', 'E', ' ', 'A', 'b', 'a', 'n', 'd', 'o', 'n', 'e', 'd', '\r', '\n' };
 
@@ -60,10 +62,9 @@ public abstract class AbstractImapRequestHandler {
             result = true;
         } else {
             result = false;
-            final Logger logger = session.getLog();
-            logger.info(failure.getMessage());
-            if (logger.isDebugEnabled()) {
-                logger.debug("Failed to write " + message, failure);
+            LOGGER.info(failure.getMessage());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Failed to write " + message, failure);
             }
         }
         return result;

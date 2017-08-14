@@ -25,12 +25,15 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.timeout.IdleState;
 import org.jboss.netty.handler.timeout.IdleStateAwareChannelHandler;
 import org.jboss.netty.handler.timeout.IdleStateEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link IdleStateAwareChannelHandler} which will call {@link ImapSession#logout()} if the
  * connected client did not receive or send any traffic in a given timeframe.
  */
 public class ImapIdleStateHandler extends IdleStateAwareChannelHandler implements NettyConstants {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ImapIdleStateHandler.class);
 
     @Override
     public void channelIdle(ChannelHandlerContext ctx, IdleStateEvent e) throws Exception {
@@ -40,7 +43,7 @@ public class ImapIdleStateHandler extends IdleStateAwareChannelHandler implement
             ImapSession session = (ImapSession) attributes.get(ctx.getChannel());
             InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
 
-            session.getLog().info("Logout client {} ({}) because it idled for too long...",
+            LOGGER.info("Logout client {} ({}) because it idled for too long...",
                 address.getHostName(),
                 address.getAddress().getHostAddress());
 

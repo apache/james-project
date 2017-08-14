@@ -19,7 +19,8 @@
 
 package org.apache.james.imap.decode.parser;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -185,7 +186,6 @@ public class SearchCommandParserQuotedCharsetTest {
                     with(same(command)), 
                     with(equal(HumanReadableText.BAD_CHARSET)),
                     with(equal(StatusResponse.ResponseCode.badCharset(CharsetUtil.getAvailableCharsetNames()))));
-            oneOf(session).getLog(); returnValue(new MockLogger());
         }});
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream("CHARSET BOGUS ".getBytes("US-ASCII")),

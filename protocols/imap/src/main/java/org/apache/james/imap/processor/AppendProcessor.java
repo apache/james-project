@@ -48,8 +48,11 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AppendProcessor.class);
 
     public AppendProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory,
             MetricFactory metricFactory) {
@@ -79,7 +82,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             // consume message on exception
             consume(messageIn);
 
-            session.getLog().debug("Append failed for mailbox " + mailboxPath, e);
+            LOGGER.debug("Append failed for mailbox " + mailboxPath, e);
             
             // Indicates that the mailbox does not exist
             // So TRY CREATE
@@ -89,7 +92,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             // consume message on exception
             consume(messageIn);
             
-            session.getLog().error("Append failed for mailbox " + mailboxPath, e);
+            LOGGER.error("Append failed for mailbox " + mailboxPath, e);
             
             // Some other issue
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
@@ -122,7 +125,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
      *            not null
      */
     private void tryCreate(ImapSession session, String tag, ImapCommand command, Responder responder, MailboxNotFoundException e) {
-        session.getLog().debug("Cannot open mailbox: ", e);
+        LOGGER.debug("Cannot open mailbox: ", e);
 
         no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
     }
@@ -150,7 +153,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             // So TRY CREATE
             tryCreate(session, tag, command, responder, e);
         } catch (MailboxException e) {
-            session.getLog().error("Unable to append message to mailbox " + mailboxPath, e);
+            LOGGER.error("Unable to append message to mailbox " + mailboxPath, e);
             // Some other issue
             no(command, tag, responder, HumanReadableText.SAVE_FAILED);
         }

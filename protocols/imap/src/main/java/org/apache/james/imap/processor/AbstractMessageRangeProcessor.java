@@ -41,10 +41,13 @@ import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRangeRequest> extends AbstractMailboxProcessor<M> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMessageRangeProcessor.class);
 
     public AbstractMessageRangeProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -105,12 +108,12 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
                 okComplete(command, tag, StatusResponse.ResponseCode.copyUid(uidValidity, idSet, resultUids), responder);
             }
         } catch (MessageRangeException e) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug(getOperationName() + " failed from mailbox " + currentMailbox.getPath() + " to " + targetMailbox + " for invalid sequence-set " + ImmutableList.copyOf(idSet), e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(getOperationName() + " failed from mailbox " + currentMailbox.getPath() + " to " + targetMailbox + " for invalid sequence-set " + ImmutableList.copyOf(idSet), e);
             }
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            session.getLog().error(getOperationName() + " failed from mailbox " + currentMailbox.getPath() + " to " + targetMailbox + " for sequence-set " + ImmutableList.copyOf(idSet), e);
+            LOGGER.error(getOperationName() + " failed from mailbox " + currentMailbox.getPath() + " to " + targetMailbox + " for sequence-set " + ImmutableList.copyOf(idSet), e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

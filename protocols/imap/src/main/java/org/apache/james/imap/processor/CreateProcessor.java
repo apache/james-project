@@ -36,8 +36,11 @@ import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CreateProcessor.class);
 
     public CreateProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -59,17 +62,17 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
             unsolicitedResponses(session, responder, false);
             okComplete(command, tag, responder);
         } catch (MailboxExistsException e) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("Create failed for mailbox " + mailboxPath + " as it already exists", e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Create failed for mailbox " + mailboxPath + " as it already exists", e);
             }
             no(command, tag, responder, HumanReadableText.MAILBOX_EXISTS);
         } catch (TooLongMailboxNameException e) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("The mailbox name length is over limit: " + mailboxPath.getName(), e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("The mailbox name length is over limit: " + mailboxPath.getName(), e);
             }
             taggedBad(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
         } catch (MailboxException e) {
-            session.getLog().error("Create failed for mailbox " + mailboxPath, e);
+            LOGGER.error("Create failed for mailbox " + mailboxPath, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

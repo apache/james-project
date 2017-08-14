@@ -60,8 +60,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 
 abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequest> extends AbstractMailboxProcessor<M> implements PermitEnableCapabilityProcessor {
-
-
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSelectionProcessor.class);
 
     final StatusResponseFactory statusResponseFactory;
@@ -94,10 +92,10 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
            
             
         } catch (MailboxNotFoundException e) {
-            session.getLog().debug("Select failed as mailbox does not exist " + mailboxName, e);
+            LOGGER.debug("Select failed as mailbox does not exist " + mailboxName, e);
             responder.respond(statusResponseFactory.taggedNo(tag, command, HumanReadableText.FAILURE_NO_SUCH_MAILBOX));
         } catch (MailboxException e) {
-            session.getLog().error("Select failed for mailbox " + mailboxName , e);
+            LOGGER.error("Select failed for mailbox " + mailboxName , e);
             no(command, tag, responder, HumanReadableText.SELECT);
         } 
     }
@@ -142,8 +140,8 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         while(unseen(responder, firstUnseen, selected, ImapSessionUtils.getMailboxSession(session)) == false) {
             // if we not was able to get find the unseen within 5 retries we should just not send it
             if (retryCount == 5) {
-                if (session.getLog().isInfoEnabled()) {
-                    session.getLog().info("Unable to uid for unseen message " + firstUnseen + " in mailbox " + selected.getPath());
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info("Unable to uid for unseen message " + firstUnseen + " in mailbox " + selected.getPath());
                 }
                 break;
             }

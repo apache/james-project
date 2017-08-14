@@ -58,10 +58,13 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
 public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoreProcessor.class);
 
     /**
      * The {@link ImapCommand} which should be used for the response if some CONDSTORE option is used
@@ -213,12 +216,12 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 }
             }
         } catch (MessageRangeException e) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("Store failed for mailbox " + session.getSelected().getPath() + " because of an invalid sequence-set " + ImmutableList.copyOf(idSet), e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Store failed for mailbox " + session.getSelected().getPath() + " because of an invalid sequence-set " + ImmutableList.copyOf(idSet), e);
             }
             taggedBad(imapCommand, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            session.getLog().error("Store failed for mailbox " + session.getSelected().getPath() + " and sequence-set " + ImmutableList.copyOf(idSet), e);
+            LOGGER.error("Store failed for mailbox " + session.getSelected().getPath() + " and sequence-set " + ImmutableList.copyOf(idSet), e);
             no(imapCommand, tag, responder, HumanReadableText.SAVE_FAILED);
         }
     }
@@ -292,8 +295,8 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 final int msn = selected.msn(uid);
 
                 if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
-                    if(session.getLog().isDebugEnabled()) {
-                        session.getLog().debug("No message found with uid " + uid + " in the uid<->msn mapping for mailbox " + selected.getPath().getFullName(mailboxSession.getPathDelimiter()) +" , this may be because it was deleted by a concurrent session. So skip it..");
+                    if(LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("No message found with uid " + uid + " in the uid<->msn mapping for mailbox " + selected.getPath().getFullName(mailboxSession.getPathDelimiter()) +" , this may be because it was deleted by a concurrent session. So skip it..");
                         
                     }
                     // skip this as it was not found in the mapping

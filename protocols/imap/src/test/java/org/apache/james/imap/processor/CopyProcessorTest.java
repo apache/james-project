@@ -49,8 +49,6 @@ import org.apache.james.mailbox.store.MailboxMetaData;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -58,7 +56,6 @@ import com.google.common.collect.Lists;
 public class CopyProcessorTest {
 
     public static final String TAG = "TAG";
-    private static final Logger LOGGER = LoggerFactory.getLogger(CopyProcessorTest.class);
 
     private CopyProcessor testee;
     private ImapProcessor mockNextProcessor;
@@ -197,7 +194,6 @@ public class CopyProcessorTest {
         when(user.getUserName()).thenReturn("username");
         when(mockMailboxSession.getPersonalSpace()).thenReturn("");
         when(mockMailboxSession.getUser()).thenReturn(user);
-        when(mockImapSession.getLog()).thenReturn(LOGGER);
         when(mockMailboxSession.getSessionId()).thenReturn(42L);
         when(mockImapSession.getState()).thenReturn(ImapSessionState.SELECTED);
         when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mockMailboxSession);

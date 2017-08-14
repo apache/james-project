@@ -21,10 +21,7 @@ package org.apache.james.imap.encode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.EndImapEncoder;
@@ -34,7 +31,8 @@ import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
+
+import com.google.common.collect.ImmutableList;
 
 public class AnnotationResponseEncoderTest {
     private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
@@ -47,16 +45,12 @@ public class AnnotationResponseEncoderTest {
     private ImapResponseComposer composer;
     private AnnotationResponseEncoder encoder;
     private ImapSession imapSession;
-    private Logger log;
 
     @Before
     public void setUp() throws Exception {
         byteImapResponseWriter = new ByteImapResponseWriter();
 
         imapSession = mock(ImapSession.class);
-        log = mock(Logger.class);
-
-        when(imapSession.getLog()).thenReturn(log);
 
         composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
         encoder = new AnnotationResponseEncoder(new EndImapEncoder());
@@ -103,7 +97,6 @@ public class AnnotationResponseEncoderTest {
 
         encoder.encode(response, composer, imapSession);
 
-        verify(log).warn("There is nil data of key {} on store: ", PRIVATE_KEY.asString());
         assertThat(byteImapResponseWriter.getString()).isEqualTo("* METADATA \"INBOX\" ()\r\n");
     }
 }

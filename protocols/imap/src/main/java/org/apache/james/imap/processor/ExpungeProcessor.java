@@ -45,10 +45,13 @@ import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
 public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> implements CapabilityImplementingProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExpungeProcessor.class);
 
     private final static List<String> UIDPLUS = ImmutableList.of("UIDPLUS");
 
@@ -96,12 +99,12 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
                 }
             }
         } catch (MessageRangeException e) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("Expunge failed", e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Expunge failed", e);
             }
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            session.getLog().error("Expunge failed for mailbox " + session.getSelected().getPath(), e);
+            LOGGER.error("Expunge failed for mailbox " + session.getSelected().getPath(), e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

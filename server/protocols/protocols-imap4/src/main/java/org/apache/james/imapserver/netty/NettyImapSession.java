@@ -20,7 +20,6 @@ package org.apache.james.imapserver.netty;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import javax.net.ssl.SSLContext;
 
@@ -33,24 +32,20 @@ import org.jboss.netty.handler.codec.compression.ZlibDecoder;
 import org.jboss.netty.handler.codec.compression.ZlibEncoder;
 import org.jboss.netty.handler.codec.compression.ZlibWrapper;
 import org.jboss.netty.handler.ssl.SslHandler;
-import org.slf4j.Logger;
 
 public class NettyImapSession implements ImapSession, NettyConstants {
-
     private ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;
     private SelectedMailbox selectedMailbox;
     private final Map<String, Object> attributesByKey = new HashMap<>();
     private final SSLContext sslContext;
     private final String[] enabledCipherSuites;
     private final boolean compress;
-    private final Supplier<Logger> log;
     private final Channel channel;
     private int handlerCount;
     private final boolean plainAuthDisallowed;
 
-    public NettyImapSession(Channel channel, Supplier<Logger> log, SSLContext sslContext, String[] enabledCipherSuites, boolean compress, boolean plainAuthDisallowed) {
+    public NettyImapSession(Channel channel, SSLContext sslContext, String[] enabledCipherSuites, boolean compress, boolean plainAuthDisallowed) {
         this.channel = channel;
-        this.log = log;
         this.sslContext = sslContext;
         this.enabledCipherSuites = enabledCipherSuites;
         this.compress = compress;
@@ -221,13 +216,6 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         channel.setReadable(false);
         channel.getPipeline().remove("lineHandler" + --handlerCount);
         channel.setReadable(true);
-    }
-
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#getLog()
-     */
-    public Logger getLog() {
-        return log.get();
     }
 
     /**

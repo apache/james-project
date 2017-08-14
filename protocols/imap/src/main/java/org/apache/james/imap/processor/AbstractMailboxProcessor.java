@@ -65,10 +65,13 @@ import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 
 abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends AbstractChainedProcessor<M> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailboxProcessor.class);
 
     public static final String IMAP_PREFIX = "IMAP-";
     private final MailboxManager mailboxManager;
@@ -141,8 +144,8 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     protected void unsolicitedResponses(ImapSession session, ImapProcessor.Responder responder, boolean omitExpunged, boolean useUid) {
         final SelectedMailbox selected = session.getSelected();
         if (selected == null) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("No mailbox selected");
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("No mailbox selected");
             }
         } else {
             unsolicitedResponses(session, responder, selected, omitExpunged, useUid);
@@ -245,8 +248,8 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             final MessageUid uid = mr.getUid();
             int msn = selected.msn(uid);
             if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
-                if (session.getLog().isDebugEnabled()) {
-                    session.getLog().debug("No message found with uid " + uid + " in the uid<->msn mapping for mailbox " + selected.getPath().getFullName(mailboxSession.getPathDelimiter()) +" , this may be because it was deleted by a concurrent session. So skip it..");
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("No message found with uid " + uid + " in the uid<->msn mapping for mailbox " + selected.getPath().getFullName(mailboxSession.getPathDelimiter()) +" , this may be because it was deleted by a concurrent session. So skip it..");
                 }  
                     
 
@@ -320,7 +323,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     }
 
     private void handleResponseException(ImapProcessor.Responder responder, MailboxException e, HumanReadableText message, ImapSession session) {
-        session.getLog().error(message.toString(), e);
+        LOGGER.error(message.toString(), e);
         // TODO: consider whether error message should be passed to the user
         final StatusResponse response = factory.untaggedNo(message);
         responder.respond(response);

@@ -38,8 +38,10 @@ import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.imap.message.response.FetchResponse.Structure;
 import org.apache.james.mailbox.MessageUid;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FetchResponseEncoder extends AbstractChainedImapEncoder {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FetchResponseEncoder.class);
     public static final String ENVELOPE = "ENVELOPE";
 
     /** Disables all optional BODYSTRUCTURE extensions */
@@ -200,10 +202,9 @@ public class FetchResponseEncoder extends AbstractChainedImapEncoder {
             for (String name : names) {
                 final String value = params.get(name);
                 if (value == null) {
-                    final Logger logger = session.getLog();
-                    logger.warn("Disposition parameter name has no value.");
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Disposition parameter " + name + " has no matching value");
+                    LOGGER.warn("Disposition parameter name has no value.");
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Disposition parameter " + name + " has no matching value");
                     }
                 } else {
                     composer.quote(name);

@@ -83,8 +83,8 @@ public abstract class AbstractImapCommandParser implements MessagingImapCommandP
 
                 result = decode(command, request, tag, session);
             } catch (DecodingException e) {
-                if (session.getLog().isDebugEnabled()) {
-                    session.getLog().debug("Cannot parse protocol ", e);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Cannot parse protocol ", e);
                 }
                 result = statusResponseFactory.taggedBad(tag, command, e.getKey());
             }

@@ -29,8 +29,10 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UnknownRequestProcessor implements ImapProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UnknownRequestProcessor.class);
 
     private final StatusResponseFactory factory;
 
@@ -39,10 +41,9 @@ public class UnknownRequestProcessor implements ImapProcessor {
         this.factory = factory;
     }
 
-    public ImapResponseMessage process(ImapMessage message, ImapSession session) {
-        Logger logger = session.getLog();
-        if (logger != null && logger.isDebugEnabled()) {
-            logger.debug("Unknown message: " + message);
+    public ImapResponseMessage process(ImapMessage message) {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Unknown message: " + message);
         }
         final ImapResponseMessage result;
         if (message instanceof ImapRequest) {
@@ -57,7 +58,7 @@ public class UnknownRequestProcessor implements ImapProcessor {
     }
 
     public void process(ImapMessage message, Responder responder, ImapSession session) {
-        final ImapResponseMessage response = process(message, session);
+        final ImapResponseMessage response = process(message);
         responder.respond(response);
     }
 

@@ -30,11 +30,14 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Processes system messages unrelated to IMAP.
  */
 public class SystemMessageProcessor extends AbstractChainedProcessor<SystemMessage> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SystemMessageProcessor.class);
 
     private final MailboxManager mailboxManager;
 
@@ -51,11 +54,11 @@ public class SystemMessageProcessor extends AbstractChainedProcessor<SystemMessa
                 forceLogout(session);
                 break;
             default:
-                session.getLog().info("Unknown system message " + message);
+                LOGGER.info("Unknown system message " + message);
                 break;
             }
         } catch (MailboxException e) {
-            session.getLog().error("Cannot force logout", e);
+            LOGGER.error("Cannot force logout", e);
         }
     }
 
@@ -70,8 +73,8 @@ public class SystemMessageProcessor extends AbstractChainedProcessor<SystemMessa
     private void forceLogout(ImapSession imapSession) throws MailboxException {
         final MailboxSession session = ImapSessionUtils.getMailboxSession(imapSession);
         if (session == null) {
-            if (imapSession.getLog().isTraceEnabled()) {
-                imapSession.getLog().trace("No mailbox session so no force logout needed");
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("No mailbox session so no force logout needed");
             }
         } else {
             session.close();
