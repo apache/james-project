@@ -22,7 +22,10 @@ import org.slf4j.Logger;
 
 /**
  * Provide {@link Logger} instances for Beans
+ *
+ * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
  */
+@Deprecated
 public interface LogProvider {
 
     /**

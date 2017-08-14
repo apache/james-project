@@ -31,7 +31,10 @@ import org.springframework.beans.factory.InitializingBean;
 
 /**
  * Provide a Log object for components
+ *
+ * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
  */
+@Deprecated
 public class LogProviderImpl implements LogProvider, InitializingBean, LogProviderManagementMBean {
 
     private final ConcurrentHashMap<String, Logger> logMap = new ConcurrentHashMap<>();
