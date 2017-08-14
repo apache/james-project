@@ -23,13 +23,15 @@ import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility methods helpful for actions.
  */
-public class ActionUtils
-{
-    
+public class ActionUtils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ActionUtils.class);
+
     private final static String ATTRIBUTE_PREFIX = ActionUtils.class.getPackage().getName() + ".";
 
     /**
@@ -71,7 +73,7 @@ public class ActionUtils
             MessagingException ex = new MessagingException(
                     "This message is looping! Message ID: "
                             + aMail.getMessage().getMessageID());
-            context.getLog().warn(ex.getMessage(), ex);
+            LOGGER.warn(ex.getMessage(), ex);
             throw ex;
         }
         aMail.setAttribute(ATTRIBUTE_PREFIX + anAttributeSuffix,

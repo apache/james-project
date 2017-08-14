@@ -23,7 +23,6 @@ import java.util.Collection;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.logging.Log;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.joda.time.DateTime;
@@ -47,12 +46,6 @@ public interface ActionContext {
      * @return Recipient receiving the given eMail
      */
     MailAddress getRecipient();
-
-    /**
-     * Gets the log.
-     * @return not null
-     */
-    public Log getLog();
     
     /**
      * Experimental mail delivery. 

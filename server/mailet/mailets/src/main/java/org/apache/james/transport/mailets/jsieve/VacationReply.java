@@ -33,13 +33,15 @@ import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class VacationReply {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(VacationReply.class);
 
     public static class Builder {
 
@@ -134,7 +136,7 @@ public class VacationReply {
             try {
                 return new MailAddress(address);
             } catch (AddressException e) {
-                context.getLog().warn("Mail address " + address + " was not well formatted : " + e.getLocalizedMessage());
+                LOGGER.warn("Mail address " + address + " was not well formatted : " + e.getLocalizedMessage());
                 return null;
             }
         }

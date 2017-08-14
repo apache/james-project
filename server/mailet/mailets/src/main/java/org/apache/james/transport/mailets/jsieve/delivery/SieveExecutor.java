@@ -136,7 +136,6 @@ public class SieveExecutor {
             SieveMailAdapter aMailAdapter = new SieveMailAdapter(aMail,
                 mailetContext, actionDispatcher, sievePoster, userSieveInformation.getScriptActivationDate(),
                 userSieveInformation.getScriptInterpretationDate(), recipient);
-            aMailAdapter.setLog(log);
             // This logging operation is potentially costly
             log.debug("Evaluating " + aMailAdapter.toString() + " against \"" + recipient.asPrettyString() + "\"");
             factory.evaluate(aMailAdapter, factory.parse(userSieveInformation.getScriptContent()));
