@@ -30,7 +30,6 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.MessageEvent;
-import org.slf4j.Logger;
 
 /**
  * {@link ChannelUpstreamHandler} which is used by the SMTPServer
@@ -40,12 +39,12 @@ public class SMTPChannelUpstreamHandler extends BasicChannelUpstreamHandler {
 
     private final SmtpMetrics smtpMetrics;
 
-    public SMTPChannelUpstreamHandler(Protocol protocol, Logger logger, Encryption encryption, SmtpMetrics smtpMetrics) {
+    public SMTPChannelUpstreamHandler(Protocol protocol, Encryption encryption, SmtpMetrics smtpMetrics) {
         super(protocol, encryption);
         this.smtpMetrics = smtpMetrics;
     }
 
-    public SMTPChannelUpstreamHandler(Protocol protocol, Logger logger, SmtpMetrics smtpMetrics) {
+    public SMTPChannelUpstreamHandler(Protocol protocol, SmtpMetrics smtpMetrics) {
         super(protocol);
         this.smtpMetrics = smtpMetrics;
     }

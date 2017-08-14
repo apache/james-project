@@ -26,8 +26,8 @@ import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.ProtocolSession.State;
+import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.smtp.MailEnvelope;
 import org.apache.james.protocols.smtp.SMTPResponse;
@@ -39,11 +39,15 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailParametersHook;
 import org.apache.james.protocols.smtp.hook.MessageHook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Handle the ESMTP SIZE extension.
  */
 public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension, DataLineFilter, MessageHook {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailSizeEsmtpExtension.class);
 
     private final static String MESG_SIZE = "MESG_SIZE"; // The size of the
     private final static String MESG_FAILED = "MESG_FAILED";   // Message failed flag
@@ -113,16 +117,16 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
         try {
             size = Integer.parseInt(mailOptionValue);
         } catch (NumberFormatException pe) {
-            session.getLogger().error("Rejected syntactically incorrect value for SIZE parameter.");
+            LOGGER.error("Rejected syntactically incorrect value for SIZE parameter.");
             
             // This is a malformed option value. We return an error
             return SYNTAX_ERROR;
         }
-        if (session.getLogger().isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             StringBuilder debugBuffer = new StringBuilder(128).append(
                     "MAIL command option SIZE received with value ").append(
                     size).append(".");
-            session.getLogger().debug(debugBuffer.toString());
+            LOGGER.debug(debugBuffer.toString());
         }
         long maxMessageSize = session.getConfiguration().getMaxMessageSize();
         if ((maxMessageSize > 0) && (size > maxMessageSize)) {
@@ -135,7 +139,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
                     .append(size).append(
                             " exceeding system maximum message size of ")
                     .append(maxMessageSize).append("based on SIZE option.");
-            session.getLogger().error(errorBuffer.toString());
+            LOGGER.error(errorBuffer.toString());
 
             return QUOTA_EXCEEDED;
         } else {
@@ -212,7 +216,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
                     .append(" exceeding system maximum message size of ")
                     .append(
                             session.getConfiguration().getMaxMessageSize());
-            session.getLogger().error(errorBuffer.toString());
+            LOGGER.error(errorBuffer.toString());
             return QUOTA_EXCEEDED;
         } else {
             return HookResult.declined();

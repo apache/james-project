@@ -20,7 +20,6 @@
 package org.apache.james.protocols.api;
 
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
-import org.slf4j.Logger;
 
 /**
  * Define a protocol
@@ -49,10 +48,5 @@ public interface Protocol {
      * @return session
      */
     ProtocolSession newSession(ProtocolTransport transport);
-
-    /**
-     * @return The logger associated with the protocol
-     */
-    Logger getProtocolLogger();
 
 }

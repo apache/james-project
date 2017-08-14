@@ -34,12 +34,15 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.RcptHook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
  * This handler can be used to just ignore duplicated recipients. 
  */
 public class SupressDuplicateRcptHandler implements RcptHook {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SupressDuplicateRcptHandler.class);
 
     @Override
     public void init(Configuration config) throws ConfigurationException {
@@ -66,7 +69,7 @@ public class SupressDuplicateRcptHandler implements RcptHook {
                           .append(" Recipient <")
                           .append(rcpt.toString())
                           .append("> OK");
-            session.getLogger().debug("Duplicate recipient not add to recipient list: " + rcpt.toString());
+            LOGGER.debug("Duplicate recipient not add to recipient list: " + rcpt.toString());
             return new HookResult(HookReturnCode.OK,SMTPRetCode.MAIL_OK, responseBuffer.toString());
         }
         return HookResult.declined();

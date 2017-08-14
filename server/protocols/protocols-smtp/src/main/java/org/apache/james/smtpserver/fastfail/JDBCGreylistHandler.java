@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
  * GreylistHandler which can be used to activate Greylisting
  */
 public class JDBCGreylistHandler extends AbstractGreylistHandler implements ProtocolHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JDBCGreylistHandler.class);
 
     /** This log is the fall back shared by all instances */
     private static final Logger FALLBACK_LOG = LoggerFactory.getLogger(JDBCGreylistHandler.class);
@@ -386,7 +387,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
         if ((wNetworks == null) || (!wNetworks.matchInetNetwork(session.getRemoteAddress().getAddress().getHostAddress()))) {
             return super.doRcpt(session, sender, rcpt);
         } else {
-            session.getLogger().info("IpAddress " + session.getRemoteAddress().getAddress().getHostAddress() + " is whitelisted. Skip greylisting.");
+            LOGGER.info("IpAddress " + session.getRemoteAddress().getAddress().getHostAddress() + " is whitelisted. Skip greylisting.");
         }
         return new HookResult(HookReturnCode.DECLINED);
     }

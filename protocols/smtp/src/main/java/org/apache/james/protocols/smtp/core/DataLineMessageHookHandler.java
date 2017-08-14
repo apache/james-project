@@ -43,6 +43,8 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MessageHook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class handles the actual calling of the {@link MessageHook} implementations to queue the message. If no {@link MessageHook} return OK or DECLINED it will write back an
@@ -50,6 +52,7 @@ import org.apache.james.protocols.smtp.hook.MessageHook;
  *
  */
 public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataLineMessageHookHandler.class);
 
     private static final Response ERROR_PROCESSING_MESSAGE = new SMTPResponse(SMTPRetCode.LOCAL_ERROR,DSNStatus.getStatus(DSNStatus.TRANSIENT,
             DSNStatus.UNDEFINED_STATUS) + " Error processing message").immutable();
@@ -101,8 +104,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
             }
             out.flush();
         } catch (IOException e) {
-            session.getLogger().error(
-                    "Unknown error occurred while processing DATA.", e);
+            LOGGER.error("Unknown error occurred while processing DATA.", e);
             
             session.resetState();
             return ERROR_PROCESSING_MESSAGE;
@@ -131,7 +133,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
         if (mail != null && messageHandlers != null) {
             for (Object messageHandler : messageHandlers) {
                 MessageHook rawHandler = (MessageHook) messageHandler;
-                session.getLogger().debug("executing message handler " + rawHandler);
+                LOGGER.debug("executing message handler " + rawHandler);
 
                 long start = System.currentTimeMillis();
                 HookResult hRes = rawHandler.onMessage(session, mail);
@@ -139,7 +141,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
 
                 if (rHooks != null) {
                     for (Object rHook : rHooks) {
-                        session.getLogger().debug("executing hook " + rHook);
+                        LOGGER.debug("executing hook " + rHook);
                         hRes = ((HookResultHook) rHook).onHookResult(session, hRes, executionTime, rawHandler);
                     }
                 }

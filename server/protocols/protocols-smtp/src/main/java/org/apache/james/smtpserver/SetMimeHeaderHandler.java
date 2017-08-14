@@ -28,11 +28,14 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.mailet.Mail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Adds the header to the message
  */
 public class SetMimeHeaderHandler implements JamesMessageHook, ProtocolHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SetMimeHeaderHandler.class);
 
     /**
      * The header name and value that needs to be added
@@ -77,7 +80,7 @@ public class SetMimeHeaderHandler implements JamesMessageHook, ProtocolHandler {
             }
 
         } catch (javax.mail.MessagingException me) {
-            session.getLogger().error(me.getMessage());
+            LOGGER.error(me.getMessage());
         }
 
         return new HookResult(HookReturnCode.DECLINED);

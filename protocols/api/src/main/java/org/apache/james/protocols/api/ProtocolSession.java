@@ -24,7 +24,6 @@ import java.nio.charset.Charset;
 import java.util.Map;
 
 import org.apache.james.protocols.api.handler.LineHandler;
-import org.slf4j.Logger;
 
 /**
  * Session for a protocol. Every new connection generates a new session
@@ -37,13 +36,7 @@ public interface ProtocolSession {
         Connection,
         Transaction
     }
-    /**
-     * Gets the context sensitive log for this session.
-     * @return log, not null
-     */
-    Logger getLogger();
-    
-    
+
     /**
      * Store the given value with the given key in the specified {@link State}. If you want to remove a value you need to use <code>null</code> as value
      * 

@@ -47,12 +47,14 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.handler.codec.frame.TooLongFrameException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link ChannelUpstreamHandler} which is used by the SMTPServer and other line based protocols
  */
 @Sharable
 public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BasicChannelUpstreamHandler.class);
     protected final Protocol protocol;
     protected final ProtocolHandlerChain chain;
     protected final Encryption secure;
@@ -88,7 +90,7 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
             List<ConnectHandler> connectHandlers = chain.getHandlers(ConnectHandler.class);
             List<ProtocolHandlerResultHandler> resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
             ProtocolSession session = (ProtocolSession) ctx.getAttachment();
-            session.getLogger().info("Connection established from " + session.getRemoteAddress().getAddress().getHostAddress());
+            LOGGER.info("Connection established from " + session.getRemoteAddress().getAddress().getHostAddress());
             if (connectHandlers != null) {
                 for (ConnectHandler cHandler : connectHandlers) {
                     long start = System.currentTimeMillis();
@@ -98,7 +100,7 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
                     for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
                         // Disable till PROTOCOLS-37 is implemented
                         if (response instanceof FutureResponse) {
-                            session.getLogger().debug("ProtocolHandlerResultHandler are not supported for FutureResponse yet");
+                            LOGGER.debug("ProtocolHandlerResultHandler are not supported for FutureResponse yet");
                             break;
                         }
                         resultHandler.onResponse(session, response, executionTime, cHandler);
@@ -155,7 +157,7 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
                 for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
                     // Disable till PROTOCOLS-37 is implemented
                     if (response instanceof FutureResponse) {
-                        pSession.getLogger().debug("ProtocolHandlerResultHandler are not supported for FutureResponse yet");
+                        LOGGER.debug("ProtocolHandlerResultHandler are not supported for FutureResponse yet");
                         break;
                     }
                     response = resultHandler.onResponse(pSession, response, executionTime, lHandler);
@@ -176,7 +178,7 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         try (Closeable closeable = ProtocolMDCContext.from(protocol, ctx)) {
             ProtocolSession session = (ProtocolSession) ctx.getAttachment();
-            getLogger(session).info("Connection closed for " + session.getRemoteAddress().getAddress().getHostAddress());
+            LOGGER.info("Connection closed for " + session.getRemoteAddress().getAddress().getHostAddress());
             cleanup(ctx);
 
             super.channelClosed(ctx, e);
@@ -232,17 +234,10 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
                     }
                     transport.writeResponse(Response.DISCONNECT, session);
                 }
-                getLogger(session).error("Unable to process request", e.getCause());
+                LOGGER.error("Unable to process request", e.getCause());
                 cleanup(ctx);
             }
         }
-    }
-
-    private Logger getLogger(ProtocolSession session) {
-        if (session != null) {
-            return session.getLogger();
-        }
-        return protocol.getProtocolLogger();
     }
 
 }

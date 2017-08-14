@@ -47,7 +47,7 @@ public abstract class AbstractStartTlsPOP3ServerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractStartTlsPOP3ServerTest.class);
 
     private POP3Protocol createProtocol(AbstractPassCmdHandler handler) throws WiringException {
-        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration(), LOGGER);
+        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration());
     }
     
     protected POP3SClient createClient() {

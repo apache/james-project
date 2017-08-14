@@ -31,8 +31,11 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.RcptHook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MaxRcptHandler implements RcptHook {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MaxRcptHandler.class);
 
     private static final HookResult MAX_RCPT = new HookResult(HookReturnCode.DENY, SMTPRetCode.SYSTEM_STORAGE_ERROR, DSNStatus.getStatus(DSNStatus.NETWORK, DSNStatus.DELIVERY_TOO_MANY_REC)
             + " Requested action not taken: max recipients reached");
@@ -54,7 +57,7 @@ public class MaxRcptHandler implements RcptHook {
      */
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
         if ((session.getRcptCount() + 1) > maxRcpt) {
-            session.getLogger().info("Maximum recipients of " + maxRcpt + " reached");
+            LOGGER.info("Maximum recipients of " + maxRcpt + " reached");
             
             return MAX_RCPT;
         } else {

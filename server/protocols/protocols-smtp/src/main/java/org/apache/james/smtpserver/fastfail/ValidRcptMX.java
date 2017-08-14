@@ -103,11 +103,7 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
      * @param dnsServer The DNSServer
      */
     public void setBannedNetworks(Collection<String> networks, DNSService dnsServer) {
-        bNetwork = new NetMatcher(networks, dnsServer) {
-            protected void log(String s) {
-                serviceLog.debug(s);
-            }
-        };
+        bNetwork = new NetMatcher(networks, dnsServer);
     }
 
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {

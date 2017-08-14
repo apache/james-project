@@ -40,6 +40,8 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 
@@ -48,6 +50,7 @@ import com.google.common.base.Throwables;
  * 
  */
 public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.protocols.smtp.hook.Hook> implements CommandHandler<SMTPSession>, ExtensibleHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractHookableCmdHandler.class);
 
     private final MetricFactory metricFactory;
     private List<Hook> hooks;
@@ -112,7 +115,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
             int i = 0;
             while (i < count) {
                 Hook rawHook = hooks.get(i);
-                session.getLogger().debug("executing hook " + rawHook.getClass().getName());
+                LOGGER.debug("executing hook " + rawHook.getClass().getName());
                 long start = System.currentTimeMillis();
 
                 HookResult hRes = callHook(rawHook, session, parameters);
@@ -120,7 +123,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
 
                 if (rHooks != null) {
                     for (HookResultHook rHook : rHooks) {
-                        session.getLogger().debug("executing hook " + rHook);
+                        LOGGER.debug("executing hook " + rHook);
                         hRes = rHook.onHookResult(session, hRes, executionTime, rawHook);
                     }
                 }

@@ -24,18 +24,21 @@ import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.RcptHook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Handler which whitelist "postmaster" and "abuse" recipients.
  */
 public class PostmasterAbuseRcptHook implements RcptHook {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostmasterAbuseRcptHook.class);
     
     /**
      * @see org.apache.james.protocols.smtp.hook.RcptHook#doRcpt(org.apache.james.protocols.smtp.SMTPSession, org.apache.mailet.MailAddress, org.apache.mailet.MailAddress)
      */
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
         if (rcpt.getLocalPart().equalsIgnoreCase("postmaster") || rcpt.getLocalPart().equalsIgnoreCase("abuse")) {
-            session.getLogger().debug("Sender allowed");
+            LOGGER.debug("Sender allowed");
             return HookResult.ok();
         } else {
             return HookResult.declined();

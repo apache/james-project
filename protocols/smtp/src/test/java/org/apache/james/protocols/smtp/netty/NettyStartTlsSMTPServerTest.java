@@ -101,7 +101,7 @@ public class NettyStartTlsSMTPServerTest {
             chain.add(handler.get());
         }
         chain.wireExtensibleHandlers();
-        return new SMTPProtocol(chain, new SMTPConfigurationImpl(), LOGGER);
+        return new SMTPProtocol(chain, new SMTPConfigurationImpl());
     }
 
     @Test

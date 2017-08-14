@@ -23,36 +23,26 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Response;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
  * {@link ProtocolHandlerResultHandler} which logs the {@link Response} of {@link CommandHandler}'s.
- * 
- * By default it logs to {@link Logger#debug(String)}, but subclasses can override this by override {@link #log(ProtocolSession, Response, String)} method.
  *
  */
 public class CommandHandlerResultLogger implements ProtocolHandlerResultHandler<Response, ProtocolSession> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommandHandlerResultLogger.class);
+
     public Response onResponse(ProtocolSession session, Response response, long executionTime, ProtocolHandler handler) {
         if (handler instanceof CommandHandler) {
             String logmessage = handler.getClass().getName() + ": " + response.toString();
-        
-            log(session, response, logmessage);
+
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(logmessage);
+            }
         }
         return response;
-    }
-
-    /**
-     * Log the given logmessage
-     * 
-     * @param session
-     * @param response
-     * @param logmessage
-     */
-    protected void log(ProtocolSession session, Response response, String logmessage) {
-        if (session.getLogger().isDebugEnabled()) {
-            session.getLogger().debug(logmessage);
-        }
     }
 
     @Override

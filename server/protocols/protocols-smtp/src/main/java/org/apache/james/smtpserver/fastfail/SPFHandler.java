@@ -44,6 +44,8 @@ import org.slf4j.LoggerFactory;
 
 public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, ProtocolHandler {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SPFHandler.class);
+
     /** This log is the fall back shared by all instances */
     private static final Logger FALLBACK_LOG = LoggerFactory.getLogger(SPFHandler.class);
 
@@ -112,7 +114,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
 
         // We have no Sender or HELO/EHLO yet return false
         if (sender == null || heloEhlo == null) {
-            session.getLogger().info("No Sender or HELO/EHLO present");
+            LOGGER.info("No Sender or HELO/EHLO present");
         } else {
 
             String ip = session.getRemoteAddress().getAddress().getHostAddress();
@@ -126,7 +128,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
             // Store the header
             session.setAttachment(SPF_HEADER, result.getHeaderText(), State.Transaction);
 
-            session.getLogger().info("Result for " + ip + " - " + sender + " - " + heloEhlo + " = " + spfResult);
+            LOGGER.info("Result for " + ip + " - " + sender + " - " + heloEhlo + " = " + spfResult);
 
             // Check if we should block!
             if ((spfResult.equals(SPFErrorConstants.FAIL_CONV)) || (spfResult.equals(SPFErrorConstants.SOFTFAIL_CONV) && blockSoftFail) || (spfResult.equals(SPFErrorConstants.PERM_ERROR_CONV) && blockPermError)) {

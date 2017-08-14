@@ -48,6 +48,8 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailParametersHook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -64,6 +66,7 @@ import com.google.common.collect.ImmutableSet;
 public class AuthCmdHandler
     implements CommandHandler<SMTPSession>, EhloExtension, ExtensibleHandler, MailParametersHook {
     private static final Collection<String> COMMANDS = ImmutableSet.of("AUTH");
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommandHandler.class);
     private static final String[] MAIL_PARAMS = { "AUTH" };
     private static final List<String> ESMTP_FEATURES = ImmutableList.of("AUTH LOGIN PLAIN", "AUTH=LOGIN PLAIN");
     
@@ -381,7 +384,7 @@ public class AuthCmdHandler
         
         if (hooks != null) {
             for (AuthHook rawHook : hooks) {
-                session.getLogger().debug("executing  hook " + rawHook);
+                LOGGER.debug("executing  hook " + rawHook);
 
                 long start = System.currentTimeMillis();
                 HookResult hRes = rawHook.doAuth(session, user, pass);
@@ -389,7 +392,7 @@ public class AuthCmdHandler
 
                 if (rHooks != null) {
                     for (HookResultHook rHook : rHooks) {
-                        session.getLogger().debug("executing  hook " + rHook);
+                        LOGGER.debug("executing  hook " + rHook);
                         hRes = rHook.onHookResult(session, hRes, executionTime, rawHook);
                     }
                 }
@@ -398,11 +401,11 @@ public class AuthCmdHandler
 
                 if (res != null) {
                     if (SMTPRetCode.AUTH_FAILED.equals(res.getRetCode())) {
-                        session.getLogger().info("AUTH method " + authType + " failed");
+                        LOGGER.info("AUTH method " + authType + " failed");
                     } else if (SMTPRetCode.AUTH_OK.equals(res.getRetCode())) {
-                        if (session.getLogger().isDebugEnabled()) {
+                        if (LOGGER.isDebugEnabled()) {
                             // TODO: Make this string a more useful debug message
-                            session.getLogger().debug("AUTH method " + authType + " succeeded");
+                            LOGGER.debug("AUTH method " + authType + " succeeded");
                         }
                     }
                     return res;
@@ -411,7 +414,7 @@ public class AuthCmdHandler
         }
 
         res = AUTH_FAILED;
-        session.getLogger().error("AUTH method "+authType+" failed from " + user + "@" + session.getRemoteAddress().getAddress().getHostAddress()); 
+        LOGGER.error("AUTH method "+authType+" failed from " + user + "@" + session.getRemoteAddress().getAddress().getHostAddress());
         return res;
     }
 
@@ -486,13 +489,13 @@ public class AuthCmdHandler
      * @param initialResponse the initial response line passed in with the AUTH command
      */
     private Response doUnknownAuth(SMTPSession session, String authType, String initialResponse) {
-        if (session.getLogger().isInfoEnabled()) {
+        if (LOGGER.isInfoEnabled()) {
             StringBuilder errorBuffer =
                 new StringBuilder(128)
                     .append("AUTH method ")
                         .append(authType)
                         .append(" is an unrecognized authentication type");
-            session.getLogger().info(errorBuffer.toString());
+            LOGGER.info(errorBuffer.toString());
         }
         return UNKNOWN_AUTH_TYPE;
     }

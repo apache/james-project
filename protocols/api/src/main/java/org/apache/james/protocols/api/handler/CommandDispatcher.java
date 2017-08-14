@@ -37,7 +37,8 @@ import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.future.FutureResponse;
 import org.apache.james.protocols.api.future.FutureResponseImpl;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -45,6 +46,7 @@ import org.apache.james.protocols.api.future.FutureResponseImpl;
  *
  */
 public class CommandDispatcher<Session extends ProtocolSession> implements ExtensibleHandler, LineHandler<Session> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommandDispatcher.class);
     /**
      * The list of available command handlers
      */
@@ -99,8 +101,8 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
         if (command == null) {
             return null;
         }
-        if (session.getLogger().isDebugEnabled()) {
-            session.getLogger().debug("Lookup command handler for command: " + command);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Lookup command handler for command: " + command);
         }
         List<CommandHandler<Session>> handlers =  commandHandlerMap.get(command);
         if(handlers == null) {
@@ -157,7 +159,7 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
             }
             return dispatchCommandHandlers(session, request);
         } catch (Exception e) {
-            session.getLogger().debug("Unable to parse request", e);
+            LOGGER.debug("Unable to parse request", e);
             return session.newFatalErrorResponse();
         } 
 
@@ -173,8 +175,8 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
      * @return response
      */
     protected Response dispatchCommandHandlers(Session session, Request request) {
-        if (session.getLogger().isDebugEnabled()) {
-            session.getLogger().debug(getClass().getName() + " received: " + request.getCommand());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(getClass().getName() + " received: " + request.getCommand());
         }
         List<CommandHandler<Session>> commandHandlers = getCommandHandlers(request.getCommand(), session);
         // fetch the command handlers registered to the command

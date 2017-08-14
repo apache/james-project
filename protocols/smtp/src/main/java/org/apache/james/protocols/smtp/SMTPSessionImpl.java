@@ -23,7 +23,6 @@ import java.util.Collection;
 import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.api.Response;
-import org.slf4j.Logger;
 
 /**
  * {@link SMTPSession} implementation
@@ -36,8 +35,8 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
     private boolean relayingAllowed;
     private boolean needsCommandInjectionDetection;
     
-    public SMTPSessionImpl(Logger logger, ProtocolTransport transport, SMTPConfiguration config) {
-        super(logger, transport, config);
+    public SMTPSessionImpl(ProtocolTransport transport, SMTPConfiguration config) {
+        super(transport, config);
         relayingAllowed = config.isRelayingAllowed(getRemoteAddress().getAddress().getHostAddress());
         needsCommandInjectionDetection = true;
     }

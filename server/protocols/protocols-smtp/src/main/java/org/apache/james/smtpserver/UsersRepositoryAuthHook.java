@@ -28,11 +28,14 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This Auth hook can be used to authenticate against the james user repository
  */
 public class UsersRepositoryAuthHook implements AuthHook {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UsersRepositoryAuthHook.class);
 
     private UsersRepository users;
 
@@ -68,7 +71,7 @@ public class UsersRepositoryAuthHook implements AuthHook {
                 return new HookResult(HookReturnCode.OK, "Authentication Successful");
             }
         } catch (UsersRepositoryException e) {
-            session.getLogger().info("Unable to access UsersRepository", e);
+            LOGGER.info("Unable to access UsersRepository", e);
         }
         return new HookResult(HookReturnCode.DECLINED);
     }

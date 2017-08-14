@@ -39,6 +39,8 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.RcptHook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -47,7 +49,7 @@ import com.google.common.collect.ImmutableSet;
  */
 public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> implements
         CommandHandler<SMTPSession> {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(RcptCmdHandler.class);
     public static final String CURRENT_RECIPIENT = "CURRENT_RECIPIENT"; // Current
                                                                         // recipient
     private static final Collection<String> COMMANDS = ImmutableSet.of("RCPT");
@@ -142,12 +144,12 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         }
         if (session.getConfiguration().useAddressBracketsEnforcement()
                 && (!recipient.startsWith("<") || !recipient.endsWith(">"))) {
-            if (session.getLogger().isInfoEnabled()) {
+            if (LOGGER.isInfoEnabled()) {
                 StringBuilder errorBuffer = new StringBuilder(192).append(
                         "Error parsing recipient address: ").append(
                         "Address did not start and end with < >").append(
                         getContext(session, null, recipient));
-                session.getLogger().info(errorBuffer.toString());
+                LOGGER.info(errorBuffer.toString());
             }
             return SYNTAX_ERROR_DELIVERY;
         }
@@ -168,12 +170,12 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         try {
             recipientAddress = new MailAddress(recipient);
         } catch (Exception pe) {
-            if (session.getLogger().isInfoEnabled()) {
+            if (LOGGER.isInfoEnabled()) {
                 StringBuilder errorBuffer = new StringBuilder(192).append(
                         "Error parsing recipient address: ").append(
                         getContext(session, recipientAddress, recipient))
                         .append(pe.getMessage());
-                session.getLogger().info(errorBuffer.toString());
+                LOGGER.info(errorBuffer.toString());
             }
             /*
              * from RFC2822; 553 Requested action not taken: mailbox name
@@ -197,7 +199,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
                     rcptOptionValue = rcptOption.substring(equalIndex + 1);
                 }
                 // Unexpected option attached to the RCPT command
-                if (session.getLogger().isDebugEnabled()) {
+                if (LOGGER.isDebugEnabled()) {
                     StringBuilder debugBuffer = new StringBuilder(128)
                             .append(
                                     "RCPT command had unrecognized/unexpected option ")
@@ -205,7 +207,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
                             .append(rcptOptionValue).append(
                                     getContext(session, recipientAddress,
                                             recipient));
-                    session.getLogger().debug(debugBuffer.toString());
+                    LOGGER.debug(debugBuffer.toString());
                 }
 
                 return new SMTPResponse(

@@ -32,7 +32,7 @@ public class ExtendedSMTPSession extends org.apache.james.protocols.smtp.SMTPSes
     private final SMTPConfiguration smtpConfiguration;
 
     public ExtendedSMTPSession(SMTPConfiguration smtpConfiguration, Logger logger, ProtocolTransport transport) {
-        super(logger, transport, smtpConfiguration);
+        super(transport, smtpConfiguration);
         this.smtpConfiguration = smtpConfiguration;
     }
 

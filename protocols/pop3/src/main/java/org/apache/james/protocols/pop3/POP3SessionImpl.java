@@ -23,7 +23,6 @@ import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
-import org.slf4j.Logger;
 
 /**
  * {@link POP3Session} implementation which use Netty
@@ -36,8 +35,8 @@ public class POP3SessionImpl extends ProtocolSessionImpl implements POP3Session 
     private Mailbox mailbox;
 
     
-    public POP3SessionImpl(Logger logger, ProtocolTransport transport, ProtocolConfiguration configData) {
-        super(logger, transport, configData);
+    public POP3SessionImpl(ProtocolTransport transport, ProtocolConfiguration configData) {
+        super(transport, configData);
     }
 
     /**

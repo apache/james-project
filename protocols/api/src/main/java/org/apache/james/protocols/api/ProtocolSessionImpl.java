@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.james.protocols.api.handler.LineHandler;
-import org.slf4j.Logger;
 
 /**
  * Basic implementation of {@link ProtocolSession}
@@ -33,8 +32,6 @@ import org.slf4j.Logger;
  * 
  */
 public class ProtocolSessionImpl implements ProtocolSession {
-
-    private final Logger pLog;
     private final ProtocolTransport transport;
     private final Map<String, Object> connectionState;
     private final Map<String, Object> sessionState;
@@ -43,13 +40,11 @@ public class ProtocolSessionImpl implements ProtocolSession {
     private final static Charset CHARSET = Charset.forName("US-ASCII");
     private final static String DELIMITER = "\r\n";
     
-    public ProtocolSessionImpl(Logger logger, ProtocolTransport transport, ProtocolConfiguration config) {
+    public ProtocolSessionImpl(ProtocolTransport transport, ProtocolConfiguration config) {
         this.transport = transport;
-        this.pLog = logger;
         this.connectionState = new HashMap<>();
         this.sessionState = new HashMap<>();
         this.config = config;
-
     }
 
     /*
@@ -104,15 +99,6 @@ public class ProtocolSessionImpl implements ProtocolSession {
     public boolean isTLSStarted() {
         return transport.isTLSStarted();
     }
-
-
-    /**
-     * @see org.apache.james.protocols.api.ProtocolSession#getLogger()
-     */
-    public Logger getLogger() {
-        return pLog;
-    }
-    
 
     /**
      * @see org.apache.james.protocols.api.ProtocolSession#getSessionID()

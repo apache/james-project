@@ -94,10 +94,10 @@ public class TLDLookup {
                     set.add(multiPartTLD);
                 }
             } catch (Exception ex) {
-                debugOut(ex);
+                LOGGER.error("Caught exception", ex);
             }
         }
-        debugOut("initTwoPartTLDs size=" + set.size());
+        LOGGER.debug("initTwoPartTLDs size=" + set.size());
         return set;
     }
 
@@ -111,14 +111,14 @@ public class TLDLookup {
         for (String multiPartTLD : multiPartTLDs) {
             try {
                 if (multiPartTLD.matches("^" + tld3 + "$")) {
-                    debugOut("adding \"" + multiPartTLD + "\"");
+                    LOGGER.debug("adding \"" + multiPartTLD + "\"");
                     set.add(multiPartTLD);
                 }
             } catch (Exception ex) {
-                debugOut(ex);
+                LOGGER.error("Caught exception", ex);
             }
         }
-        debugOut("initThreePartTLDs size=" + set.size());
+        LOGGER.debug("initThreePartTLDs size=" + set.size());
         return set;
     }
 
@@ -164,25 +164,7 @@ public class TLDLookup {
                 "org.ws", "gov.ws", "edu.ws", "ac.yu", "co.yu", "edu.yu", "org.yu", "com.ye", "net.ye", "org.ye", "gov.ye", "edu.ye", "mil.ye", "ac.za", "alt.za", "bourse.za", "city.za", "co.za", "edu.za", "gov.za", "law.za", "mil.za", "net.za", "ngo.za", "nom.za", "org.za", "school.za", "tm.za",
                 "web.za", "co.zw", "ac.zw", "org.zw", "gov.zw", "eu.org", "au.com", "br.com", "cn.com", "de.com", "de.net", "eu.com", "gb.com", "gb.net", "hu.com", "no.com", "qc.com", "ru.com", "sa.com", "se.com", "uk.com", "uk.net", "us.com", "uy.com", "za.com", "dk.org", "tel.no", "fax.nr",
                 "mob.nr", "mobil.nr", "mobile.nr", "tel.nr", "tlf.nr", "e164.arpa" };
-        debugOut("array size=" + tmp.length);
+        LOGGER.debug("array size=" + tmp.length);
         return tmp;
-    }
-
-    /**
-     * Debugging output
-     */
-    private static void debugOut(String msg) {
-        if (testing) {
-            LOGGER.debug(msg);
-        }
-    }
-
-    /**
-     * Debugging output
-     */
-    private static void debugOut(Throwable th) {
-        if (testing) {
-            LOGGER.debug("Error caught", th);
-        }
     }
 }

@@ -57,11 +57,14 @@ import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.apache.james.smtpserver.model.MailetMailAddressAdapter;
 import org.apache.james.smtpserver.model.ProtocolMailAddressAdapter;
 import org.apache.mailet.Mail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Handles the calling of JamesMessageHooks
  */
 public class DataLineJamesMessageHookHandler implements DataLineFilter, ExtensibleHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataLineJamesMessageHookHandler.class);
 
     private List<JamesMessageHook> messageHandlers;
 
@@ -126,7 +129,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
 
                 } catch (MessagingException e) {
                     // TODO probably return a temporary problem
-                    session.getLogger().info("Unexpected error handling DATA stream", e);
+                    LOGGER.info("Unexpected error handling DATA stream", e);
                     return new SMTPResponse(SMTPRetCode.LOCAL_ERROR, "Unexpected error handling DATA stream.");
                 } finally {
                     LifecycleUtil.dispose(mimeMessageCopyOnWriteProxy);
@@ -147,12 +150,12 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
         } catch (IOException e) {
             LifecycleUtil.dispose(mmiss);
             SMTPResponse response = new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Error processing message: " + e.getMessage());
-            session.getLogger().error("Unknown error occurred while processing DATA.", e);
+            LOGGER.error("Unknown error occurred while processing DATA.", e);
             return response;
         } catch (AddressException e) {
             LifecycleUtil.dispose(mmiss);
             SMTPResponse response = new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Error processing message: " + e.getMessage());
-            session.getLogger().error("Invalid email address while processing DATA.", e);
+            LOGGER.error("Invalid email address while processing DATA.", e);
             return response;
         }
         return null;
@@ -165,7 +168,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
                 OutputStream out;
                 out = mmiss.getWritableOutputStream();
                 for (MessageHook rawHandler : mHandlers) {
-                    session.getLogger().debug("executing james message handler " + rawHandler);
+                    LOGGER.debug("executing james message handler " + rawHandler);
                     long start = System.currentTimeMillis();
 
                     HookResult hRes = rawHandler.onMessage(session, new MailToMailEnvelopeWrapper(mail, out));
@@ -173,7 +176,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
 
                     if (rHooks != null) {
                         for (HookResultHook rHook : rHooks) {
-                            session.getLogger().debug("executing hook " + rHook);
+                            LOGGER.debug("executing hook " + rHook);
                             hRes = rHook.onHookResult(session, hRes, executionTime, rawHandler);
                         }
                     }
@@ -188,13 +191,13 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
                 }
 
                 for (JamesMessageHook messageHandler : messageHandlers) {
-                    session.getLogger().debug("executing james message handler " + messageHandler);
+                    LOGGER.debug("executing james message handler " + messageHandler);
                     long start = System.currentTimeMillis();
                     HookResult hRes = messageHandler.onMessage(session, mail);
                     long executionTime = System.currentTimeMillis() - start;
                     if (rHooks != null) {
                         for (HookResultHook rHook : rHooks) {
-                            session.getLogger().debug("executing hook " + rHook);
+                            LOGGER.debug("executing hook " + rHook);
                             hRes = rHook.onHookResult(session, hRes, executionTime, messageHandler);
                         }
                     }

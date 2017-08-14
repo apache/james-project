@@ -52,7 +52,7 @@ public abstract class AbstractPOP3ServerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractPOP3ServerTest.class);
 
     private POP3Protocol createProtocol(AbstractPassCmdHandler handler) throws WiringException {
-        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration(), LOGGER);
+        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration());
     }
     
     protected abstract ProtocolServer createServer(Protocol protocol);

@@ -32,6 +32,8 @@ import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -39,8 +41,8 @@ import com.google.common.collect.ImmutableSet;
  * Handles QUIT command
  */
 public class QuitCmdHandler implements CommandHandler<POP3Session> {
-
     private static final Collection<String> COMMANDS = ImmutableSet.of("QUIT");
+    private static final Logger LOGGER = LoggerFactory.getLogger(QuitCmdHandler.class);
     private static final Response SIGN_OFF;
     private static final Response SIGN_OFF_NOT_CLEAN;
 
@@ -82,7 +84,7 @@ public class QuitCmdHandler implements CommandHandler<POP3Session> {
             response = SIGN_OFF;
         } catch (Exception ex) {
             response = SIGN_OFF_NOT_CLEAN;
-            session.getLogger().error("Some deleted messages were not removed", ex);
+            LOGGER.error("Some deleted messages were not removed", ex);
         }
         try {
             mailbox.close();

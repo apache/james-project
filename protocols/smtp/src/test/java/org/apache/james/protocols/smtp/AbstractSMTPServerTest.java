@@ -1103,7 +1103,7 @@ public abstract class AbstractSMTPServerTest {
         SMTPProtocolHandlerChain chain = new SMTPProtocolHandlerChain(new NoopMetricFactory());
         chain.addAll(0, Arrays.asList(handlers));
         chain.wireExtensibleHandlers();
-        return new SMTPProtocol(chain, new SMTPConfigurationImpl(), LOGGER);
+        return new SMTPProtocol(chain, new SMTPConfigurationImpl());
     }
     
     protected static void checkEnvelope(MailEnvelope env, String sender, List<String> recipients, String msg) throws IOException {

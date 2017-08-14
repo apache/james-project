@@ -78,7 +78,7 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
     @Override
     protected void preInit() throws Exception {
         super.preInit();
-        POP3Protocol protocol = new POP3Protocol(getProtocolHandlerChain(), theConfigData, getLogger());
+        POP3Protocol protocol = new POP3Protocol(getProtocolHandlerChain(), theConfigData);
         coreHandler = new BasicChannelUpstreamHandler(protocol, getEncryption());
     }
 

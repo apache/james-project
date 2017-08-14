@@ -28,11 +28,14 @@ import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.DataCmdHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * handles DATA command
  */
 public class JamesDataCmdHandler extends DataCmdHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JamesDataCmdHandler.class);
 
     @Inject
     public JamesDataCmdHandler(MetricFactory metricFactory) {
@@ -51,7 +54,7 @@ public class JamesDataCmdHandler extends DataCmdHandler {
             MimeMessageInputStreamSource mmiss = new MimeMessageInputStreamSource(MailImpl.getId());
             session.setAttachment(SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE, mmiss, State.Transaction);
         } catch (Exception e) {
-            session.getLogger().warn("Error creating mimemessagesource for incoming data", e);
+            LOGGER.warn("Error creating mimemessagesource for incoming data", e);
             return new SMTPResponse(SMTPRetCode.LOCAL_ERROR, "Unexpected error preparing to receive DATA.");
         }
 

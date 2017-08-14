@@ -25,6 +25,8 @@ import org.apache.james.protocols.smtp.hook.Hook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -32,7 +34,8 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
  * logged to INFO. If not to DEBUG
  *
  */
-public class HookResultLogger implements HookResultHook{
+public class HookResultLogger implements HookResultHook {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HookResultLogger.class);
 
     @Override
     public void init(Configuration config) throws ConfigurationException {
@@ -81,9 +84,9 @@ public class HookResultLogger implements HookResultHook{
         sb.append(")");
 
         if (info) {
-            session.getLogger().info(sb.toString());
+            LOGGER.info(sb.toString());
         } else {
-            session.getLogger().debug(sb.toString());
+            LOGGER.debug(sb.toString());
         }
         return hResult;
     }

@@ -71,7 +71,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
         }
         chain.addAll(0, hList);
         chain.wireExtensibleHandlers();
-        return new SMTPProtocol(chain, new LMTPConfigurationImpl(), LOGGER);
+        return new SMTPProtocol(chain, new LMTPConfigurationImpl());
     }
     
 

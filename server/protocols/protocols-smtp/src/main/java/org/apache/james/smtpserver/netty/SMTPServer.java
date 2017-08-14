@@ -111,7 +111,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             }
             authorizedNetworks = new NetMatcher(networks, dns);
         }
-        SMTPProtocol transport = new SMTPProtocol(getProtocolHandlerChain(), theConfigData, getLogger()) {
+        SMTPProtocol transport = new SMTPProtocol(getProtocolHandlerChain(), theConfigData) {
 
             @Override
             public ProtocolSession newSession(ProtocolTransport transport) {
@@ -119,7 +119,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             }
             
         };
-        coreHandler = new SMTPChannelUpstreamHandler(transport, getLogger(), getEncryption(), smtpMetrics);
+        coreHandler = new SMTPChannelUpstreamHandler(transport, getEncryption(), smtpMetrics);
     }
 
     @Override
