@@ -19,8 +19,8 @@
 
 package org.apache.james.managesieveserver.netty;
 
+import java.io.Closeable;
 import java.net.InetSocketAddress;
-import java.util.function.Supplier;
 
 import javax.net.ssl.SSLContext;
 
@@ -28,7 +28,6 @@ import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.util.SettableSession;
-import org.apache.james.protocols.api.logger.ContextualLogger;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFutureListener;
@@ -65,28 +64,32 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        String request = (String) e.getMessage();
-        Session manageSieveSession = attributes.get(ctx.getChannel());
-        String responseString = manageSieveProcessor.handleRequest(manageSieveSession, request);
-        ((ChannelManageSieveResponseWriter)ctx.getAttachment()).write(responseString);
-        if (manageSieveSession.getState() == Session.State.SSL_NEGOCIATION) {
-            turnSSLon(ctx.getChannel());
-            manageSieveSession.setSslEnabled(true);
-            manageSieveSession.setState(Session.State.UNAUTHENTICATED);
+        try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
+            String request = (String) e.getMessage();
+            Session manageSieveSession = attributes.get(ctx.getChannel());
+            String responseString = manageSieveProcessor.handleRequest(manageSieveSession, request);
+            ((ChannelManageSieveResponseWriter) ctx.getAttachment()).write(responseString);
+            if (manageSieveSession.getState() == Session.State.SSL_NEGOCIATION) {
+                turnSSLon(ctx.getChannel());
+                manageSieveSession.setSslEnabled(true);
+                manageSieveSession.setState(Session.State.UNAUTHENTICATED);
+            }
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        getLogger(ctx).warn("Error while processing ManageSieve request", e.getCause());
+        try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
+            logger.warn("Error while processing ManageSieve request", e.getCause());
 
-        if (e.getCause() instanceof TooLongFrameException) {
-            // Max line length exceeded
-            // See also JAMES-1190
-            ((ChannelManageSieveResponseWriter)ctx.getAttachment()).write("NO Maximum command line length exceeded");
-        } else if (e.getCause() instanceof SessionTerminatedException) {
-            ((ChannelManageSieveResponseWriter)ctx.getAttachment()).write("OK channel is closing");
-            logout(ctx);
+            if (e.getCause() instanceof TooLongFrameException) {
+                // Max line length exceeded
+                // See also JAMES-1190
+                ((ChannelManageSieveResponseWriter) ctx.getAttachment()).write("NO Maximum command line length exceeded");
+            } else if (e.getCause() instanceof SessionTerminatedException) {
+                ((ChannelManageSieveResponseWriter) ctx.getAttachment()).write("OK channel is closing");
+                logout(ctx);
+            }
         }
     }
 
@@ -102,42 +105,29 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
 
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
-        getLogger(ctx).info("Connection established from " + address.getAddress().getHostAddress());
+        try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
+            InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
+            logger.info("Connection established from " + address.getAddress().getHostAddress());
 
-        Session session = new SettableSession();
-        if (sslServer) {
-            session.setSslEnabled(true);
+            Session session = new SettableSession();
+            if (sslServer) {
+                session.setSslEnabled(true);
+            }
+            attributes.set(ctx.getChannel(), session);
+            ctx.setAttachment(new ChannelManageSieveResponseWriter(ctx.getChannel()));
+            super.channelBound(ctx, e);
+            ((ChannelManageSieveResponseWriter) ctx.getAttachment()).write(manageSieveProcessor.getAdvertisedCapabilities());
         }
-        attributes.set(ctx.getChannel(), session);
-        ctx.setAttachment(new ChannelManageSieveResponseWriter(ctx.getChannel()));
-        super.channelBound(ctx, e);
-        ((ChannelManageSieveResponseWriter)ctx.getAttachment()).write(manageSieveProcessor.getAdvertisedCapabilities());
     }
 
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
-        getLogger(ctx).info("Connection closed for " + address.getAddress().getHostAddress());
-
-        attributes.remove(ctx.getChannel());
-        super.channelClosed(ctx, e);
-    }
-
-    private Logger getLogger(final ChannelHandlerContext ctx) {
-        return new ContextualLogger(getUserSupplier(ctx),
-            Integer.toString(ctx.getChannel().getId()),
-            logger);
-    }
-
-    private Supplier<String> getUserSupplier(final ChannelHandlerContext ctx) {
-        return () -> {
-            Session session = attributes.get(ctx.getChannel());
-            if (session != null) {
-                return session.getUser();
-            }
-            return null;
-        };
+        try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
+            InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
+            logger.info("Connection closed for " + address.getAddress().getHostAddress());
+            attributes.remove(ctx.getChannel());
+            super.channelClosed(ctx, e);
+        }
     }
 
     private void turnSSLon(Channel channel) {
