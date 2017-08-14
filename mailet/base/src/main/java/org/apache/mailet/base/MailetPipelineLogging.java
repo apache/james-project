@@ -21,39 +21,17 @@ package org.apache.mailet.base;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
-import org.apache.mailet.MailetConfig;
-import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
-
-import com.google.common.base.Optional;
+import org.slf4j.LoggerFactory;
 
 public class MailetPipelineLogging {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailetPipelineLogging.class);
 
-    public static void logBeginOfMailetProcess(final Mailet mailet, final Mail mail) {
-        getLogger(mailet)
-        .transform(logger -> {
-            logger.debug("Entering mailet: {}\n\tmail state {}", mailet.getMailetInfo(), mail.getState());
-            return true;
-        });
+    public static void logBeginOfMailetProcess(Mailet mailet, Mail mail) {
+        LOGGER.debug("Mail: {} Entering mailet: {}", mail.getState(), mailet.getMailetInfo());
     }
 
-    public static void logEndOfMailetProcess(final Mailet mailet, final Mail mail) {
-        getLogger(mailet)
-            .transform(logger -> {
-                logger.debug("End of mailet: {}\n\tmail state {}", mailet.getMailetInfo(), mail.getState());
-                return true;
-            });
-    }
-
-    private static Optional<Logger> getLogger(Mailet mailet) {
-        MailetConfig mailetConfig = mailet.getMailetConfig();
-        if (mailetConfig == null) {
-            return Optional.absent();
-        }
-        MailetContext mailetContext = mailetConfig.getMailetContext();
-        if (mailetContext == null) {
-            return Optional.absent();
-        }
-        return Optional.fromNullable(mailetContext.getLogger());
+    public static void logEndOfMailetProcess(Mailet mailet, Mail mail) {
+        LOGGER.debug("Mail: {} End of mailet: {}", mail.getState(), mailet.getMailetInfo());
     }
 }

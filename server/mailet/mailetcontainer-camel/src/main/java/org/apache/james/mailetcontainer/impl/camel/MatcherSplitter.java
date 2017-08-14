@@ -19,6 +19,8 @@
 
 package org.apache.james.mailetcontainer.impl.camel;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -35,10 +37,14 @@ import org.apache.james.mailetcontainer.impl.ProcessorUtil;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.MDCBuilder;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 import org.slf4j.Logger;
+
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 
 /**
  * A Splitter for use with Camel to split the MailMessage into many pieces if
@@ -90,7 +96,18 @@ public class MatcherSplitter {
             List<Mail> mails = new ArrayList<>();
             boolean fullMatch = false;
 
-            try {
+            try (Closeable closeable =
+                     MDCBuilder.create()
+                         .addContext(MDCBuilder.PROTOCOL, "MAILET")
+                         .addContext(MDCBuilder.ACTION, "MATCHER")
+                         .addContext(MDCBuilder.IP, mail.getRemoteAddr())
+                         .addContext(MDCBuilder.HOST, mail.getRemoteHost())
+                         .addContext("matcher", matcher.getMatcherInfo())
+                         .addContext("state", mail.getState())
+                         .addContext("mail", mail.getName())
+                         .addContext("recipients", ImmutableList.copyOf(mail.getRecipients()))
+                         .addContext("sender", mail.getSender())
+                         .build()) {
                 // call the matcher
                 matchedRcpts = matcher.match(mail);
 
@@ -120,6 +137,8 @@ public class MatcherSplitter {
                 } else {
                     ProcessorUtil.handleException(me, mail, matcher.getMatcherConfig().getMatcherName(), onMatchException, logger);
                 }
+            } catch (IOException e) {
+                throw Throwables.propagate(e);
             }
 
             // check if the matcher matched

@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.impl.camel;
 
+import java.io.Closeable;
 import java.util.List;
 import java.util.Locale;
 
@@ -30,11 +31,14 @@ import org.apache.james.mailetcontainer.impl.ProcessorUtil;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.MDCBuilder;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.MailetPipelineLogging;
 import org.slf4j.Logger;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Mailet wrapper which execute a Mailet in a Processor
@@ -67,7 +71,17 @@ public class CamelProcessor implements Processor {
         long start = System.currentTimeMillis();
         TimeMetric timeMetric = metricFactory.timer(mailet.getClass().getSimpleName());
         MessagingException ex = null;
-        try {
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "MAILET")
+                     .addContext(MDCBuilder.ACTION, "MAILET")
+                     .addContext(MDCBuilder.HOST, mail.getRemoteHost())
+                     .addContext("state", mail.getState())
+                     .addContext("mailet", mailet.getClass().getSimpleName())
+                     .addContext("mail", mail.getName())
+                     .addContext("recipients", ImmutableList.copyOf(mail.getRecipients()))
+                     .addContext("sender", mail.getSender())
+                     .build()) {
             MailetPipelineLogging.logBeginOfMailetProcess(mailet, mail);
             mailet.service(mail);
         } catch (MessagingException me) {
