@@ -54,6 +54,8 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.quota.QuotaChecker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -66,6 +68,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 
 public class StoreMessageIdManager implements MessageIdManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoreMessageIdManager.class);
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MailboxEventDispatcher dispatcher;
     private final MessageId.Factory messageIdFactory;
@@ -259,7 +262,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                 Mailbox currentMailbox = mailboxMapper.findMailboxById(mailboxId);
                 return belongsToCurrentUser(currentMailbox, mailboxSession);
             } catch (MailboxException e) {
-                mailboxSession.getLog().error(String.format("Can not retrieve mailboxPath associated with %s", mailboxId.serialize()), e);
+                LOGGER.error(String.format("Can not retrieve mailboxPath associated with %s", mailboxId.serialize()), e);
                 return false;
             }
         };

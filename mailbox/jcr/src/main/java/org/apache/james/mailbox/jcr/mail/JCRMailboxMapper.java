@@ -52,7 +52,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  */
 public class JCRMailboxMapper extends AbstractJCRScalingMapper implements MailboxMapper {
 
-	@SuppressWarnings("deprecation")
+    @SuppressWarnings("deprecation")
     private static final String XPATH_LANGUAGE = Query.XPATH;
 
     public JCRMailboxMapper(MailboxSessionJCRRepository repos, MailboxSession session, int scaling) {
@@ -99,7 +99,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
             QueryResult result = manager.createQuery(queryString, XPATH_LANGUAGE).execute();
             NodeIterator it = result.getNodes();
             if (it.hasNext()) {
-                return new JCRMailbox(it.nextNode(), getLogger());
+                return new JCRMailbox(it.nextNode());
             }
             throw new MailboxNotFoundException(path);
         } catch (PathNotFoundException e) {
@@ -113,7 +113,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
     public Mailbox findMailboxById(MailboxId id) throws MailboxException, MailboxNotFoundException {
         try {
             Node node = getSession().getNodeByIdentifier(id.serialize());
-            return new JCRMailbox(node, getLogger());
+            return new JCRMailbox(node);
         } catch (PathNotFoundException e) {
             throw new MailboxNotFoundException(id.serialize());
         } catch (RepositoryException e) {
@@ -142,7 +142,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
             QueryResult result = manager.createQuery(queryString, XPATH_LANGUAGE).execute();
             NodeIterator it = result.getNodes();
             while (it.hasNext()) {
-                mailboxList.add(new JCRMailbox(it.nextNode(), getLogger()));
+                mailboxList.add(new JCRMailbox(it.nextNode()));
             }
         } catch (PathNotFoundException e) {
             // nothing todo
@@ -242,7 +242,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
             QueryResult result = manager.createQuery(queryString, XPATH_LANGUAGE).execute();
             NodeIterator it = result.getNodes();
             while (it.hasNext()) {
-                mList.add(new JCRMailbox(it.nextNode(), getLogger()));
+                mList.add(new JCRMailbox(it.nextNode()));
             }
             return mList;
         } catch (RepositoryException e) {

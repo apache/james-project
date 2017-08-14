@@ -63,8 +63,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
                 final MailboxManager mailboxManager = getMailboxManager();
                 try {
                     final MailboxSession mailboxSession = mailboxManager.login(authenticationAttempt.getAuthenticationId(),
-                        authenticationAttempt.getPassword(),
-                        session.getLog());
+                        authenticationAttempt.getPassword());
                     session.authenticated();
                     session.setAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY, mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);
@@ -94,8 +93,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
                 try {
                     final MailboxSession mailboxSession = mailboxManager.loginAsOtherUser(authenticationAttempt.getAuthenticationId(),
                         authenticationAttempt.getPassword(),
-                        authenticationAttempt.getDelegateUserName().get(),
-                        session.getLog());
+                        authenticationAttempt.getDelegateUserName().get());
                     session.authenticated();
                     session.setAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY, mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);

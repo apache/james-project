@@ -65,7 +65,7 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
     protected Mailbox auth(POP3Session session, String username, String password) throws Exception {
         MailboxSession mSession = null;
         try {
-            mSession = manager.login(session.getUser(), password, session.getLogger());
+            mSession = manager.login(session.getUser(), password);
             manager.startProcessingRequest(mSession);
             MailboxPath inbox = MailboxPath.inbox(mSession);
             

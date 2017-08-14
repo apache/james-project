@@ -40,7 +40,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
-import org.slf4j.Logger;
 
 import com.google.common.base.Optional;
 
@@ -260,20 +259,18 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
     /**
      * Creates a new system session.<br>
      * A system session is intended to be used for programmatic access.<br>
-     * Use {@link #login(String, String, Logger)} when accessing this API from a
+     * Use {@link #login(String, String)} when accessing this API from a
      * protocol.
      * 
      * @param userName
      *            the name of the user whose session is being created
-     * @param log
-     *            context sensitive log
      * @return <code>MailboxSession</code>, not null
      * @throws BadCredentialsException
      *             when system access is not allowed for the given user
      * @throws MailboxException
      *             when the creation fails for other reasons
      */
-    MailboxSession createSystemSession(String userName, Logger log) throws BadCredentialsException, MailboxException;
+    MailboxSession createSystemSession(String userName) throws BadCredentialsException, MailboxException;
 
     /**
      * Autenticates the given user against the given password.<br>
@@ -283,8 +280,6 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      *            user name
      * @param passwd
      *            password supplied
-     * @param log
-     *            context sensitive log
      * @return a <code>MailboxSession</code> when the user is authenticated and
      *         authorized to access
      * @throws BadCredentialsException
@@ -292,7 +287,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      * @throws MailboxException
      *             when the creation fails for other reasons
      */
-    MailboxSession login(String userid, String passwd, Logger log) throws BadCredentialsException, MailboxException;
+    MailboxSession login(String userid, String passwd) throws BadCredentialsException, MailboxException;
 
     /**
      * Autenticates the given administrator against the given password,
@@ -305,8 +300,6 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      *            password supplied for the admin user
      * @param otherUserId
      *            user name of the real user
-     * @param log
-     *            context sensitive log
      * @return a <code>MailboxSession</code> for the real user
      *         when the admin is authenticated and authorized to access
      * @throws BadCredentialsException
@@ -314,7 +307,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      * @throws MailboxException
      *             when the creation fails for other reasons
      */
-    MailboxSession loginAsOtherUser(String adminUserId, String passwd, String otherUserId, Logger log) throws BadCredentialsException, MailboxException;
+    MailboxSession loginAsOtherUser(String adminUserId, String passwd, String otherUserId) throws BadCredentialsException, MailboxException;
 
     /**
      * <p>

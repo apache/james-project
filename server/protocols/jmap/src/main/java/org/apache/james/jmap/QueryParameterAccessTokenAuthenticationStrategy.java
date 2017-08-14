@@ -32,14 +32,10 @@ import org.apache.james.jmap.utils.DownloadPath;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
 public class QueryParameterAccessTokenAuthenticationStrategy implements AuthenticationStrategy {
-
-    private static final Logger LOG = LoggerFactory.getLogger(QueryParameterAccessTokenAuthenticationStrategy.class);
     private static final String AUTHENTICATION_PARAMETER = "access_token";
 
     private final SimpleTokenManager tokenManager;
@@ -64,7 +60,7 @@ public class QueryParameterAccessTokenAuthenticationStrategy implements Authenti
 
     private MailboxSession createSystemSession(String username) {
         try {
-            return mailboxManager.createSystemSession(username, LOG);
+            return mailboxManager.createSystemSession(username);
         } catch (MailboxException e) {
             throw new MailboxSessionCreationException(e);
         }

@@ -39,7 +39,6 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -63,7 +62,7 @@ public abstract class MailboxManagerStressTest {
         final ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 2);
         final List<MessageUid> uList = new ArrayList<>();
         final String username = "username";
-        MailboxSession session = mailboxManager.createSystemSession(username, LoggerFactory.getLogger("Test"));
+        MailboxSession session = mailboxManager.createSystemSession(username);
         mailboxManager.startProcessingRequest(session);
         final MailboxPath path = new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "INBOX");
         mailboxManager.createMailbox(path, session);
@@ -101,7 +100,7 @@ public abstract class MailboxManagerStressTest {
 
 
                 try {
-                    MailboxSession mailboxSession = mailboxManager.createSystemSession(username, LoggerFactory.getLogger("Test"));
+                    MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
 
                     mailboxManager.startProcessingRequest(mailboxSession);
                     MessageManager m = mailboxManager.getMailbox(path, mailboxSession);

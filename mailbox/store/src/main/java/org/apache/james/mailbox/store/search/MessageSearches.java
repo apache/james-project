@@ -70,6 +70,8 @@ import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.mime4j.utils.search.MessageMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -80,6 +82,8 @@ import com.google.common.collect.Lists;
  * Utility methods to help perform search operations.
  */
 public class MessageSearches implements Iterable<SimpleMessageSearchIndex.SearchResult> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageSearches.class);
 
     private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
         .setMaxContentLen(-1)
@@ -115,9 +119,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                     builder.add(m);
                 }
             } catch (MailboxException e) {
-                if (session != null && session.getLog() != null) {
-                    session.getLog().error("Unable to search message " + m.getUid(), e);
-                }
+                LOGGER.error("Unable to search message " + m.getUid(), e);
             }
         }
         List<MailboxMessage> sortedResults = FluentIterable.from(builder.build())
@@ -223,14 +225,13 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     }
 
     private boolean isInMessage(String value, InputStream input, boolean header) throws IOException, MimeException {
-        MessageMatcher.MessageMatcherBuilder builder = MessageMatcher.builder()
+        return MessageMatcher.builder()
             .searchContents(Lists.<CharSequence>newArrayList(value))
             .caseInsensitive(true)
-            .includeHeaders(header);
-        if (session != null && session.getLog() != null) {
-            builder.logger(session.getLog());
-        }
-        return builder.build().messageMatches(input);
+            .includeHeaders(header)
+            .logger(LOGGER)
+            .build()
+            .messageMatches(input);
     }
 
     private boolean messageContains(String value, MailboxMessage message) throws IOException, MimeException {

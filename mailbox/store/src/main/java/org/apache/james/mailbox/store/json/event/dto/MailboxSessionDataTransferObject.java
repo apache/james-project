@@ -69,7 +69,6 @@ public class MailboxSessionDataTransferObject {
         return new SimpleMailboxSession(sessionId,
             username,
             "",
-            LOG,
             retrieveLocales(),
             sharedSpaces,
             otherUserSpace,

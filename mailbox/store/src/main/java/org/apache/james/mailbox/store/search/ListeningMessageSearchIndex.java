@@ -31,6 +31,8 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 
@@ -41,6 +43,7 @@ import com.google.common.base.Optional;
  *
  */
 public abstract class ListeningMessageSearchIndex implements MessageSearchIndex, MailboxListener {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ListeningMessageSearchIndex.class);
 
     public static final int UNLIMITED = -1;
     private final MessageMapperFactory factory;
@@ -89,7 +92,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
                     try {
                         delete(session, expunged.getMailbox(), expunged.getUids());
                     } catch (MailboxException e) {
-                        session.getLog().error("Unable to deleted messages " + expunged.getUids() + " from index for mailbox " + expunged.getMailbox(), e);
+                        LOGGER.error("Unable to deleted messages " + expunged.getUids() + " from index for mailbox " + expunged.getMailbox(), e);
                     }
                 } else if (event instanceof EventFactory.FlagsUpdatedImpl) {
                     EventFactory.FlagsUpdatedImpl flagsUpdated = (EventFactory.FlagsUpdatedImpl) event;
@@ -98,14 +101,14 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
                     try {
                         update(session, mailbox, flagsUpdated.getUpdatedFlags());
                     } catch (MailboxException e) {
-                        session.getLog().error("Unable to update flags in index for mailbox " + mailbox, e);
+                        LOGGER.error("Unable to update flags in index for mailbox " + mailbox, e);
                     }
                 }
             } else if (event instanceof EventFactory.MailboxDeletionImpl) {
                 deleteAll(session, ((EventFactory.MailboxDeletionImpl) event).getMailbox());
             }
         } catch (MailboxException e) {
-            session.getLog().error("Unable to update index", e);
+            LOGGER.error("Unable to update index", e);
         }
     }
 
@@ -119,7 +122,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
                     .findInMailbox(mailbox, MessageRange.one(next), FetchType.Full, UNLIMITED)
                     .next());
             } catch (Exception e) {
-                session.getLog().error(String.format("Could not retrieve message %d in mailbox %s",
+                LOGGER.error(String.format("Could not retrieve message %d in mailbox %s",
                     next, mailbox.getMailboxId().serialize()), e);
                 return Optional.absent();
             }
@@ -130,7 +133,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
         try {
             add(session, mailbox, message);
         } catch (MailboxException e) {
-            session.getLog().error("Unable to index message " + message.getUid() + " for mailbox " + mailbox, e);
+            LOGGER.error("Unable to index message " + message.getUid() + " for mailbox " + mailbox, e);
         }
     }
 

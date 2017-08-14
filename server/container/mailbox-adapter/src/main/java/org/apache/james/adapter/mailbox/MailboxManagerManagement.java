@@ -79,7 +79,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
                      .addContext(MDCBuilder.ACTION, "deleteMailboxes")
                      .addContext("concernedUser", username)
                      .build()) {
-            session = mailboxManager.createSystemSession(username, log);
+            session = mailboxManager.createSystemSession(username);
             mailboxManager.startProcessingRequest(session);
             List<MailboxMetaData> mList = retrieveAllUserMailboxes(username, session);
             for (MailboxMetaData aMList : mList) {
@@ -120,7 +120,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
                      .addContext(MDCBuilder.ACTION, "listMailboxes")
                      .addContext("concernedUser", username)
                      .build()) {
-            session = mailboxManager.createSystemSession(username, log);
+            session = mailboxManager.createSystemSession(username);
             mailboxManager.startProcessingRequest(session);
             List<MailboxMetaData> mList = retrieveAllUserMailboxes(username, session);
             boxes = mList.stream()
@@ -148,7 +148,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
                      .addContext(MDCBuilder.ACTION, "createMailbox")
                      .addContext("mailboxPath", mailboxPath.asString())
                      .build()) {
-            session = mailboxManager.createSystemSession(user, log);
+            session = mailboxManager.createSystemSession(user);
             mailboxManager.startProcessingRequest(session);
             mailboxManager.createMailbox(mailboxPath, session);
         } catch (Exception e) {
@@ -169,7 +169,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
                      .addContext(MDCBuilder.ACTION, "deleteMailbox")
                      .addContext("mailboxPath", mailboxPath.asString())
                      .build()) {
-            session = mailboxManager.createSystemSession(user, log);
+            session = mailboxManager.createSystemSession(user);
             mailboxManager.startProcessingRequest(session);
             mailboxManager.deleteMailbox(mailboxPath, session);
         } catch (Exception e) {
@@ -193,7 +193,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
                      .addContext("mailboxPath", mailboxPath.asString())
                      .addContext("emlPath", emlPath)
                      .build()) {
-            session = mailboxManager.createSystemSession(user, log);
+            session = mailboxManager.createSystemSession(user);
             mailboxManager.startProcessingRequest(session);
             MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, session);
             InputStream emlFileAsStream = new FileInputStream(emlPath);

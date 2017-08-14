@@ -82,6 +82,7 @@ import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Optional;
@@ -97,6 +98,7 @@ import com.google.common.collect.Iterables;
  *
  */
 public class StoreMailboxManager implements MailboxManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoreMailboxManager.class);
 
     public static final char SQL_WILDCARD_CHAR = '%';
 
@@ -383,19 +385,19 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public MailboxSession createSystemSession(String userName, Logger log) {
-        return createSession(userName, null, log, SessionType.System);
+    public MailboxSession createSystemSession(String userName) {
+        return createSession(userName, null, SessionType.System);
     }
 
     /**
      * Create Session
      *
      * @param userName
-     * @param log
      * @return session
      */
-    protected MailboxSession createSession(String userName, String password, Logger log, SessionType type) {
-        return new SimpleMailboxSession(randomId(), userName, password, log, new ArrayList<>(), getDelimiter(), type);
+
+    protected MailboxSession createSession(String userName, String password, SessionType type) {
+        return new SimpleMailboxSession(randomId(), userName, password, new ArrayList<>(), getDelimiter(), type);
     }
 
     /**
@@ -419,28 +421,28 @@ public class StoreMailboxManager implements MailboxManager {
      * @param passwd the password
      * @return success true if login success false otherwise
      */
-    private boolean login(String userid, String passwd) throws MailboxException {
+    private boolean isValidLogin(String userid, String passwd) throws MailboxException {
         return authenticator.isAuthentic(userid, passwd);
     }
 
     @Override
-    public MailboxSession login(String userid, String passwd, Logger log) throws BadCredentialsException, MailboxException {
-        if (login(userid, passwd)) {
-            return createSession(userid, passwd, log, SessionType.User);
+    public MailboxSession login(String userid, String passwd) throws BadCredentialsException, MailboxException {
+        if (isValidLogin(userid, passwd)) {
+            return createSession(userid, passwd, SessionType.User);
         } else {
             throw new BadCredentialsException();
         }
     }
 
     @Override
-    public MailboxSession loginAsOtherUser(String adminUserid, String passwd, String otherUserId, Logger log) throws MailboxException {
-        if (! login(adminUserid, passwd)) {
+    public MailboxSession loginAsOtherUser(String adminUserid, String passwd, String otherUserId) throws MailboxException {
+        if (! isValidLogin(adminUserid, passwd)) {
             throw new BadCredentialsException();
         }
         Authorizator.AuthorizationState authorizationState = authorizator.canLoginAsOtherUser(adminUserid, otherUserId);
         switch (authorizationState) {
             case ALLOWED:
-                return createSystemSession(otherUserId, log);
+                return createSystemSession(otherUserId);
             case NOT_ADMIN:
                 throw new NotAdminException();
             case UNKNOWN_USER:
@@ -493,11 +495,11 @@ public class StoreMailboxManager implements MailboxManager {
         Mailbox mailboxRow = mapper.findMailboxByPath(mailboxPath);
 
         if (mailboxRow == null) {
-            session.getLog().info("Mailbox '" + mailboxPath + "' not found.");
+            LOGGER.info("Mailbox '" + mailboxPath + "' not found.");
             throw new MailboxNotFoundException(mailboxPath);
 
         } else {
-            session.getLog().debug("Loaded mailbox " + mailboxPath);
+            LOGGER.debug("Loaded mailbox " + mailboxPath);
 
             return createMessageManager(mailboxRow, session);
         }
@@ -510,16 +512,16 @@ public class StoreMailboxManager implements MailboxManager {
         Mailbox mailboxRow = mapper.findMailboxById(mailboxId);
 
         if (mailboxRow == null) {
-            session.getLog().info("Mailbox '" + mailboxId.serialize() + "' not found.");
+            LOGGER.info("Mailbox '" + mailboxId.serialize() + "' not found.");
             throw new MailboxNotFoundException(mailboxId.serialize());
         }
         
         if (! belongsToCurrentUser(mailboxRow, session)) {
-            session.getLog().info("Mailbox '" + mailboxId.serialize() + "' does not belong to user '" + session.getUser() + "' but to '" + mailboxRow.getUser());
+            LOGGER.info("Mailbox '" + mailboxId.serialize() + "' does not belong to user '" + session.getUser() + "' but to '" + mailboxRow.getUser());
             throw new MailboxNotFoundException(mailboxId.serialize());
         }
 
-        session.getLog().debug("Loaded mailbox " + mailboxId.serialize());
+        LOGGER.debug("Loaded mailbox " + mailboxId.serialize());
 
         return createMessageManager(mailboxRow, session);
     }
@@ -531,10 +533,10 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public Optional<MailboxId> createMailbox(MailboxPath mailboxPath, final MailboxSession mailboxSession)
             throws MailboxException {
-        mailboxSession.getLog().debug("createMailbox " + mailboxPath);
+        LOGGER.debug("createMailbox " + mailboxPath);
         final int length = mailboxPath.getName().length();
         if (length == 0) {
-            mailboxSession.getLog().warn("Ignoring mailbox with empty name");
+            LOGGER.warn("Ignoring mailbox with empty name");
         } else {
             if (mailboxPath.getName().charAt(length - 1) == getDelimiter())
                 mailboxPath.setName(mailboxPath.getName().substring(0, length - 1));
@@ -574,7 +576,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public void deleteMailbox(final MailboxPath mailboxPath, final MailboxSession session) throws MailboxException {
-        session.getLog().info("deleteMailbox " + mailboxPath);
+        LOGGER.info("deleteMailbox " + mailboxPath);
         final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         Mailbox mailbox = mapper.execute((Mapper.Transaction<Mailbox>) () -> {
@@ -596,7 +598,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public void renameMailbox(final MailboxPath from, final MailboxPath to, final MailboxSession session) throws MailboxException {
-        final Logger log = session.getLog();
+        final Logger log = LOGGER;
         if (log.isDebugEnabled())
             log.debug("renameMailbox " + from + " to " + to);
         if (mailboxExists(to, session)) {

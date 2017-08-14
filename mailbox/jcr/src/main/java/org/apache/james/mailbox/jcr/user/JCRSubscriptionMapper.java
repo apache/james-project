@@ -107,7 +107,7 @@ public class JCRSubscriptionMapper extends AbstractJCRScalingMapper implements S
             
             NodeIterator nodeIt = result.getNodes();
             if (nodeIt.hasNext()) {
-                return new JCRSubscription(nodeIt.nextNode(), mailbox, getLogger());
+                return new JCRSubscription(nodeIt.nextNode(), mailbox);
             }
             
         } catch (PathNotFoundException e) {
@@ -140,7 +140,7 @@ public class JCRSubscriptionMapper extends AbstractJCRScalingMapper implements S
                 if (node.hasProperty(JCRSubscription.MAILBOXES_PROPERTY)) {
                     Value[] values = node.getProperty(JCRSubscription.MAILBOXES_PROPERTY).getValues();
                     for (Value value : values) {
-                        subList.add(new JCRSubscription(node, value.getString(), getLogger()));
+                        subList.add(new JCRSubscription(node, value.getString()));
                     }
                 }
             }

@@ -35,7 +35,6 @@ public class MockMailboxSession implements MailboxSession{
     private final User user;
     private boolean close;
     private final Map<Object, Object> attrs = new HashMap<>();
-    private final Logger log = LoggerFactory.getLogger("MockLog");
     private final static Random RANDOM = new Random();
 
     private final long sessionId = RANDOM.nextLong();
@@ -76,10 +75,6 @@ public class MockMailboxSession implements MailboxSession{
 
     public Map<Object, Object> getAttributes() {
         return attrs;
-    }
-
-    public Logger getLog() {
-        return log;
     }
 
     public String getOtherUsersSpace() {

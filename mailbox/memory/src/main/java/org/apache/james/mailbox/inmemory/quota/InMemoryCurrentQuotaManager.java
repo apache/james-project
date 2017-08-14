@@ -30,8 +30,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
@@ -40,8 +38,6 @@ import com.google.common.cache.LoadingCache;
 
 public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryCurrentQuotaManager.class);
-
     private final LoadingCache<QuotaRoot, Entry> quotaCache;
 
     @Inject
@@ -49,7 +45,7 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
         this.quotaCache = CacheBuilder.newBuilder().build(new CacheLoader<QuotaRoot, Entry>() {
             @Override
             public Entry load(QuotaRoot quotaRoot) throws Exception {
-                return new Entry(quotaCalculator.recalculateCurrentQuotas(quotaRoot, mailboxManager.createSystemSession(quotaRoot.getValue(), LOGGER)));
+                return new Entry(quotaCalculator.recalculateCurrentQuotas(quotaRoot, mailboxManager.createSystemSession(quotaRoot.getValue())));
             }
         });
     }

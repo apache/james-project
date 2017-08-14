@@ -40,7 +40,7 @@ public class GroupFolderResolverTest {
     
     @Test
     public void isGroupFolderShouldReturnFalseWhenMailboxNamespaceIsNull() {
-        SimpleMailboxSession mailboxSession = new SimpleMailboxSession(1, "username", "password", log, localePreferences, sharedSpaces, null, pathSeparator, SessionType.User);
+        SimpleMailboxSession mailboxSession = new SimpleMailboxSession(1, "username", "password", localePreferences, sharedSpaces, null, pathSeparator, SessionType.User);
         GroupFolderResolver testee =  new GroupFolderResolver(mailboxSession);
         
         SimpleMailbox mailbox = new SimpleMailbox(new MailboxPath(null, "user", "name"), UID_VALIDITY);
@@ -49,7 +49,7 @@ public class GroupFolderResolverTest {
     
     @Test
     public void isGroupFolderShouldReturnFalseWhenMailboxNamespaceEqualsToUserNamespace() {
-        SimpleMailboxSession mailboxSession = new SimpleMailboxSession(1, "username", "password", log, localePreferences, sharedSpaces, null, pathSeparator, SessionType.User);
+        SimpleMailboxSession mailboxSession = new SimpleMailboxSession(1, "username", "password", localePreferences, sharedSpaces, null, pathSeparator, SessionType.User);
         GroupFolderResolver testee =  new GroupFolderResolver(mailboxSession);
         
         SimpleMailbox mailbox = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "name"), UID_VALIDITY);
@@ -59,7 +59,7 @@ public class GroupFolderResolverTest {
     @Test
     public void isGroupFolderShouldReturnFalseWhenMailboxNamespaceEqualsToOtherUsersNamespace() {
         String otherUsersSpace = "other";
-        SimpleMailboxSession mailboxSession = new SimpleMailboxSession(1, "username", "password", log, localePreferences, sharedSpaces, otherUsersSpace, pathSeparator, SessionType.User);
+        SimpleMailboxSession mailboxSession = new SimpleMailboxSession(1, "username", "password", localePreferences, sharedSpaces, otherUsersSpace, pathSeparator, SessionType.User);
         GroupFolderResolver testee =  new GroupFolderResolver(mailboxSession);
         
         SimpleMailbox mailbox = new SimpleMailbox(new MailboxPath("other", "user", "name"), UID_VALIDITY);
@@ -69,7 +69,7 @@ public class GroupFolderResolverTest {
     @Test
     public void isGroupFolderShouldReturnTrueWhenMailboxNamespaceDoesntEqualToOtherUsersNamespace() {
         String otherUsersSpace = "other";
-        SimpleMailboxSession mailboxSession = new SimpleMailboxSession(1, "username", "password", log, localePreferences, sharedSpaces, otherUsersSpace, pathSeparator, SessionType.User);
+        SimpleMailboxSession mailboxSession = new SimpleMailboxSession(1, "username", "password", localePreferences, sharedSpaces, otherUsersSpace, pathSeparator, SessionType.User);
         GroupFolderResolver testee =  new GroupFolderResolver(mailboxSession);
         
         SimpleMailbox mailbox = new SimpleMailbox(new MailboxPath("namespace", "user", "name"), UID_VALIDITY);

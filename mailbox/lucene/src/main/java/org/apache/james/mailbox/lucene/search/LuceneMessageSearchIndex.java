@@ -119,6 +119,8 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -134,6 +136,7 @@ import com.google.common.collect.ImmutableSet;
  * @param 
  */
 public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LuceneMessageSearchIndex.class);
     private final static Date MAX_DATE;
     private final static Date MIN_DATE;
     
@@ -603,7 +606,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                             sentDate =  cal.getTime();
                             
                         } catch (org.apache.james.mime4j.field.datetime.parser.ParseException e) {
-                            session.getLog().debug("Unable to parse Date header for proper indexing", e);
+                            LOGGER.debug("Unable to parse Date header for proper indexing", e);
                             // This should never happen anyway fallback to the already parsed field
                             sentDate = ((DateTimeField) f).getDate();
                         }

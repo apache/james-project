@@ -51,7 +51,6 @@ import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
-import org.slf4j.LoggerFactory;
 
 public class HBaseHostSystem extends JamesImapHostSystem {
 
@@ -123,7 +122,7 @@ public class HBaseHostSystem extends JamesImapHostSystem {
     @Override
     protected void resetData() throws Exception {
         resetUserMetaData();
-        MailboxSession session = mailboxManager.createSystemSession("test", LoggerFactory.getLogger("TestLog"));
+        MailboxSession session = mailboxManager.createSystemSession("test");
         mailboxManager.startProcessingRequest(session);
         mailboxManager.deleteEverything(session);
         mailboxManager.endProcessingRequest(session);

@@ -43,7 +43,6 @@ import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
 
 /**
  * Test class for the {@link MailboxCopierImpl} implementation.
@@ -81,10 +80,8 @@ public class MailboxCopierTest {
      */
     @Before
     public void setup() throws BadCredentialsException, MailboxException {
-        
         mailboxCopier = new MailboxCopierImpl();
-        mailboxCopier.setLog(LoggerFactory.getLogger(MailboxCopierTest.class.getName()));
-        
+
         srcMemMailboxManager = newInMemoryMailboxManager();
         dstMemMailboxManager = newInMemoryMailboxManager();
         
@@ -132,7 +129,7 @@ public class MailboxCopierTest {
      */
     private void assertMailboxManagerSize(MailboxManager mailboxManager, int multiplicationFactor) throws BadCredentialsException, MailboxException {
         
-        MailboxSession mailboxSession = mailboxManager.createSystemSession("manager", LoggerFactory.getLogger("src-mailbox-copier"));        
+        MailboxSession mailboxSession = mailboxManager.createSystemSession("manager");
         mailboxManager.startProcessingRequest(mailboxSession);
 
         List<MailboxPath> mailboxPathList = mailboxManager.list(mailboxSession);

@@ -37,6 +37,8 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
@@ -50,6 +52,8 @@ import com.google.common.base.Preconditions;
  *
  */
 public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(LazyMessageSearchIndex.class);
 
     private final ListeningMessageSearchIndex index;
     private final ConcurrentHashMap<MailboxId, Object> indexed = new ConcurrentHashMap<>();
@@ -110,7 +114,7 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
                     try {
                         add(session, mailbox, message);
                     } catch (MailboxException e) {
-                        session.getLog().error("Unable to index message " + message.getUid() + " in mailbox " + mailbox.getName(), e);
+                        LOGGER.error("Unable to index message " + message.getUid() + " in mailbox " + mailbox.getName(), e);
                     }
                 }
             }

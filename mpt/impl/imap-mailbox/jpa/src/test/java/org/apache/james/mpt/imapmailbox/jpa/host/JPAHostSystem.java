@@ -57,7 +57,6 @@ import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -124,7 +123,7 @@ public class JPAHostSystem extends JamesImapHostSystem {
 
     public void resetData() throws Exception {
         resetUserMetaData();
-        MailboxSession session = mailboxManager.createSystemSession("test", LoggerFactory.getLogger("TestLog"));
+        MailboxSession session = mailboxManager.createSystemSession("test");
         mailboxManager.startProcessingRequest(session);
         mailboxManager.deleteEverything(session);
         mailboxManager.endProcessingRequest(session);

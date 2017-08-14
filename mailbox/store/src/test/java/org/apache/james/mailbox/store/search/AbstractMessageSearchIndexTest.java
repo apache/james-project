@@ -47,8 +47,6 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -58,7 +56,6 @@ public abstract class AbstractMessageSearchIndexTest {
     protected static final String OTHERUSER = "otheruser";
     protected static final String USERNAME = "benwa";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMessageSearchIndexTest.class);
     public static final long LIMIT = 100L;
     public static final boolean RECENT = true;
     public static final boolean NOT_RECENT = false;
@@ -92,8 +89,8 @@ public abstract class AbstractMessageSearchIndexTest {
     public void setUp() throws Exception {
         initializeMailboxManager();
 
-        session = storeMailboxManager.createSystemSession(USERNAME, LOGGER);
-        otherSession = storeMailboxManager.createSystemSession(OTHERUSER, LOGGER);
+        session = storeMailboxManager.createSystemSession(USERNAME);
+        otherSession = storeMailboxManager.createSystemSession(OTHERUSER);
 
         MailboxPath inboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, INBOX);
         MailboxPath otherInboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, OTHERUSER, INBOX);
@@ -330,7 +327,7 @@ public abstract class AbstractMessageSearchIndexTest {
     @Test
     public void searchShouldReturnEmptyWhenUserDontMatch() throws MailboxException {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.MultimailboxSearch));
-        MailboxSession otherUserSession = storeMailboxManager.createSystemSession("otherUser", LOGGER);
+        MailboxSession otherUserSession = storeMailboxManager.createSystemSession("otherUser");
         SearchQuery searchQuery = new SearchQuery();
         assertThat(messageSearchIndex.search(otherUserSession, mailbox, searchQuery))
             .isEmpty();

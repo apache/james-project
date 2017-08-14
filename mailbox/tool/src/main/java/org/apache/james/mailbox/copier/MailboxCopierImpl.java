@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
  * 
  */
 public class MailboxCopierImpl implements MailboxCopier {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxCopierImpl.class.getName());
 
     private final static FetchGroup GROUP = new FetchGroup() {
 
@@ -59,11 +60,6 @@ public class MailboxCopierImpl implements MailboxCopier {
         }
         
     };
-    
-    /**
-     * The logger.
-     */
-    private Logger log = LoggerFactory.getLogger(MailboxCopierImpl.class.getName());
 
     /**
      * @see org.apache.james.mailbox.copier.MailboxCopier#copyMailboxes(org.apache.james.mailbox.MailboxManager, org.apache.james.mailbox.MailboxManager)
@@ -77,14 +73,14 @@ public class MailboxCopierImpl implements MailboxCopier {
 
         List<MailboxPath> mailboxPathList = null;
 
-        srcMailboxSession = srcMailboxManager.createSystemSession("manager", log);
+        srcMailboxSession = srcMailboxManager.createSystemSession("manager");
         srcMailboxManager.startProcessingRequest(srcMailboxSession);
         mailboxPathList = srcMailboxManager.list(srcMailboxSession);
         srcMailboxManager.endProcessingRequest(srcMailboxSession);
 
-        log.info("Found " + mailboxPathList.size() + " mailboxes in source mailbox manager.");
+        LOGGER.info("Found " + mailboxPathList.size() + " mailboxes in source mailbox manager.");
         for (int i=0; i < mailboxPathList.size(); i++) {
-            log.info("Mailbox#" + i + " path=" + mailboxPathList.get(i));
+            LOGGER.info("Mailbox#" + i + " path=" + mailboxPathList.get(i));
         }
 
         MailboxPath mailboxPath = null;
@@ -95,19 +91,19 @@ public class MailboxCopierImpl implements MailboxCopier {
             
             if ((mailboxPath.getName() != null) && (mailboxPath.getName().trim().length() > 0)) {
                 
-                log.info("Ready to copy source mailbox path=" + mailboxPath.toString());
+                LOGGER.info("Ready to copy source mailbox path=" + mailboxPath.toString());
 
-                srcMailboxSession = srcMailboxManager.createSystemSession(mailboxPath.getUser(), log);
-                dstMailboxSession = dstMailboxManager.createSystemSession(mailboxPath.getUser(), log);
+                srcMailboxSession = srcMailboxManager.createSystemSession(mailboxPath.getUser());
+                dstMailboxSession = dstMailboxManager.createSystemSession(mailboxPath.getUser());
 
                 dstMailboxManager.startProcessingRequest(dstMailboxSession);
                 try {
                     dstMailboxManager.createMailbox(mailboxPath, dstMailboxSession);
-                    log.info("Destination mailbox " + i + "/" + mailboxPathList.size() 
+                    LOGGER.info("Destination mailbox " + i + "/" + mailboxPathList.size()
                             + " created with path=" + mailboxPath.toString()
                             + " after " + (Calendar.getInstance().getTimeInMillis() - start.getTimeInMillis()) + " ms.");
                 } catch (MailboxExistsException e) {
-                    log.error("Mailbox " + i + " with path=" + mailboxPath.toString() + " already exists.", e);
+                    LOGGER.error("Mailbox " + i + " with path=" + mailboxPath.toString() + " already exists.", e);
                 }
                 dstMailboxManager.endProcessingRequest(dstMailboxSession);
 
@@ -129,7 +125,7 @@ public class MailboxCopierImpl implements MailboxCopier {
                     dstMailboxManager.startProcessingRequest(dstMailboxSession);
                     dstMessageManager.appendMessage(content.getInputStream(), messageResult.getInternalDate(), dstMailboxSession, messageResult.getFlags().contains(Flag.RECENT), messageResult.getFlags());
                     dstMailboxManager.endProcessingRequest(dstMailboxSession);
-                    log.info("MailboxMessage #" + j + " appended in destination mailbox with path=" + mailboxPath.toString());
+                    LOGGER.info("MailboxMessage #" + j + " appended in destination mailbox with path=" + mailboxPath.toString());
                     j++;
 
                 }
@@ -139,7 +135,7 @@ public class MailboxCopierImpl implements MailboxCopier {
             
             else {
                 
-                log.info("Destination mailbox " + i + "/" + mailboxPathList.size() 
+                LOGGER.info("Destination mailbox " + i + "/" + mailboxPathList.size()
                         + " with path=" + mailboxPath.toString()
                         + " has a null or empty name");
 
@@ -147,17 +143,7 @@ public class MailboxCopierImpl implements MailboxCopier {
 
         }
 
-        log.info("Mailboxes copied in " + (Calendar.getInstance().getTimeInMillis() - start.getTimeInMillis()) + " ms.");
+        LOGGER.info("Mailboxes copied in " + (Calendar.getInstance().getTimeInMillis() - start.getTimeInMillis()) + " ms.");
 
     }
-    
-    /**
-     * Set the logger.
-     * 
-     * @param log
-     */
-    public void setLog(Logger log) {
-        this.log = log;
-    }
-
 }

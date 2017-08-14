@@ -28,7 +28,6 @@ import java.util.Map;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
-import org.slf4j.Logger;
 
 /**
  * Describes a mailbox session.
@@ -42,8 +41,6 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
     private final String personalSpace;
     
     private final long sessionId;
-    
-    private final Logger log;
 
     private final String userName;
     
@@ -61,14 +58,13 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
 
     
     public SimpleMailboxSession(long sessionId, String userName, String password,
-            final Logger log, List<Locale> localePreferences, char pathSeparator, SessionType type) {
-        this(sessionId, userName, password, log, localePreferences, new ArrayList<>(), null, pathSeparator, type);
+                                List<Locale> localePreferences, char pathSeparator, SessionType type) {
+        this(sessionId, userName, password, localePreferences, new ArrayList<>(), null, pathSeparator, type);
     }
 
     public SimpleMailboxSession(long sessionId, String userName, String password,
-            final Logger log, List<Locale> localePreferences, List<String> sharedSpaces, String otherUsersSpace, char pathSeparator, SessionType type) {
+                                List<Locale> localePreferences, List<String> sharedSpaces, String otherUsersSpace, char pathSeparator, SessionType type) {
         this.sessionId = sessionId;
-        this.log = log;
         this.userName = userName;
         this.password = password;
         this.otherUsersSpace = otherUsersSpace;
@@ -84,13 +80,7 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
         this.attributes = new HashMap<>();
         this.pathSeparator = pathSeparator;
     }
-    
-    /**
-     * @see org.apache.james.mailbox.MailboxSession#getLog()
-     */
-    public Logger getLog() {
-        return log;
-    }
+
 
     /**
      * @see org.apache.james.mailbox.MailboxSession#close()

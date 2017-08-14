@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Optional;
 
 import org.apache.james.jmap.model.mailbox.Mailbox;
-import org.apache.james.jmap.utils.MailboxUtilsTest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -33,13 +32,10 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.SimpleMailboxMetaData;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
 public class MailboxFactoryTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxUtilsTest.class);
     public static final char DELIMITER = '.';
 
     private MailboxManager mailboxManager;
@@ -52,7 +48,7 @@ public class MailboxFactoryTest {
         InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(inMemoryIntegrationResources.createGroupMembershipResolver());
         user = "user@domain.org";
-        mailboxSession = mailboxManager.login(user, "pass", LOGGER);
+        mailboxSession = mailboxManager.login(user, "pass");
         sut = new MailboxFactory(mailboxManager);
     }
 

@@ -98,7 +98,7 @@ public class ToSenderFolder extends GenericMailet {
     public void init() throws MessagingException {
         folder = getInitParameter("folder", "Sent");
         consume = getInitParameter("consume", false);
-        mailboxAppender = new MailboxAppender(mailboxManager, getMailetContext().getLogger());
+        mailboxAppender = new MailboxAppender(mailboxManager);
     }
 
     @Override

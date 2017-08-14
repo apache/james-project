@@ -20,15 +20,19 @@ package org.apache.james.mailbox.store.quota;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-
-import javax.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdater {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ListeningCurrentQuotaUpdater.class);
 
     private final StoreCurrentQuotaManager currentQuotaManager;
     private final QuotaRootResolver quotaRootResolver;
@@ -59,7 +63,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
                 handleExpungedEvent((Expunged) event, quotaRoot);
             }
         } catch(MailboxException e) {
-            event.getSession().getLog().error("Error while updating quotas", e);
+            LOGGER.error("Error while updating quotas", e);
         }
     }
 

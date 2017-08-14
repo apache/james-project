@@ -147,7 +147,7 @@ public class James23Importer implements LogEnabled {
             String userName30 = convert23UserTo30(userName23);
 
 
-            MailboxSession mailboxSession = mailboxManager.createSystemSession(userName30, log);
+            MailboxSession mailboxSession = mailboxManager.createSystemSession(userName30);
             MailboxPath mailboxPath = MailboxPath.inbox(mailboxSession);
 
             mailboxManager.startProcessingRequest(mailboxSession);

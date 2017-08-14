@@ -52,10 +52,13 @@ import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 
 public class MaildirFolder {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MaildirFolder.class);
 
     public static final String VALIDITY_FILE = "james-uidvalidity";
     public static final String UIDLIST_FILE = "james-uidlist";
@@ -343,7 +346,7 @@ public class MaildirFolder {
                         int gap = line.indexOf(" ");
                         if (gap == -1) {
                             // there must be some issues in the file if no gap can be found
-                            session.getLog().info("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
+                            LOGGER.info("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
                             continue;
                         }
 
@@ -509,7 +512,7 @@ public class MaildirFolder {
                         if (gap == -1) {
                             // there must be some issues in the file if no gap can be found
                             // there must be some issues in the file if no gap can be found
-                            session.getLog().info("Corrupted entry in uid-file " + uidList + " line " + lines.size());
+                            LOGGER.info("Corrupted entry in uid-file " + uidList + " line " + lines.size());
                             continue;
                         }
 
@@ -636,7 +639,7 @@ public class MaildirFolder {
 
                     if (gap == -1) {
                         // there must be some issues in the file if no gap can be found
-                    	session.getLog().info("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
+                    	LOGGER.info("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
                         continue;
                     }
                     
@@ -860,7 +863,7 @@ public class MaildirFolder {
                     int gap = line.indexOf(" ");
                     if (gap == -1) {
                         // there must be some issues in the file if no gap can be found
-                        session.getLog().info("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
+                        LOGGER.info("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
                         continue;
                     }
 

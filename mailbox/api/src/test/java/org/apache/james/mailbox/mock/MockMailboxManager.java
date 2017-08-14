@@ -29,7 +29,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.slf4j.LoggerFactory;
 
 /**
  * A mock mailbox manager.
@@ -114,7 +113,7 @@ public class MockMailboxManager {
                 
                 String folderName = "INBOX";
 
-                MailboxSession mailboxSession = getMockMailboxManager().createSystemSession(user, LoggerFactory.getLogger("mailboxmanager-test"));
+                MailboxSession mailboxSession = getMockMailboxManager().createSystemSession(user);
                 mailboxPath = new MailboxPath("#private", user, folderName);
                 createMailbox(mailboxSession, mailboxPath);
                 

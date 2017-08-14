@@ -77,13 +77,13 @@ public class ReIndexerImpl implements ReIndexer {
     }
 
     public void reIndex(MailboxPath path) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(path.getUser(), LOGGER);
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(path.getUser());
         reIndex(path, mailboxSession);
     }
 
 
     public void reIndex() throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession("re-indexing", LOGGER);
+        MailboxSession mailboxSession = mailboxManager.createSystemSession("re-indexing");
         LOGGER.info("Starting a full reindex");
         List<MailboxPath> mailboxPaths = mailboxManager.list(mailboxSession);
         GlobalRegistration globalRegistration = new GlobalRegistration();

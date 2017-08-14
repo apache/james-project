@@ -51,7 +51,6 @@ import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
 public class JCRHostSystem extends JamesImapHostSystem {
@@ -104,7 +103,7 @@ public class JCRHostSystem extends JamesImapHostSystem {
                             new DefaultQuotaRootResolver(mf),
                             new DefaultMetricFactory());
             resetUserMetaData();
-            MailboxSession session = mailboxManager.createSystemSession("test", LoggerFactory.getLogger("TestLog"));
+            MailboxSession session = mailboxManager.createSystemSession("test");
             mailboxManager.startProcessingRequest(session);
             //mailboxManager.deleteEverything(session);
             mailboxManager.endProcessingRequest(session);

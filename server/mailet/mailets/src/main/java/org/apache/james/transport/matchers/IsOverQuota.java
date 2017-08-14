@@ -38,8 +38,6 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This matcher will check if the incoming email will make recipients exceed their quotas.
@@ -57,7 +55,6 @@ import org.slf4j.LoggerFactory;
  */
 public class IsOverQuota extends GenericMatcher {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(IsOverQuota.class);
     private static final int SINGLE_EMAIL = 1;
 
     private final QuotaRootResolver quotaRootResolver;
@@ -79,7 +76,7 @@ public class IsOverQuota extends GenericMatcher {
             List<MailAddress> result = new ArrayList<>();
             for (MailAddress mailAddress : mail.getRecipients()) {
                 String userName = usersRepository.getUser(mailAddress);
-                MailboxSession mailboxSession = mailboxManager.createSystemSession(userName, LOGGER);
+                MailboxSession mailboxSession = mailboxManager.createSystemSession(userName);
                 MailboxPath mailboxPath = MailboxPath.inbox(mailboxSession);
                 QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
 

@@ -20,17 +20,19 @@
 package org.apache.james.mailbox.store.event;
 
 import org.apache.james.mailbox.MailboxListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SynchronousEventDelivery implements EventDelivery {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SynchronousEventDelivery.class);
 
     @Override
     public void deliver(MailboxListener mailboxListener, MailboxListener.Event event) {
         try {
             mailboxListener.event(event);
         } catch(Throwable throwable) {
-            event.getSession()
-                .getLog()
-                .error("Error while processing listener "
+            LOGGER.error("Error while processing listener "
                         + mailboxListener.getClass().getCanonicalName()
                         + " for "
                         + event.getClass().getCanonicalName(),

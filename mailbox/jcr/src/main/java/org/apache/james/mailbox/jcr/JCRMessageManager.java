@@ -69,7 +69,7 @@ public class JCRMessageManager extends StoreMessageManager {
     protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException{
         JCRId mailboxId = (JCRId) getMailboxEntity().getMailboxId();
         return new JCRMailboxMessage(mailboxId, getMessageIdFactory().generate(), internalDate,
-                size, flags, content, bodyStartOctet, propertyBuilder, log);
+                size, flags, content, bodyStartOctet, propertyBuilder);
     }
 
     /**

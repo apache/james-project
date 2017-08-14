@@ -45,7 +45,6 @@ import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 
@@ -70,7 +69,7 @@ public class ReIndexerImplTest {
     @Test
     public void test() throws Exception {
         final MockMailboxSession mockMailboxSession = new MockMailboxSession("re-indexing");
-        when(mailboxManager.createSystemSession(any(String.class), any(Logger.class)))
+        when(mailboxManager.createSystemSession(any(String.class)))
             .thenReturn(mockMailboxSession);
         final MessageMapper messageMapper = mock(MessageMapper.class);
         final MailboxMapper mailboxMapper = mock(MailboxMapper.class);
@@ -87,7 +86,7 @@ public class ReIndexerImplTest {
 
         reIndexer.reIndex(INBOX);
 
-        verify(mailboxManager).createSystemSession(any(String.class), any(Logger.class));
+        verify(mailboxManager).createSystemSession(any(String.class));
         verify(mailboxSessionMapperFactory).getMailboxMapper(mockMailboxSession);
         verify(mailboxSessionMapperFactory).getMessageMapper(mockMailboxSession);
         verify(mailboxMapper).findMailboxByPath(INBOX);
@@ -102,7 +101,7 @@ public class ReIndexerImplTest {
     @Test
     public void mailboxPathUserShouldBeUsedWhenReIndexing() throws Exception {
         MockMailboxSession systemMailboxSession = new MockMailboxSession("re-indexing");
-        when(mailboxManager.createSystemSession(eq("re-indexing"), any(Logger.class)))
+        when(mailboxManager.createSystemSession("re-indexing"))
             .thenReturn(systemMailboxSession);
         MailboxMapper mailboxMapper = mock(MailboxMapper.class);
         when(mailboxSessionMapperFactory.getMailboxMapper(systemMailboxSession))
@@ -111,7 +110,7 @@ public class ReIndexerImplTest {
         String user1 = "user1@james.org";
         MailboxPath user1MailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user1, "Inbox");
         MockMailboxSession user1MailboxSession = new MockMailboxSession(user1);
-        when(mailboxManager.createSystemSession(eq(user1), any(Logger.class)))
+        when(mailboxManager.createSystemSession(user1))
             .thenReturn(user1MailboxSession);
         MailboxMapper user1MailboxMapper = mock(MailboxMapper.class);
         when(mailboxSessionMapperFactory.getMailboxMapper(user1MailboxSession))

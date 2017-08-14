@@ -119,7 +119,7 @@ abstract public class AbstractStorageQuota extends AbstractQuotaMatcher {
             catch (UsersRepositoryException e) {
                 throw new MessagingException("Unable to access UsersRepository", e);
             }
-            session = manager.createSystemSession(username, getMailetContext().getLogger());
+            session = manager.createSystemSession(username);
             manager.startProcessingRequest(session);
 
             // get all mailboxes for the user to calculate the size

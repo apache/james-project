@@ -26,7 +26,6 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
-import org.slf4j.Logger;
 
 /**
  * Abstract base class for Mapper's which support scaling. This supports Level 1 Implementations of JCR. So no real transaction management is used. 
@@ -48,15 +47,6 @@ public abstract class AbstractJCRScalingMapper extends TransactionalMapper imple
         
         this.mSession = mSession;
         this.repository = repository;
-    }
-
-    /**
-     * Return the logger
-     * 
-     * @return logger
-     */
-    protected Logger getLogger() {
-        return mSession.getLog();
     }
     
     /**

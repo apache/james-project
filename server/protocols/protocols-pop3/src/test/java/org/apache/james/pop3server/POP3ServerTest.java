@@ -216,7 +216,7 @@ public class POP3ServerTest {
 
         pop3Client.disconnect();
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "foo", "INBOX");
-        MailboxSession session = mailboxManager.login("foo", "bar", LoggerFactory.getLogger("Test"));
+        MailboxSession session = mailboxManager.login("foo", "bar");
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
             mailboxManager.createMailbox(mailboxPath, session);
         }
@@ -301,7 +301,7 @@ public class POP3ServerTest {
         usersRepository.addUser("foo2", "bar2");
 
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "foo2", "INBOX");
-        MailboxSession session = mailboxManager.login("foo2", "bar2", LoggerFactory.getLogger("Test"));
+        MailboxSession session = mailboxManager.login("foo2", "bar2");
 
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
             mailboxManager.createMailbox(mailboxPath, session);
@@ -390,7 +390,7 @@ public class POP3ServerTest {
         usersRepository.addUser("foo2", "bar2");
 
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "foo2", "INBOX");
-        MailboxSession session = mailboxManager.login("foo2", "bar2", LoggerFactory.getLogger("Test"));
+        MailboxSession session = mailboxManager.login("foo2", "bar2");
 
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
             mailboxManager.createMailbox(mailboxPath, session);
@@ -440,7 +440,7 @@ public class POP3ServerTest {
         usersRepository.addUser("foo2", "bar2");
 
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "foo2", "INBOX");
-        MailboxSession session = mailboxManager.login("foo2", "bar2", LoggerFactory.getLogger("Test"));
+        MailboxSession session = mailboxManager.login("foo2", "bar2");
 
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
             mailboxManager.createMailbox(mailboxPath, session);
@@ -646,7 +646,7 @@ public class POP3ServerTest {
         pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         usersRepository.addUser("foo6", "bar6");
-        MailboxSession session = mailboxManager.login("foo6", "bar6", LoggerFactory.getLogger("Test"));
+        MailboxSession session = mailboxManager.login("foo6", "bar6");
 
         MailboxPath mailboxPath = MailboxPath.inbox(session);
 

@@ -61,7 +61,6 @@ import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
 import org.apache.lucene.store.FSDirectory;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.io.Files;
@@ -86,7 +85,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
         tempFile.deleteOnExit();
 
         resetUserMetaData();
-        MailboxSession session = mailboxManager.createSystemSession("test", LoggerFactory.getLogger("TestLog"));
+        MailboxSession session = mailboxManager.createSystemSession("test");
         mailboxManager.startProcessingRequest(session);
         mailboxManager.deleteEverything(session);
         mailboxManager.endProcessingRequest(session);

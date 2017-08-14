@@ -43,8 +43,6 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
@@ -52,7 +50,6 @@ import com.google.common.base.Throwables;
 public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSystem {
 
     private static final byte[] MESSAGE_CONTENT = "subject: any\n\nbody".getBytes(Charsets.UTF_8);
-    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageIdManagerTestSystem.class);
 
     public static MessageIdManagerTestSystem createTestingData(QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
         CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory();
@@ -70,7 +67,7 @@ public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSys
         ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(
             (StoreCurrentQuotaManager) currentQuotaManager,
             mailboxManager.getQuotaRootResolver());
-        mailboxManager.addGlobalListener(listeningCurrentQuotaUpdater, mailboxManager.createSystemSession("System", LOGGER));
+        mailboxManager.addGlobalListener(listeningCurrentQuotaUpdater, mailboxManager.createSystemSession("System"));
         return new CassandraMessageIdManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, mailboxManager.getEventDispatcher()),
             new CassandraMessageId.Factory(),
             mapperFactory,

@@ -75,7 +75,7 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
                 username = recipient.getLocalPart();
             }
 
-            MailboxSession mailboxSession = mailboxManager.createSystemSession(username, session.getLogger());
+            MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
             MailboxPath inbox = MailboxPath.inbox(mailboxSession);
 
             mailboxManager.startProcessingRequest(mailboxSession);

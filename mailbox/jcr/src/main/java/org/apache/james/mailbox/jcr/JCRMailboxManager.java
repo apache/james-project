@@ -83,7 +83,7 @@ public class JCRMailboxManager extends StoreMailboxManager implements JCRImapCon
 
     @Override
     protected Mailbox doCreateMailbox(MailboxPath path, MailboxSession session) throws MailboxException {
-        return new org.apache.james.mailbox.jcr.mail.model.JCRMailbox(path, randomUidValidity(), logger);
+        return new org.apache.james.mailbox.jcr.mail.model.JCRMailbox(path, randomUidValidity());
     }
 
 }

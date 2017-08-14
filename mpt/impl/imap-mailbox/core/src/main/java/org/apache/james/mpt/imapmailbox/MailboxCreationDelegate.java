@@ -22,12 +22,8 @@ package org.apache.james.mpt.imapmailbox;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MailboxCreationDelegate {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxCreationDelegate.class);
 
     private final MailboxManager mailboxManager;
 
@@ -36,7 +32,7 @@ public class MailboxCreationDelegate {
     }
 
     public void createMailbox(MailboxPath mailboxPath) throws Exception{
-        MailboxSession mailboxSession = mailboxManager.createSystemSession("system", LOGGER);
+        MailboxSession mailboxSession = mailboxManager.createSystemSession("system");
         mailboxManager.startProcessingRequest(mailboxSession);
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
         mailboxManager.logout(mailboxSession, true);

@@ -34,12 +34,15 @@ import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxUtil;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
  * JCR implementation of a {@link Mailbox}
  */
 public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JCRMailbox.class);
 
     private static final String TAB = " ";
 
@@ -53,7 +56,6 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
 
     private String name;
     private long uidValidity;
-    private final Logger logger;
     private Node node;
 
 
@@ -63,21 +65,15 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
     private long highestKnownModSeq;
     
     
-    public JCRMailbox( final MailboxPath path, long uidValidity, Logger logger) {
+    public JCRMailbox(final MailboxPath path, long uidValidity) {
         this.name = path.getName();
         this.namespace = path.getNamespace();
         this.user = path.getUser();
         this.uidValidity = uidValidity;
-        this.logger = logger;
     }
     
-    public JCRMailbox( final Node node, Logger logger) {
+    public JCRMailbox(final Node node) {
         this.node = node;
-        this.logger = logger;
-    }
-    
-    public Logger getLog() {
-        return logger;
     }
 
     @Override
@@ -94,7 +90,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
             try {
                 return node.getProperty(NAME_PROPERTY).getString();
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + NAME_PROPERTY, e);
+                LOGGER.error("Unable to access property " + NAME_PROPERTY, e);
             }
         }
         return name;
@@ -109,7 +105,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
             try {
                 return node.getProperty(UIDVALIDITY_PROPERTY).getLong();
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + UIDVALIDITY_PROPERTY, e);
+                LOGGER.error("Unable to access property " + UIDVALIDITY_PROPERTY, e);
             }
         }
         return uidValidity;
@@ -127,7 +123,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
                 // See https://issues.apache.org/jira/browse/IMAP-162
                 node.getSession().move(node.getPath(), node.getParent().getPath() + NODE_DELIMITER + Text.escapePath(name));
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + NAME_PROPERTY, e);
+                LOGGER.error("Unable to access property " + NAME_PROPERTY, e);
             }
         } else {
             this.name = name;
@@ -211,7 +207,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
             try {
                 return JCRId.of(node.getIdentifier());
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + JcrConstants.JCR_UUID, e);
+                LOGGER.error("Unable to access property " + JcrConstants.JCR_UUID, e);
             }
         }
         return null;      
@@ -230,7 +226,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
             try {
                 return node.getProperty(NAMESPACE_PROPERTY).getString();
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + NAMESPACE_PROPERTY, e);
+                LOGGER.error("Unable to access property " + NAMESPACE_PROPERTY, e);
             }
         }
         return namespace;
@@ -250,7 +246,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
                     return user;
                 }
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + USER_PROPERTY, e);
+                LOGGER.error("Unable to access property " + USER_PROPERTY, e);
             }
         }
         return user;
@@ -265,7 +261,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
             try {
                 node.setProperty(NAMESPACE_PROPERTY, namespace);
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + NAMESPACE_PROPERTY, e);
+                LOGGER.error("Unable to access property " + NAMESPACE_PROPERTY, e);
             }
         } else {
             this.namespace = namespace;
@@ -285,7 +281,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
                 }
                 node.setProperty(USER_PROPERTY, user);
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + NAME_PROPERTY, e);
+                LOGGER.error("Unable to access property " + NAME_PROPERTY, e);
             }
         } else {
             this.user = user;
@@ -297,7 +293,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
             try {
                 return node.getProperty(LASTUID_PROPERTY).getLong();
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + LASTUID_PROPERTY, e);
+                LOGGER.error("Unable to access property " + LASTUID_PROPERTY, e);
             }
         }
         return lastKnownUid;
@@ -308,7 +304,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
             try {
                 return node.getProperty(HIGHESTMODSEQ_PROPERTY).getLong();
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + HIGHESTMODSEQ_PROPERTY, e);
+                LOGGER.error("Unable to access property " + HIGHESTMODSEQ_PROPERTY, e);
             }
         }
         return highestKnownModSeq;

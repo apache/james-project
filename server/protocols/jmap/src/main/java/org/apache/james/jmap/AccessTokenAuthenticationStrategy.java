@@ -63,7 +63,7 @@ public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy
 
         if (username.isPresent()) {
             try {
-                return mailboxManager.createSystemSession(username.get(), LOG);
+                return mailboxManager.createSystemSession(username.get());
             } catch (MailboxException e) {
                 throw new MailboxSessionCreationException(e);
             }

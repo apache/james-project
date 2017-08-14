@@ -68,7 +68,7 @@ public class LocalDelivery extends GenericMailet {
     public void init() throws MessagingException {
         mailDispatcher = MailDispatcher.builder()
             .mailStore(SimpleMailStore.builder()
-                .mailboxAppender(new MailboxAppender(mailboxManager, getMailetContext().getLogger()))
+                .mailboxAppender(new MailboxAppender(mailboxManager))
                 .usersRepository(usersRepository)
                 .folder(MailboxConstants.INBOX)
                 .metric(metricFactory.generate(LOCAL_DELIVERED_MAILS_METRIC_NAME))

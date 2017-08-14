@@ -77,7 +77,7 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
             String username = (String) getMail().getAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE);
             if (getMail().getAttribute(IS_DELIVERED) == null) {
                 try {
-                    MailboxSession mailboxSession = mailboxManager.createSystemSession(username, LOG);
+                    MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
                     moveFromOutboxToSent(messageId, mailboxSession);
                     getMail().setAttribute(IS_DELIVERED, IS_DELIVERED);
                 } catch (MailShouldBeInOutboxException e) {

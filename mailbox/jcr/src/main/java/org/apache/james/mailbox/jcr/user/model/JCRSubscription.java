@@ -31,32 +31,32 @@ import org.apache.james.mailbox.jcr.JCRImapConstants;
 import org.apache.james.mailbox.jcr.Persistent;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JCR implementation of a {@link Subscription}.
  */
 public class JCRSubscription implements Subscription, Persistent, JCRImapConstants {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JCRSubscription.class);
+
     private static final String TOSTRING_SEPARATOR = " ";
 
     public final static String USERNAME_PROPERTY = "jamesMailbox:user";
     public final static String MAILBOXES_PROPERTY =  "jamesMailbox:subscriptionMailboxes";
     
     private Node node;
-    private final Logger log;
     private final String mailbox;
     private String username;
 
     
-    public JCRSubscription(Node node, String mailbox, Logger log) {
+    public JCRSubscription(Node node, String mailbox) {
         this.node = node;
-        this.log = log;
         this.mailbox = mailbox;
     }
 
-    public JCRSubscription(String username, String mailbox, Logger log) {
+    public JCRSubscription(String username, String mailbox) {
         this.username = username;
         this.mailbox = mailbox;
-        this.log = log;
     }
 
     /*
@@ -78,7 +78,7 @@ public class JCRSubscription implements Subscription, Persistent, JCRImapConstan
             try {
                 return node.getProperty(USERNAME_PROPERTY).getString();
             } catch (RepositoryException e) {
-                log.error("Unable to access Property " + USERNAME_PROPERTY, e);
+                LOGGER.error("Unable to access Property " + USERNAME_PROPERTY, e);
             }
             return null;
         }

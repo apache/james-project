@@ -27,6 +27,8 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.MessagingImapCommandParser;
 import org.apache.james.protocols.imap.DecodingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -34,6 +36,8 @@ import org.apache.james.protocols.imap.DecodingException;
  * </p>
  */
 public abstract class AbstractImapCommandParser implements MessagingImapCommandParser {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractImapCommandParser.class);
 
     private final ImapCommand command;
 

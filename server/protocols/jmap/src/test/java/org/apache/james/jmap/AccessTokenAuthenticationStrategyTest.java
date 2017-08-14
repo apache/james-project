@@ -20,7 +20,6 @@ package org.apache.james.jmap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -41,7 +40,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
 
 public class AccessTokenAuthenticationStrategyTest {
 
@@ -84,7 +82,7 @@ public class AccessTokenAuthenticationStrategyTest {
         String username = "123456789";
         MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
-        when(mockedMailboxManager.createSystemSession(eq(username), any(Logger.class)))
+        when(mockedMailboxManager.createSystemSession(eq(username)))
                 .thenReturn(fakeMailboxSession);
 
         UUID authHeader = UUID.randomUUID();
@@ -101,7 +99,7 @@ public class AccessTokenAuthenticationStrategyTest {
     @Test
     public void createMailboxSessionShouldThrowWhenMailboxExceptionHasOccurred() throws Exception {
         String username = "username";
-        when(mockedMailboxManager.createSystemSession(eq(username), any(Logger.class)))
+        when(mockedMailboxManager.createSystemSession(eq(username)))
                 .thenThrow(new MailboxException());
 
         UUID authHeader = UUID.randomUUID();
@@ -122,7 +120,7 @@ public class AccessTokenAuthenticationStrategyTest {
         String username = "123456789";
         MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
-        when(mockedMailboxManager.createSystemSession(eq(username), any(Logger.class)))
+        when(mockedMailboxManager.createSystemSession(eq(username)))
                 .thenReturn(fakeMailboxSession);
 
         UUID authHeader = UUID.randomUUID();

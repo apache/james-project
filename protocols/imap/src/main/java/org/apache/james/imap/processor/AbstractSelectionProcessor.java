@@ -54,10 +54,15 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.api.MetricFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
 abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequest> extends AbstractMailboxProcessor<M> implements PermitEnableCapabilityProcessor {
+
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSelectionProcessor.class);
 
     final StatusResponseFactory statusResponseFactory;
 
@@ -363,8 +368,8 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
             int msn = selected.msn(unseenUid);
 
             if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
-                if (session.getLog().isDebugEnabled()) {
-                    session.getLog().debug("No message found with uid " + unseenUid + " in mailbox " + selected.getPath().getFullName(session.getPathDelimiter()));
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("No message found with uid " + unseenUid + " in mailbox " + selected.getPath().getFullName(session.getPathDelimiter()));
                 }
                 return false;
             } 

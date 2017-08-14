@@ -56,6 +56,8 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JCR implementation of a {@link MessageMapper}. The implementation store each
@@ -63,6 +65,8 @@ import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
  * 
  */
 public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapConstants {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JCRMessageMapper.class);
 
     @SuppressWarnings("deprecation")
     private static final String XPATH_LANGUAGE = Query.XPATH;
@@ -349,7 +353,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
             NodeIterator iterator = result.getNodes();
             while (iterator.hasNext()) {
-                list.add(new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()).getUid());
+                list.add(new JCRMailboxMessage(iterator.nextNode(), LOGGER).getUid());
             }
             return list;
 
@@ -372,7 +376,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
             NodeIterator iterator = result.getNodes();
             if (iterator.hasNext()) {
-                return new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()).getUid();
+                return new JCRMailboxMessage(iterator.nextNode(), LOGGER).getUid();
             } else {
                 return null;
             }
@@ -444,7 +448,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
             // A copy of a message is recent
             // See MAILBOX-85
             node.setProperty(JCRMailboxMessage.RECENT_PROPERTY, true);
-            return new SimpleMessageMetaData(new JCRMailboxMessage(node, mailboxSession.getLog()));
+            return new SimpleMessageMetaData(new JCRMailboxMessage(node, LOGGER));
         } catch (RepositoryException e) {
             throw new MailboxException("Unable to copy message " + original + " in mailbox " + mailbox, e);
         }
@@ -565,7 +569,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            list.add(new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()));
+            list.add(new JCRMailboxMessage(iterator.nextNode(), LOGGER));
         }
         return list;
     }
@@ -582,7 +586,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
         QueryResult result = query.execute();
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            list.add(new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()));
+            list.add(new JCRMailboxMessage(iterator.nextNode(), LOGGER));
         }
         return list;
     }
@@ -602,7 +606,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            list.add(new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()));
+            list.add(new JCRMailboxMessage(iterator.nextNode(), LOGGER));
         }
         return list;
     }
@@ -621,7 +625,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            list.add(new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()));
+            list.add(new JCRMailboxMessage(iterator.nextNode(), LOGGER));
         }
         return list;
     }
@@ -638,7 +642,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            list.add(new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()));
+            list.add(new JCRMailboxMessage(iterator.nextNode(), LOGGER));
         }
         return list;
     }
@@ -655,7 +659,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            JCRMailboxMessage member = new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog());
+            JCRMailboxMessage member = new JCRMailboxMessage(iterator.nextNode(), LOGGER);
             list.add(member);
         }
         return list;
@@ -673,7 +677,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            list.add(new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()));
+            list.add(new JCRMailboxMessage(iterator.nextNode(), LOGGER));
         }
         return list;
     }
@@ -689,7 +693,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            JCRMailboxMessage member = new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog());
+            JCRMailboxMessage member = new JCRMailboxMessage(iterator.nextNode(), LOGGER);
             list.add(member);
         }
         return list;

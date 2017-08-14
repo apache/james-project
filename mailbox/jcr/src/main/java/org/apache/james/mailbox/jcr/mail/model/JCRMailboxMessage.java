@@ -54,15 +54,17 @@ import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.comparator.UidComparator;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 
 public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Persistent {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(JCRMailboxMessage.class);
+
     private static final Comparator<MailboxMessage> MESSAGE_UID_COMPARATOR = new UidComparator();
     
     private Node node;
-    private final Logger logger;
     private SharedInputStream content;
     private String mediaType;
     private Long textualLineCount;
@@ -108,18 +110,16 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
     public final static String MODSEQ_PROPERTY = "jamesMailbox:modSeq";
 
     public JCRMailboxMessage(Node node, Logger logger) {
-        this.logger= logger;
         this.node = node;
     }
     
     public JCRMailboxMessage(JCRId mailboxUUID, MessageId messageId, Date internalDate, int size, Flags flags, SharedInputStream content,
-                             int bodyStartOctet, PropertyBuilder propertyBuilder, Logger logger) {
+                             int bodyStartOctet, PropertyBuilder propertyBuilder) {
         super();
         this.mailboxUUID = mailboxUUID;
         this.messageId = messageId;
         this.internalDate = internalDate;
         this.size = size;
-        this.logger = logger;
         setFlags(flags);
         this.content = content;
        
@@ -130,7 +130,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
         final List<Property> properties = propertyBuilder.toProperties();
         this.properties = new ArrayList<>(properties.size());
         for (Property property:properties) {
-            this.properties.add(new JCRProperty(property,logger));
+            this.properties.add(new JCRProperty(property));
         }
         
     }
@@ -138,7 +138,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
     /**
      * Create a copy of the given message
      */
-    public JCRMailboxMessage(JCRId mailboxUUID, MessageUid uid, MessageId messageId, long modSeq, JCRMailboxMessage message, Logger logger) throws MailboxException {
+    public JCRMailboxMessage(JCRId mailboxUUID, MessageUid uid, MessageId messageId, long modSeq, JCRMailboxMessage message) throws MailboxException {
         this.mailboxUUID = mailboxUUID;
         this.messageId = messageId;
         this.internalDate = message.getInternalDate();
@@ -146,7 +146,6 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
         setFlags(message.createFlags());
         this.uid = uid;
         this.modSeq = modSeq;
-        this.logger = logger;
         try {
             this.content = new SharedByteArrayInputStream(IOUtils.toByteArray(message.getFullContent()));
         } catch (IOException e) {
@@ -162,7 +161,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
         final List<Property> properties = pBuilder.toProperties();
         this.properties = new ArrayList<>(properties.size());
         for (Property property:properties) {
-            this.properties.add(new JCRProperty(property,  logger));
+            this.properties.add(new JCRProperty(property));
         }
     }
 
@@ -181,7 +180,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
             try {
                 return node.getProperty(SIZE_PROPERTY).getLong();
             } catch (RepositoryException e) {
-                logger.error("Unable to retrieve property " + SIZE_PROPERTY, e);
+                LOGGER.error("Unable to retrieve property " + SIZE_PROPERTY, e);
 
             }
             return 0;
@@ -195,7 +194,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
             try {
                 return node.getNode(JcrConstants.JCR_CONTENT).getProperty(JcrConstants.JCR_MIMETYPE).getString();
             } catch (RepositoryException e) {
-                logger.error("Unable to retrieve node " + JcrConstants.JCR_MIMETYPE, e);
+                LOGGER.error("Unable to retrieve node " + JcrConstants.JCR_MIMETYPE, e);
             }
             return null;
         }
@@ -209,11 +208,11 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
                 List<Property> properties = new ArrayList<>();
                 NodeIterator nodeIt = node.getNodes("messageProperty");
                 while (nodeIt.hasNext()) {
-                    properties.add(new JCRProperty(nodeIt.nextNode(), logger));
+                    properties.add(new JCRProperty(nodeIt.nextNode()));
                 }
                 return properties;
             } catch (RepositoryException e) {
-                logger.error("Unable to retrieve nodes messageProperty", e);
+                LOGGER.error("Unable to retrieve nodes messageProperty", e);
             }
         }
         return new ArrayList<>(properties);
@@ -225,7 +224,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
             try {
                 return node.getProperty(SUBTYPE_PROPERTY).getString();
             } catch (RepositoryException e) {
-                logger.error("Unable to retrieve node " + SUBTYPE_PROPERTY, e);
+                LOGGER.error("Unable to retrieve node " + SUBTYPE_PROPERTY, e);
             }
             return null;
         }
@@ -245,7 +244,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
                     return node.getProperty(TEXTUAL_LINE_COUNT_PROPERTY).getLong();
                 } 
             } catch (RepositoryException e) {
-                logger.error("Unable to retrieve property " + TEXTUAL_LINE_COUNT_PROPERTY, e);
+                LOGGER.error("Unable to retrieve property " + TEXTUAL_LINE_COUNT_PROPERTY, e);
 
             }
             return null;
@@ -268,7 +267,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
             try {
                 return node.getIdentifier();
             } catch (RepositoryException e) {
-                logger.error("Unable to access UUID", e);
+                LOGGER.error("Unable to access UUID", e);
             }
         }
         return null;
@@ -318,7 +317,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
 
             List<Property> currentProperties = getProperties();
             List<Property> newProperties = currentProperties.stream()
-                .map(prop -> new JCRProperty(prop, logger))
+                .map(JCRProperty::new)
                 .collect(Guavate.toImmutableList());
             // remove old properties, we will add a bunch of new ones
             NodeIterator iterator = node.getNodes("messageProperty");
@@ -343,7 +342,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
             try {
                 return (int)node.getProperty(BODY_START_OCTET_PROPERTY).getLong();
             } catch (RepositoryException e) {
-                logger.error("Unable to retrieve property " + TEXTUAL_LINE_COUNT_PROPERTY, e);
+                LOGGER.error("Unable to retrieve property " + TEXTUAL_LINE_COUNT_PROPERTY, e);
 
             }
             return 0;
@@ -402,7 +401,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
                 }
 
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + FLAGGED_PROPERTY,
+                LOGGER.error("Unable to access property " + FLAGGED_PROPERTY,
                                 e);
             }
             return null;
@@ -416,7 +415,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
             try {
                 return JCRId.of(node.getProperty(MAILBOX_UUID_PROPERTY).getString());
             } catch (RepositoryException e) {
-                logger.error("Unable to access property "
+                LOGGER.error("Unable to access property "
                         + MAILBOX_UUID_PROPERTY, e);
             }
         }
@@ -431,7 +430,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
                 return MessageUid.of(node.getProperty(UID_PROPERTY).getLong());
 
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + UID_PROPERTY, e);
+                LOGGER.error("Unable to access property " + UID_PROPERTY, e);
             }
             return MessageUid.MIN_VALUE;
         }
@@ -447,7 +446,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
                 }
 
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + ANSWERED_PROPERTY,
+                LOGGER.error("Unable to access property " + ANSWERED_PROPERTY,
                         e);
             }
             return false;
@@ -464,7 +463,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
                 }
 
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + DELETED_PROPERTY,
+                LOGGER.error("Unable to access property " + DELETED_PROPERTY,
                                 e);
             }
             return false;
@@ -480,7 +479,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
                     return node.getProperty(DRAFT_PROPERTY).getBoolean();
                 }
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + DRAFT_PROPERTY, e);
+                LOGGER.error("Unable to access property " + DRAFT_PROPERTY, e);
             }
             return false;
         }
@@ -495,7 +494,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
                     return node.getProperty(FLAGGED_PROPERTY).getBoolean();
                 }
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + FLAGGED_PROPERTY,
+                LOGGER.error("Unable to access property " + FLAGGED_PROPERTY,
                                 e);
             }
             return false;
@@ -511,7 +510,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
                     return node.getProperty(RECENT_PROPERTY).getBoolean();
                 }
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + RECENT_PROPERTY, e);
+                LOGGER.error("Unable to access property " + RECENT_PROPERTY, e);
             }
             return false;
         }
@@ -525,7 +524,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
                 return node.getProperty(SEEN_PROPERTY).getBoolean();
 
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + SEEN_PROPERTY, e);
+                LOGGER.error("Unable to access property " + SEEN_PROPERTY, e);
             }
             return false;
         }
@@ -550,7 +549,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
                         flags.contains(Flags.Flag.SEEN));
                 node.setProperty(USERFLAGS_PROPERTY, flags.getUserFlags());
             } catch (RepositoryException e) {
-                logger.error("Unable to set flags", e);
+                LOGGER.error("Unable to set flags", e);
             }
         } else {
             answered = flags.contains(Flags.Flag.ANSWERED);
@@ -574,7 +573,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
                 node.setProperty(RECENT_PROPERTY, false);
 
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + RECENT_PROPERTY, e);
+                LOGGER.error("Unable to access property " + RECENT_PROPERTY, e);
             }
         } else {
             recent = false;
@@ -587,7 +586,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
             try {
                 return node.getIdentifier();
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + JcrConstants.JCR_UUID, e);
+                LOGGER.error("Unable to access property " + JcrConstants.JCR_UUID, e);
             }
         }
         return null;      
@@ -648,7 +647,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
                 return node.getProperty(MODSEQ_PROPERTY).getLong();
 
             } catch (RepositoryException e) {
-                logger.error("Unable to access property " + MODSEQ_PROPERTY, e);
+                LOGGER.error("Unable to access property " + MODSEQ_PROPERTY, e);
             }
             return 0;
         }
@@ -661,7 +660,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
             try {
                 node.setProperty(MODSEQ_PROPERTY, modSeq);
             } catch (RepositoryException e) {
-                logger.error("Unable to set mod-sequence", e);
+                LOGGER.error("Unable to set mod-sequence", e);
             }
         } else {
             this.modSeq = modSeq;
@@ -674,7 +673,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
             try {
                 node.setProperty(UID_PROPERTY, uid.asLong());
             } catch (RepositoryException e) {
-                logger.error("Unable to set uid", e);
+                LOGGER.error("Unable to set uid", e);
             }
         } else {
             this.uid = uid;

@@ -30,14 +30,11 @@ import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
 public class JWTAuthenticationStrategy implements AuthenticationStrategy {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JWTAuthenticationStrategy.class);
     @VisibleForTesting static final String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
     private final JwtTokenVerifier tokenManager;
     private final MailboxManager mailboxManager;
@@ -61,7 +58,7 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
         Stream<MailboxSession> mailboxSessionStream = userLoginStream
                 .map(l -> {
                     try {
-                        return mailboxManager.createSystemSession(l, LOG);
+                        return mailboxManager.createSystemSession(l);
                     } catch (MailboxException e) {
                         throw new MailboxSessionCreationException(e);
                     }
