@@ -65,6 +65,10 @@
         </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
+            <artifactId>james-server-util-java8</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
             <artifactId>metrics-api</artifactId>
         </dependency>
         <dependency>

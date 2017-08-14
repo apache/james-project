@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +36,7 @@ import org.apache.james.imap.message.request.IRAuthenticateRequest;
 import org.apache.james.imap.message.response.AuthenticateResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
@@ -160,4 +162,11 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         return ImmutableList.copyOf(caps);
     }
 
+    @Override
+    protected Closeable addContextToMDC(AuthenticateRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "AUTHENTICATE")
+            .addContext("authType", message.getAuthType())
+            .build();
+    }
 }

@@ -21,6 +21,8 @@ package org.apache.james.imap.api.message.request;
 
 import java.util.List;
 
+import com.google.common.base.MoreObjects;
+
 public final class SearchOperation {
 
     private final SearchKey key;
@@ -37,7 +39,14 @@ public final class SearchOperation {
     public List<SearchResultOption> getResultOptions() {
         return options;
     }
-    
+
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("key", key)
+            .toString();
+    }
  
     
 }

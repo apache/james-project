@@ -22,6 +22,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
+
 public class FetchData {
     private boolean flags;
 
@@ -206,5 +209,23 @@ public class FetchData {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("flags", flags)
+            .add("uid", uid)
+            .add("internalDate", internalDate)
+            .add("size", size)
+            .add("envelope", envelope)
+            .add("body", body)
+            .add("bodyStructure", bodyStructure)
+            .add("setSeen", setSeen)
+            .add("bodyElements", ImmutableSet.copyOf(bodyElements))
+            .add("modSeq", modSeq)
+            .add("changedSince", changedSince)
+            .add("vanished", vanished)
+            .toString();
     }
 }

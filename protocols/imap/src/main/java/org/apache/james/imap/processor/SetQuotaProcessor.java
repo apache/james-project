@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,6 +32,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.SetQuotaRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 /**
  * SETQUOTA processor
@@ -56,5 +58,14 @@ public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest>
         };
         HumanReadableText humanReadableText = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
         no(command, tag, responder, humanReadableText);
+    }
+
+    @Override
+    protected Closeable addContextToMDC(SetQuotaRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "SET_QUOTA")
+            .addContext("quotaRoot", message.getQuotaRoot())
+            .addContext("limits", message.getResourceLimits())
+            .build();
     }
 }

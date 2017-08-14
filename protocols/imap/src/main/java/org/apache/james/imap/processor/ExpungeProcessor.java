@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.Iterator;
 import java.util.List;
 
@@ -43,6 +44,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
@@ -124,5 +126,13 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
      */
     public List<String> getImplementedCapabilities(ImapSession session) {
         return UIDPLUS;
+    }
+
+    @Override
+    protected Closeable addContextToMDC(ExpungeRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "EXPUNGE")
+            .addContext("uidSet", IdRange.toString(message.getUidSet()))
+            .build();
     }
 }

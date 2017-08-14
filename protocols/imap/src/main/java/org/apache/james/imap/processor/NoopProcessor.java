@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -26,6 +28,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.NoopRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 public class NoopProcessor extends AbstractMailboxProcessor<NoopRequest> {
 
@@ -38,5 +41,12 @@ public class NoopProcessor extends AbstractMailboxProcessor<NoopRequest> {
         // So, unsolicated responses are returned to check for new mail
         unsolicitedResponses(session, responder, false);
         okComplete(command, tag, responder);
+    }
+
+    @Override
+    protected Closeable addContextToMDC(NoopRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "NOOP")
+            .build();
     }
 }

@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -62,6 +63,7 @@ import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -496,5 +498,14 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
      */
     public List<String> getImplementedCapabilities(ImapSession session) {
         return CAPS;
+    }
+
+    @Override
+    protected Closeable addContextToMDC(SearchRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "SEARCH")
+            .addContext("useUid", message.isUseUids())
+            .addContext("searchOperation", message.getSearchOperation())
+            .build();
     }
 }

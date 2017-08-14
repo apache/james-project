@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
@@ -36,6 +38,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
 
@@ -85,5 +88,14 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
             session.getLog().error("Rename from " + existingPath + " to " + newPath + " failed", e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
+    }
+
+    @Override
+    protected Closeable addContextToMDC(RenameRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "RENAME")
+            .addContext("existingName", message.getExistingName())
+            .addContext("newName", message.getNewName())
+            .build();
     }
 }

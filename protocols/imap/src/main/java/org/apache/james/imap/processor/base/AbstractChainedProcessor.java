@@ -19,10 +19,15 @@
 
 package org.apache.james.imap.processor.base;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
+
+import com.google.common.base.Throwables;
 
 abstract public class AbstractChainedProcessor<M extends ImapMessage> implements ImapProcessor {
 
@@ -51,7 +56,12 @@ abstract public class AbstractChainedProcessor<M extends ImapMessage> implements
     public void process(ImapMessage message, Responder responder, ImapSession session) {
         final boolean isAcceptable = isAcceptable(message);
         if (isAcceptable) {
-            doProcess((M) message, responder, session);
+            M acceptableMessage = (M) message;
+            try (Closeable closeable = addContextToMDC(acceptableMessage)) {
+                doProcess(acceptableMessage, responder, session);
+            } catch (IOException e) {
+                throw Throwables.propagate(e);
+            }
         } else {
             next.process(message, responder, session);
         }
@@ -85,4 +95,9 @@ abstract public class AbstractChainedProcessor<M extends ImapMessage> implements
      *            <code>ImapSession</code>, not null
      */
     abstract protected void doProcess(M acceptableMessage, Responder responder, ImapSession session);
+
+    /**
+     * Add request specific information to the MDC, for contextual logging
+     */
+    abstract protected Closeable addContextToMDC(M message);
 }

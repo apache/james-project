@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.Collections;
 import java.util.List;
 
@@ -40,6 +41,7 @@ import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 /**
  * MYRIGHTS Processor.
@@ -112,4 +114,11 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
         return CAPABILITIES;
     }
 
+    @Override
+    protected Closeable addContextToMDC(MyRightsRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "MYRIGHTS")
+            .addContext("mailbox", message.getMailboxName())
+            .build();
+    }
 }

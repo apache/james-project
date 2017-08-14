@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.Collections;
 import java.util.List;
 
@@ -45,6 +46,7 @@ import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.SimpleMailboxACL.SimpleMailboxACLEntryKey;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 /**
  * SETACL Processor.
@@ -163,4 +165,13 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
         return CAPABILITIES;
     }
 
+    @Override
+    protected Closeable addContextToMDC(SetACLRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "SET_ACL")
+            .addContext("mailbox", message.getMailboxName())
+            .addContext("identifier", message.getIdentifier())
+            .addContext("rights", message.getRights())
+            .build();
+    }
 }

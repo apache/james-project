@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +47,7 @@ import org.apache.james.mailbox.model.MailboxMetaData.Children;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
 
@@ -229,5 +231,14 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
 
     protected boolean isAcceptable(ImapMessage message) {
         return ListRequest.class.equals(message.getClass());
+    }
+
+    @Override
+    protected Closeable addContextToMDC(ListRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "LIST")
+            .addContext("base", message.getBaseReferenceName())
+            .addContext("pattern", message.getMailboxPattern())
+            .build();
     }
 }

@@ -19,17 +19,36 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
+
+import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.message.request.SelectRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 public class SelectProcessor extends AbstractSelectionProcessor<SelectRequest> {
 
     public SelectProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory,
             MetricFactory metricFactory) {
         super(SelectRequest.class, next, mailboxManager, statusResponseFactory, false, metricFactory);
+    }
+
+    @Override
+    protected Closeable addContextToMDC(SelectRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "SELECT")
+            .addContext("mailbox", message.getMailboxName())
+            .addContext("condstore", message.getCondstore())
+            .addContext("knownModseq", message.getKnownModSeq())
+            .addContext("knownUids", UidRange.toString(message.getKnownUidSet()))
+            .addContext("knownIdRange", IdRange.toString(message.getKnownSequenceSet()))
+            .addContext("lastKnownUidValidity", message.getLastKnownUidValidity())
+            .addContext("uidSet", UidRange.toString(message.getUidSet()))
+            .build();
     }
 
 }

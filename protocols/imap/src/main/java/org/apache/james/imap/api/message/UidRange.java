@@ -22,17 +22,24 @@ package org.apache.james.imap.api.message;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MessageRange;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
 
 public final class UidRange implements Iterable<MessageUid> {
+    public static String toString(UidRange[] ranges) {
+        return Optional.ofNullable(ranges)
+            .map(ImmutableList::copyOf)
+            .toString();
+    }
 
     public static List<UidRange> mergeRanges(List<UidRange> ranges) {
         if (ranges.isEmpty()) {

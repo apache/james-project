@@ -19,9 +19,11 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
+import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -33,6 +35,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
@@ -65,6 +68,16 @@ public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> im
         } else {
             return ImmutableList.of();
         }
+    }
+
+    @Override
+    protected Closeable addContextToMDC(MoveRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "MOVE")
+            .addContext("targetMailbox", message.getMailboxName())
+            .addContext("uidEnabled", message.isUseUids())
+            .addContext("idSet", IdRange.toString(message.getIdSet()))
+            .build();
     }
 
 }

@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,6 +57,7 @@ import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
@@ -343,5 +345,16 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             }
         }
         
+    }
+
+    @Override
+    protected Closeable addContextToMDC(StoreRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "STORE")
+            .addContext("ranges", IdRange.toString(message.getIdSet()))
+            .addContext("useUids", message.isUseUids())
+            .addContext("unchangedSince", message.getUnchangedSince())
+            .addContext("isSilent", message.isSilent())
+            .build();
     }
 }

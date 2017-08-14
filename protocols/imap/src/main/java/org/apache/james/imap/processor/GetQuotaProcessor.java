@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -40,6 +41,7 @@ import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
@@ -106,4 +108,11 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
         return false;
     }
 
+    @Override
+    protected Closeable addContextToMDC(GetQuotaRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "GET_QUOTA")
+            .addContext("quotaRoot", message.getQuotaRoot())
+            .build();
+    }
 }

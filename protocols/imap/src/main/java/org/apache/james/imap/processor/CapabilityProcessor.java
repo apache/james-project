@@ -26,6 +26,7 @@ import static org.apache.james.imap.api.ImapConstants.SUPPORTS_RFC3348;
 import static org.apache.james.imap.api.ImapConstants.UTF8;
 import static org.apache.james.imap.api.ImapConstants.VERSION;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +42,7 @@ import org.apache.james.imap.message.request.CapabilityRequest;
 import org.apache.james.imap.message.response.CapabilityResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
@@ -139,6 +141,13 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
         }
         caps.removeAll(disabledCaps);
         return caps;
+    }
+
+    @Override
+    protected Closeable addContextToMDC(CapabilityRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "CAPABILITY")
+            .build();
     }
     
 

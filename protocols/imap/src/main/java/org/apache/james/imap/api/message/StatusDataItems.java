@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.api.message;
 
+import com.google.common.base.MoreObjects;
+
 public class StatusDataItems {
     private boolean messages;
 
@@ -78,5 +80,16 @@ public class StatusDataItems {
     public boolean isHighestModSeq() {
         return highestModSeq;
     }
-    
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("messages", messages)
+            .add("recent", recent)
+            .add("uidNext", uidNext)
+            .add("uidValidity", uidValidity)
+            .add("unseen", unseen)
+            .add("highestModSeq", highestModSeq)
+            .toString();
+    }
 }

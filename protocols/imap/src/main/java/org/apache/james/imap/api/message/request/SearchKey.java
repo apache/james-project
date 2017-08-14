@@ -22,9 +22,13 @@ package org.apache.james.imap.api.message.request;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Atom key used by a search. Build instances by factory methods.
@@ -507,5 +511,20 @@ public final class SearchKey {
         } else if (!value.equals(other.value))
             return false;
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("type", type)
+            .add("date", date)
+            .add("size", size)
+            .add("value", value)
+            .add("seconds", seconds)
+            .add("modSeq", modSeq)
+            .add("uids", Arrays.toString(uids))
+            .add("sequences", Arrays.toString(sequence))
+            .add("keys", Optional.ofNullable(keys).map(ImmutableList::copyOf))
+            .toString();
     }
 }

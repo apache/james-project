@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -41,6 +42,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
 
@@ -130,5 +132,14 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
             final HumanReadableText displayTextKey = HumanReadableText.GENERIC_LSUB_FAILURE;
             no(command, tag, responder, displayTextKey);
         }
+    }
+
+    @Override
+    protected Closeable addContextToMDC(LsubRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "LSUB")
+            .addContext("base", message.getBaseReferenceName())
+            .addContext("pattern", message.getMailboxPattern())
+            .build();
     }
 }

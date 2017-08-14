@@ -21,6 +21,7 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_ENABLE;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -38,6 +39,9 @@ import org.apache.james.imap.message.response.EnableResponse;
 import org.apache.james.imap.processor.PermitEnableCapabilityProcessor.EnableException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+
+import com.google.common.collect.ImmutableList;
 
 import com.google.common.collect.ImmutableList;
 
@@ -137,4 +141,11 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
         return CAPS;
     }
 
+    @Override
+    protected Closeable addContextToMDC(EnableRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "ENABLE")
+            .addContext("capabilities", ImmutableList.copyOf(message.getCapabilities()))
+            .build();
+    }
 }

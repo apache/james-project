@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
@@ -46,6 +47,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
 
@@ -154,4 +156,11 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
         }
     }
 
+    @Override
+    protected Closeable addContextToMDC(AppendRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "APPEND")
+            .addContext("mailbox", message.getMailboxName())
+            .build();
+    }
 }

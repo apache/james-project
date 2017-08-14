@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -34,6 +36,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
 
@@ -74,5 +77,13 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
             session.getLog().error("Delete failed for mailbox " + mailboxPath, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
+    }
+
+    @Override
+    protected Closeable addContextToMDC(DeleteRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "DELETE")
+            .addContext("mailbox", message.getMailboxName())
+            .build();
     }
 }

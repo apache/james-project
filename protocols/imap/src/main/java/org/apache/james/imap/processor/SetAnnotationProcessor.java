@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -38,6 +39,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
@@ -73,5 +75,14 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
             session.getLog().error(command.getName() + " failed for mailbox " + mailboxName, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
+    }
+
+    @Override
+    protected Closeable addContextToMDC(SetAnnotationRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "SET_ANNOTATION")
+            .addContext("mailbox", message.getMailboxName())
+            .addContext("annotations", message.getMailboxAnnotations())
+            .build();
     }
 }

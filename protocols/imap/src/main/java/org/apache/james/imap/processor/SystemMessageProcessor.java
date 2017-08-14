@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
+
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -27,6 +29,7 @@ import org.apache.james.imap.processor.base.AbstractChainedProcessor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.util.MDCBuilder;
 
 /**
  * Processes system messages unrelated to IMAP.
@@ -76,4 +79,11 @@ public class SystemMessageProcessor extends AbstractChainedProcessor<SystemMessa
         }
     }
 
+    @Override
+    protected Closeable addContextToMDC(SystemMessage message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "SYSTEM_MESSAGE")
+            .addContext("message", message)
+            .build();
+    }
 }

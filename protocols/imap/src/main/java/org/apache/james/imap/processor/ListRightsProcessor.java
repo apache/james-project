@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -41,6 +42,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.SimpleMailboxACL.SimpleMailboxACLEntryKey;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
@@ -134,4 +136,12 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
         return CAPABILITIES;
     }
 
+    @Override
+    protected Closeable addContextToMDC(ListRightsRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "LIST_RIGHTS")
+            .addContext("mailbox", message.getMailboxName())
+            .addContext("identifier", message.getIdentifier())
+            .build();
+    }
 }

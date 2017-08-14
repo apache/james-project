@@ -24,11 +24,20 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Represents a range of UID or MSN values.
  */
 public final class IdRange implements Iterable<Long>, Comparable<IdRange>{
+
+    public static String toString(IdRange[] ranges) {
+        return Optional.ofNullable(ranges)
+            .map(ImmutableList::copyOf)
+            .toString();
+    }
 
     private long _lowVal;
 

@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor.fetch;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -50,6 +51,7 @@ import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MessageResult.MimePath;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
@@ -246,4 +248,13 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         }
     }
 
+    @Override
+    protected Closeable addContextToMDC(FetchRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "FETCH")
+            .addContext("useUid", message.isUseUids())
+            .addContext("idSet", IdRange.toString(message.getIdSet()))
+            .addContext("fetchedData", message.getFetch())
+            .build();
+    }
 }

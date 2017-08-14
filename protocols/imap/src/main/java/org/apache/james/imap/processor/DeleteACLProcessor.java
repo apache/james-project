@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+
+import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -42,6 +44,7 @@ import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.SimpleMailboxACL.SimpleMailboxACLEntryKey;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
@@ -144,4 +147,12 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
         return CAPABILITIES;
     }
 
+    @Override
+    protected Closeable addContextToMDC(DeleteACLRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "DELETE_ACL")
+            .addContext("mailbox", message.getMailboxName())
+            .addContext("identifier", message.getIdentifier())
+            .build();
+    }
 }

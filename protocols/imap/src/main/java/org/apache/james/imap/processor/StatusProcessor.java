@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -36,6 +38,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 
 public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
@@ -156,5 +159,14 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
             messages = null;
         }
         return messages;
+    }
+
+    @Override
+    protected Closeable addContextToMDC(StatusRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "STATUS")
+            .addContext("mailbox", message.getMailboxName())
+            .addContext("parameters", message.getStatusDataItems())
+            .build();
     }
 }

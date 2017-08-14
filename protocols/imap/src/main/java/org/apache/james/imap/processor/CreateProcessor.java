@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -33,6 +35,7 @@ import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
 
@@ -69,5 +72,13 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
             session.getLog().error("Create failed for mailbox " + mailboxPath, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
+    }
+
+    @Override
+    protected Closeable addContextToMDC(CreateRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "CREATE")
+            .addContext("mailbox", message.getMailboxName())
+            .build();
     }
 }

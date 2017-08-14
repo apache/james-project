@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -31,6 +33,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 public class UnsubscribeProcessor extends AbstractSubscriptionProcessor<UnsubscribeRequest> {
 
@@ -65,4 +68,11 @@ public class UnsubscribeProcessor extends AbstractSubscriptionProcessor<Unsubscr
         }
     }
 
+    @Override
+    protected Closeable addContextToMDC(UnsubscribeRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "UNSUBSCRIBE")
+            .addContext("mailbox", message.getMailboxName())
+            .build();
+    }
 }

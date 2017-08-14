@@ -21,6 +21,7 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_IDLE;
 
+import java.io.Closeable;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executors;
@@ -46,6 +47,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 
@@ -198,5 +200,12 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         public ExecutionMode getExecutionMode() {
             return ExecutionMode.ASYNCHRONOUS;
         }
+    }
+
+    @Override
+    protected Closeable addContextToMDC(IdleRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "IDLE")
+            .build();
     }
 }
