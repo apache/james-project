@@ -36,6 +36,8 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.JamesUser;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.model.DefaultJamesUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A partial implementation of a Repository to store users.
@@ -48,6 +50,7 @@ import org.apache.james.user.lib.model.DefaultJamesUser;
  */
 @Deprecated
 public abstract class AbstractJamesUsersRepository extends AbstractUsersRepository implements JamesUsersRepository, RecipientRewriteTable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractJamesUsersRepository.class);
 
     /**
      * Ignore case in usernames
@@ -142,7 +145,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
                         mappingsBuilder.add(forward);
                     } else {
                         String errorBuffer = "Forwarding was enabled for " + username + " but no forwarding address was set for this account.";
-                        getLogger().error(errorBuffer);
+                        LOGGER.error(errorBuffer);
                     }
                 }
             }

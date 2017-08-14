@@ -23,7 +23,9 @@ import java.util.Map;
 
 /**
  * Allow to change loglevel via JMX
+ * @deprecated static configuration via SLF4J implementation configuration file is advised
  */
+@Deprecated
 public interface LogProviderManagementMBean {
 
     List<String> getSupportedLogLevels();

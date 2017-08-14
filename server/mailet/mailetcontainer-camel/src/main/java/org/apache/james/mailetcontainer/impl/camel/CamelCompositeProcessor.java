@@ -109,7 +109,6 @@ public class CamelCompositeProcessor extends AbstractStateCompositeProcessor imp
     protected MailProcessor createMailProcessor(String name, HierarchicalConfiguration config) throws Exception {
         CamelMailetProcessor processor = new CamelMailetProcessor(metricFactory);
         try {
-            processor.setLog(logger);
             processor.setCamelContext(camelContext);
             processor.setMailetContext(mailetContext);
             processor.setMailetLoader(mailetLoader);

@@ -28,8 +28,6 @@ import org.apache.james.rrt.cassandra.CassandraRRTModule;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTable;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -40,8 +38,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class CassandraRecipientRewriteTableModule extends AbstractModule {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTable.class);
 
     @Override
     public void configure() {
@@ -67,7 +63,6 @@ public class CassandraRecipientRewriteTableModule extends AbstractModule {
         @Override
         public void initModule() {
             try {
-                recipientRewriteTable.setLog(LOGGER);
                 recipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
             } catch (ConfigurationException e) {
                 Throwables.propagate(e);

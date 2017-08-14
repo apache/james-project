@@ -44,8 +44,6 @@ import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.UnmodifiableIterator;
@@ -53,7 +51,6 @@ import com.sun.mail.smtp.SMTPSenderFailedException;
 
 @SuppressWarnings("deprecation")
 public class MailDelivrerTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailDelivrerTest.class);
     public static final String MX1_HOSTNAME = "mx1." + MailAddressFixture.JAMES2_APACHE_ORG;
     public static final String MX2_HOSTNAME = "mx2." + MailAddressFixture.JAMES2_APACHE_ORG;
     public static final String SMTP_URI2 = "protocol://userid:password@host:119/file1";
@@ -77,7 +74,7 @@ public class MailDelivrerTest {
             .setProperty(RemoteDeliveryConfiguration.DEBUG, "true")
             .build(),
             mock(DomainList.class));
-        testee = new MailDelivrer(configuration, mailDelivrerToHost, dnsHelper, bouncer, LOGGER);
+        testee = new MailDelivrer(configuration, mailDelivrerToHost, dnsHelper, bouncer);
     }
 
     @Test

@@ -34,15 +34,11 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class AbstractDomainListPrivateMethodsTest {
-
-    public static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainListPrivateMethodsTest.class);
     private MyDomainList domainList;
     private DNSService dnsService;
     private EnvDetector envDetector;
@@ -52,7 +48,6 @@ public class AbstractDomainListPrivateMethodsTest {
         dnsService = mock(DNSService.class);
         envDetector = mock(EnvDetector.class);
         domainList = new MyDomainList(dnsService, envDetector);
-        domainList.setLog(LOGGER);
     }
 
     private static class MyDomainList extends AbstractDomainList {
@@ -188,7 +183,6 @@ public class AbstractDomainListPrivateMethodsTest {
 
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(true);
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
-        domainList.setLog(LOGGER);
         domainList.configure(configuration);
 
         String detected = "detected.tld";
@@ -203,7 +197,6 @@ public class AbstractDomainListPrivateMethodsTest {
 
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(true);
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(true);
-        domainList.setLog(LOGGER);
         domainList.configure(configuration);
 
         String detected = "detected.tld";
@@ -222,7 +215,6 @@ public class AbstractDomainListPrivateMethodsTest {
 
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(true);
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(true);
-        domainList.setLog(LOGGER);
         domainList.configure(configuration);
 
         String added = "added.tld";

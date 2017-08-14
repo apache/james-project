@@ -22,7 +22,6 @@ package org.apache.james.domainlist.cassandra;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.AbstractDomainListTest;
-import org.slf4j.LoggerFactory;
 
 public class CassandraDomainListTest extends AbstractDomainListTest {
 
@@ -32,7 +31,6 @@ public class CassandraDomainListTest extends AbstractDomainListTest {
     protected DomainList createDomainList() {
         cassandra = CassandraCluster.create(new CassandraDomainListModule());
         CassandraDomainList testee = new CassandraDomainList(getDNSServer("localhost"), cassandra.getConf());
-        testee.setLog(LoggerFactory.getLogger(getClass()));
         testee.setAutoDetect(false);
         testee.setAutoDetectIP(false);
         return testee;

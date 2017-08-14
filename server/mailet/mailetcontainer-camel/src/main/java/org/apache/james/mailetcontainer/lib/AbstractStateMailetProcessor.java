@@ -34,7 +34,6 @@ import javax.management.NotCompliantMBeanException;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.MailetLoader;
 import org.apache.james.mailetcontainer.api.MatcherLoader;
@@ -53,6 +52,7 @@ import org.apache.mailet.MatcherConfig;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.MatcherInverter;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 
@@ -60,7 +60,8 @@ import com.github.steveash.guavate.Guavate;
  * Abstract base class for {@link MailProcessor} implementations which want to
  * process {@link Mail} via {@link Matcher} and {@link Mailet}
  */
-public abstract class AbstractStateMailetProcessor implements MailProcessor, Configurable, LogEnabled {
+public abstract class AbstractStateMailetProcessor implements MailProcessor, Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractStateMailetProcessor.class);
 
     private MailetContext mailetContext;
     private MatcherLoader matcherLoader;
@@ -68,7 +69,6 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
     private final List<MailetProcessorListener> listeners = Collections.synchronizedList(new ArrayList<MailetProcessorListener>());
     private JMXStateMailetProcessorListener jmxListener;
     private boolean enableJmx = true;
-    private Logger logger;
     private HierarchicalConfiguration config;
     private MailetLoader mailetLoader;
     private final List<MatcherMailetPair> pairs = new ArrayList<>();
@@ -92,12 +92,6 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
         this.mailetLoader = mailetLoader;
     }
 
-    /**
-     * @see org.apache.james.lifecycle.api.LogEnabled#setLog(org.slf4j.Logger)
-     */
-    public void setLog(Logger log) {
-        this.logger = log;
-    }
 
     /**
      * @see
@@ -144,13 +138,13 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
         for (MatcherMailetPair pair : pairs) {
             Mailet mailet = pair.getMailet();
             Matcher matcher = pair.getMatcher();
-            if (logger.isDebugEnabled()) {
-                logger.debug("Shutdown matcher " + matcher.getMatcherInfo());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Shutdown matcher " + matcher.getMatcherInfo());
             }
             matcher.destroy();
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("Shutdown mailet " + mailet.getMailetInfo());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Shutdown mailet " + mailet.getMailetInfo());
             }
             mailet.destroy();
 
@@ -165,10 +159,6 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
      */
     protected void toProcessor(Mail mail) throws MessagingException {
         rootMailProcessor.service(mail);
-    }
-
-    protected Logger getLogger() {
-        return logger;
     }
 
     protected String getState() {
@@ -357,34 +347,34 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
                 }
 
                 // The matcher itself should log that it's been inited.
-                if (logger.isInfoEnabled()) {
+                if (LOGGER.isInfoEnabled()) {
                     String infoBuffer = "Matcher " + matcherName + " instantiated.";
-                    logger.info(infoBuffer.toString());
+                    LOGGER.info(infoBuffer.toString());
                 }
             } catch (MessagingException ex) {
                 // **** Do better job printing out exception
-                if (logger.isErrorEnabled()) {
+                if (LOGGER.isErrorEnabled()) {
                     String errorBuffer = "Unable to init matcher " + matcherName + ": " + ex.toString();
-                    logger.error(errorBuffer.toString(), ex);
+                    LOGGER.error(errorBuffer.toString(), ex);
                     if (ex.getNextException() != null) {
-                        logger.error("Caused by nested exception: ", ex.getNextException());
+                        LOGGER.error("Caused by nested exception: ", ex.getNextException());
                     }
                 }
                 throw new ConfigurationException("Unable to init matcher " + matcherName, ex);
             }
             try {
                 mailet = mailetLoader.getMailet(createMailetConfig(mailetClassName, c));
-                if (logger.isInfoEnabled()) {
+                if (LOGGER.isInfoEnabled()) {
                     String infoBuffer = "Mailet " + mailetClassName + " instantiated.";
-                    logger.info(infoBuffer.toString());
+                    LOGGER.info(infoBuffer.toString());
                 }
             } catch (MessagingException ex) {
                 // **** Do better job printing out exception
-                if (logger.isErrorEnabled()) {
+                if (LOGGER.isErrorEnabled()) {
                     String errorBuffer = "Unable to init mailet " + mailetClassName + ": " + ex.toString();
-                    logger.error(errorBuffer.toString(), ex);
+                    LOGGER.error(errorBuffer.toString(), ex);
                     if (ex.getNextException() != null) {
-                        logger.error("Caused by nested exception: ", ex.getNextException());
+                        LOGGER.error("Caused by nested exception: ", ex.getNextException());
                     }
                 }
                 throw new ConfigurationException("Unable to init mailet " + mailetClassName, ex);
@@ -427,7 +417,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
                 // error processor. That is currently the
                 // normal situation for James, and the message
                 // will show up in the error store.
-                logger.warn("Message {} reached the end of this processor, and is automatically deleted. " +
+                LOGGER.warn("Message {} reached the end of this processor, and is automatically deleted. " +
                     "This may indicate a configuration error.", mail.getName());
             }
 

@@ -78,7 +78,7 @@ public class DeliveryRunnableTest {
         bouncer = mock(Bouncer.class);
         mailDelivrer = mock(MailDelivrer.class);
         mailQueue = mock(MailQueue.class);
-        testee = new DeliveryRunnable(mailQueue, configuration, mockMetricFactory, LOGGER, bouncer, mailDelivrer, DeliveryRunnable.DEFAULT_NOT_STARTED, FIXED_DATE_SUPPLIER);
+        testee = new DeliveryRunnable(mailQueue, configuration, mockMetricFactory, bouncer, mailDelivrer, DeliveryRunnable.DEFAULT_NOT_STARTED, FIXED_DATE_SUPPLIER);
     }
 
     @Test

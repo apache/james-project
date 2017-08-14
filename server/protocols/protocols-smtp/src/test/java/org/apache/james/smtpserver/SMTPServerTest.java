@@ -197,9 +197,6 @@ public class SMTPServerTest {
     }
 
     protected void setUpSMTPServer() {
-        Logger log = LoggerFactory.getLogger("SMTP");
-        // slf4j can't set programmatically any log level. It's just a facade
-        // log.setLevel(SimpleLog.LOG_LEVEL_ALL);
         SmtpMetricsImpl smtpMetrics = mock(SmtpMetricsImpl.class);
         when(smtpMetrics.getCommandsMetric()).thenReturn(mock(Metric.class));
         when(smtpMetrics.getConnectionMetric()).thenReturn(mock(Metric.class));
@@ -207,8 +204,6 @@ public class SMTPServerTest {
         smtpServer.setDnsService(dnsServer);
         smtpServer.setFileSystem(fileSystem);
         smtpServer.setProtocolHandlerLoader(chain);
-        smtpServer.setLog(log);
-
     }
 
     protected void init(SMTPTestConfiguration testConfiguration) throws Exception {

@@ -27,8 +27,6 @@ import org.apache.james.domainlist.cassandra.CassandraDomainList;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -40,8 +38,6 @@ import com.google.inject.multibindings.Multibinder;
 
 public class CassandraDomainListModule extends AbstractModule {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DomainList.class);
-    
     @Override
     public void configure() {
         bind(CassandraDomainList.class).in(Scopes.SINGLETON);
@@ -65,7 +61,6 @@ public class CassandraDomainListModule extends AbstractModule {
         @Override
         public void initModule() {
             try {
-                cassandraDomainList.setLog(LOGGER);
                 cassandraDomainList.configure(configurationProvider.getConfiguration("domainlist"));
             } catch (ConfigurationException e) {
                 Throwables.propagate(e);

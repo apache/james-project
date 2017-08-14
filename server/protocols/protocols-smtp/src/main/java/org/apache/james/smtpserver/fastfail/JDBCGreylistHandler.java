@@ -58,15 +58,6 @@ import org.slf4j.LoggerFactory;
 public class JDBCGreylistHandler extends AbstractGreylistHandler implements ProtocolHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(JDBCGreylistHandler.class);
 
-    /** This log is the fall back shared by all instances */
-    private static final Logger FALLBACK_LOG = LoggerFactory.getLogger(JDBCGreylistHandler.class);
-
-    /**
-     * Non context specific log should only be used when no context specific log
-     * is available
-     */
-    private Logger serviceLog = FALLBACK_LOG;
-
     private DataSource datasource = null;
 
     private FileSystem fileSystem = null;
@@ -299,7 +290,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
      */
     private final JDBCUtil theJDBCUtil = new JDBCUtil() {
         protected void delegatedLog(String logString) {
-            serviceLog.debug("JDBCRecipientRewriteTable: " + logString);
+            LOGGER.debug("JDBCRecipientRewriteTable: " + logString);
         }
     };
 
@@ -323,7 +314,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
                 sqlFile = fileSystem.getFile(sqlFileUrl);
                 sqlFileUrl = null;
             } catch (Exception e) {
-                serviceLog.error(e.getMessage(), e);
+                LOGGER.error(e.getMessage(), e);
                 throw e;
             }
 
@@ -370,7 +361,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
 
                 StringBuilder logBuffer;
                 logBuffer = new StringBuilder(64).append("Created table '").append(tableName).append("' using sqlResources string '").append(createSqlStringName).append("'.");
-                serviceLog.info(logBuffer.toString());
+                LOGGER.info(logBuffer.toString());
 
             } finally {
                 theJDBCUtil.closeJDBCStatement(createStatement);
@@ -390,13 +381,6 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
             LOGGER.info("IpAddress " + session.getRemoteAddress().getAddress().getHostAddress() + " is whitelisted. Skip greylisting.");
         }
         return new HookResult(HookReturnCode.DECLINED);
-    }
-
-    /**
-     * @see org.apache.james.lifecycle.api.LogEnabled#setLog(Logger)
-     */
-    public void setLog(Logger log) {
-        this.serviceLog = log;
     }
 
     @Override
@@ -426,7 +410,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
                 wList.add(aWhitelistArray.trim());
             }
             wNetworks = new NetMatcher(wList, dnsService);
-            serviceLog.info("Whitelisted addresses: " + getWhiteListedNetworks().toString());
+            LOGGER.info("Whitelisted addresses: " + getWhiteListedNetworks().toString());
         }
 
         // Get the SQL file location

@@ -64,7 +64,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -90,7 +90,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -119,7 +119,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -148,7 +148,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -178,7 +178,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -207,7 +207,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -236,7 +236,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -265,7 +265,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .build();
@@ -284,7 +284,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -310,7 +310,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -337,7 +337,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.BOUNCE_PROCESSOR, BOUNCE_PROCESSOR)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -364,7 +364,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.BOUNCE_PROCESSOR, BOUNCE_PROCESSOR)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .build();
@@ -382,7 +382,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -410,7 +410,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -440,7 +440,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.BOUNCE_PROCESSOR, BOUNCE_PROCESSOR)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)

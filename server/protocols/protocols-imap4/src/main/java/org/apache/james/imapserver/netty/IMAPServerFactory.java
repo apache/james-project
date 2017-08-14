@@ -31,7 +31,6 @@ import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
-import org.slf4j.Logger;
 
 public class IMAPServerFactory extends AbstractServerFactory {
 
@@ -55,13 +54,13 @@ public class IMAPServerFactory extends AbstractServerFactory {
     }
     
     @Override
-    protected List<AbstractConfigurableAsyncServer> createServers(Logger log, HierarchicalConfiguration config) throws Exception {
+
+    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception {
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration> configs = config.configurationsAt("imapserver");
         
         for (HierarchicalConfiguration serverConfig: configs) {
             IMAPServer server = createServer();
-            server.setLog(log);
             server.setFileSystem(fileSystem);
             server.configure(serverConfig);
             servers.add(server);

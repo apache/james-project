@@ -32,8 +32,11 @@ import org.apache.james.protocols.netty.LineDelimiterBasedChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.smtpserver.netty.SMTPChannelUpstreamHandler;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServerMBean {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LMTPServer.class);
 
     /**
      * The maximum message size allowed by this SMTP server. The default value,
@@ -71,9 +74,9 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
             // by 1024, to put it in bytes
             maxMessageSize = configuration.getLong("maxmessagesize", maxMessageSize) * 1024;
             if (maxMessageSize > 0) {
-                getLogger().info("The maximum allowed message size is " + maxMessageSize + " bytes.");
+                LOGGER.info("The maximum allowed message size is " + maxMessageSize + " bytes.");
             } else {
-                getLogger().info("No maximum message size is enforced for this server.");
+                LOGGER.info("No maximum message size is enforced for this server.");
             }
 
             // get the lmtpGreeting

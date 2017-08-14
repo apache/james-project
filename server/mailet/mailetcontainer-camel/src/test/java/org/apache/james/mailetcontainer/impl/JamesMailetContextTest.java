@@ -53,7 +53,6 @@ public class JamesMailetContextTest {
     @Before
     public void setUp() throws Exception {
         domainList = new MemoryDomainList(DNS_SERVICE);
-        domainList.setLog(LOGGER);
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);

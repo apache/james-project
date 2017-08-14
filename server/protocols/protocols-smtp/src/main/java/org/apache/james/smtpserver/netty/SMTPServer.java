@@ -39,11 +39,14 @@ import org.apache.james.smtpserver.CoreCmdHandlerLoader;
 import org.apache.james.smtpserver.ExtendedSMTPSession;
 import org.apache.james.smtpserver.jmx.JMXHandlersLoader;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * NIO SMTPServer which use Netty
  */
 public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServerMBean {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractProtocolAsyncServer.class);
 
     /**
      * Whether authentication is required to use this SMTP server.
@@ -115,7 +118,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
             @Override
             public ProtocolSession newSession(ProtocolTransport transport) {
-                return new ExtendedSMTPSession(theConfigData, getLogger(), transport);
+                return new ExtendedSMTPSession(theConfigData, transport);
             }
             
         };
@@ -134,9 +137,9 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             else
                 authRequired = AUTH_DISABLED;
             if (authRequired != AUTH_DISABLED) {
-                getLogger().info("This SMTP server requires authentication.");
+                LOGGER.info("This SMTP server requires authentication.");
             } else {
-                getLogger().info("This SMTP server does not require authentication.");
+                LOGGER.info("This SMTP server does not require authentication.");
             }
 
             authorizedAddresses = configuration.getString("authorizedAddresses", null);
@@ -159,16 +162,16 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
           
             if (authorizedNetworks != null) {
-                getLogger().info("Authorized addresses: " + authorizedNetworks.toString());
+                LOGGER.info("Authorized addresses: " + authorizedNetworks.toString());
             }
 
             // get the message size limit from the conf file and multiply
             // by 1024, to put it in bytes
             maxMessageSize = configuration.getLong("maxmessagesize", maxMessageSize) * 1024;
             if (maxMessageSize > 0) {
-                getLogger().info("The maximum allowed message size is " + maxMessageSize + " bytes.");
+                LOGGER.info("The maximum allowed message size is " + maxMessageSize + " bytes.");
             } else {
-                getLogger().info("No maximum message size is enforced for this server.");
+                LOGGER.info("No maximum message size is enforced for this server.");
             }
 
             heloEhloEnforcement = configuration.getBoolean("heloEhloEnforcement", true);

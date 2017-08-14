@@ -33,6 +33,8 @@ import org.apache.james.repository.file.FilePersistentObjectRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.AbstractJamesUsersRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -54,11 +56,7 @@ import org.apache.james.user.lib.AbstractJamesUsersRepository;
 @Deprecated
 @Singleton
 public class UsersFileRepository extends AbstractJamesUsersRepository {
-
-    /**
-     * Whether 'deep debugging' is turned on.
-     */
-    protected static boolean DEEP_DEBUG = false;
+    private static final Logger LOGGER = LoggerFactory.getLogger(UsersFileRepository.class);
 
     private FilePersistentObjectRepository objectRepository;
 
@@ -97,17 +95,16 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
             objectConfiguration.addProperty("[@destinationURL]", destination);
 
             objectRepository = new FilePersistentObjectRepository();
-            objectRepository.setLog(getLogger());
             objectRepository.setFileSystem(fileSystem);
             objectRepository.configure(objectConfiguration);
             objectRepository.init();
-            if (getLogger().isDebugEnabled()) {
+            if (LOGGER.isDebugEnabled()) {
                 String logBuffer = this.getClass().getName() + " created in " + destination;
-                getLogger().debug(logBuffer);
+                LOGGER.debug(logBuffer);
             }
         } catch (Exception e) {
-            if (getLogger().isErrorEnabled()) {
-                getLogger().error("Failed to initialize repository:" + e.getMessage(), e);
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("Failed to initialize repository:" + e.getMessage(), e);
             }
             throw e;
         }

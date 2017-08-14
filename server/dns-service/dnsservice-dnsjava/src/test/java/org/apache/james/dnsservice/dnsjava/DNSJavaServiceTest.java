@@ -71,7 +71,6 @@ public class DNSJavaServiceTest {
 
         db.load(new ByteArrayInputStream(DNS_SERVER_CONFIG));
 
-        dnsServer.setLog(LoggerFactory.getLogger(DNSJavaServiceTest.class));
         dnsServer.configure(db);
         dnsServer.init();
 

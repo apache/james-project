@@ -27,7 +27,6 @@ import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.apache.james.system.hbase.TablePool;
 import org.junit.Before;
-import org.slf4j.LoggerFactory;
 
 /**
  * Tests for the HBase RecipientRewriteTable implementation.
@@ -50,7 +49,6 @@ public class HBaseRecipientRewriteTableTest extends AbstractRecipientRewriteTabl
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         HBaseRecipientRewriteTable rrt = new HBaseRecipientRewriteTable();
-        rrt.setLog(LoggerFactory.getLogger("MockLog"));
         rrt.configure(new DefaultConfigurationBuilder());
         return rrt;
     }

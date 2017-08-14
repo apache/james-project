@@ -35,6 +35,8 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -44,6 +46,7 @@ import com.google.common.collect.ImmutableList;
  * database schema can be reused.
  */
 public class JPADomainList extends AbstractDomainList {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JPADomainList.class);
 
     /**
      * The entity manager to access the database.
@@ -83,7 +86,7 @@ public class JPADomainList extends AbstractDomainList {
             domains = entityManager.createNamedQuery("listDomainNames").getResultList();
             transaction.commit();
         } catch (PersistenceException e) {
-            getLogger().error("Failed to list domains", e);
+            LOGGER.error("Failed to list domains", e);
             rollback(transaction);
             throw new DomainListException("Unable to retrieve domains", e);
         } finally {
@@ -103,7 +106,7 @@ public class JPADomainList extends AbstractDomainList {
             transaction.commit();
             return result;
         } catch (PersistenceException e) {
-            getLogger().error("Failed to find domain", e);
+            LOGGER.error("Failed to find domain", e);
             rollback(transaction);
             throw new DomainListException("Unable to retrieve domains", e);
         } finally {
@@ -126,7 +129,7 @@ public class JPADomainList extends AbstractDomainList {
             entityManager.persist(jpaDomain);
             transaction.commit();
         } catch (PersistenceException e) {
-            getLogger().error("Failed to save domain", e);
+            LOGGER.error("Failed to save domain", e);
             rollback(transaction);
             throw new DomainListException("Unable to add domain " + domain, e);
         } finally {
@@ -148,7 +151,7 @@ public class JPADomainList extends AbstractDomainList {
             entityManager.createNamedQuery("deleteDomainByName").setParameter("name", lowerCasedDomain).executeUpdate();
             transaction.commit();
         } catch (PersistenceException e) {
-            getLogger().error("Failed to remove domain", e);
+            LOGGER.error("Failed to remove domain", e);
             rollback(transaction);
             throw new DomainListException("Unable to remove domain " + domain, e);
         } finally {
@@ -168,7 +171,7 @@ public class JPADomainList extends AbstractDomainList {
                 .setParameter("name", domain)
                 .getSingleResult() != null;
         } catch (NoResultException e) {
-            getLogger().debug("No domain found", e);
+            LOGGER.debug("No domain found", e);
             return false;
         }
     }

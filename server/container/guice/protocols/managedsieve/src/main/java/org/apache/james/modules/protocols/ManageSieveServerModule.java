@@ -27,8 +27,6 @@ import org.apache.james.managesieveserver.netty.ManageSieveServerFactory;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
 import org.apache.james.utils.GuiceProbe;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -38,8 +36,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class ManageSieveServerModule extends AbstractModule {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveServerModule.class);
 
     @Override
     protected void configure() {
@@ -63,7 +59,6 @@ public class ManageSieveServerModule extends AbstractModule {
         @Override
         public void initModule() {
             try {
-                manageSieveServerFactory.setLog(LOGGER);
                 manageSieveServerFactory.configure(configurationProvider.getConfiguration("managesieveserver"));
                 manageSieveServerFactory.init();
             } catch (Exception e) {

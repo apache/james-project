@@ -30,7 +30,6 @@ import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.lib.MappingsImpl.Builder;
 import org.junit.Before;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 
@@ -50,9 +49,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
 
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
-        XMLRecipientRewriteTable localVirtualUserTable = new XMLRecipientRewriteTable();
-        localVirtualUserTable.setLog(LoggerFactory.getLogger("MockLog"));
-        return localVirtualUserTable;
+        return new XMLRecipientRewriteTable();
     }
 
     @Override

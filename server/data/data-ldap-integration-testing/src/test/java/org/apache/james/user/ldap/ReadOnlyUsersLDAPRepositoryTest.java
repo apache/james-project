@@ -60,7 +60,6 @@ public class ReadOnlyUsersLDAPRepositoryTest {
     private void startUsersRepository(HierarchicalConfiguration ldapRepositoryConfiguration) throws ConfigurationException, Exception {
         ldapRepository = new ReadOnlyUsersLDAPRepository();
         ldapRepository.configure(ldapRepositoryConfiguration);
-        ldapRepository.setLog(LOGGER);
         ldapRepository.init();
     }
 

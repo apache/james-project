@@ -26,7 +26,6 @@ import org.apache.derby.jdbc.EmbeddedDriver;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
-import org.slf4j.LoggerFactory;
 
 import cucumber.api.java.Before;
 
@@ -46,7 +45,6 @@ public class JDBCStepdefs {
     @SuppressWarnings("deprecation")
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         JDBCRecipientRewriteTable localVirtualUserTable = new JDBCRecipientRewriteTable();
-        localVirtualUserTable.setLog(LoggerFactory.getLogger("MockLog"));
         localVirtualUserTable.setDataSource(getDataSource());
         localVirtualUserTable.setFileSystem(new MockFileSystem());
         DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();

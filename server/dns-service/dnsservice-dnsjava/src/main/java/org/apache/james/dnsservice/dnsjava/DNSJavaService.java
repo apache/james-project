@@ -36,10 +36,10 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.DNSServiceMBean;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xbill.DNS.ARecord;
 import org.xbill.DNS.Cache;
 import org.xbill.DNS.Credibility;
@@ -62,7 +62,8 @@ import com.google.common.collect.ImmutableList;
 /**
  * Provides DNS client functionality to services running inside James
  */
-public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, Configurable {
+public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DNSJavaService.class);
 
     /**
      * A resolver instance used to retrieve DNS records. This is a reference to
@@ -115,12 +116,6 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
 
     private String localAddress;
 
-    private Logger logger;
-
-    public void setLog(Logger logger) {
-        this.logger = logger;
-    }
-
     @Inject
     public DNSJavaService(MetricFactory metricFactory) {
         this.metricFactory = metricFactory;
@@ -133,21 +128,21 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
 
         List<Name> sPaths = new ArrayList<>();
         if (autodiscover) {
-            logger.info("Autodiscovery is enabled - trying to discover your system's DNS Servers");
+            LOGGER.info("Autodiscovery is enabled - trying to discover your system's DNS Servers");
             String[] serversArray = ResolverConfig.getCurrentConfig().servers();
             if (serversArray != null) {
                 for (String aServersArray : serversArray) {
                     dnsServers.add(aServersArray);
-                    logger.info("Adding autodiscovered server " + aServersArray);
+                    LOGGER.info("Adding autodiscovered server " + aServersArray);
                 }
             }
             Name[] systemSearchPath = ResolverConfig.getCurrentConfig().searchPath();
             if (systemSearchPath != null && systemSearchPath.length > 0) {
                 sPaths.addAll(Arrays.asList(systemSearchPath));
             }
-            if (logger.isInfoEnabled()) {
+            if (LOGGER.isInfoEnabled()) {
                 for (Name searchPath : sPaths) {
-                    logger.info("Adding autodiscovered search path " + searchPath.toString());
+                    LOGGER.info("Adding autodiscovered search path " + searchPath.toString());
                 }
             }
         }
@@ -171,7 +166,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
         searchPaths = sPaths.toArray(new Name[sPaths.size()]);
 
         if (dnsServers.isEmpty()) {
-            logger.info("No DNS servers have been specified or found by autodiscovery - adding 127.0.0.1");
+            LOGGER.info("No DNS servers have been specified or found by autodiscovery - adding 127.0.0.1");
             dnsServers.add("127.0.0.1");
         }
 
@@ -186,7 +181,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
 
     @PostConstruct
     public void init() throws Exception {
-        logger.debug("DNSService init...");
+        LOGGER.debug("DNSService init...");
 
         // If no DNS servers were configured, default to local host
         if (dnsServers.isEmpty()) {
@@ -200,16 +195,16 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
         // Create the extended resolver...
         final String[] serversArray = dnsServers.toArray(new String[dnsServers.size()]);
 
-        if (logger.isInfoEnabled()) {
+        if (LOGGER.isInfoEnabled()) {
             for (String aServersArray : serversArray) {
-                logger.info("DNS Server is: " + aServersArray);
+                LOGGER.info("DNS Server is: " + aServersArray);
             }
         }
 
         try {
             resolver = new ExtendedResolver(serversArray);
         } catch (UnknownHostException uhe) {
-            logger.error("DNS service could not be initialized.  The DNS servers specified are not recognized hosts.", uhe);
+            LOGGER.error("DNS service could not be initialized.  The DNS servers specified are not recognized hosts.", uhe);
             throw uhe;
         }
 
@@ -220,7 +215,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
             Lookup.setDefaultResolver(resolver);
             Lookup.setDefaultCache(cache, DClass.IN);
             Lookup.setDefaultSearchPath(searchPaths);
-            logger.info("Registered cache, resolver and search paths as DNSJava defaults");
+            LOGGER.info("Registered cache, resolver and search paths as DNSJava defaults");
         }
 
         // Cache the local hostname and local address. This is needed because
@@ -232,7 +227,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
         localHostName = addr.getHostName();
         localAddress = addr.getHostAddress();
 
-        logger.debug("DNSService ...init end");
+        LOGGER.debug("DNSService ...init end");
     }
 
     /**
@@ -312,7 +307,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
                 Collections.shuffle(samePrio);
                 servers.addAll(samePrio);
             }
-            logger.debug("Found MX record " + mxRecord);
+            LOGGER.debug("Found MX record " + mxRecord);
         }
         return servers;
     }
@@ -329,7 +324,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
             // it's a valid DNS entry
             if (servers.size() == 0) {
                 StringBuffer logBuffer = new StringBuffer(128).append("Couldn't resolve MX records for domain ").append(hostname).append(".");
-                logger.info(logBuffer.toString());
+                LOGGER.info(logBuffer.toString());
                 try {
                     getByName(hostname);
                     servers.add(hostname);
@@ -338,7 +333,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
                     // so we can't add it to the server list. In this
                     // case we return an empty list of servers
                     logBuffer = new StringBuffer(128).append("Couldn't resolve IP address for host ").append(hostname).append(".");
-                    logger.error(logBuffer.toString(), uhe);
+                    LOGGER.error(logBuffer.toString(), uhe);
                 }
             }
             timeMetric.stopAndPublish();
@@ -375,14 +370,14 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
             } catch (IllegalStateException ise) {
                 // This is okay, because it mimics the original behaviour
                 // TODO find out if it's a bug in DNSJava
-                logger.warn("Error determining result ", ise);
+                LOGGER.warn("Error determining result ", ise);
                 throw new TemporaryResolutionException("DNSService is temporary not reachable");
             }
 
             // return rawDNSLookup(name, false, type, typeDesc);
         } catch (TextParseException tpe) {
             // TODO: Figure out how to handle this correctly.
-            logger.error("Couldn't parse name " + namestr, tpe);
+            LOGGER.error("Couldn't parse name " + namestr, tpe);
             return null;
         }
     }

@@ -25,7 +25,6 @@ import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
-import org.slf4j.LoggerFactory;
 
 /**
  * Test the JDBC Virtual User Table implementation.
@@ -39,7 +38,6 @@ public class JDBCRecipientRewriteTableTest extends AbstractRecipientRewriteTable
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         JDBCRecipientRewriteTable localVirtualUserTable = new JDBCRecipientRewriteTable();
-        localVirtualUserTable.setLog(LoggerFactory.getLogger("MockLog"));
         localVirtualUserTable.setDataSource(getDataSource());
         localVirtualUserTable.setFileSystem(new MockFileSystem());
         DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();

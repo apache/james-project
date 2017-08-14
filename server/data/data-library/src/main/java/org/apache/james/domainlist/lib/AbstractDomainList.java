@@ -32,7 +32,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +45,7 @@ import com.google.common.collect.ImmutableList;
  * All implementations of the DomainList interface should extends this abstract
  * class
  */
-public abstract class AbstractDomainList implements DomainList, LogEnabled, Configurable {
+public abstract class AbstractDomainList implements DomainList, Configurable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainList.class);
 
@@ -61,7 +60,6 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     private final EnvDetector envDetector;
     private boolean autoDetect = true;
     private boolean autoDetectIP = true;
-    private Logger logger;
     private String defaultDomain;
 
     public AbstractDomainList(DNSService dns, EnvDetector envDetector) {
@@ -71,14 +69,6 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
 
     public AbstractDomainList(DNSService dns) {
         this(dns, new EnvDetector());
-    }
-
-    public void setLog(Logger logger) {
-        this.logger = logger;
-    }
-
-    protected Logger getLogger() {
-        return logger;
     }
 
     @Override
@@ -170,9 +160,9 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
         mutableDomains.addAll(detectedDomains);
         mutableDomains.addAll(detectIps(mutableDomains));
 
-        if (getLogger().isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             for (String domain : mutableDomains) {
-                getLogger().debug("Handling mail for: " + domain);
+                LOGGER.debug("Handling mail for: " + domain);
             }
         }
 
@@ -181,7 +171,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
 
     private List<String> detectIps(ArrayList<String> mutableDomains) {
         if (autoDetectIP) {
-            return getDomainsIP(mutableDomains, dns, getLogger());
+            return getDomainsIP(mutableDomains, dns, LOGGER);
         }
         return ImmutableList.of();
     }
@@ -195,7 +185,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
                 hostName = "localhost";
             }
 
-            getLogger().info("Local host is: " + hostName);
+            LOGGER.info("Local host is: " + hostName);
             if (hostName != null && !hostName.equals("localhost")) {
                 return ImmutableList.of(hostName.toLowerCase(Locale.US));
             }
@@ -240,7 +230,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
      *            set to <code>false</code> for disable
      */
     public synchronized void setAutoDetect(boolean autoDetect) {
-        getLogger().info("Set autodetect to: " + autoDetect);
+        LOGGER.info("Set autodetect to: " + autoDetect);
         this.autoDetect = autoDetect;
     }
 
@@ -252,7 +242,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
      *            set to <code>false</code> for disable
      */
     public synchronized void setAutoDetectIP(boolean autoDetectIP) {
-        getLogger().info("Set autodetectIP to: " + autoDetectIP);
+        LOGGER.info("Set autodetectIP to: " + autoDetectIP);
         this.autoDetectIP = autoDetectIP;
     }
 

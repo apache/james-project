@@ -135,10 +135,9 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     protected final Metric enqueuedMailsMetric;
     protected final Metric mailQueueSize;
     protected final MetricFactory metricFactory;
-    protected final Logger logger;
     public final static String FORCE_DELIVERY = "FORCE_DELIVERY";
 
-    public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName, MetricFactory metricFactory, Logger logger) {
+    public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName, MetricFactory metricFactory) {
         try {
             connection = connectionFactory.createConnection();
             connection.start();
@@ -150,7 +149,6 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         this.metricFactory = metricFactory;
         this.enqueuedMailsMetric = metricFactory.generate("enqueuedMail:" + queueName);
         this.mailQueueSize = metricFactory.generate("mailQueueSize:" + queueName);
-        this.logger = logger;
     }
 
     /**
@@ -400,7 +398,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             } catch (AddressException e) {
                 // Should never happen as long as the user does not modify the
                 // the header by himself
-                logger.error("Unable to parse the recipient address " + token + " for mail " + mail.getName() + ", so we ignore it", e);
+                LOGGER.error("Unable to parse the recipient address " + token + " for mail " + mail.getName() + ", so we ignore it", e);
             }
         }
         mail.setRecipients(rcpts);
@@ -421,7 +419,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
                 if (attrValue instanceof Serializable) {
                     mail.setAttribute(name, (Serializable) attrValue);
                 } else {
-                    logger.error("Not supported mail attribute " + name + " of type " + attrValue + " for mail " + mail.getName());
+                    LOGGER.error("Not supported mail attribute " + name + " of type " + attrValue + " for mail " + mail.getName());
                 }
             }
         }
@@ -435,7 +433,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             } catch (AddressException e) {
                 // Should never happen as long as the user does not modify the
                 // the header by himself
-                logger.error("Unable to parse the sender address " + sender + " for mail " + mail.getName() + ", so we fallback to a null sender", e);
+                LOGGER.error("Unable to parse the sender address " + sender + " for mail " + mail.getName() + ", so we fallback to a null sender", e);
                 mail.setSender(null);
             }
         }
@@ -503,7 +501,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             }
             return size;
         } catch (Exception e) {
-            logger.error("Unable to get size of queue " + queueName, e);
+            LOGGER.error("Unable to get size of queue " + queueName, e);
             throw new MailQueueException("Unable to get size of queue " + queueName, e);
         } finally {
             closeBrowser(browser);
@@ -545,7 +543,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             session.commit();
             return count;
         } catch (Exception e) {
-            logger.error("Unable to flush mail", e);
+            LOGGER.error("Unable to flush mail", e);
             rollback(session);
             throw new MailQueueException("Unable to get size of queue " + queueName, e);
         } finally {
@@ -690,7 +688,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
                                 }
                             };
                         } catch (MessagingException | JMSException e) {
-                            logger.error("Unable to browse queue", e);
+                            LOGGER.error("Unable to browse queue", e);
                         }
                     }
 
@@ -714,7 +712,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             closeBrowser(browser);
             closeSession(session);
 
-            logger.error("Unable to browse queue " + queueName, e);
+            LOGGER.error("Unable to browse queue " + queueName, e);
             throw new MailQueueException("Unable to browse queue " + queueName, e);
         }
     }
@@ -724,7 +722,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         try {
             connection.close();
         } catch (JMSException e) {
-            logger.error("Error while closing session", e);
+            LOGGER.error("Error while closing session", e);
         }
     }
     

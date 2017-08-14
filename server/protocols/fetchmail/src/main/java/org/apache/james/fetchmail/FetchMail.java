@@ -38,11 +38,11 @@ import org.apache.commons.configuration.tree.ConfigurationNode;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -79,7 +79,9 @@ import org.slf4j.Logger;
  * delegate, <code>StoreProcessor</code>.
  * </p>
  */
-public class FetchMail implements Runnable, LogEnabled, Configurable {
+public class FetchMail implements Runnable, Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FetchMail.class);
+
     /**
      * Key fields for DynamicAccounts.
      */
@@ -384,8 +386,6 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
      */
     private DNSService dnsServer;
 
-    private Logger logger;
-
     private MailQueue queue;
 
     private DomainList domainList;
@@ -410,7 +410,7 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
         setSessionParameters(configuration);
 
         // Create the ParsedConfiguration used in the delegation chain
-        ParsedConfiguration parsedConfiguration = new ParsedConfiguration(configuration, logger, getLocalUsers(), getDNSService(), getDomainList(), getMailQueue());
+        ParsedConfiguration parsedConfiguration = new ParsedConfiguration(configuration, getLocalUsers(), getDNSService(), getDomainList(), getMailQueue());
 
         setParsedConfiguration(parsedConfiguration);
 
@@ -459,14 +459,14 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
     public void run() {
         // if we are already fetching then just return
         if (isFetching()) {
-            logger.info("Triggered fetch cancelled. A fetch is already in progress.");
+            LOGGER.info("Triggered fetch cancelled. A fetch is already in progress.");
             return;
         }
 
         // Enter Fetching State
         try {
             setFetching(true);
-            logger.info("Fetcher starting fetches");
+            LOGGER.info("Fetcher starting fetches");
 
             logJavaMailProperties();
 
@@ -486,20 +486,20 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
             logMessage.append(" static accounts and ");
             logMessage.append(getDynamicAccounts().size());
             logMessage.append(" dynamic accounts.");
-            logger.info(logMessage.toString());
+            LOGGER.info(logMessage.toString());
 
             // Fetch each account
             for (Account mergedAccount : mergedAccounts) {
                 try {
                     new StoreProcessor(mergedAccount).process();
                 } catch (MessagingException ex) {
-                    logger.error("A MessagingException has terminated processing of this Account", ex);
+                    LOGGER.error("A MessagingException has terminated processing of this Account", ex);
                 }
             }
         } catch (Exception ex) {
-            logger.error("An Exception has terminated this fetch.", ex);
+            LOGGER.error("An Exception has terminated this fetch.", ex);
         } finally {
-            logger.info("Fetcher completed fetches");
+            LOGGER.info("Fetcher completed fetches");
 
             // Exit Fetching State
             setFetching(false);
@@ -509,8 +509,8 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
     private void logJavaMailProperties() {
         // if debugging, list the JavaMail property key/value pairs
         // for this Session
-        if (logger.isDebugEnabled()) {
-            logger.debug("Session properties:");
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Session properties:");
             Properties properties = getSession().getProperties();
             Enumeration<Object> e = properties.keys();
             while (e.hasMoreElements()) {
@@ -519,7 +519,7 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
                 if (val.length() > 40) {
                     val = val.substring(0, 37) + "...";
                 }
-                logger.debug(key + "=" + val);
+                LOGGER.debug(key + "=" + val);
 
             }
         }
@@ -585,10 +585,6 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
 
     public void setUsersRepository(UsersRepository urepos) {
         this.fieldLocalUsers = urepos;
-    }
-
-    public final void setLog(Logger logger) {
-        this.logger = logger;
     }
 
     /**
@@ -855,12 +851,12 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
             List<HierarchicalConfiguration> allProperties = configuration.configurationsAt("javaMailProperties.property");
             for (HierarchicalConfiguration propConf : allProperties) {
                 properties.setProperty(propConf.getString("[@name]"), propConf.getString("[@value]"));
-                if (logger.isDebugEnabled()) {
+                if (LOGGER.isDebugEnabled()) {
                     StringBuilder messageBuffer = new StringBuilder("Set property name: ");
                     messageBuffer.append(propConf.getString("[@name]"));
                     messageBuffer.append(" to: ");
                     messageBuffer.append(propConf.getString("[@value]"));
-                    logger.debug(messageBuffer.toString());
+                    LOGGER.debug(messageBuffer.toString());
                 }
             }
         }

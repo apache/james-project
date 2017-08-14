@@ -32,33 +32,26 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.impl.jmx.JMXStateCompositeProcessorListener;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstract base class for {@link org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor} which service the
  * {@link Mail} with a {@link org.apache.james.mailetcontainer.impl.camel.CamelProcessor} instances
  */
-public abstract class AbstractStateCompositeProcessor implements MailProcessor, Configurable, LogEnabled {
+public abstract class AbstractStateCompositeProcessor implements MailProcessor, Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractStateCompositeProcessor.class);
 
     private final List<CompositeProcessorListener> listeners = Collections.synchronizedList(new ArrayList<CompositeProcessorListener>());
     private final Map<String, MailProcessor> processors = new HashMap<>();
-    protected Logger logger;
     protected HierarchicalConfiguration config;
 
     private JMXStateCompositeProcessorListener jmxListener;
     private boolean enableJmx = true;
 
-    /**
-     * @see org.apache.james.lifecycle.api.LogEnabled#setLog(org.slf4j.Logger)
-     */
-    public void setLog(Logger log) {
-        this.logger = log;
-
-    }
 
     public void addListener(CompositeProcessorListener listener) {
         listeners.add(listener);
@@ -93,7 +86,7 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
         MailProcessor processor = getProcessor(mail.getState());
 
         if (processor != null) {
-            logger.debug("Call MailProcessor " + mail.getState());
+            LOGGER.debug("Call MailProcessor " + mail.getState());
             try {
                 processor.service(mail);
 

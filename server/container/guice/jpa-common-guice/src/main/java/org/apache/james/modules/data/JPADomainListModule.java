@@ -18,13 +18,8 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Scopes;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
+import java.util.List;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.JPADomainList;
@@ -34,7 +29,13 @@ import org.apache.james.utils.ConfigurationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Scopes;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 
 public class JPADomainListModule extends AbstractModule {
 
@@ -62,7 +63,6 @@ public class JPADomainListModule extends AbstractModule {
         @Override
         public void initModule() {
             try {
-                jpaDomainList.setLog(LOGGER);
                 jpaDomainList.configure(configurationProvider.getConfiguration("domainlist"));
             } catch (ConfigurationException e) {
                 Throwables.propagate(e);

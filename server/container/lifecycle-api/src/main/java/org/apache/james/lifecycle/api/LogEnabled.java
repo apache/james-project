@@ -25,7 +25,10 @@ import org.slf4j.Logger;
  * Indicates that a services requires general logging. Note that this log should
  * only be used for general service operations. A context sensitive log should
  * be preferred where that is available within the context of a call.
+ *
+ * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
  */
+@Deprecated
 public interface LogEnabled {
 
     /**

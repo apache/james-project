@@ -35,6 +35,7 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -43,10 +44,7 @@ import org.slf4j.Logger;
  * </p>
  */
 class ParsedConfiguration {
-    /**
-     * The logger.
-     */
-    private Logger fieldLogger;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ParsedConfiguration.class);
 
     /**
      * The name of the folder to fetch from the javamail provider
@@ -300,14 +298,12 @@ class ParsedConfiguration {
      * Constructor for ParsedConfiguration.
      * 
      * @param configuration
-     * @param logger
      * @param localUsers
      * @param dnsServer
      * @throws ConfigurationException
      */
-    public ParsedConfiguration(HierarchicalConfiguration configuration, Logger logger, UsersRepository localUsers, DNSService dnsServer, DomainList domainList, MailQueue queue) throws ConfigurationException {
+    public ParsedConfiguration(HierarchicalConfiguration configuration, UsersRepository localUsers, DNSService dnsServer, DomainList domainList, MailQueue queue) throws ConfigurationException {
         this();
-        setLogger(logger);
         setLocalUsers(localUsers);
         setDNSServer(dnsServer);
         setDomainList(domainList);
@@ -374,8 +370,8 @@ class ParsedConfiguration {
             setMarkMaxMessageSizeExceededSeen(maxmessagesize.getBoolean("[@markseen]"));
         }
 
-        if (getLogger().isDebugEnabled()) {
-            getLogger().info("Configured FetchMail fetch task " + getFetchTaskName());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.info("Configured FetchMail fetch task " + getFetchTaskName());
         }
     }
 
@@ -502,25 +498,6 @@ class ParsedConfiguration {
      */
     protected void setRecurse(boolean recurse) {
         fieldRecurse = recurse;
-    }
-
-    /**
-     * Returns the logger.
-     * 
-     * @return Logger
-     */
-    public Logger getLogger() {
-        return fieldLogger;
-    }
-
-    /**
-     * Sets the logger.
-     * 
-     * @param logger
-     *            The logger to set
-     */
-    protected void setLogger(Logger logger) {
-        fieldLogger = logger;
     }
 
     /**

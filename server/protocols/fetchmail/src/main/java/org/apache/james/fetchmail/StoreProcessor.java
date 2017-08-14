@@ -23,11 +23,16 @@ import javax.mail.Folder;
 import javax.mail.MessagingException;
 import javax.mail.Store;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Class <code>StoreProcessor</code> connects to a message store, gets the
  * target Folder and delegates its processing to <code>FolderProcessor</code>.
  */
 public class StoreProcessor extends ProcessorAbstract {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoreProcessor.class);
+
     /**
      * Constructor for StoreProcessor.
      * 
@@ -55,7 +60,7 @@ public class StoreProcessor extends ProcessorAbstract {
         logMessageBuffer.append("' in folder '");
         logMessageBuffer.append(getJavaMailFolderName());
         logMessageBuffer.append("'");
-        getLogger().info(logMessageBuffer.toString());
+        LOGGER.info(logMessageBuffer.toString());
 
         try {
             // Get a Store object
@@ -70,19 +75,19 @@ public class StoreProcessor extends ProcessorAbstract {
             // Get the Folder
             folder = store.getFolder(getJavaMailFolderName());
             if (folder == null)
-                getLogger().error(getFetchTaskName() + " No default folder");
+                LOGGER.error(getFetchTaskName() + " No default folder");
 
             // Process the Folder
             new FolderProcessor(folder, getAccount()).process();
 
         } catch (MessagingException ex) {
-            getLogger().error("A MessagingException has terminated processing of this Folder", ex);
+            LOGGER.error("A MessagingException has terminated processing of this Folder", ex);
         } finally {
             try {
                 if (null != store && store.isConnected())
                     store.close();
             } catch (MessagingException ex) {
-                getLogger().error("A MessagingException occured while closing the Store", ex);
+                LOGGER.error("A MessagingException occured while closing the Store", ex);
             }
             logMessageBuffer = new StringBuilder("Finished fetching mail from server '");
             logMessageBuffer.append(getHost());
@@ -91,7 +96,7 @@ public class StoreProcessor extends ProcessorAbstract {
             logMessageBuffer.append("' in folder '");
             logMessageBuffer.append(getJavaMailFolderName());
             logMessageBuffer.append("'");
-            getLogger().info(logMessageBuffer.toString());
+            LOGGER.info(logMessageBuffer.toString());
         }
     }
 

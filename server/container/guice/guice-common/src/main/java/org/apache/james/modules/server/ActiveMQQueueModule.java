@@ -26,8 +26,6 @@ import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.james.queue.activemq.ActiveMQMailQueueFactory;
 import org.apache.james.queue.activemq.EmbeddedActiveMQ;
 import org.apache.james.queue.api.MailQueueFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -35,9 +33,6 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 
 public class ActiveMQQueueModule extends AbstractModule {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQQueueModule.class);
-    
     @Override
     protected void configure() {
         bind(PersistenceAdapter.class).to(KahaDBPersistenceAdapter.class);
@@ -55,7 +50,6 @@ public class ActiveMQQueueModule extends AbstractModule {
     @Singleton
     public MailQueueFactory createActiveMailQueueFactory(ActiveMQMailQueueFactory activeMQMailQueueFactory) {
         activeMQMailQueueFactory.setUseJMX(true);
-        activeMQMailQueueFactory.setLog(LOGGER);
         activeMQMailQueueFactory.init();
         return activeMQMailQueueFactory;
     }

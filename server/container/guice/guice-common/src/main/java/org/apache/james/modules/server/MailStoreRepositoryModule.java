@@ -30,7 +30,6 @@ import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
 import org.apache.james.utils.InMemoryMailRepositoryStore;
 import org.apache.james.utils.MailRepositoryProvider;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -71,7 +70,6 @@ public class MailStoreRepositoryModule extends AbstractModule {
         public MailRepository get() {
             FileMailRepository fileMailRepository = new FileMailRepository();
             fileMailRepository.setFileSystem(fileSystem);
-            fileMailRepository.setLog(LoggerFactory.getLogger(FileMailRepository.class));
             return fileMailRepository;
         }
     }

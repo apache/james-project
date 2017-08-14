@@ -34,7 +34,6 @@ import org.apache.james.domainlist.api.DomainListException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -82,7 +81,6 @@ public class XMLDomainListTest {
     public void testNoConfiguredDomains() throws Exception {
         List<String> domains = new ArrayList<>();
         XMLDomainList dom = new XMLDomainList(setUpDNSServer("localhost"));
-        dom.setLog(LoggerFactory.getLogger("MockLog"));
         dom.configure(setUpConfiguration(false, false, domains));
 
         assertThat(dom.getDomains()).containsOnly(DEFAULT_DOMAIN);
@@ -95,7 +93,6 @@ public class XMLDomainListTest {
         domains.add("domain2.");
 
         XMLDomainList dom = new XMLDomainList(setUpDNSServer("localhost"));
-        dom.setLog(LoggerFactory.getLogger("MockLog"));
         dom.configure(setUpConfiguration(false, false, domains));
 
         assertThat(dom.getDomains()).hasSize(3);
@@ -107,7 +104,6 @@ public class XMLDomainListTest {
         domains.add("domain1.");
 
         XMLDomainList dom = new XMLDomainList(setUpDNSServer("local"));
-        dom.setLog(LoggerFactory.getLogger("MockLog"));
         dom.configure(setUpConfiguration(true, false, domains));
 
         assertThat(dom.getDomains()).hasSize(3);
@@ -119,9 +115,7 @@ public class XMLDomainListTest {
         domains.add("domain1.");
 
         XMLDomainList dom = new XMLDomainList(setUpDNSServer("localhost"));
-        dom.setLog(LoggerFactory.getLogger("MockLog"));
         dom.configure(setUpConfiguration(true, false, domains));
-
 
         assertThat(dom.getDomains()).hasSize(2);
     }
@@ -134,7 +128,6 @@ public class XMLDomainListTest {
         domains.add("domain1");
 
         XMLDomainList testee = new XMLDomainList(setUpDNSServer("hostname"));
-        testee.setLog(LoggerFactory.getLogger("MockLog"));
         testee.configure(setUpConfiguration(true, false, domains));
 
         testee.addDomain("newDomain");
@@ -148,7 +141,6 @@ public class XMLDomainListTest {
         domains.add("domain1");
 
         XMLDomainList testee = new XMLDomainList(setUpDNSServer("localhost"));
-        testee.setLog(LoggerFactory.getLogger("MockLog"));
         testee.configure(setUpConfiguration(true, false, domains));
 
         testee.removeDomain("newDomain");
@@ -164,7 +156,6 @@ public class XMLDomainListTest {
         configuration.addProperty("defaultDomain", "localhost");
 
         XMLDomainList testee = new XMLDomainList(setUpDNSServer("localhost"));
-        testee.setLog(LoggerFactory.getLogger("MockLog"));
         testee.configure(configuration);
 
         assertThat(testee.getDomainListInternal()).hasSize(3);

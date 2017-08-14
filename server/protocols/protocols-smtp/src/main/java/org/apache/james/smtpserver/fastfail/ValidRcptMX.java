@@ -49,32 +49,13 @@ import com.github.steveash.guavate.Guavate;
  */
 public class ValidRcptMX implements RcptHook, ProtocolHandler {
 
-    /**
-     * This log is the fall back shared by all instances
-     */
-    private static final Logger FALLBACK_LOG = LoggerFactory.getLogger(ValidRcptMX.class);
-
-    /**
-     * Non context specific log should only be used when no context specific log
-     * is available
-     */
-    private Logger serviceLog = FALLBACK_LOG;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ValidRcptMX.class);
 
     private DNSService dnsService = null;
 
     private static final String LOCALHOST = "localhost";
 
     private NetMatcher bNetwork = null;
-
-    /**
-     * Sets the service log.<br>
-     * Where available, a context sensitive log should be used.
-     *
-     * @param log not null
-     */
-    public void setLog(Logger log) {
-        this.serviceLog = log;
-    }
 
     /**
      * Gets the DNS service.
@@ -153,8 +134,7 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
 
             setBannedNetworks(bannedNetworks, dnsService);
 
-            serviceLog.info("Invalid MX Networks: " + bNetwork.toString());
-
+            LOGGER.info("Invalid MX Networks: " + bNetwork.toString());
         } else {
             throw new ConfigurationException("Please configure at least on invalid MX network");
         }

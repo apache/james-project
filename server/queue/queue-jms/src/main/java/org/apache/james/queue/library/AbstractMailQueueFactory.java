@@ -30,12 +30,12 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.apache.james.lifecycle.api.LifecycleUtil;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueManagementMBean;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -43,12 +43,12 @@ import com.google.common.annotations.VisibleForTesting;
  * {@link MailQueueFactory} abstract base class which take care of register the
  * {@link MailQueue} implementations via JMX (if possible)
  */
-public abstract class AbstractMailQueueFactory implements MailQueueFactory, LogEnabled {
+public abstract class AbstractMailQueueFactory implements MailQueueFactory {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailQueueFactory.class);
 
     public static final String MBEAN_NAME_QUEUE_PREFIX = "org.apache.james:type=component,name=queue,queue=";
 
     protected final Map<String, MailQueue> queues = new HashMap<>();
-    protected Logger log;
     private boolean useJMX = true;
     private MBeanServer mbeanServer;
     private final List<String> mbeans = new ArrayList<>();
@@ -73,7 +73,7 @@ public abstract class AbstractMailQueueFactory implements MailQueueFactory, LogE
             try {
                 mbeanServer.unregisterMBean(new ObjectName(mbean));
             } catch (Exception e) {
-                log.error("Error while destroying AbstractMailQueueFactory : ", e);
+                LOGGER.error("Error while destroying AbstractMailQueueFactory : ", e);
             }
         }
         mbeans.clear();
@@ -136,11 +136,6 @@ public abstract class AbstractMailQueueFactory implements MailQueueFactory, LogE
             throw new RuntimeException("Unable to unregister mbean", e);
         }
 
-    }
-
-    @Override
-    public void setLog(Logger log) {
-        this.log = log;
     }
     
 }

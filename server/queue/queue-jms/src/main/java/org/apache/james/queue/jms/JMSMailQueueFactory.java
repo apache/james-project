@@ -45,7 +45,7 @@ public class JMSMailQueueFactory extends AbstractMailQueueFactory {
 
     @Override
     protected MailQueue createMailQueue(String name) {
-        return new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, metricFactory, log);
+        return new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, metricFactory);
     }
     
 }

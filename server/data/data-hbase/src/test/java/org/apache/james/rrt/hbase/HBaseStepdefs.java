@@ -28,7 +28,6 @@ import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 import org.apache.james.system.hbase.TablePool;
 import org.apache.james.user.hbase.def.HUsersRepository;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 
@@ -64,7 +63,6 @@ public class HBaseStepdefs {
 
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         HBaseRecipientRewriteTable rrt = new HBaseRecipientRewriteTable();
-        rrt.setLog(LoggerFactory.getLogger("MockLog"));
         rrt.configure(new DefaultConfigurationBuilder());
         return rrt;
     }

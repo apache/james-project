@@ -63,9 +63,6 @@ import com.google.inject.multibindings.Multibinder;
 
 public class CamelMailetContainerModule extends AbstractModule {
 
-    private static final Logger CAMEL_LOGGER = LoggerFactory.getLogger(CamelCompositeProcessor.class);
-    private static final Logger SPOOLER_LOGGER = LoggerFactory.getLogger(JamesMailSpooler.class);
-    private static final Logger MAILET_LOGGER = LoggerFactory.getLogger(JamesMailetContext.class);
     private static final Logger LOGGER = LoggerFactory.getLogger(CamelMailetContainerModule.class);
 
     @Override
@@ -92,7 +89,6 @@ public class CamelMailetContainerModule extends AbstractModule {
                                                     UsersRepository localusers,
                                                     DomainList domains) {
         JamesMailetContext jamesMailetContext = new JamesMailetContext();
-        jamesMailetContext.setLog(MAILET_LOGGER);
         jamesMailetContext.setDNSService(dns);
         jamesMailetContext.retrieveRootMailQueue(mailQueueFactory);
         jamesMailetContext.setUsersRepository(localusers);
@@ -145,7 +141,6 @@ public class CamelMailetContainerModule extends AbstractModule {
         }
 
         private void configureProcessors(DefaultCamelContext camelContext) throws Exception {
-            camelCompositeProcessor.setLog(CAMEL_LOGGER);
             camelCompositeProcessor.setCamelContext(camelContext);
             camelCompositeProcessor.configure(getProcessorConfiguration());
             camelCompositeProcessor.init();
@@ -163,7 +158,6 @@ public class CamelMailetContainerModule extends AbstractModule {
 
         private void configureJamesSpooler() throws ConfigurationException {
             jamesMailSpooler.setMailProcessor(camelCompositeProcessor);
-            jamesMailSpooler.setLog(SPOOLER_LOGGER);
             jamesMailSpooler.configure(getJamesSpoolerConfiguration());
             jamesMailSpooler.init();
         }
@@ -179,7 +173,6 @@ public class CamelMailetContainerModule extends AbstractModule {
         }
 
         private void configureMailetContext() throws ConfigurationException {
-            mailetContext.setLog(MAILET_LOGGER);
             mailetContext.configure(getMailetContextConfiguration());
             mailetContext.retrieveRootMailQueue(mailQueueFactory);
         }

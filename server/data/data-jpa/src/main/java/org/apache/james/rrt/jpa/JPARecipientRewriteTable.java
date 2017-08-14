@@ -34,12 +34,15 @@ import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class responsible to implement the Virtual User Table in database with JPA
  * access.
  */
 public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JPARecipientRewriteTable.class);
 
     /**
      * The entity manager to access the database.
@@ -98,7 +101,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
                 return virtualUsers.get(0).getTargetAddress();
             }
         } catch (PersistenceException e) {
-            getLogger().debug("Failed to find mapping for  user=" + user + " and domain=" + domain, e);
+            LOGGER.debug("Failed to find mapping for  user=" + user + " and domain=" + domain, e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }
@@ -125,7 +128,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
                 return MappingsImpl.fromRawString(virtualUsers.get(0).getTargetAddress());
             }
         } catch (PersistenceException e) {
-            getLogger().debug("Failed to get user domain mappings", e);
+            LOGGER.debug("Failed to get user domain mappings", e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }
@@ -156,7 +159,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             if (mapping.size() > 0)
                 return mapping;
         } catch (PersistenceException e) {
-            getLogger().debug("Failed to get all mappings", e);
+            LOGGER.debug("Failed to get all mappings", e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }
@@ -204,7 +207,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
                 return true;
             }
         } catch (PersistenceException e) {
-            getLogger().debug("Failed to update mapping", e);
+            LOGGER.debug("Failed to update mapping", e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }
@@ -232,7 +235,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             transaction.commit();
 
         } catch (PersistenceException e) {
-            getLogger().debug("Failed to remove mapping", e);
+            LOGGER.debug("Failed to remove mapping", e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }
@@ -260,7 +263,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             entityManager.persist(jpaRecipientRewrite);
             transaction.commit();
         } catch (PersistenceException e) {
-            getLogger().debug("Failed to save virtual user", e);
+            LOGGER.debug("Failed to save virtual user", e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }

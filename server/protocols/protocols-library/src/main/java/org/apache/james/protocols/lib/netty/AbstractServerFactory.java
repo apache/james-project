@@ -27,41 +27,32 @@ import javax.annotation.PreDestroy;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
-import org.slf4j.Logger;
 
 /**
  * Abstract base class for Factories that need to create {@link AbstractConfigurableAsyncServer}'s via configuration files
  */
-public abstract class AbstractServerFactory implements Configurable, LogEnabled {
+public abstract class AbstractServerFactory implements Configurable {
 
-    private Logger log;
     private List<AbstractConfigurableAsyncServer> servers;
     private HierarchicalConfiguration config;
 
     /**
      * Create {@link AbstractConfigurableAsyncServer} servers, inject dependencies and configure them before return all fo them in a {@link List}
-     * 
-     * @param log
+     *
      * @param config
      * @return servers
      * @throws Exception
      */
-    protected abstract List<AbstractConfigurableAsyncServer> createServers(Logger log, HierarchicalConfiguration config) throws Exception;
+    protected abstract List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception;
     
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         this.config = config;
     }
 
-    @Override
-    public void setLog(Logger log) {
-        this.log = log;
-    }
-
     @PostConstruct
     public void init() throws Exception {
-        servers = createServers(log, config);
+        servers = createServers(config);
         for (AbstractConfigurableAsyncServer server: servers) {
             server.init();
         }

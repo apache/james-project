@@ -49,6 +49,7 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link ManageableMailQueue} implementation which use the fs to store {@link Mail}'s
@@ -57,6 +58,7 @@ import org.slf4j.Logger;
  * loading the needed meta-data into memory for fast access.
  */
 public class FileMailQueue implements ManageableMailQueue {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileMailQueue.class);
 
     private final ConcurrentHashMap<String, FileItem> keyMappings = new ConcurrentHashMap<>();
     private final BlockingQueue<String> inmemoryQueue = new LinkedBlockingQueue<>();
@@ -64,7 +66,6 @@ public class FileMailQueue implements ManageableMailQueue {
     private final static AtomicLong COUNTER = new AtomicLong();
     private final String queueDirName;
     private final File queueDir;
-    private final Logger log;
 
     private final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
     private final boolean sync;
@@ -73,9 +74,8 @@ public class FileMailQueue implements ManageableMailQueue {
     private final static String NEXT_DELIVERY = "FileQueueNextDelivery";
     private final static int SPLITCOUNT = 10;
 
-    public FileMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, String queuename, boolean sync, Logger log) throws IOException {
+    public FileMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, String queuename, boolean sync) throws IOException {
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
-        this.log = log;
         this.sync = sync;
         this.queueDir = new File(parentDir, queuename);
         this.queueDirName = queueDir.getAbsolutePath();
@@ -131,9 +131,8 @@ public class FileMailQueue implements ManageableMailQueue {
                             }
                         }, next - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
                     }
-
                 } catch (ClassNotFoundException | IOException e) {
-                    log.error("Unable to load Mail", e);
+                    LOGGER.error("Unable to load Mail", e);
                 } finally {
                     if (oin != null) {
                         try {
@@ -360,7 +359,7 @@ public class FileMailQueue implements ManageableMailQueue {
             try {
                 FileUtils.forceDelete(new File(getMessageFile()));
             } catch (IOException e) {
-                log.debug("Remove of msg file for mail failed");
+                LOGGER.debug("Remove of msg file for mail failed");
             }
         }
     }
@@ -470,7 +469,7 @@ public class FileMailQueue implements ManageableMailQueue {
                             };
                             return true;
                         } catch (IOException | ClassNotFoundException e) {
-                            log.info("Unable to load mail", e);
+                            LOGGER.info("Unable to load mail", e);
                         } finally {
                             if (in != null) {
                                 try {

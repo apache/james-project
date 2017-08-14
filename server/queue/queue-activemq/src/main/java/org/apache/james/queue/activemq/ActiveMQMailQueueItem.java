@@ -33,20 +33,20 @@ import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.jms.JMSMailQueueItem;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * ActiveMQ {@link MailQueueItem} implementation which handles Blob-Messages as
  * well
  */
 public class ActiveMQMailQueueItem extends JMSMailQueueItem implements ActiveMQSupport {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQMailQueueItem.class);
 
     private final Message message;
-    private final Logger logger;
 
-    public ActiveMQMailQueueItem(Mail mail, Connection connection, Session session, MessageConsumer consumer, Message message, Logger logger) {
+    public ActiveMQMailQueueItem(Mail mail, Connection connection, Session session, MessageConsumer consumer, Message message) {
         super(mail, connection, session, consumer);
         this.message = message;
-        this.logger = logger;
     }
 
     /**
@@ -62,7 +62,7 @@ public class ActiveMQMailQueueItem extends JMSMailQueueItem implements ActiveMQS
                 try {
                     ((ActiveMQBlobMessage) message).deleteFile();
                 } catch (IOException | JMSException e) {
-                    logger.warn("Unable to delete blob message file for mail {}", getMail().getName());
+                    LOGGER.warn("Unable to delete blob message file for mail {}", getMail().getName());
                 }
             }
             getMail().removeAttribute(JAMES_REUSE_BLOB_URL);

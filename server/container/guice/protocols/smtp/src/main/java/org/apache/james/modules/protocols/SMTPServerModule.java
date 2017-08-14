@@ -26,8 +26,6 @@ import org.apache.james.smtpserver.SendMailHandler;
 import org.apache.james.smtpserver.netty.SMTPServerFactory;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -37,8 +35,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class SMTPServerModule extends AbstractModule {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SMTPServerModule.class);
 
     @Override
     protected void configure() {
@@ -64,7 +60,6 @@ public class SMTPServerModule extends AbstractModule {
         @Override
         public void initModule() {
             try {
-                smtpServerFactory.setLog(LOGGER);
                 smtpServerFactory.configure(configurationProvider.getConfiguration("smtpserver"));
                 smtpServerFactory.init();
                 sendMailHandler.init(null);

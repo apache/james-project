@@ -23,7 +23,6 @@ import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
-import org.slf4j.LoggerFactory;
 
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
@@ -50,7 +49,6 @@ public class JPAStepdefs {
 
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         JPARecipientRewriteTable localVirtualUserTable = new JPARecipientRewriteTable();
-        localVirtualUserTable.setLog(LoggerFactory.getLogger("MockLog"));
         localVirtualUserTable.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
         DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
         localVirtualUserTable.configure(defaultConfiguration);

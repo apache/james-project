@@ -29,7 +29,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
-import org.slf4j.Logger;
 
 public class LMTPServerFactory extends AbstractServerFactory{
 
@@ -49,7 +48,7 @@ public class LMTPServerFactory extends AbstractServerFactory{
     }
     
     @Override
-    protected List<AbstractConfigurableAsyncServer> createServers(Logger log, HierarchicalConfiguration config) throws Exception{
+    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception{
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration> configs = config.configurationsAt("lmtpserver");
         
@@ -57,7 +56,6 @@ public class LMTPServerFactory extends AbstractServerFactory{
             LMTPServer server = createServer();
             server.setFileSystem(fileSystem);
             server.setProtocolHandlerLoader(loader);
-            server.setLog(log);
             server.configure(serverConfig);
             servers.add(server);
         }

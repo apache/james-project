@@ -26,7 +26,6 @@ import org.apache.james.mailetcontainer.api.mock.MockMatcherLoader;
 import org.apache.james.mailetcontainer.lib.AbstractStateCompositeProcessor;
 import org.apache.james.mailetcontainer.lib.AbstractStateCompositeProcessorTest;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.slf4j.LoggerFactory;
 
 public class CamelCompositeProcessorTest extends AbstractStateCompositeProcessorTest {
 
@@ -34,7 +33,6 @@ public class CamelCompositeProcessorTest extends AbstractStateCompositeProcessor
     protected AbstractStateCompositeProcessor createProcessor(HierarchicalConfiguration config) throws Exception {
         CamelCompositeProcessor processor = new CamelCompositeProcessor(new NoopMetricFactory());
         try {
-            processor.setLog(LoggerFactory.getLogger("MockLog"));
             processor.setCamelContext(new DefaultCamelContext());
             processor.setMailetLoader(new MockMailetLoader());
             processor.setMatcherLoader(new MockMatcherLoader());

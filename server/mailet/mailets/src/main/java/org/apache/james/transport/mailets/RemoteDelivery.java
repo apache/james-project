@@ -44,7 +44,6 @@ import org.apache.james.transport.mailets.remoteDelivery.RemoteDeliverySocketFac
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
-import org.slf4j.Logger;
 
 import com.google.common.collect.HashMultimap;
 
@@ -135,7 +134,6 @@ public class RemoteDelivery extends GenericMailet {
     private final THREAD_STATE startThreads;
 
     private MailQueue queue;
-    private Logger logger;
     private RemoteDeliveryConfiguration configuration;
     private ExecutorService executor;
 
@@ -154,7 +152,6 @@ public class RemoteDelivery extends GenericMailet {
     }
 
     public void init() throws MessagingException {
-        logger = getMailetContext().getLogger();
         configuration = new RemoteDeliveryConfiguration(getMailetConfig(), domainList);
         queue = queueFactory.getQueue(configuration.getOutGoingQueueName());
         try {
@@ -176,9 +173,8 @@ public class RemoteDelivery extends GenericMailet {
                     configuration,
                     dnsServer,
                     metricFactory,
-                    logger,
                     getMailetContext(),
-                    new Bouncer(configuration, getMailetContext(), logger),
+                    new Bouncer(configuration, getMailetContext()),
                     isDestroyed));
         }
     }

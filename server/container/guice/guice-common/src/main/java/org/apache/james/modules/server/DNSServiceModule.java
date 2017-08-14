@@ -25,8 +25,6 @@ import org.apache.james.dnsservice.dnsjava.DNSJavaService;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -37,8 +35,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class DNSServiceModule extends AbstractModule {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DNSServiceModule.class);
 
     @Override
     protected void configure() {
@@ -62,7 +58,6 @@ public class DNSServiceModule extends AbstractModule {
 
         public void initModule() {
             try {
-                dnsService.setLog(LOGGER);
                 dnsService.configure(configurationProvider.getConfiguration("dnsservice"));
                 dnsService.init();
             } catch (Exception e) {

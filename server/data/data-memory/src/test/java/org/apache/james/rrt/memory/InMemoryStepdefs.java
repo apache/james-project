@@ -22,7 +22,6 @@ package org.apache.james.rrt.memory;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
-import org.slf4j.LoggerFactory;
 
 import cucumber.api.java.Before;
 
@@ -41,7 +40,6 @@ public class InMemoryStepdefs {
 
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         MemoryRecipientRewriteTable rrt = new MemoryRecipientRewriteTable();
-        rrt.setLog(LoggerFactory.getLogger("MockLog"));
         rrt.configure(new DefaultConfigurationBuilder());
         return rrt;
     }

@@ -74,10 +74,10 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.core.MailImpl;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of a MailRepository using UNIX mbox files.
@@ -114,7 +114,8 @@ import org.slf4j.Logger;
  * and into something else (IMAP server or mail list displayer)
  */
 
-public class MBoxMailRepository implements MailRepository, LogEnabled, Configurable {
+public class MBoxMailRepository implements MailRepository, Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MBoxMailRepository.class);
 
     static final SimpleDateFormat dy = new SimpleDateFormat("EE MMM dd HH:mm:ss yyyy", Locale.US);
     static final String LOCKEXT = ".lock";
@@ -156,12 +157,6 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
         MimeMessage messageAction(String messageSeparator, String bodyText, long messageStart);
     }
 
-    private Logger logger;
-
-    public void setLog(Logger logger) {
-        this.logger = logger;
-    }
-
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
         /*
       The repository configuration
@@ -178,22 +173,18 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
             mboxFile = destination.substring("mbox://".length());
         }
 
-        if (getLogger().isDebugEnabled()) {
-            getLogger().debug("MBoxMailRepository.destinationURL: " + destination);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("MBoxMailRepository.destinationURL: " + destination);
         }
 
         String checkType = configuration.getString("[@type]");
         if (!(checkType.equals("MAIL") || checkType.equals("SPOOL"))) {
             String exceptionString = "Attempt to configure MboxMailRepository as " + checkType;
-            if (getLogger().isWarnEnabled()) {
-                getLogger().warn(exceptionString);
+            if (LOGGER.isWarnEnabled()) {
+                LOGGER.warn(exceptionString);
             }
             throw new ConfigurationException(exceptionString);
         }
-    }
-
-    protected Logger getLogger() {
-        return logger;
     }
 
     /**
@@ -231,12 +222,12 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
             mimeMessage = new MimeMessage(session, mb);
 
         } catch (MessagingException e) {
-            getLogger().error("Unable to parse mime message!", e);
+            LOGGER.error("Unable to parse mime message!", e);
         }
 
-        if (mimeMessage == null && getLogger().isDebugEnabled()) {
+        if (mimeMessage == null && LOGGER.isDebugEnabled()) {
             String logBuffer = this.getClass().getName() + " Mime message is null";
-            getLogger().debug(logBuffer);
+            LOGGER.debug(logBuffer);
         }
 
         /*
@@ -246,14 +237,14 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
          * .TO).toString(); } catch (Exception e) { // It has errored, so time
          * for plan B // use the from field I suppose try {
          * mimeMessage.setRecipients(javax.mail.Message.RecipientType.TO,
-         * mimeMessage.getFrom()); if (getLogger().isDebugEnabled()) {
+         * mimeMessage.getFrom()); if (LOGGER.isDebugEnabled()) {
          * StringBuffer logBuffer = new StringBuffer(128)
          * .append(this.getClass().getName())
          * .append(" Patching To: field for message ")
          * .append(" with  From: field");
-         * getLogger().debug(logBuffer.toString()); } } catch
+         * LOGGER.debug(logBuffer.toString()); } } catch
          * (MessagingException e1) {
-         * getLogger().error("Unable to set to: field to from: field", e); } }
+         * LOGGER.error("Unable to set to: field to from: field", e); } }
          */
         return mimeMessage;
     }
@@ -285,10 +276,10 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
      *            The action to take when a message is found
      */
     private MimeMessage parseMboxFile(RandomAccessFile ins, MessageAction messAct) {
-        if ((getLogger().isDebugEnabled())) {
+        if ((LOGGER.isDebugEnabled())) {
             String logBuffer = this.getClass().getName() + " Start parsing " + mboxFile;
 
-            getLogger().debug(logBuffer);
+            LOGGER.debug(logBuffer);
         }
         try {
 
@@ -307,8 +298,8 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
                     foundSep = sepMatchPattern.matcher(line).matches();
 
                     if (foundSep && inMessage) {
-                        // if ((DEEP_DEBUG) && (getLogger().isDebugEnabled())) {
-                        // getLogger().debug(this.getClass().getName() +
+                        // if ((DEEP_DEBUG) && (LOGGER.isDebugEnabled())) {
+                        // LOGGER.debug(this.getClass().getName() +
                         // " Invoking " + messAct.getClass() + " at " +
                         // prevMessageStart);
                         // }
@@ -338,8 +329,8 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
                         foundSep = sepMatchPattern.matcher(line).matches();
                         if (foundSep && inMessage) {
                             // if ((DEEP_DEBUG) &&
-                            // (getLogger().isDebugEnabled())) {
-                            // getLogger().debug(this.getClass().getName() +
+                            // (LOGGER.isDebugEnabled())) {
+                            // LOGGER.debug(this.getClass().getName() +
                             // " Invoking " + messAct.getClass() + " at " +
                             // prevMessageStart);
                             // }
@@ -373,14 +364,14 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
                 return messAct.messageAction(previousMessageSeparator, messageBuffer.toString(), prevMessageStart);
             }
         } catch (IOException ioEx) {
-            getLogger().error("Unable to write file (General I/O problem) " + mboxFile, ioEx);
+            LOGGER.error("Unable to write file (General I/O problem) " + mboxFile, ioEx);
         } catch (PatternSyntaxException e) {
-            getLogger().error("Bad regex passed " + mboxFile, e);
+            LOGGER.error("Bad regex passed " + mboxFile, e);
         } finally {
-            if ((getLogger().isDebugEnabled())) {
+            if ((LOGGER.isDebugEnabled())) {
                 String logBuffer = this.getClass().getName() + " Finished parsing " + mboxFile;
 
-                getLogger().debug(logBuffer);
+                LOGGER.debug(logBuffer);
             }
         }
         return null;
@@ -423,18 +414,18 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
         // Can we find the key first
         if (mList == null || !mList.containsKey(key)) {
             // Not initiailised so no point looking
-            if ((getLogger().isDebugEnabled())) {
+            if ((LOGGER.isDebugEnabled())) {
                 String logBuffer = this.getClass().getName() + " mList - key not found " + mboxFile;
 
-                getLogger().debug(logBuffer);
+                LOGGER.debug(logBuffer);
             }
             return foundMessage;
         }
         long messageStart = mList.get(key);
-        if ((getLogger().isDebugEnabled())) {
+        if ((LOGGER.isDebugEnabled())) {
             String logBuffer = this.getClass().getName() + " Load message starting at offset " + messageStart + " from file " + mboxFile;
 
-            getLogger().debug(logBuffer);
+            LOGGER.debug(logBuffer);
         }
         // Now try and find the position in the file
         RandomAccessFile ins = null;
@@ -451,33 +442,33 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
                 public MimeMessage messageAction(String messageSeparator, String bodyText, long messageStart) {
                     try {
                         if (key.equals(generateKeyValue(bodyText))) {
-                            getLogger().debug(this.getClass().getName() + " Located message. Returning MIME message");
+                            LOGGER.debug(this.getClass().getName() + " Located message. Returning MIME message");
                             return convertTextToMimeMessage(bodyText);
                         }
                     } catch (NoSuchAlgorithmException e) {
-                        getLogger().error("MD5 not supported! ", e);
+                        LOGGER.error("MD5 not supported! ", e);
                     }
                     return null;
                 }
             };
             foundMessage = this.parseMboxFile(ins, op);
         } catch (FileNotFoundException e) {
-            getLogger().error("Unable to save(open) file (File not found) " + mboxFile, e);
+            LOGGER.error("Unable to save(open) file (File not found) " + mboxFile, e);
         } catch (IOException e) {
-            getLogger().error("Unable to write file (General I/O problem) " + mboxFile, e);
+            LOGGER.error("Unable to write file (General I/O problem) " + mboxFile, e);
         } finally {
             if (foundMessage == null) {
-                if ((getLogger().isDebugEnabled())) {
+                if ((LOGGER.isDebugEnabled())) {
                     String logBuffer = this.getClass().getName() + " select - message not found " + mboxFile;
 
-                    getLogger().debug(logBuffer);
+                    LOGGER.debug(logBuffer);
                 }
             }
             if (ins != null)
                 try {
                     ins.close();
                 } catch (IOException e) {
-                    getLogger().error("Unable to close file (General I/O problem) " + mboxFile, e);
+                    LOGGER.error("Unable to close file (General I/O problem) " + mboxFile, e);
                 }
         }
         return foundMessage;
@@ -510,28 +501,28 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
                     try {
                         String key = generateKeyValue(bodyText);
                         mList.put(key, messageStart);
-                        if ((getLogger().isDebugEnabled())) {
-                            getLogger().debug(this.getClass().getName() + " Key " + key + " at " + messageStart);
+                        if ((LOGGER.isDebugEnabled())) {
+                            LOGGER.debug(this.getClass().getName() + " Key " + key + " at " + messageStart);
                         }
 
                     } catch (NoSuchAlgorithmException e) {
-                        getLogger().error("MD5 not supported! ", e);
+                        LOGGER.error("MD5 not supported! ", e);
                     }
                     return null;
                 }
             });
             // System.out.println("Done Load keys!");
         } catch (FileNotFoundException e) {
-            getLogger().error("Unable to save(open) file (File not found) " + mboxFile, e);
+            LOGGER.error("Unable to save(open) file (File not found) " + mboxFile, e);
             this.mList = new Hashtable<>((int) DEFAULTMLISTCAPACITY);
         } catch (IOException e) {
-            getLogger().error("Unable to write file (General I/O problem) " + mboxFile, e);
+            LOGGER.error("Unable to write file (General I/O problem) " + mboxFile, e);
         } finally {
             if (ins != null)
                 try {
                     ins.close();
                 } catch (IOException e) {
-                    getLogger().error("Unable to close file (General I/O problem) " + mboxFile, e);
+                    LOGGER.error("Unable to close file (General I/O problem) " + mboxFile, e);
                 }
         }
     }
@@ -541,10 +532,10 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
      */
     public void store(Mail mc) {
 
-        if ((getLogger().isDebugEnabled())) {
+        if ((LOGGER.isDebugEnabled())) {
             String logBuffer = this.getClass().getName() + " Will store message to file " + mboxFile;
 
-            getLogger().debug(logBuffer);
+            LOGGER.debug(logBuffer);
         }
         this.mList = null;
         // Now make up the from header
@@ -560,7 +551,7 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
             }
 
         } catch (IOException | MessagingException e) {
-            getLogger().error("Unable to parse mime message for " + mboxFile, e);
+            LOGGER.error("Unable to parse mime message for " + mboxFile, e);
         }
         // And save only the new stuff to disk
         RandomAccessFile saveFile;
@@ -572,9 +563,9 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
             saveFile.close();
 
         } catch (FileNotFoundException e) {
-            getLogger().error("Unable to save(open) file (File not found) " + mboxFile, e);
+            LOGGER.error("Unable to save(open) file (File not found) " + mboxFile, e);
         } catch (IOException e) {
-            getLogger().error("Unable to write file (General I/O problem) " + mboxFile, e);
+            LOGGER.error("Unable to write file (General I/O problem) " + mboxFile, e);
         }
     }
 
@@ -591,10 +582,10 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
             // correct for it BEFORE we return the iterator.
             findMessage(keys.iterator().next());
         }
-        if ((getLogger().isDebugEnabled())) {
+        if ((LOGGER.isDebugEnabled())) {
             String logBuffer = this.getClass().getName() + " " + keys.size() + " keys to be iterated over.";
 
-            getLogger().debug(logBuffer);
+            LOGGER.debug(logBuffer);
         }
         if (fifo)
             Collections.sort(keys); // Keys is a HashSet; impose FIFO for apps
@@ -612,16 +603,16 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
 
         MimeMessage foundMessage = findMessage(key);
         if (foundMessage == null) {
-            getLogger().error("found message is null!");
+            LOGGER.error("found message is null!");
             return null;
         }
         res = new MailImpl();
         res.setMessage(foundMessage);
         res.setName(key);
-        if ((getLogger().isDebugEnabled())) {
+        if ((LOGGER.isDebugEnabled())) {
             String logBuffer = this.getClass().getName() + " Retrieving entry for key " + key;
 
-            getLogger().debug(logBuffer);
+            LOGGER.debug(logBuffer);
         }
         return res;
     }
@@ -650,16 +641,16 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
             // So wait for a file
             while (!mBoxLock.createNewFile() && sleepCount < MAXSLEEPTIMES) {
                 try {
-                    if ((getLogger().isDebugEnabled())) {
+                    if ((LOGGER.isDebugEnabled())) {
                         String logBuffer = this.getClass().getName() + " Waiting for lock on file " + mboxFile;
 
-                        getLogger().debug(logBuffer);
+                        LOGGER.debug(logBuffer);
                     }
 
                     Thread.sleep(LOCKSLEEPDELAY);
                     sleepCount++;
                 } catch (InterruptedException e) {
-                    getLogger().error("File lock wait for " + mboxFile + " interrupted!", e);
+                    LOGGER.error("File lock wait for " + mboxFile + " interrupted!", e);
 
                 }
             }
@@ -680,7 +671,7 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
             FileUtils.forceDelete(mBoxLock);
         } catch (IOException e) {
             String logBuffer = this.getClass().getName() + " Failed to delete lock file " + lockFileName;
-            getLogger().error(logBuffer);
+            LOGGER.error(logBuffer);
         }
     }
 
@@ -688,10 +679,10 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
      * @see org.apache.james.mailrepository.api.MailRepository#remove(Collection)
      */
     public void remove(final Collection<Mail> mails) {
-        if ((getLogger().isDebugEnabled())) {
+        if ((LOGGER.isDebugEnabled())) {
             String logBuffer = this.getClass().getName() + " Removing entry for key " + mails;
 
-            getLogger().debug(logBuffer);
+            LOGGER.debug(logBuffer);
         }
         // The plan is as follows:
         // Attempt to locate the message in the file
@@ -732,9 +723,9 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
 
                         }
                     } catch (NoSuchAlgorithmException e) {
-                        getLogger().error("MD5 not supported! ", e);
+                        LOGGER.error("MD5 not supported! ", e);
                     } catch (IOException e) {
-                        getLogger().error("Unable to write file (General I/O problem) " + mboxFile, e);
+                        LOGGER.error("Unable to write file (General I/O problem) " + mboxFile, e);
                     }
                     return null;
                 }
@@ -760,9 +751,9 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
             }
 
         } catch (FileNotFoundException e) {
-            getLogger().error("Unable to save(open) file (File not found) " + mboxFile, e);
+            LOGGER.error("Unable to save(open) file (File not found) " + mboxFile, e);
         } catch (IOException e) {
-            getLogger().error("Unable to write file (General I/O problem) " + mboxFile, e);
+            LOGGER.error("Unable to write file (General I/O problem) " + mboxFile, e);
         }
     }
 
@@ -774,7 +765,7 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
         try {
             lockMBox();
         } catch (Exception e) {
-            getLogger().error("Lock failed!", e);
+            LOGGER.error("Lock failed!", e);
             return; // No lock, so exit
         }
         ArrayList<Mail> keys = new ArrayList<>();

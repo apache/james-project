@@ -34,17 +34,18 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.util.concurrent.JMXEnabledScheduledThreadPoolExecutor;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A class to instantiate and schedule a set of mail fetching tasks
  */
-public class FetchScheduler implements FetchSchedulerMBean, LogEnabled, Configurable {
+public class FetchScheduler implements FetchSchedulerMBean, Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FetchScheduler.class);
 
     /**
      * Configuration object for this service
@@ -61,8 +62,6 @@ public class FetchScheduler implements FetchSchedulerMBean, LogEnabled, Configur
     private DNSService dns;
 
     private UsersRepository urepos;
-
-    private Logger logger;
 
     private MailQueueFactory queueFactory;
 
@@ -86,13 +85,6 @@ public class FetchScheduler implements FetchSchedulerMBean, LogEnabled, Configur
     @Inject
     public void setDomainList(DomainList domainList) {
         this.domainList = domainList;
-    }
-
-    /**
-     * @see org.apache.james.lifecycle.api.LogEnabled#setLog(org.slf4j.Logger)
-     */
-    public final void setLog(Logger logger) {
-        this.logger = logger;
     }
 
     /**
@@ -124,7 +116,6 @@ public class FetchScheduler implements FetchSchedulerMBean, LogEnabled, Configur
 
                 FetchMail fetcher = new FetchMail();
 
-                fetcher.setLog(logger);
                 fetcher.setDNSService(dns);
                 fetcher.setUsersRepository(urepos);
                 fetcher.setMailQueue(queue);
@@ -136,22 +127,22 @@ public class FetchScheduler implements FetchSchedulerMBean, LogEnabled, Configur
                 schedulers.add(scheduler.scheduleWithFixedDelay(fetcher, 0, interval, TimeUnit.MILLISECONDS));
             }
 
-            if (logger.isInfoEnabled())
-                logger.info("FetchMail Started");
+            if (LOGGER.isInfoEnabled())
+                LOGGER.info("FetchMail Started");
         } else {
-            if (logger.isInfoEnabled())
-                logger.info("FetchMail Disabled");
+            if (LOGGER.isInfoEnabled())
+                LOGGER.info("FetchMail Disabled");
         }
     }
 
     @PreDestroy
     public void dispose() {
         if (enabled) {
-            logger.info("FetchMail dispose...");
+            LOGGER.info("FetchMail dispose...");
             for (ScheduledFuture<?> scheduler1 : schedulers) {
                 scheduler1.cancel(false);
             }
-            logger.info("FetchMail ...dispose end");
+            LOGGER.info("FetchMail ...dispose end");
         }
     }
 

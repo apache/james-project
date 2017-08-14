@@ -20,12 +20,14 @@
 
 package org.apache.james.repository.file;
 
-import org.apache.james.repository.api.StreamRepository;
-
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import org.apache.james.repository.api.StreamRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of a StreamRepository to a File.<br>
@@ -33,6 +35,7 @@ import java.io.OutputStream;
  * mark and reset methods. (working not like BufferedInputStream!!!)
  */
 public class FilePersistentStreamRepository extends AbstractFileRepository implements StreamRepository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FilePersistentStreamRepository.class);
 
     @Override
     protected String getExtensionDecorator() {
@@ -46,7 +49,7 @@ public class FilePersistentStreamRepository extends AbstractFileRepository imple
             return getInputStream(key);
         } catch (IOException ioe) {
             final String message = "Exception caught while retrieving a stream ";
-            getLogger().warn(message, ioe);
+            LOGGER.warn(message, ioe);
             throw new RuntimeException(message + ": " + ioe);
         }
     }
@@ -59,7 +62,7 @@ public class FilePersistentStreamRepository extends AbstractFileRepository imple
             return new BufferedOutputStream(outputStream);
         } catch (IOException ioe) {
             final String message = "Exception caught while storing a stream ";
-            getLogger().warn(message, ioe);
+            LOGGER.warn(message, ioe);
             throw new RuntimeException(message + ": " + ioe);
         }
     }

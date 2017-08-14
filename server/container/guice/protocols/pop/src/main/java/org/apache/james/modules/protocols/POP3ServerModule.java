@@ -25,8 +25,6 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.pop3server.netty.POP3ServerFactory;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -36,8 +34,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class POP3ServerModule extends AbstractModule {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(POP3ServerModule.class);
 
     @Override
     protected void configure() {
@@ -59,7 +55,6 @@ public class POP3ServerModule extends AbstractModule {
         @Override
         public void initModule() {
             try {
-                pop3ServerFactory.setLog(LOGGER);
                 pop3ServerFactory.configure(configurationProvider.getConfiguration("pop3server"));
                 pop3ServerFactory.init();
             } catch (Exception e) {

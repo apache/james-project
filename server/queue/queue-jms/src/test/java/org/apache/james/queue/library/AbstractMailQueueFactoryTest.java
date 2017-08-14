@@ -25,22 +25,19 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import java.util.concurrent.TimeUnit;
+
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.mailet.Mail;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-import java.util.concurrent.TimeUnit;
 
 public class AbstractMailQueueFactoryTest {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailQueueFactoryTest.class);
     private static final String QUEUE_1 = "queue1";
     private static final String QUEUE_2 = "queue2";
     private static final String QUEUE_3 = "queue3";
@@ -99,7 +96,6 @@ public class AbstractMailQueueFactoryTest {
             }
         };
         abstractMailQueueFactory.setMbeanServer(mBeanServer);
-        abstractMailQueueFactory.setLog(LOGGER);
     }
 
     @Test

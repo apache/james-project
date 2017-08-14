@@ -33,7 +33,6 @@ import javax.naming.directory.SearchResult;
 import org.apache.james.util.retry.api.RetrySchedule;
 import org.apache.james.util.retry.naming.LoggingRetryHandler;
 import org.apache.james.util.retry.naming.RetryingContext;
-import org.slf4j.Logger;
 
 /**
  * <code>RetryingDirContext</code> retries the methods defined by <code>javax.naming.directory.DirContext</code>
@@ -51,12 +50,11 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
      *
      * @param schedule
      * @param maxRetries
-     * @param logger
      * @throws NamingException
      */
-    public RetryingDirContext(RetrySchedule schedule, int maxRetries, Logger logger)
+    public RetryingDirContext(RetrySchedule schedule, int maxRetries)
             throws NamingException {
-        super(schedule, maxRetries, logger);
+        super(schedule, maxRetries);
     }
 
     /**
@@ -66,8 +64,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public void bind(final Name name, final Object obj, final Attributes attrs)
             throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(),
-                getLogger()) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -84,8 +81,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public void bind(final String name, final Object obj, final Attributes attrs)
             throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(),
-                getLogger()) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -103,7 +99,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     public DirContext createSubcontext(final Name name, final Attributes attrs)
             throws NamingException {
         return (DirContext) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this,
-                getSchedule(), getMaxRetries(), getLogger()) {
+                getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -120,7 +116,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     public DirContext createSubcontext(final String name, final Attributes attrs)
             throws NamingException {
         return (DirContext) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this,
-                getSchedule(), getMaxRetries(), getLogger()) {
+                getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -135,7 +131,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public Attributes getAttributes(final Name name) throws NamingException {
         return (Attributes) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this,
-                getSchedule(), getMaxRetries(), getLogger()) {
+                getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -150,7 +146,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public Attributes getAttributes(final String name) throws NamingException {
         return (Attributes) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this,
-                getSchedule(), getMaxRetries(), getLogger()) {
+                getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -166,7 +162,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public Attributes getAttributes(final Name name, final String[] attrIds) throws NamingException {
         return (Attributes) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this,
-                getSchedule(), getMaxRetries(), getLogger()) {
+                getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -183,7 +179,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     public Attributes getAttributes(final String name, final String[] attrIds)
             throws NamingException {
         return (Attributes) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this,
-                getSchedule(), getMaxRetries(), getLogger()) {
+                getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -198,7 +194,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public DirContext getSchema(final Name name) throws NamingException {
         final Context context = getDelegate();
-        return new RetryingDirContext(getSchedule(), getMaxRetries(), getLogger()) {
+        return new RetryingDirContext(getSchedule(), getMaxRetries()) {
 
             @Override
             public DirContext newDelegate() throws NamingException {
@@ -213,7 +209,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public DirContext getSchema(final String name) throws NamingException {
         final Context context = getDelegate();
-        return new RetryingDirContext(getSchedule(), getMaxRetries(), getLogger()) {
+        return new RetryingDirContext(getSchedule(), getMaxRetries()) {
 
             @Override
             public DirContext newDelegate() throws NamingException {
@@ -228,7 +224,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public DirContext getSchemaClassDefinition(final Name name) throws NamingException {
         final Context context = getDelegate();
-        return new RetryingDirContext(getSchedule(), getMaxRetries(), getLogger()) {
+        return new RetryingDirContext(getSchedule(), getMaxRetries()) {
 
             @Override
             public DirContext newDelegate() throws NamingException {
@@ -243,7 +239,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public DirContext getSchemaClassDefinition(final String name) throws NamingException {
         final Context context = getDelegate();
-        return new RetryingDirContext(getSchedule(), getMaxRetries(), getLogger()) {
+        return new RetryingDirContext(getSchedule(), getMaxRetries()) {
 
             @Override
             public DirContext newDelegate() throws NamingException {
@@ -259,8 +255,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public void modifyAttributes(final Name name, final ModificationItem[] mods)
             throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(),
-                getLogger()) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -277,8 +272,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public void modifyAttributes(final String name, final ModificationItem[] mods)
             throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(),
-                getLogger()) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -295,8 +289,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public void modifyAttributes(final Name name, final int modOp, final Attributes attrs)
             throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(),
-                getLogger()) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -313,8 +306,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public void modifyAttributes(final String name, final int modOp, final Attributes attrs)
             throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(),
-                getLogger()) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -331,8 +323,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public void rebind(final Name name, final Object obj, final Attributes attrs)
             throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(),
-                getLogger()) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -349,8 +340,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     @Override
     public void rebind(final String name, final Object obj, final Attributes attrs)
             throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(),
-                getLogger()) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -370,7 +360,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
             final Attributes matchingAttributes)
             throws NamingException {
         return (NamingEnumeration<SearchResult>) new LoggingRetryHandler(
-                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(), getLogger()) {
+                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -389,7 +379,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
             final Attributes matchingAttributes)
             throws NamingException {
         return (NamingEnumeration<SearchResult>) new LoggingRetryHandler(
-                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(), getLogger()) {
+                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -408,7 +398,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
             final Attributes matchingAttributes,
             String[] attributesToReturn) throws NamingException {
         return (NamingEnumeration<SearchResult>) new LoggingRetryHandler(
-                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(), getLogger()) {
+                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -427,7 +417,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
             final Attributes matchingAttributes,
             final String[] attributesToReturn) throws NamingException {
         return (NamingEnumeration<SearchResult>) new LoggingRetryHandler(
-                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(), getLogger()) {
+                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -447,7 +437,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
             final SearchControls cons)
             throws NamingException {
         return (NamingEnumeration<SearchResult>) new LoggingRetryHandler(
-                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(), getLogger()) {
+                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -466,7 +456,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
             final SearchControls cons)
             throws NamingException {
         return (NamingEnumeration<SearchResult>) new LoggingRetryHandler(
-                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(), getLogger()) {
+                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -485,7 +475,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     public NamingEnumeration<SearchResult> search(final Name name, final String filterExpr,
             final Object[] filterArgs, final SearchControls cons) throws NamingException {
         return (NamingEnumeration<SearchResult>) new LoggingRetryHandler(
-                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(), getLogger()) {
+                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {
@@ -504,7 +494,7 @@ abstract public class RetryingDirContext extends RetryingContext implements DirC
     public NamingEnumeration<SearchResult> search(final String name, final String filterExpr,
             final Object[] filterArgs, final SearchControls cons) throws NamingException {
         return (NamingEnumeration<SearchResult>) new LoggingRetryHandler(
-                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(), getLogger()) {
+                DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
 
             @Override
             public Object operation() throws NamingException {

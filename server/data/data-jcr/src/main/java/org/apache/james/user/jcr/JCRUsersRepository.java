@@ -42,12 +42,15 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.jcr.model.JCRUser;
 import org.apache.james.user.lib.AbstractUsersRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link UsersRepository} implementation which stores users to a JCR
  * {@link Repository}
  */
 public class JCRUsersRepository extends AbstractUsersRepository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JCRUsersRepository.class);
 
     // TODO: Add namespacing
     private static final String PASSWD_PROPERTY = "passwd";
@@ -112,8 +115,8 @@ public class JCRUsersRepository extends AbstractUsersRepository {
             }
 
         } catch (RepositoryException e) {
-            if (getLogger().isInfoEnabled()) {
-                getLogger().info("Failed to add user: " + username, e);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Failed to add user: " + username, e);
             }
             user = null;
         }
@@ -158,7 +161,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
                         session.save();
                     } catch (PathNotFoundException e) {
                         // user not found
-                        getLogger().debug("User not found");
+                        LOGGER.debug("User not found");
                         throw new UsersRepositoryException("User " + user.getUserName() + " not exist");
                     }
                 } finally {
@@ -166,8 +169,8 @@ public class JCRUsersRepository extends AbstractUsersRepository {
                 }
 
             } catch (RepositoryException e) {
-                if (getLogger().isInfoEnabled()) {
-                    getLogger().info("Failed to add user: " + userName, e);
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info("Failed to add user: " + userName, e);
                 }
                 throw new UsersRepositoryException("Failed to add user: " + userName, e);
 
@@ -200,8 +203,8 @@ public class JCRUsersRepository extends AbstractUsersRepository {
             }
 
         } catch (RepositoryException e) {
-            if (getLogger().isInfoEnabled()) {
-                getLogger().info("Failed to remove user: " + username, e);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Failed to remove user: " + username, e);
             }
             throw new UsersRepositoryException("Failed to remove user: " + username, e);
 
@@ -228,8 +231,8 @@ public class JCRUsersRepository extends AbstractUsersRepository {
                 session.logout();
             }
         } catch (PathNotFoundException e) {
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("User not found: " + name, e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("User not found: " + name, e);
             }
         } catch (RepositoryException e) {
             throw new UsersRepositoryException("Failed to search for user: " + name, e);
@@ -271,7 +274,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
                     return current.equals(hashPassword);
                 } catch (PathNotFoundException e) {
                     // user not found
-                    getLogger().debug("User not found");
+                    LOGGER.debug("User not found");
                     return false;
                 }
             } finally {
@@ -279,8 +282,8 @@ public class JCRUsersRepository extends AbstractUsersRepository {
             }
 
         } catch (RepositoryException e) {
-            if (getLogger().isInfoEnabled()) {
-                getLogger().info("Failed to search user: " + username, e);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Failed to search user: " + username, e);
             }
             throw new UsersRepositoryException("Failed to search for user: " + username, e);
 
@@ -312,8 +315,8 @@ public class JCRUsersRepository extends AbstractUsersRepository {
                 session.logout();
             }
         } catch (RepositoryException e) {
-            if (getLogger().isInfoEnabled()) {
-                getLogger().info("Failed to count user", e);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Failed to count user", e);
             }
             throw new UsersRepositoryException("Failed to count user", e);
 
@@ -343,18 +346,18 @@ public class JCRUsersRepository extends AbstractUsersRepository {
                             final String userName = node.getProperty(USERNAME_PROPERTY).getString();
                             userNames.add(userName);
                         } catch (PathNotFoundException e) {
-                            getLogger().info("Node missing user name. Ignoring.");
+                            LOGGER.info("Node missing user name. Ignoring.");
                         }
                     }
                 } catch (PathNotFoundException e) {
-                    getLogger().info("Path not found. Forgotten to setup the repository?");
+                    LOGGER.info("Path not found. Forgotten to setup the repository?");
                 }
             } finally {
                 session.logout();
             }
         } catch (RepositoryException e) {
-            if (getLogger().isInfoEnabled()) {
-                getLogger().info("Failed to list users", e);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Failed to list users", e);
             }
             throw new UsersRepositoryException("Failed to list users", e);
         }
@@ -375,7 +378,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
                 final Node rootNode = session.getRootNode();
                 try {
                     rootNode.getNode(path);
-                    getLogger().info("User already exists");
+                    LOGGER.info("User already exists");
                     throw new UsersRepositoryException("User " + lowerCasedUsername + " already exists");
                 } catch (PathNotFoundException e) {
                     // user does not exist
@@ -405,8 +408,8 @@ public class JCRUsersRepository extends AbstractUsersRepository {
             }
 
         } catch (RepositoryException e) {
-            if (getLogger().isInfoEnabled()) {
-                getLogger().info("Failed to add user: " + lowerCasedUsername, e);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Failed to add user: " + lowerCasedUsername, e);
             }
             throw new UsersRepositoryException("Failed to add user: " + lowerCasedUsername, e);
 

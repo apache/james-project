@@ -26,26 +26,23 @@ import javax.mail.internet.InternetAddress;
 
 import org.apache.mailet.base.MailAddressFixture;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class AddressesArrayToMailAddressListConverterTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AddressesArrayToMailAddressListConverterTest.class);
 
     @Test
     public void getAddressesAsMailAddressShouldReturnEmptyOnNull() {
-        assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(null, LOGGER)).isEmpty();
+        assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(null)).isEmpty();
     }
 
     @Test
     public void getAddressesAsMailAddressShouldReturnEmptyOnEmpty() {
-        assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(new Address[]{}, LOGGER)).isEmpty();
+        assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(new Address[]{})).isEmpty();
     }
 
     @Test
     public void getAddressesAsMailAddressShouldWorkWithSingleValue() throws Exception {
         assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(new Address[]{
-            new InternetAddress(MailAddressFixture.ANY_AT_JAMES.toString())}, LOGGER))
+            new InternetAddress(MailAddressFixture.ANY_AT_JAMES.toString())}))
             .containsOnly(MailAddressFixture.ANY_AT_JAMES);
     }
 
@@ -53,7 +50,7 @@ public class AddressesArrayToMailAddressListConverterTest {
     public void getAddressesAsMailAddressShouldWorkWithTwoValues() throws Exception {
         assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(new Address[]{
             new InternetAddress(MailAddressFixture.ANY_AT_JAMES.toString()),
-            new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.toString())}, LOGGER))
+            new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.toString())}))
             .containsOnly(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES);
     }
 }

@@ -65,8 +65,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class POP3ServerTest {
 
@@ -707,11 +705,6 @@ public class POP3ServerTest {
         pop3Server = createPOP3Server();
         pop3Server.setFileSystem(fileSystem);
         pop3Server.setProtocolHandlerLoader(protocolHandlerChain);
-    
-        Logger log = LoggerFactory.getLogger("Mock");
-        // slf4j can't set programmatically any log level. It's just a facade
-        // log.setLevel(SimpleLog.LOG_LEVEL_DEBUG);
-        pop3Server.setLog(log);
     }
 
     protected void finishSetUp(POP3TestConfiguration testConfiguration) throws Exception {

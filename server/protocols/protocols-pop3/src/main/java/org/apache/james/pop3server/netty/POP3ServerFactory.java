@@ -10,7 +10,6 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
-import org.slf4j.Logger;
 
 public class POP3ServerFactory extends AbstractServerFactory{
 
@@ -32,7 +31,7 @@ public class POP3ServerFactory extends AbstractServerFactory{
     }
     
     @Override
-    protected List<AbstractConfigurableAsyncServer> createServers(Logger log, HierarchicalConfiguration config) throws Exception{
+    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception{
 
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration> configs = config.configurationsAt("pop3server");
@@ -40,7 +39,6 @@ public class POP3ServerFactory extends AbstractServerFactory{
         for (HierarchicalConfiguration serverConfig: configs) {
             POP3Server server = createServer();
             server.setProtocolHandlerLoader(loader);
-            server.setLog(log);
             server.setFileSystem(fileSystem);
             server.configure(serverConfig);
             servers.add(server);

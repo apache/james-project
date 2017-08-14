@@ -37,6 +37,8 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.jpa.model.JPAUser;
 import org.apache.james.user.lib.AbstractUsersRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -44,6 +46,7 @@ import com.google.common.collect.ImmutableList;
  * JPA based UserRepository
  */
 public class JPAUsersRepository extends AbstractUsersRepository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JPAUsersRepository.class);
 
     private EntityManagerFactory entityManagerFactory;
 
@@ -84,7 +87,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
         } catch (NoResultException e) {
             return null;
         } catch (PersistenceException e) {
-            getLogger().debug("Failed to find user", e);
+            LOGGER.debug("Failed to find user", e);
             throw new UsersRepositoryException("Unable to search user", e);
         } finally {
             entityManager.close();
@@ -124,11 +127,11 @@ public class JPAUsersRepository extends AbstractUsersRepository {
                 entityManager.merge(user);
                 transaction.commit();
             } else {
-                getLogger().debug("User not found");
+                LOGGER.debug("User not found");
                 throw new UsersRepositoryException("User " + user.getUserName() + " not found");
             }
         } catch (PersistenceException e) {
-            getLogger().debug("Failed to update user", e);
+            LOGGER.debug("Failed to update user", e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }
@@ -158,7 +161,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
                 transaction.commit();
             }
         } catch (PersistenceException e) {
-            getLogger().debug("Failed to remove user", e);
+            LOGGER.debug("Failed to remove user", e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }
@@ -184,7 +187,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
                 .setParameter("name", name.toLowerCase(Locale.US))
                 .getSingleResult() > 0;
         } catch (PersistenceException e) {
-            getLogger().debug("Failed to find user", e);
+            LOGGER.debug("Failed to find user", e);
             throw new UsersRepositoryException("Failed to find user" + name, e);
         } finally {
             entityManager.close();
@@ -223,7 +226,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
         try {
             return ((Long) entityManager.createNamedQuery("countUsers").getSingleResult()).intValue();
         } catch (PersistenceException e) {
-            getLogger().debug("Failed to find user", e);
+            LOGGER.debug("Failed to find user", e);
             throw new UsersRepositoryException("Failed to count users", e);
         } finally {
             entityManager.close();
@@ -245,7 +248,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
             return ImmutableList.copyOf(entityManager.createNamedQuery("listUserNames").getResultList()).iterator();
 
         } catch (PersistenceException e) {
-            getLogger().debug("Failed to find user", e);
+            LOGGER.debug("Failed to find user", e);
             throw new UsersRepositoryException("Failed to list users", e);
         } finally {
             entityManager.close();
@@ -287,7 +290,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
             entityManager.persist(user);
             transaction.commit();
         } catch (PersistenceException e) {
-            getLogger().debug("Failed to save user", e);
+            LOGGER.debug("Failed to save user", e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }

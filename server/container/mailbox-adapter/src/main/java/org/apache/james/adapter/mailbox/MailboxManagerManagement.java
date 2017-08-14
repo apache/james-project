@@ -32,7 +32,6 @@ import javax.mail.Flags;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -43,6 +42,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
@@ -51,10 +51,10 @@ import com.google.common.base.Throwables;
 /**
  * JMX managmenent for Mailboxes
  */
-public class MailboxManagerManagement extends StandardMBean implements MailboxManagerManagementMBean, LogEnabled {
+public class MailboxManagerManagement extends StandardMBean implements MailboxManagerManagementMBean {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxManagerManagement.class);
 
     private MailboxManager mailboxManager;
-    private Logger log;
     private static final boolean RECENT = true;
 
     @Inject
@@ -87,21 +87,13 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
             }
             return true;
         } catch (MailboxException e) {
-            log.error("Error while remove mailboxes for user " + username, e);
+            LOGGER.error("Error while remove mailboxes for user " + username, e);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         } finally {
             closeSession(session);
         }
         return false;
-    }
-
-    /**
-     * @see org.apache.james.lifecycle.api.LogEnabled#setLog(org.slf4j.Logger)
-     */
-    @Override
-    public void setLog(Logger log) {
-        this.log = log;
     }
 
     /**
@@ -128,7 +120,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
                 .sorted()
                 .collect(Guavate.toImmutableList());
         } catch (MailboxException e) {
-            log.error("Error list mailboxes for user " + username, e);
+            LOGGER.error("Error list mailboxes for user " + username, e);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         } finally {
@@ -152,7 +144,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
             mailboxManager.startProcessingRequest(session);
             mailboxManager.createMailbox(mailboxPath, session);
         } catch (Exception e) {
-            log.error("Unable to create mailbox", e);
+            LOGGER.error("Unable to create mailbox", e);
         } finally {
             closeSession(session);
         }
@@ -173,7 +165,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
             mailboxManager.startProcessingRequest(session);
             mailboxManager.deleteMailbox(mailboxPath, session);
         } catch (Exception e) {
-            log.error("Unable to create mailbox", e);
+            LOGGER.error("Unable to create mailbox", e);
         } finally {
             closeSession(session);
         }
@@ -200,7 +192,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
             messageManager.appendMessage(emlFileAsStream, new Date(),
                     session, RECENT, new Flags());
         } catch (Exception e) {
-            log.error("Unable to create mailbox", e);
+            LOGGER.error("Unable to create mailbox", e);
         } finally {
             closeSession(session);
         }
@@ -212,7 +204,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
             try {
                 mailboxManager.logout(session, true);
             } catch (MailboxException e) {
-                log.error("Can not log session out", e);
+                LOGGER.error("Can not log session out", e);
             }
         }
     }

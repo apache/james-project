@@ -25,7 +25,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
 import org.apache.james.dnsservice.library.MXHostAddressIterator;
 import org.apache.mailet.HostAddress;
-import org.slf4j.Logger;
 
 @SuppressWarnings("deprecation")
 public class DnsHelper {
@@ -33,19 +32,17 @@ public class DnsHelper {
     public static final boolean USE_SEVERAL_IP = false;
     private final DNSService dnsServer;
     private final RemoteDeliveryConfiguration configuration;
-    private final Logger logger;
 
-    public DnsHelper(DNSService dnsServer, RemoteDeliveryConfiguration configuration, Logger logger) {
+    public DnsHelper(DNSService dnsServer, RemoteDeliveryConfiguration configuration) {
         this.dnsServer = dnsServer;
         this.configuration = configuration;
-        this.logger = logger;
     }
 
     public Iterator<HostAddress> retrieveHostAddressIterator(String host) throws TemporaryResolutionException {
         if (configuration.getGatewayServer().isEmpty()) {
-            return new MXHostAddressIterator(dnsServer.findMXRecords(host).iterator(), dnsServer, USE_SEVERAL_IP, logger);
+            return new MXHostAddressIterator(dnsServer.findMXRecords(host).iterator(), dnsServer, USE_SEVERAL_IP);
         } else {
-            return new MXHostAddressIterator(configuration.getGatewayServer().iterator(), dnsServer, USE_SEVERAL_IP, logger);
+            return new MXHostAddressIterator(configuration.getGatewayServer().iterator(), dnsServer, USE_SEVERAL_IP);
         }
     }
 

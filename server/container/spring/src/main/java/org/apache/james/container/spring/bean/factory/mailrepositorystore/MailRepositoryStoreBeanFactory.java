@@ -36,13 +36,15 @@ import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 
 /**
  * Provides a registry of mail repositories. A mail repository is uniquely
  * identified by its destinationURL, type and model.
  */
-public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implements MailRepositoryStore, LogEnabled, Configurable {
+public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implements MailRepositoryStore, Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailRepositoryStoreBeanFactory.class);
 
     /**
      * Map of [destinationURL + type]->Repository
@@ -65,11 +67,6 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
     private HierarchicalConfiguration configuration;
 
     /**
-     * The Logger
-     */
-    private Logger logger;
-
-    /**
      * @see org.apache.james.lifecycle.api.Configurable#configure(org.apache.commons.configuration.HierarchicalConfiguration)
      */
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
@@ -80,7 +77,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
     @SuppressWarnings("unchecked")
     public void init() throws Exception {
 
-        getLogger().info("JamesMailStore init...");
+        LOGGER.info("JamesMailStore init...");
 
         repositories = new ReferenceMap();
         classes = new HashMap<>();
@@ -110,7 +107,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
 
         String className = repConf.getString("[@class]");
 
-        boolean infoEnabled = getLogger().isInfoEnabled();
+        boolean infoEnabled = LOGGER.isInfoEnabled();
 
         for (String protocol : repConf.getStringArray("protocols.protocol")) {
             HierarchicalConfiguration defConf = null;
@@ -122,7 +119,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
             }
 
             if (infoEnabled) {
-                getLogger().info("Registering Repository instance of class {} to handle {} protocol requests", className, protocol);
+                LOGGER.info("Registering Repository instance of class {} to handle {} protocol requests", className, protocol);
             }
 
             if (classes.get(protocol) != null) {
@@ -166,16 +163,16 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
         MailRepository reply = repositories.get(repID);
         StringBuffer logBuffer;
         if (reply != null) {
-            if (getLogger().isDebugEnabled()) {
+            if (LOGGER.isDebugEnabled()) {
                 logBuffer = new StringBuffer(128).append("obtained repository: ").append(repID).append(",").append(reply.getClass());
-                getLogger().debug(logBuffer.toString());
+                LOGGER.debug(logBuffer.toString());
             }
             return reply;
         } else {
             String repClass = classes.get(protocol);
-            if (getLogger().isDebugEnabled()) {
+            if (LOGGER.isDebugEnabled()) {
                 logBuffer = new StringBuffer(128).append("obtained repository: ").append(repClass).append(" to handle: ").append(protocol).append(" with key ").append(protocol);
-                getLogger().debug(logBuffer.toString());
+                LOGGER.debug(logBuffer.toString());
             }
 
             // If default values have been set, create a new repository
@@ -198,7 +195,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
                 reply = (MailRepository) getBeanFactory().autowire(clazz, ConfigurableListableBeanFactory.AUTOWIRE_AUTODETECT, false);
 
                 if (reply instanceof LogEnabled) {
-                    ((LogEnabled) reply).setLog(logger);
+                    ((LogEnabled) reply).setLog(LOGGER);
                 }
 
                 if (reply instanceof Configurable) {
@@ -208,14 +205,14 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
                 reply = (MailRepository) getBeanFactory().initializeBean(reply, protocol);
 
                 repositories.put(repID, reply);
-                if (getLogger().isInfoEnabled()) {
+                if (LOGGER.isInfoEnabled()) {
                     logBuffer = new StringBuffer(128).append("added repository: ").append(repID).append("->").append(repClass);
-                    getLogger().info(logBuffer.toString());
+                    LOGGER.info(logBuffer.toString());
                 }
                 return reply;
             } catch (Exception e) {
-                if (getLogger().isWarnEnabled()) {
-                    getLogger().warn("Exception while creating repository:" + e.getMessage(), e);
+                if (LOGGER.isWarnEnabled()) {
+                    LOGGER.warn("Exception while creating repository:" + e.getMessage(), e);
                 }
                 throw new MailRepositoryStoreException("Cannot find or init repository", e);
             }
@@ -228,14 +225,6 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
      */
     public synchronized List<String> getUrls() {
         return new ArrayList<>(repositories.keySet());
-    }
-
-    public void setLog(Logger logger) {
-        this.logger = logger;
-    }
-
-    private Logger getLogger() {
-        return logger;
     }
 
 }

@@ -31,28 +31,28 @@ import org.apache.mailet.HostAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sun.mail.smtp.SMTPTransport;
 
 @SuppressWarnings("deprecation")
 public class MailDelivrerToHost {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailDelivrerToHost.class);
     public static final String BIT_MIME_8 = "8BITMIME";
 
     private final RemoteDeliveryConfiguration configuration;
     private final Converter7Bit converter7Bit;
     private final Session session;
-    private final Logger logger;
 
-    public MailDelivrerToHost(RemoteDeliveryConfiguration remoteDeliveryConfiguration, MailetContext mailetContext, Logger logger) {
+    public MailDelivrerToHost(RemoteDeliveryConfiguration remoteDeliveryConfiguration, MailetContext mailetContext) {
         this.configuration = remoteDeliveryConfiguration;
         this.converter7Bit = new Converter7Bit(mailetContext);
         this.session = Session.getInstance(configuration.createFinalJavaxProperties());
-        this.logger = logger;
     }
 
     public ExecutionResult tryDeliveryToHost(Mail mail, InternetAddress[] addr, HostAddress outgoingMailServer) throws MessagingException {
         Properties props = getPropertiesForMail(mail);
-        logger.debug("Attempting delivery of {} to host {} at {} from {}",
+        LOGGER.debug("Attempting delivery of {} to host {} at {} from {}",
             mail.getName(), outgoingMailServer.getHostName(), outgoingMailServer.getHost(), props.get("mail.smtp.from"));
 
         // Many of these properties are only in later JavaMail versions
@@ -67,7 +67,7 @@ public class MailDelivrerToHost {
             transport.setLocalHost( props.getProperty("mail.smtp.localhost", configuration.getHeloNameProvider().getHeloName()) );
             connect(outgoingMailServer, transport);
             transport.sendMessage(adaptToTransport(mail.getMessage(), transport), addr);
-            logger.debug("Mail ({})  sent successfully to {} at {} from {} for {}", mail.getName(), outgoingMailServer.getHostName(),
+            LOGGER.debug("Mail ({})  sent successfully to {} at {} from {} for {}", mail.getName(), outgoingMailServer.getHostName(),
                 outgoingMailServer.getHost(), props.get("mail.smtp.from"), mail.getRecipients());
         } finally {
             closeTransport(mail, outgoingMailServer, transport);
@@ -99,7 +99,7 @@ public class MailDelivrerToHost {
             try {
                 converter7Bit.convertTo7Bit(message);
             } catch (IOException e) {
-                logger.error("Error during the conversion to 7 bit.", e);
+                LOGGER.error("Error during the conversion to 7 bit.", e);
             }
         }
         return message;
@@ -124,7 +124,7 @@ public class MailDelivrerToHost {
                 // of the mail transaction (MAIL, RCPT, DATA).
                 transport.close();
             } catch (MessagingException e) {
-                logger.error("Warning: could not close the SMTP transport after sending mail ({}) to {} at {} for {}; " +
+                LOGGER.error("Warning: could not close the SMTP transport after sending mail ({}) to {} at {} for {}; " +
                         "probably the server has already closed the connection. Message is considered to be delivered. Exception: {}",
                     mail.getName(), outgoingMailServer.getHostName(), outgoingMailServer.getHost(), mail.getRecipients(), e.getMessage());
             }

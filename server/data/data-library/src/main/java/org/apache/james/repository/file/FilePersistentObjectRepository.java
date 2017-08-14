@@ -25,12 +25,15 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 
 import org.apache.james.repository.api.ObjectRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a simple implementation of persistent object store using object
  * serialization on the file system.
  */
 public class FilePersistentObjectRepository extends AbstractFileRepository implements ObjectRepository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FilePersistentObjectRepository.class);
 
     /**
      * @see
@@ -55,7 +58,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
 
                 final Object object = stream.readObject();
                 if (DEBUG) {
-                    getLogger().debug("returning object " + object + " for key " + key);
+                    LOGGER.debug("returning object " + object + " for key " + key);
                 }
                 return object;
             } finally {
@@ -84,7 +87,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
                 final Object object = stream.readObject();
 
                 if (DEBUG) {
-                    getLogger().debug("returning object " + object + " for key " + key);
+                    LOGGER.debug("returning object " + object + " for key " + key);
                 }
                 return object;
             } finally {
@@ -107,7 +110,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
             final ObjectOutputStream stream = new ObjectOutputStream(outputStream);
             stream.writeObject(value);
             if (DEBUG)
-                getLogger().debug("storing object " + value + " for key " + key);
+                LOGGER.debug("storing object " + value + " for key " + key);
         } catch (Exception e) {
             throw new RuntimeException("Exception caught while storing an object: " + e);
         }

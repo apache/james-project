@@ -25,21 +25,18 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
-import org.slf4j.Logger;
 
 /**
  * {@link MailQueueFactory} implementation which returns {@link FileMailQueue} instances
  */
-public class FileMailQueueFactory implements MailQueueFactory, LogEnabled {
+public class FileMailQueueFactory implements MailQueueFactory {
 
     private final Map<String, MailQueue> queues = new HashMap<>();
     private MailQueueItemDecoratorFactory mailQueueActionItemDecoratorFactory;
     private FileSystem fs;
-    private Logger log;
     private boolean sync = true;
 
     @Inject
@@ -66,7 +63,7 @@ public class FileMailQueueFactory implements MailQueueFactory, LogEnabled {
         if (queue == null) {
             synchronized (queues) {
                 try {
-                    queue = new FileMailQueue(mailQueueActionItemDecoratorFactory, fs.getFile("file://var/store/queue"), name, sync, log);
+                    queue = new FileMailQueue(mailQueueActionItemDecoratorFactory, fs.getFile("file://var/store/queue"), name, sync);
                     queues.put(name, queue);
                 } catch (IOException e) {
                     throw new RuntimeException("Unable to access queue " + name, e);
@@ -74,11 +71,6 @@ public class FileMailQueueFactory implements MailQueueFactory, LogEnabled {
             }
         }
         return queue;
-    }
-
-    @Override
-    public void setLog(Logger log) {
-        this.log = log;
     }
 
 }

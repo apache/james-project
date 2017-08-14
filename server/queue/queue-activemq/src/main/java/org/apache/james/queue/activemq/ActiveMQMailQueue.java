@@ -49,6 +49,7 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.jms.JMSMailQueue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -85,6 +86,7 @@ import org.slf4j.Logger;
  * To have a good throughput you should use a caching connection factory. </p>
  */
 public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQMailQueue.class);
 
     private final boolean useBlob;
 
@@ -92,8 +94,8 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
      * Construct a {@link ActiveMQMailQueue} which only use {@link BlobMessage}
      * 
      */
-    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, MetricFactory metricFactory, Logger logger) {
-        this(connectionFactory, mailQueueItemDecoratorFactory, queuename, true, metricFactory, logger);
+    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, MetricFactory metricFactory) {
+        this(connectionFactory, mailQueueItemDecoratorFactory, queuename, true, metricFactory);
     }
 
     /**
@@ -102,10 +104,9 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
      * @param connectionFactory
      * @param queuename
      * @param useBlob
-     * @param logger
      */
-    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, boolean useBlob, MetricFactory metricFactory, Logger logger) {
-        super(connectionFactory, mailQueueItemDecoratorFactory, queuename, metricFactory, logger);
+    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, boolean useBlob, MetricFactory metricFactory) {
+        super(connectionFactory, mailQueueItemDecoratorFactory, queuename, metricFactory);
         this.useBlob = useBlob;
     }
 
@@ -123,7 +124,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
                     mail.setAttribute(JAMES_QUEUE_NAME, queueName);
                 } catch (MalformedURLException e) {
                     // Ignore on error
-                    logger.debug("Unable to get url from blobmessage for mail " + mail.getName());
+                    LOGGER.debug("Unable to get url from blobmessage for mail " + mail.getName());
                 }
                 MimeMessageSource source = new MimeMessageBlobMessageSource(blobMessage);
                 mail.setMessage(new MimeMessageCopyOnWriteProxy(source));
@@ -226,7 +227,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
     @Override
     protected MailQueueItem createMailQueueItem(Connection connection, Session session, MessageConsumer consumer, Message message) throws JMSException, MessagingException {
         Mail mail = createMail(message);
-        ActiveMQMailQueueItem activeMQMailQueueItem = new ActiveMQMailQueueItem(mail, connection, session, consumer, message, logger);
+        ActiveMQMailQueueItem activeMQMailQueueItem = new ActiveMQMailQueueItem(mail, connection, session, consumer, message);
         return mailQueueItemDecoratorFactory.decorate(activeMQMailQueueItem);
     }
 
@@ -242,7 +243,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
                     // https://issues.apache.org/activemq/browse/AMQ-3018
                     ((ActiveMQBlobMessage) m).deleteFile();
                 } catch (Exception e) {
-                    logger.error("Unable to delete blob file for message " + m, e);
+                    LOGGER.error("Unable to delete blob file for message " + m, e);
                 }
             }
         }
@@ -317,7 +318,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
                     // every TemporaryQueue which will never get unregistered
                     replyTo.delete();
                 } catch (JMSException e) {
-                    logger.error("Error while deleting temporary queue", e);
+                    LOGGER.error("Error while deleting temporary queue", e);
                 }
             }
             closeSession(session);

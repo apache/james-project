@@ -37,6 +37,7 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.MailetPipelineLogging;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -44,10 +45,10 @@ import com.google.common.collect.ImmutableList;
  * Mailet wrapper which execute a Mailet in a Processor
  */
 public class CamelProcessor implements Processor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CamelProcessor.class);
 
     private final MetricFactory metricFactory;
     private final Mailet mailet;
-    private final Logger logger;
     private final CamelMailetProcessor processor;
 
     /**
@@ -56,10 +57,9 @@ public class CamelProcessor implements Processor {
      * @param metricFactory
      * @param mailet
      */
-    public CamelProcessor(MetricFactory metricFactory, Mailet mailet, Logger logger, CamelMailetProcessor processor) {
+    public CamelProcessor(MetricFactory metricFactory, Mailet mailet, CamelMailetProcessor processor) {
         this.metricFactory = metricFactory;
         this.mailet = mailet;
-        this.logger = logger;
         this.processor = processor;
     }
 
@@ -103,7 +103,7 @@ public class CamelProcessor implements Processor {
                 // changed by the mailet
                 ProcessorUtil.verifyMailAddresses(mail.getRecipients());
             } else {
-                ProcessorUtil.handleException(me, mail, mailet.getMailetConfig().getMailetName(), onMailetException, logger);
+                ProcessorUtil.handleException(me, mail, mailet.getMailetConfig().getMailetName(), onMailetException, LOGGER);
             }
 
         } finally {

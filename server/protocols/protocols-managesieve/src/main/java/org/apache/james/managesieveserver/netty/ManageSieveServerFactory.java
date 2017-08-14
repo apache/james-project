@@ -35,7 +35,6 @@ import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
-import org.slf4j.Logger;
 
 public class ManageSieveServerFactory extends AbstractServerFactory {
 
@@ -72,13 +71,12 @@ public class ManageSieveServerFactory extends AbstractServerFactory {
     }
 
     @Override
-    protected List<AbstractConfigurableAsyncServer> createServers(Logger log, HierarchicalConfiguration config) throws Exception {
+    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception {
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration> configs = config.configurationsAt("managesieveserver");
 
         for (HierarchicalConfiguration serverConfig: configs) {
             ManageSieveServer server = new ManageSieveServer(8000, manageSieveProcessor);
-            server.setLog(log);
             server.setFileSystem(fileSystem);
             server.configure(serverConfig);
             servers.add(server);

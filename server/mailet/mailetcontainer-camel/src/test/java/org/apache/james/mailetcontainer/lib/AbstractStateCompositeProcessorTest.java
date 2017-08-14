@@ -37,8 +37,6 @@ import org.apache.mailet.Mail;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class AbstractStateCompositeProcessorTest {
 
@@ -63,10 +61,6 @@ public abstract class AbstractStateCompositeProcessorTest {
                 };
             }
         };
-        Logger log = LoggerFactory.getLogger("MockLog");
-        // slf4j can't set programmatically any log level. It's just a facade
-        // log.setLevel(SimpleLog.LOG_LEVEL_DEBUG);
-        processor.setLog(log);
         processor.configure(createConfig(Arrays.asList("root", "error", "test")));
         processor.init();
 

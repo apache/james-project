@@ -41,7 +41,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.jmx.ServerMBean;
 import org.apache.james.protocols.netty.AbstractAsyncServer;
@@ -53,11 +52,14 @@ import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.handler.execution.ExecutionHandler;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstract base class for Servers for all James Servers
  */
-public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServer implements LogEnabled, Configurable, ServerMBean {
+public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServer implements Configurable, ServerMBean {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractConfigurableAsyncServer.class);
+
     /** The default value for the connection backlog. */
     public static final int DEFAULT_BACKLOG = 200;
 
@@ -84,8 +86,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     private String x509Algorithm = defaultX509algorithm;
 
     private FileSystem fileSystem;
-
-    private Logger logger;
 
     private boolean enabled;
 
@@ -123,13 +123,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         this.fileSystem = filesystem;
     }
 
-    /**
-     * @see org.apache.james.lifecycle.api.LogEnabled#setLog(org.slf4j.Logger)
-     */
-    public final void setLog(Logger logger) {
-        this.logger = logger;
-    }
-
     protected void registerMBean() {
 
         try {
@@ -162,9 +155,8 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
         enabled = config.getBoolean("[@enabled]", true);
 
-        final Logger logger = getLogger();
         if (!enabled) {
-            logger.info(getServiceType() + " disabled by configuration");
+            LOGGER.info(getServiceType() + " disabled by configuration");
             return;
         }
 
@@ -185,7 +177,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             }
             address = new InetSocketAddress(ip, port);
 
-            logger.info(getServiceType() + " bound to: " + ip + ":" + port);
+            LOGGER.info(getServiceType() + " bound to: " + ip + ":" + port);
 
             bindAddresses.add(address);
         }
@@ -203,26 +195,26 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         setTimeout(config.getInt(TIMEOUT_NAME, DEFAULT_TIMEOUT));
 
         StringBuilder infoBuffer = new StringBuilder(64).append(getServiceType()).append(" handler connection timeout is: ").append(getTimeout());
-        logger.info(infoBuffer.toString());
+        LOGGER.info(infoBuffer.toString());
 
         setBacklog(config.getInt(BACKLOG_NAME, DEFAULT_BACKLOG));
 
         infoBuffer = new StringBuilder(64).append(getServiceType()).append(" connection backlog is: ").append(getBacklog());
-        logger.info(infoBuffer.toString());
+        LOGGER.info(infoBuffer.toString());
 
         String connectionLimitString = config.getString("connectionLimit", null);
         if (connectionLimitString != null) {
             try {
                 connectionLimit = new Integer(connectionLimitString);
             } catch (NumberFormatException nfe) {
-                logger.error("Connection limit value is not properly formatted.", nfe);
+                LOGGER.error("Connection limit value is not properly formatted.", nfe);
             }
             if (connectionLimit < 0) {
-                logger.error("Connection limit value cannot be less than zero.");
+                LOGGER.error("Connection limit value cannot be less than zero.");
                 throw new ConfigurationException("Connection limit value cannot be less than zero.");
             } else if (connectionLimit > 0) {
                 infoBuffer = new StringBuilder(128).append(getServiceType()).append(" will allow a maximum of ").append(connectionLimitString).append(" connections.");
-                logger.info(infoBuffer.toString());
+                LOGGER.info(infoBuffer.toString());
             }
         }
 
@@ -231,14 +223,14 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             try {
                 connPerIP = Integer.parseInt(connectionLimitPerIP);
             } catch (NumberFormatException nfe) {
-                logger.error("Connection limit per IP value is not properly formatted.", nfe);
+                LOGGER.error("Connection limit per IP value is not properly formatted.", nfe);
             }
             if (connPerIP < 0) {
-                logger.error("Connection limit per IP value cannot be less than zero.");
+                LOGGER.error("Connection limit per IP value cannot be less than zero.");
                 throw new ConfigurationException("Connection limit value cannot be less than zero.");
             } else if (connPerIP > 0) {
                 infoBuffer = new StringBuilder(128).append(getServiceType()).append(" will allow a maximum of ").append(connPerIP).append(" per IP connections for ").append(getServiceType());
-                logger.info(infoBuffer.toString());
+                LOGGER.info(infoBuffer.toString());
             }
         }
 
@@ -276,7 +268,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             mbeanServer = ManagementFactory.getPlatformMBeanServer();
             registerMBean();
             
-            getLogger().info("Init " + getServiceType() + " done");
+            LOGGER.info("Init " + getServiceType() + " done");
 
         }
     
@@ -285,7 +277,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     @PreDestroy
     public final void destroy() {
         
-        getLogger().info("Dispose " + getServiceType());
+        LOGGER.info("Dispose " + getServiceType());
         
         if (isEnabled()) {
             unbind();
@@ -297,7 +289,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
             unregisterMBean();
         }
-        getLogger().info("Dispose " + getServiceType() + " done");
+        LOGGER.info("Dispose " + getServiceType() + " done");
 
     }
 
@@ -344,7 +336,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             hostName = "localhost";
         }
 
-        getLogger().info("{} is running on: {}", getServiceType(), hostName);
+        LOGGER.info("{} is running on: {}", getServiceType(), hostName);
 
         boolean autodetect = handlerConfiguration.getBoolean(HELLO_NAME + ".[@autodetect]", true);
         if (autodetect) {
@@ -356,16 +348,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             }
         }
 
-        getLogger().info("{} handler hello name is: {}", getServiceType(), helloName);
-    }
-
-    /**
-     * Return the logger
-     * 
-     * @return logger
-     */
-    protected Logger getLogger() {
-        return logger;
+        LOGGER.info("{} handler hello name is: {}", getServiceType(), helloName);
     }
 
     /**
@@ -500,7 +483,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         try {
             bind();
         } catch (Exception e) {
-            logger.error("Unable to start server", e);
+            LOGGER.error("Unable to start server", e);
             return false;
         }
         return true;

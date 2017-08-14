@@ -77,7 +77,7 @@ public abstract class ActiveMQMailQueueTest extends AbstractJMSMailQueueTest {
     protected JMSMailQueue createQueue(ConnectionFactory factory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName) {
         Logger log = LoggerFactory.getLogger(ActiveMQMailQueueTest.class);
 
-        return new ActiveMQMailQueue(factory, mailQueueItemDecoratorFactory, queueName, useBlobMessages(), new NoopMetricFactory(), log);
+        return new ActiveMQMailQueue(factory, mailQueueItemDecoratorFactory, queueName, useBlobMessages(), new NoopMetricFactory());
     }
 
     protected boolean useBlobMessages() {

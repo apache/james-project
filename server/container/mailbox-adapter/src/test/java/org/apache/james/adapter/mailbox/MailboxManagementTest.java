@@ -33,9 +33,9 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
+import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -76,8 +76,7 @@ public class MailboxManagementTest {
         mailboxManager.init();
         mailboxManagerManagement = new MailboxManagerManagement();
         mailboxManagerManagement.setMailboxManager(mailboxManager);
-        mailboxManagerManagement.setLog(LOGGER);
-        session = mailboxManager.createSystemSession("TEST", LOGGER);
+        session = mailboxManager.createSystemSession("TEST");
     }
 
     @Test

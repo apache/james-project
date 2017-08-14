@@ -32,7 +32,6 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.jmx.MailSpoolerMBean;
 import org.apache.james.metrics.api.MetricFactory;
@@ -44,13 +43,15 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutor;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manages the mail spool. This class is responsible for retrieving messages
  * from the spool, directing messages to the appropriate processor, and removing
  * them from the spool when processing is complete.
  */
-public class JamesMailSpooler implements Runnable, Disposable, Configurable, LogEnabled, MailSpoolerMBean {
+public class JamesMailSpooler implements Runnable, Disposable, Configurable, MailSpoolerMBean {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JamesMailSpooler.class);
 
     public static final String SPOOL_PROCESSING = "spoolProcessing";
     private MailQueue queue;
@@ -86,8 +87,6 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Log
      */
     private MailProcessor mailProcessor;
 
-    private Logger logger;
-
     private MailQueueFactory queueFactory;
 
     private int numDequeueThreads;
@@ -121,13 +120,13 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Log
      */
     @PostConstruct
     public void init() {
-        logger.info(getClass().getName() + " init...");
+        LOGGER.info(getClass().getName() + " init...");
 
         queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
 
-        if (logger.isInfoEnabled()) {
+        if (LOGGER.isInfoEnabled()) {
             String infoBuffer = getClass().getName() + " uses " + numThreads + " Thread(s)";
-            logger.info(infoBuffer);
+            LOGGER.info(infoBuffer);
         }
 
         active.set(true);
@@ -147,9 +146,9 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Log
     @Override
     public void run() {
 
-        if (logger.isInfoEnabled()) {
-            logger.info("Run " + getClass().getName() + ": " + Thread.currentThread().getName());
-            logger.info("Queue=" + queue.toString());
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Run " + getClass().getName() + ": " + Thread.currentThread().getName());
+            LOGGER.info("Queue=" + queue.toString());
         }
 
         while (active.get()) {
@@ -166,17 +165,17 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Log
                         processingActive.incrementAndGet();
 
                         Mail mail = queueItem.getMail();
-                        if (logger.isDebugEnabled()) {
+                        if (LOGGER.isDebugEnabled()) {
                             String debugBuffer = "==== Begin processing mail " + mail.getName() + "====";
-                            logger.debug(debugBuffer);
+                            LOGGER.debug(debugBuffer);
                         }
 
                         try {
                             mailProcessor.service(mail);
                             queueItem.done(true);
                         } catch (Exception e) {
-                            if (active.get() && logger.isErrorEnabled()) {
-                                logger.error("Exception processing mail while spooling " + e.getMessage(), e);
+                            if (active.get() && LOGGER.isErrorEnabled()) {
+                                LOGGER.error("Exception processing mail while spooling " + e.getMessage(), e);
                             }
                             queueItem.done(false);
 
@@ -185,8 +184,8 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Log
                             mail = null;
                         }
                     } catch (Throwable e) {
-                        if (active.get() && logger.isErrorEnabled()) {
-                            logger.error("Exception processing mail while spooling " + e.getMessage(), e);
+                        if (active.get() && LOGGER.isErrorEnabled()) {
+                            LOGGER.error("Exception processing mail while spooling " + e.getMessage(), e);
 
                         }
                     } finally {
@@ -197,15 +196,15 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Log
 
                 });
             } catch (MailQueueException e1) {
-                if (active.get() && logger.isErrorEnabled()) {
-                    logger.error("Exception dequeue mail", e1);
+                if (active.get() && LOGGER.isErrorEnabled()) {
+                    LOGGER.error("Exception dequeue mail", e1);
 
                 }
             } catch (InterruptedException interrupted) {
                 //MailSpooler is stopping
             }
         }
-        logger.info("Stop {} : {}", getClass().getName(), Thread.currentThread().getName());
+        LOGGER.info("Stop {} : {}", getClass().getName(), Thread.currentThread().getName());
     }
 
     /**
@@ -221,7 +220,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Log
     @PreDestroy
     @Override
     public void dispose() {
-        logger.info(getClass().getName() + " dispose...");
+        LOGGER.info(getClass().getName() + " dispose...");
         active.set(false); // shutdown the threads
         dequeueService.shutdownNow();
         workerService.shutdown();
@@ -235,11 +234,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Log
             }
         }
 
-        logger.info(getClass().getName() + " thread shutdown completed.");
-    }
-
-    public void setLog(Logger log) {
-        this.logger = log;
+        LOGGER.info(getClass().getName() + " thread shutdown completed.");
     }
 
     @Override

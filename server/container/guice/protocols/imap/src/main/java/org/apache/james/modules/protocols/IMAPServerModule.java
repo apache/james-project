@@ -36,8 +36,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.modules.Names;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -49,8 +47,6 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 
 public class IMAPServerModule extends AbstractModule {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(IMAPServerModule.class);
 
     @Override
     protected void configure() {
@@ -100,7 +96,6 @@ public class IMAPServerModule extends AbstractModule {
         @Override
         public void initModule()  {
             try {
-                imapServerFactory.setLog(LOGGER);
                 imapServerFactory.configure(configurationProvider.getConfiguration("imapserver"));
                 imapServerFactory.init();
             } catch (Exception e) {

@@ -24,7 +24,6 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
-import org.slf4j.LoggerFactory;
 
 /**
  * Test the JPA Virtual User Table implementation.
@@ -36,7 +35,6 @@ public class JPARecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         JPARecipientRewriteTable localVirtualUserTable = new JPARecipientRewriteTable();
-        localVirtualUserTable.setLog(LoggerFactory.getLogger("MockLog"));
         localVirtualUserTable.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
         DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
         localVirtualUserTable.configure(defaultConfiguration);

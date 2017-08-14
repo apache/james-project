@@ -29,7 +29,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.MailAddress;
-import org.slf4j.Logger;
 
 /**
  * <p>
@@ -143,15 +142,6 @@ abstract public class ProcessorAbstract {
      */
     protected String getJavaMailProviderName() {
         return getConfiguration().getJavaMailProviderName();
-    }
-
-    /**
-     * Returns the logger.
-     * 
-     * @return Logger
-     */
-    protected Logger getLogger() {
-        return getConfiguration().getLogger();
     }
 
     /**

@@ -45,6 +45,8 @@ import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.AbstractJamesUsersRepository;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An abstract base class for creating UserRepository implementations which use
@@ -92,6 +94,7 @@ import org.apache.james.util.sql.SqlResources;
  */
 @Deprecated
 public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractJdbcUsersRepository.class);
 
     protected Map<String, String> m_sqlParameters;
 
@@ -245,14 +248,14 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
     @PostConstruct
     public void init() throws Exception {
         StringBuffer logBuffer;
-        if (getLogger().isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             logBuffer = new StringBuffer(128).append(this.getClass().getName()).append(".initialize()");
-            getLogger().debug(logBuffer.toString());
+            LOGGER.debug(logBuffer.toString());
         }
 
         theJDBCUtil = new JDBCUtil() {
             protected void delegatedLog(String logString) {
-                AbstractJdbcUsersRepository.this.getLogger().warn("AbstractJdbcUsersRepository: " + logString);
+                AbstractJdbcUsersRepository.this.LOGGER.warn("AbstractJdbcUsersRepository: " + logString);
             }
         };
 
@@ -266,13 +269,13 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             try {
                 sqlFile = fileSystem.getResource(m_sqlFileName);
             } catch (Exception e) {
-                getLogger().error(e.getMessage(), e);
+                LOGGER.error(e.getMessage(), e);
                 throw e;
             }
 
-            if (getLogger().isDebugEnabled()) {
+            if (LOGGER.isDebugEnabled()) {
                 logBuffer = new StringBuffer(256).append("Reading SQL resources from: ").append(m_sqlFileName).append(", section ").append(this.getClass().getName()).append(".");
-                getLogger().debug(logBuffer.toString());
+                LOGGER.debug(logBuffer.toString());
             }
 
             SqlResources sqlStatements = new SqlResources();
@@ -324,10 +327,10 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
                 }
 
                 logBuffer = new StringBuffer(128).append(this.getClass().getName()).append(": Created table \'").append(tableName).append("\'.");
-                getLogger().info(logBuffer.toString());
+                LOGGER.info(logBuffer.toString());
             } else {
-                if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("Using table: " + tableName);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Using table: " + tableName);
                 }
             }
 
@@ -360,9 +363,9 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      */
     protected void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
         StringBuffer logBuffer;
-        if (getLogger().isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             logBuffer = new StringBuffer(64).append(this.getClass().getName()).append(".configure()");
-            getLogger().debug(logBuffer.toString());
+            LOGGER.debug(logBuffer.toString());
         }
 
         // Parse the DestinationURL for the name of the datasource,
@@ -400,9 +403,9 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             throw new ConfigurationException("Malformed destinationURL - " + "Must be of the format \"db://<data-source>[/<table>[/<key>]]\".");
         }
 
-        if (getLogger().isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             logBuffer = new StringBuffer(128).append("Parsed URL: table = '").append(m_sqlParameters.get("table")).append("', key = '").append(m_sqlParameters.get("key")).append("'");
-            getLogger().debug(logBuffer.toString());
+            LOGGER.debug(logBuffer.toString());
         }
 
         // Get the SQL file location

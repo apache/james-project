@@ -38,6 +38,8 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.RFC2822Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -198,6 +200,8 @@ import org.apache.mailet.base.RFC2822Headers;
  * </p>
  */
 public class MessageProcessor extends ProcessorAbstract {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageProcessor.class);
+
     private MimeMessage fieldMessageIn;
 
     /**
@@ -293,10 +297,10 @@ public class MessageProcessor extends ProcessorAbstract {
      */
     public void process() throws MessagingException {
         // Log delivery attempt
-        if (getLogger().isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             StringBuilder logMessageBuffer = new StringBuilder("Attempting delivery of message with id. ");
             logMessageBuffer.append(getMessageIn().getMessageID());
-            getLogger().debug(logMessageBuffer.toString());
+            LOGGER.debug(logMessageBuffer.toString());
         }
 
         // Determine the intended recipient
@@ -309,18 +313,18 @@ public class MessageProcessor extends ProcessorAbstract {
                 String messageID = getMessageIn().getMessageID();
                 if (!getDeferredRecipientNotFoundMessageIDs().contains(messageID)) {
                     getDeferredRecipientNotFoundMessageIDs().add(messageID);
-                    if (getLogger().isDebugEnabled()) {
+                    if (LOGGER.isDebugEnabled()) {
                         StringBuilder messageBuffer = new StringBuilder("Deferred processing of message for which the intended recipient could not be found. Message ID: ");
                         messageBuffer.append(messageID);
-                        getLogger().debug(messageBuffer.toString());
+                        LOGGER.debug(messageBuffer.toString());
                     }
                     return;
                 } else {
                     getDeferredRecipientNotFoundMessageIDs().remove(messageID);
-                    if (getLogger().isDebugEnabled()) {
+                    if (LOGGER.isDebugEnabled()) {
                         StringBuilder messageBuffer = new StringBuilder("Processing deferred message for which the intended recipient could not be found. Message ID: ");
                         messageBuffer.append(messageID);
-                        getLogger().debug(messageBuffer.toString());
+                        LOGGER.debug(messageBuffer.toString());
                     }
                 }
             }
@@ -620,7 +624,7 @@ public class MessageProcessor extends ProcessorAbstract {
     }
 
     private void logMailCreation(MailImpl mail) {
-        if (getLogger().isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             StringBuilder messageBuffer = new StringBuilder("Created mail with name: ");
             messageBuffer.append(mail.getName());
             messageBuffer.append(", sender: ");
@@ -635,7 +639,7 @@ public class MessageProcessor extends ProcessorAbstract {
             messageBuffer.append(", remote host name: ");
             messageBuffer.append(mail.getRemoteHost());
             messageBuffer.append('.');
-            getLogger().debug(messageBuffer.toString());
+            LOGGER.debug(messageBuffer.toString());
         }
     }
 
@@ -795,10 +799,10 @@ public class MessageProcessor extends ProcessorAbstract {
         if (isMarkUndeliverableSeen())
             setMessageSeen();
         logStatusWarn("Message could not be delivered due to an error parsing a mail address.");
-        if (getLogger().isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             StringBuilder messageBuffer = new StringBuilder("UNDELIVERABLE Message ID: ");
             messageBuffer.append(getMessageIn().getMessageID());
-            getLogger().debug(messageBuffer.toString(), ex);
+            LOGGER.debug(messageBuffer.toString(), ex);
         }
     }
 
@@ -817,10 +821,10 @@ public class MessageProcessor extends ProcessorAbstract {
             setMessageSeen();
 
         logStatusWarn("Message could not be delivered due to an error determining the remote domain.");
-        if (getLogger().isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             StringBuilder messageBuffer = new StringBuilder("UNDELIVERABLE Message ID: ");
             messageBuffer.append(getMessageIn().getMessageID());
-            getLogger().debug(messageBuffer.toString(), ex);
+            LOGGER.debug(messageBuffer.toString(), ex);
         }
     }
 
@@ -849,7 +853,7 @@ public class MessageProcessor extends ProcessorAbstract {
         try {
             return getConfiguration().getDomainList().containsDomain(recipient.getDomain());
         } catch (DomainListException e) {
-            getLogger().error("Unable to access DomainList", e);
+            LOGGER.error("Unable to access DomainList", e);
             return false;
         }
     }
@@ -1079,7 +1083,7 @@ public class MessageProcessor extends ProcessorAbstract {
      * @param detailMsg
      */
     protected void logStatusInfo(String detailMsg) throws MessagingException {
-        getLogger().info(getStatusReport(detailMsg).toString());
+        LOGGER.info(getStatusReport(detailMsg).toString());
     }
 
     /**
@@ -1088,7 +1092,7 @@ public class MessageProcessor extends ProcessorAbstract {
      * @param detailMsg
      */
     protected void logStatusWarn(String detailMsg) throws MessagingException {
-        getLogger().warn(getStatusReport(detailMsg).toString());
+        LOGGER.warn(getStatusReport(detailMsg).toString());
     }
 
     /**
@@ -1097,7 +1101,7 @@ public class MessageProcessor extends ProcessorAbstract {
      * @param detailMsg
      */
     protected void logStatusError(String detailMsg) throws MessagingException {
-        getLogger().error(getStatusReport(detailMsg).toString());
+        LOGGER.error(getStatusReport(detailMsg).toString());
     }
 
     /**

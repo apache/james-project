@@ -30,7 +30,6 @@ import javax.mail.MessagingException;
 import org.apache.james.core.MimeMessageInputStream;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -44,13 +43,13 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tool to import James 2.3 users and mails into James 3.0.
  */
-public class James23Importer implements LogEnabled {
-
-    private Logger log;
+public class James23Importer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(James23Importer.class);
 
     /**
      * James 3.0 users repository.
@@ -114,7 +113,7 @@ public class James23Importer implements LogEnabled {
             String userName23 = j23uIt.next();
             String userName30 = convert23UserTo30(userName23);
             james30UsersRepository.addUser(userName30, defaultPassword);
-            log.info("New user is copied from 2.3 to 3.0 with username=" + userName30);
+            LOGGER.info("New user is copied from 2.3 to 3.0 with username=" + userName30);
         }
     }
 
@@ -169,11 +168,6 @@ public class James23Importer implements LogEnabled {
 
         }
 
-    }
-
-    @Override
-    public void setLog(Logger log) {
-        this.log = log;
     }
 
     /**

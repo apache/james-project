@@ -69,7 +69,7 @@ public abstract class AbstractJMSMailQueueTest {
     
     protected JMSMailQueue createQueue(ConnectionFactory factory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName) {
         Logger log = LoggerFactory.getLogger(AbstractJMSMailQueueTest.class);
-        return new JMSMailQueue(factory, mailQueueItemDecoratorFactory, queueName, new NoopMetricFactory(), log);
+        return new JMSMailQueue(factory, mailQueueItemDecoratorFactory, queueName, new NoopMetricFactory());
     }
 
     @Before

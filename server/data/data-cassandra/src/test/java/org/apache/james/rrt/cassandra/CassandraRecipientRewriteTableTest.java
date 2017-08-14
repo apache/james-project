@@ -24,7 +24,6 @@ import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
-import org.slf4j.LoggerFactory;
 
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
@@ -52,7 +51,6 @@ public class CassandraRecipientRewriteTableTest extends AbstractRecipientRewrite
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         CassandraRecipientRewriteTable rrt = new CassandraRecipientRewriteTable(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
-        rrt.setLog(LoggerFactory.getLogger("MockLog"));
         rrt.configure(new DefaultConfigurationBuilder());
         return rrt;
     }
