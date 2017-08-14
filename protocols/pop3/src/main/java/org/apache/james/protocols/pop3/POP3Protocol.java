@@ -36,7 +36,11 @@ public class POP3Protocol extends ProtocolImpl{
         super(chain, config, logger);
     }
 
-    
+    @Override
+    public String getName() {
+        return "POP3";
+    }
+
     @Override
     public ProtocolSession newSession(ProtocolTransport transport) {
         return new POP3SessionImpl(logger, transport, getConfiguration());

@@ -26,7 +26,7 @@ import org.slf4j.Logger;
  * Basic {@link Protocol} implementation 
  *
  */
-public class ProtocolImpl implements Protocol{
+public abstract class ProtocolImpl implements Protocol{
     private final ProtocolHandlerChain chain;
     private final ProtocolConfiguration config;
     protected final Logger logger;

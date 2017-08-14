@@ -41,4 +41,8 @@ public class SMTPProtocol extends ProtocolImpl {
         return new SMTPSessionImpl(logger, transport, (SMTPConfiguration) getConfiguration());
     }
 
+    @Override
+    public String getName() {
+        return "SMTP";
+    }
 }

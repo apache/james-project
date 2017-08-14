@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
+import java.io.Closeable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -69,8 +70,10 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
 
     @Override
     public void channelBound(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        ctx.setAttachment(createSession(ctx));
-        super.channelBound(ctx, e);
+        try (Closeable closeable = ProtocolMDCContext.from(protocol, ctx)) {
+            ctx.setAttachment(createSession(ctx));
+            super.channelBound(ctx, e);
+        }
     }
 
 
@@ -81,32 +84,34 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        List<ConnectHandler> connectHandlers = chain.getHandlers(ConnectHandler.class);
-        List<ProtocolHandlerResultHandler> resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
-        ProtocolSession session = (ProtocolSession) ctx.getAttachment();
-        session.getLogger().info("Connection established from " + session.getRemoteAddress().getAddress().getHostAddress());
-        if (connectHandlers != null) {
-            for (ConnectHandler cHandler : connectHandlers) {
-                long start = System.currentTimeMillis();
-                Response response = cHandler.onConnect(session);
-                long executionTime = System.currentTimeMillis() - start;
+        try (Closeable closeable = ProtocolMDCContext.from(protocol, ctx)) {
+            List<ConnectHandler> connectHandlers = chain.getHandlers(ConnectHandler.class);
+            List<ProtocolHandlerResultHandler> resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
+            ProtocolSession session = (ProtocolSession) ctx.getAttachment();
+            session.getLogger().info("Connection established from " + session.getRemoteAddress().getAddress().getHostAddress());
+            if (connectHandlers != null) {
+                for (ConnectHandler cHandler : connectHandlers) {
+                    long start = System.currentTimeMillis();
+                    Response response = cHandler.onConnect(session);
+                    long executionTime = System.currentTimeMillis() - start;
 
-                for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
-                    // Disable till PROTOCOLS-37 is implemented
-                    if (response instanceof FutureResponse) {
-                        session.getLogger().debug("ProtocolHandlerResultHandler are not supported for FutureResponse yet");
-                        break;
+                    for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
+                        // Disable till PROTOCOLS-37 is implemented
+                        if (response instanceof FutureResponse) {
+                            session.getLogger().debug("ProtocolHandlerResultHandler are not supported for FutureResponse yet");
+                            break;
+                        }
+                        resultHandler.onResponse(session, response, executionTime, cHandler);
                     }
-                    resultHandler.onResponse(session, response, executionTime, cHandler);
-                }
-                if (response != null) {
-                    // TODO: This kind of sucks but I was able to come up with something more elegant here
-                    ((ProtocolSessionImpl) session).getProtocolTransport().writeResponse(response, session);
-                }
+                    if (response != null) {
+                        // TODO: This kind of sucks but I was able to come up with something more elegant here
+                        ((ProtocolSessionImpl) session).getProtocolTransport().writeResponse(response, session);
+                    }
 
+                }
             }
+            super.channelConnected(ctx, e);
         }
-        super.channelConnected(ctx, e);
     }
 
 
@@ -114,14 +119,16 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
     @SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
     public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        List<DisconnectHandler> connectHandlers = chain.getHandlers(DisconnectHandler.class);
-        ProtocolSession session = (ProtocolSession) ctx.getAttachment();
-        if (connectHandlers != null) {
-            for (DisconnectHandler connectHandler : connectHandlers) {
-                connectHandler.onDisconnect(session);
+        try (Closeable closeable = ProtocolMDCContext.from(protocol, ctx)) {
+            List<DisconnectHandler> connectHandlers = chain.getHandlers(DisconnectHandler.class);
+            ProtocolSession session = (ProtocolSession) ctx.getAttachment();
+            if (connectHandlers != null) {
+                for (DisconnectHandler connectHandler : connectHandlers) {
+                    connectHandler.onDisconnect(session);
+                }
             }
+            super.channelDisconnected(ctx, e);
         }
-        super.channelDisconnected(ctx, e);
     }
 
 
@@ -131,45 +138,49 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        ProtocolSession pSession = (ProtocolSession) ctx.getAttachment();
-        LinkedList<LineHandler> lineHandlers = chain.getHandlers(LineHandler.class);
-        LinkedList<ProtocolHandlerResultHandler> resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
+        try (Closeable closeable = ProtocolMDCContext.from(protocol, ctx)) {
+            ProtocolSession pSession = (ProtocolSession) ctx.getAttachment();
+            LinkedList<LineHandler> lineHandlers = chain.getHandlers(LineHandler.class);
+            LinkedList<ProtocolHandlerResultHandler> resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
 
-        
-        if (lineHandlers.size() > 0) {
-        
-            ChannelBuffer buf = (ChannelBuffer) e.getMessage();      
-            LineHandler lHandler=  (LineHandler) lineHandlers.getLast();
-            long start = System.currentTimeMillis();            
-            Response response = lHandler.onLine(pSession,buf.toByteBuffer());
-            long executionTime = System.currentTimeMillis() - start;
 
-            for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
-                // Disable till PROTOCOLS-37 is implemented
-                if (response instanceof FutureResponse) {
-                    pSession.getLogger().debug("ProtocolHandlerResultHandler are not supported for FutureResponse yet");
-                    break;
+            if (lineHandlers.size() > 0) {
+
+                ChannelBuffer buf = (ChannelBuffer) e.getMessage();
+                LineHandler lHandler = (LineHandler) lineHandlers.getLast();
+                long start = System.currentTimeMillis();
+                Response response = lHandler.onLine(pSession, buf.toByteBuffer());
+                long executionTime = System.currentTimeMillis() - start;
+
+                for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
+                    // Disable till PROTOCOLS-37 is implemented
+                    if (response instanceof FutureResponse) {
+                        pSession.getLogger().debug("ProtocolHandlerResultHandler are not supported for FutureResponse yet");
+                        break;
+                    }
+                    response = resultHandler.onResponse(pSession, response, executionTime, lHandler);
                 }
-                response = resultHandler.onResponse(pSession, response, executionTime, lHandler);
-            }
-            if (response != null) {
-                // TODO: This kind of sucks but I was able to come up with something more elegant here
-                ((ProtocolSessionImpl)pSession).getProtocolTransport().writeResponse(response, pSession);
+                if (response != null) {
+                    // TODO: This kind of sucks but I was able to come up with something more elegant here
+                    ((ProtocolSessionImpl) pSession).getProtocolTransport().writeResponse(response, pSession);
+                }
+
             }
 
+            super.messageReceived(ctx, e);
         }
-        
-        super.messageReceived(ctx, e);
     }
 
 
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        ProtocolSession session = (ProtocolSession) ctx.getAttachment();
-        getLogger(session).info("Connection closed for " + session.getRemoteAddress().getAddress().getHostAddress());
-        cleanup(ctx);
+        try (Closeable closeable = ProtocolMDCContext.from(protocol, ctx)) {
+            ProtocolSession session = (ProtocolSession) ctx.getAttachment();
+            getLogger(session).info("Connection closed for " + session.getRemoteAddress().getAddress().getHostAddress());
+            cleanup(ctx);
 
-        super.channelClosed(ctx, e);
+            super.channelClosed(ctx, e);
+        }
     }
 
     /**
@@ -202,26 +213,28 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        Channel channel = ctx.getChannel();
-        ProtocolSession session = (ProtocolSession) ctx.getAttachment();
-        if (e.getCause() instanceof TooLongFrameException && session != null) {
-            Response r = session.newLineTooLongResponse();
-            ProtocolTransport transport = ((ProtocolSessionImpl)session).getProtocolTransport();
-            if (r != null)  {
-                transport.writeResponse(r, session);
-            }
-        } else {
-            if (channel.isConnected() && session != null) {
-                ProtocolTransport transport = ((ProtocolSessionImpl)session).getProtocolTransport();
-
-                Response r = session.newFatalErrorResponse();
+        try (Closeable closeable = ProtocolMDCContext.from(protocol, ctx)) {
+            Channel channel = ctx.getChannel();
+            ProtocolSession session = (ProtocolSession) ctx.getAttachment();
+            if (e.getCause() instanceof TooLongFrameException && session != null) {
+                Response r = session.newLineTooLongResponse();
+                ProtocolTransport transport = ((ProtocolSessionImpl) session).getProtocolTransport();
                 if (r != null) {
                     transport.writeResponse(r, session);
-                } 
-                transport.writeResponse(Response.DISCONNECT, session);
+                }
+            } else {
+                if (channel.isConnected() && session != null) {
+                    ProtocolTransport transport = ((ProtocolSessionImpl) session).getProtocolTransport();
+
+                    Response r = session.newFatalErrorResponse();
+                    if (r != null) {
+                        transport.writeResponse(r, session);
+                    }
+                    transport.writeResponse(Response.DISCONNECT, session);
+                }
+                getLogger(session).error("Unable to process request", e.getCause());
+                cleanup(ctx);
             }
-            getLogger(session).error("Unable to process request", e.getCause());
-            cleanup(ctx);            
         }
     }
 

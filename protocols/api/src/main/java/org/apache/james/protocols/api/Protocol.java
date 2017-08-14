@@ -26,6 +26,7 @@ import org.slf4j.Logger;
  * Define a protocol
  */
 public interface Protocol {
+    String getName();
 
     /**
      * Return the {@link ProtocolHandlerChain} which is defined for the {@link Protocol}
