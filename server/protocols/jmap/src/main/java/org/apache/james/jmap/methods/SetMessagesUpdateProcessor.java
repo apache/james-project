@@ -111,6 +111,13 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             }
         } catch (MailboxException e) {
             handleMessageUpdateException(messageId, builder, e);
+        } catch (IllegalArgumentException e) {
+            ValidationResult invalidPropertyKeywords = ValidationResult.builder()
+                    .property(MessageProperties.MessageProperty.keywords.asFieldName())
+                    .message(e.getMessage())
+                    .build();
+
+            handleInvalidRequest(builder, messageId, ImmutableList.of(invalidPropertyKeywords));
         }
 
     }
