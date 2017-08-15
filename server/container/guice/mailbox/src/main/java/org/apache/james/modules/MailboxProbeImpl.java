@@ -155,11 +155,11 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         mailboxManager.endProcessingRequest(mailboxSession);
         mailboxSession.close();
     }
-    
+
     @Override
-    public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
+    public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags)
             throws MailboxException {
-        
+
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
         return messageManager.appendMessage(message, internalDate, mailboxSession, isRecent, flags);

@@ -17,41 +17,34 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.probe;
+package org.apache.james.utils;
 
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.Date;
+import java.util.List;
+import javax.inject.Inject;
 
-import javax.mail.Flags;
-
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.ComposedMessageId;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageResult;
 
-public interface MailboxProbe {
+import com.google.common.collect.ImmutableList;
 
-    void createMailbox(String namespace, String user, String name);
+public class MessageIdProbe implements GuiceProbe {
+    private final MailboxManager mailboxManager;
+    private final MessageIdManager messageIdManager;
 
-    Mailbox getMailbox(String namespace, String user, String name);
+    @Inject
+    public MessageIdProbe(MailboxManager mailboxManager, MessageIdManager messageIdManager) {
+        this.mailboxManager = mailboxManager;
+        this.messageIdManager = messageIdManager;
+    }
 
-    Collection<String> listUserMailboxes(String user);
+    public List<MessageResult> getMessages(MessageId messageId, String user) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(user);
 
-    void deleteMailbox(String namespace, String user, String name);
-
-    void importEmlFileToMailbox(String namespace, String user, String name, String emlpath) throws Exception;
-
-    ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate,
-            boolean isRecent, Flags flags) throws MailboxException;
-
-    void copyMailbox(String srcBean, String dstBean) throws Exception;
-
-    void deleteUserMailboxesNames(String user) throws Exception;
-
-    void reIndexMailbox(String namespace, String user, String name) throws Exception;
-
-    void reIndexAll() throws Exception;
-
-    Collection<String> listSubscriptions(String user) throws Exception;
+        return messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.FULL_CONTENT, mailboxSession);
+    }
 }
