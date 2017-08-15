@@ -58,7 +58,6 @@ import com.google.common.collect.ImmutableList;
 public class CassandraMapperProvider implements MapperProvider {
 
     private static final Factory MESSAGE_ID_FACTORY = new CassandraMessageId.Factory();
-    public static final int MAX_ACL_RETRY = 10;
 
     private final CassandraCluster cassandra;
     private final MessageUidProvider messageUidProvider;
@@ -112,12 +111,12 @@ public class CassandraMapperProvider implements MapperProvider {
         CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(cassandra.getConf());
         CassandraDeletedMessageDAO deletedMessageDAO = new CassandraDeletedMessageDAO(cassandra.getConf());
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
-        CassandraMessageDAOV2 messageDAOV2 = new CassandraMessageDAOV2(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO);
+        CassandraMessageDAO messageDAO = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO);
         return new CassandraMailboxSessionMapperFactory(
             new CassandraUidProvider(cassandra.getConf()),
             cassandraModSeqProvider,
             cassandra.getConf(),
-            messageDAOV2,
+            messageDAO,
             new CassandraMessageIdDAO(cassandra.getConf(), MESSAGE_ID_FACTORY),
             new CassandraMessageIdToImapUidDAO(cassandra.getConf(), MESSAGE_ID_FACTORY),
             new CassandraMailboxCounterDAO(cassandra.getConf()),

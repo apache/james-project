@@ -63,7 +63,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private final CassandraMailboxDAO mailboxDAO;
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
     private final CassandraMessageIdDAO messageIdDAO;
-    private final CassandraMessageDAOV2 messageDAOV2;
+    private final CassandraMessageDAO messageDAO;
     private final CassandraIndexTableHandler indexTableHandler;
     private final ModSeqProvider modSeqProvider;
     private final MailboxSession mailboxSession;
@@ -72,14 +72,14 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     public CassandraMessageIdMapper(MailboxMapper mailboxMapper, CassandraMailboxDAO mailboxDAO, CassandraAttachmentMapper attachmentMapper,
                                     CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO,
-                                    CassandraMessageDAOV2 messageDAOV2, CassandraIndexTableHandler indexTableHandler,
+                                    CassandraMessageDAO messageDAO, CassandraIndexTableHandler indexTableHandler,
                                     ModSeqProvider modSeqProvider, MailboxSession mailboxSession, CassandraConfiguration cassandraConfiguration) {
 
         this.mailboxMapper = mailboxMapper;
         this.mailboxDAO = mailboxDAO;
         this.imapUidDAO = imapUidDAO;
         this.messageIdDAO = messageIdDAO;
-        this.messageDAOV2 = messageDAOV2;
+        this.messageDAO = messageDAO;
         this.indexTableHandler = indexTableHandler;
         this.modSeqProvider = modSeqProvider;
         this.mailboxSession = mailboxSession;
@@ -99,10 +99,10 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
                 .map(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty())))
             .completableFuture()
             .thenApply(stream -> stream.collect(Guavate.toImmutableList()))
-            .thenCompose(composedMessageIds -> messageDAOV2.retrieveMessages(composedMessageIds, fetchType, Limit.unlimited()))
+            .thenCompose(composedMessageIds -> messageDAO.retrieveMessages(composedMessageIds, fetchType, Limit.unlimited()))
             .thenApply(stream -> stream
-                .filter(CassandraMessageDAOV2.MessageResult::isFound)
-                .map(CassandraMessageDAOV2.MessageResult::message))
+                .filter(CassandraMessageDAO.MessageResult::isFound)
+                .map(CassandraMessageDAO.MessageResult::message))
             .thenCompose(stream -> attachmentLoader.addAttachmentToMessages(stream, fetchType))
             .thenCompose(this::filterMessagesWithExistingMailbox)
             .join()
@@ -147,7 +147,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .flags(mailboxMessage.createFlags())
             .modSeq(mailboxMessage.getModSeq())
             .build();
-        messageDAOV2.save(mailboxMessage)
+        messageDAO.save(mailboxMessage)
             .thenCompose(voidValue -> CompletableFuture.allOf(
                 imapUidDAO.insert(composedMessageIdWithMetaData),
                 messageIdDAO.insert(composedMessageIdWithMetaData)))

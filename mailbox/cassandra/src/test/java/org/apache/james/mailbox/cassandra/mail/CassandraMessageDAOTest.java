@@ -54,7 +54,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
 
-public class CassandraMessageDAOV2Test {
+public class CassandraMessageDAOTest {
     private static final int BODY_START = 16;
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final String CONTENT = "Subject: Test7 \n\nBody7\n.\n";
@@ -62,7 +62,7 @@ public class CassandraMessageDAOV2Test {
 
     private CassandraCluster cassandra;
 
-    private CassandraMessageDAOV2 testee;
+    private CassandraMessageDAO testee;
     private CassandraBlobsDAO blobsDAO;
     private CassandraMessageId.Factory messageIdFactory;
 
@@ -79,7 +79,7 @@ public class CassandraMessageDAOV2Test {
         messageIdFactory = new CassandraMessageId.Factory();
         messageId = messageIdFactory.generate();
         blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
-        testee = new CassandraMessageDAOV2(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO);
+        testee = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO);
 
         composedMessageId = new ComposedMessageId(MAILBOX_ID, messageId, messageUid);
 
@@ -180,9 +180,9 @@ public class CassandraMessageDAOV2Test {
             .build();
     }
 
-    private MessageWithoutAttachment toMessage(CompletableFuture<Stream<CassandraMessageDAOV2.MessageResult>> readOptional) throws InterruptedException, java.util.concurrent.ExecutionException {
+    private MessageWithoutAttachment toMessage(CompletableFuture<Stream<CassandraMessageDAO.MessageResult>> readOptional) throws InterruptedException, java.util.concurrent.ExecutionException {
         return readOptional.join()
-            .map(CassandraMessageDAOV2.MessageResult::message)
+            .map(CassandraMessageDAO.MessageResult::message)
             .map(Pair::getLeft)
             .findAny()
             .orElseThrow(() -> new IllegalStateException("Collection is not supposed to be empty"));

@@ -90,7 +90,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
 
-public class CassandraMessageDAOV2 {
+public class CassandraMessageDAO {
     public static final long DEFAULT_LONG_VALUE = 0L;
     public static final String DEFAULT_OBJECT_VALUE = null;
     private static final byte[] EMPTY_BYTE_ARRAY = {};
@@ -108,7 +108,7 @@ public class CassandraMessageDAOV2 {
     private final Cid.CidParser cidParser;
 
     @Inject
-    public CassandraMessageDAOV2(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO, CassandraConfiguration cassandraConfiguration) {
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO, CassandraConfiguration cassandraConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.typesProvider = typesProvider;
         this.blobsDAO = blobsDAO;
@@ -123,7 +123,7 @@ public class CassandraMessageDAOV2 {
     }
 
     @VisibleForTesting
-    public CassandraMessageDAOV2(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO) {
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO) {
         this(session, typesProvider, blobsDAO, CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
