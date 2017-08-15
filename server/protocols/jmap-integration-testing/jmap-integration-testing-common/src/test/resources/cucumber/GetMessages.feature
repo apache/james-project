@@ -318,3 +318,36 @@ Feature: GetMessages method
     Examples:
             |content-type                                       |tranfer-encoding   |content                                                                                                     |preview                                                                                      |
             |"text/html; charset=iso-8859-1"                    |quoted-printable   |"Dans le cadre du stage effectu=E9 Mlle 2017, =E0 sign=E9e d=E8s que possible, =E0, tr=E8s, journ=E9e.."    |effectué, à, signée dès, très, journée                                                                        |
+
+  Scenario Outline: Retrieving message should display keywords as jmap flag
+    Given the user has a message "m1" in the "inbox" mailbox with flags <flags>
+    When the user ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the keywords of the message is <keyword>
+
+    Examples:
+            |flags                          |keyword                        |
+            |"$Flagged,$Answered,$Draft"    |$Flagged,$Answered,$Draft      |
+
+  Scenario Outline: Retrieving message should display keywords without unsupported jmap flag
+    Given the user has a message "m1" in the "inbox" mailbox with flags <flags>
+    When the user ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the keywords of the message is <keyword>
+
+    Examples:
+            |flags                                  |keyword                 |
+            |"$Flagged,$Answered,$Deleted,$Recent"  |$Flagged,$Answered      |
+
+  Scenario Outline: Retrieving message should display keywords with custom user jmap flag
+    Given the user has a message "m1" in the "inbox" mailbox with flags <flags>
+    When the user ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the keywords of the message is <keyword>
+
+    Examples:
+            |flags                    |keyword                 |
+            |"$Flagged,$Forwarded"    |$Forwarded,$Flagged     |

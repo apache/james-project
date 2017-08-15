@@ -42,6 +42,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.methods.integration.cucumber.util.TableRow;
+import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
@@ -84,11 +85,11 @@ public class GetMessagesMethodStepdefs {
     private final MainStepdefs mainStepdefs;
     private final UserStepdefs userStepdefs;
     private final Map<String, MessageId> messageIdsByName;
-    
+
     private HttpResponse response;
     private DocumentContext jsonPath;
     private List<MessageId> requestedMessageIds;
-    
+
     @Inject
     private GetMessagesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs) {
         this.mainStepdefs = mainStepdefs;
@@ -147,9 +148,9 @@ public class GetMessagesMethodStepdefs {
 
     private MessageId appendMessage(String mailbox, ContentType contentType, String subject, String content, Optional<Map<String, String>> headers) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
-        return mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(userStepdefs.lastConnectedUser, 
+        return mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(userStepdefs.lastConnectedUser,
                 new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox),
-                new ByteArrayInputStream(message(contentType, subject, content, headers).getBytes(Charsets.UTF_8)), 
+                new ByteArrayInputStream(message(contentType, subject, content, headers).getBytes(Charsets.UTF_8)),
                 Date.from(dateTime.toInstant()), false, new Flags()).getMessageId();
     }
 
@@ -244,6 +245,25 @@ public class GetMessagesMethodStepdefs {
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with long and complicated HTML content$")
     public void appendMessageWithSpecialCase(String messageName, String mailbox) throws Exception {
         appendMessage(messageName, "eml/htmlWithLongAndComplicatedContent.eml");
+    }
+
+    @Given("^the user has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with flags \"([^\"]*)\"$")
+    public void appendMessageWithFlags(String messageName, String mailbox, List<String> keywords) throws Exception {
+        Flags flags = Keywords.factory()
+            .fromList(keywords)
+            .asFlags();
+        appendMessage(messageName, flags);
+    }
+
+    private void appendMessage(String messageName, Flags flags) throws Exception {
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        boolean isRecent = flags.contains(Flags.Flag.RECENT);
+        MessageId id = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(userStepdefs.lastConnectedUser,
+                new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, DefaultMailboxes.INBOX),
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+                Date.from(dateTime.toInstant()), isRecent, flags)
+                .getMessageId();
+        messageIdsByName.put(messageName, id);
     }
 
     private void appendMessage(String messageName, String emlFileName) throws Exception {
@@ -377,12 +397,12 @@ public class GetMessagesMethodStepdefs {
         assertThat(jsonPath.<List<String>>read(ARGUMENTS + ".notFound")).containsExactlyElementsOf(elements);
     }
 
-    
+
     @Then("^the list should contain (\\d+) message$")
     public void assertListContains(int numberOfMessages) throws Exception {
         assertThat(jsonPath.<List<String>>read(ARGUMENTS + ".list")).hasSize(numberOfMessages);
     }
-    
+
     @Then("^the id of the message is \"([^\"]*)\"$")
     public void assertIdOfTheFirstMessage(String messageName) throws Exception {
         MessageId id = messageIdsByName.get(messageName);
@@ -501,6 +521,12 @@ public class GetMessagesMethodStepdefs {
     public void assertPreviewOfMessageShouldBePrintedWithEncoding(List<String> preview) throws Exception {
         String actual = jsonPath.<String>read(FIRST_MESSAGE + ".preview");
         assertThat(actual).contains(preview);
+    }
+
+    @Then("^the keywords of the message is (.*)$")
+    public void assertKeywordsOfMessageShouldDisplay(List<String> keywords) throws Exception {
+        assertThat(jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords").keySet())
+            .containsOnlyElementsOf(keywords);
     }
 
     private void assertAttachment(String attachment, DataTable attachmentProperties) {
