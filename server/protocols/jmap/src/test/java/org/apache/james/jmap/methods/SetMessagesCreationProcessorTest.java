@@ -42,6 +42,7 @@ import org.apache.james.jmap.model.BlobId;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
+import org.apache.james.jmap.model.Keyword;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
@@ -72,9 +73,12 @@ import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.mailet.Mail;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class SetMessagesCreationProcessorTest {
@@ -115,7 +119,8 @@ public class SetMessagesCreationProcessorTest {
     private Optional<MessageManager> optionalOutbox;
     private Optional<MessageManager> optionalDrafts;
 
-
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
     @Before
     public void setUp() throws MailboxException {
         HtmlTextExtractor htmlTextExtractor = mock(HtmlTextExtractor.class);
@@ -153,6 +158,56 @@ public class SetMessagesCreationProcessorTest {
         SetMessagesResponse result = sut.process(requestWithEmptyCreate, session);
 
         assertThat(result.getCreated()).isEmpty();
+        assertThat(result.getNotCreated()).isEmpty();
+    }
+
+    @Test
+    public void processShouldThrowWhenBothIsFlagAndKeywords() {
+        expectedException.expect(IllegalArgumentException.class);
+        SetMessagesRequest createMessageWithError = SetMessagesRequest.builder()
+            .create(
+                creationMessageId,
+                creationMessageBuilder
+                    .mailboxId(OUTBOX_ID.serialize())
+                    .isAnswered(Optional.of(true))
+                    .keywords(ImmutableMap.of("$Answered", true))
+                    .build())
+            .build();
+
+        sut.process(createMessageWithError, session);
+    }
+
+    @Test
+    public void processShouldCreateWhenKeywords() {
+        SetMessagesRequest createMessageWithKeywords = SetMessagesRequest.builder()
+            .create(
+                creationMessageId,
+                creationMessageBuilder
+                    .mailboxId(OUTBOX_ID.serialize())
+                    .keywords(ImmutableMap.of("$Answered", true))
+                    .build())
+            .build();
+
+        SetMessagesResponse result = sut.process(createMessageWithKeywords, session);
+
+        assertThat(result.getCreated()).isNotEmpty();
+        assertThat(result.getNotCreated()).isEmpty();
+    }
+
+    @Test
+    public void processShouldCreateWhenIsFlag() {
+        SetMessagesRequest createMessageWithKeywords = SetMessagesRequest.builder()
+            .create(
+                creationMessageId,
+                creationMessageBuilder
+                    .mailboxId(OUTBOX_ID.serialize())
+                    .isAnswered(Optional.of(true))
+                    .build())
+            .build();
+
+        SetMessagesResponse result = sut.process(createMessageWithKeywords, session);
+
+        assertThat(result.getCreated()).isNotEmpty();
         assertThat(result.getNotCreated()).isEmpty();
     }
 
