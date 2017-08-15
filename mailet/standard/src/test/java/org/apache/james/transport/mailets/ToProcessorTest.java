@@ -21,9 +21,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 import javax.mail.MessagingException;
 
@@ -31,7 +29,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetException;
-import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -132,26 +129,5 @@ public class ToProcessorTest {
         mailet.service(mail);
 
         assertThat(mail.getErrorMessage()).isEqualTo(initialErrorMessage + "\r\n" + notice);
-    }
-
-    @Test
-    public void serviceShouldLogWhenDebug() throws MessagingException {
-        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-                .mailetName("Test")
-                .mailetContext(mailContext)
-                .setProperty("processor", "error")
-                .setProperty("notice", "error in message")
-                .setProperty("debug", "true")
-                .build();
-        mailet.init(mailetConfig);
-
-        String initialErrorMessage = "first";
-        Mail mail = FakeMail.builder()
-            .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES)
-            .errorMessage(initialErrorMessage)
-            .build();
-        mailet.service(mail);
-
-        verify(logger).info(anyString());
     }
 }
