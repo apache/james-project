@@ -38,11 +38,14 @@ import org.apache.jsieve.parser.generated.TokenMgrError;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class SieveExecutor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SieveExecutor.class);
 
     public static Builder builder() {
         return new Builder();
@@ -88,7 +91,6 @@ public class SieveExecutor {
     private final ResourceLocator resourceLocator;
     private final SieveFactory factory;
     private final ActionDispatcher actionDispatcher;
-    private final Log log;
 
     public SieveExecutor(MailetContext mailetContext, SievePoster sievePoster,
                          ResourceLocator resourceLocator, Log log) throws MessagingException {
@@ -97,7 +99,6 @@ public class SieveExecutor {
         this.resourceLocator = resourceLocator;
         factory = createFactory(log);
         this.actionDispatcher = new ActionDispatcher();
-        this.log = log;
     }
 
     private SieveFactory createFactory(Log log) throws MessagingException {
@@ -114,30 +115,30 @@ public class SieveExecutor {
         Preconditions.checkNotNull(recipient, "Recipient for mail to be spooled cannot be null.");
         Preconditions.checkNotNull(mail.getMessage(), "Mail message to be spooled cannot be null.");
 
-        return sieveMessage(recipient, mail, log);
+        return sieveMessage(recipient, mail);
     }
 
-    protected boolean sieveMessage(MailAddress recipient, Mail aMail, Log log) throws MessagingException {
+    protected boolean sieveMessage(MailAddress recipient, Mail aMail) throws MessagingException {
         try {
             ResourceLocator.UserSieveInformation userSieveInformation = resourceLocator.get(recipient);
-            sieveMessageEvaluate(recipient, aMail, userSieveInformation, log);
+            sieveMessageEvaluate(recipient, aMail, userSieveInformation);
             return true;
         } catch (ScriptNotFoundException e) {
-            log.info("Can not locate SIEVE script for user " + recipient.asPrettyString());
+            LOGGER.info("Can not locate SIEVE script for user " + recipient.asPrettyString());
             return false;
         } catch (Exception ex) {
-            log.error("Cannot evaluate Sieve script for user " + recipient.asPrettyString(), ex);
+            LOGGER.error("Cannot evaluate Sieve script for user " + recipient.asPrettyString(), ex);
             return false;
         }
     }
 
-    private void sieveMessageEvaluate(MailAddress recipient, Mail aMail, ResourceLocator.UserSieveInformation userSieveInformation, Log log) throws MessagingException, IOException {
+    private void sieveMessageEvaluate(MailAddress recipient, Mail aMail, ResourceLocator.UserSieveInformation userSieveInformation) throws MessagingException, IOException {
         try {
             SieveMailAdapter aMailAdapter = new SieveMailAdapter(aMail,
                 mailetContext, actionDispatcher, sievePoster, userSieveInformation.getScriptActivationDate(),
                 userSieveInformation.getScriptInterpretationDate(), recipient);
             // This logging operation is potentially costly
-            log.debug("Evaluating " + aMailAdapter.toString() + " against \"" + recipient.asPrettyString() + "\"");
+            LOGGER.debug("Evaluating " + aMailAdapter.toString() + " against \"" + recipient.asPrettyString() + "\"");
             factory.evaluate(aMailAdapter, factory.parse(userSieveInformation.getScriptContent()));
         } catch (SieveException | ParseException ex) {
             handleFailure(recipient, aMail, ex);
