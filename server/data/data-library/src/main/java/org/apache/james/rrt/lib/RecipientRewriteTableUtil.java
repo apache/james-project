@@ -64,13 +64,6 @@ public class RecipientRewriteTableUtil {
         if (msgPos < identifierLength + 1)
             throw new PatternSyntaxException("Regex should be formatted as regex:<regular-expression>:<parameterized-string>", targetString, 0);
 
-        // log("regex: targetString = " + targetString);
-        // log("regex: msgPos = " + msgPos);
-        // log("regex: compile " + targetString.substring("regex:".length(),
-        // msgPos));
-        // log("regex: address = " + address.toString());
-        // log("regex: replace = " + targetString.substring(msgPos + 1));
-
         Pattern pattern = Pattern.compile(targetString.substring(identifierLength, msgPos));
         Matcher match = pattern.matcher(address.toString());
 
