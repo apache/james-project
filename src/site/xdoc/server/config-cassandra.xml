@@ -114,13 +114,13 @@
         <dt><strong>mailbox.blob.part.size</strong></dt>
         <dd>Optional. Defaults to 102400 (100KB).<br/> Controls the size of blob parts used to store messages.</dd>
         <dt><strong>migration.v1.v2.on.the.fly</strong></dt>
-        <dd>Optional. Defaults to false.<br/> Controls wether v1 to v2 migration should be run on the fly.</dd>
+        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to false.<br/> Controls wether v1 to v2 migration should be run on the fly.</dd>
         <dt><strong>migration.v1.v2.thread.count</strong></dt>
-        <dd>Optional. Defaults to 2.<br/> Controls the number of threads used to asynchronously migrate from v1 to v2.</dd>
+        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to 2.<br/> Controls the number of threads used to asynchronously migrate from v1 to v2.</dd>
         <dt><strong>migration.v1.v2.queue.length</strong></dt>
-        <dd>Optional. Defaults to 1000.<br/> Controls the queue size of v1 to v2 migration task. Drops when full.</dd>
+        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to 1000.<br/> Controls the queue size of v1 to v2 migration task. Drops when full.</dd>
         <dt><strong>migration.v1.read.fetch.size</strong></dt>
-        <dd>Optional. Defaults to 10.<br/> Controls the fetch size of the request to retrieve all messages stored in V1 during the migration process.</dd>
+        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to 10.<br/> Controls the fetch size of the request to retrieve all messages stored in V1 during the migration process.</dd>
       </dl>
 
 
