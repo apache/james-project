@@ -19,6 +19,8 @@
 
 package org.apache.james.protocols.smtp.core;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -37,6 +39,9 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
+import org.apache.james.util.MDCBuilder;
+
+import com.google.common.base.Throwables;
 
 /**
  * Abstract class which Handle hook-aware CommanHandler.
@@ -65,7 +70,10 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
         String parameters = request.getArgument();
         Response response = doFilterChecks(session, command, parameters);
 
-        try {
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.ACTION, command)
+                     .build()) {
             if (response == null) {
 
                 response = processHooks(session, command, parameters);
@@ -77,6 +85,8 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
             } else {
                 return response;
             }
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
         } finally {
             timeMetric.stopAndPublish();
         }

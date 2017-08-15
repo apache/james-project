@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.core;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,6 +46,9 @@ import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
+import org.apache.james.util.MDCBuilder;
+
+import com.google.common.base.Throwables;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -139,7 +144,10 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
     public Response onCommand(SMTPSession session, Request request) {
         TimeMetric timeMetric = metricFactory.timer("SMTP-" + request.getCommand());
         session.stopDetectingCommandInjection();
-        try {
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.ACTION, request.getCommand())
+                     .build()) {
             String parameters = request.getArgument();
             Response response = doDATAFilter(session, parameters);
 
@@ -148,6 +156,8 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
             } else {
                 return response;
             }
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
         } finally {
             timeMetric.stopAndPublish();
             session.needsCommandInjectionDetection();
