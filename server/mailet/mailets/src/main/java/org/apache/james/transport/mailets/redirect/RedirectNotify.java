@@ -145,7 +145,9 @@ public interface RedirectNotify extends Mailet, MailetConfig {
 
     DNSService getDNSService();
 
+    @Deprecated
     void log(String message);
+    @Deprecated
     void log(String message, Throwable t);
 
     /**

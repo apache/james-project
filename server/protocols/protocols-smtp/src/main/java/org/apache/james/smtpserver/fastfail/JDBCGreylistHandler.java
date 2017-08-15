@@ -288,11 +288,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
     /**
      * The JDBCUtil helper class
      */
-    private final JDBCUtil theJDBCUtil = new JDBCUtil() {
-        protected void delegatedLog(String logString) {
-            LOGGER.debug("JDBCRecipientRewriteTable: " + logString);
-        }
-    };
+    private final JDBCUtil theJDBCUtil = new JDBCUtil();
 
     /**
      * Initializes the sql query environment from the SqlResources file. Will

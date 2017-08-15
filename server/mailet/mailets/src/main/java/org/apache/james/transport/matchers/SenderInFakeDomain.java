@@ -19,11 +19,13 @@
 
 package org.apache.james.transport.matchers;
 
+import java.util.Collection;
+
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
-
-import java.util.Collection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Does a DNS lookup (MX and A/CNAME records) on the sender's domain. If there
@@ -31,6 +33,7 @@ import java.util.Collection;
  */
 @Experimental
 public class SenderInFakeDomain extends AbstractNetworkMatcher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SenderInFakeDomain.class);
 
     public Collection<MailAddress> match(Mail mail) {
         if (mail.getSender() == null) {
@@ -43,7 +46,7 @@ public class SenderInFakeDomain extends AbstractNetworkMatcher {
         if (servers.size() == 0) {
             // No records...could not deliver to this domain, so matches
             // criteria.
-            log("No MX, A, or CNAME record found for domain: " + domain);
+            LOGGER.info("No MX, A, or CNAME record found for domain: " + domain);
             return mail.getRecipients();
         } else if (matchNetwork(servers.iterator().next())) {
             /*
@@ -62,8 +65,8 @@ public class SenderInFakeDomain extends AbstractNetworkMatcher {
              * 203.119.4.6/32          # .PH TLD (.ph)
              *
              */
-            log("Banned IP found for domain: " + domain);
-            log(" --> :" + servers.iterator().next());
+            LOGGER.info("Banned IP found for domain: " + domain);
+            LOGGER.info(" --> :" + servers.iterator().next());
             return mail.getRecipients();
         } else {
             // Some servers were found... the domain is not fake.

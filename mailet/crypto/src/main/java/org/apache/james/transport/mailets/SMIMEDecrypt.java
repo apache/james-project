@@ -45,6 +45,8 @@ import org.bouncycastle.cms.RecipientInformationStore;
 import org.bouncycastle.cms.jcajce.JceKeyTransEnvelopedRecipient;
 import org.bouncycastle.mail.smime.SMIMEEnveloped;
 import org.bouncycastle.mail.smime.SMIMEUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 
@@ -74,6 +76,7 @@ import com.google.common.base.Charsets;
  * 
  */
 public class SMIMEDecrypt extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SMIMEDecrypt.class);
 
     private SMIMEKeyHolder keyHolder;
     private X509CertificateHolder certificateHolder;
@@ -121,7 +124,7 @@ public class SMIMEDecrypt extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
         Part strippedMessage = null;
-        log("Starting message decryption..");
+        LOGGER.info("Starting message decryption..");
         if (message.isMimeType("application/x-pkcs7-mime") || message.isMimeType("application/pkcs7-mime")) {
             try {
                 SMIMEEnveloped env = new SMIMEEnveloped(message);
@@ -134,12 +137,12 @@ public class SMIMEDecrypt extends GenericMailet {
                             JceKeyTransEnvelopedRecipient recipient = new JceKeyTransEnvelopedRecipient(keyHolder.getPrivateKey());
                             // strippedMessage contains the decrypted message.
                             strippedMessage = SMIMEUtil.toMimeBodyPart(info.getContent(recipient));
-                            log("Encrypted message decrypted");
+                            LOGGER.info("Encrypted message decrypted");
                         } catch (Exception e) {
                             throw new MessagingException("Error during the decryption of the message", e);
                         }
                     } else {
-                        log("Found an encrypted message but it isn't encrypted for the supplied key");
+                        LOGGER.info("Found an encrypted message but it isn't encrypted for the supplied key");
                     }
                 }
             } catch (CMSException e) {
@@ -167,8 +170,8 @@ public class SMIMEDecrypt extends GenericMailet {
                 }
                 newMessage.saveChanges();
                 mail.setMessage(newMessage);
-            } catch (IOException e) { 
-                log("Error during the strip of the encrypted message");
+            } catch (IOException e) {
+                LOGGER.error("Error during the strip of the encrypted message", e);
                 throw new MessagingException("Error during the stripping of the encrypted message",e);
             }
         }

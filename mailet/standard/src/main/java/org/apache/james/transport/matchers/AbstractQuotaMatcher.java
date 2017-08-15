@@ -30,6 +30,8 @@ import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <P>Abstract matcher checking whether a recipient has exceeded a maximum allowed quota.</P>
@@ -41,7 +43,8 @@ import org.apache.mailet.base.GenericMatcher;
  * @since 2.2.0
  */
 @Experimental
-abstract public class AbstractQuotaMatcher extends GenericMatcher { 
+abstract public class AbstractQuotaMatcher extends GenericMatcher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractQuotaMatcher.class);
 
     /**
      * Standard matcher entrypoint.
@@ -76,10 +79,10 @@ abstract public class AbstractQuotaMatcher extends GenericMatcher {
     protected boolean isOverQuota(MailAddress address, Mail mail) {
         try {
             boolean over = getQuota(address, mail) < getUsed(address, mail);
-            if (over) log(address + " is over quota.");
+            if (over) LOGGER.info(address + " is over quota.");
             return over;
         } catch (Throwable e) {
-            log("Exception checking quota for: " + address, e);
+            LOGGER.error("Exception checking quota for: " + address, e);
             return false;
         }
     }

@@ -29,6 +29,8 @@ import javax.mail.internet.MimeMessage;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -46,6 +48,7 @@ import com.google.common.collect.ImmutableList;
  * 
  */
 public class RemoveMimeHeader extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RemoveMimeHeader.class);
     
     private List<String> headers;
 
@@ -72,7 +75,7 @@ public class RemoveMimeHeader extends GenericMailet {
             }
             message.saveChanges();
         } catch (MessagingException e) {
-            log("Unable to remove headers: " + e.getMessage());
+            LOGGER.error("Unable to remove headers: ", e);
         }
     }
 }

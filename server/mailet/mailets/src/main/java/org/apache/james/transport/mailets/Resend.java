@@ -42,6 +42,8 @@ import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -295,6 +297,7 @@ import com.google.common.collect.ImmutableList;
  */
 
 public class Resend extends GenericMailet implements RedirectNotify {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Resend.class);
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };
@@ -328,7 +331,7 @@ public class Resend extends GenericMailet implements RedirectNotify {
     @Override
     public void init() throws MessagingException {
         if (getInitParameters().isDebug()) {
-            log("Initializing");
+            LOGGER.debug("Initializing");
         }
 
         // check that all init parameters have been declared in
@@ -337,7 +340,7 @@ public class Resend extends GenericMailet implements RedirectNotify {
 
         if (getInitParameters().isStatic()) {
             if (getInitParameters().isDebug()) {
-                log(getInitParameters().asString());
+                LOGGER.debug(getInitParameters().asString());
             }
         }
     }

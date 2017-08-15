@@ -21,14 +21,9 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.james.transport.KeyHolder;
-import org.apache.james.transport.SMIMEAttributeNames;
-import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.mailet.base.GenericMailet;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
-import org.apache.mailet.base.RFC2822Headers;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.util.Enumeration;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -39,9 +34,16 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.ParseException;
 
-import java.io.IOException;
-import java.util.Enumeration;
-import java.lang.reflect.Constructor;
+import org.apache.james.transport.KeyHolder;
+import org.apache.james.transport.SMIMEAttributeNames;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMailet;
+import org.apache.mailet.base.RFC2822Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
@@ -105,6 +107,7 @@ import com.google.common.base.Throwables;
  * @since 2.2.1
  */
 public abstract class AbstractSign extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSign.class);
     
     private static final String HEADERS_PATTERN = "[headers]";
     
@@ -199,7 +202,7 @@ public abstract class AbstractSign extends GenericMailet {
             throw new MessagingException("The specified <keyHolderClass> does not exist: " + keyHolderClassName);
         }
         if (isDebug()) {
-            log("keyHolderClass: " + getKeyHolderClass());
+            LOGGER.debug("keyHolderClass: " + getKeyHolderClass());
         }
     }
     
@@ -225,7 +228,7 @@ public abstract class AbstractSign extends GenericMailet {
     protected void initExplanationText() {
         setExplanationText(getInitParameter("explanationText"));
         if (isDebug()) {
-            log("Explanation text:\r\n" + getExplanationText());
+            LOGGER.debug("Explanation text:\r\n" + getExplanationText());
         }
     }
     
@@ -272,21 +275,21 @@ public abstract class AbstractSign extends GenericMailet {
         if (keyAliasPassword == null) {
             keyAliasPassword = keyStorePassword;
             if (isDebug()) {
-                log("<keyAliasPassword> parameter not specified: will default to the <keyStorePassword> parameter.");
+                LOGGER.debug("<keyAliasPassword> parameter not specified: will default to the <keyStorePassword> parameter.");
             }
         }
         
         String keyStoreType = getInitParameter("keyStoreType");
         if (keyStoreType == null) {
             if (isDebug()) {
-                log("<keyStoreType> parameter not specified: the default will be as appropriate to the keyStore requested.");
+                LOGGER.debug("<keyStoreType> parameter not specified: the default will be as appropriate to the keyStore requested.");
             }
         }
         
         String keyAlias = getInitParameter("keyAlias");
         if (keyAlias == null) {
             if (isDebug()) {
-                log("<keyAlias> parameter not specified: will look for the first one in the keystore.");
+                LOGGER.debug("<keyAlias> parameter not specified: will look for the first one in the keystore.");
             }
         }
         
@@ -298,7 +301,7 @@ public abstract class AbstractSign extends GenericMailet {
             .append(", keyStoreType=").append(keyStoreType)
             .append(", keyAlias=").append(keyAlias)
             .append(" ");
-            log(logBuffer.toString());
+            LOGGER.debug(logBuffer.toString());
         }
             
         // Certificate preparation
@@ -306,7 +309,7 @@ public abstract class AbstractSign extends GenericMailet {
         setKeyHolder((KeyHolder)keyHolderConstructor.newInstance(parameters));
         
         if (isDebug()) {
-            log("Subject Distinguished Name: " + getKeyHolder().getSignerDistinguishedName());
+            LOGGER.debug("Subject Distinguished Name: " + getKeyHolder().getSignerDistinguishedName());
         }
         
         if (getKeyHolder().getSignerAddress() == null) {
@@ -363,9 +366,9 @@ public abstract class AbstractSign extends GenericMailet {
         setRebuildFrom((getInitParameter("rebuildFrom") == null) ? false : Boolean.valueOf(getInitParameter("rebuildFrom")));
         if (isDebug()) {
             if (isRebuildFrom()) {
-                log("Will modify the \"From:\" header.");
+                LOGGER.debug("Will modify the \"From:\" header.");
             } else {
-                log("Will leave the \"From:\" header unchanged.");
+                LOGGER.debug("Will leave the \"From:\" header unchanged.");
             }
         }
     }
@@ -405,7 +408,7 @@ public abstract class AbstractSign extends GenericMailet {
             }
             setSignerName(getKeyHolder().getSignerCN());
             if (isDebug()) {
-                log("<signerName> parameter not specified: will use the certificate signer \"CN=\" attribute.");
+                LOGGER.debug("<signerName> parameter not specified: will use the certificate signer \"CN=\" attribute.");
             }
         }
     }
@@ -441,7 +444,7 @@ public abstract class AbstractSign extends GenericMailet {
         try {
             initDebug();
             if (isDebug()) {
-                log("Initializing");
+                LOGGER.debug("Initializing");
             }
             
             initKeyHolderClass();
@@ -455,7 +458,7 @@ public abstract class AbstractSign extends GenericMailet {
         } catch (MessagingException me) {
             throw me;
         } catch (Exception e) {
-            log("Exception thrown", e);
+            LOGGER.error("Exception thrown", e);
             throw new MessagingException("Exception thrown", e);
         } finally {
             if (isDebug()) {
@@ -466,7 +469,7 @@ public abstract class AbstractSign extends GenericMailet {
                 .append(", postmasterSigns=").append(postmasterSigns)
                 .append(", rebuildFrom=").append(rebuildFrom)
                 .append(" ");
-                log(logBuffer.toString());
+                LOGGER.debug(logBuffer.toString());
             }
         }
         
@@ -535,14 +538,14 @@ public abstract class AbstractSign extends GenericMailet {
             mail.setAttribute(SMIMEAttributeNames.SMIME_SIGNER_ADDRESS, getKeyHolder().getSignerAddress());
             
             if (isDebug()) {
-                log("Message signed, reverse-path: " + mail.getSender() + ", Id: " + messageId);
+                LOGGER.debug("Message signed, reverse-path: " + mail.getSender() + ", Id: " + messageId);
             }
             
         } catch (MessagingException me) {
-            log("MessagingException found - could not sign!", me);
+            LOGGER.error("MessagingException found - could not sign!", me);
             throw me;
         } catch (Exception e) {
-            log("Exception found", e);
+            LOGGER.error("Exception found", e);
             throw new MessagingException("Exception thrown - could not sign!", e);
         }
         
@@ -573,14 +576,14 @@ public abstract class AbstractSign extends GenericMailet {
         
         // Is it a bounce?
         if (reversePath == null) {
-            log("Can not sign: no sender");
+            LOGGER.info("Can not sign: no sender");
             return false;
         }
         
         String authUser = (String) mail.getAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME);
         // was the sender user SMTP authorized?
         if (authUser == null) {
-            log("Can not sign mail for sender <" + mail.getSender() + "> as he is not a SMTP authenticated user");
+            LOGGER.info("Can not sign mail for sender <" + mail.getSender() + "> as he is not a SMTP authenticated user");
             return false;
         }
         
@@ -588,19 +591,19 @@ public abstract class AbstractSign extends GenericMailet {
         if (Objects.equal(getMailetContext().getPostmaster(), reversePath)) {
             // should not sign postmaster sent messages?
             if (!isPostmasterSigns()) {
-                log("Can not sign mails for postmaster");
+                LOGGER.info("Can not sign mails for postmaster");
                 return false;
             }
         } else {
             // is the reverse-path user different from the SMTP authorized user?
             String username = getUsername(reversePath);
             if (!username.equals(authUser)) {
-                log("SMTP logged in as <" + authUser + "> but pretend to be sender <" + username + ">");
+                LOGGER.info("SMTP logged in as <" + authUser + "> but pretend to be sender <" + username + ">");
                 return false;
             }
             // is there no "From:" address same as the reverse-path?
             if (!fromAddressSameAsReverse(mail)) {
-                log("Can not sign mails with empty FROM header field");
+                LOGGER.info("Can not sign mails with empty FROM header field");
                 return false;
             }
         }
@@ -610,7 +613,7 @@ public abstract class AbstractSign extends GenericMailet {
         boolean isAlreadySigned = mimeMessage.isMimeType("multipart/signed")
             || mimeMessage.isMimeType("application/pkcs7-mime");
         if (isAlreadySigned) {
-            log("Can not sign a mail already signed");
+            LOGGER.info("Can not sign a mail already signed");
         }
         return !isAlreadySigned;
 
@@ -658,7 +661,7 @@ public abstract class AbstractSign extends GenericMailet {
                     try {
                         mailAddress = new MailAddress(aFromArray);
                     } catch (ParseException pe) {
-                        log("Unable to parse a \"FROM\" header address: " + aFromArray.toString() + "; ignoring.");
+                        LOGGER.info("Unable to parse a \"FROM\" header address: " + aFromArray.toString() + "; ignoring.");
                         continue;
                     }
                     if (mailAddress.equals(reversePath)) {
@@ -667,7 +670,7 @@ public abstract class AbstractSign extends GenericMailet {
                 }
             }
         } catch (MessagingException me) {
-            log("Unable to parse the \"FROM\" header; ignoring.");
+            LOGGER.info("Unable to parse the \"FROM\" header; ignoring.");
         }
         
         return false;

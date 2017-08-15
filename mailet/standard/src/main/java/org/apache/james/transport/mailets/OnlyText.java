@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
 import javax.mail.Message;
@@ -32,6 +33,8 @@ import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Keep only the text part of a message.
@@ -43,6 +46,8 @@ import org.apache.mailet.base.GenericMailet;
  */
 @Experimental
 public class OnlyText extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OnlyText.class);
+
     private static final String PARAMETER_NAME_NOTEXT_PROCESSOR = "NoTextProcessor";
 
     private String optionsNotextProcessor = null;
@@ -67,8 +72,8 @@ public class OnlyText extends GenericMailet {
             Object content = null;
             try {
                 content = mp.getBodyPart(i).getContent();
-            } catch (java.io.UnsupportedEncodingException e) {
-                log("Caught error [" + e.getMessage() + "] in a text/plain part, skipping...");
+            } catch (UnsupportedEncodingException e) {
+                LOGGER.error("Caught error in a text/plain part, skipping...", e);
             }
             if (content != null) {
                 if (mp.getBodyPart(i).isMimeType("text/plain")) {

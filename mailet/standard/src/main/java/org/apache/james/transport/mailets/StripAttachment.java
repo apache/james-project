@@ -49,6 +49,8 @@ import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -81,6 +83,7 @@ import com.google.common.collect.ImmutableList;
  * </p>
  */
 public class StripAttachment extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StripAttachment.class);
 
     private static final String MULTIPART_MIME_TYPE = "multipart/*";
     public static final String PATTERN_PARAMETER_NAME = "pattern";
@@ -193,7 +196,7 @@ public class StripAttachment extends GenericMailet {
           logMessage.append(attributeName);
           logMessage.append("]");
       }
-      log(logMessage.toString());
+      LOGGER.debug(logMessage.toString());
     }
     
     /**
@@ -289,7 +292,7 @@ public class StripAttachment extends GenericMailet {
             }
             return atLeastOneRemoved || subpartHasBeenChanged;
         } catch (Exception e) {
-            log("Failing while analysing part for attachments (StripAttachment mailet).", e);
+            LOGGER.error("Failing while analysing part for attachments (StripAttachment mailet).", e);
             return false;
         }
     }
@@ -383,7 +386,7 @@ public class StripAttachment extends GenericMailet {
     private String renameWithConfigurationPattern(String fileName) {
         if (filenameReplacingPatterns != null) {
             boolean debug = false;
-            return new ContentReplacer(debug, this).applyPatterns(filenameReplacingPatterns, fileName);
+            return new ContentReplacer(debug).applyPatterns(filenameReplacingPatterns, fileName);
         }
         return fileName;
     }
@@ -409,7 +412,7 @@ public class StripAttachment extends GenericMailet {
         boolean result = isMatchingPattern(name, regExPattern).or(false) 
                 || !isMatchingPattern(name, notRegExPattern).or(true);
 
-        log("attachment " + name + " " + ((result) ? "matches" : "does not match"));
+        LOGGER.debug("attachment " + name + " " + ((result) ? "matches" : "does not match"));
         return result;
     }
 
@@ -438,12 +441,12 @@ public class StripAttachment extends GenericMailet {
         try {
             File outputFile = outputFile(part, fileName);
 
-            log("saving content of " + outputFile.getName() + "...");
+            LOGGER.debug("saving content of " + outputFile.getName() + "...");
             IOUtils.copy(part.getInputStream(), new FileOutputStream(outputFile));
 
             return Optional.of(outputFile.getName());
         } catch (Exception e) {
-            log("Error while saving contents of", e);
+            LOGGER.error("Error while saving contents of", e);
             return Optional.absent();
         }
     }

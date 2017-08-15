@@ -30,19 +30,19 @@ import javax.mail.internet.ParseException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
-import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
 public class ContentReplacer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ContentReplacer.class);
 
     private final boolean debug;
-    private final GenericMailet logOwner;
 
-    public ContentReplacer(boolean debug, GenericMailet logOwner) {
+    public ContentReplacer(boolean debug) {
         this.debug = debug;
-        this.logOwner = logOwner;
     }
 
     public String applyPatterns(List<ReplacingPattern> patterns, String text) {
@@ -70,7 +70,7 @@ public class ContentReplacer {
 
     private String replaceFirst(ReplacingPattern replacingPattern, Matcher matcher) {
         if (debug) {
-            logOwner.log("Subject rule match: " + replacingPattern.getMatcher());
+            LOGGER.debug("Subject rule match: " + replacingPattern.getMatcher());
         }
         return matcher.replaceFirst(replacingPattern.getSubstitution());
     }

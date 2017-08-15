@@ -30,7 +30,6 @@ import java.util.regex.Pattern;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMailet;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -41,8 +40,7 @@ public class ContentReplacerTest {
 
     @Test
     public void applyPatternsShouldModifyWhenMatching() {
-        GenericMailet mailet = mock(GenericMailet.class);
-        ContentReplacer testee = new ContentReplacer(false, mailet);
+        ContentReplacer testee = new ContentReplacer(false);
 
         ImmutableList<ReplacingPattern> patterns = ImmutableList.of(new ReplacingPattern(Pattern.compile("test"), false, "TEST"),
             new ReplacingPattern(Pattern.compile("a"), true, "e"),
@@ -54,8 +52,7 @@ public class ContentReplacerTest {
 
     @Test
     public void applyPatternsShouldNotRepeatWhenNotAskedFor() {
-        GenericMailet mailet = mock(GenericMailet.class);
-        ContentReplacer testee = new ContentReplacer(false, mailet);
+        ContentReplacer testee = new ContentReplacer(false);
 
         ImmutableList<ReplacingPattern> patterns = ImmutableList.of(new ReplacingPattern(Pattern.compile("test"), false, "TEST"));
         String value = testee.applyPatterns(patterns, "test test");
@@ -65,8 +62,7 @@ public class ContentReplacerTest {
 
     @Test
     public void applyPatternsShouldRepeatWhenAskedFor() {
-        GenericMailet mailet = mock(GenericMailet.class);
-        ContentReplacer testee = new ContentReplacer(false, mailet);
+        ContentReplacer testee = new ContentReplacer(false);
 
         ImmutableList<ReplacingPattern> patterns = ImmutableList.of(new ReplacingPattern(Pattern.compile("test"), true, "TEST"));
         String value = testee.applyPatterns(patterns, "test test");
@@ -76,8 +72,7 @@ public class ContentReplacerTest {
 
     @Test
     public void applyPatternShouldModifyWhenMatchingBody() throws Exception {
-        GenericMailet mailet = mock(GenericMailet.class);
-        ContentReplacer testee = new ContentReplacer(false, mailet);
+        ContentReplacer testee = new ContentReplacer(false);
 
         Mail mail = mock(Mail.class);
         MimeMessage mimeMessage = mock(MimeMessage.class);
@@ -101,8 +96,7 @@ public class ContentReplacerTest {
 
     @Test
     public void applyPatternShouldModifyWhenMatchingSubject() throws Exception {
-        GenericMailet mailet = mock(GenericMailet.class);
-        ContentReplacer testee = new ContentReplacer(false, mailet);
+        ContentReplacer testee = new ContentReplacer(false);
 
         Mail mail = mock(Mail.class);
         MimeMessage mimeMessage = mock(MimeMessage.class);
@@ -126,8 +120,7 @@ public class ContentReplacerTest {
 
     @Test
     public void applyPatternShouldKeepPreviousCharsetWhenNoneSet() throws Exception {
-        GenericMailet mailet = mock(GenericMailet.class);
-        ContentReplacer testee = new ContentReplacer(false, mailet);
+        ContentReplacer testee = new ContentReplacer(false);
 
         Mail mail = mock(Mail.class);
         MimeMessage mimeMessage = mock(MimeMessage.class);

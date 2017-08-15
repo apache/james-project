@@ -30,6 +30,8 @@ import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Receives a Mail from the Queue and takes care to deliver the message
@@ -49,6 +51,7 @@ import org.apache.mailet.base.GenericMailet;
  */
 @Experimental
 public class ToSenderFolder extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ToSenderFolder.class);
 
     private final UsersRepository usersRepository;
     private final MailboxManager mailboxManager;
@@ -83,7 +86,7 @@ public class ToSenderFolder extends GenericMailet {
 
         mailboxAppender.append(mail.getMessage(), username, folder);
 
-        log("Local delivery with ToSenderFolder mailet for mail " + mail.getName() + " with sender " + sender.toString() + " in folder " + folder);
+        LOGGER.error("Local delivery with ToSenderFolder mailet for mail " + mail.getName() + " with sender " + sender.toString() + " in folder " + folder);
     }
 
     private String retrieveUser(MailAddress sender) throws MessagingException {

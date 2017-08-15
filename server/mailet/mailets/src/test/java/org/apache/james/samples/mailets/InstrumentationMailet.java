@@ -33,14 +33,21 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMessage.RecipientType;
 import javax.mail.internet.NewsAddress;
 
-import org.apache.mailet.*;
-import org.apache.mailet.MailetContext.LogLevel;
+import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.Mailet;
+import org.apache.mailet.MailetConfig;
+import org.apache.mailet.MailetContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Mailet just prints out the details of a message. Sometimes Useful for
  * debugging.
  */
 public class InstrumentationMailet implements Mailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
 
     private MailetConfig config;
 
@@ -65,47 +72,46 @@ public class InstrumentationMailet implements Mailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        MailetContext context = config.getMailetContext();
-        context.log(LogLevel.INFO, "######## MAIL STARTS");
-        context.log(LogLevel.INFO, "");
+        LOGGER.info("######## MAIL STARTS");
+        LOGGER.info("");
 
         MimeMessage message = mail.getMessage();
 
-        context.log(LogLevel.INFO, "Mail named: " + mail.getName());
+        LOGGER.info("Mail named: " + mail.getName());
 
         for (Iterator<String> it = mail.getAttributeNames(); it.hasNext();) {
             String attributeName = it.next();
-            context.log(LogLevel.INFO, "Attribute " + attributeName);
+            LOGGER.info("Attribute " + attributeName);
         }
-        context.log(LogLevel.INFO, "Message size: " + mail.getMessageSize());
-        context.log(LogLevel.INFO, "Last updated: " + mail.getLastUpdated());
-        context.log(LogLevel.INFO, "Remote Address: " + mail.getRemoteAddr());
-        context.log(LogLevel.INFO, "Remote Host: " + mail.getRemoteHost());
-        context.log(LogLevel.INFO, "State: " + mail.getState());
-        context.log(LogLevel.INFO, "Sender host: " + mail.getSender().getDomain());
-        context.log(LogLevel.INFO, "Sender user: " + mail.getSender().getLocalPart());
+        LOGGER.info("Message size: " + mail.getMessageSize());
+        LOGGER.info("Last updated: " + mail.getLastUpdated());
+        LOGGER.info("Remote Address: " + mail.getRemoteAddr());
+        LOGGER.info("Remote Host: " + mail.getRemoteHost());
+        LOGGER.info("State: " + mail.getState());
+        LOGGER.info("Sender host: " + mail.getSender().getDomain());
+        LOGGER.info("Sender user: " + mail.getSender().getLocalPart());
         Collection<MailAddress> recipients = mail.getRecipients();
         for (MailAddress address : recipients) {
-            context.log(LogLevel.INFO, "Recipient: " + address.getLocalPart() + "@" + address.getDomain());
+            LOGGER.info("Recipient: " + address.getLocalPart() + "@" + address.getDomain());
         }
 
-        context.log(LogLevel.INFO, "Subject: " + message.getSubject());
-        context.log(LogLevel.INFO, "MessageID: " + message.getMessageID());
-        context.log(LogLevel.INFO, "Received: " + message.getReceivedDate());
-        context.log(LogLevel.INFO, "Sent: " + message.getSentDate());
+        LOGGER.info("Subject: " + message.getSubject());
+        LOGGER.info("MessageID: " + message.getMessageID());
+        LOGGER.info("Received: " + message.getReceivedDate());
+        LOGGER.info("Sent: " + message.getSentDate());
 
         @SuppressWarnings("unchecked")
         Enumeration<String> allHeadersLines = message.getAllHeaderLines();
         while (allHeadersLines.hasMoreElements()) {
             String header = (String) allHeadersLines.nextElement();
-            context.log(LogLevel.INFO, "Header Line:= " + header);
+            LOGGER.info("Header Line:= " + header);
         }
 
         @SuppressWarnings("unchecked")
         Enumeration<Header> allHeadersEnumeration = message.getAllHeaders();
         while (allHeadersEnumeration.hasMoreElements()) {
             Header header = (Header) allHeadersEnumeration.nextElement();
-            context.log(LogLevel.INFO, "Header: " + header.getName() + "=" + header.getValue());
+            LOGGER.info("Header: " + header.getName() + "=" + header.getValue());
         }
 
         Address[] to = message.getRecipients(RecipientType.TO);
@@ -118,27 +124,27 @@ public class InstrumentationMailet implements Mailet {
         Flags flags = message.getFlags();
         Flag[] systemFlags = flags.getSystemFlags();
         for (Flag systemFlag : systemFlags) {
-            context.log(LogLevel.INFO, "System Flag:" + systemFlag);
+            LOGGER.info("System Flag:" + systemFlag);
         }
         String[] userFlags = flags.getUserFlags();
         for (String userFlag : userFlags) {
-            context.log(LogLevel.INFO, "User flag: " + userFlag);
+            LOGGER.info("User flag: " + userFlag);
         }
 
         String mimeType = message.getContentType();
-        context.log(LogLevel.INFO, "Mime type: " + mimeType);
+        LOGGER.info("Mime type: " + mimeType);
         if ("text/plain".equals(mimeType)) {
             try {
                 Object content = message.getContent();
-                context.log(LogLevel.INFO, "Content: " + content);
+                LOGGER.info("Content: " + content);
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
         }
 
-        context.log(LogLevel.INFO, "");
-        context.log(LogLevel.INFO, "######## MAIL ENDS");
+        LOGGER.info("");
+        LOGGER.info("######## MAIL ENDS");
     }
 
     private void printAddresses(Address[] addresses, String prefix) {
@@ -146,10 +152,10 @@ public class InstrumentationMailet implements Mailet {
         for (Address address1 : addresses) {
             if (address1 instanceof InternetAddress) {
                 InternetAddress address = (InternetAddress) address1;
-                context.log(LogLevel.INFO, prefix + address.getPersonal() + "@" + address.getAddress());
+                LOGGER.info(prefix + address.getPersonal() + "@" + address.getAddress());
             } else if (address1 instanceof NewsAddress) {
                 NewsAddress address = (NewsAddress) address1;
-                context.log(LogLevel.INFO, prefix + address.getNewsgroup() + "@" + address.getHost());
+                LOGGER.info(prefix + address.getNewsgroup() + "@" + address.getHost());
             }
         }
     }

@@ -27,6 +27,8 @@ import java.util.concurrent.TimeoutException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
@@ -52,6 +54,7 @@ import com.rabbitmq.client.ConnectionFactory;
  * sending it.
  */
 public class AmqpForwardAttribute extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AmqpForwardAttribute.class);
 
     public static final String URI_PARAMETER_NAME = "uri";
     public static final String EXCHANGE_PARAMETER_NAME = "exchange";
@@ -105,9 +108,9 @@ public class AmqpForwardAttribute extends GenericMailet {
         try {
             sendContent(content);
         } catch (IOException e) {
-            log("IOException while writing to AMQP: " + e.getMessage(), e);
+            LOGGER.error("IOException while writing to AMQP: " + e.getMessage(), e);
         } catch (TimeoutException e) {
-            log("TimeoutException while writing to AMQP: " + e.getMessage(), e);
+            LOGGER.error("TimeoutException while writing to AMQP: " + e.getMessage(), e);
         }
     }
 

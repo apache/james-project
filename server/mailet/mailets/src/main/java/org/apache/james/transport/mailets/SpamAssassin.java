@@ -19,13 +19,16 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.james.util.scanner.SpamAssassinInvoker;
-import org.apache.mailet.Experimental;
-import org.apache.mailet.base.GenericMailet;
-import org.apache.mailet.Mail;
-
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+
+import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
+import org.apache.james.util.scanner.SpamAssassinInvoker;
+import org.apache.mailet.Experimental;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Sends the message through daemonized SpamAssassin (spamd), visit <a
@@ -53,9 +56,9 @@ import javax.mail.internet.MimeMessage;
  */
 @Experimental
 public class SpamAssassin extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
 
     String spamdHost;
-
     int spamdPort;
 
     /**
@@ -98,7 +101,7 @@ public class SpamAssassin extends GenericMailet {
 
             message.saveChanges();
         } catch (MessagingException e) {
-            log(e.getMessage());
+            LOGGER.error("Encountered exception", e);
         }
 
     }

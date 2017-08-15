@@ -52,6 +52,8 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
@@ -62,6 +64,8 @@ import com.google.common.collect.Lists;
  * </p>
  */
 public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionContext {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SieveMailAdapter.class);
+
     /**
      * The Mail being adapted.
      */
@@ -170,7 +174,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     {
         final List<Action> actions = getActions();
         for (final Action action: actions) {
-            getMailetContext().log(MailetContext.LogLevel.INFO, "Executing action: " + action.toString());
+            LOGGER.info("Executing action: " + action.toString());
             try
             {
                 dispatcher.execute(action, getMail(), this);

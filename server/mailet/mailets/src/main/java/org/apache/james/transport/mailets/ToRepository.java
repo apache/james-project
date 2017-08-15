@@ -26,6 +26,8 @@ import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Stores incoming Mail in the specified Repository.<br>
@@ -33,6 +35,7 @@ import org.apache.mailet.base.GenericMailet;
  * the pipe and may be processed by additional mailets. If false will be destroyed.
  */
 public class ToRepository extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ToRepository.class);
 
     private MailRepository repository;
 
@@ -73,7 +76,7 @@ public class ToRepository extends GenericMailet {
     @Override
     public void service(Mail mail) throws javax.mail.MessagingException {
         String logBuffer = "Storing mail " + mail.getName() + " in " + repositoryPath;
-        log(logBuffer);
+        LOGGER.info(logBuffer);
         repository.store(mail);
         if (!passThrough) {
             mail.setState(Mail.GHOST);

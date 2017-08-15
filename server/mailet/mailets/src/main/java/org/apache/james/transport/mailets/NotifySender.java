@@ -44,6 +44,8 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -120,6 +122,7 @@ import com.google.common.collect.ImmutableList;
  * </p>
  */
 public class NotifySender extends GenericMailet implements RedirectNotify {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NotifySender.class);
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[]{
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "to" };
@@ -163,7 +166,7 @@ public class NotifySender extends GenericMailet implements RedirectNotify {
     @Override
     public void init() throws MessagingException {
         if (getInitParameters().isDebug()) {
-            log("Initializing");
+            LOGGER.debug("Initializing");
         }
 
         // check that all init parameters have been declared in
@@ -172,7 +175,7 @@ public class NotifySender extends GenericMailet implements RedirectNotify {
 
         if (getInitParameters().isStatic()) {
             if (getInitParameters().isDebug()) {
-                log(getInitParameters().asString());
+                LOGGER.debug(getInitParameters().asString());
             }
         }
     }
@@ -201,7 +204,7 @@ public class NotifySender extends GenericMailet implements RedirectNotify {
             if (specialAddress.isPresent()) {
                 return ImmutableList.of(specialAddress.get().toInternetAddress());
             }
-            log("\"to\" parameter ignored, set to sender");
+            LOGGER.info("\"to\" parameter ignored, set to sender");
         }
         return ImmutableList.of(SpecialAddress.SENDER.toInternetAddress());
     }

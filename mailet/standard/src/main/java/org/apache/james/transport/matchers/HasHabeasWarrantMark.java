@@ -21,14 +21,17 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.Experimental;
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import java.util.Collection;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.util.Collection;
+
+import org.apache.mailet.Experimental;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>This matcher tests for the Hebeas Warrant Mark.
@@ -70,6 +73,8 @@ import java.util.Collection;
 @Experimental
 public class HasHabeasWarrantMark extends GenericMatcher
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HasHabeasWarrantMark.class);
+
     public static final String[][] warrantMark =
     {
         { "X-Habeas-SWE-1", "winter into spring" }, 
@@ -102,7 +107,7 @@ public class HasHabeasWarrantMark extends GenericMatcher
 
                 if (!(requiredValue.equals(headerValue))) return null;
             } catch (Exception e) {
-                log(e.toString());
+                LOGGER.info(e.toString());
                 return null;            //if we get an exception, don't validate the mark
             }
 

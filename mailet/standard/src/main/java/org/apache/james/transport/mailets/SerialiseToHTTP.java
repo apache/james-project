@@ -39,6 +39,8 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Serialise the email and pass it to an HTTP call
@@ -56,6 +58,7 @@ import org.apache.mailet.base.GenericMailet;
  */
 @Experimental
 public class SerialiseToHTTP extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SerialiseToHTTP.class);
 
     /**
      * The name of the header to be added.
@@ -96,7 +99,7 @@ public class SerialiseToHTTP extends GenericMailet {
         }
 
         // record the result
-        log("I will attempt to deliver serialised messages to "
+        LOGGER.debug("I will attempt to deliver serialised messages to "
                 + targetUrl
                 + " as "
                 + messageKeyName
@@ -125,7 +128,7 @@ public class SerialiseToHTTP extends GenericMailet {
                 mail.setState(Mail.GHOST);
             }
         } catch (MessagingException | IOException me) {
-            log(me.getMessage());
+            LOGGER.error("Messaging exception", me);
             addHeader(mail, false, me.getMessage());
         }
     }
@@ -138,8 +141,8 @@ public class SerialiseToHTTP extends GenericMailet {
                 message.setHeader("X-toHTTPFailure", errorMessage);
             }
             message.saveChanges();
-        } catch (MessagingException e) {
-            log(e.getMessage());
+        } catch (MessagingException me) {
+            LOGGER.error("Messaging exception", me);
         }
     }
 
@@ -156,7 +159,7 @@ public class SerialiseToHTTP extends GenericMailet {
 
         if( data.length>1 && data[1]!=null ) {
             requestBuilder.addParameter(data[1].getName(),data[1].getValue());
-            log( data[1].getName() + "::" + data[1].getValue() );
+            LOGGER.debug( data[1].getName() + "::" + data[1].getValue() );
         }
 
         CloseableHttpClient client = HttpClientBuilder.create().build();
@@ -165,15 +168,15 @@ public class SerialiseToHTTP extends GenericMailet {
             clientResponse = client.execute(requestBuilder.build());
 
             if (clientResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                log("POST failed: " + clientResponse.getStatusLine());
+                LOGGER.debug("POST failed: " + clientResponse.getStatusLine());
                 return clientResponse.getStatusLine().toString();
             }
             return null;
         } catch (ClientProtocolException e) {
-            log("Fatal protocol violation: " + e.getMessage());
+            LOGGER.error("Fatal protocol violation: ", e);
             return "Fatal protocol violation: " + e.getMessage();
         } catch (IOException e) {
-            log("Fatal transport error: " + e.getMessage());
+            LOGGER.debug("Fatal transport error: ", e);
             return "Fatal transport error: " + e.getMessage();
         } finally {
             IOUtils.closeQuietly(clientResponse);

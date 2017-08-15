@@ -26,6 +26,8 @@ import javax.mail.MessagingException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 
@@ -43,6 +45,7 @@ import com.google.common.base.Optional;
  *
  */
 public class ToProcessor extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ToProcessor.class);
 
     private boolean debug;
     private String processor;
@@ -70,7 +73,7 @@ public class ToProcessor extends GenericMailet {
     @Override
     public void service(Mail mail) throws MessagingException {
         if (debug) {
-            log(String.format("Sending mail %s to %s", mail, processor));
+            LOGGER.debug(String.format("Sending mail %s to %s", mail, processor));
         }
         mail.setState(processor);
         if (noticeText.isPresent()) {

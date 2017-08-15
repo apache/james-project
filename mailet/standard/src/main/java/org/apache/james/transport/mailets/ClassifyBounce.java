@@ -18,20 +18,23 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
-import org.apache.mailet.Experimental;
-import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMailet;
+import java.io.IOException;
+import java.util.Locale;
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.internet.MimeMessage;
-import java.io.IOException;
-import java.util.Locale;
-import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import org.apache.mailet.Experimental;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -45,6 +48,7 @@ import java.util.regex.Pattern;
  */
 @Experimental
 public class ClassifyBounce extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClassifyBounce.class);
 
     /**
      * The name of the header to be added.
@@ -78,8 +82,8 @@ public class ClassifyBounce extends GenericMailet {
             message.setHeader(headerName, classification);
             message.saveChanges();
             //}
-        } catch (javax.mail.MessagingException me) {
-            log("Error classifying message: " + me.getMessage());
+        } catch (MessagingException me) {
+            LOGGER.error("Error classifying message: ", me);
         }
     }
 

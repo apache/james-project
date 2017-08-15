@@ -30,6 +30,8 @@ import java.util.TreeSet;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.inetnetwork.InetNetworkBuilder;
 import org.apache.james.dnsservice.library.inetnetwork.model.InetNetwork;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Splitter;
 
@@ -40,6 +42,8 @@ import com.google.common.base.Splitter;
  * address or domain name is within a set of subnets.
  */
 public class NetMatcher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NetMatcher.class);
+
     public static final String NETS_SEPARATOR = ", ";
 
     /**
@@ -98,7 +102,7 @@ public class NetMatcher {
         try {
             ip = dnsServer.getByName(hostIP);
         } catch (UnknownHostException uhe) {
-            log("Cannot resolve address for " + hostIP + ": " + uhe.getMessage());
+            LOGGER.info("Cannot resolve address for " + hostIP + ": " + uhe.getMessage());
             return false;
         }
 
@@ -133,15 +137,6 @@ public class NetMatcher {
     }
 
     /**
-     * Can be overwritten for logging
-     *
-     * @param s
-     *            the String to log
-     */
-    protected void log(String s) {
-    }
-
-    /**
      * Init the class with the given networks.
      * 
      * @param nets
@@ -168,7 +163,7 @@ public class NetMatcher {
                 InetNetwork inet = inetNetwork.getFromString(net);
                 networks.add(inet);
             } catch (UnknownHostException uhe) {
-                log("Cannot resolve address: " + uhe.getMessage());
+                LOGGER.info("Cannot resolve address: " + uhe.getMessage());
             }
         }
 

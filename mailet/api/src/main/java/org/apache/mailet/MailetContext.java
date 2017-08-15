@@ -62,7 +62,9 @@ public interface MailetContext {
      * Loglevel for logging operations
      *
      * @since Mailet API v2.5
+     * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
      */
+    @Deprecated
     enum LogLevel {
         DEBUG,
         INFO,
@@ -170,7 +172,7 @@ public interface MailetContext {
      * the mailet log is specific to the mailet container.
      *
      * @param message the message to be written to the log
-     * @deprecated use {@link #log(LogLevel level, String message)}
+     * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
      */
     @Deprecated
     void log(String message);
@@ -182,7 +184,7 @@ public interface MailetContext {
      *
      * @param message the message to be written to the log
      * @param t       the Throwable whose stack trace is to be written to the log
-     * @deprecated use {@link #log(LogLevel level, String message, Throwable t)}
+     * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
      */
     @Deprecated
     void log(String message, Throwable t);
@@ -195,7 +197,9 @@ public interface MailetContext {
      * @param level   {@link LogLevel} to use
      * @param message the message to be written to the log
      * @since 2.5
+     * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
      */
+    @Deprecated
     void log(LogLevel level, String message);
 
     /**
@@ -207,7 +211,9 @@ public interface MailetContext {
      * @param t       the Throwable whose stack trace is to be written to the log
      * @param level   {@link LogLevel} to use
      * @since 2.5
+     * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
      */
+    @Deprecated
     void log(LogLevel level, String message, Throwable t);
 
     /**

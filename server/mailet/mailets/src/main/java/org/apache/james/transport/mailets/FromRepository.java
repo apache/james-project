@@ -29,9 +29,12 @@ import javax.mail.MessagingException;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Re-spools Mail found in the specified Repository.
@@ -46,6 +49,7 @@ import org.apache.mailet.base.GenericMailet;
  */
 @Experimental
 public class FromRepository extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
 
     /** The repository from where this mailet spools mail. */
     private MailRepository repository;
@@ -102,17 +106,7 @@ public class FromRepository extends GenericMailet {
             try {
                 Mail mail = repository.retrieve(key);
                 if (mail != null && mail.getRecipients() != null) {
-                    log((new StringBuffer(160).append("Spooling mail ").append(mail.getName()).append(" from ").append(repositoryPath)).toString());
-
-                    /*
-                     * log("Return-Path: " +
-                     * mail.getMessage().getHeader(RFC2822Headers.RETURN_PATH,
-                     * ", ")); log("Sender: " + mail.getSender()); log("To: " +
-                     * mail.getMessage().getHeader(RFC2822Headers.TO, ", "));
-                     * log("Recipients: "); for (Iterator i =
-                     * mail.getRecipients().iterator(); i.hasNext(); ) {
-                     * log("    " + ((MailAddress)i.next()).toString()); };
-                     */
+                    LOGGER.debug((new StringBuffer(160).append("Spooling mail ").append(mail.getName()).append(" from ").append(repositoryPath)).toString());
 
                     mail.setAttribute("FromRepository", Boolean.TRUE);
                     mail.setState(processor);
@@ -122,7 +116,7 @@ public class FromRepository extends GenericMailet {
                     LifecycleUtil.dispose(mail);
                 }
             } catch (MessagingException e) {
-                log((new StringBuffer(160).append("Unable to re-spool mail ").append(key).append(" from ").append(repositoryPath)).toString(), e);
+                LOGGER.error((new StringBuffer(160).append("Unable to re-spool mail ").append(key).append(" from ").append(repositoryPath)).toString(), e);
             }
         }
 

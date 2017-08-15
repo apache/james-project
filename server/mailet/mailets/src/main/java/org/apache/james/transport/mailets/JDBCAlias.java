@@ -38,6 +38,8 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Rewrites recipient addresses based on a database table. The connection is
@@ -55,6 +57,7 @@ import org.apache.mailet.base.GenericMailet;
  */
 @Experimental
 public class JDBCAlias extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JDBCAlias.class);
 
     protected DataSource datasource;
     protected String query = null;
@@ -65,11 +68,7 @@ public class JDBCAlias extends GenericMailet {
     }
 
     // The JDBCUtil helper class
-    private final JDBCUtil theJDBCUtil = new JDBCUtil() {
-        protected void delegatedLog(String logString) {
-            log("JDBCAlias: " + logString);
-        }
-    };
+    private final JDBCUtil theJDBCUtil = new JDBCUtil();
 
     /**
      * Initialize the mailet
@@ -149,7 +148,7 @@ public class JDBCAlias extends GenericMailet {
                         // Don't alias this address... there's an invalid
                         // address mapping here
                         String exceptionBuffer = "There is an invalid alias from " + recipient + " to " + mappingRS.getString(1);
-                        log(exceptionBuffer);
+                        LOGGER.error(exceptionBuffer, pe);
                     }
                 } finally {
                     ResultSet localRS = mappingRS;

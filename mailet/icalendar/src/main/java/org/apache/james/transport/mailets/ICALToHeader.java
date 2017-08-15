@@ -26,6 +26,8 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
@@ -56,6 +58,8 @@ import net.fortuna.ical4j.model.component.VEvent;
  * </pre>
  */
 public class ICALToHeader extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ICALToHeader.class);
+
     public static final String ATTRIBUTE_PROPERTY = "attribute";
     public static final String ATTRIBUTE_DEFAULT_NAME = "icalendar";
 
@@ -93,7 +97,7 @@ public class ICALToHeader extends GenericMailet {
                 .ifPresent(Throwing.<Calendar>consumer(calendar -> writeToHeaders(calendar, mail))
                     .sneakyThrow());
         } catch (ClassCastException e) {
-            log("Received a mail with " + attribute + " not being an ICAL object for mail " + mail.getName());
+            LOGGER.error("Received a mail with " + attribute + " not being an ICAL object for mail " + mail.getName(), e);
         }
     }
 
@@ -122,7 +126,7 @@ public class ICALToHeader extends GenericMailet {
             try {
                 mimeMessage.addHeader(headerName, property.getValue());
             } catch (MessagingException e) {
-                log("Could not add header " + headerName + " with value " + property.getValue(), e);
+                LOGGER.error("Could not add header " + headerName + " with value " + property.getValue(), e);
             }
         }
     }

@@ -253,11 +253,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             LOGGER.debug(logBuffer.toString());
         }
 
-        theJDBCUtil = new JDBCUtil() {
-            protected void delegatedLog(String logString) {
-                AbstractJdbcUsersRepository.this.LOGGER.warn("AbstractJdbcUsersRepository: " + logString);
-            }
-        };
+        theJDBCUtil = new JDBCUtil();
 
         // Test the connection to the database, by getting the DatabaseMetaData.
         Connection conn = openConnection();

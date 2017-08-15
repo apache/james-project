@@ -42,6 +42,8 @@ import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -121,6 +123,7 @@ import com.google.common.collect.ImmutableList;
  * @since 2.2.0
  */
 public class Bounce extends GenericMailet implements RedirectNotify {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Bounce.class);
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError" };
@@ -156,7 +159,7 @@ public class Bounce extends GenericMailet implements RedirectNotify {
     @Override
     public void init() throws MessagingException {
         if (getInitParameters().isDebug()) {
-            log("Initializing");
+            LOGGER.debug("Initializing");
         }
 
         // check that all init parameters have been declared in
@@ -165,7 +168,7 @@ public class Bounce extends GenericMailet implements RedirectNotify {
 
         if (getInitParameters().isStatic()) {
             if (getInitParameters().isDebug()) {
-                log(getInitParameters().asString());
+                LOGGER.debug(getInitParameters().asString());
             }
         }
     }
@@ -238,7 +241,7 @@ public class Bounce extends GenericMailet implements RedirectNotify {
             passThrough(originalMail);
         } else {
             if (getInitParameters().isDebug()) {
-                log("Processing a bounce request for a message with a reverse path.  The bounce will be sent to " + originalMail.getSender().toString());
+                LOGGER.debug("Processing a bounce request for a message with a reverse path.  The bounce will be sent to " + originalMail.getSender().toString());
             }
             ProcessRedirectNotify.from(this).process(originalMail);
         }
@@ -246,7 +249,7 @@ public class Bounce extends GenericMailet implements RedirectNotify {
 
     private void passThrough(Mail originalMail) throws MessagingException {
         if (getInitParameters().isDebug()) {
-            log("Processing a bounce request for a message with an empty reverse-path.  No bounce will be sent.");
+            LOGGER.debug("Processing a bounce request for a message with an empty reverse-path.  No bounce will be sent.");
         }
         if (!getInitParameters().getPassThrough()) {
             originalMail.setState(Mail.GHOST);

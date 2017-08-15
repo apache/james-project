@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * @since 2.3.0
  */
 
-abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
+public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JDBCBayesianAnalyzer.class);
 
@@ -53,22 +53,9 @@ abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
     public final static String DATABASE_LOCK = "database lock";
 
     /**
-     * An abstract method which child classes override to handle logging of
-     * errors in their particular environments.
-     * 
-     * @param errorString
-     *            the error message generated
-     */
-    abstract protected void delegatedLog(String errorString);
-
-    /**
      * The JDBCUtil helper class
      */
-    private final JDBCUtil theJDBCUtil = new JDBCUtil() {
-        protected void delegatedLog(String logString) {
-            JDBCBayesianAnalyzer.this.delegatedLog(logString);
-        }
-    };
+    private final JDBCUtil theJDBCUtil = new JDBCUtil();
 
     /** Contains all of the sql strings for this component. */
     private final SqlResources sqlQueries = new SqlResources();
@@ -174,7 +161,7 @@ abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
                 }
             }
             // Verbose.
-            delegatedLog("Ham tokens count: " + ham.size());
+            LOGGER.debug("Ham tokens count: " + ham.size());
 
             rs.close();
             pstmt.close();
@@ -194,7 +181,7 @@ abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
             }
 
             // Verbose.
-            delegatedLog("Spam tokens count: " + spam.size());
+            LOGGER.error("Spam tokens count: " + spam.size());
 
             rs.close();
             pstmt.close();
@@ -417,7 +404,7 @@ abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
 
             StringBuffer logBuffer;
             logBuffer = new StringBuffer(64).append("Created table '").append(tableName).append("' using sqlResources string '").append(createSqlStringName).append("'.");
-            delegatedLog(logBuffer.toString());
+            LOGGER.error(logBuffer.toString());
 
         } finally {
             theJDBCUtil.closeJDBCStatement(createStatement);

@@ -34,11 +34,14 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public class MailModifier {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailModifier.class);
 
     private static final String LOCAHOST = "127.0.0.1";
 
@@ -108,7 +111,7 @@ public class MailModifier {
         if (!recipients.isEmpty()) {
             mail.setRecipients(recipients);
             if (mailet.getInitParameters().isDebug()) {
-                mailet.log("recipients set to: " + StringUtils.arrayToString(recipients.toArray()));
+                LOGGER.debug("recipients set to: " + StringUtils.arrayToString(recipients.toArray()));
             }
         }
     }
@@ -118,7 +121,7 @@ public class MailModifier {
             InternetAddress[] internetAddresses = MailAddressUtils.toInternetAddressArray(mailAddresses);
             mail.getMessage().setRecipients(Message.RecipientType.TO, internetAddresses);
             if (mailet.getInitParameters().isDebug()) {
-                mailet.log("apparentlyTo set to: " + internetAddresses);
+                LOGGER.debug("apparentlyTo set to: " + internetAddresses);
             }
         }
     }
@@ -141,12 +144,12 @@ public class MailModifier {
             if (replyTo.equals(SpecialAddress.NULL)) {
                 mail.getMessage().setReplyTo(null);
                 if (mailet.getInitParameters().isDebug()) {
-                    mailet.log("replyTo set to: null");
+                    LOGGER.debug("replyTo set to: null");
                 }
             } else {
                 mail.getMessage().setReplyTo(new InternetAddress[] { replyTo.toInternetAddress() });
                 if (mailet.getInitParameters().isDebug()) {
-                    mailet.log("replyTo set to: " + replyTo);
+                    LOGGER.debug("replyTo set to: " + replyTo);
                 }
             }
         }
@@ -163,12 +166,12 @@ public class MailModifier {
             if (reversePath.equals(SpecialAddress.NULL)) {
                 mail.setSender(null);
                 if (mailet.getInitParameters().isDebug()) {
-                    mailet.log("reversePath set to: null");
+                    LOGGER.debug("reversePath set to: null");
                 }
             } else {
                 mail.setSender(reversePath);
                 if (mailet.getInitParameters().isDebug()) {
-                    mailet.log("reversePath set to: " + reversePath);
+                    LOGGER.debug("reversePath set to: " + reversePath);
                 }
             }
         }
@@ -184,7 +187,7 @@ public class MailModifier {
             if (messageId != null) {
                 mail.getMessage().setHeader(RFC2822Headers.IN_REPLY_TO, messageId);
                 if (mailet.getInitParameters().isDebug()) {
-                    mailet.log("IN_REPLY_TO set to: " + messageId);
+                    LOGGER.debug("IN_REPLY_TO set to: " + messageId);
                 }
             }
         }
@@ -195,7 +198,7 @@ public class MailModifier {
             mail.getMessage().setFrom(sender.get().toInternetAddress());
 
             if (mailet.getInitParameters().isDebug()) {
-                mailet.log("sender set to: " + sender);
+                LOGGER.debug("sender set to: " + sender);
             }
         }
     }
@@ -211,7 +214,7 @@ public class MailModifier {
         if (messageId != null) {
             mail.getMessage().setHeader(RFC2822Headers.MESSAGE_ID, messageId);
             if (mailet.getInitParameters().isDebug()) {
-                mailet.log("MESSAGE_ID restored to: " + messageId);
+                LOGGER.debug("MESSAGE_ID restored to: " + messageId);
             }
         }
     }

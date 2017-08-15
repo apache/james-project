@@ -25,10 +25,12 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.jspf.core.Logger;
 import org.apache.james.jspf.executor.SPFResult;
 import org.apache.james.jspf.impl.DefaultSPF;
+import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.mailet.Experimental;
-import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMailet;
+import org.slf4j.LoggerFactory;
 
 /**
  * Check the ip, sender, helo against SPF. Add the following attributes to the
@@ -52,6 +54,8 @@ import org.apache.mailet.MailAddress;
  */
 @Experimental
 public class SPF extends GenericMailet {
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
+
     private boolean addHeader = false;
     private org.apache.james.jspf.impl.SPF spf;
     public final static String EXPLANATION_ATTRIBUTE = "org.apache.james.transport.mailets.spf.explanation";
@@ -86,7 +90,7 @@ public class SPF extends GenericMailet {
             mail.setAttribute(EXPLANATION_ATTRIBUTE, result.getExplanation());
             mail.setAttribute(RESULT_ATTRIBUTE, result.getResult());
 
-            log("ip:" + remoteAddr + " from:" + sender + " helo:" + helo + " = " + result.getResult());
+            LOGGER.debug("ip:" + remoteAddr + " from:" + sender + " helo:" + helo + " = " + result.getResult());
             if (addHeader) {
                 try {
                     MimeMessage msg = mail.getMessage();
@@ -114,30 +118,30 @@ public class SPF extends GenericMailet {
 
         public void debug(String arg0) {
             if (debug) {
-                log(arg0);
+                LOGGER.debug(arg0);
             }
         }
 
         public void debug(String arg0, Throwable arg1) {
             if (debug) {
-                log(arg0, arg1);
+                LOGGER.debug(arg0, arg1);
             }
         }
 
         public void error(String arg0) {
-            log(arg0);
+            LOGGER.error(arg0);
         }
 
         public void error(String arg0, Throwable arg1) {
-            log(arg0, arg1);
+            LOGGER.error(arg0, arg1);
         }
 
         public void fatalError(String arg0) {
-            log(arg0);
+            LOGGER.error(arg0);
         }
 
         public void fatalError(String arg0, Throwable arg1) {
-            log(arg0, arg1);
+            LOGGER.error(arg0, arg1);
         }
 
         public Logger getChildLogger(String childName) {
@@ -145,39 +149,39 @@ public class SPF extends GenericMailet {
         }
 
         public void info(String arg0) {
-            log(arg0);
+            LOGGER.info(arg0);
         }
 
         public void info(String arg0, Throwable arg1) {
-            log(arg0, arg1);
+            LOGGER.info(arg0, arg1);
         }
 
         public boolean isDebugEnabled() {
-            return debug;
+            return LOGGER.isDebugEnabled();
         }
 
         public boolean isErrorEnabled() {
-            return true;
+            return LOGGER.isErrorEnabled();
         }
 
         public boolean isFatalErrorEnabled() {
-            return true;
+            return LOGGER.isErrorEnabled();
         }
 
         public boolean isInfoEnabled() {
-            return true;
+            return LOGGER.isInfoEnabled();
         }
 
         public boolean isWarnEnabled() {
-            return true;
+            return LOGGER.isWarnEnabled();
         }
 
         public void warn(String arg0) {
-            log(arg0);
+            LOGGER.warn(arg0);
         }
 
         public void warn(String arg0, Throwable arg1) {
-            log(arg0, arg1);
+            LOGGER.warn(arg0, arg1);
         }
 
     }

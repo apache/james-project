@@ -25,8 +25,11 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailImpl;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ProcessRedirectNotify {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessRedirectNotify.class);
 
     public static ProcessRedirectNotify from(RedirectNotify mailet) {
         return new ProcessRedirectNotify(mailet);
@@ -55,7 +58,7 @@ public class ProcessRedirectNotify {
             mailModifier.setRemoteHost();
 
             if (mailet.getInitParameters().isDebug()) {
-                mailet.log("New mail - sender: " + newMail.getSender() + ", recipients: " + StringUtils.arrayToString(newMail.getRecipients().toArray()) + ", name: " + newMail.getName() + ", remoteHost: " + newMail.getRemoteHost() + ", remoteAddr: " + newMail.getRemoteAddr() + ", state: " + newMail.getState()
+                LOGGER.debug("New mail - sender: " + newMail.getSender() + ", recipients: " + StringUtils.arrayToString(newMail.getRecipients().toArray()) + ", name: " + newMail.getName() + ", remoteHost: " + newMail.getRemoteHost() + ", remoteAddr: " + newMail.getRemoteAddr() + ", state: " + newMail.getState()
                         + ", lastUpdated: " + newMail.getLastUpdated() + ", errorMessage: " + newMail.getErrorMessage());
             }
 
@@ -111,7 +114,7 @@ public class ProcessRedirectNotify {
 
     private void createAlterMessage(Mail originalMail, MailImpl newMail) throws MessagingException {
         if (isDebug) {
-            mailet.log("Alter message");
+            LOGGER.debug("Alter message");
         }
         newMail.setMessage(new MimeMessage(Session.getDefaultInstance(System.getProperties(), null)));
 
@@ -129,7 +132,7 @@ public class ProcessRedirectNotify {
             newMail.setMessage(new CopiedMimeMessage(originalMail.getMessage()));
         }
         if (isDebug) {
-            mailet.log("Message resent unaltered.");
+            LOGGER.debug("Message resent unaltered.");
         }
     }
 

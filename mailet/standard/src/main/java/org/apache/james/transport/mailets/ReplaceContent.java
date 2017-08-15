@@ -164,6 +164,6 @@ public class ReplaceContent extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MailetException {
-        new ContentReplacer(debug, this).replaceMailContentAndSubject(mail, replaceConfig, charset);
+        new ContentReplacer(debug).replaceMailContentAndSubject(mail, replaceConfig, charset);
     }
 }

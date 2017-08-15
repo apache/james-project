@@ -41,9 +41,9 @@ import org.apache.james.transport.mailets.managesieve.transcode.MessageToCoreToM
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailetContext;
-import org.apache.mailet.MailetContext.LogLevel;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -90,6 +90,7 @@ import com.google.common.collect.Lists;
  */
 @Experimental
 public class ManageSieveMailet extends GenericMailet implements MessageToCoreToMessage.HelpProvider {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
 
     // Injected
     private SieveRepository sieveRepository = null;
@@ -123,11 +124,11 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
     public void service(Mail mail) throws MessagingException {
         // Sanity checks
         if (mail.getSender() == null) {
-            getMailetContext().log(MailetContext.LogLevel.ERROR, "Sender is null");
+            LOGGER.error("Sender is null");
             return;
         }
         if (!getMailetContext().isLocalServer(mail.getSender().getDomain().toLowerCase(Locale.US))) {
-            getMailetContext().log(LogLevel.ERROR, "Sender not local");
+            LOGGER.error("Sender not local");
             return;
         }
 

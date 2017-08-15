@@ -19,10 +19,6 @@
 
 package org.apache.james.mailrepository.jdbc;
 
-import org.apache.james.core.MimeMessageSource;
-import org.apache.james.repository.api.StreamRepository;
-import org.apache.james.util.sql.JDBCUtil;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +28,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import org.apache.james.core.MimeMessageSource;
+import org.apache.james.repository.api.StreamRepository;
+import org.apache.james.util.sql.JDBCUtil;
 
 /**
  * This class points to a specific message in a repository. This will return an
@@ -65,12 +65,7 @@ public class MimeMessageJDBCSource extends MimeMessageSource {
     /**
      * The JDBCUtil helper class
      */
-    private static final JDBCUtil theJDBCUtil = new JDBCUtil() {
-        protected void delegatedLog(String logString) {
-            // No logging available at this point in the code.
-            // Therefore this is a noop method.
-        }
-    };
+    private static final JDBCUtil theJDBCUtil = new JDBCUtil();
 
     /**
      * Construct a MimeMessageSource based on a JDBC repository, a key, and a

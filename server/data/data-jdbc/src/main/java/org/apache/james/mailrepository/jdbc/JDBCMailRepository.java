@@ -270,11 +270,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
             throw new ConfigurationException(message, e);
         }
 
-        theJDBCUtil = new JDBCUtil() {
-            protected void delegatedLog(String logString) {
-                JDBCMailRepository.this.LOGGER.warn("JDBCMailRepository: " + logString);
-            }
-        };
+        theJDBCUtil = new JDBCUtil();
 
         // Test the connection to the database, by getting the DatabaseMetaData.
         Connection conn = datasource.getConnection();

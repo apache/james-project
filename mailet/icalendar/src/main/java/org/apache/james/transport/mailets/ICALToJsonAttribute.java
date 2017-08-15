@@ -36,6 +36,8 @@ import org.apache.james.transport.mailets.model.ICAL;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -79,6 +81,7 @@ import net.fortuna.ical4j.model.Calendar;
  * </pre>
  */
 public class ICALToJsonAttribute extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ICALToJsonAttribute.class);
 
     public static final String SOURCE_ATTRIBUTE_NAME = "source";
     public static final String RAW_SOURCE_ATTRIBUTE_NAME = "rawSource";
@@ -140,7 +143,7 @@ public class ICALToJsonAttribute extends GenericMailet {
         }
         Optional<String> sender = retrieveSender(mail);
         if (!sender.isPresent()) {
-            log("Skipping " + mail.getName() + " because no sender and no from");
+            LOGGER.info("Skipping " + mail.getName() + " because no sender and no from");
             return;
         }
         try {
@@ -152,7 +155,7 @@ public class ICALToJsonAttribute extends GenericMailet {
                 .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
             mail.setAttribute(destinationAttributeName, (Serializable) jsonsInByteForm);
         } catch (ClassCastException e) {
-            log("Received a mail with " + sourceAttributeName + " not being an ICAL object for mail " + mail.getName(), e);
+            LOGGER.error("Received a mail with " + sourceAttributeName + " not being an ICAL object for mail " + mail.getName(), e);
         }
     }
 
@@ -178,10 +181,10 @@ public class ICALToJsonAttribute extends GenericMailet {
         try {
             return Stream.of(objectMapper.writeValueAsString(ical));
         } catch (JsonProcessingException e) {
-            log("Error while serializing Calendar for mail " + mailName, e);
+            LOGGER.error("Error while serializing Calendar for mail " + mailName, e);
             return Stream.of();
         } catch (Exception e) {
-            log("Exception caught while attaching ICAL to the email as JSON for mail " + mailName, e);
+            LOGGER.error("Exception caught while attaching ICAL to the email as JSON for mail " + mailName, e);
             return Stream.of();
         }
     }
@@ -190,7 +193,7 @@ public class ICALToJsonAttribute extends GenericMailet {
         Calendar calendar = entry.getValue();
         byte[] rawICal = rawCalendars.get(entry.getKey());
         if (rawICal == null) {
-            log("Cannot find matching raw ICAL from key: " + entry.getKey());
+            LOGGER.debug("Cannot find matching raw ICAL from key: " + entry.getKey());
             return Stream.of();
         }
         try {
@@ -200,7 +203,7 @@ public class ICALToJsonAttribute extends GenericMailet {
                 .sender(sender)
                 .build());
         } catch (Exception e) {
-            log("Exception while converting calendar to ICAL", e);
+            LOGGER.error("Exception while converting calendar to ICAL", e);
             return Stream.of();
         }
     }

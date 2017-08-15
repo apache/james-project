@@ -34,6 +34,8 @@ import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -49,6 +51,7 @@ import org.apache.mailet.MailAddress;
  */
 @Experimental
 public class NetworkIsInWhitelist extends AbstractSQLWhitelistMatcher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkIsInWhitelist.class);
 
     private DNSService dns;
     private String selectNetworks;
@@ -130,7 +133,7 @@ public class NetworkIsInWhitelist extends AbstractSQLWhitelistMatcher {
             }
             return matched;
         } catch (SQLException sqle) {
-            log("Error accessing database", sqle);
+            LOGGER.error("Error accessing database", sqle);
             throw new MessagingException("Exception thrown", sqle);
         } finally {
             theJDBCUtil.closeJDBCConnection(conn);

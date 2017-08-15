@@ -29,6 +29,8 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
@@ -62,6 +64,8 @@ import net.fortuna.ical4j.util.CompatibilityHints;
  * </p>
  */
 public class ICalendarParser extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ICalendarParser.class);
+
     public static final String SOURCE_ATTRIBUTE_PARAMETER_NAME = "sourceAttribute";
     public static final String DESTINATION_ATTRIBUTE_PARAMETER_NAME = "destinationAttribute";
 
@@ -130,10 +134,10 @@ public class ICalendarParser extends GenericMailet {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(icsContent);
             return Stream.of(Pair.of(key, builder.build(inputStream)));
         } catch (IOException e) {
-            log("Error while reading input: " + icsContent, e);
+            LOGGER.error("Error while reading input: " + icsContent, e);
             return Stream.of();
         } catch (ParserException e) {
-            log("Error while parsing ICal object: " + icsContent, e);
+            LOGGER.error("Error while parsing ICal object: " + icsContent, e);
             return Stream.of();
         }
     }

@@ -242,14 +242,14 @@ public class JamesMailetContext implements MailetContext, Configurable {
                 try {
                     return isLocalEmail(new MailAddress(name.toLowerCase(Locale.US), domains.getDefaultDomain()));
                 } catch (DomainListException e) {
-                    log("Unable to access DomainList", e);
+                    LOGGER.error("Unable to access DomainList", e);
                     return false;
                 }
             } else {
                 return isLocalEmail(new MailAddress(name.toLowerCase(Locale.US)));
             }
         } catch (ParseException e) {
-            log("Error checking isLocalUser for user " + name);
+            LOGGER.info("Error checking isLocalUser for user " + name, e);
             return false;
         }
     }
@@ -263,7 +263,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
             try {
                 return localusers.contains(localusers.getUser(mailAddress));
             } catch (UsersRepositoryException e) {
-                log("Unable to access UsersRepository", e);
+                LOGGER.error("Unable to access UsersRepository", e);
             }
         }
         return false;

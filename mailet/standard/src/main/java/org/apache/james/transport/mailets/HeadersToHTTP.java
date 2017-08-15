@@ -39,6 +39,8 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Serialise the email and pass it to an HTTP call
@@ -56,6 +58,7 @@ import org.apache.mailet.base.GenericMailet;
  */
 @Experimental
 public class HeadersToHTTP extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HeadersToHTTP.class);
 
     /**
      * The name of the header to be added.
@@ -90,7 +93,7 @@ public class HeadersToHTTP extends GenericMailet {
         }
 
         // record the result
-        log("I will attempt to deliver serialised messages to "
+        LOGGER.debug("I will attempt to deliver serialised messages to "
                 + targetUrl
                 + ". "
                 + ( ((parameterKey==null) || (parameterKey.length()<1)) ? "I will not add any fields to the post. " : "I will prepend: "	+ parameterKey + "=" + parameterValue + ". ")
@@ -106,19 +109,19 @@ public class HeadersToHTTP extends GenericMailet {
      */
     public void service(Mail mail) {
         try {
-            log(mail.getName() + "HeadersToHTTP: Starting");
+            LOGGER.debug(mail.getName() + "HeadersToHTTP: Starting");
             MimeMessage message = mail.getMessage();
             HashSet<NameValuePair> pairs = getNameValuePairs(message);
-            log(mail.getName() + "HeadersToHTTP: " + pairs.size() + " named value pairs found");
+            LOGGER.debug(mail.getName() + "HeadersToHTTP: " + pairs.size() + " named value pairs found");
             String result = httpPost(pairs);
             if (passThrough) {
                 addHeader(mail, true, result);
             } else {
                 mail.setState(Mail.GHOST);
             }
-        } catch (MessagingException | IOException me) {
-            log(me.getMessage());
-            addHeader(mail, false, me.getMessage());
+        } catch (MessagingException | IOException e) {
+            LOGGER.error("Exception", e);
+            addHeader(mail, false, e.getMessage());
         }
     }
 
@@ -131,7 +134,7 @@ public class HeadersToHTTP extends GenericMailet {
             }
             message.saveChanges();
         } catch (MessagingException e) {
-            log(e.getMessage());
+            LOGGER.error("Exception", e);
         }
     }
 
@@ -144,7 +147,7 @@ public class HeadersToHTTP extends GenericMailet {
             HttpUriRequest request = RequestBuilder.post(url).addParameters(pairs.toArray(new NameValuePair[0])).build();
             clientResponse = client.execute(request);
             String result = clientResponse.getStatusLine().getStatusCode() + ": " + clientResponse.getStatusLine();
-            log("HeadersToHTTP: " + result);
+            LOGGER.debug("HeadersToHTTP: " + result);
             return result;
         } finally {
             IOUtils.closeQuietly(clientResponse);

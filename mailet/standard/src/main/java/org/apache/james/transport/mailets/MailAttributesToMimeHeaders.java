@@ -30,6 +30,8 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
@@ -48,6 +50,7 @@ import com.google.common.collect.ImmutableMap.Builder;
  * </code></pre>
  */
 public class MailAttributesToMimeHeaders extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailAttributesToMimeHeaders.class);
 
     private static final String CONFIGURATION_ERROR_MESSAGE = "Invalid config. Please use \"attributeName; headerName\"";
     private Map<String, String> mappings;
@@ -83,7 +86,7 @@ public class MailAttributesToMimeHeaders extends GenericMailet {
             }
             message.saveChanges();
         } catch (MessagingException e) {
-            log(e.getMessage());
+            LOGGER.error("Encountered exception", e);
         }
     }
 

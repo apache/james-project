@@ -19,10 +19,14 @@
 
 package org.apache.james.ai.classic;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Periodically reloads corpus.
  */
 class CorpusLoaderThread extends Thread {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CorpusLoaderThread.class);
 
     private final BayesianAnalysis analysis;
 
@@ -35,19 +39,19 @@ class CorpusLoaderThread extends Thread {
      * Thread entry point.
      */
     public void run() {
-        analysis.log("CorpusLoader thread started: will wake up every " + BayesianAnalysis.CORPUS_RELOAD_INTERVAL + " ms");
+        LOGGER.info("CorpusLoader thread started: will wake up every " + BayesianAnalysis.CORPUS_RELOAD_INTERVAL + " ms");
 
         try {
             Thread.sleep(BayesianAnalysis.CORPUS_RELOAD_INTERVAL);
 
             while (true) {
                 if (analysis.getLastCorpusLoadTime() < JDBCBayesianAnalyzer.getLastDatabaseUpdateTime()) {
-                    analysis.log("Reloading Corpus ...");
+                    LOGGER.info("Reloading Corpus ...");
                     try {
                         analysis.loadData(analysis.datasource.getConnection());
-                        analysis.log("Corpus reloaded");
+                        LOGGER.info("Corpus reloaded");
                     } catch (java.sql.SQLException se) {
-                        analysis.log("SQLException: ", se);
+                        LOGGER.error("SQLException: ", se);
                     }
 
                 }

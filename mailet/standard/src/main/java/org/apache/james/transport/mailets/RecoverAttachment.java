@@ -19,22 +19,24 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.mailet.Experimental;
-import org.apache.mailet.base.GenericMailet;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailetException;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Map;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+
+import org.apache.mailet.Experimental;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailetException;
+import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -58,6 +60,7 @@ import java.util.Map;
  */
 @Experimental
 public class RecoverAttachment extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecoverAttachment.class);
 
     public static final String ATTRIBUTE_PARAMETER_NAME = "attribute";
 
@@ -76,7 +79,7 @@ public class RecoverAttachment extends GenericMailet {
                     + " is a mandatory parameter");
         }
 
-        log("RecoverAttachment is initialised with attribute [" + attributeName
+        LOGGER.debug("RecoverAttachment is initialised with attribute [" + attributeName
                 + "]");
     }
 
@@ -128,9 +131,9 @@ public class RecoverAttachment extends GenericMailet {
                 }
                 message.saveChanges();
             } catch (MessagingException e) {
-                log("MessagingException in recoverAttachment", e);
+                LOGGER.error("MessagingException in recoverAttachment", e);
             } catch (IOException e) {
-                log("IOException in recoverAttachment", e);
+                LOGGER.error("IOException in recoverAttachment", e);
             }
         }
     }

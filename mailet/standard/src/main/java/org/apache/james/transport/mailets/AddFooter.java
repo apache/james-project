@@ -35,6 +35,8 @@ import javax.mail.internet.MimePart;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 
@@ -44,6 +46,7 @@ import com.google.common.base.Optional;
  * messages with alternate content types or with attachments.
  */
 public class AddFooter extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AddFooter.class);
 
     private static final String HTML_BR_TAG = "<br />";
     private static final String CARRIAGE_RETURN = "\r\n";
@@ -68,11 +71,11 @@ public class AddFooter extends GenericMailet {
             if (attachFooter(message)) {
                 message.saveChanges();
             } else {
-                log("Unable to add footer to mail " + mail.getName());
+                LOGGER.info("Unable to add footer to mail " + mail.getName());
             }
         } catch (UnsupportedEncodingException e) {
-            log("UnsupportedEncoding Unable to add footer to mail "
-                    + mail.getName());
+            LOGGER.warn("UnsupportedEncoding Unable to add footer to mail "
+                    + mail.getName(), e);
         } catch (IOException ioe) {
             throw new MessagingException("Could not read message", ioe);
         }

@@ -75,11 +75,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     /**
      * The JDBCUtil helper class
      */
-    private final JDBCUtil theJDBCUtil = new JDBCUtil() {
-        protected void delegatedLog(String logString) {
-            LOGGER.debug("JDBCRecipientRewriteTable: " + logString);
-        }
-    };
+    private final JDBCUtil theJDBCUtil = new JDBCUtil();
 
     @PostConstruct
     public void init() throws Exception {

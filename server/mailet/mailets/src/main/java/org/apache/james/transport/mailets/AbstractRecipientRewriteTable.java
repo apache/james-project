@@ -41,6 +41,8 @@ import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides an abstraction of common functionality needed for implementing a
@@ -52,6 +54,7 @@ import org.apache.mailet.base.GenericMailet;
 @Deprecated
 @Experimental
 public abstract class AbstractRecipientRewriteTable extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRecipientRewriteTable.class);
     static private final String MARKER = "org.apache.james.transport.mailets.AbstractRecipientRewriteTable.mapped";
     private DNSService dns;
     private DomainList domainList;
@@ -110,14 +113,11 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
                     while (tokenizer.hasMoreTokens()) {
                         String targetAddress = tokenizer.nextToken().trim();
 
-                        // log("Attempting to map from " + source + " to " +
-                        // targetAddress);
-
                         if (targetAddress.startsWith("regex:")) {
                             try {
                                 targetAddress = RecipientRewriteTableUtil.regexMap(source, targetAddress);
                             } catch (PatternSyntaxException e) {
-                                log("Exception during regexMap processing: ", e);
+                                LOGGER.error("Exception during regexMap processing: ", e);
                             }
                             if (targetAddress == null)
                                 continue;
@@ -139,15 +139,15 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
                             }
 
                             String buf = "Translating virtual user " + source + " to " + target;
-                            log(buf);
+                            LOGGER.info(buf);
 
                         } catch (ParseException pe) {
                             // Don't map this address... there's an invalid
                             // address mapping here
                             String exceptionBuffer = "There is an invalid map from " + source + " to " + targetAddress;
-                            log(exceptionBuffer);
+                            LOGGER.error(exceptionBuffer);
                         } catch (DomainListException e) {
-                            log("Unable to access DomainList", e);
+                            LOGGER.error("Unable to access DomainList", e);
                         }
                     }
                 }
@@ -237,7 +237,7 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
             @SuppressWarnings("unused")
             Integer code = Integer.valueOf(error.substring("error:".length(), msgPos));
         } catch (NumberFormatException e) {
-            log("Cannot send DSN.  Exception parsing DSN code from: " + error, e);
+            LOGGER.error("Cannot send DSN.  Exception parsing DSN code from: " + error, e);
             return;
         }
         @SuppressWarnings("unused")
@@ -246,7 +246,7 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
         try {
             getMailetContext().bounce(mail, error);
         } catch (MessagingException me) {
-            log("Cannot send DSN.  Exception during DSN processing: ", me);
+            LOGGER.error("Cannot send DSN.  Exception during DSN processing: ", me);
         }
     }
 

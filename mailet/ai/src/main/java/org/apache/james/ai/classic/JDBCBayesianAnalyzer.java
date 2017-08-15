@@ -28,6 +28,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 /**
@@ -42,20 +44,16 @@ import org.w3c.dom.Document;
  * @since 2.3.0
  */
 
-public class JDBCBayesianAnalyzer extends BayesianAnalyzer implements Log {
+public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JDBCBayesianAnalyzer.class);
 
     /** Public object representing a lock on database activity. */
     public final static String DATABASE_LOCK = "database lock";
-
-
     
     /**
      * The JDBCUtil helper class
      */
-    private final JDBCUtil theJDBCUtil = new JDBCUtil(this);
-
-    /** Logs messages. */
-    private Log log;
+    private final JDBCUtil theJDBCUtil = new JDBCUtil();
     
     /** Contains all of the sql strings for this component. */
     private final SqlResources sqlQueries = new SqlResources();
@@ -90,28 +88,6 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer implements Log {
     
     public JDBCBayesianAnalyzer() {
         super();
-        log = new SystemLog();
-    }
-    
-    public JDBCBayesianAnalyzer(Log log) {
-        super();
-        this.log = log;
-    }
-
-    /**
-     * Gets the current log.
-     * @return current log, not null
-     */
-    public Log getLog() {
-        return log;
-    }
-
-    /**
-     * Sets the current log.
-     * @param log not null
-     */
-    public void setLog(Log log) {
-        this.log = log;
     }
 
     /**
@@ -182,7 +158,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer implements Log {
                 }
             }
             // Verbose.
-            log("Ham tokens count: " + ham.size());
+            LOGGER.debug("Ham tokens count: " + ham.size());
 
             rs.close();
             pstmt.close();
@@ -202,7 +178,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer implements Log {
             }
 
             // Verbose.
-            log("Spam tokens count: " + spam.size());
+            LOGGER.debug("Spam tokens count: " + spam.size());
 
             rs.close();
             pstmt.close();
@@ -222,8 +198,8 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer implements Log {
             if (rs != null) {
                 try {
                     rs.close();
-                } catch (java.sql.SQLException se) {
-                    log("Failed to close statement after selecting spam tokens.", se);
+                } catch (SQLException se) {
+                    LOGGER.error("Failed to close statement after selecting spam tokens.", se);
                 }
 
                 rs = null;
@@ -232,8 +208,8 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer implements Log {
             if (pstmt != null) {
                 try {
                     pstmt.close();
-                } catch (java.sql.SQLException se) {
-                    log("Failed to close statement selecting message counts.", se);
+                } catch (SQLException se) {
+                    LOGGER.error("Failed to close statement selecting message counts.", se);
                 }
 
                 pstmt = null;
@@ -303,15 +279,15 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer implements Log {
             if (init != null) {
                 try {
                     init.close();
-                } catch (java.sql.SQLException ignore) {
-                    log("Failed to close statement after initializing message count.", ignore);
+                } catch (SQLException ignore) {
+                    LOGGER.error("Failed to close statement after initializing message count.", ignore);
                 }
             }
             if (update != null) {
                 try {
                     update.close();
-                } catch (java.sql.SQLException ignore) {
-                    log("Failed to close statement after setting message count.", ignore);
+                } catch (SQLException ignore) {
+                    LOGGER.error("Failed to close statement after setting message count.", ignore);
                 }
             }
         }
@@ -346,8 +322,8 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer implements Log {
             if (insert != null) {
                 try {
                     insert.close();
-                } catch (java.sql.SQLException ignore) {
-                    log("Failed to close statement after updating tokens.", ignore);
+                } catch (SQLException ignore) {
+                    LOGGER.error("Failed to close statement after updating tokens.", ignore);
                 }
 
                 insert = null;
@@ -356,8 +332,8 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer implements Log {
             if (update != null) {
                 try {
                     update.close();
-                } catch (java.sql.SQLException ignore) {
-                    log("Failed to close statement after updating tokens.", ignore);
+                } catch (SQLException ignore) {
+                    LOGGER.error("Failed to close statement after updating tokens.", ignore);
                 }
 
                 update = null;
@@ -430,7 +406,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer implements Log {
 
             StringBuffer logBuffer = null;
             logBuffer = new StringBuffer(64).append("Created table '").append(tableName).append("' using sqlResources string '").append(createSqlStringName).append("'.");
-            log(logBuffer.toString());
+            LOGGER.debug(logBuffer.toString());
 
         } finally {
             theJDBCUtil.closeJDBCStatement(createStatement);
@@ -450,35 +426,12 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer implements Log {
             if (delete != null) {
                 try {
                     delete.close();
-                } catch (java.sql.SQLException ignore) {
-                    log("Failed to close statement after deleting ham statement. ", ignore);
+                } catch (SQLException ignore) {
+                    LOGGER.error("Failed to close statement after deleting ham statement. ", ignore);
                 }
                 
                 delete = null;
             }
         }
-    }
-    
-    
-    /**
-     * Logs errors.
-     * 
-     * @param errorString
-     *            the error message generated
-     */
-    public void log(String errorString) {
-        log.log(errorString);
-    }
-
-    /**
-     * Logs errors.
-     * 
-     * @param errorString
-     *            the error message generated
-     * @param t 
-     *            exception 
-     */
-    public void log(String errorString, Throwable t) {
-        log.log(errorString, t);
     }
 }

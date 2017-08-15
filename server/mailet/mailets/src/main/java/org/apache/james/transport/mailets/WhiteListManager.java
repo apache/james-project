@@ -46,6 +46,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.sql.DataSource;
 
+import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.model.JamesUser;
 import org.apache.james.util.sql.JDBCUtil;
@@ -56,6 +57,8 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -122,6 +125,7 @@ import org.apache.mailet.base.RFC2822Headers;
 @Experimental
 @SuppressWarnings("deprecation")
 public class WhiteListManager extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
 
     private boolean automaticInsert;
     private String displayFlag;
@@ -145,11 +149,7 @@ public class WhiteListManager extends GenericMailet {
     /**
      * The JDBCUtil helper class
      */
-    private final JDBCUtil theJDBCUtil = new JDBCUtil() {
-        protected void delegatedLog(String logString) {
-            log("WhiteListManager: " + logString);
-        }
-    };
+    private final JDBCUtil theJDBCUtil = new JDBCUtil();
 
     /**
      * Contains all of the sql strings for this component.
@@ -184,7 +184,7 @@ public class WhiteListManager extends GenericMailet {
      */
     public void init() throws MessagingException {
         automaticInsert = Boolean.valueOf(getInitParameter("automaticInsert"));
-        log("automaticInsert: " + automaticInsert);
+        LOGGER.debug("automaticInsert: " + automaticInsert);
 
         displayFlag = getInitParameter("displayFlag");
         insertFlag = getInitParameter("insertFlag");
@@ -193,7 +193,7 @@ public class WhiteListManager extends GenericMailet {
         String whitelistManagerAddressString = getInitParameter("whitelistManagerAddress");
         if (whitelistManagerAddressString != null) {
             whitelistManagerAddressString = whitelistManagerAddressString.trim();
-            log("whitelistManagerAddress: " + whitelistManagerAddressString);
+            LOGGER.debug("whitelistManagerAddress: " + whitelistManagerAddressString);
             try {
                 whitelistManagerAddress = new MailAddress(whitelistManagerAddressString);
             } catch (javax.mail.internet.ParseException pe) {
@@ -202,29 +202,29 @@ public class WhiteListManager extends GenericMailet {
 
             if (displayFlag != null) {
                 displayFlag = displayFlag.trim();
-                log("displayFlag: " + displayFlag);
+                LOGGER.debug("displayFlag: " + displayFlag);
             } else {
-                log("displayFlag is null");
+                LOGGER.debug("displayFlag is null");
             }
             if (insertFlag != null) {
                 insertFlag = insertFlag.trim();
-                log("insertFlag: " + insertFlag);
+                LOGGER.debug("insertFlag: " + insertFlag);
             } else {
-                log("insertFlag is null");
+                LOGGER.debug("insertFlag is null");
             }
             if (removeFlag != null) {
                 removeFlag = removeFlag.trim();
-                log("removeFlag: " + removeFlag);
+                LOGGER.debug("removeFlag: " + removeFlag);
             } else {
-                log("removeFlag is null");
+                LOGGER.debug("removeFlag is null");
             }
         } else {
-            log("whitelistManagerAddress is null; will ignore commands");
+            LOGGER.debug("whitelistManagerAddress is null; will ignore commands");
         }
 
         String repositoryPath = getInitParameter("repositoryPath");
         if (repositoryPath != null) {
-            log("repositoryPath: " + repositoryPath);
+            LOGGER.debug("repositoryPath: " + repositoryPath);
         } else {
             throw new MessagingException("repositoryPath is null");
         }
@@ -360,7 +360,7 @@ public class WhiteListManager extends GenericMailet {
                 }
             }
         } catch (SQLException sqle) {
-            log("Error accessing database", sqle);
+            LOGGER.error("Error accessing database", sqle);
             throw new MessagingException("Exception thrown", sqle);
         } finally {
             theJDBCUtil.closeJDBCStatement(selectStmt);
@@ -372,7 +372,7 @@ public class WhiteListManager extends GenericMailet {
                     dbUpdated = false;
                 }
             } catch (Exception e) {
-                log("Ignored exception upon rollback", e);
+                LOGGER.error("Ignored exception upon rollback", e);
             }
             theJDBCUtil.closeJDBCConnection(conn);
         }
@@ -507,7 +507,7 @@ public class WhiteListManager extends GenericMailet {
                 }
 
                 if (dbUpdated) {
-                    log("Insertion request issued by " + senderMailAddress);
+                    LOGGER.debug("Insertion request issued by " + senderMailAddress);
                 }
                 // Commit our changes if necessary.
                 if (conn != null && dbUpdated && !conn.getAutoCommit()) {
@@ -541,7 +541,7 @@ public class WhiteListManager extends GenericMailet {
                     dbUpdated = false;
                 }
             } catch (Exception e) {
-                log("Ignored exception upon rollback", e);
+                LOGGER.error("Ignored exception upon rollback", e);
             }
             theJDBCUtil.closeJDBCConnection(conn);
         }
@@ -628,7 +628,7 @@ public class WhiteListManager extends GenericMailet {
                 }
 
                 if (dbUpdated) {
-                    log("Removal request issued by " + senderMailAddress);
+                    LOGGER.debug("Removal request issued by " + senderMailAddress);
                 }
                 // Commit our changes if necessary.
                 if (conn != null && dbUpdated && !conn.getAutoCommit()) {
@@ -662,7 +662,7 @@ public class WhiteListManager extends GenericMailet {
                     dbUpdated = false;
                 }
             } catch (Exception e) {
-                log("Ignored exception upon rollback", e);
+                LOGGER.error("Ignored exception upon rollback", e);
             }
             theJDBCUtil.closeJDBCConnection(conn);
         }
@@ -719,7 +719,7 @@ public class WhiteListManager extends GenericMailet {
             // Send it off...
             getMailetContext().sendMail(notifier, recipients, reply);
         } catch (Exception e) {
-            log("Exception found sending reply", e);
+            LOGGER.error("Exception found sending reply", e);
         }
     }
 
@@ -806,7 +806,7 @@ public class WhiteListManager extends GenericMailet {
 
             StringBuffer logBuffer;
             logBuffer = new StringBuffer(64).append("Created table '").append(tableName).append("' using sqlResources string '").append(createSqlStringName).append("'.");
-            log(logBuffer.toString());
+            LOGGER.info(logBuffer.toString());
 
         } finally {
             theJDBCUtil.closeJDBCStatement(createStatement);

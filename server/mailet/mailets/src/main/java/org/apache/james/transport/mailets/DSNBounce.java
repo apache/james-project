@@ -35,6 +35,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.james.core.MailImpl;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.MailModifier;
 import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
@@ -57,6 +58,8 @@ import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.StringUtils;
 import org.apache.mailet.base.mail.MimeMultipartReport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -102,6 +105,7 @@ import com.google.common.collect.ImmutableList;
  */
 
 public class DSNBounce extends GenericMailet implements RedirectNotify {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[]{ "debug", "passThrough", "messageString", "attachment", "sender", "prefix" };
     private static final List<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH);
@@ -129,7 +133,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     @Override
     public void init() throws MessagingException {
         if (getInitParameters().isDebug()) {
-            log("Initializing");
+            LOGGER.debug("Initializing");
         }
 
         // check that all init parameters have been declared in
@@ -138,7 +142,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
 
         if (getInitParameters().isStatic()) {
             if (getInitParameters().isDebug()) {
-                log(getInitParameters().asString());
+                LOGGER.debug(getInitParameters().asString());
             }
         }
         messageString = getInitParameter("messageString",
@@ -246,7 +250,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
             newMail.setRecipients(getSenderAsList(originalMail));
        
             if (getInitParameters().isDebug()) {
-                log("New mail - sender: " + newMail.getSender() + ", recipients: " + StringUtils.arrayToString(newMail.getRecipients().toArray()) + ", name: " + newMail.getName() + ", remoteHost: " + newMail.getRemoteHost() + ", remoteAddr: " + newMail.getRemoteAddr() + ", state: " + newMail.getState()
+                LOGGER.debug("New mail - sender: " + newMail.getSender() + ", recipients: " + StringUtils.arrayToString(newMail.getRecipients().toArray()) + ", name: " + newMail.getName() + ", remoteHost: " + newMail.getRemoteHost() + ", remoteAddr: " + newMail.getRemoteAddr() + ", state: " + newMail.getState()
                         + ", lastUpdated: " + newMail.getLastUpdated() + ", errorMessage: " + newMail.getErrorMessage());
             }
        
@@ -278,7 +282,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private boolean hasSender(Mail originalMail) {
         if (originalMail.getSender() == null) {
             if (getInitParameters().isDebug()) {
-                log("Processing a bounce request for a message with an empty reverse-path.  No bounce will be sent.");
+                LOGGER.info("Processing a bounce request for a message with an empty reverse-path.  No bounce will be sent.");
             }
             return false;
         }
@@ -312,7 +316,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private List<MailAddress> getSenderAsList(Mail originalMail) {
         MailAddress reversePath = originalMail.getSender();
         if (getInitParameters().isDebug()) {
-            log("Processing a bounce request for a message with a reverse path.  The bounce will be sent to " + reversePath);
+            LOGGER.debug("Processing a bounce request for a message with a reverse path.  The bounce will be sent to " + reversePath);
         }
 
         return ImmutableList.of(reversePath);
@@ -398,7 +402,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
             buffer.append("Reporting-MTA: dns; " + dns.getHostName(dns.getLocalHost()))
                 .append(LINE_BREAK);
         } catch (Exception e) {
-            log("WARNING: sending DSN without required Reporting-MTA Address");
+            LOGGER.error("Sending DSN without required Reporting-MTA Address", e);
         }
     }
 

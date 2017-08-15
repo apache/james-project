@@ -35,7 +35,8 @@ import org.apache.james.rrt.lib.Mappings;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
-import org.apache.mailet.MailetContext.LogLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -46,6 +47,8 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 public class RecipientRewriteTableProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTableProcessor.class);
+
     private final org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore;
     private final DomainList domainList;
     private final MailetContext mailetContext;
@@ -117,7 +120,7 @@ public class RecipientRewriteTableProcessor {
             }
             return origin(recipient);
         } catch (ErrorMappingException | RecipientRewriteTableException | MessagingException e) {
-            mailetContext.log(LogLevel.INFO, "Error while process mail.", e);
+            LOGGER.info("Error while process mail.", e);
             return error(recipient);
         }
     }
@@ -181,9 +184,9 @@ public class RecipientRewriteTableProcessor {
         if (!remoteAddress.isEmpty()) {
             try {
                 mailetContext.sendMail(sender, remoteAddress, message);
-                mailetContext.log(LogLevel.INFO, "Mail for " + recipient + " forwarded to " + remoteAddress);
+                LOGGER.info("Mail for " + recipient + " forwarded to " + remoteAddress);
             } catch (MessagingException ex) {
-                mailetContext.log(LogLevel.WARN, "Error forwarding mail to " + remoteAddress);
+                LOGGER.warn("Error forwarding mail to " + remoteAddress);
             }
         }
     }

@@ -40,6 +40,8 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -125,23 +127,17 @@ import org.apache.mailet.base.RFC2822Headers;
  */
 @Experimental
 public class BayesianAnalysis extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BayesianAnalysis.class);
+
     /**
      * The JDBCUtil helper class
      */
-    private final JDBCUtil theJDBCUtil = new JDBCUtil() {
-        protected void delegatedLog(String logString) {
-            log("BayesianAnalysis: " + logString);
-        }
-    };
+    private final JDBCUtil theJDBCUtil = new JDBCUtil();
 
     /**
      * The JDBCBayesianAnalyzer class that does all the work.
      */
-    private final JDBCBayesianAnalyzer analyzer = new JDBCBayesianAnalyzer() {
-        protected void delegatedLog(String logString) {
-            log("BayesianAnalysis: " + logString);
-        }
-    };
+    private final JDBCBayesianAnalyzer analyzer = new JDBCBayesianAnalyzer();
 
     private DataSource datasource;
 
@@ -240,16 +236,16 @@ public class BayesianAnalysis extends GenericMailet {
         ignoreLocalSender = Boolean.valueOf(getInitParameter("ignoreLocalSender"));
 
         if (ignoreLocalSender) {
-            log("Will ignore messages coming from local senders");
+            LOGGER.debug("Will ignore messages coming from local senders");
         } else {
-            log("Will analyze messages coming from local senders");
+            LOGGER.debug("Will analyze messages coming from local senders");
         }
 
         String maxSizeParam = getInitParameter("maxSize");
         if (maxSizeParam != null) {
             setMaxSize(Integer.parseInt(maxSizeParam));
         }
-        log("maxSize: " + getMaxSize());
+        LOGGER.debug("maxSize: " + getMaxSize());
 
         String tag = getInitParameter("tagSubject");
         if (tag != null && tag.equals("false")) {
@@ -330,7 +326,7 @@ public class BayesianAnalysis extends GenericMailet {
                 senderString = mail.getSender().toString();
             }
             if (probability > 0.1) {
-                log(headerName + ": " + probabilityString + "; From: " + senderString + "; Recipient(s): " + getAddressesString(mail.getRecipients()));
+                LOGGER.debug(headerName + ": " + probabilityString + "; From: " + senderString + "; Recipient(s): " + getAddressesString(mail.getRecipients()));
 
                 // Check if we should tag the subject
                 if (tagSubject) {
@@ -341,7 +337,7 @@ public class BayesianAnalysis extends GenericMailet {
             saveChanges(message);
 
         } catch (Exception e) {
-            log("Exception: " + e.getMessage(), e);
+            LOGGER.error("Exception: " + e.getMessage(), e);
             throw new MessagingException("Exception thrown", e);
         }
     }
@@ -357,7 +353,7 @@ public class BayesianAnalysis extends GenericMailet {
                 analyzer.tokenCountsClear();
             }
 
-            log("BayesianAnalysis Corpus loaded");
+            LOGGER.error("BayesianAnalysis Corpus loaded");
 
             touchLastCorpusLoadTime();
 
@@ -397,7 +393,7 @@ public class BayesianAnalysis extends GenericMailet {
                 message.setSubject(toAppend + " " + subject, "iso-8859-1");
             }
         } catch (MessagingException ex) {
-            log("Ignored error while modifying subject", ex);
+            LOGGER.error("Ignored error while modifying subject", ex);
         }
     }
 
@@ -425,19 +421,19 @@ public class BayesianAnalysis extends GenericMailet {
          * Thread entry point.
          */
         public void run() {
-            analysis.log("CorpusLoader thread started: will wake up every " + CORPUS_RELOAD_INTERVAL + " ms");
+            LOGGER.info("CorpusLoader thread started: will wake up every " + CORPUS_RELOAD_INTERVAL + " ms");
 
             try {
                 Thread.sleep(CORPUS_RELOAD_INTERVAL);
 
                 while (true) {
                     if (analysis.getLastCorpusLoadTime() < JDBCBayesianAnalyzer.getLastDatabaseUpdateTime()) {
-                        analysis.log("Reloading Corpus ...");
+                        LOGGER.info("Reloading Corpus ...");
                         try {
                             analysis.loadData(analysis.datasource.getConnection());
-                            analysis.log("Corpus reloaded");
+                            LOGGER.info("Corpus reloaded");
                         } catch (java.sql.SQLException se) {
-                            analysis.log("SQLException: ", se);
+                            LOGGER.error("SQLException: ", se);
                         }
 
                     }

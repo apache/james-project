@@ -30,6 +30,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -47,6 +49,7 @@ import com.google.common.collect.ImmutableMap;
  * Then all this map attribute values will be replaced by their content.
  */
 public class MimeDecodingMailet extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MimeDecodingMailet.class);
 
     public static final String ATTRIBUTE_PARAMETER_NAME = "attribute";
 
@@ -81,7 +84,7 @@ public class MimeDecodingMailet extends GenericMailet {
     private Map<String, byte[]> getAttributeContent(Mail mail) throws MailetException {
         Serializable attributeContent = mail.getAttribute(attribute);
         if (! (attributeContent instanceof Map)) {
-            log("Invalid attribute found into attribute "
+            LOGGER.debug("Invalid attribute found into attribute "
                     + attribute + "class Map expected but "
                     + attributeContent.getClass() + " found.");
             return ImmutableMap.of();
@@ -94,10 +97,10 @@ public class MimeDecodingMailet extends GenericMailet {
             MimeBodyPart mimeBodyPart = new MimeBodyPart(new ByteArrayInputStream((byte[]) rawMime));
             return Optional.fromNullable(IOUtils.toByteArray(mimeBodyPart.getInputStream()));
         } catch (IOException e) {
-            log("Error while extracting content from mime part", e);
+            LOGGER.error("Error while extracting content from mime part", e);
             return Optional.absent();
         } catch (ClassCastException e) {
-            log("Invalid map attribute types.", e);
+            LOGGER.error("Invalid map attribute types.", e);
             return Optional.absent();
         }
     }

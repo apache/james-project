@@ -34,6 +34,8 @@ import org.apache.james.transport.mailets.redirect.SpecialAddressKind;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.RFC2822Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -41,6 +43,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 public class SpecialAddressesUtils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SpecialAddressesUtils.class);
 
     public static SpecialAddressesUtils from(RedirectNotify mailet) {
         return new SpecialAddressesUtils(mailet);
@@ -115,7 +118,7 @@ public class SpecialAddressesUtils {
             }
             return getReplyTos(replyToArray);
         } catch (MessagingException ae) {
-            mailet.log("Unable to parse the \"REPLY_TO\" header in the original message; ignoring.");
+            LOGGER.warn("Unable to parse the \"REPLY_TO\" header in the original message; ignoring.");
             return ImmutableSet.of();
         }
     }
@@ -134,7 +137,7 @@ public class SpecialAddressesUtils {
             try {
                 builder.add(new MailAddress(replyTo));
             } catch (ParseException pe) {
-                mailet.log("Unable to parse a \"REPLY_TO\" header address in the original message: " + replyTo + "; ignoring.");
+                LOGGER.warn("Unable to parse a \"REPLY_TO\" header address in the original message: " + replyTo + "; ignoring.");
             }
         }
         return builder.build();
@@ -187,7 +190,7 @@ public class SpecialAddressesUtils {
                     InternetAddress[] fromArray = (InternetAddress[]) mail.getMessage().getFrom();
                     return allOrSender(mail, fromArray);
                 } catch (MessagingException me) {
-                    mailet.log("Unable to parse the \"FROM\" header in the original message; ignoring.");
+                    LOGGER.warn("Unable to parse the \"FROM\" header in the original message; ignoring.");
                     return ImmutableSet.of();
                 }
             case REPLY_TO:
@@ -195,7 +198,7 @@ public class SpecialAddressesUtils {
                     InternetAddress[] replyToArray = (InternetAddress[]) mail.getMessage().getReplyTo();
                     return allOrSender(mail, replyToArray);
                 } catch (MessagingException me) {
-                    mailet.log("Unable to parse the \"REPLY_TO\" header in the original message; ignoring.");
+                    LOGGER.warn("Unable to parse the \"REPLY_TO\" header in the original message; ignoring.");
                     return ImmutableSet.of();
                 }
             case TO:
@@ -231,13 +234,13 @@ public class SpecialAddressesUtils {
                         InternetAddress[] originalToInternetAddresses = InternetAddress.parse(toHeader, false);
                         return MailAddressUtils.from(originalToInternetAddresses);
                     } catch (MessagingException ae) {
-                        mailet.log("Unable to parse a \"TO\" header address in the original message: " + toHeader + "; ignoring.");
+                        LOGGER.warn("Unable to parse a \"TO\" header address in the original message: " + toHeader + "; ignoring.");
                     }
                 }
             }
             return ImmutableList.of();
         } catch (MessagingException ae) {
-            mailet.log("Unable to parse the \"TO\" header  in the original message; ignoring.");
+            LOGGER.warn("Unable to parse the \"TO\" header  in the original message; ignoring.");
             return ImmutableList.of();
         }
     }

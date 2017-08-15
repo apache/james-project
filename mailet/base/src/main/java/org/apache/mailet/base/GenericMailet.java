@@ -33,7 +33,8 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
-import org.apache.mailet.MailetContext.LogLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -50,6 +51,7 @@ import com.google.common.base.Strings;
  * @version 1.0.0, 24/04/1999
  */
 public abstract class GenericMailet implements Mailet, MailetConfig {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GenericMailet.class);
 
     private static final String YES = "yes";
     private static final String NO = "no";
@@ -238,9 +240,11 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
      * Writes the specified message to a mailet log file.
      *
      * @param message - a String specifying the message to be written to the log file
+     * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
      */
+    @Deprecated
     public void log(String message) {
-        getMailetContext().log(LogLevel.INFO, message);
+        LOGGER.info(message);
     }
 
     /**
@@ -249,9 +253,11 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
      *
      * @param message - a String that describes the error or exception
      * @param t - the java.lang.Throwable to be logged
+     * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
      */
+    @Deprecated
     public void log(String message, Throwable t) {
-        getMailetContext().log(LogLevel.ERROR, message, t);
+        LOGGER.error(message, t);
     }
 
     /**
