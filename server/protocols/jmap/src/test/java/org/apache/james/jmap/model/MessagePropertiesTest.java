@@ -50,7 +50,15 @@ public class MessagePropertiesTest {
             .hasValueSatisfying(value -> 
                 assertThat(value).contains(MessageProperty.textBody).doesNotContain(MessageProperty.body));
     }
-    
+
+    @Test
+    public void toOutputPropertiesShouldReturnIsUnread() {
+        MessageProperties actual = new MessageProperties(Optional.of(ImmutableSet.of("isUnread"))).toOutputProperties();
+        assertThat(actual.getOptionalMessageProperties())
+                .hasValueSatisfying(value ->
+                        assertThat(value).contains(MessageProperty.isUnread));
+    }
+
     @Test
     public void toOutputPropertiesShouldReturnMandatoryPropertiesWhenEmptyRequest() {
         MessageProperties actual = new MessageProperties(Optional.of(ImmutableSet.of())).toOutputProperties();

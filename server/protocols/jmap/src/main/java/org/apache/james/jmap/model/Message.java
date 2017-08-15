@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import javax.mail.Flags;
 
 import org.apache.james.jmap.methods.GetMessagesMethod;
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
@@ -57,10 +58,6 @@ public class Message {
         private String threadId;
         private ImmutableList<MailboxId> mailboxIds;
         private String inReplyToMessageId;
-        private boolean isUnread;
-        private boolean isFlagged;
-        private boolean isAnswered;
-        private boolean isDraft;
         private ImmutableMap<String, String> headers;
         private Emailer from;
         private final ImmutableList.Builder<Emailer> to;
@@ -75,6 +72,7 @@ public class Message {
         private Optional<String> htmlBody = Optional.empty();
         private final ImmutableList.Builder<Attachment> attachments;
         private final ImmutableMap.Builder<BlobId, SubMessage> attachedMessages;
+        private Optional<Flags> flags = Optional.empty();
 
         private Builder() {
             to = ImmutableList.builder();
@@ -120,23 +118,8 @@ public class Message {
             return this;
         }
 
-        public Builder isUnread(boolean isUnread) {
-            this.isUnread = isUnread;
-            return this;
-        }
-
-        public Builder isFlagged(boolean isFlagged) {
-            this.isFlagged = isFlagged;
-            return this;
-        }
-
-        public Builder isAnswered(boolean isAnswered) {
-            this.isAnswered = isAnswered;
-            return this;
-        }
-
-        public Builder isDraft(boolean isDraft) {
-            this.isDraft = isDraft;
+        public Builder flags(Flags flags) {
+            this.flags = Optional.ofNullable(flags);
             return this;
         }
 
@@ -223,9 +206,15 @@ public class Message {
             ImmutableMap<BlobId, SubMessage> attachedMessages = this.attachedMessages.build();
             Preconditions.checkState(areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachements'");
             boolean hasAttachment = hasAttachment(attachments);
+            Keywords keywords = flags.map(flag -> Keywords.factory()
+                    .filterImapNonExposedKeywords()
+                    .fromFlags(flag))
+                .orElse(Keywords.DEFAULT_VALUE);
 
-            return new Message(id, blobId, threadId, mailboxIds, Optional.ofNullable(inReplyToMessageId), isUnread, isFlagged, isAnswered, isDraft, hasAttachment, headers, Optional.ofNullable(from),
-                    to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, size, preview, textBody, htmlBody, attachments, attachedMessages);
+            return new Message(id, blobId, threadId, mailboxIds, Optional.ofNullable(inReplyToMessageId),
+                hasAttachment, headers, Optional.ofNullable(from),
+                to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, size, preview, textBody, htmlBody, attachments, attachedMessages,
+                keywords);
         }
     }
 
@@ -250,10 +239,6 @@ public class Message {
     private final String threadId;
     private final ImmutableList<MailboxId> mailboxIds;
     private final Optional<String> inReplyToMessageId;
-    private final boolean isUnread;
-    private final boolean isFlagged;
-    private final boolean isAnswered;
-    private final boolean isDraft;
     private final boolean hasAttachment;
     @JsonFilter(GetMessagesMethod.HEADERS_FILTER)
     private final ImmutableMap<String, String> headers;
@@ -270,16 +255,13 @@ public class Message {
     private final Optional<String> htmlBody;
     private final ImmutableList<Attachment> attachments;
     private final ImmutableMap<BlobId, SubMessage> attachedMessages;
+    private final Keywords keywords;
 
     @VisibleForTesting Message(MessageId id,
                                BlobId blobId,
                                String threadId,
                                ImmutableList<MailboxId> mailboxIds,
                                Optional<String> inReplyToMessageId,
-                               boolean isUnread,
-                               boolean isFlagged,
-                               boolean isAnswered,
-                               boolean isDraft,
                                boolean hasAttachment,
                                ImmutableMap<String, String> headers,
                                Optional<Emailer> from,
@@ -294,16 +276,13 @@ public class Message {
                                Optional<String> textBody,
                                Optional<String> htmlBody,
                                ImmutableList<Attachment> attachments,
-                               ImmutableMap<BlobId, SubMessage> attachedMessages) {
+                               ImmutableMap<BlobId, SubMessage> attachedMessages,
+                               Keywords keywords) {
         this.id = id;
         this.blobId = blobId;
         this.threadId = threadId;
         this.mailboxIds = mailboxIds;
         this.inReplyToMessageId = inReplyToMessageId;
-        this.isUnread = isUnread;
-        this.isFlagged = isFlagged;
-        this.isAnswered = isAnswered;
-        this.isDraft = isDraft;
         this.hasAttachment = hasAttachment;
         this.headers = headers;
         this.from = from;
@@ -319,6 +298,7 @@ public class Message {
         this.htmlBody = htmlBody;
         this.attachments = attachments;
         this.attachedMessages = attachedMessages;
+        this.keywords = keywords;
     }
 
     public MessageId getId() {
@@ -342,19 +322,19 @@ public class Message {
     }
 
     public boolean isIsUnread() {
-        return isUnread;
+        return !keywords.contains(Keyword.SEEN);
     }
 
     public boolean isIsFlagged() {
-        return isFlagged;
+        return keywords.contains(Keyword.FLAGGED);
     }
 
     public boolean isIsAnswered() {
-        return isAnswered;
+        return keywords.contains(Keyword.ANSWERED);
     }
 
     public boolean isIsDraft() {
-        return isDraft;
+        return keywords.contains(Keyword.DRAFT);
     }
 
     public boolean isHasAttachment() {
@@ -417,4 +397,7 @@ public class Message {
         return attachedMessages;
     }
 
+    public ImmutableMap<String, Boolean> getKeywords() {
+        return keywords.asMap();
+    }
 }
