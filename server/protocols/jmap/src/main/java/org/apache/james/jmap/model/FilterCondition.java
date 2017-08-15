@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 @JsonDeserialize(builder = FilterCondition.Builder.class)
@@ -60,10 +61,14 @@ public class FilterCondition implements Filter {
         private String subject;
         private String body;
         private Header header;
+        private Optional<String> hasKeyword;
+        private Optional<String> notKeyword;
 
         private Builder() {
             inMailboxes = Optional.empty();
             notInMailboxes = Optional.empty();
+            hasKeyword = Optional.empty();
+            notKeyword = Optional.empty();
         }
 
         public Builder inMailboxes(String... inMailboxes) {
@@ -85,6 +90,18 @@ public class FilterCondition implements Filter {
         @JsonDeserialize
         public Builder notInMailboxes(Optional<List<String>> notInMailboxes) {
             this.notInMailboxes = notInMailboxes.map(ImmutableList::copyOf);
+            return this;
+        }
+
+        @JsonDeserialize
+        public Builder hasKeyword(Optional<String> hasKeyword) {
+            this.hasKeyword = hasKeyword;
+            return this;
+        }
+
+        @JsonDeserialize
+        public Builder notKeyword(Optional<String> notKeyword) {
+            this.notKeyword = notKeyword;
             return this;
         }
 
@@ -174,9 +191,12 @@ public class FilterCondition implements Filter {
         }
 
         public FilterCondition build() {
+            Preconditions.checkArgument(!hasKeyword.isPresent() || (new Keyword(hasKeyword.get()) != null), "hasKeyword is not valid");
+            Preconditions.checkArgument(!notKeyword.isPresent() || (new Keyword(notKeyword.get()) != null), "notKeyword is not valid");
             return new FilterCondition(inMailboxes, notInMailboxes, Optional.ofNullable(before), Optional.ofNullable(after), Optional.ofNullable(minSize), Optional.ofNullable(maxSize),
                     Optional.ofNullable(isFlagged), Optional.ofNullable(isUnread), Optional.ofNullable(isAnswered), Optional.ofNullable(isDraft), Optional.ofNullable(hasAttachment),
-                    Optional.ofNullable(text), Optional.ofNullable(from), Optional.ofNullable(to), Optional.ofNullable(cc), Optional.ofNullable(bcc), Optional.ofNullable(subject), Optional.ofNullable(body), Optional.ofNullable(header));
+                    Optional.ofNullable(text), Optional.ofNullable(from), Optional.ofNullable(to), Optional.ofNullable(cc), Optional.ofNullable(bcc), Optional.ofNullable(subject),
+                    Optional.ofNullable(body), Optional.ofNullable(header), hasKeyword, notKeyword);
         }
     }
 
@@ -199,10 +219,13 @@ public class FilterCondition implements Filter {
     private final Optional<String> subject;
     private final Optional<String> body;
     private final Optional<Header> header;
+    private final Optional<String> hasKeyword;
+    private final Optional<String> notKeyword;
 
     @VisibleForTesting FilterCondition(Optional<List<String>> inMailboxes, Optional<List<String>> notInMailboxes, Optional<ZonedDateTime> before, Optional<ZonedDateTime> after, Optional<Integer> minSize, Optional<Integer> maxSize,
-            Optional<Boolean> isFlagged, Optional<Boolean> isUnread, Optional<Boolean> isAnswered, Optional<Boolean> isDraft, Optional<Boolean> hasAttachment,
-            Optional<String> text, Optional<String> from, Optional<String> to, Optional<String> cc, Optional<String> bcc, Optional<String> subject, Optional<String> body, Optional<Header> header) {
+                                       Optional<Boolean> isFlagged, Optional<Boolean> isUnread, Optional<Boolean> isAnswered, Optional<Boolean> isDraft, Optional<Boolean> hasAttachment,
+                                       Optional<String> text, Optional<String> from, Optional<String> to, Optional<String> cc, Optional<String> bcc, Optional<String> subject,
+                                       Optional<String> body, Optional<Header> header, Optional<String> hasKeyword, Optional<String> notKeyword) {
 
         this.inMailboxes = inMailboxes;
         this.notInMailboxes = notInMailboxes;
@@ -223,6 +246,8 @@ public class FilterCondition implements Filter {
         this.subject = subject;
         this.body = body;
         this.header = header;
+        this.hasKeyword = hasKeyword;
+        this.notKeyword = notKeyword;
     }
 
     public Optional<List<String>> getInMailboxes() {
@@ -301,6 +326,14 @@ public class FilterCondition implements Filter {
         return header;
     }
 
+    public Optional<String> getHasKeyword() {
+        return hasKeyword;
+    }
+
+    public Optional<String> getNotKeyword() {
+        return notKeyword;
+    }
+
     @Override
     public final boolean equals(Object obj) {
         if (obj instanceof FilterCondition) {
@@ -323,14 +356,17 @@ public class FilterCondition implements Filter {
                 && Objects.equals(this.bcc, other.bcc)
                 && Objects.equals(this.subject, other.subject)
                 && Objects.equals(this.body, other.body)
-                && Objects.equals(this.header, other.header);
+                && Objects.equals(this.header, other.header)
+                && Objects.equals(this.hasKeyword, other.hasKeyword)
+                && Objects.equals(this.notKeyword, other.notKeyword);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(inMailboxes, notInMailboxes, before, after, minSize, maxSize, isFlagged, isUnread, isAnswered, isDraft, hasAttachment, text, from, to, cc, bcc, subject, body, header);
+        return Objects.hash(inMailboxes, notInMailboxes, before, after, minSize, maxSize, isFlagged, isUnread, isAnswered, isDraft, hasAttachment,
+                text, from, to, cc, bcc, subject, body, header, hasKeyword, notKeyword);
     }
 
     @Override
@@ -355,6 +391,8 @@ public class FilterCondition implements Filter {
         subject.ifPresent(x -> helper.add("subject", x));
         body.ifPresent(x -> helper.add("body", x));
         header.ifPresent(x -> helper.add("header", x));
+        hasKeyword.ifPresent(x -> helper.add("hasKeyword", x));
+        notKeyword.ifPresent(x -> helper.add("notKeyword", x));
         return helper.toString();
     }
 

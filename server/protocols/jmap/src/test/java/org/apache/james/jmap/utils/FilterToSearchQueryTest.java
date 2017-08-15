@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.Optional;
 
 import javax.mail.Flags.Flag;
 
@@ -31,14 +32,17 @@ import org.apache.james.jmap.model.Filter;
 import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.FilterOperator;
 import org.apache.james.jmap.model.Header;
+import org.apache.james.jmap.model.Keyword;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class FilterToSearchQueryTest {
+    private final static String FORWARDED = "forwarded";
 
     @Test
     public void filterConditionShouldThrowWhenUnknownFilter() {
@@ -473,6 +477,54 @@ public class FilterToSearchQueryTest {
                 ));
 
         SearchQuery searchQuery = new FilterToSearchQuery().convert(complexFilter);
+
+        assertThat(searchQuery).isEqualTo(expectedSearchQuery);
+    }
+
+    @Test
+    public void filterConditionShouldMapWhenHasKeyword() {
+        SearchQuery expectedSearchQuery = new SearchQuery();
+        expectedSearchQuery.andCriteria(SearchQuery.flagIsSet(Flag.FLAGGED));
+
+        SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
+                .hasKeyword(Optional.of("$Flagged"))
+                .build());
+
+        assertThat(searchQuery).isEqualTo(expectedSearchQuery);
+    }
+
+    @Test
+    public void filterConditionShouldMapWhenHasKeywordWithUserFlag() {
+        SearchQuery expectedSearchQuery = new SearchQuery();
+        expectedSearchQuery.andCriteria(SearchQuery.flagIsSet(FORWARDED));
+
+        SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
+                .hasKeyword(Optional.of(FORWARDED))
+                .build());
+
+        assertThat(searchQuery).isEqualTo(expectedSearchQuery);
+    }
+
+    @Test
+    public void filterConditionShouldMapWhenNotKeyword() {
+        SearchQuery expectedSearchQuery = new SearchQuery();
+        expectedSearchQuery.andCriteria(SearchQuery.flagIsUnSet(Flag.FLAGGED));
+
+        SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
+            .notKeyword(Optional.of("$Flagged"))
+            .build());
+
+        assertThat(searchQuery).isEqualTo(expectedSearchQuery);
+    }
+
+    @Test
+    public void filterConditionShouldMapWhenNotKeywordWithUserFlag() {
+        SearchQuery expectedSearchQuery = new SearchQuery();
+        expectedSearchQuery.andCriteria(SearchQuery.flagIsUnSet(FORWARDED));
+
+        SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
+                .notKeyword(Optional.of(FORWARDED))
+                .build());
 
         assertThat(searchQuery).isEqualTo(expectedSearchQuery);
     }
