@@ -138,7 +138,7 @@ public class MessageParserTest {
         List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
 
         Attachment attachment = attachments.get(0).getAttachment();
-        assertThat(attachment.getStream()).hasContentEqualTo(ClassLoader.getSystemResourceAsStream("eml/gimp.png"));
+        assertThat(attachment.getStream()).hasSameContentAs(ClassLoader.getSystemResourceAsStream("eml/gimp.png"));
     }
 
     @Test

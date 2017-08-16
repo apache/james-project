@@ -131,7 +131,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         List<MessageAttachment> attachments = messages.next().getAttachments();
         assertThat(attachments).hasSize(1);
         assertThat(attachmentMapper.getAttachment(attachments.get(0).getAttachmentId()).getStream())
-            .hasContentEqualTo(ClassLoader.getSystemResourceAsStream("eml/gimp.png"));
+            .hasSameContentAs(ClassLoader.getSystemResourceAsStream("eml/gimp.png"));
     }
 
     @Test
@@ -154,9 +154,9 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         List<MessageAttachment> attachments = messages.next().getAttachments();
         assertThat(attachments).hasSize(2);
         assertThat(attachmentMapper.getAttachment(attachments.get(0).getAttachmentId()).getStream())
-            .hasContentEqualTo(ClassLoader.getSystemResourceAsStream("eml/4037_014.jpg"));
+            .hasSameContentAs(ClassLoader.getSystemResourceAsStream("eml/4037_014.jpg"));
         assertThat(attachmentMapper.getAttachment(attachments.get(1).getAttachmentId()).getStream())
-            .hasContentEqualTo(ClassLoader.getSystemResourceAsStream("eml/4037_015.jpg"));
+            .hasSameContentAs(ClassLoader.getSystemResourceAsStream("eml/4037_015.jpg"));
     }
 
     @Test
