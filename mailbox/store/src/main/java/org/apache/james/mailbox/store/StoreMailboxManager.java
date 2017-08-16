@@ -85,7 +85,6 @@ import org.slf4j.Logger;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 

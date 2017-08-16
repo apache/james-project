@@ -89,8 +89,9 @@ public class MimeMessageUtils {
 
     public List<Header> toHeaderList() throws MessagingException {
         ImmutableList.Builder<Header> headers = ImmutableList.builder();
-        Enumeration allHeaders = message.getAllHeaders();
-        for (@SuppressWarnings("unchecked") Enumeration<Header> e = allHeaders; e.hasMoreElements();) {
+        @SuppressWarnings("unchecked")
+        Enumeration<Header> allHeaders = message.getAllHeaders();
+        for (Enumeration<Header> e = allHeaders; e.hasMoreElements();) {
             headers.add(e.nextElement());
         }
         return headers.build();
