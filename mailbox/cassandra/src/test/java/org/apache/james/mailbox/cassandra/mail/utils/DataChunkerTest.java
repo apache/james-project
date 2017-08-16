@@ -21,24 +21,16 @@ package org.apache.james.mailbox.cassandra.mail.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Stream;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Charsets;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
 
@@ -82,8 +74,9 @@ public class DataChunkerTest {
     @Test
     public void chunkShouldReturnOneEmptyArrayWhenInputEmpty() {
         Stream<Pair<Integer, ByteBuffer>> chunks = testee.chunk(new byte[0], CHUNK_SIZE);
-        assertThat(toArraysWithPosition(chunks))
-            .containsOnly(Pair.of(0, ImmutableList.of()));
+        ByteBuffer emptyBuffer = ByteBuffer.wrap(new byte[0]);
+        assertThat(chunks)
+            .containsOnlyElementsOf(ImmutableList.of(Pair.of(0, emptyBuffer)));
     }
 
     @Test
@@ -92,8 +85,8 @@ public class DataChunkerTest {
 
         Stream<Pair<Integer, ByteBuffer>> chunks = testee.chunk(data, CHUNK_SIZE);
 
-        assertThat(toArraysWithPosition(chunks))
-            .containsOnly(Pair.of(0, ImmutableList.copyOf(ArrayUtils.toObject(data))));
+        assertThat(chunks)
+            .containsOnlyElementsOf(ImmutableList.of(Pair.of(0, ByteBuffer.wrap(data))));
     }
 
     @Test
@@ -103,8 +96,8 @@ public class DataChunkerTest {
 
         Stream<Pair<Integer, ByteBuffer>> chunks = testee.chunk(data, CHUNK_SIZE);
 
-        assertThat(toArraysWithPosition(chunks))
-            .containsOnly(Pair.of(0, ImmutableList.copyOf(ArrayUtils.toObject(data))));
+        assertThat(chunks)
+            .containsOnlyElementsOf(ImmutableList.of(Pair.of(0, ByteBuffer.wrap(data))));
     }
 
     @Test
@@ -115,25 +108,10 @@ public class DataChunkerTest {
 
         Stream<Pair<Integer, ByteBuffer>> chunks = testee.chunk(data, CHUNK_SIZE);
 
-        assertThat(toArraysWithPosition(chunks))
-            .containsOnly(
-                Pair.of(0, ImmutableList.copyOf(ArrayUtils.toObject(part1))),
-                Pair.of(1, ImmutableList.copyOf(ArrayUtils.toObject(part2))));
-    }
-
-    private ImmutableList<Pair<Integer, List<Byte>>> toArraysWithPosition(Stream<Pair<Integer, ByteBuffer>> chunks) {
-        return chunks
-            .map(this::toByteArrayPair)
-            .collect(Guavate.toImmutableList());
-    }
-
-    private Pair<Integer, List<Byte>> toByteArrayPair(Pair<Integer, ByteBuffer> pair) {
-        try {
-            Byte[] bytes = ArrayUtils.toObject(IOUtils.toByteArray(new ByteBufferBackedInputStream(pair.getRight())));
-            return Pair.of(pair.getKey(), Arrays.asList(bytes));
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
+        assertThat(chunks)
+        .containsOnlyElementsOf(ImmutableList.of(
+                Pair.of(0, ByteBuffer.wrap(part1)),
+                Pair.of(1, ByteBuffer.wrap(part2))));
     }
 
 }

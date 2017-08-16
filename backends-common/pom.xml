@@ -34,7 +34,6 @@
     <inceptionYear>2015</inceptionYear>
 
     <properties>
-        <assertj.version>3.2.0</assertj.version>
         <junit.version>4.11</junit.version>
         <slf4j.version>1.7.25</slf4j.version>
     </properties>
@@ -70,7 +69,7 @@
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
-                <version>${assertj.version}</version>
+                <version>3.8.0</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>

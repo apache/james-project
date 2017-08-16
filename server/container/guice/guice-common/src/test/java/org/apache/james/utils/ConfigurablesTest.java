@@ -45,7 +45,6 @@ public class ConfigurablesTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void configurablesShouldKeepTheAddedElementsOrder() {
         sut.add(MyConfigurable.class);
         sut.add(MyConfigurable2.class);

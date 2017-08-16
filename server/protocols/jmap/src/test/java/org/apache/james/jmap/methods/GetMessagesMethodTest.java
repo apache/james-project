@@ -32,10 +32,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMessagesRequest;
@@ -120,7 +120,7 @@ public class GetMessagesMethodTest {
     private MailboxPath inboxPath;
     private MailboxPath customMailboxPath;
     private ClientId clientId;
-
+    
     @Before
     public void setup() throws Exception {
         clientId = ClientId.of("#0");
@@ -235,11 +235,9 @@ public class GetMessagesMethodTest {
 
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
-        assertThat(result).hasSize(1)
-            .extracting(JmapResponse::getProperties)
-            .flatExtracting(Optional::get)
-            .asList()
-            .containsOnly(MessageProperty.id);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getProperties())
+            .isEqualTo(Optional.of(ImmutableSet.of(MessageProperty.id)));
     }
 
     @Test
@@ -253,12 +251,10 @@ public class GetMessagesMethodTest {
                 .ids(ImmutableList.of(message1.getMessageId()))
                 .build();
 
-        Stream<JmapResponse> result = testee.process(request, clientId, session);
-        assertThat(result).hasSize(1)
-            .extracting(JmapResponse::getProperties)
-            .flatExtracting(Optional::get)
-            .asList()
-            .containsOnlyElementsOf(MessageProperty.allOutputProperties());
+        List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getProperties())
+            .isEqualTo(Optional.of(MessageProperty.allOutputProperties()));
     }
 
     @Test
@@ -276,11 +272,9 @@ public class GetMessagesMethodTest {
         Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.subject);
 
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
-        assertThat(result).hasSize(1)
-            .extracting(JmapResponse::getProperties)
-            .flatExtracting(Optional::get)
-            .asList()
-            .containsOnlyElementsOf(expected);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getProperties())
+            .isEqualTo(Optional.of(expected));
     }
     
     @Test
@@ -299,11 +293,9 @@ public class GetMessagesMethodTest {
 
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
-        assertThat(result).hasSize(1)
-            .extracting(JmapResponse::getProperties)
-            .flatExtracting(Optional::get)
-            .asList()
-            .containsOnlyElementsOf(expected);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getProperties())
+            .isEqualTo(Optional.of(expected));
     }
 
     @Test
@@ -411,12 +403,9 @@ public class GetMessagesMethodTest {
 
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
-        assertThat(result)
-            .hasSize(1)
-            .extracting(JmapResponse::getProperties)
-            .flatExtracting(Optional::get)
-            .asList()
-            .containsOnlyElementsOf(expected);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getProperties())
+            .isEqualTo(Optional.of(expected));
     }
     
     @Test
