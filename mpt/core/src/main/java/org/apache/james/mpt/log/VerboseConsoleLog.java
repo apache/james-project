@@ -43,7 +43,7 @@ public class VerboseConsoleLog implements Logger {
         SysPrint(format, arg1, arg2);
     }
 
-    public void trace(String format, Object[] argArray) {
+    public void trace(String format, Object... argArray) {
         SysPrint(format, argArray);
     }
 
@@ -67,7 +67,7 @@ public class VerboseConsoleLog implements Logger {
         SysPrint(marker, format, arg1, arg2);
     }
 
-    public void trace(Marker marker, String format, Object[] argArray) {
+    public void trace(Marker marker, String format, Object... argArray) {
         SysPrint(marker, format, argArray);
     }
 
@@ -91,7 +91,7 @@ public class VerboseConsoleLog implements Logger {
         SysPrint(format, arg1, arg2);
     }
 
-    public void debug(String format, Object[] argArray) {
+    public void debug(String format, Object... argArray) {
         SysPrint(format, argArray);
     }
 
@@ -115,7 +115,7 @@ public class VerboseConsoleLog implements Logger {
         SysPrint(marker, format, arg1, arg2);
     }
 
-    public void debug(Marker marker, String format, Object[] argArray) {
+    public void debug(Marker marker, String format, Object... argArray) {
         SysPrint(marker, format, argArray);
     }
 
@@ -139,7 +139,7 @@ public class VerboseConsoleLog implements Logger {
         SysPrint(format, arg1, arg2);
     }
 
-    public void info(String format, Object[] argArray) {
+    public void info(String format, Object... argArray) {
         SysPrint(format, argArray);
     }
 
@@ -163,7 +163,7 @@ public class VerboseConsoleLog implements Logger {
         SysPrint(marker, format, arg1, arg2);
     }
 
-    public void info(Marker marker, String format, Object[] argArray) {
+    public void info(Marker marker, String format, Object... argArray) {
         SysPrint(marker, format, argArray);
     }
 
@@ -183,7 +183,7 @@ public class VerboseConsoleLog implements Logger {
         SysPrint(format, arg);
     }
 
-    public void warn(String format, Object[] argArray) {
+    public void warn(String format, Object... argArray) {
         SysPrint(format, argArray);
     }
 
@@ -210,7 +210,7 @@ public class VerboseConsoleLog implements Logger {
         SysPrint(marker, format, arg1, arg2);
     }
 
-    public void warn(Marker marker, String format, Object[] argArray) {
+    public void warn(Marker marker, String format, Object... argArray) {
         SysPrint(marker, format, argArray);
     }
 
@@ -234,7 +234,7 @@ public class VerboseConsoleLog implements Logger {
         SysPrint(format, arg1, arg2);
     }
 
-    public void error(String format, Object[] argArray) {
+    public void error(String format, Object... argArray) {
         SysPrint(format, argArray);
     }
 
@@ -258,7 +258,7 @@ public class VerboseConsoleLog implements Logger {
         SysPrint(marker, format, arg1, arg2);
     }
 
-    public void error(Marker marker, String format, Object[] argArray) {
+    public void error(Marker marker, String format, Object... argArray) {
         SysPrint(marker, format, argArray);
     }
 

@@ -34,7 +34,7 @@ final class MockLogger implements Logger {
     public void debug(Marker arg0, String arg1, Object arg2) {
     }
 
-    public void debug(Marker arg0, String arg1, Object[] arg2) {
+    public void debug(Marker arg0, String arg1, Object... arg2) {
     }
 
     public void debug(Marker arg0, String arg1, Throwable arg2) {
@@ -49,7 +49,7 @@ final class MockLogger implements Logger {
     public void debug(String arg0, Object arg1) {
     }
 
-    public void debug(String arg0, Object[] arg1) {
+    public void debug(String arg0, Object... arg1) {
     }
 
     public void debug(String arg0, Throwable arg1) {
@@ -64,7 +64,7 @@ final class MockLogger implements Logger {
     public void error(Marker arg0, String arg1, Object arg2) {
     }
 
-    public void error(Marker arg0, String arg1, Object[] arg2) {
+    public void error(Marker arg0, String arg1, Object... arg2) {
     }
 
     public void error(Marker arg0, String arg1, Throwable arg2) {
@@ -79,7 +79,7 @@ final class MockLogger implements Logger {
     public void error(String arg0, Object arg1) {
     }
 
-    public void error(String arg0, Object[] arg1) {
+    public void error(String arg0, Object... arg1) {
     }
 
     public void error(String arg0, Throwable arg1) {
@@ -98,7 +98,7 @@ final class MockLogger implements Logger {
     public void info(Marker arg0, String arg1, Object arg2) {
     }
 
-    public void info(Marker arg0, String arg1, Object[] arg2) {
+    public void info(Marker arg0, String arg1, Object... arg2) {
     }
 
     public void info(Marker arg0, String arg1, Throwable arg2) {
@@ -113,7 +113,7 @@ final class MockLogger implements Logger {
     public void info(String arg0, Object arg1) {
     }
 
-    public void info(String arg0, Object[] arg1) {
+    public void info(String arg0, Object... arg1) {
     }
 
     public void info(String arg0, Throwable arg1) {
@@ -168,7 +168,7 @@ final class MockLogger implements Logger {
     public void trace(Marker arg0, String arg1, Object arg2) {
     }
 
-    public void trace(Marker arg0, String arg1, Object[] arg2) {
+    public void trace(Marker arg0, String arg1, Object... arg2) {
     }
 
     public void trace(Marker arg0, String arg1, Throwable arg2) {
@@ -183,7 +183,7 @@ final class MockLogger implements Logger {
     public void trace(String arg0, Object arg1) {
     }
 
-    public void trace(String arg0, Object[] arg1) {
+    public void trace(String arg0, Object... arg1) {
     }
 
     public void trace(String arg0, Throwable arg1) {
@@ -198,7 +198,7 @@ final class MockLogger implements Logger {
     public void warn(Marker arg0, String arg1, Object arg2) {
     }
 
-    public void warn(Marker arg0, String arg1, Object[] arg2) {
+    public void warn(Marker arg0, String arg1, Object... arg2) {
     }
 
     public void warn(Marker arg0, String arg1, Throwable arg2) {
@@ -213,7 +213,7 @@ final class MockLogger implements Logger {
     public void warn(String arg0, Object arg1) {
     }
 
-    public void warn(String arg0, Object[] arg1) {
+    public void warn(String arg0, Object... arg1) {
     }
 
     public void warn(String arg0, Throwable arg1) {
