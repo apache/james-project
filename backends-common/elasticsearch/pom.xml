@@ -26,7 +26,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>apache-james-backends-es</artifactId>
-    
+
     <dependencies>
         <dependency>
             <groupId>org.apache.james</groupId>
@@ -82,7 +82,6 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
-            <version>1.3.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
