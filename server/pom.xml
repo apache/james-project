@@ -180,7 +180,7 @@
         <pax-logging-api.version>1.6.4</pax-logging-api.version>
         <mockito-core.version>1.9.0</mockito-core.version>
         <jackson-data.version>2.6.3</jackson-data.version>
-        <jetty.version>9.3.5.v20151012</jetty.version>
+        <jetty.version>9.4.4.v20170414</jetty.version>
         <cassandra-unit.version>2.1.9.2</cassandra-unit.version>
         <assertj-guava.version>3.1.0</assertj-guava.version>
         <testcontainers-version>1.3.1</testcontainers-version>
@@ -1096,6 +1096,11 @@
                 <version>${servlet-api.version}</version>
             </dependency>
             <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>3.1.0</version>
+            </dependency>
+            <dependency>
                 <groupId>commons-pool</groupId>
                 <artifactId>commons-pool</artifactId>
                 <version>${commons-pool.version}</version>
@@ -1627,6 +1632,11 @@
             <dependency>
                 <groupId>com.jayway.restassured</groupId>
                 <artifactId>rest-assured</artifactId>
+                <version>2.6.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sparkjava</groupId>
+                <artifactId>spark-core</artifactId>
                 <version>2.6.0</version>
             </dependency>
             <dependency>

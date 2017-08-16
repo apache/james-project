@@ -24,11 +24,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.BufferedInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 
 import javax.inject.Inject;
 
+import com.google.common.base.CharMatcher;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Async;
@@ -175,11 +177,19 @@ public class UploadStepdefs {
 
     @Then("^the user should receive a specified JSON content$")
     public void jsonResponse() throws Exception {
-        assertThat(response.getHeaders("Content-Type")).extracting(Header::getValue).containsExactly(org.apache.http.entity.ContentType.APPLICATION_JSON.toString());
+        assertThat(response.getHeaders("Content-Type"))
+            .extracting(header ->
+                normalizeContentType(header.getValue()))
+            .containsExactly(
+                normalizeContentType(org.apache.http.entity.ContentType.APPLICATION_JSON.toString()));
         DocumentContext jsonPath = JsonPath.parse(response.getEntity().getContent());
         assertThat(jsonPath.<String>read("blobId")).isEqualTo(_1M_ZEROED_FILE_BLOB_ID);
         assertThat(jsonPath.<String>read("type")).isEqualTo("application/octet-stream");
         assertThat(jsonPath.<Integer>read("size")).isEqualTo(_1M);
+    }
+
+    private String normalizeContentType(String input) {
+        return CharMatcher.WHITESPACE.removeFrom(input.toLowerCase(Locale.US));
     }
 
     @Then("^\"([^\"]*)\" should be able to retrieve the content$")
