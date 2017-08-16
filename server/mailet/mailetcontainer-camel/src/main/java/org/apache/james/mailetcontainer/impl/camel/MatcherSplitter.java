@@ -27,9 +27,9 @@ import java.util.Locale;
 import javax.mail.MessagingException;
 
 import org.apache.camel.Body;
+import org.apache.camel.ExchangeProperty;
 import org.apache.camel.Handler;
 import org.apache.camel.InOnly;
-import org.apache.camel.Property;
 import org.apache.james.core.MailImpl;
 import org.apache.james.mailetcontainer.impl.ProcessorUtil;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
@@ -74,11 +74,11 @@ public class MatcherSplitter {
      * @throws MessagingException
      */
     @Handler
-    public List<Mail> split(@Property(MATCHER_PROPERTY) Matcher matcher,
-                            @Property(ON_MATCH_EXCEPTION_PROPERTY) String onMatchException,
-                            @Property(LOGGER_PROPERTY) Logger logger,
-                            @Property(MAILETCONTAINER_PROPERTY) CamelMailetProcessor container,
-                            @Property(METRIC_FACTORY) MetricFactory metricFactory,
+    public List<Mail> split(@ExchangeProperty(MATCHER_PROPERTY) Matcher matcher,
+                            @ExchangeProperty(ON_MATCH_EXCEPTION_PROPERTY) String onMatchException,
+                            @ExchangeProperty(LOGGER_PROPERTY) Logger logger,
+                            @ExchangeProperty(MAILETCONTAINER_PROPERTY) CamelMailetProcessor container,
+                            @ExchangeProperty(METRIC_FACTORY) MetricFactory metricFactory,
                             @Body Mail mail) throws MessagingException {
         Collection<MailAddress> matchedRcpts = null;
         Collection<MailAddress> origRcpts = new ArrayList<>(mail.getRecipients());
