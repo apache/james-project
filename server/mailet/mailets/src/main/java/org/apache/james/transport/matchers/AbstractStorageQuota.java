@@ -106,7 +106,7 @@ abstract public class AbstractStorageQuota extends AbstractQuotaMatcher {
      *            the recipient to check
      */
     @Override
-    protected long getUsed(MailAddress recipient, Mail _) throws MessagingException {
+    protected long getUsed(MailAddress recipient, Mail ignored) throws MessagingException {
         long size = 0;
         MailboxSession session;
         try {

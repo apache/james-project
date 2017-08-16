@@ -657,7 +657,7 @@ public class MessageProcessor extends ProcessorAbstract {
         try {
             from = ((InternetAddress) getMessageIn().getFrom()[0]).getAddress().trim();
             setDefaultSenderLocalPart(false);
-        } catch (Exception _) {
+        } catch (Exception ignored) {
             from = getDefaultLocalPart();
             setDefaultSenderLocalPart(true);
             StringBuilder buffer = new StringBuilder(32);

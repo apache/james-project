@@ -156,7 +156,7 @@ public class MimeMessageUtil {
             try {
                 bis = message.getRawInputStream();
                 bos = bodyOs;
-            } catch (javax.mail.MessagingException _) {
+            } catch (javax.mail.MessagingException ignored) {
                 throw udte;
             }
         } catch (javax.mail.MessagingException me) {
@@ -174,7 +174,7 @@ public class MimeMessageUtil {
             try {
                 bis = message.getRawInputStream();
                 bos = bodyOs;
-            } catch (javax.mail.MessagingException _) {
+            } catch (javax.mail.MessagingException ignored) {
                 throw me;
             }
         }

@@ -116,7 +116,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
             token2 = authTokenizer.nextToken();                 // Authentication Identity
             try {
                 return delegation(token1, token2, authTokenizer.nextToken());
-            } catch (java.util.NoSuchElementException _) {
+            } catch (java.util.NoSuchElementException ignored) {
                 // If we got here, this is what happened.  RFC 2595
                 // says that "the client may leave the authorization
                 // identity empty to indicate that it is the same as

@@ -262,7 +262,7 @@ public class AuthCmdHandler
                 try {
                     pass = authTokenizer.nextToken();             // Password
                 }
-                catch (java.util.NoSuchElementException _) {
+                catch (java.util.NoSuchElementException ignored) {
                     // If we got here, this is what happened.  RFC 2595
                     // says that "the client may leave the authorization
                     // identity empty to indicate that it is the same as
