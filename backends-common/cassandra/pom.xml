@@ -30,8 +30,11 @@
     <artifactId>apache-james-backends-cassandra</artifactId>
     <name>Apache James Cassandra backend</name>
 
-
     <dependencies>
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-server-lifecycle-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
             <artifactId>james-server-util-java8</artifactId>

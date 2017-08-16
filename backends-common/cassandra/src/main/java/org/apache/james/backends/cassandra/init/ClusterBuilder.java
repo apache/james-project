@@ -175,11 +175,14 @@ public class ClusterBuilder {
         poolingOptions.ifPresent(clusterBuilder::withPoolingOptions);
 
         Cluster cluster = clusterBuilder.build();
-
-        queryLogger.map(queryLoggerConfiguration ->
-            cluster.register(queryLoggerConfiguration.getQueryLogger()));
-
-        return cluster;
+        try {
+            queryLogger.map(queryLoggerConfiguration ->
+                cluster.register(queryLoggerConfiguration.getQueryLogger()));
+            return cluster;
+        } catch (Exception e) {
+            cluster.close();
+            throw e;
+        }
     }
 
     private Optional<Integer> getRefreshSchemaIntervalMillis() {
