@@ -38,6 +38,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.util.OptionalConverter;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -112,7 +113,8 @@ public class ElasticSearchSearcher {
         if (mailboxId != null && uid != null) {
             Number uidAsNumber = uid.getValue();
             return Optional.of(
-                new MessageSearchIndex.SearchResult(toGuava(id.map(field -> messageIdFactory.fromString(field.getValue()))),
+                new MessageSearchIndex.SearchResult(
+                    OptionalConverter.toGuava(id.map(field -> messageIdFactory.fromString(field.getValue()))),
                     mailboxIdFactory.fromString(mailboxId.getValue()),
                     MessageUid.of(uidAsNumber.longValue())));
         } else {
@@ -127,10 +129,6 @@ public class ElasticSearchSearcher {
         } else {
             return Optional.empty();
         }
-    }
-
-    private <T> com.google.common.base.Optional<T> toGuava(Optional<T> optional) {
-        return com.google.common.base.Optional.fromNullable(optional.orElse(null));
     }
 
 }
