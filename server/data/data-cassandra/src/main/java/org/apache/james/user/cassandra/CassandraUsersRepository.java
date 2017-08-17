@@ -45,6 +45,8 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.model.DefaultUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
@@ -55,6 +57,7 @@ import com.google.common.primitives.Ints;
 public class CassandraUsersRepository extends AbstractUsersRepository {
 
     private static final String DEFAULT_ALGO_VALUE = "SHA1";
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraUsersRepository.class);
 
     private final CassandraAsyncExecutor executor;
     private final CassandraUtils cassandraUtils;
@@ -162,7 +165,10 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     public boolean test(String name, String password) throws UsersRepositoryException {
         return Optional.ofNullable(getUserByName(name))
                 .map(x -> x.verifyPassword(password))
-                .orElse(false);
+            .orElseGet(() -> {
+                LOGGER.info("Could not retrieve user {}. Authentication failure.");
+                return false;
+            });
     }
 
     @Override
