@@ -166,7 +166,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
         return Optional.ofNullable(getUserByName(name))
                 .map(x -> x.verifyPassword(password))
             .orElseGet(() -> {
-                LOGGER.info("Could not retrieve user {}. Authentication failure.");
+                LOGGER.info("Could not retrieve user {}. Password is unverified.");
                 return false;
             });
     }
