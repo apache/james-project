@@ -46,6 +46,9 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
+import org.apache.james.util.OptionalConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.exceptions.InvalidQueryException;
@@ -57,6 +60,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     public static final String WILDCARD = "%";
     public static final String VALUES_MAY_NOT_BE_LARGER_THAN_64_K = "Index expression values may not be larger than 64K";
     public static final String CLUSTERING_COLUMNS_IS_TOO_LONG = "The sum of all clustering columns is too long";
+    public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapper.class);
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraMailboxPathDAO mailboxPathDAO;
@@ -117,10 +121,15 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
         return FluentFutureStream.of(mailboxPathDAO.listUserMailboxes(path.getNamespace(), path.getUser()))
             .filter(idAndPath -> regex.matcher(idAndPath.getMailboxPath().getName()).matches())
-            .map(CassandraMailboxPathDAO.CassandraIdAndPath::getCassandraId)
-            .thenFlatComposeOnOptional(mailboxDAO::retrieveMailbox)
+            .thenFlatComposeOnOptional(this::retrieveMailbox)
             .join()
             .collect(Guavate.toImmutableList());
+    }
+
+    private CompletableFuture<Optional<SimpleMailbox>> retrieveMailbox(CassandraMailboxPathDAO.CassandraIdAndPath idAndPath) {
+        return mailboxDAO.retrieveMailbox(idAndPath.getCassandraId())
+            .thenApply(optional -> OptionalConverter.ifEmpty(optional,
+                () -> LOGGER.warn("Could not retrieve mailbox {} with path {} in mailbox table.", idAndPath.getCassandraId(), idAndPath.getMailboxPath())));
     }
 
     @Override

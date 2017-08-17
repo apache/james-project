@@ -56,6 +56,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.FluentFutureStream;
+import org.apache.james.util.OptionalConverter;
 import org.apache.james.util.streams.JamesCollectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -235,11 +236,8 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private CompletableFuture<Optional<ComposedMessageIdWithMetaData>> retrieveComposedId(CassandraId mailboxId, MessageUid uid) {
         return messageIdDAO.retrieve(mailboxId, uid)
-            .thenApply(value -> Optional.of(value)
-            .orElseGet(() -> {
-                LOGGER.warn("Could not retrieve message {} {}", mailboxId, uid);
-                return Optional.empty();
-            }));
+            .thenApply(optional -> OptionalConverter.ifEmpty(optional,
+                () -> LOGGER.warn("Could not retrieve message {} {}", mailboxId, uid)));
     }
 
     private CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>> retrieveMessagesAndDoMigrationIfNeeded(

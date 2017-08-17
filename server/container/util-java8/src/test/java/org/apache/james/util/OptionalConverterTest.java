@@ -21,6 +21,7 @@ package org.apache.james.util;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,6 +33,39 @@ public class OptionalConverterTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
+
+    @Test
+    public void ifEmptyShouldPreserveValueOfEmptyOptionals() {
+        Optional<Object> expected = OptionalConverter.ifEmpty(Optional.empty(), () -> { });
+
+        assertThat(expected).isEmpty();
+    }
+
+    @Test
+    public void ifEmptyShouldPreserveValueOfPresentOptionals() {
+        String value = "value";
+        Optional<String> expected = OptionalConverter.ifEmpty(Optional.of(value), () -> { });
+
+        assertThat(expected).contains(value);
+    }
+
+    @Test
+    public void ifEmptyShouldPerformOperationIfEmpty() {
+        AtomicInteger operationCounter = new AtomicInteger(0);
+
+        OptionalConverter.ifEmpty(Optional.empty(), operationCounter::incrementAndGet);
+
+        assertThat(operationCounter.get()).isEqualTo(1);
+    }
+
+    @Test
+    public void ifEmptyShouldNotPerformOperationIfPresent() {
+        AtomicInteger operationCounter = new AtomicInteger(0);
+
+        OptionalConverter.ifEmpty(Optional.of("value"), operationCounter::incrementAndGet);
+
+        assertThat(operationCounter.get()).isEqualTo(0);
+    }
 
     @Test
     public void toStreamShouldConvertEmptyOptionalToEmptyStream() {
