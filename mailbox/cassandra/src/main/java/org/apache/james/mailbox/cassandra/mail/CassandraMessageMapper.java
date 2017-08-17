@@ -151,10 +151,13 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     private CompletableFuture<Void> deleteAsFuture(MailboxMessage message, CassandraId mailboxId) {
-        return messageIdDAO.retrieve(mailboxId, message.getUid())
-            .thenCompose(optional -> optional
-                .map(this::deleteUsingMailboxId)
-                .orElse(CompletableFuture.completedFuture(null)));
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
+            .composedMessageId(new ComposedMessageId(mailboxId, message.getMessageId(), message.getUid()))
+            .flags(message.createFlags())
+            .modSeq(message.getModSeq())
+            .build();
+
+        return deleteUsingMailboxId(composedMessageIdWithMetaData);
     }
 
     private CompletableFuture<Void> deleteUsingMailboxId(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
@@ -166,10 +169,6 @@ public class CassandraMessageMapper implements MessageMapper {
             imapUidDAO.delete(messageId, mailboxId),
             messageIdDAO.delete(mailboxId, uid)
         ).thenCompose(voidValue -> indexTableHandler.updateIndexOnDelete(composedMessageIdWithMetaData, mailboxId));
-    }
-
-    private CompletableFuture<Optional<ComposedMessageIdWithMetaData>> retrieveMessageId(CassandraId mailboxId, MailboxMessage message) {
-        return messageIdDAO.retrieve(mailboxId, message.getUid());
     }
 
     @Override
