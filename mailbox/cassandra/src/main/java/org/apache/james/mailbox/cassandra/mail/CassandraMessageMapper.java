@@ -144,18 +144,12 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public void delete(Mailbox mailbox, MailboxMessage message) {
-        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-
-        deleteAsFuture(message, mailboxId)
+        deleteAsFuture(message)
             .join();
     }
 
-    private CompletableFuture<Void> deleteAsFuture(MailboxMessage message, CassandraId mailboxId) {
-        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
-            .composedMessageId(new ComposedMessageId(mailboxId, message.getMessageId(), message.getUid()))
-            .flags(message.createFlags())
-            .modSeq(message.getModSeq())
-            .build();
+    private CompletableFuture<Void> deleteAsFuture(MailboxMessage message) {
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = message.getComposedMessageIdWithMetaData();
 
         return deleteUsingMailboxId(composedMessageIdWithMetaData);
     }
@@ -244,12 +238,7 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public MessageMetaData move(Mailbox destinationMailbox, MailboxMessage original) throws MailboxException {
-        CassandraId originalMailboxId = (CassandraId) original.getMailboxId();
-        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
-            .composedMessageId(new ComposedMessageId(originalMailboxId, original.getMessageId(), original.getUid()))
-            .flags(original.createFlags())
-            .modSeq(original.getModSeq())
-            .build();
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = original.getComposedMessageIdWithMetaData();
 
         MessageMetaData messageMetaData = copy(destinationMailbox, original);
         deleteUsingMailboxId(composedMessageIdWithMetaData).join();
