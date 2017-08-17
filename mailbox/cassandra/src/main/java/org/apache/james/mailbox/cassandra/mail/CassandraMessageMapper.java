@@ -39,9 +39,9 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.cassandra.mail.migration.V1ToV2Migration;
 import org.apache.james.mailbox.cassandra.mail.utils.FlagsUpdateStageResult;
+import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
@@ -196,8 +196,6 @@ public class CassandraMessageMapper implements MessageMapper {
             .thenCompose(stream -> attachmentLoader.addAttachmentToMessages(stream, fetchType));
     }
 
-
-
     @Override
     public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
@@ -228,11 +226,20 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private CompletableFuture<Stream<SimpleMailboxMessage>> expungeUidChunk(CassandraId mailboxId, Collection<MessageUid> uidChunk) {
         return FluentFutureStream.ofOptionals(
-                uidChunk.stream().map(uid -> messageIdDAO.retrieve(mailboxId, uid)))
+                uidChunk.stream().map(uid -> retrieveComposedId(mailboxId, uid)))
             .performOnAll(this::deleteUsingMailboxId)
             .thenFlatCompose(idWithMetadata -> retrieveMessagesAndDoMigrationIfNeeded(ImmutableList.of(idWithMetadata), FetchType.Metadata, Limit.unlimited()))
             .map(pair -> pair.getKey().toMailboxMessage(ImmutableList.of()))
             .completableFuture();
+    }
+
+    private CompletableFuture<Optional<ComposedMessageIdWithMetaData>> retrieveComposedId(CassandraId mailboxId, MessageUid uid) {
+        return messageIdDAO.retrieve(mailboxId, uid)
+            .thenApply(value -> Optional.of(value)
+            .orElseGet(() -> {
+                LOGGER.warn("Could not retrieve message {} {}", mailboxId, uid);
+                return Optional.empty();
+            }));
     }
 
     private CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>> retrieveMessagesAndDoMigrationIfNeeded(
