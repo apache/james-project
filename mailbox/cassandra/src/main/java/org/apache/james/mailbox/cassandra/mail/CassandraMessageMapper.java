@@ -39,9 +39,9 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.cassandra.mail.migration.V1ToV2Migration;
 import org.apache.james.mailbox.cassandra.mail.utils.FlagsUpdateStageResult;
+import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
@@ -246,10 +246,15 @@ public class CassandraMessageMapper implements MessageMapper {
     @Override
     public MessageMetaData move(Mailbox destinationMailbox, MailboxMessage original) throws MailboxException {
         CassandraId originalMailboxId = (CassandraId) original.getMailboxId();
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
+            .composedMessageId(new ComposedMessageId(originalMailboxId, original.getMessageId(), original.getUid()))
+            .flags(original.createFlags())
+            .modSeq(original.getModSeq())
+            .build();
+
         MessageMetaData messageMetaData = copy(destinationMailbox, original);
-        retrieveMessageId(originalMailboxId, original)
-            .thenCompose(optional -> optional.map(this::deleteUsingMailboxId).orElse(CompletableFuture.completedFuture(null)))
-            .join();
+        deleteUsingMailboxId(composedMessageIdWithMetaData).join();
+
         return messageMetaData;
     }
 
