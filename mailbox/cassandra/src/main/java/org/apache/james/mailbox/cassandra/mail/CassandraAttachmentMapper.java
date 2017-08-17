@@ -39,7 +39,6 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -47,6 +46,9 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.FluentFutureStream;
+import org.apache.james.util.OptionalConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -54,10 +56,10 @@ import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.ThrownByLambdaException;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import org.apache.james.util.OptionalConverter;
 
 public class CassandraAttachmentMapper implements AttachmentMapper {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraAttachmentMapper.class);
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
 
     @Inject
@@ -123,7 +125,9 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
                 .from(TABLE_NAME)
                 .where(eq(ID, id)))
             .thenApply(optional ->
-                optional.map(this::attachment));
+                OptionalConverter.ifEmpty(
+                    optional.map(this::attachment),
+                    () -> LOGGER.warn("Failed retrieving attachment {}", attachmentId)));
     }
 
     @Override
