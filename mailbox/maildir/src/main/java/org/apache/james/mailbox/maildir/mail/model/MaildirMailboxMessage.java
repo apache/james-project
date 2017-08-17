@@ -28,6 +28,8 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.maildir.MaildirFolder;
 import org.apache.james.mailbox.maildir.MaildirId;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
+import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
@@ -66,6 +68,15 @@ public class MaildirMailboxMessage extends DelegatingMailboxMessage {
             }
         }
         setFlags(flags);
+    }
+
+    @Override
+    public ComposedMessageIdWithMetaData getComposedMessageIdWithMetaData() {
+        return ComposedMessageIdWithMetaData.builder()
+            .modSeq(modSeq)
+            .flags(createFlags())
+            .composedMessageId(new ComposedMessageId(mailbox.getMailboxId(), getMessageId(), uid))
+            .build();
     }
 
     

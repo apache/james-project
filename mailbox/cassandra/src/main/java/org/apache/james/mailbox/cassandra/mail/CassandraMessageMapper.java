@@ -145,17 +145,14 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public void delete(Mailbox mailbox, MailboxMessage message) {
-        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-
-        deleteAsFuture(message, mailboxId)
+        deleteAsFuture(message)
             .join();
     }
 
-    private CompletableFuture<Void> deleteAsFuture(MailboxMessage message, CassandraId mailboxId) {
-        return messageIdDAO.retrieve(mailboxId, message.getUid())
-            .thenCompose(optional -> optional
-                .map(this::deleteUsingMailboxId)
-                .orElse(CompletableFuture.completedFuture(null)));
+    private CompletableFuture<Void> deleteAsFuture(MailboxMessage message) {
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = message.getComposedMessageIdWithMetaData();
+
+        return deleteUsingMailboxId(composedMessageIdWithMetaData);
     }
 
     private CompletableFuture<Void> deleteUsingMailboxId(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
@@ -167,10 +164,6 @@ public class CassandraMessageMapper implements MessageMapper {
             imapUidDAO.delete(messageId, mailboxId),
             messageIdDAO.delete(mailboxId, uid)
         ).thenCompose(voidValue -> indexTableHandler.updateIndexOnDelete(composedMessageIdWithMetaData, mailboxId));
-    }
-
-    private CompletableFuture<Optional<ComposedMessageIdWithMetaData>> retrieveMessageId(CassandraId mailboxId, MailboxMessage message) {
-        return messageIdDAO.retrieve(mailboxId, message.getUid());
     }
 
     @Override
@@ -250,11 +243,11 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public MessageMetaData move(Mailbox destinationMailbox, MailboxMessage original) throws MailboxException {
-        CassandraId originalMailboxId = (CassandraId) original.getMailboxId();
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = original.getComposedMessageIdWithMetaData();
+
         MessageMetaData messageMetaData = copy(destinationMailbox, original);
-        retrieveMessageId(originalMailboxId, original)
-            .thenCompose(optional -> optional.map(this::deleteUsingMailboxId).orElse(CompletableFuture.completedFuture(null)))
-            .join();
+        deleteUsingMailboxId(composedMessageIdWithMetaData).join();
+
         return messageMetaData;
     }
 

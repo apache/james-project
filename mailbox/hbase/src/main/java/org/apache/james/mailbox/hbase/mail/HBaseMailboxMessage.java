@@ -40,6 +40,8 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.hbase.HBaseId;
 import org.apache.james.mailbox.hbase.io.ChunkInputStream;
+import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.FlagsBuilder;
@@ -139,6 +141,15 @@ public class HBaseMailboxMessage implements MailboxMessage {
         this.mediaType = propertyBuilder.getMediaType();
         this.subType = propertyBuilder.getSubType();
         this.properties = propertyBuilder.toProperties();
+    }
+
+    @Override
+    public ComposedMessageIdWithMetaData getComposedMessageIdWithMetaData() {
+        return ComposedMessageIdWithMetaData.builder()
+            .modSeq(modSeq)
+            .flags(createFlags())
+            .composedMessageId(new ComposedMessageId(mailboxId, getMessageId(), uid))
+            .build();
     }
 
     @Override

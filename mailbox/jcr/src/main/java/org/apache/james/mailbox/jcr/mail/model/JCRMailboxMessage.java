@@ -44,6 +44,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jcr.JCRId;
 import org.apache.james.mailbox.jcr.JCRImapConstants;
 import org.apache.james.mailbox.jcr.Persistent;
+import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.FlagsBuilder;
@@ -162,6 +164,15 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
         for (Property property:properties) {
             this.properties.add(new JCRProperty(property,  logger));
         }
+    }
+
+    @Override
+    public ComposedMessageIdWithMetaData getComposedMessageIdWithMetaData() {
+        return ComposedMessageIdWithMetaData.builder()
+            .modSeq(modSeq)
+            .flags(createFlags())
+            .composedMessageId(new ComposedMessageId(getMailboxId(), getMessageId(), uid))
+            .build();
     }
 
     @Override

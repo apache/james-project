@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.mail.model;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxId;
 
 /**
@@ -29,6 +30,8 @@ import org.apache.james.mailbox.model.MailboxId;
  * has internal structure described by the meta-data.
  */
 public interface MailboxMessage extends Message, Comparable<MailboxMessage> {
+
+    ComposedMessageIdWithMetaData getComposedMessageIdWithMetaData();
 
     /**
      * Return the mailbox id of the linked mailbox
