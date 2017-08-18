@@ -216,7 +216,7 @@ public class WebAdminServerIntegrationTest {
     public void postShouldDoMigrationAndUpdateCurrentVersion() throws Exception {
         given()
             .port(webAdminGuiceProbe.getWebAdminPort())
-            .body("2")
+            .body(String.valueOf(CassandraSchemaVersionManager.MAX_VERSION))
         .when()
             .post(UPGRADE_VERSION)
         .then()
@@ -228,7 +228,7 @@ public class WebAdminServerIntegrationTest {
             .get(VERSION)
         .then()
             .statusCode(200)
-            .body(is("{\"version\":2}"));
+            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
     }
 
     @Test

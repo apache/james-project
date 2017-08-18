@@ -22,21 +22,21 @@ package org.apache.james.webadmin.service;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.mailbox.cassandra.mail.migration.Migration;
 import org.apache.james.webadmin.dto.CassandraVersionResponse;
-
-import com.google.common.base.Preconditions;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 public class CassandraMigrationService {
-    private static final int FIRST_VERSION = 1;
     public static final String LATEST_VERSION = "latestVersion";
     private final CassandraSchemaVersionDAO schemaVersionDAO;
     private final int latestVersion;
@@ -60,7 +60,7 @@ public class CassandraMigrationService {
     }
 
     public synchronized void upgradeToVersion(int newVersion) {
-        int currentVersion = schemaVersionDAO.getCurrentSchemaVersion().join().orElse(FIRST_VERSION);
+        int currentVersion = schemaVersionDAO.getCurrentSchemaVersion().join().orElse(CassandraSchemaVersionManager.DEFAULT_VERSION);
         if (currentVersion >= newVersion) {
             throw new IllegalStateException("Current version is already up to date");
         }
