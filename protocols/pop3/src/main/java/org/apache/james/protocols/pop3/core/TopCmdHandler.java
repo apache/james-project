@@ -21,10 +21,8 @@ package org.apache.james.protocols.pop3.core;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -37,12 +35,15 @@ import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.POP3StreamResponse;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Handles TOP command
  */
 public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("TOP"));
-    private static final Set<String> CAPS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("TOP")));
+    private static final Collection<String> COMMANDS = ImmutableList.of("TOP");
+    private static final Set<String> CAPS = ImmutableSet.of("TOP");
     
     private static final Response SYNTAX_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Usage: TOP [mail number] [Line number]").immutable();
     private static final Response ERROR_MESSAGE_RETR = new POP3Response(POP3Response.ERR_RESPONSE, "Error while retrieving message.").immutable();

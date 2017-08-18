@@ -19,7 +19,6 @@
 
 package org.apache.james.user.jpa;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Locale;
 
@@ -38,6 +37,8 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.jpa.model.JPAUser;
 import org.apache.james.user.lib.AbstractUsersRepository;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * JPA based UserRepository
@@ -241,7 +242,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
         try {
-            return Collections.unmodifiableList(entityManager.createNamedQuery("listUserNames").getResultList()).iterator();
+            return ImmutableList.copyOf(entityManager.createNamedQuery("listUserNames").getResultList()).iterator();
 
         } catch (PersistenceException e) {
             getLogger().debug("Failed to find user", e);

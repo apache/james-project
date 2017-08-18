@@ -20,9 +20,7 @@ package org.apache.james.protocols.smtp.core;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -47,6 +45,8 @@ import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 
+import com.google.common.collect.ImmutableSet;
+
 
 /**
   * handles DATA command
@@ -57,7 +57,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
     private static final Response NO_SENDER = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_OTHER)+" No sender specified").immutable();
     private static final Response UNEXPECTED_ARG = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_COMMAND_UNRECOGNIZED, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_INVALID_ARG)+" Unexpected argument provided with DATA command").immutable();
     private static final Response DATA_READY = new SMTPResponse(SMTPRetCode.DATA_READY, "Ok Send data ending with <CRLF>.<CRLF>").immutable();
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("DATA"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("DATA");
 
     public static final class DataConsumerLineHandler implements LineHandler<SMTPSession> {
 

@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -44,6 +43,8 @@ import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.SimpleMailboxACL.SimpleMailboxACLEntryKey;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * DELETEACL Processor.
  * 
@@ -51,7 +52,7 @@ import org.apache.james.metrics.api.MetricFactory;
  */
 public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLRequest> implements CapabilityImplementingProcessor {
 
-    private static final List<String> CAPABILITIES = Collections.singletonList(ImapConstants.SUPPORTS_ACL);
+    private static final List<String> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_ACL);
 
     public DeleteACLProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {

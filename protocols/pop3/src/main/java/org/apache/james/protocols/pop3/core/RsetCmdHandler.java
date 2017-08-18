@@ -21,27 +21,26 @@ package org.apache.james.protocols.pop3.core;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Handles RSET command
  */
 public class RsetCmdHandler implements CommandHandler<POP3Session> {
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("RSET"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("RSET");
 
     @Override
     public void init(Configuration config) throws ConfigurationException {

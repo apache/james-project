@@ -19,9 +19,7 @@
 
 package org.apache.james.mailetcontainer.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -62,6 +60,8 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
+
+import com.google.common.collect.ImmutableSet;
 
 @SuppressWarnings("deprecation")
 public class JamesMailetContext implements MailetContext, LogEnabled, Configurable {
@@ -109,7 +109,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
         } catch (TemporaryResolutionException e) {
             // TODO: We only do this to not break backward compatiblity. Should
             // fixed later
-            return Collections.unmodifiableCollection(new ArrayList<String>(0));
+            return ImmutableSet.of();
         }
     }
 
@@ -306,7 +306,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
         } catch (TemporaryResolutionException e) {
             // TODO: We only do this to not break backward compatiblity. Should
             // fixed later
-            return Collections.unmodifiableCollection(new ArrayList<HostAddress>(0)).iterator();
+            return ImmutableSet.<HostAddress>of().iterator();
         }
     }
 

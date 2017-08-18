@@ -19,8 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -46,9 +44,11 @@ import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.google.common.collect.ImmutableList;
+
 public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> implements CapabilityImplementingProcessor {
 
-    private final static List<String> UIDPLUS = Collections.unmodifiableList(Arrays.asList("UIDPLUS"));
+    private final static List<String> UIDPLUS = ImmutableList.of("UIDPLUS");
 
     public ExpungeProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {

@@ -18,11 +18,11 @@
  ****************************************************************/
 package org.apache.james.protocols.api.handler;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.apache.james.protocols.api.ProtocolSession;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * A special {@link CommandHandler} implementation which should be extended by {@link CommandHandler}'s which should get called for unknown command. So this is some kind
@@ -39,7 +39,7 @@ public abstract class UnknownCommandHandler<S extends ProtocolSession> implement
     public final static String COMMAND_IDENTIFIER ="UNKNOWN_CMD";
     
     
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList(COMMAND_IDENTIFIER));
+    private static final Collection<String> COMMANDS = ImmutableSet.of(COMMAND_IDENTIFIER);
   
     /*
      * (non-Javadoc)

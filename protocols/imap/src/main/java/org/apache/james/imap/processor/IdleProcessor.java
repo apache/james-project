@@ -20,8 +20,7 @@
 package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_IDLE;
-import java.util.Arrays;
-import java.util.Collections;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executors;
@@ -48,9 +47,11 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.google.common.collect.ImmutableList;
+
 public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> implements CapabilityImplementingProcessor {
 
-    private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_IDLE));
+    private final static List<String> CAPS = ImmutableList.of(SUPPORTS_IDLE);
     public final static int DEFAULT_SCHEDULED_POOL_CORE_SIZE = 5;
     private final static String DONE = "DONE";
     private TimeUnit heartbeatIntervalUnit;

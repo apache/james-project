@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imap.processor;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,11 +29,13 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.StartTLSRequest;
 import org.apache.james.imap.processor.base.AbstractChainedProcessor;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * Processing STARTLS commands
  */
 public class StartTLSProcessor extends AbstractChainedProcessor<StartTLSRequest> implements CapabilityImplementingProcessor {
-    private final static List<String> STARTTLS_CAP = Collections.unmodifiableList(Arrays.asList(ImapConstants.SUPPORTS_STARTTLS));
+    private final static List<String> STARTTLS_CAP = ImmutableList.of(ImapConstants.SUPPORTS_STARTTLS);
     private final StatusResponseFactory factory;
 
     public StartTLSProcessor(ImapProcessor next, StatusResponseFactory factory) {

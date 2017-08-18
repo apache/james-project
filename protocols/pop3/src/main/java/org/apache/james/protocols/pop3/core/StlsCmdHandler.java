@@ -19,10 +19,8 @@
 
 package org.apache.james.protocols.pop3.core;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
@@ -34,14 +32,16 @@ import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.POP3StartTlsResponse;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Handler which offer STARTTLS implementation for POP3. STARTTLS is started
  * with the STSL command
  */
 public class StlsCmdHandler implements CommandHandler<POP3Session>, CapaCapability {
 
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("STLS"));
-    private static final Set<String> CAPS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("STLS")));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("STLS");
+    private static final Set<String> CAPS = ImmutableSet.of("STLS");
 
     private static final Response BEGIN_TLS = new POP3StartTlsResponse(POP3Response.OK_RESPONSE, "Begin TLS negotiation").immutable();
 

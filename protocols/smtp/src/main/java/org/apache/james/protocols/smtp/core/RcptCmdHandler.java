@@ -20,9 +20,7 @@
 package org.apache.james.protocols.smtp.core;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
@@ -42,6 +40,8 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.RcptHook;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Handles RCPT command
  */
@@ -50,7 +50,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
 
     public static final String CURRENT_RECIPIENT = "CURRENT_RECIPIENT"; // Current
                                                                         // recipient
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("RCPT"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("RCPT");
     private static final Response MAIL_NEEDED = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_OTHER) + " Need MAIL before RCPT").immutable();
     private static final Response SYNTAX_ERROR_ARGS = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Usage: RCPT TO:<recipient>").immutable();
     private static final Response SYNTAX_ERROR_DELIVERY = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Syntax error in parameters or arguments").immutable();

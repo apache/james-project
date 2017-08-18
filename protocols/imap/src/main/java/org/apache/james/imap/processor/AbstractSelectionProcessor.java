@@ -20,8 +20,6 @@
 package org.apache.james.imap.processor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -57,12 +55,14 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.google.common.collect.ImmutableList;
+
 abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequest> extends AbstractMailboxProcessor<M> implements PermitEnableCapabilityProcessor {
 
     final StatusResponseFactory statusResponseFactory;
 
     private final boolean openReadOnly;
-    private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList(ImapConstants.SUPPORTS_QRESYNC, ImapConstants.SUPPORTS_CONDSTORE));
+    private final static List<String> CAPS = ImmutableList.of(ImapConstants.SUPPORTS_QRESYNC, ImapConstants.SUPPORTS_CONDSTORE);
 
     
     public AbstractSelectionProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, boolean openReadOnly,

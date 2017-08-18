@@ -22,8 +22,6 @@ package org.apache.james.imap.processor;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_ENABLE;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -41,11 +39,13 @@ import org.apache.james.imap.processor.PermitEnableCapabilityProcessor.EnableExc
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.google.common.collect.ImmutableList;
+
 public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> implements CapabilityImplementingProcessor {
 
     private final static List<PermitEnableCapabilityProcessor> capabilities = new ArrayList<>();
     public final static String ENABLED_CAPABILITIES = "ENABLED_CAPABILITIES";
-    private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_ENABLE));
+    private final static List<String> CAPS = ImmutableList.of(SUPPORTS_ENABLE);
     private final CapabilityProcessor capabilityProcessor;
 
     public EnableProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, List<PermitEnableCapabilityProcessor> capabilities,

@@ -19,9 +19,7 @@
 
 package org.apache.james.protocols.smtp.core;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import javax.inject.Inject;
 
@@ -36,6 +34,8 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.QuitHook;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Handles QUIT command
  */
@@ -44,7 +44,7 @@ public class QuitCmdHandler extends AbstractHookableCmdHandler<QuitHook> {
     /**
      * The name of the command handled by the command handler
      */
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("QUIT"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("QUIT");
 
     private static final Response SYNTAX_ERROR;
     static {

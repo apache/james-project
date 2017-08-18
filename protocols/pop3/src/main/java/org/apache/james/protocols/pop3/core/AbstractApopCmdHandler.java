@@ -19,9 +19,7 @@
 
 package org.apache.james.protocols.pop3.core;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
@@ -29,6 +27,8 @@ import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Handles the APOP command
@@ -38,7 +38,7 @@ import org.apache.james.protocols.pop3.mailbox.Mailbox;
  */
 public abstract class AbstractApopCmdHandler extends AbstractPassCmdHandler{
 
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("APOP"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("APOP");
     
     @Override
     public Response onCommand(POP3Session session, Request request) {

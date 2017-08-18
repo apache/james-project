@@ -20,8 +20,6 @@ package org.apache.james.protocols.netty;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -61,7 +59,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer{
     
     public synchronized void setListenAddresses(InetSocketAddress... addresses) {
         if (started) throw new IllegalStateException("Can only be set when the server is not running");
-        this.addresses = Collections.unmodifiableList(Arrays.asList(addresses));
+        this.addresses = ImmutableList.copyOf(addresses);
     }
     
     /**

@@ -19,10 +19,7 @@
 
 package org.apache.james.protocols.pop3.core;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
@@ -33,13 +30,15 @@ import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Handles USER command
  */
 public class UserCmdHandler implements CommandHandler<POP3Session>, CapaCapability {
 
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("USER"));
-    private static final Set<String> CAPS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("USER")));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("USER");
+    private static final Set<String> CAPS = ImmutableSet.of("USER");
 
     @Override
     public void init(Configuration config) throws ConfigurationException {

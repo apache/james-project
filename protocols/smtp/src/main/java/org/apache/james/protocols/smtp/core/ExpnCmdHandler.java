@@ -21,9 +21,7 @@
 
 package org.apache.james.protocols.smtp.core;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -35,6 +33,8 @@ import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
   * Handles EXPN command
   */
@@ -44,7 +44,7 @@ public class ExpnCmdHandler implements CommandHandler<SMTPSession> {
     /**
      * The name of the command handled by the command handler
      */
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("EXPN"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("EXPN");
     
     /**
      * Handler method called upon receipt of a EXPN command.

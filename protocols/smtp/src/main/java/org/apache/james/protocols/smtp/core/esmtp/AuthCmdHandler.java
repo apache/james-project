@@ -24,7 +24,6 @@ package org.apache.james.protocols.smtp.core.esmtp;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -50,6 +49,9 @@ import org.apache.james.protocols.smtp.hook.HookResultHook;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailParametersHook;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
 
 /**
  * handles AUTH command
@@ -61,9 +63,9 @@ import org.apache.james.protocols.smtp.hook.MailParametersHook;
  */
 public class AuthCmdHandler
     implements CommandHandler<SMTPSession>, EhloExtension, ExtensibleHandler, MailParametersHook {
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("AUTH"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("AUTH");
     private static final String[] MAIL_PARAMS = { "AUTH" };
-    private static final List<String> ESMTP_FEATURES = Collections.unmodifiableList(Arrays.asList("AUTH LOGIN PLAIN", "AUTH=LOGIN PLAIN"));
+    private static final List<String> ESMTP_FEATURES = ImmutableList.of("AUTH LOGIN PLAIN", "AUTH=LOGIN PLAIN");
     
     private static final Response AUTH_ABORTED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " Authentication aborted").immutable();
     private static final Response ALREADY_AUTH = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_OTHER)+" User has previously authenticated. "

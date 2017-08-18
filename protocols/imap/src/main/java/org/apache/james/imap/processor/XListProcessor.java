@@ -20,7 +20,6 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_XLIST;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,12 +37,14 @@ import org.apache.james.imap.message.response.XListResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * Processes XLIST command
  */
 public class XListProcessor extends ListProcessor implements CapabilityImplementingProcessor {
 
-    private final static List<String> XLIST_CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_XLIST));
+    private final static List<String> XLIST_CAPS = ImmutableList.of(SUPPORTS_XLIST);
     private final MailboxTyper mailboxTyper;
 
     // some interface

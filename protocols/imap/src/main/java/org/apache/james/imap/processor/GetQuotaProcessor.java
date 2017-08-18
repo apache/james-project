@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -42,12 +41,14 @@ import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * GETQUOTA processor
  */
 public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest> implements CapabilityImplementingProcessor {
 
-    private static final List<String> CAPABILITIES = Collections.singletonList(ImapConstants.SUPPORTS_QUOTA);
+    private static final List<String> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_QUOTA);
 
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;

@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -42,6 +41,7 @@ import org.apache.james.protocols.pop3.mailbox.Mailbox;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class MailboxAdapter implements Mailbox {
 
@@ -160,7 +160,7 @@ public class MailboxAdapter implements Mailbox {
                 MessageMetaData metaData = new MessageMetaData(String.valueOf(result.getUid().asLong()), result.getSize());
                 mList.add(metaData);
             }
-            return Collections.unmodifiableList(mList);
+            return ImmutableList.copyOf(mList);
         } catch (MailboxException e) {
             throw new IOException("Unable to retrieve messages", e);
         } finally {

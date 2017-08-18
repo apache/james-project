@@ -19,9 +19,7 @@
 
 package org.apache.james.protocols.pop3.core;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
@@ -34,11 +32,13 @@ import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Handles DELE command
  */
 public class DeleCmdHandler implements CommandHandler<POP3Session> {
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("DELE"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("DELE");
 
     private static final Response SYNTAX_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Usage: DELE [mail number]").immutable();
     private static final Response DELETED = new POP3Response(POP3Response.OK_RESPONSE, "Message deleted").immutable();

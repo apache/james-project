@@ -20,9 +20,7 @@
 package org.apache.james.imap.processor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -66,11 +64,12 @@ import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.metrics.api.MetricFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> implements CapabilityImplementingProcessor {
 
     protected final static String SEARCH_MODSEQ = "SEARCH_MODSEQ";
-    private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList("WITHIN", "ESEARCH", "SEARCHRES"));
+    private final static List<String> CAPS = ImmutableList.of("WITHIN", "ESEARCH", "SEARCHRES");
     
     public SearchProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {

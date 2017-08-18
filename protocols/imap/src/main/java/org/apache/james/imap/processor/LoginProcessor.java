@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,12 +31,14 @@ import org.apache.james.imap.message.request.LoginRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * Processes a <code>LOGIN</code> command.
  */
 public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implements CapabilityImplementingProcessor{
 
-    private final static List<String> LOGINDISABLED_CAPS = Collections.unmodifiableList(Arrays.asList("LOGINDISABLED"));
+    private final static List<String> LOGINDISABLED_CAPS = ImmutableList.of("LOGINDISABLED");
     public LoginProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
         super(LoginRequest.class, next, mailboxManager, factory, metricFactory);

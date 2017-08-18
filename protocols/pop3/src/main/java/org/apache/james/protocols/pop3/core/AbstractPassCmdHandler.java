@@ -19,10 +19,7 @@
 
 package org.apache.james.protocols.pop3.core;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-
 
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -30,11 +27,13 @@ import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Handles PASS commands.
  */
 public abstract class AbstractPassCmdHandler extends RsetCmdHandler {
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("PASS"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("PASS");
     private static final Response UNEXPECTED_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Unexpected error accessing mailbox").immutable();
     protected static final Response AUTH_FAILED = new POP3Response(POP3Response.ERR_RESPONSE, "Authentication failed.").immutable();
 

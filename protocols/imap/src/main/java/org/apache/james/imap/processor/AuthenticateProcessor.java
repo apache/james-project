@@ -21,7 +21,6 @@ package org.apache.james.imap.processor;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -36,6 +35,8 @@ import org.apache.james.imap.message.request.IRAuthenticateRequest;
 import org.apache.james.imap.message.response.AuthenticateResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Processor which handles the AUTHENTICATE command. Only authtype of PLAIN is supported ATM.
@@ -156,7 +157,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         }
         // Support for SASL-IR. See RFC4959
         caps.add("SASL-IR");
-        return Collections.unmodifiableList(caps);
+        return ImmutableList.copyOf(caps);
     }
 
 }

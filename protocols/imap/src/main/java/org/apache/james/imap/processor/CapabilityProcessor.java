@@ -27,7 +27,6 @@ import static org.apache.james.imap.api.ImapConstants.UTF8;
 import static org.apache.james.imap.api.ImapConstants.VERSION;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -42,6 +41,8 @@ import org.apache.james.imap.message.request.CapabilityRequest;
 import org.apache.james.imap.message.response.CapabilityResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
+
+import com.google.common.collect.ImmutableList;
 
 public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequest> implements CapabilityImplementingProcessor {
 
@@ -58,7 +59,7 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
             caps.add(SUPPORTS_I18NLEVEL_1);
         }
         caps.add(SUPPORTS_CONDSTORE);
-        CAPS = Collections.unmodifiableList(caps);
+        CAPS = ImmutableList.copyOf(caps);
     }
     
     private final List<CapabilityImplementingProcessor> capabilities = new ArrayList<>();
