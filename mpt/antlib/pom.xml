@@ -47,15 +47,6 @@ to the library requiring no extra coding.</description>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant-antunit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
         </dependency>
@@ -67,6 +58,15 @@ to the library requiring no extra coding.</description>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant-antunit</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -84,10 +84,10 @@ to the library requiring no extra coding.</description>
                         <configuration>
                             <tasks>
                                 <ant antfile="src/test/resources/build.xml" inheritAll="false" inheritRefs="false">
-                                    <property name="jar.name" location="${project.build.outputDirectory}" />
-                                    <property name="base.dir" location="${basedir}" />
-                                    <property name="test.skipped" value="${maven.test.skip}" />
-                                    <property name="test.classpath" refid="maven.test.classpath" />
+                                    <property location="${project.build.outputDirectory}" name="jar.name"></property>
+                                    <property location="${basedir}" name="base.dir"></property>
+                                    <property name="test.skipped" value="${maven.test.skip}"></property>
+                                    <property name="test.classpath" refid="maven.test.classpath"></property>
                                 </ant>
                             </tasks>
                         </configuration>
@@ -105,6 +105,13 @@ to the library requiring no extra coding.</description>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
                     <archive>
                         <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
@@ -120,18 +127,12 @@ to the library requiring no extra coding.</description>
                         </manifestEntries>
                     </archive>
                 </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
                 <executions>
                     <execution>
                         <id>bundle-manifest</id>
@@ -141,7 +142,6 @@ to the library requiring no extra coding.</description>
                         </goals>
                     </execution>
                 </executions>
-                <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Export-Package>org.apache.james.mpt.ant</Export-Package>

@@ -33,11 +33,16 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
+            <artifactId>apache-james-mailbox-jcr</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-jcr</artifactId>
+            <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-core</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- Use lucene 2.4.1 for now to let jcr tests pass -->
@@ -47,11 +52,5 @@
             <version>${lucene-core.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-core</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 </project>
-

@@ -28,9 +28,8 @@
     </parent>
 
     <artifactId>apache-james-mailbox-scanning-search</artifactId>
-    <description>Apache James Mailbox IMAP search implementation using scanning</description>
     <name>Apache James :: Mailbox :: Scanning</name>
-
+    <description>Apache James Mailbox IMAP search implementation using scanning</description>
 
     <dependencies>
         <dependency>

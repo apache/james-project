@@ -28,8 +28,8 @@
     </parent>
 
     <artifactId>apache-james-mailbox-jcr</artifactId>
-    <name>Apache James :: Mailbox :: JCR</name>
     <packaging>bundle</packaging>
+    <name>Apache James :: Mailbox :: JCR</name>
 
     <dependencies>
         <dependency>
@@ -38,20 +38,23 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-store</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-store</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -60,6 +63,11 @@
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
@@ -71,11 +79,24 @@
             <artifactId>jackrabbit-jcr-commons</artifactId>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- xercesImpl needed for some java versions -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
@@ -84,28 +105,6 @@
         <dependency>
             <groupId>xml-apis</groupId>
             <artifactId>xml-apis</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-api</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-store</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

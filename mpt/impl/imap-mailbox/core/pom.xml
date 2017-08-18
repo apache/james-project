@@ -33,25 +33,16 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mpt-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-imap</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-imap</artifactId>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-store</artifactId>
             <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mpt-core</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -86,17 +77,17 @@
             <artifactId>commons-lang</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <!-- As mime4j use commons-logging we need to specify the binding here -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-imap</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-imap</artifactId>
+            <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>org.jmock</groupId>
@@ -106,6 +97,14 @@
             <groupId>org.jmock</groupId>
             <artifactId>jmock-junit4</artifactId>
         </dependency>
+        <!-- As mime4j use commons-logging we need to specify the binding here -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
     </dependencies>
 </project>
-

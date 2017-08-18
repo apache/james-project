@@ -40,16 +40,8 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-backends-jpa</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-lifecycle-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-dnsservice-api</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -60,20 +52,46 @@
             <artifactId>james-server-data-library</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-data-library</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-dnsservice-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-dnsservice-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-lifecycle-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <!-- Test dependencies -->
@@ -98,31 +116,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-library</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-dnsservice-api</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>commons-dbcp</groupId>
-            <artifactId>commons-dbcp</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>test</scope>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -138,25 +138,6 @@
                 <groupId>org.apache.openjpa</groupId>
                 <artifactId>openjpa-maven-plugin</artifactId>
                 <version>2.4.2</version>
-                <configuration>
-                    <includes>
-                        org/apache/james/user/jpa/model/JPAUser.class,org/apache/james/rrt/jpa/model/JPARecipientRewrite.class,org/apache/james/domainlist/jpa/model/JPADomain.class
-                    </includes>
-                    <addDefaultConstructor>true</addDefaultConstructor>
-                    <enforcePropertyRestrictions>true</enforcePropertyRestrictions>
-                    <toolProperties>
-                        <property>
-                            <name>log</name>
-                            <value>TOOL=TRACE</value>
-                        </property>
-                        <property>
-                            <name>metaDataFactory</name>
-                            <value>
-                                jpa(Types=org.apache.james.user.jpa.model.JPAUser;org.apache.james.rrt.jpa.model.JPARecipientRewrite;org.apache.james.domainlist.jpa.model.JPADomain)
-                            </value>
-                        </property>
-                    </toolProperties>
-                </configuration>
                 <executions>
                     <execution>
                         <id>enhancer</id>
@@ -166,6 +147,21 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <includes>org/apache/james/user/jpa/model/JPAUser.class,org/apache/james/rrt/jpa/model/JPARecipientRewrite.class,org/apache/james/domainlist/jpa/model/JPADomain.class</includes>
+                    <addDefaultConstructor>true</addDefaultConstructor>
+                    <enforcePropertyRestrictions>true</enforcePropertyRestrictions>
+                    <toolProperties>
+                        <property>
+                            <name>log</name>
+                            <value>TOOL=TRACE</value>
+                        </property>
+                        <property>
+                            <name>metaDataFactory</name>
+                            <value>jpa(Types=org.apache.james.user.jpa.model.JPAUser;org.apache.james.rrt.jpa.model.JPARecipientRewrite;org.apache.james.domainlist.jpa.model.JPADomain)</value>
+                        </property>
+                    </toolProperties>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>

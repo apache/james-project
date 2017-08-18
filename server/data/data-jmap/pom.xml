@@ -51,10 +51,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-        </dependency>
-        <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
         </dependency>
@@ -62,6 +58,10 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>

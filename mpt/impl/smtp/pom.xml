@@ -18,21 +18,21 @@
     under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>apache-james-mpt</artifactId>
         <groupId>org.apache.james</groupId>
         <version>3.1.0-SNAPSHOT</version>
         <relativePath>../..</relativePath>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
 
     <artifactId>apache-james-mpt-smtp</artifactId>
-    <name>Apache James MPT SMTP</name>
     <packaging>pom</packaging>
+    <name>Apache James MPT SMTP</name>
 
     <modules>
-        <module>core</module>
         <module>cassandra</module>
+        <module>core</module>
     </modules>
 
     <dependencyManagement>
@@ -64,10 +64,10 @@
                             <includes>
                                 <include>**/cassandra/**/*.java</include>
                             </includes>
-                           <excludes>
-                             <exclude>**/suite/*.java</exclude>
-                             <exclude>**/suite/**/*.java</exclude>
-                           </excludes>
+                            <excludes>
+                                <exclude>**/suite/*.java</exclude>
+                                <exclude>**/suite/**/*.java</exclude>
+                            </excludes>
                         </configuration>
                     </plugin>
                 </plugins>

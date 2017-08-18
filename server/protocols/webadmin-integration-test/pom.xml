@@ -52,6 +52,18 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-cassandra-guice</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-guice-common</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-jmap</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -69,18 +81,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-webadmin-mailbox</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-cassandra-guice</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-common</artifactId>
-            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>

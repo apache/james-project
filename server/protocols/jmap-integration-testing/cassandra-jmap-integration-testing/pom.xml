@@ -17,8 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -66,24 +65,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-cassandra-guice</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-common</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-jmap</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-jmap-integration-testing</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -91,6 +72,24 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-dnsservice-api</artifactId>
             <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-guice-common</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-guice-jmap</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-jmap-integration-testing</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -110,12 +109,12 @@
         </dependency>
         <dependency>
             <groupId>info.cukes</groupId>
-            <artifactId>cucumber-java</artifactId>
+            <artifactId>cucumber-guice</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>info.cukes</groupId>
-            <artifactId>cucumber-guice</artifactId>
+            <artifactId>cucumber-java</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -142,12 +141,6 @@
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>java-hamcrest</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-util-java8</artifactId>
-            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>

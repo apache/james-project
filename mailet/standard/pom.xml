@@ -21,8 +21,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.james</groupId>
         <artifactId>apache-mailet</artifactId>
+        <groupId>org.apache.james</groupId>
         <version>3.1.0-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
@@ -31,10 +31,8 @@
     <packaging>bundle</packaging>
 
     <name>Apache James :: Standard Mailets</name>
-    <description>
-        Apache James Standard Mailets is a rich collection of general purpose mailets
-        with limited dependencies. These mailets can be used in any mailet container.
-    </description>
+    <description>Apache James Standard Mailets is a rich collection of general purpose mailets
+        with limited dependencies. These mailets can be used in any mailet container.</description>
     <url>http://james.apache.org/mailet/standard/</url>
     <inceptionYear>2008</inceptionYear>
 

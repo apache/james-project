@@ -3,8 +3,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.james</groupId>
         <artifactId>james-server</artifactId>
+        <groupId>org.apache.james</groupId>
         <version>3.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
@@ -15,6 +15,11 @@
     <name>Apache James :: Karaf :: James Server</name>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-karaf-features</artifactId>
+            <type>pom</type>
+        </dependency>
         <dependency>
             <groupId>org.apache.karaf</groupId>
             <artifactId>apache-karaf</artifactId>
@@ -28,19 +33,13 @@
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-karaf-features</artifactId>
-            <type>pom</type>
-        </dependency>
     </dependencies>
-
 
     <build>
         <resources>
             <resource>
-                <directory>src/main/filtered-resources</directory>
                 <filtering>true</filtering>
+                <directory>src/main/filtered-resources</directory>
                 <includes>
                     <include>**/*</include>
                 </includes>
@@ -50,12 +49,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <configuration>
-                    <useDefaultDelimiters>false</useDefaultDelimiters>
-                    <delimiters>
-                        <delimiter>${*}</delimiter>
-                    </delimiters>
-                </configuration>
                 <executions>
                     <execution>
                         <id>filter</id>
@@ -65,6 +58,12 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <useDefaultDelimiters>false</useDefaultDelimiters>
+                    <delimiters>
+                        <delimiter>${*}</delimiter>
+                    </delimiters>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -122,17 +121,12 @@
                         <goals>
                             <goal>add-features-to-repo</goal>
                         </goals>
+                        <inherited>false</inherited>
                         <configuration>
                             <descriptors>
-                                <descriptor>
-                                    mvn:org.apache.karaf.assemblies.features/standard/${karaf.version}/xml/features
-                                </descriptor>
-                                <descriptor>
-                                    mvn:org.apache.karaf.assemblies.features/enterprise/${karaf.version}/xml/features
-                                </descriptor>
-                                <descriptor>
-                                    mvn:org.apache.james.karaf/james-karaf-features/${project.version}/xml/features
-                                </descriptor>
+                                <descriptor>mvn:org.apache.karaf.assemblies.features/standard/${karaf.version}/xml/features</descriptor>
+                                <descriptor>mvn:org.apache.karaf.assemblies.features/enterprise/${karaf.version}/xml/features</descriptor>
+                                <descriptor>mvn:org.apache.james.karaf/james-karaf-features/${project.version}/xml/features</descriptor>
                             </descriptors>
                             <features>
                                 <feature>config</feature>
@@ -142,7 +136,6 @@
                             <includeMvnBasedDescriptors>true</includeMvnBasedDescriptors>
                             <repository>target/features-repo</repository>
                         </configuration>
-                        <inherited>false</inherited>
                     </execution>
                 </executions>
             </plugin>

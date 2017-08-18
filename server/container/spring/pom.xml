@@ -35,17 +35,41 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-tool</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-mailet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-data-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-filesystem-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-filesystem-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-lifecycle-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-filesystem-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-filesystem-api</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
+            <artifactId>james-server-mailbox-adapter</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -56,47 +80,62 @@
             <artifactId>james-server-protocols-library</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-api</artifactId>
+            <groupId>com.sparkjava</groupId>
+            <artifactId>spark-core</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-core</artifactId>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-api</artifactId>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-mailbox-adapter</artifactId>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-tool</artifactId>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-spring</artifactId>
+            <version>${activemq.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.james.protocols</groupId>
             <artifactId>protocols-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-mailet-api</artifactId>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-          <groupId>org.apache.activemq</groupId>
-          <artifactId>activemq-spring</artifactId>
-          <version>${activemq.version}</version>
-          <exclusions>
-            <exclusion>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-            </exclusion>
-          </exclusions>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -108,24 +147,28 @@
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
             <artifactId>spring-jms</artifactId>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>org.springframework</groupId>
                     <artifactId>spring-core</artifactId>
+                    <groupId>org.springframework</groupId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.springframework</groupId>
                     <artifactId>spring-beans</artifactId>
+                    <groupId>org.springframework</groupId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.springframework</groupId>
                     <artifactId>spring-aop</artifactId>
+                    <groupId>org.springframework</groupId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.springframework</groupId>
                     <artifactId>spring-tx</artifactId>
+                    <groupId>org.springframework</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -136,49 +179,6 @@
         <dependency>
             <groupId>org.springframework.osgi</groupId>
             <artifactId>spring-osgi-extender</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.sparkjava</groupId>
-            <artifactId>spark-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>javax.inject</groupId>
-          <artifactId>javax.inject</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>pl.pragmatists</groupId>

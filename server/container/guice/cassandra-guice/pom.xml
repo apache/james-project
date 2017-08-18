@@ -22,8 +22,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.james</groupId>
         <artifactId>james-server-guice</artifactId>
+        <groupId>org.apache.james</groupId>
         <version>3.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -38,13 +38,7 @@
         <cassandra.includes>empty</cassandra.includes>
     </properties>
 
-
     <dependencies>
-        <dependency>
-            <groupId>org.hdrhistogram</groupId>
-            <artifactId>HdrHistogram</artifactId>
-            <version>2.1.4</version>
-        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-backends-cassandra</artifactId>
@@ -63,8 +57,8 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-cassandra</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -81,6 +75,10 @@
             <artifactId>apache-james-mailbox-tika</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-tika</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -89,20 +87,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-tika</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-cassandra</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-jmap-cassandra</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>metrics-es-reporter</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -128,6 +117,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-guice-jmap</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-jmx</artifactId>
         </dependency>
         <dependency>
@@ -136,11 +131,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-pop</artifactId>
+            <artifactId>james-server-guice-managedsieve</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-managedsieve</artifactId>
+            <artifactId>james-server-guice-pop</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -174,15 +169,14 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-jmap</artifactId>
+            <artifactId>james-server-util-java8</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-util-java8</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
+            <artifactId>metrics-es-reporter</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -217,6 +211,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.hdrhistogram</groupId>
+            <artifactId>HdrHistogram</artifactId>
+            <version>2.1.4</version>
+        </dependency>
+        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
@@ -227,15 +226,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <profiles>
-        <profile>
-            <id>cassandra</id>
-            <properties>
-                <cassandra.includes>**/*.java</cassandra.includes>
-            </properties>
-        </profile>
-    </profiles>
 
     <build>
         <plugins>
@@ -248,13 +238,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                   <excludes>
-                       <exclude>**/suite/*.java</exclude>
-                       <exclude>**/suite/**/*.java</exclude>
-                   </excludes>
-                   <includes>
-                       <include>${cassandra.includes}</include>
-                   </includes>
+                    <excludes>
+                        <exclude>**/suite/*.java</exclude>
+                        <exclude>**/suite/**/*.java</exclude>
+                    </excludes>
+                    <includes>
+                        <include>${cassandra.includes}</include>
+                    </includes>
                 </configuration>
             </plugin>
             <plugin>
@@ -304,4 +294,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>cassandra</id>
+            <properties>
+                <cassandra.includes>**/*.java</cassandra.includes>
+            </properties>
+        </profile>
+    </profiles>
 </project>

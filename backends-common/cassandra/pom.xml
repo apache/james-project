@@ -48,8 +48,8 @@
                 exclude this dependency explicitly: -->
             <exclusions>
                 <exclusion>
-                    <groupId>io.netty</groupId>
                     <artifactId>*</artifactId>
+                    <groupId>io.netty</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -72,6 +72,12 @@
             <version>0.3.0</version>
         </dependency>
         <dependency>
+            <groupId>nl.jqno.equalsverifier</groupId>
+            <artifactId>equalsverifier</artifactId>
+            <version>1.7.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
@@ -88,12 +94,6 @@
             <version>1.9.0</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>nl.jqno.equalsverifier</groupId>
-            <artifactId>equalsverifier</artifactId>
-            <version>1.7.6</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
-    
+
 </project>

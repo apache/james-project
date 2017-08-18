@@ -33,21 +33,21 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-hbase</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-imap</artifactId>
-            <scope>test</scope>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>13.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-test</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hbase</groupId>
@@ -61,10 +61,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-test</artifactId>
+            <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-imap</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
-

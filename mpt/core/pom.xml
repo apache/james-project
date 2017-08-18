@@ -27,22 +27,10 @@
     </parent>
     <artifactId>apache-james-mpt-core</artifactId>
     <name>Apache James MPT Core</name>
-    <description>
-      Apache James Mail Protocol Tester (MPT) is a library providing a framework for the 
-      scriptable functional testing of ASCII based line protocols.
-    </description>
+    <description>Apache James Mail Protocol Tester (MPT) is a library providing a framework for the 
+      scriptable functional testing of ASCII based line protocols.</description>
     <url>http://james.apache.org/mpt/main</url>
     <dependencies>
-        <dependency>
-            <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-imap</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-imap</artifactId>
-            <type>test-jar</type>
-            <scope>compile</scope>
-        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
@@ -85,6 +73,16 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-imap</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-imap</artifactId>
+            <type>test-jar</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
@@ -99,6 +97,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
                     <archive>
                         <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
@@ -114,17 +119,11 @@
                         </manifestEntries>
                     </archive>
                 </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
                 <executions>
                     <execution>
                         <id>bundle-manifest</id>
@@ -134,7 +133,6 @@
                         </goals>
                     </execution>
                 </executions>
-                <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Export-Package>org.apache.james.mpt</Export-Package>
@@ -160,7 +158,7 @@
     </build>
 
     <profiles>
-       <profile>
+        <profile>
             <id>doclint-java8-disable</id>
             <activation>
                 <jdk>[1.8,)</jdk>

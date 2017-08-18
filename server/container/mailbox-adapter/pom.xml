@@ -35,23 +35,15 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-lifecycle-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-filesystem-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-util-java8</artifactId>
+            <artifactId>apache-james-mailbox-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-maildir</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -70,15 +62,23 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-maildir</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-tool</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-data-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-filesystem-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-lifecycle-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-util-java8</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -98,6 +98,10 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 

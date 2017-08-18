@@ -33,11 +33,9 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-lifecycle-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-dnsservice-api</artifactId>
+            <artifactId>apache-james-mailbox-hbase</artifactId>
+            <classifier>tests</classifier>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -48,52 +46,42 @@
             <artifactId>james-server-data-library</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-data-library</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-dnsservice-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-dnsservice-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-lifecycle-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>13.0</version>
+            <!--$NO-MVN-MAN-VER$-->
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
         </dependency>
         <dependency>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
+        </dependency>
+        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.jruby</groupId>
-                    <artifactId>jruby-complete</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <!-- Test dependencies -->
         <dependency>
@@ -112,19 +100,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>13.0</version><!--$NO-MVN-MAN-VER$-->
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-library</artifactId>
-            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -133,26 +110,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-dnsservice-api</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-hbase</artifactId>
-            <classifier>tests</classifier>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>org.jruby</groupId>
-                    <artifactId>jruby-complete</artifactId>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -162,9 +125,47 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jruby-complete</artifactId>
+                    <groupId>org.jruby</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>slf4j-log4j12</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>log4j</artifactId>
+                    <groupId>log4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jruby-complete</artifactId>
+                    <groupId>org.jruby</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

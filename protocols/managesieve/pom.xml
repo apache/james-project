@@ -21,8 +21,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.james</groupId>
         <artifactId>protocols</artifactId>
+        <groupId>org.apache.james</groupId>
         <version>3.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -34,14 +34,6 @@
     <name>Apache James :: Protocols :: ManageSieve</name>
 
     <dependencies>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-jsieve-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-server-data-api</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
@@ -60,6 +52,14 @@
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>apache-jsieve-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-server-data-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
@@ -70,6 +70,5 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
 
 </project>

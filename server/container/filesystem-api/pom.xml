@@ -43,8 +43,8 @@
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
-          <groupId>javax.inject</groupId>
-          <artifactId>javax.inject</artifactId>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

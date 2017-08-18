@@ -35,26 +35,18 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-server-util</artifactId>
-        </dependency>
-        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>protocols-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>protocols-api</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>protocols-netty</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>metrics-api</artifactId>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -63,6 +55,11 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
@@ -88,9 +85,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-            <scope>test</scope>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-server-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>metrics-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
@@ -134,7 +134,7 @@
                                 </relocation>
                             </relocations>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ComponentsXmlResourceTransformer" />
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ComponentsXmlResourceTransformer"></transformer>
                             </transformers>
                         </configuration>
                     </execution>

@@ -43,29 +43,25 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-lucene</artifactId>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-lucene</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-jpa</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-jpa</artifactId>
             <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-lucene</artifactId>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-lucene</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-store</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -75,6 +71,10 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
         </dependency>
     </dependencies>
 

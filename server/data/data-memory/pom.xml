@@ -43,13 +43,13 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-dnsservice-api</artifactId>
+            <artifactId>james-server-data-library</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-library</artifactId>
+            <artifactId>james-server-dnsservice-api</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

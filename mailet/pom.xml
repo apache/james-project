@@ -21,8 +21,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.james</groupId>
         <artifactId>james-project</artifactId>
+        <groupId>org.apache.james</groupId>
         <version>3.1.0-SNAPSHOT</version>
     </parent>
 
@@ -33,6 +33,30 @@
     <description>Apache James Mailets parent and aggregator</description>
     <url>http://james.apache.org/mailet/</url>
     <inceptionYear>2008</inceptionYear>
+
+    <mailingLists>
+        <mailingList>
+            <name>Apache Mailet API List</name>
+            <subscribe>mailet-api-subscribe@james.apache.org</subscribe>
+            <unsubscribe>mailet-api-unsubscribe@james.apache.org</unsubscribe>
+            <post>mailet-api-@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-mailet-api/</archive>
+        </mailingList>
+    </mailingLists>
+
+    <modules>
+        <module>ai</module>
+        <module>api</module>
+        <module>base</module>
+        <module>crypto</module>
+        <module>icalendar</module>
+        <module>mailetdocs-maven-plugin</module>
+        <module>standard</module>
+    </modules>
+
+    <issueManagement>
+        <url>http://issues.apache.org/jira/browse/MAILET</url>
+    </issueManagement>
 
     <properties>
         <!-- Override the source descriptor -->
@@ -61,17 +85,6 @@
         <apache-commons-io.version>1.3.2</apache-commons-io.version>
     </properties>
 
-
-    <modules>
-        <module>api</module>
-        <module>base</module>
-        <module>mailetdocs-maven-plugin</module>
-        <module>crypto</module>
-        <module>standard</module>
-        <module>ai</module>
-        <module>icalendar</module>
-    </modules>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -96,6 +109,26 @@
                 <version>${mime4j.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson-data.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jdk8</artifactId>
+                <version>${jackson-data.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.steveash.guavate</groupId>
+                <artifactId>guavate</artifactId>
+                <version>${guavate.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>18.0</version>
+            </dependency>
+            <dependency>
                 <groupId>com.rabbitmq</groupId>
                 <artifactId>amqp-client</artifactId>
                 <version>4.0.0</version>
@@ -106,54 +139,9 @@
                 <version>1.5.4</version>
             </dependency>
             <dependency>
-                <groupId>javax.activation</groupId>
-                <artifactId>activation</artifactId>
-                <version>${activation.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.inject</groupId>
-                <artifactId>javax.inject</artifactId>
-                <version>${javax.inject.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.bouncycastle</groupId>
-                <artifactId>bcmail-jdk15on</artifactId>
-                <version>1.52</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-io</artifactId>
-                <version>${apache-commons-io.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven.artifact</groupId>
-                <artifactId>maven-artifact</artifactId>
-                <version>${maven-artifact.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven</groupId>
-                <artifactId>maven-plugin-api</artifactId>
-                <version>${maven-plugin-api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven.plugin-tools</groupId>
-                <artifactId>maven-plugin-annotations</artifactId>
-                <version>${maven-plugin-annotations.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven.reporting</groupId>
-                <artifactId>maven-reporting-impl</artifactId>
-                <version>${maven-reporting-impl.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven.reporting</groupId>
-                <artifactId>maven-reporting-api</artifactId>
-                <version>${maven-reporting-api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mnode.ical4j</groupId>
-                <artifactId>ical4j</artifactId>
-                <version>${ical4j.version}</version>
+                <groupId>com.thoughtworks.qdox</groupId>
+                <artifactId>qdox</artifactId>
+                <version>${qdox.version}</version>
             </dependency>
             <dependency>
                 <groupId>commons-collections</groupId>
@@ -166,6 +154,27 @@
                 <version>${commons-io.version}</version>
             </dependency>
             <dependency>
+                <groupId>javax.activation</groupId>
+                <artifactId>activation</artifactId>
+                <version>${activation.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.inject</groupId>
+                <artifactId>javax.inject</artifactId>
+                <version>${javax.inject.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${apache-commons-io.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>${commons-lang3.version}</version>
@@ -176,10 +185,35 @@
                 <version>${httpclient-osgi.version}</version>
                 <exclusions>
                     <exclusion>
-                        <groupId>commons-logging</groupId>
                         <artifactId>commons-logging</artifactId>
+                        <groupId>commons-logging</groupId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-plugin-api</artifactId>
+                <version>${maven-plugin-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven.artifact</groupId>
+                <artifactId>maven-artifact</artifactId>
+                <version>${maven-artifact.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven.plugin-tools</groupId>
+                <artifactId>maven-plugin-annotations</artifactId>
+                <version>${maven-plugin-annotations.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven.reporting</groupId>
+                <artifactId>maven-reporting-api</artifactId>
+                <version>${maven-reporting-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven.reporting</groupId>
+                <artifactId>maven-reporting-impl</artifactId>
+                <version>${maven-reporting-impl.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.assertj</groupId>
@@ -194,25 +228,14 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>com.thoughtworks.qdox</groupId>
-                <artifactId>qdox</artifactId>
-                <version>${qdox.version}</version>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcmail-jdk15on</artifactId>
+                <version>1.52</version>
             </dependency>
             <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <scope>test</scope>
-                <version>${junit.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>18.0</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.steveash.guavate</groupId>
-                <artifactId>guavate</artifactId>
-                <version>${guavate.version}</version>
+                <groupId>org.mnode.ical4j</groupId>
+                <artifactId>ical4j</artifactId>
+                <version>${ical4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
@@ -223,16 +246,6 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson-data.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jdk8</artifactId>
-                <version>${jackson-data.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -261,7 +274,6 @@
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
-                <inherited>true</inherited>
                 <executions>
                     <execution>
                         <phase>verify</phase>
@@ -289,6 +301,7 @@
                         </configuration>
                     </execution>
                 </executions>
+                <inherited>true</inherited>
             </plugin>
             <!-- Add NOTICE and LICENSE to generated JAR -->
             <plugin>
@@ -306,8 +319,7 @@
                             <properties>
                                 <!-- <preProjectText>PRE PROCESS TEXT</preProjectText> -->
                                 <postProjectText>This file is automatically generated by dependencies declared in
-                                    pom.xml
-                                </postProjectText>
+                                    pom.xml</postProjectText>
                                 <addLicense>true</addLicense>
                             </properties>
                         </configuration>
@@ -335,19 +347,5 @@
             </plugin>
         </plugins>
     </reporting>
-
-    <mailingLists>
-        <mailingList>
-            <name>Apache Mailet API List</name>
-            <subscribe>mailet-api-subscribe@james.apache.org</subscribe>
-            <unsubscribe>mailet-api-unsubscribe@james.apache.org</unsubscribe>
-            <post>mailet-api-@james.apache.org</post>
-            <archive>http://mail-archives.apache.org/mod_mbox/james-mailet-api/</archive>
-        </mailingList>
-    </mailingLists>
-
-    <issueManagement>
-        <url>http://issues.apache.org/jira/browse/MAILET</url>
-    </issueManagement>
 
 </project>

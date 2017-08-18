@@ -46,16 +46,12 @@
             <artifactId>metrics-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
         </dependency>
         <dependency>
             <groupId>dnsjava</groupId>
@@ -65,15 +61,15 @@
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-annotation_1.1_spec</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-annotation_1.1_spec</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -83,6 +79,10 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

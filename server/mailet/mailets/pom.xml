@@ -33,29 +33,76 @@
     <name>Apache James :: Server :: Mailets</name>
 
     <dependencies>
+        <!--
+               <dependency>
+                   <groupId>${project.groupId}</groupId>
+                   <artifactId>apache-james-imap-processor</artifactId>
+               </dependency>
+        -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-util</artifactId>
+            <artifactId>apache-james-mailbox-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-dnsservice-library</artifactId>
+            <artifactId>apache-james-mailbox-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-lifecycle-api</artifactId>
+            <artifactId>apache-james-mailbox-memory</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-filesystem-api</artifactId>
+            <artifactId>apache-james-mailbox-memory</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-queue-api</artifactId>
+            <artifactId>apache-james-mailbox-store</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-dnsservice-api</artifactId>
+            <artifactId>apache-james-mailbox-store</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-mailet-api</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-mailet-base</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-mailet-base</artifactId>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-mailet-standard</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-mime4j-dom</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-mime4j-james-utils</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-core</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -68,108 +115,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>metrics-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-managesieve</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-managesieve</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-mailet-api</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-smtp</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-mailet-base</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-mailet-standard</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.jspf</groupId>
-            <artifactId>apache-jspf-resolver</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-mime4j-dom</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-mime4j-james-utils</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>joda-time</groupId>
-            <artifactId>joda-time</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-        </dependency>
-        <!--
-               <dependency>
-                   <groupId>${project.groupId}</groupId>
-                   <artifactId>apache-james-imap-processor</artifactId>
-               </dependency>
-        -->
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-api</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>javax.inject</groupId>
-          <artifactId>javax.inject</artifactId>
-        </dependency>
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-mailet-base</artifactId>
-            <classifier>tests</classifier>
-            <scope>test</scope>
+            <artifactId>james-server-dnsservice-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -179,31 +125,77 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-api</artifactId>
+            <artifactId>james-server-dnsservice-library</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-filesystem-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-lifecycle-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-queue-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>metrics-api</artifactId>
+        </dependency>
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james.jspf</groupId>
+            <artifactId>apache-jspf-resolver</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-managesieve</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-managesieve</artifactId>
             <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-store</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-store</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-memory</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-memory</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
+            <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-smtp</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
@@ -219,6 +211,14 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 

@@ -28,8 +28,8 @@
     </parent>
 
     <artifactId>zookeeper-sequence-provider</artifactId>
-    <name>Apache James :: Mailbox :: Zookeeper Sequence Provider</name>
     <packaging>bundle</packaging>
+    <name>Apache James :: Mailbox :: Zookeeper Sequence Provider</name>
     <description>High performance distribuited sequence provider based on ZooKeepr</description>
 
     <properties>
@@ -37,6 +37,41 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-store</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>13.0</version>
+            <!--$NO-MVN-MAN-VER$-->
+        </dependency>
+        <dependency>
+            <groupId>com.netflix.curator</groupId>
+            <artifactId>curator-client</artifactId>
+            <version>${curator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.netflix.curator</groupId>
+            <artifactId>curator-framework</artifactId>
+            <version>${curator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.netflix.curator</groupId>
+            <artifactId>curator-recipes</artifactId>
+            <version>${curator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.netflix.curator</groupId>
+            <artifactId>curator-test</artifactId>
+            <version>${curator.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -49,40 +84,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-store</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.netflix.curator</groupId>
-            <artifactId>curator-recipes</artifactId>
-            <version>${curator.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>13.0</version><!--$NO-MVN-MAN-VER$-->
-        </dependency>
-        <dependency>
-            <groupId>com.netflix.curator</groupId>
-            <artifactId>curator-framework</artifactId>
-            <version>${curator.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.netflix.curator</groupId>
-            <artifactId>curator-client</artifactId>
-            <version>${curator.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.netflix.curator</groupId>
-            <artifactId>curator-test</artifactId>
-            <version>${curator.version}</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

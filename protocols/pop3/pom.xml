@@ -39,23 +39,23 @@
             <artifactId>protocols-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>protocols-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>protocols-netty</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>protocols-api</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>protocols-netty</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

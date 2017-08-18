@@ -22,8 +22,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.james</groupId>
         <artifactId>james-server</artifactId>
+        <groupId>org.apache.james</groupId>
         <version>3.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -51,8 +51,7 @@
         <javamail.system-properties>${javamail.system-property1} ${javamail.system-property2}
             ${javamail.system-property3} ${javamail.system-property4} ${javamail.system-property5}
             ${javamail.system-property6} ${javamail.system-property7} ${javamail.system-property8}
-            ${javamail.system-property9} ${javamail.system-property10}
-        </javamail.system-properties>
+            ${javamail.system-property9} ${javamail.system-property10}</javamail.system-properties>
 
         <!-- JMX system properties -->
         <!-- For more details see -->
@@ -74,6 +73,58 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-jcr</artifactId>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>mail</artifactId>
+                    <groupId>javax.mail</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-jpa</artifactId>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>mail</artifactId>
+                    <groupId>javax.mail</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-memory</artifactId>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>mail</artifactId>
+                    <groupId>javax.mail</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-spring</artifactId>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>hbase</artifactId>
+                    <groupId>org.apache.hbase</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>hadoop-core</artifactId>
+                    <groupId>org.apache.hadoop</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>mail</artifactId>
+                    <groupId>javax.mail</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-cli</artifactId>
         </dependency>
         <dependency>
@@ -88,10 +139,6 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>metrics-logger</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-api</artifactId>
             <exclusions>
                 <exclusion>
@@ -100,132 +147,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-dnsservice-library</artifactId>
-            <exclusions>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-filesystem-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-lifecycle-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-mailetcontainer-api</artifactId>
-            <exclusions>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-queue-api</artifactId>
-            <exclusions>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-spring</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.osgi</groupId>
-                    <artifactId>spring-osgi-extender</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.osgi</groupId>
-                    <artifactId>org.osgi.core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <!-- Runtime dependencies which will get included in the generated binary distribution -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-daemon</groupId>
-            <artifactId>commons-daemon</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-core</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>tools</artifactId>
-                    <groupId>com.sun</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-spring</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>tools</artifactId>
-                    <groupId>com.sun</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.xbean</groupId>
-            <artifactId>xbean-spring</artifactId>
-            <scope>runtime</scope>
-        </dependency>
 
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-jms</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-orm</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-tx</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-jdbc</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-mailetcontainer-camel</artifactId>
+            <artifactId>james-server-data-file</artifactId>
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
@@ -236,7 +161,66 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-mailbox-adapter</artifactId>
+            <artifactId>james-server-data-hbase</artifactId>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jruby-complete</artifactId>
+                    <groupId>org.jruby</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>hsqldb</artifactId>
+                    <groupId>hsqldb</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>hbase</artifactId>
+                    <groupId>org.apache.hbase</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>hadoop-core</artifactId>
+                    <groupId>org.apache.hadoop</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>mail</artifactId>
+                    <groupId>javax.mail</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-data-jcr</artifactId>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>mail</artifactId>
+                    <groupId>javax.mail</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-data-jdbc</artifactId>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>mail</artifactId>
+                    <groupId>javax.mail</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-data-jpa</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-data-ldap</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-data-library</artifactId>
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
@@ -257,20 +241,17 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>metrics-api</artifactId>
+            <artifactId>james-server-dnsservice-library</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>mail</artifactId>
+                    <groupId>javax.mail</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>metrics-dropwizard</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-protocols-library</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-util</artifactId>
+            <artifactId>james-server-fetchmail</artifactId>
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
@@ -281,7 +262,15 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-library</artifactId>
+            <artifactId>james-server-filesystem-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-lifecycle-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-mailbox-adapter</artifactId>
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
@@ -292,13 +281,28 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-ldap</artifactId>
-            <scope>runtime</scope>
+            <artifactId>james-server-mailetcontainer-api</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>mail</artifactId>
+                    <groupId>javax.mail</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
-
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-protocols-smtp</artifactId>
+            <artifactId>james-server-mailetcontainer-camel</artifactId>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>mail</artifactId>
+                    <groupId>javax.mail</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-mailets</artifactId>
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
@@ -310,6 +314,11 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-protocols-imap4</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-protocols-library</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -339,14 +348,32 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-managesieve</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-protocols-smtp</artifactId>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>mail</artifactId>
+                    <groupId>javax.mail</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-fetchmail</artifactId>
+            <artifactId>james-server-queue-activemq</artifactId>
             <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>mail</artifactId>
+                    <groupId>javax.mail</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-queue-api</artifactId>
             <exclusions>
                 <exclusion>
                     <artifactId>mail</artifactId>
@@ -378,7 +405,25 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-queue-activemq</artifactId>
+            <artifactId>james-server-spring</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>spring-osgi-extender</artifactId>
+                    <groupId>org.springframework.osgi</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org.osgi.core</artifactId>
+                    <groupId>org.osgi</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>mail</artifactId>
+                    <groupId>javax.mail</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-util</artifactId>
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
@@ -389,12 +434,39 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-mailets</artifactId>
+            <artifactId>metrics-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>metrics-dropwizard</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>metrics-logger</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-daemon</groupId>
+            <artifactId>commons-daemon</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-core</artifactId>
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
+                    <artifactId>tools</artifactId>
+                    <groupId>com.sun</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-spring</artifactId>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>tools</artifactId>
+                    <groupId>com.sun</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -416,128 +488,55 @@
             <artifactId>derby</artifactId>
             <scope>runtime</scope>
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-jpa</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-spring</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>hbase</artifactId>
-                    <groupId>org.apache.hbase</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>hadoop-core</artifactId>
-                    <groupId>org.apache.hadoop</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-jcr</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-memory</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-file</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-jpa</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-jdbc</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-hbase</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.jruby</groupId>
-                    <artifactId>jruby-complete</artifactId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>hsqldb</artifactId>
-                    <groupId>hsqldb</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>hbase</artifactId>
-                    <groupId>org.apache.hbase</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>hadoop-core</artifactId>
-                    <groupId>org.apache.hadoop</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-jcr</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.james.protocols</groupId>
             <artifactId>protocols-imap</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-managesieve</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.xbean</groupId>
+            <artifactId>xbean-spring</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- Runtime dependencies which will get included in the generated binary distribution -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jms</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-orm</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
             <scope>runtime</scope>
         </dependency>
     </dependencies>
@@ -553,35 +552,35 @@
     </build>
 
     <profiles>
-	<profile>
+        <profile>
             <id>build-for-jdk-8</id>
             <activation>
                 <jdk>[1.8,)</jdk>
             </activation>
-	    <dependencies>
-	        <dependency>
-		    <groupId>${project.groupId}</groupId>
-		    <artifactId>apache-james-mailbox-elasticsearch</artifactId>
-		    <scope>runtime</scope>
-		    <exclusions>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>apache-james-mailbox-elasticsearch</artifactId>
+                    <scope>runtime</scope>
+                    <exclusions>
                         <exclusion>
-			    <artifactId>mail</artifactId>
-			    <groupId>javax.mail</groupId>
-			</exclusion>
-		    </exclusions>
-		</dependency>
-		<dependency>
-		    <groupId>${project.groupId}</groupId>
-		    <artifactId>apache-james-mailbox-tika</artifactId>
-		    <scope>runtime</scope>
-		    <exclusions>
+                            <artifactId>mail</artifactId>
+                            <groupId>javax.mail</groupId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>apache-james-mailbox-tika</artifactId>
+                    <scope>runtime</scope>
+                    <exclusions>
                         <exclusion>
-			  <artifactId>mail</artifactId>
-			  <groupId>javax.mail</groupId>
-			</exclusion>
-		    </exclusions>
-		</dependency>
-	    </dependencies>
+                            <artifactId>mail</artifactId>
+                            <groupId>javax.mail</groupId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+            </dependencies>
         </profile>
         <profile>
             <id>cassandra</id>
@@ -590,6 +589,11 @@
                 <james.system-properties>${james.system-property1} ${james.system-property2}</james.system-properties>
             </properties>
             <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>apache-james-backends-cassandra</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-mailbox-cassandra</artifactId>
@@ -604,11 +608,6 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-data-cassandra</artifactId>
-                    <scope>runtime</scope>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-backends-cassandra</artifactId>
                     <scope>runtime</scope>
                 </dependency>
             </dependencies>
@@ -626,7 +625,7 @@
         <profile>
             <id>lucene</id>
             <activation>
-              <activeByDefault>true</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <dependencies>
                 <dependency>
@@ -655,16 +654,16 @@
                             <groupId>javax.mail</groupId>
                         </exclusion>
                         <exclusion>
-                            <groupId>org.apache.lucene</groupId>
                             <artifactId>lucene-core</artifactId>
+                            <groupId>org.apache.lucene</groupId>
                         </exclusion>
                         <exclusion>
-                            <groupId>org.apache.lucene</groupId>
                             <artifactId>lucene-analyzers</artifactId>
+                            <groupId>org.apache.lucene</groupId>
                         </exclusion>
                         <exclusion>
-                            <groupId>org.apache.lucene</groupId>
                             <artifactId>lucene-smartcn</artifactId>
+                            <groupId>org.apache.lucene</groupId>
                         </exclusion>
                     </exclusions>
                 </dependency>
@@ -673,7 +672,7 @@
         <profile>
             <id>with-assembly</id>
             <activation>
-              <activeByDefault>true</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <build>
                 <plugins>
@@ -681,6 +680,16 @@
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>appassembler-maven-plugin</artifactId>
                         <version>1.10</version>
+                        <executions>
+                            <execution>
+                                <id>make-appassemble</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>assemble</goal>
+                                    <goal>generate-daemons</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                         <configuration>
                             <!-- Include etc/ in the beginning of the classpath declaration in the bin scripts -->
                             <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
@@ -692,8 +701,7 @@
                             <environmentSetupFileName>setenv</environmentSetupFileName>
                             <!-- set some sane defaults for memory -->
                             <extraJvmArguments>${jvm.system-property1} -Xms128m -Xmx512m ${jmx.system-properties}
-                                ${javamail.system-properties} ${james.system-properties}
-                            </extraJvmArguments>
+                                ${javamail.system-properties} ${james.system-properties}</extraJvmArguments>
                             <!-- Generate bin scripts for windows and unix per default -->
                             <platforms>
                                 <platform>windows</platform>
@@ -920,16 +928,6 @@
                                 </daemon>
                             </daemons>
                         </configuration>
-                        <executions>
-                            <execution>
-                                <id>make-appassemble</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>assemble</goal>
-                                    <goal>generate-daemons</goal>
-                                </goals>
-                            </execution>
-                        </executions>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -938,41 +936,37 @@
                         <executions>
                             <execution>
                                 <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
                                 <configuration>
 
                                     <tasks>
                                         <!-- this is only needed because windows freak out on long cmd lines, so we strip of the absolute path
                                             from the lib dir to make windows happy again
                                         -->
-                                        <replace file="${project.build.directory}/appassembler/bin/run.bat" token="%BASEDIR%\lib" value="..\lib" />
-                                        <replace file="${project.build.directory}/appassembler/bin/run.sh" token="setenv" value="setenv.sh" />
+                                        <replace file="${project.build.directory}/appassembler/bin/run.bat" token="%BASEDIR%\lib" value="..\lib"></replace>
+                                        <replace file="${project.build.directory}/appassembler/bin/run.sh" token="setenv" value="setenv.sh"></replace>
 
                                         <!-- this is needed because appassembler is not really smart on some settings -->
-                                        <replace file="${project.build.directory}/appassembler/jsw/james/conf/wrapper.conf" token="lib/wrapper.jar" value="%REPO_DIR%/wrapper.jar" />
-                                        <replace file="${project.build.directory}/appassembler/jsw/james/bin/james" token="logs" value="var" />
+                                        <replace file="${project.build.directory}/appassembler/jsw/james/conf/wrapper.conf" token="lib/wrapper.jar" value="%REPO_DIR%/wrapper.jar"></replace>
+                                        <replace file="${project.build.directory}/appassembler/jsw/james/bin/james" token="logs" value="var"></replace>
 
                                         <!-- copy the linux wrapper-linux-x86-32 to wrapper, so use it as default if no matching wrapper was found -->
-                                        <copy file="${project.build.directory}/appassembler/jsw/james/bin/wrapper-linux-x86-32" tofile="${project.build.directory}/appassembler/jsw/james/bin/wrapper" />
+                                        <copy file="${project.build.directory}/appassembler/jsw/james/bin/wrapper-linux-x86-32" tofile="${project.build.directory}/appassembler/jsw/james/bin/wrapper"></copy>
                                         <!-- this is only needed because windows freak out on long cmd lines, so we strip of the absolute path
                                             from the lib dir to make windows happy again
                                         -->
-                                        <replace file="${project.build.directory}/appassembler/bin/james-cli.bat" token="%BASEDIR%\lib" value="..\lib" />
-                                        <replace file="${project.build.directory}/appassembler/bin/james-cli.sh" token="setenv" value="setenv.sh" />
+                                        <replace file="${project.build.directory}/appassembler/bin/james-cli.bat" token="%BASEDIR%\lib" value="..\lib"></replace>
+                                        <replace file="${project.build.directory}/appassembler/bin/james-cli.sh" token="setenv" value="setenv.sh"></replace>
                                     </tasks>
 
                                 </configuration>
-                                <goals>
-                                    <goal>run</goal>
-                                </goals>
                             </execution>
                         </executions>
                     </plugin>
                     <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
-                        <configuration>
-                            <descriptorSourceDirectory>src/assemble/</descriptorSourceDirectory>
-                            <tarLongFileMode>gnu</tarLongFileMode>
-                        </configuration>
                         <executions>
                             <execution>
                                 <id>make-assembly</id>
@@ -982,6 +976,10 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <descriptorSourceDirectory>src/assemble/</descriptorSourceDirectory>
+                            <tarLongFileMode>gnu</tarLongFileMode>
+                        </configuration>
                     </plugin>
                     <!--
                     The signing process excludes the artifact created by this plugin.
@@ -992,6 +990,15 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-war-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>make-war</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>war</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                         <configuration>
                             <webResources>
                                 <resource>
@@ -1040,15 +1047,6 @@
                                 </resource>
                             </webResources>
                         </configuration>
-                        <executions>
-                            <execution>
-                                <id>make-war</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>war</goal>
-                                </goals>
-                            </execution>
-                        </executions>
                     </plugin>
                 </plugins>
             </build>

@@ -18,23 +18,23 @@
     under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>apache-james-mpt</artifactId>
         <groupId>org.apache.james</groupId>
         <version>3.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
-
-    <name>Apache James MPT ManageSieve</name>
 
     <artifactId>apache-james-mpt-managesieve</artifactId>
     <packaging>pom</packaging>
 
+    <name>Apache James MPT ManageSieve</name>
+
     <modules>
+        <module>cassandra</module>
         <module>core</module>
         <module>file</module>
-        <module>cassandra</module>
     </modules>
 
     <dependencyManagement>
@@ -47,14 +47,14 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-mpt-managesieve-file</artifactId>
+                <artifactId>apache-james-mpt-managesieve-core</artifactId>
                 <version>${project.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-mpt-managesieve-core</artifactId>
+                <artifactId>apache-james-mpt-managesieve-file</artifactId>
                 <version>${project.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

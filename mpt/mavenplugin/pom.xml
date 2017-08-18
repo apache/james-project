@@ -48,13 +48,13 @@ to the library requiring no extra coding.</description>
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
             <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
         </dependency>
     </dependencies>
 
@@ -187,7 +187,7 @@ to the library requiring no extra coding.</description>
                                 <generateReports>false</generateReports>
                             </configuration>
                         </plugin>
-                     </plugins>
+                    </plugins>
                 </pluginManagement>
             </build>
         </profile>
@@ -207,6 +207,6 @@ to the library requiring no extra coding.</description>
                     </plugin>
                 </plugins>
             </build>
-         </profile>
+        </profile>
     </profiles>
 </project>

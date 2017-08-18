@@ -28,8 +28,8 @@
     </parent>
 
     <artifactId>apache-james-mailbox-memory</artifactId>
-    <name>Apache James :: Mailbox :: In Memory</name>
     <packaging>bundle</packaging>
+    <name>Apache James :: Mailbox :: In Memory</name>
 
     <dependencies>
         <dependency>
@@ -38,22 +38,13 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-store</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
+            <artifactId>apache-james-mailbox-api</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-api</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
+            <artifactId>apache-james-mailbox-store</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -80,11 +71,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
@@ -93,6 +79,20 @@
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>1.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

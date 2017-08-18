@@ -56,14 +56,14 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-common</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-jmap</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -79,19 +79,23 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-util-java8</artifactId>
-            <type>test-jar</type>
+            <artifactId>james-server-testing</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-testing</artifactId>
+            <artifactId>james-server-util-java8</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
@@ -102,10 +106,6 @@
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

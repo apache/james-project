@@ -24,10 +24,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
+        <groupId>org.apache</groupId>
         <version>18</version>
-        <relativePath />
+        <relativePath></relativePath>
     </parent>
 
     <groupId>org.apache.james</groupId>
@@ -36,16 +36,14 @@
     <packaging>pom</packaging>
 
     <name>Apache James Project</name>
-    <description>
-        The Apache Java Enterprise Mail Server (a.k.a. Apache James) is a 100% pure Java SMTP, IMAP, JMAP and POP3 Mail
+    <description>The Apache Java Enterprise Mail Server (a.k.a. Apache James) is a 100% pure Java SMTP, IMAP, JMAP and POP3 Mail
         server.
         We have designed James to be a complete and portable enterprise mail engine solution based on currently
         available open protocols. James is also a mail application platform. We have developed a Java API to let
         you write Java code to process emails that we call the mailet API. A mailet can generate an automatic reply,
         update a database, prevent spam, build a message archive, or whatever you can imagine. A matcher determines
         whether your mailet should process an email in the server. The James project hosts the Mailet API, and James
-        provides an implementation of this mail application platform API.
-    </description>
+        provides an implementation of this mail application platform API.</description>
     <url>http://james.apache.org/</url>
     <inceptionYear>2006</inceptionYear>
 
@@ -61,103 +59,101 @@
             <id>bago</id>
             <name>Stefano Bagnara</name>
             <email>bago@apache.org</email>
-            <timezone>2</timezone>
             <roles>
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
+            <timezone>2</timezone>
         </developer>
         <developer>
             <id>norman</id>
             <name>Norman Maurer</name>
             <email>norman@apache.org</email>
-            <timezone>2</timezone>
             <roles>
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
+            <timezone>2</timezone>
         </developer>
         <developer>
             <id>serge</id>
             <name>Serge Knystautas</name>
             <email>sergek@lokitech.com</email>
-            <timezone />
             <roles>
                 <role>Developer</role>
             </roles>
+            <timezone></timezone>
             <properties>
                 <Donator>Serge was the original donator of the James code, which has since been massively
                     improved by people smarter than him. He tries to answer questions on the listserv and make
                     code
-                    contributions when he does get a rare bit of free time.
-                </Donator>
+                    contributions when he does get a rare bit of free time.</Donator>
             </properties>
         </developer>
         <developer>
             <id>benrdf</id>
             <name>Bernd Fondermann</name>
             <email>bf_jak@brainlounge.de</email>
-            <timezone />
             <roles>
                 <role>Developer</role>
             </roles>
+            <timezone></timezone>
         </developer>
         <developer>
             <id>sbrewin</id>
             <name>Steve Brewin</name>
             <email>sbrewin@synsys.com</email>
-            <timezone />
             <roles>
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
+            <timezone></timezone>
         </developer>
         <developer>
             <id>hilmer</id>
             <name>Søren Hilmer</name>
             <email>sh@widetrail.dk</email>
-            <timezone />
             <roles>
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
+            <timezone></timezone>
         </developer>
         <developer>
             <id>noel</id>
             <name>Noel J. Bergman</name>
             <email>noel@devtech.com</email>
-            <timezone />
             <roles>
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
+            <timezone></timezone>
         </developer>
         <developer>
             <id>danny</id>
             <name>Danny Angus</name>
             <email>danny@apache.org</email>
-            <timezone />
+            <organization>Student Loans Company ltd</organization>
+            <organizationUrl>http://www.slc.co.uk</organizationUrl>
             <roles>
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
-            <organization>Student Loans Company ltd</organization>
-            <organizationUrl>http://www.slc.co.uk</organizationUrl>
+            <timezone></timezone>
             <properties>
                 <Description>Danny is a member of the Apache Software Foundation and married father
                     of two by night, and by day works as lead technical consultant for the Student Loans
-                    Company ltd.
-                </Description>
+                    Company ltd.</Description>
             </properties>
         </developer>
         <developer>
             <id>adc</id>
             <name>Alan D. Cabrera</name>
             <email>list@toolazydogs.com</email>
-            <timezone>-8</timezone>
             <roles>
                 <role>Developer</role>
             </roles>
+            <timezone>-8</timezone>
         </developer>
         <developer>
             <id>hbedi</id>
@@ -179,21 +175,21 @@
             <id>vincenzo</id>
             <name>Vincenzo Gianferrari Pini</name>
             <email>vincenzo.gianferraripini@praxis.it</email>
-            <timezone />
             <roles>
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
+            <timezone></timezone>
         </developer>
         <developer>
             <id>rdonkin</id>
             <name>Robert Burrell Donkin</name>
             <email>rdonkin@apache.org</email>
-            <timezone />
             <roles>
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
+            <timezone></timezone>
         </developer>
         <developer>
             <id>niklas</id>
@@ -217,68 +213,68 @@
             <id>mwiederkehr</id>
             <name>Markus Wiederkehr</name>
             <email>mwiederkehr@apache.org</email>
-            <timezone />
             <roles>
                 <role>Developer</role>
             </roles>
+            <timezone></timezone>
         </developer>
         <developer>
             <id>olegk</id>
             <name>Oleg Kalnichevski</name>
             <email>olegk@apache.org</email>
-            <timezone />
             <roles>
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
+            <timezone></timezone>
         </developer>
         <developer>
             <id>manolo</id>
             <name>Manuel Carrasco Monino</name>
             <email>manolo@apache.org</email>
-            <timezone />
             <roles>
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
+            <timezone></timezone>
         </developer>
         <developer>
             <id>eric</id>
             <name>Eric Charles</name>
             <email>eric@apache.org</email>
-            <timezone />
             <roles>
                 <role>Developer</role>
                 <role>PMC Chair</role>
             </roles>
+            <timezone></timezone>
         </developer>
         <developer>
             <id>felixk</id>
             <name>Felix Knecht</name>
             <email>felixk@apache.org</email>
-            <timezone>1</timezone>
             <roles>
                 <role>Emeritus</role>
             </roles>
+            <timezone>1</timezone>
         </developer>
         <developer>
             <id>ieugen</id>
             <name>Ioan Eugen Stan</name>
             <email>ieugen@apache.org</email>
-            <timezone />
             <roles>
                 <role>PMC Member</role>
                 <role>Developer</role>
             </roles>
+            <timezone></timezone>
         </developer>
         <developer>
             <id>matthieu</id>
             <name>Matthieu Baechler</name>
             <email>matthieu@apache.org</email>
-            <timezone />
             <roles>
                 <role>Developer</role>
             </roles>
+            <timezone></timezone>
         </developer>
         <developer>
             <id>btellier</id>
@@ -286,11 +282,11 @@
             <email>btellier@linagora.com</email>
             <organization>Linagora</organization>
             <organizationUrl>https://linagora.com</organizationUrl>
-            <timezone />
             <roles>
                 <role>PMC Member</role>
                 <role>Developer</role>
             </roles>
+            <timezone></timezone>
         </developer>
         <developer>
             <id>aduprat</id>
@@ -298,11 +294,11 @@
             <email>aduprat@linagora.com</email>
             <organization>Linagora</organization>
             <organizationUrl>https://linagora.com</organizationUrl>
-            <timezone />
             <roles>
                 <role>PMC Member</role>
                 <role>Developer</role>
             </roles>
+            <timezone></timezone>
         </developer>
         <developer>
             <id>rouazana</id>
@@ -310,10 +306,10 @@
             <email>rouazana@linagora.com</email>
             <organization>Linagora</organization>
             <organizationUrl>https://linagora.com</organizationUrl>
-            <timezone />
             <roles>
                 <role>Developer</role>
             </roles>
+            <timezone></timezone>
         </developer>
     </developers>
 
@@ -531,11 +527,21 @@
         <maven>3.0.2</maven>
     </prerequisites>
 
+    <modules>
+        <module>backends-common</module>
+        <module>mailbox</module>
+        <module>mailet</module>
+        <module>metrics</module>
+        <module>mpt</module>
+        <module>protocols</module>
+        <module>server</module>
+    </modules>
+
     <scm>
         <connection>scm:git:http://git-wip-us.apache.org/repos/asf/james-project.git</connection>
         <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/james-project.git</developerConnection>
+        <tag>HEAD</tag>
         <url>http://git-wip-us.apache.org/repos/asf/james-project.git</url>
-      <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
@@ -571,19 +577,9 @@
             This property contains the directory where to deploy when running using "-Psite-reports" profile
             to avoid accidently overriding the common modules website. Empty by default.
         -->
-        <deployTechnicalSiteDirectory />
+        <deployTechnicalSiteDirectory></deployTechnicalSiteDirectory>
     </properties>
 
-    <modules>
-        <module>backends-common</module>
-        <module>mailbox</module>
-        <module>mailet</module>
-        <module>metrics</module>
-        <module>mpt</module>
-        <module>protocols</module>
-        <module>server</module>
-    </modules>
-    
     <build>
         <extensions>
             <extension>
@@ -940,7 +936,7 @@
                                         <execute>
                                             <runOnIncremental>false</runOnIncremental>
                                         </execute>
-                                        <ignore />
+                                        <ignore></ignore>
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -956,7 +952,7 @@
                                         <execute>
                                             <runOnIncremental>false</runOnIncremental>
                                         </execute>
-                                        <ignore />
+                                        <ignore></ignore>
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -972,7 +968,7 @@
                                         <execute>
                                             <runOnIncremental>false</runOnIncremental>
                                         </execute>
-                                        <ignore />
+                                        <ignore></ignore>
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -986,7 +982,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore />
+                                        <ignore></ignore>
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -999,7 +995,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore />
+                                        <ignore></ignore>
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>
@@ -1120,13 +1116,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>animal-sniffer-maven-plugin</artifactId>
-                <configuration>
-                    <signature>
-                        <groupId>org.codehaus.mojo.signature</groupId>
-                        <artifactId>java18</artifactId>
-                        <version>1.0</version>
-                    </signature>
-                </configuration>
                 <executions>
                     <execution>
                         <id>check_java_8</id>
@@ -1136,6 +1125,13 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <signature>
+                        <groupId>org.codehaus.mojo.signature</groupId>
+                        <artifactId>java18</artifactId>
+                        <version>1.0</version>
+                    </signature>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -1147,13 +1143,6 @@
         -->
         <profile>
             <id>site-reports</id>
-            <properties>
-                <!--
-                    This property contains the directory where to deploy when running using "-Psite-reports" profile
-                    to avoid accidently overriding the common modules website
-                -->
-                <deployTechnicalSiteDirectory>technical-reports/</deployTechnicalSiteDirectory>
-            </properties>
 
             <build>
                 <pluginManagement>
@@ -1161,6 +1150,13 @@
                         <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-site-plugin</artifactId>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>org.apache.maven.doxia</groupId>
+                                    <artifactId>doxia-module-markdown</artifactId>
+                                    <version>1.3</version>
+                                </dependency>
+                            </dependencies>
                             <configuration>
                                 <siteDirectory>${basedir}/src/reporting-site</siteDirectory>
                                 <reportPlugins combine.children="append">
@@ -1343,17 +1339,17 @@
                                     -->
                                 </reportPlugins>
                             </configuration>
-                            <dependencies>
-                                <dependency>
-                                    <groupId>org.apache.maven.doxia</groupId>
-                                    <artifactId>doxia-module-markdown</artifactId>
-                                    <version>1.3</version>
-                                </dependency>
-                            </dependencies>
                         </plugin>
                     </plugins>
                 </pluginManagement>
             </build>
+            <properties>
+                <!--
+                    This property contains the directory where to deploy when running using "-Psite-reports" profile
+                    to avoid accidently overriding the common modules website
+                -->
+                <deployTechnicalSiteDirectory>technical-reports/</deployTechnicalSiteDirectory>
+            </properties>
         </profile>
     </profiles>
 </project>

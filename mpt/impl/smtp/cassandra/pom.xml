@@ -18,35 +18,34 @@
     under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>apache-james-mpt-smtp</artifactId>
         <groupId>org.apache.james</groupId>
         <version>3.1.0-SNAPSHOT</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
-
-    <name>Apache James MPT SMTP Cassandra</name>
 
     <artifactId>apache-james-mpt-smtp-cassandra</artifactId>
     <packaging>jar</packaging>
+
+    <name>Apache James MPT SMTP Cassandra</name>
 
     <properties>
         <cassandra.includes>empty</cassandra.includes>
     </properties>
 
-
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-backends-cassandra</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-backends-es</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -69,20 +68,20 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-cassandra-guice</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-common</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-jmap</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -105,6 +104,29 @@
             <artifactId>slf4j-simple</artifactId>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/suite/*.java</exclude>
+                        <exclude>**/suite/**/*.java</exclude>
+                    </excludes>
+                    <includes>
+                        <include>${cassandra.includes}</include>
+                    </includes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <profiles>
         <profile>
@@ -133,28 +155,5 @@
             </properties>
         </profile>
     </profiles>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                   <excludes>
-                       <exclude>**/suite/*.java</exclude>
-                       <exclude>**/suite/**/*.java</exclude>
-                   </excludes>
-                   <includes>
-                       <include>${cassandra.includes}</include>
-                   </includes>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

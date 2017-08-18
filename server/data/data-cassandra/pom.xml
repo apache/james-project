@@ -35,6 +35,15 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-backends-cassandra</artifactId>
         </dependency>
+
+        <!-- Test dependencies -->
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-backends-cassandra</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-api</artifactId>
@@ -45,7 +54,19 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-data-library</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-dnsservice-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-dnsservice-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -62,31 +83,6 @@
         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-
-        <!-- Test dependencies -->
-
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-backends-cassandra</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-library</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-dnsservice-api</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>info.cukes</groupId>
@@ -125,10 +121,23 @@
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 
     <profiles>
         <profile>
@@ -151,14 +160,5 @@
             </build>
         </profile>
     </profiles>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

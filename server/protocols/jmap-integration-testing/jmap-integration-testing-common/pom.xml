@@ -32,7 +32,6 @@
 
     <name>Apache James :: Server :: JMAP :: Integration testing Common</name>
 
-
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -41,14 +40,20 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-common</artifactId>
+            <artifactId>james-server-dnsservice-api</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-common</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-guice-common</artifactId>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -67,12 +72,6 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-dnsservice-api</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-util-java8</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -80,7 +79,8 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>18.0</version> <!--$NO-MVN-MAN-VER$-->
+            <version>18.0</version>
+            <!--$NO-MVN-MAN-VER$-->
         </dependency>
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>

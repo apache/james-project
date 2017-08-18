@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements. See the NOTICE file
@@ -21,8 +21,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.james</groupId>
         <artifactId>james-project</artifactId>
+        <groupId>org.apache.james</groupId>
         <version>3.1.0-SNAPSHOT</version>
     </parent>
 
@@ -33,16 +33,16 @@
     <description>Apache James Backends: common utils to access backends</description>
     <inceptionYear>2015</inceptionYear>
 
+    <modules>
+        <module>cassandra</module>
+        <module>elasticsearch</module>
+        <module>jpa</module>
+    </modules>
+
     <properties>
         <junit.version>4.11</junit.version>
         <slf4j.version>1.7.25</slf4j.version>
     </properties>
-
-    <modules>
-        <module>cassandra</module>
-        <module>jpa</module>
-        <module>elasticsearch</module>
-    </modules>
 
     <dependencyManagement>
         <dependencies>

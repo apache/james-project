@@ -29,18 +29,6 @@
     <artifactId>apache-james-mailbox</artifactId>
     <packaging>pom</packaging>
 
-    <repositories>
-      <!-- apache.snapshot is needed for james-project SNAPSHOT, see JAMES-1470 -->
-      <repository>
-        <id>apache.snapshots</id>
-        <name>Apache Snapshot Repository</name>
-        <url>http://repository.apache.org/snapshots</url>
-        <releases>
-          <enabled>false</enabled>
-        </releases>
-      </repository>
-    </repositories>
-
     <name>Apache James :: Mailbox</name>
     <description>Apache James Mailbox</description>
     <url>http://james.apache.org/mailbox</url>
@@ -54,16 +42,16 @@
         <module>hbase</module>
         <module>jcr</module>
         <module>jpa</module>
+        <module>kafka</module>
         <module>lucene</module>
         <module>maildir</module>
         <module>memory</module>
         <module>scanning-search</module>
-        <module>store</module>
         <module>spring</module>
+        <module>store</module>
         <module>tika</module>
         <module>tool</module>
         <module>zoo-seq-provider</module>
-        <module>kafka</module>
     </modules>
 
     <issueManagement>
@@ -112,18 +100,39 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.github.steveash.guavate</groupId>
-                <artifactId>guavate</artifactId>
-                <version>1.0.0</version>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-backends-cassandra</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>${guava.version}</version>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-backends-cassandra</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
             </dependency>
-            <!--
-                START Modules
-            -->
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-backends-es</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-backends-es</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-backends-jpa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-backends-jpa</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>apache-james-mailbox-api</artifactId>
@@ -137,55 +146,6 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-mailbox-store</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-mailbox-lucene</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-mailbox-lucene</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-mailbox-store</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-mailbox-jpa</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-mailbox-jcr</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-mailbox-memory</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-mailbox-maildir</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-mailbox-hbase</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-           <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>apache-james-mailbox-cassandra</artifactId>
                 <version>${project.version}</version>
@@ -197,6 +157,62 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mailbox-elasticsearch</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mailbox-hbase</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mailbox-jcr</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mailbox-jpa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mailbox-lucene</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mailbox-lucene</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mailbox-maildir</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mailbox-memory</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mailbox-store</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mailbox-store</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>apache-james-mailbox-tika</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -206,13 +222,38 @@
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
-
-           <dependency>
+            <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>apache-james-mailbox-tool</artifactId>
                 <version>${project.version}</version>
             </dependency>
-           <dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-mailet-api</artifactId>
+                <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>mail</artifactId>
+                        <groupId>javax.mail</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-mime4j-core</artifactId>
+                <version>${apache-mime4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-mime4j-dom</artifactId>
+                <version>${apache-mime4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-mime4j-james-utils</artifactId>
+                <version>${apache-mime4j.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-util</artifactId>
                 <version>${project.version}</version>
@@ -228,28 +269,41 @@
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
-            <!--
-                END Modules
-            -->
-
-            <!--
-                START Mail
-            -->
             <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-mime4j-core</artifactId>
-                <version>${apache-mime4j.version}</version>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-mime4j-dom</artifactId>
-                <version>${apache-mime4j.version}</version>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson-databinding.version}</version>
             </dependency>
-
             <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-mime4j-james-utils</artifactId>
-                <version>${apache-mime4j.version}</version>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-guava</artifactId>
+                <version>${jackson-databinding.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jdk8</artifactId>
+                <version>${jackson-databinding.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.steveash.guavate</groupId>
+                <artifactId>guavate</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>${h2.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.sun.mail</groupId>
@@ -257,130 +311,20 @@
                 <version>1.5.4</version>
             </dependency>
             <dependency>
-                <groupId>javax.activation</groupId>
-                <artifactId>activation</artifactId>
-                <version>${activation.version}</version>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils-core</artifactId>
+                <version>${commons-beanutils-core.version}</version>
             </dependency>
-            <dependency>
-                <groupId>javax.inject</groupId>
-                <artifactId>javax.inject</artifactId>
-                <version>${javax.inject.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.geronimo.specs</groupId>
-                <artifactId>geronimo-activation_1.1_spec</artifactId>
-                <version>${geronimo-activation-spec.version}</version>
-            </dependency>
-            <!--
-                END Mail
-            -->
-
-            <!--
-                Start James Mailet
-            -->
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-mailet-api</artifactId>
-                <version>${project.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>javax.mail</groupId>
-                        <artifactId>mail</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <!--
-
-            -->
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-backends-cassandra</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-backends-cassandra</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-backends-es</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-backends-es</artifactId>
-                <type>test-jar</type>
-                <scope>test</scope>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-mailbox-elasticsearch</artifactId>
-                <type>test-jar</type>
-                <scope>test</scope>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!--
-                START Logging
-            -->
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-simple</artifactId>
-                <version>${slf4j.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>${logback.version}</version>
-            </dependency>
-            <!--
-                START Logging
-            -->
-
-            <!--
-                Start Commons
-            -->
             <dependency>
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
                 <version>${commons-codec.version}</version>
             </dependency>
             <dependency>
-                <groupId>commons-lang</groupId>
-                <artifactId>commons-lang</artifactId>
-                <version>${commons-lang.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-pool</groupId>
-                <artifactId>commons-pool</artifactId>
-                <version>${commons-pool.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-dbcp</groupId>
-                <artifactId>commons-dbcp</artifactId>
-                <version>${commons-dbcp.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>xercesImpl</artifactId>
-                        <groupId>xerces</groupId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
                 <groupId>commons-configuration</groupId>
                 <artifactId>commons-configuration</artifactId>
-                <scope>test</scope>
                 <version>${commons-configuration.version}</version>
+                <scope>test</scope>
                 <exclusions>
                     <exclusion>
                         <artifactId>dom4j</artifactId>
@@ -409,37 +353,46 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>commons-beanutils</groupId>
-                <artifactId>commons-beanutils-core</artifactId>
-                <version>${commons-beanutils-core.version}</version>
+                <groupId>commons-dbcp</groupId>
+                <artifactId>commons-dbcp</artifactId>
+                <version>${commons-dbcp.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>xercesImpl</artifactId>
+                        <groupId>xerces</groupId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson-databinding.version}</version>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-guava</artifactId>
-                <version>${jackson-databinding.version}</version>
+                <groupId>commons-lang</groupId>
+                <artifactId>commons-lang</artifactId>
+                <version>${commons-lang.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jdk8</artifactId>
-                <version>${jackson-databinding.version}</version>
+                <groupId>commons-pool</groupId>
+                <artifactId>commons-pool</artifactId>
+                <version>${commons-pool.version}</version>
             </dependency>
-            
-            <!--
-                END Commons
-            -->
-
-            <!--
-                START Testing
-            -->
-            <!--
-                Use to build protocol tester.
-                Convert this to testing once MPT has been released.
-            -->
+            <dependency>
+                <groupId>javax.activation</groupId>
+                <artifactId>activation</artifactId>
+                <version>${activation.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.inject</groupId>
+                <artifactId>javax.inject</artifactId>
+                <version>${javax.inject.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.jcr</groupId>
+                <artifactId>jcr</artifactId>
+                <version>${jcr.version}</version>
+            </dependency>
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
@@ -447,21 +400,9 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.xenei</groupId>
-                <artifactId>junit-contracts</artifactId>
-                <version>0.1.5</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-core</artifactId>
-                <version>${mockito-core.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.h2database</groupId>
-                <artifactId>h2</artifactId>
-                <version>${h2.version}</version>
-                <scope>test</scope>
+                <groupId>nl.jqno.equalsverifier</groupId>
+                <artifactId>equalsverifier</artifactId>
+                <version>1.7.6</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.derby</groupId>
@@ -470,62 +411,47 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>commons-io</groupId>
-                <artifactId>commons-io</artifactId>
-                <version>${commons-io.version}</version>
+                <groupId>org.apache.geronimo.specs</groupId>
+                <artifactId>geronimo-activation_1.1_spec</artifactId>
+                <version>${geronimo-activation-spec.version}</version>
             </dependency>
             <dependency>
-                <groupId>nl.jqno.equalsverifier</groupId>
-                <artifactId>equalsverifier</artifactId>
-                <version>1.7.6</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.assertj</groupId>
-                <artifactId>assertj-core</artifactId>
-                <version>3.8.0</version>
-            </dependency>
-            <!--
-                END Testing
-            -->
-
-
-            <!--
-                START OpenJPA
-            -->
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-backends-jpa</artifactId>
-                <version>${project.version}</version>
+                <groupId>org.apache.geronimo.specs</groupId>
+                <artifactId>geronimo-annotation_1.0_spec</artifactId>
+                <version>${geronimo-annotation-spec.version}</version>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-backends-jpa</artifactId>
-                <version>${project.version}</version>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-core</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-test</artifactId>
+                <version>${hadoop.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase</artifactId>
+                <version>${hbase.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>jackson-core-asl</artifactId>
+                        <groupId>org.codehaus.jackson</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>jackson-mapper-asl</artifactId>
+                        <groupId>org.codehaus.jackson</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase</artifactId>
+                <version>${hbase.version}</version>
                 <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.jasypt</groupId>
-                <artifactId>jasypt</artifactId>
-                <version>${jasypt.version}</version>
-            </dependency>
-
-            <!--
-                END OpenJPA
-            -->
-
-            <!--
-                START JCR
-            -->
-            <dependency>
-                <groupId>javax.jcr</groupId>
-                <artifactId>jcr</artifactId>
-                <version>${jcr.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.jackrabbit</groupId>
-                <artifactId>jackrabbit-jcr-commons</artifactId>
-                <version>${jackrabbit.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.jackrabbit</groupId>
@@ -533,45 +459,43 @@
                 <version>${jackrabbit.version}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>org.apache.jackrabbit</groupId>
+                <artifactId>jackrabbit-jcr-commons</artifactId>
+                <version>${jackrabbit.version}</version>
+            </dependency>
 
             <dependency>
-                <groupId>xerces</groupId>
-                <artifactId>xercesImpl</artifactId>
-                <version>${xercesImpl.version}</version>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>3.8.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-guava</artifactId>
+                <version>3.1.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jasypt</groupId>
+                <artifactId>jasypt</artifactId>
+                <version>${jasypt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito-core.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>xml-apis</groupId>
-                <artifactId>xml-apis</artifactId>
-                <version>${xml-apis.version}</version>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>${slf4j.version}</version>
                 <scope>test</scope>
-            </dependency>
-
-            <!--
-                END JCR
-            -->
-
-            <!--
-                START GERONIMO ANNOTATION
-            -->
-
-            <dependency>
-                <groupId>org.apache.geronimo.specs</groupId>
-                <artifactId>geronimo-annotation_1.0_spec</artifactId>
-                <version>${geronimo-annotation-spec.version}</version>
-            </dependency>
-
-            <!--
-                END GERONIMO ANNOTATION
-            -->
-
-            <!--
-                START SPRING
-            -->
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-core</artifactId>
-                <version>${spring.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
@@ -585,64 +509,50 @@
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
-                <artifactId>spring-orm</artifactId>
+                <artifactId>spring-core</artifactId>
                 <version>${spring.version}</version>
             </dependency>
-            <!--
-                END SPRING
-            -->
-
-            <!--
-                START HBASE/HADOOP
-            -->
             <dependency>
-                <groupId>org.apache.hbase</groupId>
-                <artifactId>hbase</artifactId>
-                <version>${hbase.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.codehaus.jackson</groupId>
-                        <artifactId>jackson-core-asl</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.codehaus.jackson</groupId>
-                        <artifactId>jackson-mapper-asl</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hbase</groupId>
-                <artifactId>hbase</artifactId>
-                <version>${hbase.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-core</artifactId>
-                <version>${hadoop.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-test</artifactId>
-                <version>${hadoop.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <!--
-                END HBASE/HADOOP
-            -->
-            <dependency>
-                <groupId>org.assertj</groupId>
-                <artifactId>assertj-guava</artifactId>
-                <version>3.1.0</version>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-orm</artifactId>
+                <version>${spring.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers</artifactId>
-                <version>1.4.2</version>
+                <version>1.3.1</version>
             </dependency>
-       </dependencies>
+            <dependency>
+                <groupId>org.xenei</groupId>
+                <artifactId>junit-contracts</artifactId>
+                <version>0.1.5</version>
+            </dependency>
+            <dependency>
+                <groupId>xerces</groupId>
+                <artifactId>xercesImpl</artifactId>
+                <version>${xercesImpl.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>xml-apis</groupId>
+                <artifactId>xml-apis</artifactId>
+                <version>${xml-apis.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
     </dependencyManagement>
+
+    <repositories>
+        <!-- apache.snapshot is needed for james-project SNAPSHOT, see JAMES-1470 -->
+        <repository>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <id>apache.snapshots</id>
+            <name>Apache Snapshot Repository</name>
+            <url>http://repository.apache.org/snapshots</url>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>
@@ -678,12 +588,12 @@
                     <type>pom</type>
                     <exclusions>
                         <exclusion>
-                            <groupId>org.apache.tika</groupId>
                             <artifactId>tika-core</artifactId>
+                            <groupId>org.apache.tika</groupId>
                         </exclusion>
                         <exclusion>
-                            <groupId>org.apache.tika</groupId>
                             <artifactId>tika-parsers</artifactId>
+                            <groupId>org.apache.tika</groupId>
                         </exclusion>
                     </exclusions>
                 </dependency>
@@ -691,4 +601,3 @@
         </profile>
     </profiles>
 </project>
-

@@ -29,8 +29,8 @@
     </parent>
 
     <artifactId>jmap-integration-testing</artifactId>
-    <name>Apache James :: Server :: JMAP :: Integration testing</name>
     <packaging>pom</packaging>
+    <name>Apache James :: Server :: JMAP :: Integration testing</name>
 
     <modules>
         <module>jmap-integration-testing-common</module>
@@ -51,4 +51,3 @@
         </profile>
     </profiles>
 </project>
-

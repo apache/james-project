@@ -40,8 +40,8 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -51,8 +51,8 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-memory</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -68,8 +68,8 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-base</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -100,8 +100,8 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-library</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

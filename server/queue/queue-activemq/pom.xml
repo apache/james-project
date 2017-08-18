@@ -35,11 +35,7 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-queue-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-queue-jms</artifactId>
+            <artifactId>apache-mailet-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -51,36 +47,25 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>apache-mailet-api</artifactId>
+            <artifactId>james-server-queue-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-broker</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-queue-jms</artifactId>
         </dependency>
         <dependency>
-          <groupId>org.apache.activemq</groupId>
-          <artifactId>activemq-kahadb-store</artifactId>
-          <version>${activemq.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>artemis-jms-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-annotation_1.1_spec</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-queue-jms</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>
@@ -94,19 +79,34 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-queue-jms</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-broker</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-kahadb-store</artifactId>
+            <version>${activemq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>artemis-jms-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-annotation_1.1_spec</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
         </dependency>
     </dependencies>
 

@@ -29,8 +29,36 @@
     </parent>
 
     <artifactId>james-server-guice</artifactId>
-    <name>Apache James :: Server :: Guice</name>
     <packaging>pom</packaging>
+    <name>Apache James :: Server :: Guice</name>
+
+    <modules>
+        <module>cassandra-guice</module>
+        <module>cassandra-ldap-guice</module>
+        <module>configuration</module>
+        <module>custom-mailets</module>
+        <module>es-metric-reporter</module>
+        <module>guice-common</module>
+        <module>jmx</module>
+        <module>jpa-common-guice</module>
+        <module>jpa-guice</module>
+        <module>jpa-smtp</module>
+        <module>mailbox</module>
+        <module>mailet</module>
+        <module>memory-guice</module>
+        <module>onami</module>
+        <module>protocols/imap</module>
+        <module>protocols/jmap</module>
+        <module>protocols/lmtp</module>
+        <module>protocols/managedsieve</module>
+        <module>protocols/pop</module>
+        <module>protocols/smtp</module>
+        <module>protocols/webadmin</module>
+        <module>protocols/webadmin-cassandra</module>
+        <module>protocols/webadmin-data</module>
+        <module>protocols/webadmin-mailbox</module>
+        <module>protocols/webadmin-swagger</module>
+    </modules>
 
     <dependencyManagement>
         <dependencies>
@@ -139,32 +167,4 @@
         </dependencies>
     </dependencyManagement>
 
-    <modules>
-        <module>configuration</module>
-        <module>guice-common</module>
-        <module>cassandra-guice</module>
-        <module>cassandra-ldap-guice</module>
-        <module>custom-mailets</module>
-        <module>es-metric-reporter</module>
-        <module>mailbox</module>
-        <module>mailet</module>
-        <module>memory-guice</module>
-        <module>jpa-common-guice</module>
-        <module>jpa-guice</module>
-        <module>jpa-smtp</module>
-        <module>jmx</module>
-        <module>onami</module>
-        <module>protocols/imap</module>
-        <module>protocols/jmap</module>
-        <module>protocols/lmtp</module>
-        <module>protocols/managedsieve</module>
-        <module>protocols/pop</module>
-        <module>protocols/smtp</module>
-        <module>protocols/webadmin</module>
-        <module>protocols/webadmin-cassandra</module>
-        <module>protocols/webadmin-data</module>
-        <module>protocols/webadmin-mailbox</module>
-        <module>protocols/webadmin-swagger</module>
-    </modules>
 </project>
-

@@ -28,23 +28,25 @@
     <artifactId>apache-james-mpt-all</artifactId>
     <packaging>pom</packaging>
     <name>Apache James MPT All</name>
-    <description>
-This module assembles distributions 
-MPT is a functional test framework specialised for the ASCII line-base protocols common in mail.
-  </description>
+    <description>This module assembles distributions 
+MPT is a functional test framework specialised for the ASCII line-base protocols common in mail.</description>
     <dependencies>
+        <dependency>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+        </dependency>
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
-        <dependency>
             <groupId>jmock</groupId>
             <artifactId>jmock</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.ant</groupId>
@@ -55,28 +57,25 @@ MPT is a functional test framework specialised for the ASCII line-base protocols
             <artifactId>ant-antunit</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>commons-cli</groupId>
-            <artifactId>commons-cli</artifactId>
-        </dependency>
     </dependencies>
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptorSourceDirectory>${basedir}/src/assemble/</descriptorSourceDirectory>
-                </configuration>
                 <executions>
                     <execution>
                         <id>make-assembly</id>
-                        <phase>package</phase> <!-- append to the packaging phase. -->
+                        <phase>package</phase>
+                        <!-- append to the packaging phase. -->
                         <goals>
                             <goal>attached</goal>
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <descriptorSourceDirectory>${basedir}/src/assemble/</descriptorSourceDirectory>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -101,7 +100,7 @@ MPT is a functional test framework specialised for the ASCII line-base protocols
                                 <generateReports>false</generateReports>
                             </configuration>
                         </plugin>
-                     </plugins>
+                    </plugins>
                 </pluginManagement>
             </build>
         </profile>

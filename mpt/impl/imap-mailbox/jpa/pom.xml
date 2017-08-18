@@ -39,11 +39,13 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
+            <artifactId>apache-james-mailbox-jpa</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-jpa</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -53,9 +55,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-jpa</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
+            <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
@@ -64,4 +64,3 @@
         </dependency>
     </dependencies>
 </project>
-

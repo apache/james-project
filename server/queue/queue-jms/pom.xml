@@ -47,35 +47,24 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>metrics-api</artifactId>
+            <artifactId>james-server-protocols-smtp</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-queue-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>metrics-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>artemis-jms-client</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-annotation_1.1_spec</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-smtp</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>
@@ -89,23 +78,34 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-broker</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-protocols-smtp</artifactId>
-            <scope>test</scope>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>artemis-jms-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-annotation_1.1_spec</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-smtp</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

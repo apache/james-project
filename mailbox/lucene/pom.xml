@@ -28,8 +28,8 @@
     </parent>
 
     <artifactId>apache-james-mailbox-lucene</artifactId>
-    <name>Apache James :: Mailbox :: Lucene Index</name>
     <packaging>bundle</packaging>
+    <name>Apache James :: Mailbox :: Lucene Index</name>
 
     <dependencies>
         <dependency>

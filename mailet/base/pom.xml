@@ -21,8 +21,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.james</groupId>
         <artifactId>apache-mailet</artifactId>
+        <groupId>org.apache.james</groupId>
         <version>3.1.0-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
@@ -31,11 +31,9 @@
     <packaging>bundle</packaging>
 
     <name>Apache James :: Basic Mailet Toolkit</name>
-    <description>
-        Apache James Basic Mailet Toolkit is a collection of utilities and lightweight framework
+    <description>Apache James Basic Mailet Toolkit is a collection of utilities and lightweight framework
         aimed at developers and testers of mailets. This toolkit is extensively used elsewhere in
-        James.
-    </description>
+        James.</description>
     <url>http://james.apache.org/mailet/base/</url>
     <inceptionYear>2008</inceptionYear>
 
@@ -49,11 +47,6 @@
             <artifactId>apache-mime4j-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>${commons-lang.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
@@ -62,17 +55,22 @@
             <artifactId>javax.mail</artifactId>
         </dependency>
         <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>${commons-lang.version}</version>
+        </dependency>
+        <dependency>
             <groupId>javax.activation</groupId>
             <artifactId>activation</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -92,13 +90,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <scope>test</scope>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 

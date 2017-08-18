@@ -28,46 +28,33 @@
     </parent>
 
     <artifactId>apache-james-mailbox-jpa</artifactId>
-    <name>Apache James :: Mailbox :: JPA</name>
     <packaging>bundle</packaging>
+    <name>Apache James :: Mailbox :: JPA</name>
 
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-backends-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-backends-jpa</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-store</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-backends-jpa</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-backends-jpa</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jasypt</groupId>
-            <artifactId>jasypt</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-api</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -81,18 +68,31 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
+            <groupId>org.jasypt</groupId>
+            <artifactId>jasypt</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -112,12 +112,6 @@
                 <groupId>org.apache.openjpa</groupId>
                 <artifactId>openjpa-maven-plugin</artifactId>
                 <version>2.4.2</version>
-                <configuration>
-                    <includes>org/apache/james/mailbox/jpa/*/model/**/*.class</includes>
-                    <excludes>org/apache/james/mailbox/jpa/mail/model/openjpa/EncryptDecryptHelper.class</excludes>
-                    <addDefaultConstructor>true</addDefaultConstructor>
-                    <enforcePropertyRestrictions>true</enforcePropertyRestrictions>
-                </configuration>
                 <executions>
                     <execution>
                         <id>enhancer</id>
@@ -127,6 +121,12 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <includes>org/apache/james/mailbox/jpa/*/model/**/*.class</includes>
+                    <excludes>org/apache/james/mailbox/jpa/mail/model/openjpa/EncryptDecryptHelper.class</excludes>
+                    <addDefaultConstructor>true</addDefaultConstructor>
+                    <enforcePropertyRestrictions>true</enforcePropertyRestrictions>
+                </configuration>
             </plugin>
         </plugins>
     </build>

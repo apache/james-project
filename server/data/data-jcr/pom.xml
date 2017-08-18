@@ -35,6 +35,14 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>apache-mailet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-api</artifactId>
         </dependency>
         <dependency>
@@ -42,36 +50,30 @@
             <artifactId>james-server-data-library</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
-        </dependency>
-        <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-core</artifactId>
+            <artifactId>james-server-data-library</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.jcr</groupId>
-            <artifactId>jcr</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-jcr-commons</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-mailet-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
         </dependency>
         <dependency>
-          <groupId>javax.inject</groupId>
-          <artifactId>javax.inject</artifactId>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.jcr</groupId>
+            <artifactId>jcr</artifactId>
         </dependency>
 
         <!-- Test dependencies -->
@@ -81,15 +83,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-library</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-annotation_1.1_spec</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
@@ -97,8 +92,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-jcr-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -106,8 +105,9 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-annotation_1.1_spec</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

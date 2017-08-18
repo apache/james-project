@@ -54,9 +54,9 @@
             <artifactId>commons-cli</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <scope>compile</scope>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
@@ -64,15 +64,15 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.easymock</groupId>
             <artifactId>easymock</artifactId>
             <version>3.3.1</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

@@ -32,6 +32,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.jayway.awaitility</groupId>
             <artifactId>awaitility</artifactId>
             <version>1.6.5</version>
@@ -40,10 +44,5 @@
             <groupId>com.spotify</groupId>
             <artifactId>docker-client</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
-        </dependency>
     </dependencies>
 </project>
-

@@ -37,6 +37,12 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-core</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-lifecycle-api</artifactId>
@@ -49,12 +55,6 @@
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-core</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -65,7 +65,7 @@
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
-            <dependency>
+        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>

@@ -22,8 +22,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.james</groupId>
         <artifactId>james-server-guice</artifactId>
+        <groupId>org.apache.james</groupId>
         <version>3.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -48,15 +48,6 @@
         </dependency>
     </dependencies>
 
-    <profiles>
-        <profile>
-            <id>jpa</id>
-            <properties>
-                <jpa.includes>**/*.java</jpa.includes>
-            </properties>
-        </profile>
-    </profiles>
-
     <build>
         <plugins>
             <plugin>
@@ -68,15 +59,24 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                   <excludes>
-                       <exclude>**/suite/*.java</exclude>
-                       <exclude>**/suite/**/*.java</exclude>
-                   </excludes>
-                   <includes>
-                       <include>${jpa.includes}</include>
-                   </includes>
+                    <excludes>
+                        <exclude>**/suite/*.java</exclude>
+                        <exclude>**/suite/**/*.java</exclude>
+                    </excludes>
+                    <includes>
+                        <include>${jpa.includes}</include>
+                    </includes>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>jpa</id>
+            <properties>
+                <jpa.includes>**/*.java</jpa.includes>
+            </properties>
+        </profile>
+    </profiles>
 </project>

@@ -30,7 +30,6 @@
     <artifactId>james-server-util-java8</artifactId>
     <name>Apache James :: Server :: Common Utilities :: Java 8</name>
 
-
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -66,6 +65,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>nl.jqno.equalsverifier</groupId>
+            <artifactId>equalsverifier</artifactId>
+            <version>1.7.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
@@ -78,12 +83,6 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>nl.jqno.equalsverifier</groupId>
-            <artifactId>equalsverifier</artifactId>
-            <scope>test</scope>
-            <version>1.7.6</version>
         </dependency>
     </dependencies>
 

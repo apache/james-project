@@ -22,8 +22,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.james</groupId>
         <artifactId>james-server-guice</artifactId>
+        <groupId>org.apache.james</groupId>
         <version>3.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -37,15 +37,6 @@
     <properties>
         <jpa.includes>empty</jpa.includes>
     </properties>
-
-    <profiles>
-        <profile>
-            <id>jpa</id>
-            <properties>
-                <jpa.includes>**/*.java</jpa.includes>
-            </properties>
-        </profile>
-    </profiles>
 
     <dependencies>
         <dependency>
@@ -79,15 +70,15 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-jpa-common-guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-webadmin</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-webadmin-data</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-jpa-common-guice</artifactId>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -112,8 +103,8 @@
             <scope>test</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>commons-logging</groupId>
                     <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -194,15 +185,24 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                   <excludes>
-                       <exclude>**/suite/*.java</exclude>
-                       <exclude>**/suite/**/*.java</exclude>
-                   </excludes>
-                   <includes>
-                       <include>${jpa.includes}</include>
-                   </includes>
+                    <excludes>
+                        <exclude>**/suite/*.java</exclude>
+                        <exclude>**/suite/**/*.java</exclude>
+                    </excludes>
+                    <includes>
+                        <include>${jpa.includes}</include>
+                    </includes>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>jpa</id>
+            <properties>
+                <jpa.includes>**/*.java</jpa.includes>
+            </properties>
+        </profile>
+    </profiles>
 </project>

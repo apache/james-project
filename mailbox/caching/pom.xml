@@ -28,8 +28,8 @@
     </parent>
 
     <artifactId>apache-james-mailbox-caching</artifactId>
-    <name>Apache James :: Mailbox :: Caching</name>
     <packaging>bundle</packaging>
+    <name>Apache James :: Mailbox :: Caching</name>
 
     <dependencies>
         <dependency>
@@ -45,17 +45,17 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -35,7 +35,12 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-lifecycle-api</artifactId>
+            <artifactId>apache-mailet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-core</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -47,11 +52,17 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-dnsservice-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-filesystem-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>apache-mailet-api</artifactId>
+            <artifactId>james-server-lifecycle-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.steveash.guavate</groupId>
@@ -62,20 +73,12 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
         </dependency>
 
         <!-- Test dependencies -->
@@ -88,6 +91,10 @@
             <groupId>info.cukes</groupId>
             <artifactId>cucumber-junit</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -111,23 +118,16 @@
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-core</artifactId>
-            <scope>test</scope>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-dnsservice-api</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
-            <type>test-jar</type>
         </dependency>
     </dependencies>
 

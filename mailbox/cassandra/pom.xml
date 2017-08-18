@@ -28,13 +28,63 @@
     </parent>
 
     <artifactId>apache-james-mailbox-cassandra</artifactId>
-    <description>Apache James Mailbox implementation over Cassandra</description>
     <name>Apache James :: Mailbox :: Cassandra</name>
+    <description>Apache James Mailbox implementation over Cassandra</description>
 
     <dependencies>
         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-backends-cassandra</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-backends-cassandra</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-store</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-store</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-util</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.fge</groupId>
+            <artifactId>throwing-lambdas</artifactId>
+            <version>0.5.0</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jayway.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>1.6.5</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.sun.mail</groupId>
@@ -48,59 +98,6 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.skyscreamer</groupId>
-            <artifactId>jsonassert</artifactId>
-            <version>1.2.3</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-backends-cassandra</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-store</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-api</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-backends-cassandra</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-store</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-util</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
             <groupId>net.javacrumbs.json-unit</groupId>
@@ -120,12 +117,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.cassandraunit</groupId>
-            <artifactId>cassandra-unit</artifactId>
-            <version>${cassandra-unit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
@@ -136,19 +127,28 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.cassandraunit</groupId>
+            <artifactId>cassandra-unit</artifactId>
+            <version>${cassandra-unit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.fge</groupId>
-            <artifactId>throwing-lambdas</artifactId>
-            <version>0.5.0</version>
+            <groupId>org.skyscreamer</groupId>
+            <artifactId>jsonassert</artifactId>
+            <version>1.2.3</version>
         </dependency>
         <dependency>
-            <groupId>com.jayway.awaitility</groupId>
-            <artifactId>awaitility</artifactId>
-            <version>1.6.5</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

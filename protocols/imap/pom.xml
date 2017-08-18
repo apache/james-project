@@ -38,7 +38,42 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>protocols-api</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.1.7</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.beetstra.jutf7</groupId>
+            <artifactId>jutf7</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>nl.jqno.equalsverifier</groupId>
+            <artifactId>equalsverifier</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
@@ -49,7 +84,11 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>apache-james-mailbox-store</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
             <artifactId>apache-mime4j-core</artifactId>
@@ -72,38 +111,6 @@
             <artifactId>metrics-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.1.7</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-        </dependency>
-       
-        <dependency>
-            <groupId>com.beetstra.jutf7</groupId>
-            <artifactId>jutf7</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
@@ -121,13 +128,13 @@
         <dependency>
             <groupId>org.jmock</groupId>
             <artifactId>jmock-junit4</artifactId>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>junit</groupId>
                     <artifactId>junit-dep</artifactId>
+                    <groupId>junit</groupId>
                 </exclusion>
             </exclusions>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -135,19 +142,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-james-mailbox-store</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>nl.jqno.equalsverifier</groupId>
-            <artifactId>equalsverifier</artifactId>
-            <scope>test</scope>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 

@@ -34,22 +34,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-filesystem-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-filesystem-api</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-lifecycle-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-util</artifactId>
+            <groupId>${javax.activation.groupId}</groupId>
+            <artifactId>${javax.activation.artifactId}</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -61,6 +48,32 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-base</artifactId>
         </dependency>
+
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-mailet-base</artifactId>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-filesystem-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-filesystem-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-lifecycle-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-util</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
@@ -71,29 +84,16 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+        </dependency>
+        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${javax.activation.groupId}</groupId>
-            <artifactId>${javax.activation.artifactId}</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-mailet-base</artifactId>
-            <classifier>tests</classifier>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
