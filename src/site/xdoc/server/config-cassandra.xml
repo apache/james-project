@@ -113,14 +113,6 @@
         <dd>Optional. Defaults to 100.<br/> Controls the number of messages to be expunged in parallel.</dd>
         <dt><strong>mailbox.blob.part.size</strong></dt>
         <dd>Optional. Defaults to 102400 (100KB).<br/> Controls the size of blob parts used to store messages.</dd>
-        <dt><strong>migration.v1.v2.on.the.fly</strong></dt>
-        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to false.<br/> Controls wether v1 to v2 migration should be run on the fly.</dd>
-        <dt><strong>migration.v1.v2.thread.count</strong></dt>
-        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to 2.<br/> Controls the number of threads used to asynchronously migrate from v1 to v2.</dd>
-        <dt><strong>migration.v1.v2.queue.length</strong></dt>
-        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to 1000.<br/> Controls the queue size of v1 to v2 migration task. Drops when full.</dd>
-        <dt><strong>migration.v1.read.fetch.size</strong></dt>
-        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to 10.<br/> Controls the fetch size of the request to retrieve all messages stored in V1 during the migration process.</dd>
       </dl>
 
 
@@ -142,6 +134,43 @@
     <p>These schema updates can be triggered by <a href="manage-webadmin.html">webadmin</a> using the Cassandra backend.</p>
 
     <p>Note that currently the progress can be tracked by logs.</p>
+
+    Here are the implemented migrations:
+
+    <subsection name="From V1 to V2">
+
+      <p>Migration tag on git repository: <a href="https://github.com/apache/james-project/releases/tag/cassandra_migration_v1_to_v2">cassandra_migration_v1_to_v2</a></p>
+
+      <p>Goal is to create a messageV2 table that aims at replacing message table. Message table is both storing message
+        metadata and blobs. It have been proven inefficient. Instead version 2 is chunking message blobs and storing it
+        in an other table. The migration process involves moving all messages from message table to messageV2 table
+        (contains only metadata) and blobs / blobParts tables.</p>
+
+      <p>Read more about this migration <a href="https://medium.com/p/7e8607eb3c4f">here</a>.</p>
+
+      <p>Summary of available options for this migration:</p>
+
+      <dl>
+        <dt><strong>migration.v1.v2.on.the.fly</strong></dt>
+        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to false.<br/> Controls wether v1 to v2 migration should be run on the fly.</dd>
+        <dt><strong>migration.v1.v2.thread.count</strong></dt>
+        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to 2.<br/> Controls the number of threads used to asynchronously migrate from v1 to v2.</dd>
+        <dt><strong>migration.v1.v2.queue.length</strong></dt>
+        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to 1000.<br/> Controls the queue size of v1 to v2 migration task. Drops when full.</dd>
+        <dt><strong>migration.v1.read.fetch.size</strong></dt>
+        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to 10.<br/> Controls the fetch size of the request to retrieve all messages stored in V1 during the migration process.</dd>
+      </dl>
+
+    </subsection>
+
+    <subsection name="From V2 to V3">
+
+      <p>Migration tag on git repository: <a href="https://github.com/apache/james-project/releases/tag/cassandra_migration_v2_to_v3">cassandra_migration_v2_to_v3</a></p>
+
+      <p>Goal is to drop <b>message</b> table. After this migration, one can manually delete this table.</p>
+
+    </subsection>
+
   </section>
 
 </body>
