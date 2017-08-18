@@ -244,9 +244,8 @@ public class AttachmentFileNameIs extends GenericMatcher {
      *@param part
      */
     protected boolean matchFoundInZip(Part part) throws MessagingException, IOException {
-        ZipInputStream zis = new ZipInputStream(part.getInputStream());
-        
-        try {
+
+        try (ZipInputStream zis = new ZipInputStream(part.getInputStream())) {
             while (true) {
                 ZipEntry zipEntry = zis.getNextEntry();
                 if (zipEntry == null) {
@@ -261,8 +260,6 @@ public class AttachmentFileNameIs extends GenericMatcher {
                 }
             }
             return false;
-        } finally {
-            zis.close();
         }
     }
 

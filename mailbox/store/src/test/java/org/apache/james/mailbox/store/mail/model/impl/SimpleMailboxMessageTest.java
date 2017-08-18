@@ -78,23 +78,17 @@ public class SimpleMailboxMessageTest {
 
     @Test
     public void testInputStreamSize() throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        try {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
             byteArrayOutputStream.write(MESSAGE.getFullContent());
             assertThat(byteArrayOutputStream.size()).isEqualTo(MESSAGE_CONTENT.getBytes(MESSAGE_CHARSET).length);
-        } finally {
-            byteArrayOutputStream.close();
         }
     }
 
     @Test
     public void testInputStreamSizeSpecialCharacters() throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        try {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
             byteArrayOutputStream.write(MESSAGE_SPECIAL_CHAR.getFullContent());
             assertThat(byteArrayOutputStream.size()).isEqualTo(MESSAGE_CONTENT_SPECIAL_CHAR.getBytes(MESSAGE_CHARSET).length);
-        } finally {
-            byteArrayOutputStream.close();
         }
     }
 

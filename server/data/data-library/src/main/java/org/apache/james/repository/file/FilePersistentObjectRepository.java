@@ -103,17 +103,11 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
      * java.lang.Object)
      */
     public synchronized void put(String key, Object value) {
-        try {
-            final OutputStream outputStream = getOutputStream(key);
-
-            try {
-                final ObjectOutputStream stream = new ObjectOutputStream(outputStream);
-                stream.writeObject(value);
-                if (DEBUG)
-                    getLogger().debug("storing object " + value + " for key " + key);
-            } finally {
-                outputStream.close();
-            }
+        try (OutputStream outputStream = getOutputStream(key)) {
+            final ObjectOutputStream stream = new ObjectOutputStream(outputStream);
+            stream.writeObject(value);
+            if (DEBUG)
+                getLogger().debug("storing object " + value + " for key " + key);
         } catch (Exception e) {
             throw new RuntimeException("Exception caught while storing an object: " + e);
         }

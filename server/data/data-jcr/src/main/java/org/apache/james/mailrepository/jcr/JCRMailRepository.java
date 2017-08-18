@@ -486,13 +486,9 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
             node = node.getProperty("jcr:content").getNode();
         }
 
-        @SuppressWarnings("deprecation")
-        InputStream stream = node.getProperty("jcr:data").getStream();
-        try {
+        try (@SuppressWarnings("deprecation") InputStream stream = node.getProperty("jcr:data").getStream()) {
             Properties properties = System.getProperties();
             return new MimeMessage(javax.mail.Session.getDefaultInstance(properties), stream);
-        } finally {
-            stream.close();
         }
     }
 
@@ -551,15 +547,11 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
             Property property = iterator.nextProperty();
             String name = Text.unescapeIllegalJcrChars(property.getName().substring("jamesattr:".length()));
             if (property.getType() == PropertyType.BINARY) {
-                @SuppressWarnings("deprecation")
-                InputStream input = property.getStream();
-                try {
+                try (@SuppressWarnings("deprecation") InputStream input = property.getStream()) {
                     ObjectInputStream stream = new ObjectInputStream(input);
                     mail.setAttribute(name, (Serializable) stream.readObject());
                 } catch (ClassNotFoundException e) {
                     throw new IOException(e.getMessage());
-                } finally {
-                    input.close();
                 }
             } else {
                 mail.setAttribute(name, property.getString());
