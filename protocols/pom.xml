@@ -46,19 +46,6 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <netty.version>3.10.6.Final</netty.version>
-        <apache-mime4j.version>0.8.1</apache-mime4j.version>
-        <commons-net.version>3.2</commons-net.version>
-        <commons-lang.version>2.6</commons-lang.version>
-        <commons-codec.version>1.7</commons-codec.version>
-        <commons-collections.version>3.2.1</commons-collections.version>
-        <apache-commons-io.version>1.3.2</apache-commons-io.version>
-        <jmock.version>2.5.1</jmock.version>
-        <jutf7.version>1.0.0</jutf7.version>
-        <junit.version>4.10</junit.version>
-        <slf4j.version>1.7.25</slf4j.version>
-        <jsieve.version>0.7</jsieve.version>
-        <mockito-core.version>1.9.0</mockito-core.version>
     </properties>
 
     <build>
