@@ -133,9 +133,7 @@ public class ResultUtils {
             }
             return messageResult;
 
-        } catch (IOException e) {
-            throw new MailboxException("Unable to parse message", e);
-        } catch (MimeException e) {
+        } catch (IOException | MimeException e) {
             throw new MailboxException("Unable to parse message", e);
         }
 

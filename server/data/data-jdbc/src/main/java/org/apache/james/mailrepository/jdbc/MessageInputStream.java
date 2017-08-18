@@ -19,15 +19,6 @@
 
 package org.apache.james.mailrepository.jdbc;
 
-import org.apache.james.core.MimeMessageCopyOnWriteProxy;
-import org.apache.james.core.MimeMessageUtil;
-import org.apache.james.core.MimeMessageWrapper;
-import org.apache.james.repository.api.StreamRepository;
-import org.apache.mailet.Mail;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,6 +26,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.james.core.MimeMessageCopyOnWriteProxy;
+import org.apache.james.core.MimeMessageUtil;
+import org.apache.james.core.MimeMessageWrapper;
+import org.apache.james.repository.api.StreamRepository;
+import org.apache.mailet.Mail;
 
 /**
  * This class provides an inputStream for a Mail object.<br>
@@ -101,9 +101,7 @@ final class MessageInputStream extends InputStream {
                 public void run() {
                     try {
                         writeStream(mail, out, update);
-                    } catch (IOException e) {
-                        caughtException = e;
-                    } catch (MessagingException e) {
+                    } catch (IOException | MessagingException e) {
                         caughtException = e;
                     }
                 }

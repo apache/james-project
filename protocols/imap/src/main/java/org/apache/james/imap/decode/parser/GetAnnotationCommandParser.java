@@ -19,12 +19,6 @@
 
 package org.apache.james.imap.decode.parser;
 
-import com.google.common.base.Optional;
-import org.apache.james.imap.message.request.GetAnnotationRequest;
-import org.apache.james.mailbox.model.MailboxAnnotationKey;
-import com.google.common.base.CharMatcher;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSet.Builder;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
@@ -32,8 +26,15 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
+import org.apache.james.imap.message.request.GetAnnotationRequest;
 import org.apache.james.imap.message.request.GetAnnotationRequest.Depth;
+import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.protocols.imap.DecodingException;
+
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
 
 public class GetAnnotationCommandParser extends AbstractImapCommandParser {
     private static final CharMatcher ENDOFLINE_PATTERN = CharMatcher.isNot('\n').and(CharMatcher.isNot('\r'));
@@ -50,12 +51,8 @@ public class GetAnnotationCommandParser extends AbstractImapCommandParser {
         throws DecodingException {
         try {
             return buildAnnotationRequest(command, requestReader, tag);
-        } catch (NullPointerException e) {
-            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, e.getMessage());
-        } catch (IllegalArgumentException e) {
-            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, e.getMessage());
-        } catch (IllegalStateException e) {
-            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, e.getMessage());
+        } catch (NullPointerException | IllegalArgumentException | IllegalStateException e) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, e.getMessage(), e);
         }
     }
 

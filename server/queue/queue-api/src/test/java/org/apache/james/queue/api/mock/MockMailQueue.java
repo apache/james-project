@@ -90,11 +90,8 @@ public class MockMailQueue implements MailQueue {
             bais = new ByteArrayInputStream(baos.toByteArray());
             return new MailImpl("MockMailCopy" + new Random().nextLong(),
                     mail.getSender(), mail.getRecipients(), bais);
-        } catch (MessagingException ex) {
-            log.error("", ex);
-            throw new RuntimeException(ex);
-        } catch (IOException ex) {
-            log.error("", ex);
+        } catch (MessagingException | IOException ex) {
+            log.error("Exception caught", ex);
             throw new RuntimeException(ex);
         } finally {
             IOUtils.closeQuietly(bais);

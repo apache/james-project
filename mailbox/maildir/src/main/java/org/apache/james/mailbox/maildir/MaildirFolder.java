@@ -21,7 +21,6 @@ package org.apache.james.mailbox.maildir;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FilenameFilter;
@@ -925,8 +924,6 @@ public class MaildirFolder {
                 try {
                     in = new FileInputStream(f);
                     props.load(in);
-                } catch (FileNotFoundException e) {
-                    throw new MailboxException("Unable to read last ACL from "+ f.getAbsolutePath(), e);
                 } catch (IOException e) {
                     throw new MailboxException("Unable to read last ACL from "+ f.getAbsolutePath(), e);
                 }
@@ -970,8 +967,6 @@ public class MaildirFolder {
                     try {
                         out = new FileOutputStream(f);
                         props.store(out, "written by "+ getClass().getName());
-                    } catch (FileNotFoundException e) {
-                        throw new MailboxException("Unable to read last ACL from "+ f.getAbsolutePath(), e);
                     } catch (IOException e) {
                         throw new MailboxException("Unable to read last ACL from "+ f.getAbsolutePath(), e);
                     }

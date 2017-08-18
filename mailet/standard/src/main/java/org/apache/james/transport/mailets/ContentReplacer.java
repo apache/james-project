@@ -87,10 +87,7 @@ public class ContentReplacer {
             if (subjectChanged || contentChanged) {
                 mail.getMessage().saveChanges();
             }
-        } catch (MessagingException e) {
-            throw new MailetException("Error in replace", e);
-            
-        } catch (IOException e) {
+        } catch (MessagingException | IOException e) {
             throw new MailetException("Error in replace", e);
         }
     }

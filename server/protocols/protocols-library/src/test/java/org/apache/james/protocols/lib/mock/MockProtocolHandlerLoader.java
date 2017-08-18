@@ -71,9 +71,7 @@ public class MockProtocolHandlerLoader implements ProtocolHandlerLoader{
         for (Object aLoaderRegistry : loaderRegistry) {
             try {
                 preDestroy(aLoaderRegistry);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
+            } catch (IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
         }
@@ -131,11 +129,7 @@ public class MockProtocolHandlerLoader implements ProtocolHandlerLoader{
                     try {
                         Object[] args = { service };
                         method.invoke(resource, args);
-                    } catch (IllegalAccessException e) {
-                        throw new RuntimeException("Injection failed for object " + resource + " on method " + method + " with resource " + service, e);
-                    } catch (IllegalArgumentException e) {
-                        throw new RuntimeException("Injection failed for object " + resource + " on method " + method + " with resource " + service, e);
-                    } catch (InvocationTargetException e) {
+                    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                         throw new RuntimeException("Injection failed for object " + resource + " on method " + method + " with resource " + service, e);
                     }
                 } else {

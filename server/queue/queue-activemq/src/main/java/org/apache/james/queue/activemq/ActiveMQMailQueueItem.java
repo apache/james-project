@@ -61,9 +61,7 @@ public class ActiveMQMailQueueItem extends JMSMailQueueItem implements ActiveMQS
                 // https://issues.apache.org/activemq/browse/AMQ-1529
                 try {
                     ((ActiveMQBlobMessage) message).deleteFile();
-                } catch (IOException e) {
-                    logger.warn("Unable to delete blob message file for mail {}", getMail().getName());
-                } catch (JMSException e) {
+                } catch (IOException | JMSException e) {
                     logger.warn("Unable to delete blob message file for mail {}", getMail().getName());
                 }
             }

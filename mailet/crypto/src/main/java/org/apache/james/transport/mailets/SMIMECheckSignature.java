@@ -172,14 +172,11 @@ public class SMIMECheckSignature extends GenericMailet {
             // message to change its state. The message 
             // is considered as not signed and the process will
             // go on.
-        } catch (CMSException e) {
+        } catch (CMSException | SMIMEException e) {
             log("Error during the analysis of the signed message", e);
             signers = null;
         } catch (IOException e) {
             log("IO error during the analysis of the signed message", e);
-            signers = null;
-        } catch (SMIMEException e) {
-            log("Error during the analysis of the signed message", e);
             signers = null;
         } catch (Exception e) {
             log("Generic error occured during the analysis of the message", e);

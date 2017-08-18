@@ -130,9 +130,7 @@ public class SpamAssassinInvoker {
             return false;
         } catch (UnknownHostException e1) {
             throw new MessagingException("Error communicating with spamd. Unknown host: " + spamdHost);
-        } catch (IOException e1) {
-            throw new MessagingException("Error communicating with spamd on " + spamdHost + ":" + spamdPort + " Exception: " + e1);
-        } catch (MessagingException e1) {
+        } catch (IOException | MessagingException e1) {
             throw new MessagingException("Error communicating with spamd on " + spamdHost + ":" + spamdPort + " Exception: " + e1);
         } finally {
             try {

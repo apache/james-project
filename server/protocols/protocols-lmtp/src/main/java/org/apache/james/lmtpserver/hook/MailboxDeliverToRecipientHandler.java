@@ -88,13 +88,7 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
             mailboxManager.endProcessingRequest(mailboxSession);
             result = new HookResult(HookReturnCode.OK, SMTPRetCode.MAIL_OK, DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received");
 
-        } catch (IOException e) {
-            session.getLogger().error("Unexpected error handling DATA stream", e);
-            result = new HookResult(HookReturnCode.DENYSOFT, " Temporary error deliver message to " + recipient);
-        } catch (MailboxException e) {
-            session.getLogger().error("Unexpected error handling DATA stream", e);
-            result = new HookResult(HookReturnCode.DENYSOFT, " Temporary error deliver message to " + recipient);
-        } catch (UsersRepositoryException e) {
+        } catch (IOException | MailboxException | UsersRepositoryException e) {
             session.getLogger().error("Unexpected error handling DATA stream", e);
             result = new HookResult(HookReturnCode.DENYSOFT, " Temporary error deliver message to " + recipient);
         }

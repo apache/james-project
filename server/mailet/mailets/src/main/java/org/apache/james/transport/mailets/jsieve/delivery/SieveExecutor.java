@@ -140,13 +140,9 @@ public class SieveExecutor {
             // This logging operation is potentially costly
             log.debug("Evaluating " + aMailAdapter.toString() + " against \"" + recipient.asPrettyString() + "\"");
             factory.evaluate(aMailAdapter, factory.parse(userSieveInformation.getScriptContent()));
-        } catch (SieveException ex) {
+        } catch (SieveException | ParseException ex) {
             handleFailure(recipient, aMail, ex);
-        }
-        catch (ParseException ex) {
-            handleFailure(recipient, aMail, ex);
-        }
-        catch (TokenMgrError ex) {
+        } catch (TokenMgrError ex) {
             handleFailure(recipient, aMail, new SieveException(ex));
         }
     }

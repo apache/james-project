@@ -127,10 +127,7 @@ public class OnlyText extends GenericMailet {
                 setContentFromPart(mail.getMessage(), mail.getMessage(), html2Text((String) mail.getMessage().getContent()), true);
             }
 
-        } catch (IOException e) {
-            throw new MailetException("Failed fetching text part", e);
-
-        } catch (MessagingException e) {
+        } catch (IOException | MessagingException e) {
             throw new MailetException("Failed fetching text part", e);
         }
     }

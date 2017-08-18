@@ -101,10 +101,7 @@ public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
                 }
             } catch (IOException ioe) {
                 return ERROR_MESSAGE_RETR;
-            } catch (IndexOutOfBoundsException iob) {
-                StringBuilder exceptionBuffer = new StringBuilder(64).append("Message (").append(num).append(") does not exist.");
-                return new POP3Response(POP3Response.ERR_RESPONSE, exceptionBuffer.toString());
-            } catch (NoSuchElementException iob) {
+            } catch (IndexOutOfBoundsException | NoSuchElementException iob) {
                 StringBuilder exceptionBuffer = new StringBuilder(64).append("Message (").append(num).append(") does not exist.");
                 return new POP3Response(POP3Response.ERR_RESPONSE, exceptionBuffer.toString());
             }

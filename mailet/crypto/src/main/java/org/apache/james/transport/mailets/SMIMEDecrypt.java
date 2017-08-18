@@ -99,9 +99,7 @@ public class SMIMEDecrypt extends GenericMailet {
         
         try {
             keyHolder = new SMIMEKeyHolder(privateStoreFile, privateStorePass, keyAlias, keyPass, privateStoreType);
-        } catch (IOException e) {
-            throw new MessagingException("Error loading keystore", e);
-        } catch (GeneralSecurityException e) {
+        } catch (IOException | GeneralSecurityException e) {
             throw new MessagingException("Error loading keystore", e);
         }
 
@@ -111,9 +109,7 @@ public class SMIMEDecrypt extends GenericMailet {
     private X509CertificateHolder from(X509Certificate certificate) throws MessagingException {
         try {
             return new X509CertificateHolder(certificate.getEncoded());
-        } catch (CertificateEncodingException e) {
-            throw new MessagingException("Error during the parsing of the certificate", e);
-        } catch (IOException e) {
+        } catch (CertificateEncodingException | IOException e) {
             throw new MessagingException("Error during the parsing of the certificate", e);
         }
     }

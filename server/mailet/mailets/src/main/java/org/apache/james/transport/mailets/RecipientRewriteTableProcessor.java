@@ -116,13 +116,7 @@ public class RecipientRewriteTableProcessor {
                 return new RrtExecutionResult(Optional.of(newMailAddresses), Optional.<List<MailAddress>>absent());
             }
             return origin(recipient);
-        } catch (ErrorMappingException e) {
-            mailetContext.log(LogLevel.INFO, "Error while process mail.", e);
-            return error(recipient);
-        } catch (RecipientRewriteTableException e) {
-            mailetContext.log(LogLevel.INFO, "Error while process mail.", e);
-            return error(recipient);
-        } catch (MessagingException e) {
+        } catch (ErrorMappingException | RecipientRewriteTableException | MessagingException e) {
             mailetContext.log(LogLevel.INFO, "Error while process mail.", e);
             return error(recipient);
         }

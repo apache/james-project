@@ -212,9 +212,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                 return messageContains(value, message);
             }
             throw new UnsupportedSearchException();
-        } catch (IOException e) {
-            throw new MailboxException("Unable to parse message", e);
-        } catch (MimeException e) {
+        } catch (IOException | MimeException e) {
             throw new MailboxException("Unable to parse message", e);
         }
     }

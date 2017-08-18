@@ -39,11 +39,7 @@ public class ProtocolHandlerLoaderBeanFactory extends AbstractBeanFactory implem
             ProtocolHandler handler =  (ProtocolHandler) getBeanFactory().createBean(c, AutowireCapableBeanFactory.AUTOWIRE_AUTODETECT, true);
             handler.init(config);
             return handler;
-        } catch (ClassNotFoundException e) {
-            throw new LoadingException("Unable to load handler", e);
-        } catch (BeansException e) {
-            throw new LoadingException("Unable to load handler", e);
-        } catch (ConfigurationException e) {
+        } catch (ClassNotFoundException | BeansException | ConfigurationException e) {
             throw new LoadingException("Unable to load handler", e);
         }
 

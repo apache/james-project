@@ -20,7 +20,6 @@ package org.apache.james.queue.file;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -133,9 +132,7 @@ public class FileMailQueue implements ManageableMailQueue {
                         }, next - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
                     }
 
-                } catch (ClassNotFoundException e1) {
-                    log.error("Unable to load Mail", e1);
-                } catch (IOException e) {
+                } catch (ClassNotFoundException | IOException e) {
                     log.error("Unable to load Mail", e);
                 } finally {
                     if (oin != null) {
@@ -197,16 +194,8 @@ public class FileMailQueue implements ManageableMailQueue {
             }
 
             //TODO: Think about exception handling in detail
-        } catch (FileNotFoundException e) {
+        } catch (IOException | MessagingException | InterruptedException e) {
             throw new MailQueueException("Unable to enqueue mail", e);
-        } catch (IOException e) {
-            throw new MailQueueException("Unable to enqueue mail", e);
-
-        } catch (MessagingException e) {
-            throw new MailQueueException("Unable to enqueue mail", e);
-        } catch (InterruptedException e) {
-            throw new MailQueueException("Unable to enqueue mail", e);
-
         } finally {
             if (out != null) {
                 try {
@@ -285,15 +274,8 @@ public class FileMailQueue implements ManageableMailQueue {
                 return mailQueueItemDecoratorFactory.decorate(fileMailQueueItem);
 
                 // TODO: Think about exception handling in detail
-            } catch (FileNotFoundException e) {
+            } catch (IOException | ClassNotFoundException | MessagingException e) {
                 throw new MailQueueException("Unable to dequeue", e);
-            } catch (IOException e) {
-                throw new MailQueueException("Unable to dequeue", e);
-            } catch (ClassNotFoundException e) {
-                throw new MailQueueException("Unable to dequeue", e);
-            } catch (MessagingException e) {
-                throw new MailQueueException("Unable to dequeue", e);
-
             } finally {
                 if (oin != null) {
                     try {
@@ -487,12 +469,7 @@ public class FileMailQueue implements ManageableMailQueue {
                                 }
                             };
                             return true;
-                        } catch (FileNotFoundException e) {
-                            log.info("Unable to load mail", e);
-                        } catch (IOException e) {
-                            log.info("Unable to load mail", e);
-
-                        } catch (ClassNotFoundException e) {
+                        } catch (IOException | ClassNotFoundException e) {
                             log.info("Unable to load mail", e);
                         } finally {
                             if (in != null) {

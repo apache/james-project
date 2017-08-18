@@ -743,15 +743,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         try {
             // parse the message to index headers and body
             parser.parse(membership.getFullContent());
-        } catch (MimeException e) {
+        } catch (MimeException | IOException e) {
             // This should never happen as it was parsed before too without problems.            
             throw new MailboxException("Unable to index content of message", e);
-        } catch (IOException e) {
-            // This should never happen as it was parsed before too without problems.
-            // anyway let us just skip the body and headers in the index
-            throw new MailboxException("Unable to index content of message", e);
         }
-       
+
 
         return doc;
     }
@@ -1264,8 +1260,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         try {
             writer.addDocument(doc);
             writer.addDocument(flagsDoc);
-        } catch (CorruptIndexException e) {
-            throw new MailboxException("Unable to add message to index", e);
         } catch (IOException e) {
             throw new MailboxException("Unable to add message to index", e);
         }
@@ -1390,9 +1384,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         
         try {
             writer.deleteDocuments(query);
-        } catch (CorruptIndexException e) {
-            throw new MailboxException("Unable to delete message from index", e);
-
         } catch (IOException e) {
             throw new MailboxException("Unable to delete message from index", e);
         }

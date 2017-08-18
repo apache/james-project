@@ -116,15 +116,7 @@ public class SMIMEKeyHolder implements KeyHolder{
         
         try {
             InitJCE.init();
-        } catch (InstantiationException e) {
-            NoSuchProviderException ex = new NoSuchProviderException("Error during cryptography provider initialization. Has bcprov-jdkxx-yyy.jar been copied in the lib directory or installed in the system?");
-            ex.initCause(e);
-            throw ex;
-        } catch (IllegalAccessException e) {
-            NoSuchProviderException ex = new NoSuchProviderException("Error during cryptography provider initialization. Has bcprov-jdkxx-yyy.jar been copied in the lib directory or installed in the system?");
-            ex.initCause(e);
-            throw ex;
-        } catch (ClassNotFoundException e) {
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             NoSuchProviderException ex = new NoSuchProviderException("Error during cryptography provider initialization. Has bcprov-jdkxx-yyy.jar been copied in the lib directory or installed in the system?");
             ex.initCause(e);
             throw ex;

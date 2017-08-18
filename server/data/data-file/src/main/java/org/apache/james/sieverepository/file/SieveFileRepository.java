@@ -193,9 +193,7 @@ public class SieveFileRepository implements SieveRepository {
             try {
                 scanner = new Scanner(file, UTF_8);
                 quota = scanner.nextLong();
-            } catch (FileNotFoundException ex) {
-                // no op
-            } catch (NoSuchElementException ex) {
+            } catch (FileNotFoundException | NoSuchElementException ex) {
                 // no op
             } finally {
                 if (null != scanner) {
@@ -398,9 +396,7 @@ public class SieveFileRepository implements SieveRepository {
             try {
                 scanner = new Scanner(file, UTF_8);
                 quota = scanner.nextLong();
-            } catch (FileNotFoundException ex) {
-                // no op
-            } catch (NoSuchElementException ex) {
+            } catch (FileNotFoundException | NoSuchElementException ex) {
                 // no op
             } finally {
                 if (null != scanner) {
@@ -452,9 +448,7 @@ public class SieveFileRepository implements SieveRepository {
             try {
                 scanner = new Scanner(file, UTF_8);
                 quota = scanner.nextLong();
-            } catch (FileNotFoundException ex) {
-                // no op
-            } catch (NoSuchElementException ex) {
+            } catch (FileNotFoundException | NoSuchElementException ex) {
                 // no op
             } finally {
                 if (null != scanner) {

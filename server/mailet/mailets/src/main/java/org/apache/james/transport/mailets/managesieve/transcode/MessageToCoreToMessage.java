@@ -20,20 +20,21 @@
 
 package org.apache.james.transport.mailets.managesieve.transcode;
 
-import org.apache.james.managesieve.api.ManageSieveException;
-import org.apache.james.managesieve.api.Session;
-import org.apache.james.managesieve.transcode.ManageSieveProcessor;
-import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Locale;
+import java.util.Scanner;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Locale;
-import java.util.Scanner;
+
+import org.apache.james.managesieve.api.ManageSieveException;
+import org.apache.james.managesieve.api.Session;
+import org.apache.james.managesieve.transcode.ManageSieveProcessor;
+import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 
 public class MessageToCoreToMessage {
     
@@ -144,9 +145,7 @@ public class MessageToCoreToMessage {
     private String retrieveAttachedScript(MimeMessage message) {
         try {
             return getScript(message);
-        } catch (IOException e) {
-            return  "";
-        } catch (MessagingException e) {
+        } catch (IOException | MessagingException e) {
             return  "";
         }
     }

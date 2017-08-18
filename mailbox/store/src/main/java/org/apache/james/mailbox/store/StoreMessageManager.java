@@ -423,9 +423,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
                 return new ComposedMessageId(mailbox.getMailboxId(), data.getMessageId(), data.getUid());
             }, true);
 
-        } catch (IOException e) {
-            throw new MailboxException("Unable to parse message", e);
-        } catch (MimeException e) {
+        } catch (IOException | MimeException e) {
             throw new MailboxException("Unable to parse message", e);
         } finally {
             IOUtils.closeQuietly(bIn);

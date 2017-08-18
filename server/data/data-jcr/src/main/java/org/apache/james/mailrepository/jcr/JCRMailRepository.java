@@ -154,9 +154,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
             } finally {
                 session.logout();
             }
-        } catch (IOException e) {
-            throw new MessagingException("Unable to retrieve message: " + key, e);
-        } catch (RepositoryException e) {
+        } catch (IOException | RepositoryException e) {
             throw new MessagingException("Unable to retrieve message: " + key, e);
         }
     }
@@ -656,9 +654,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
             } finally {
                 session.logout();
             }
-        } catch (IOException e) {
-            throw new MessagingException("Unable to store message: " + mail.getName(), e);
-        } catch (RepositoryException e) {
+        } catch (IOException | RepositoryException e) {
             throw new MessagingException("Unable to store message: " + mail.getName(), e);
         }
     }

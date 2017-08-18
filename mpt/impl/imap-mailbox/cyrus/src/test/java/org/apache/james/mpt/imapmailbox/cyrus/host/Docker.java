@@ -89,9 +89,7 @@ public class Docker {
         try {
             dockerClient.killContainer(container.id());
             dockerClient.removeContainer(container.id(), true);
-        } catch (DockerException e) {
-            Throwables.propagate(e);
-        } catch (InterruptedException e) {
+        } catch (DockerException | InterruptedException e) {
             Throwables.propagate(e);
         }
     }
@@ -110,12 +108,9 @@ public class Docker {
                                     .ports()
                                     .get(EXPOSED_IMAP_PORT))
                             .hostPort());
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException | DockerException | InterruptedException e) {
             throw Throwables.propagate(e);
-        } catch (DockerException e) {
-            throw Throwables.propagate(e);
-        } catch (InterruptedException e) {
-            throw Throwables.propagate(e);        }
+        }
     }
     
     public void createUser(ContainerCreation container, String user, String password) throws DockerException, InterruptedException {

@@ -80,9 +80,7 @@ public class LogMessage extends GenericMailet {
             MimeMessage message = mail.getMessage();
             logHeaders(message);
             logBody(message);
-        } catch (MessagingException e) {
-            log("Error logging message.", e);
-        } catch (java.io.IOException e) {
+        } catch (MessagingException | IOException e) {
             log("Error logging message.", e);
         }
         if (!passThrough) {

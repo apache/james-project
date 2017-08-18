@@ -184,10 +184,7 @@ public class MailImpl implements Disposable, Mail {
                 }
                 setAttributesRaw(attribs);
             }
-        } catch (IOException e) {
-            LOGGER.error("Error while deserializing attributes", e);
-            setAttributesRaw(new HashMap<>());
-        } catch (ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             LOGGER.error("Error while deserializing attributes", e);
             setAttributesRaw(new HashMap<>());
         }

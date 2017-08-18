@@ -116,12 +116,9 @@ public class HeadersToHTTP extends GenericMailet {
             } else {
                 mail.setState(Mail.GHOST);
             }
-        } catch (javax.mail.MessagingException me) {
+        } catch (MessagingException | IOException me) {
             log(me.getMessage());
             addHeader(mail, false, me.getMessage());
-        } catch (IOException e) {
-            log(e.getMessage());
-            addHeader(mail, false, e.getMessage());
         }
     }
 

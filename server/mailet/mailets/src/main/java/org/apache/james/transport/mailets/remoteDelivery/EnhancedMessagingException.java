@@ -114,10 +114,7 @@ public class EnhancedMessagingException {
         if (hasReturnCode()) {
             try {
                 return Optional.of((InternetAddress) invokeGetter(messagingException, "getAddress"));
-            } catch (ClassCastException cce) {
-            } catch (IllegalArgumentException iae) {
-            } catch (IllegalStateException ise) {
-            }
+            } catch (ClassCastException | IllegalArgumentException | IllegalStateException cce) { }
         }
         return Optional.absent();
     }

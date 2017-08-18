@@ -341,9 +341,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
                 return new SimpleMessageMetaData(persistData);
             }
 
-        } catch (PersistenceException e) {
-            throw new MailboxException("Save of message " + message + " failed in mailbox " + mailbox, e);
-        } catch (ArgumentException e) {
+        } catch (PersistenceException | ArgumentException e) {
             throw new MailboxException("Save of message " + message + " failed in mailbox " + mailbox, e);
         }
     }

@@ -28,8 +28,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
-import java.nio.charset.MalformedInputException;
-import java.nio.charset.UnmappableCharacterException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -447,13 +445,7 @@ public abstract class ImapRequestLineReader {
         try {
             return charset.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(buffer).toString();
 
-        } catch (IllegalStateException e) {
-            throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
-        } catch (MalformedInputException e) {
-            throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
-        } catch (UnmappableCharacterException e) {
-            throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
-        } catch (CharacterCodingException e) {
+        } catch (IllegalStateException | CharacterCodingException e) {
             throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
         }
     }

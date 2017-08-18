@@ -223,9 +223,7 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
                     }
                 }
             }
-        } catch (MessagingException e) {
-            session.getLogger().error(e.getMessage());
-        } catch (IOException e) {
+        } catch (MessagingException | IOException e) {
             session.getLogger().error(e.getMessage());
         }
         return false;

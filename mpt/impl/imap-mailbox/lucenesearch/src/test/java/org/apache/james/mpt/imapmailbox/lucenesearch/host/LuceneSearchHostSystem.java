@@ -140,9 +140,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
                 new DefaultImapEncoderFactory().buildImapEncoder(),
                 defaultImapProcessorFactory);
 
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        } catch (MailboxException e) {
+        } catch (IOException | MailboxException e) {
             throw Throwables.propagate(e);
         }
     }

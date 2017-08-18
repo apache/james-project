@@ -559,9 +559,7 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
                 fromHeader = "From " + mc.getMessage().getFrom()[0] + " " + dy.format(Calendar.getInstance().getTime());
             }
 
-        } catch (IOException e) {
-            getLogger().error("Unable to parse mime message for " + mboxFile, e);
-        } catch (MessagingException e) {
+        } catch (IOException | MessagingException e) {
             getLogger().error("Unable to parse mime message for " + mboxFile, e);
         }
         // And save only the new stuff to disk

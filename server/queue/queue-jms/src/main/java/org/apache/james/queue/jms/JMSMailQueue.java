@@ -689,9 +689,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
                                     return mail;
                                 }
                             };
-                        } catch (MessagingException e) {
-                            logger.error("Unable to browse queue", e);
-                        } catch (JMSException e) {
+                        } catch (MessagingException | JMSException e) {
                             logger.error("Unable to browse queue", e);
                         }
                     }

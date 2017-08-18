@@ -19,7 +19,6 @@
 
 package org.apache.james.transport.mailets;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
@@ -126,15 +125,8 @@ public class ReplaceContent extends GenericMailet {
                     .addAllSubjectReplacingUnits(subjectPatternFile())
                     .addAllBodyReplacingUnits(bodyPatternFile())
                     .build();
-        } catch (FileNotFoundException e) {
+        } catch (MailetException | IOException e) {
             throw new MailetException("Failed initialization", e);
-            
-        } catch (MailetException e) {
-            throw new MailetException("Failed initialization", e);
-            
-        } catch (IOException e) {
-            throw new MailetException("Failed initialization", e);
-            
         }
     }
 

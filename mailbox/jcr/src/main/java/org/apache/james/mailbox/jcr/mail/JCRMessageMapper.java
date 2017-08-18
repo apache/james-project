@@ -520,9 +520,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
                 membership.merge(messageNode);
             }
             return new SimpleMessageMetaData(membership);
-        } catch (RepositoryException e) {
-            throw new MailboxException("Unable to save message " + message + " in mailbox " + mailbox, e);
-        } catch (IOException e) {
+        } catch (RepositoryException | IOException e) {
             throw new MailboxException("Unable to save message " + message + " in mailbox " + mailbox, e);
         }
     }

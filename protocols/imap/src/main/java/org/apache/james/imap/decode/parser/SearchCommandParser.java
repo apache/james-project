@@ -1021,10 +1021,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
             }
 
             return new SearchRequest(command, new SearchOperation(finalKey, options), useUids, tag);
-        } catch (IllegalCharsetNameException e) {
-            session.getLog().debug("Unable to decode request", e);
-            return unsupportedCharset(tag, command);
-        } catch (UnsupportedCharsetException e) {
+        } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
             session.getLog().debug("Unable to decode request", e);
             return unsupportedCharset(tag, command);
         }

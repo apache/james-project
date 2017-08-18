@@ -118,9 +118,7 @@ public class DefaultDescriptorsExtractor {
                 logInterfaces(log, klass, allInterfaces);
             }
 
-        } catch (NoClassDefFoundError e) {
-            log.error("NotFound: " + e.getMessage());
-        } catch (ClassNotFoundException e) {
+        } catch (NoClassDefFoundError | ClassNotFoundException e) {
             log.error("NotFound: " + e.getMessage());
         } catch (SecurityException e) {
             log.error("SE: " + e.getMessage());
@@ -175,17 +173,8 @@ public class DefaultDescriptorsExtractor {
             if (info != null && info.length() > 0) {
                 result.setInfo(info);
             }
-        } catch (InstantiationException e) {
-            handleInfoLoadFailure(log, nameOfClass, type, e);
-        } catch (IllegalAccessException e) {
-            handleInfoLoadFailure(log, nameOfClass, type, e);
-        } catch (IllegalArgumentException e) {
-            handleInfoLoadFailure(log, nameOfClass, type, e);
-        } catch (SecurityException e) {
-            handleInfoLoadFailure(log, nameOfClass, type, e);
-        } catch (InvocationTargetException e) {
-            handleInfoLoadFailure(log, nameOfClass, type, e);
-        } catch (NoSuchMethodException e) {
+        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                | InvocationTargetException | SecurityException | NoSuchMethodException e) {
             handleInfoLoadFailure(log, nameOfClass, type, e);
         }
         return result;
@@ -231,9 +220,7 @@ public class DefaultDescriptorsExtractor {
         if (log.isDebugEnabled()) {
             try {
                 log.debug("Constructor(empty): " + klass.getConstructor((Class<?>)null));
-            } catch (SecurityException e) { 
-                log.debug("Cannot introspect empty constructor", e);
-            } catch (NoSuchMethodException e) {
+            } catch (SecurityException | NoSuchMethodException e) {
                 log.debug("Cannot introspect empty constructor", e);
             }
         }
