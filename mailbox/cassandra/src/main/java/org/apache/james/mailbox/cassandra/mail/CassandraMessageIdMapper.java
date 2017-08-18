@@ -35,7 +35,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.mail.migration.V1ToV2Migration;
 import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -56,7 +55,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 
 public class CassandraMessageIdMapper implements MessageIdMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageIdMapper.class);
@@ -70,14 +68,12 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private final ModSeqProvider modSeqProvider;
     private final MailboxSession mailboxSession;
     private final AttachmentLoader attachmentLoader;
-    private final V1ToV2Migration v1ToV2Migration;
     private final CassandraConfiguration cassandraConfiguration;
 
     public CassandraMessageIdMapper(MailboxMapper mailboxMapper, CassandraMailboxDAO mailboxDAO, CassandraAttachmentMapper attachmentMapper,
                                     CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO,
-                                    CassandraMessageDAO messageDAOV1, CassandraMessageDAOV2 messageDAOV2,
-                                    CassandraIndexTableHandler indexTableHandler, ModSeqProvider modSeqProvider, MailboxSession mailboxSession,
-                                    V1ToV2Migration v1ToV2Migration, CassandraConfiguration cassandraConfiguration) {
+                                    CassandraMessageDAOV2 messageDAOV2, CassandraIndexTableHandler indexTableHandler,
+                                    ModSeqProvider modSeqProvider, MailboxSession mailboxSession, CassandraConfiguration cassandraConfiguration) {
 
         this.mailboxMapper = mailboxMapper;
         this.mailboxDAO = mailboxDAO;
@@ -89,7 +85,6 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         this.mailboxSession = mailboxSession;
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
         this.cassandraConfiguration = cassandraConfiguration;
-        this.v1ToV2Migration = v1ToV2Migration;
     }
 
     @Override
@@ -104,19 +99,14 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
                 .map(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty())))
             .completableFuture()
             .thenApply(stream -> stream.collect(Guavate.toImmutableList()))
-            .thenCompose(composedMessageIds -> retrieveMessagesAndDoMigrationIfNeeded(fetchType, composedMessageIds))
+            .thenCompose(composedMessageIds -> messageDAOV2.retrieveMessages(composedMessageIds, fetchType, Limit.unlimited()))
+            .thenApply(stream -> stream
+                .filter(CassandraMessageDAOV2.MessageResult::isFound)
+                .map(CassandraMessageDAOV2.MessageResult::message))
             .thenCompose(stream -> attachmentLoader.addAttachmentToMessages(stream, fetchType))
             .thenCompose(this::filterMessagesWithExistingMailbox)
             .join()
             .sorted(Comparator.comparing(MailboxMessage::getUid));
-    }
-
-    private CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>>
-            retrieveMessagesAndDoMigrationIfNeeded(FetchType fetchType, ImmutableList<ComposedMessageIdWithMetaData> composedMessageIds) {
-
-        return FluentFutureStream.of(messageDAOV2.retrieveMessages(composedMessageIds, fetchType, Limit.unlimited()))
-            .thenComposeOnAll(v1ToV2Migration::getFromV2orElseFromV1AfterMigration)
-            .completableFuture();
     }
 
     private CompletableFuture<Stream<SimpleMailboxMessage>> filterMessagesWithExistingMailbox(Stream<SimpleMailboxMessage> stream) {

@@ -21,7 +21,6 @@ package org.apache.james.modules.server;
 
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.mailbox.cassandra.mail.migration.Migration;
-import org.apache.james.mailbox.cassandra.mail.migration.V1ToV2Migration;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.routes.CassandraMigrationRoutes;
 import org.apache.james.webadmin.service.CassandraMigrationService;
@@ -33,22 +32,18 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 public class CassandraRoutesModule extends AbstractModule {
-
-    private static final int FROM_V1_TO_V2 = 1;
+    private static final int FROM_V2_TO_V3 = 2;
 
     @Override
     protected void configure() {
         bind(CassandraRoutesModule.class).in(Scopes.SINGLETON);
         bind(CassandraMigrationService.class).in(Scopes.SINGLETON);
 
-        Multibinder<Migration> migrationMultibinder = Multibinder.newSetBinder(binder(), Migration.class);
-        migrationMultibinder.addBinding().to(V1ToV2Migration.class);
-
         Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
         routesMultibinder.addBinding().to(CassandraMigrationRoutes.class);
 
         MapBinder<Integer, Migration> allMigrationClazzBinder = MapBinder.newMapBinder(binder(), Integer.class, Migration.class);
-        allMigrationClazzBinder.addBinding(FROM_V1_TO_V2).to(V1ToV2Migration.class);
+        allMigrationClazzBinder.addBinding(FROM_V2_TO_V3).toInstance(() -> Migration.MigrationResult.COMPLETED);
 
         bindConstant()
             .annotatedWith(Names.named(CassandraMigrationService.LATEST_VERSION))

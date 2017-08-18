@@ -59,7 +59,7 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.BlobId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.utils.Limit;
-import org.apache.james.mailbox.cassandra.table.CassandraMessageV1Table;
+import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Attachments;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Properties;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -213,30 +213,6 @@ public class CassandraMessageDAOV2 {
             .setBool(Attachments.IS_INLINE, messageAttachment.isInline());
     }
 
-    public CompletableFuture<Void> save(CassandraMessageDAO.RawMessage rawMessage) {
-        return CompletableFutureUtil.combine(
-            blobsDAO.save(rawMessage.getHeaderContent()),
-            blobsDAO.save(rawMessage.getBodyContent()),
-            Pair::of)
-            .thenCompose(pair ->
-                cassandraAsyncExecutor.executeVoid(boundWriteStatement(rawMessage, pair)));
-    }
-
-    private BoundStatement boundWriteStatement(CassandraMessageDAO.RawMessage message, Pair<Optional<BlobId>, Optional<BlobId>> pair) {
-        CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
-        return insert.bind()
-            .setUUID(MESSAGE_ID, messageId.get())
-            .setTimestamp(INTERNAL_DATE, message.getInternalDate())
-            .setInt(BODY_START_OCTET, message.getBodyStartOctet())
-            .setLong(FULL_CONTENT_OCTETS, message.getFullContentOctet())
-            .setLong(BODY_OCTECTS, message.getFullContentOctet() - message.getBodyStartOctet())
-            .setString(BODY_CONTENT, pair.getRight().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
-            .setString(HEADER_CONTENT, pair.getLeft().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
-            .setLong(TEXTUAL_LINE_COUNT, message.getTextuaLineCount())
-            .setList(PROPERTIES, buildPropertiesUdt(message.getPropertyBuilder().toProperties()))
-            .setList(ATTACHMENTS, buildAttachmentUdt(message));
-    }
-
     private List<UDTValue> buildPropertiesUdt(MailboxMessage message) {
         return message.getProperties().stream()
             .map(x -> typesProvider.getDefinedUserType(PROPERTIES)
@@ -245,21 +221,6 @@ public class CassandraMessageDAOV2 {
                 .setString(Properties.NAME, x.getLocalName())
                 .setString(Properties.VALUE, x.getValue()))
             .collect(Guavate.toImmutableList());
-    }
-
-    private ImmutableList<UDTValue> buildAttachmentUdt(CassandraMessageDAO.RawMessage message) {
-        return message.getAttachments().stream()
-            .map(this::toUDT)
-            .collect(Guavate.toImmutableList());
-    }
-
-    private UDTValue toUDT(MessageAttachmentRepresentation messageAttachment) {
-        return typesProvider.getDefinedUserType(ATTACHMENTS)
-            .newValue()
-            .setString(Attachments.ID, messageAttachment.getAttachmentId().getId())
-            .setString(Attachments.NAME, messageAttachment.getName().orElse(null))
-            .setString(Attachments.CID, messageAttachment.getCid().map(Cid::getValue).orElse(null))
-            .setBool(Attachments.IS_INLINE, messageAttachment.isInline());
     }
 
     public CompletableFuture<Stream<MessageResult>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
@@ -345,7 +306,7 @@ public class CassandraMessageDAOV2 {
             .attachmentId(AttachmentId.from(udtValue.getString(Attachments.ID)))
             .name(udtValue.getString(Attachments.NAME))
             .cid(OptionalConverter.fromGuava(
-                cidParser.parse(udtValue.getString(CassandraMessageV1Table.Attachments.CID))))
+                cidParser.parse(udtValue.getString(CassandraMessageV2Table.Attachments.CID))))
             .isInline(udtValue.getBool(Attachments.IS_INLINE))
             .build();
     }

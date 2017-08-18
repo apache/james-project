@@ -33,7 +33,6 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
@@ -59,7 +58,6 @@ public class CassandraMailboxManagerProvider {
         CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(session, messageIdFactory);
         CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(session, messageIdFactory);
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(session);
-        CassandraMessageDAO messageDAO = new CassandraMessageDAO(session, cassandraTypesProvider);
         CassandraMessageDAOV2 messageDAOV2 = new CassandraMessageDAOV2(session, cassandraTypesProvider, blobsDAO);
         CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(session);
         CassandraMailboxRecentsDAO mailboxRecentsDAO = new CassandraMailboxRecentsDAO(session);
@@ -72,7 +70,6 @@ public class CassandraMailboxManagerProvider {
         CassandraMailboxSessionMapperFactory mapperFactory = new CassandraMailboxSessionMapperFactory(uidProvider,
             modSeqProvider,
             session,
-            messageDAO,
             messageDAOV2,
             messageIdDAO,
             imapUidDAO,

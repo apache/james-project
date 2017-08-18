@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra.modules;
 
 import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.blob;
 import static com.datastax.driver.core.DataType.cboolean;
 import static com.datastax.driver.core.DataType.cint;
 import static com.datastax.driver.core.DataType.set;
@@ -35,7 +34,6 @@ import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageIds;
-import org.apache.james.mailbox.cassandra.table.CassandraMessageV1Table;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table;
 import org.apache.james.mailbox.cassandra.table.Flag;
 import org.apache.james.mailbox.cassandra.table.MessageIdToImapUid;
@@ -92,21 +90,6 @@ public class CassandraMessageModule implements CassandraModule {
                     .compactionOptions(SchemaBuilder.leveledStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CACHED_MESSAGE_ID_ROWS))),
-            new CassandraTable(CassandraMessageV1Table.TABLE_NAME,
-                SchemaBuilder.createTable(CassandraMessageV1Table.TABLE_NAME)
-                    .ifNotExists()
-                    .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
-                    .addColumn(CassandraMessageV1Table.INTERNAL_DATE, timestamp())
-                    .addColumn(CassandraMessageV1Table.BODY_START_OCTET, cint())
-                    .addColumn(CassandraMessageV1Table.BODY_OCTECTS, bigint())
-                    .addColumn(CassandraMessageV1Table.TEXTUAL_LINE_COUNT, bigint())
-                    .addColumn(CassandraMessageV1Table.FULL_CONTENT_OCTETS, bigint())
-                    .addColumn(CassandraMessageV1Table.BODY_CONTENT, blob())
-                    .addColumn(CassandraMessageV1Table.HEADER_CONTENT, blob())
-                    .addUDTListColumn(CassandraMessageV1Table.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageV1Table.ATTACHMENTS))
-                    .addUDTListColumn(CassandraMessageV1Table.PROPERTIES, SchemaBuilder.frozen(CassandraMessageV1Table.PROPERTIES))
-                    .withOptions()
-                    .comment("Deprecated table. Was used to store messages. See `messagev2` instead.")),
             new CassandraTable(CassandraMessageV2Table.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraMessageV2Table.TABLE_NAME)
                     .ifNotExists()
@@ -124,19 +107,19 @@ public class CassandraMessageModule implements CassandraModule {
                     .comment("Holds message metadata, independently of any mailboxes. Content of messages is stored " +
                         "in `blobs` and `blobparts` tables.")));
         types = ImmutableList.of(
-            new CassandraType(CassandraMessageV1Table.PROPERTIES,
-                SchemaBuilder.createType(CassandraMessageV1Table.PROPERTIES)
+            new CassandraType(CassandraMessageV2Table.PROPERTIES,
+                SchemaBuilder.createType(CassandraMessageV2Table.PROPERTIES)
                     .ifNotExists()
-                    .addColumn(CassandraMessageV1Table.Properties.NAMESPACE, text())
-                    .addColumn(CassandraMessageV1Table.Properties.NAME, text())
-                    .addColumn(CassandraMessageV1Table.Properties.VALUE, text())),
-            new CassandraType(CassandraMessageV1Table.ATTACHMENTS,
-                SchemaBuilder.createType(CassandraMessageV1Table.ATTACHMENTS)
+                    .addColumn(CassandraMessageV2Table.Properties.NAMESPACE, text())
+                    .addColumn(CassandraMessageV2Table.Properties.NAME, text())
+                    .addColumn(CassandraMessageV2Table.Properties.VALUE, text())),
+            new CassandraType(CassandraMessageV2Table.ATTACHMENTS,
+                SchemaBuilder.createType(CassandraMessageV2Table.ATTACHMENTS)
                     .ifNotExists()
-                    .addColumn(CassandraMessageV1Table.Attachments.ID, text())
-                    .addColumn(CassandraMessageV1Table.Attachments.NAME, text())
-                    .addColumn(CassandraMessageV1Table.Attachments.CID, text())
-                    .addColumn(CassandraMessageV1Table.Attachments.IS_INLINE, cboolean())));
+                    .addColumn(CassandraMessageV2Table.Attachments.ID, text())
+                    .addColumn(CassandraMessageV2Table.Attachments.NAME, text())
+                    .addColumn(CassandraMessageV2Table.Attachments.CID, text())
+                    .addColumn(CassandraMessageV2Table.Attachments.IS_INLINE, cboolean())));
     }
 
     @Override
