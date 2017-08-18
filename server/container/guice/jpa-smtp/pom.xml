@@ -82,11 +82,11 @@
             <artifactId>james-server-jpa-common-guice</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-webadmin</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-webadmin-data</artifactId>
         </dependency>
         <dependency>

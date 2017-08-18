@@ -51,7 +51,7 @@
             <type>test-jar</type>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-backends-es</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -83,7 +83,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-icalendar</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -96,11 +96,11 @@
             <artifactId>james-server-data-cassandra</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-jmap-cassandra</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>metrics-es-reporter</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -151,19 +151,19 @@
             <artifactId>james-server-guice-webadmin</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-webadmin-cassandra</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-webadmin-data</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-webadmin-mailbox</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-webadmin-swagger</artifactId>
         </dependency>
         <dependency>

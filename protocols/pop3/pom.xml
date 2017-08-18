@@ -35,7 +35,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>protocols-api</artifactId>
         </dependency>
         <dependency>
@@ -48,13 +48,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>protocols-api</artifactId>
             <scope>test</scope>
             <type>test-jar</type>
         </dependency>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>protocols-netty</artifactId>
             <scope>test</scope>
         </dependency>

@@ -34,19 +34,19 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-protocols-smtp</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>org.apache.james</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-dnsservice-api</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.apache.james</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-dnsservice-library</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.apache.james</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-queue-api</artifactId>
                 </exclusion>
                 <exclusion>
@@ -56,19 +56,19 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-lifecycle-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-protocols-library</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
         </dependency>
         <dependency>
@@ -88,11 +88,11 @@
             <artifactId>protocols-lmtp</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-api</artifactId>
         </dependency>
         <dependency>

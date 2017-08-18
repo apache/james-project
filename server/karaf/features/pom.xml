@@ -9,7 +9,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.apache.james.karaf</groupId>
     <artifactId>james-karaf-features</artifactId>
     <packaging>pom</packaging>
     <name>Apache James :: Karaf :: Features</name>

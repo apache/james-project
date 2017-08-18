@@ -73,11 +73,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-cli</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-core</artifactId>
             <exclusions>
                 <exclusion>
@@ -87,11 +87,11 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>metrics-logger</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-api</artifactId>
             <exclusions>
                 <exclusion>
@@ -101,7 +101,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-dnsservice-library</artifactId>
             <exclusions>
                 <exclusion>
@@ -111,15 +111,15 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-filesystem-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-lifecycle-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-mailetcontainer-api</artifactId>
             <exclusions>
                 <exclusion>
@@ -129,7 +129,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-queue-api</artifactId>
             <exclusions>
                 <exclusion>
@@ -139,7 +139,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-spring</artifactId>
             <exclusions>
                 <exclusion>
@@ -224,7 +224,7 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-mailetcontainer-camel</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -235,7 +235,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-mailbox-adapter</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -246,30 +246,30 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-dnsservice-api</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-dnsservice-dnsjava</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>metrics-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>metrics-dropwizard</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-protocols-library</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-util</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -280,7 +280,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-library</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -291,13 +291,13 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-ldap</artifactId>
             <scope>runtime</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-protocols-smtp</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -308,12 +308,12 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-protocols-imap4</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-protocols-lmtp</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -324,12 +324,12 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-protocols-managesieve</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-protocols-pop3</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -344,7 +344,7 @@
             <artifactId>protocols-managesieve</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-fetchmail</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -355,7 +355,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-queue-file</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -366,7 +366,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-queue-jms</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -377,7 +377,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-queue-activemq</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -388,7 +388,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-mailets</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -417,7 +417,7 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-jpa</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -428,7 +428,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-spring</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -447,7 +447,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-jcr</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -458,7 +458,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-memory</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -470,7 +470,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-file</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -481,12 +481,12 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-jpa</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-jdbc</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -497,7 +497,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-hbase</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -524,7 +524,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-jcr</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -560,7 +560,7 @@
             </activation>
 	    <dependencies>
 	        <dependency>
-		    <groupId>org.apache.james</groupId>
+		    <groupId>${project.groupId}</groupId>
 		    <artifactId>apache-james-mailbox-elasticsearch</artifactId>
 		    <scope>runtime</scope>
 		    <exclusions>
@@ -571,7 +571,7 @@
 		    </exclusions>
 		</dependency>
 		<dependency>
-		    <groupId>org.apache.james</groupId>
+		    <groupId>${project.groupId}</groupId>
 		    <artifactId>apache-james-mailbox-tika</artifactId>
 		    <scope>runtime</scope>
 		    <exclusions>
@@ -591,7 +591,7 @@
             </properties>
             <dependencies>
                 <dependency>
-                    <groupId>org.apache.james</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-mailbox-cassandra</artifactId>
                     <scope>runtime</scope>
                     <exclusions>
@@ -602,12 +602,12 @@
                     </exclusions>
                 </dependency>
                 <dependency>
-                    <groupId>org.apache.james</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-data-cassandra</artifactId>
                     <scope>runtime</scope>
                 </dependency>
                 <dependency>
-                    <groupId>org.apache.james</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-backends-cassandra</artifactId>
                     <scope>runtime</scope>
                 </dependency>
@@ -617,7 +617,7 @@
             <id>kafka</id>
             <dependencies>
                 <dependency>
-                    <groupId>org.apache.james</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-mailbox-kafka</artifactId>
                     <scope>runtime</scope>
                 </dependency>
@@ -630,7 +630,7 @@
             </activation>
             <dependencies>
                 <dependency>
-                    <groupId>org.apache.james</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-mailbox-lucene</artifactId>
                     <scope>runtime</scope>
                     <exclusions>
@@ -646,7 +646,7 @@
             <id>exclude-lucene</id>
             <dependencies>
                 <dependency>
-                    <groupId>org.apache.james</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-mailbox-lucene</artifactId>
                     <scope>runtime</scope>
                     <exclusions>
@@ -1060,7 +1060,7 @@
                 <plugins>
                     <!-- be sure to start up james before run it -->
                     <plugin>
-                        <groupId>org.apache.james</groupId>
+                        <groupId>${project.groupId}</groupId>
                         <artifactId>maven-mpt-plugin</artifactId>
                         <version>0.2-SNAPSHOT</version>
                         <configuration>

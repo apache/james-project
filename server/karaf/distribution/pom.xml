@@ -9,7 +9,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.apache.james.karaf</groupId>
     <artifactId>james-karaf-distribution</artifactId>
     <packaging>pom</packaging>
 
@@ -30,7 +29,7 @@
             <classifier>features</classifier>
         </dependency>
         <dependency>
-            <groupId>org.apache.james.karaf</groupId>
+            <groupId>org.apache.james</groupId>
             <artifactId>james-karaf-features</artifactId>
             <type>pom</type>
         </dependency>

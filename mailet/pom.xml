@@ -75,23 +75,23 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.apache.james</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>apache-mailet-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.james</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>apache-mailet-base</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.james</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>apache-mailet-base</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
             <dependency>
-                <groupId>org.apache.james</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>apache-mime4j-core</artifactId>
                 <version>${mime4j.version}</version>
             </dependency>
@@ -241,7 +241,7 @@
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>org.apache.james</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>maven-mailetdocs-plugin</artifactId>
                     <version>${plugin.mailetdocs.version}</version>
                 </plugin>

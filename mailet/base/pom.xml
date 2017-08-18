@@ -41,11 +41,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mime4j-core</artifactId>
         </dependency>
         <dependency>
@@ -115,7 +115,7 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.james</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>maven-mailetdocs-plugin</artifactId>
             </plugin>
             <plugin>

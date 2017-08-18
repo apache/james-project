@@ -39,17 +39,17 @@
             <artifactId>james-server-util</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>protocols-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>protocols-api</artifactId>
             <scope>test</scope>
             <type>test-jar</type>
         </dependency>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>protocols-netty</artifactId>
         </dependency>
         <dependency>
@@ -130,7 +130,7 @@
                             <relocations>
                                 <relocation>
                                     <pattern>org.apache.commons.codec.binary</pattern>
-                                    <shadedPattern>org.apache.james.protocols.smtp.util</shadedPattern>
+                                    <shadedPattern>${project.groupId}.smtp.util</shadedPattern>
                                 </relocation>
                             </relocations>
                             <transformers>

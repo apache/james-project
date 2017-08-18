@@ -112,7 +112,7 @@
             <artifactId>james-server-mailets</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>metrics-api</artifactId>
         </dependency>
         <dependency>
@@ -120,7 +120,7 @@
             <artifactId>metrics-logger</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>metrics-dropwizard</artifactId>
         </dependency>
         <dependency>
@@ -174,7 +174,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-base</artifactId>
             <scope>test</scope>
             <type>test-jar</type>

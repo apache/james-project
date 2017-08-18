@@ -33,7 +33,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mime4j-dom</artifactId>
         </dependency>
         <dependency>

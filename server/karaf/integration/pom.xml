@@ -9,7 +9,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.apache.james.karaf</groupId>
     <artifactId>james-karaf-integration</artifactId>
     <packaging>pom</packaging>
     <name>Apache James :: Karaf :: Integration tests</name>
@@ -77,7 +76,7 @@
 
         <!-- Apache Felix Karaf integration -->
         <dependency>
-            <groupId>org.apache.james.karaf</groupId>
+            <groupId>org.apache.james</groupId>
             <artifactId>james-karaf-distribution</artifactId>
             <scope>test</scope>
             <type>tar.gz</type>
@@ -103,7 +102,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.james.karaf</groupId>
+            <groupId>org.apache.james</groupId>
             <artifactId>james-karaf-features</artifactId>
             <type>pom</type>
         </dependency>

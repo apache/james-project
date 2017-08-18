@@ -35,7 +35,7 @@
     <dependencies>
         <!-- only used by JamesUser (for MailAddress) -->
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
         </dependency>
         <dependency>

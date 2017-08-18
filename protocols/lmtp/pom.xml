@@ -35,11 +35,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>protocols-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>protocols-smtp</artifactId>
         </dependency>
         <dependency>
@@ -62,18 +62,18 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>protocols-netty</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>protocols-api</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>protocols-smtp</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
