@@ -30,6 +30,12 @@ import org.hamcrest.Description;
  * 
  */
 public class StatusResponseTypeMatcher extends BaseMatcher<StatusResponse> {
+
+    public static final StatusResponseTypeMatcher OK_RESPONSE_MATCHER = new StatusResponseTypeMatcher(StatusResponse.Type.OK);
+    public static final StatusResponseTypeMatcher BAD_RESPONSE_MATCHER = new StatusResponseTypeMatcher(StatusResponse.Type.BAD);
+    public static final StatusResponseTypeMatcher NO_RESPONSE_MATCHER = new StatusResponseTypeMatcher(StatusResponse.Type.NO);
+
+
     private final org.apache.james.imap.api.message.response.StatusResponse.Type serverResponseType;
 
     public StatusResponseTypeMatcher(org.apache.james.imap.api.message.response.StatusResponse.Type responseCode) {
