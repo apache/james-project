@@ -257,12 +257,28 @@
       <p>
         6.
         <strong>pom.xml</strong>
-        files shall follow the same ordering as seen in the reference
-        of
-        the
-        <a href="http://maven.apache.org/ref/3.0.3/maven-model/maven.html">Maven Model</a>
-        ,
-        split multiple attributes each on a new line.
+
+        <br/>
+        We also require the following best practice regarding maven:
+        <ul>
+          <li>Define your dependency versions in james-project pom.xml. This structurally ensures all projects get the
+            same version, and that there is no version clashes.</li>
+          <li>Don't use <i>org.apache.james</i> groupId for your dependencies. Use <i>${project.groupId}</i>.
+            If not, you break the policies for automatic sorting, as well as make it more ambiguous.</li>
+          <li>You should be ordering your dependencies. The sort order is:
+            <ul>
+              <ol>If the project is part of org.james.apache groupId? Internal dependencies goes first.</ol>
+              <ol>Then we order by groupId</ol>
+              <ol>Then we order by artifactId</ol>
+              <ol>Then we order by type. <i>test-jar</i> goes last.</ol>
+            </ul>
+            Hopefully, some tools are doing this sorting for you:</li>
+        </ul>
+        <pre>
+          <code>mvn com.github.ekryd.sortpom:sortpom-maven-plugin:sort -Dsort.keepBlankLines -Dsort.sortDependencies=groupId,artifactId -Dsort.nrOfIndentSpace=4 -Dsort.createBackupFile=false -Dsort.sortModules=true -Dsort.sortModules=true</code>
+        </pre>
+        <p>You should also split multiple attributes each on a new line.</p>
+        <p>You should ensure your POM files, as well as sections ordering follows the <a href="http://maven.apache.org/ref/3.0.3/maven-model/maven.html">Maven Model</a></p>
       </p>
       <p>
         <strong>Eclipse IDE</strong>
