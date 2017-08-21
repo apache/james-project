@@ -755,7 +755,6 @@
                 <artifactId>apache-james-mailbox-hbase</artifactId>
                 <version>${project.version}</version>
                 <classifier>tests</classifier>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -902,7 +901,6 @@
                 <artifactId>apache-mailet-base</artifactId>
                 <version>${project.version}</version>
                 <classifier>tests</classifier>
-                <scope>test</scope>
                 <exclusions>
                     <exclusion>
                         <artifactId>mail</artifactId>
@@ -926,7 +924,6 @@
                 <artifactId>apache-mailet-standard</artifactId>
                 <version>${project.version}</version>
                 <classifier>tests</classifier>
-                <scope>test</scope>
                 <exclusions>
                     <exclusion>
                         <artifactId>mail</artifactId>
@@ -959,7 +956,6 @@
                 <artifactId>james-server-cassandra-guice</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -981,7 +977,6 @@
                 <artifactId>james-server-core</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -1029,7 +1024,6 @@
                 <artifactId>james-server-data-jmap</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -1093,7 +1087,6 @@
                 <artifactId>james-server-dnsservice-library</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -1110,7 +1103,6 @@
                 <artifactId>james-server-filesystem-api</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -1185,7 +1177,6 @@
                 <artifactId>james-server-mailetcontainer-api</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -1228,7 +1219,6 @@
                 <artifactId>james-server-protocols-library</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -1261,7 +1251,6 @@
                 <artifactId>james-server-protocols-smtp</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -1278,7 +1267,6 @@
                 <artifactId>james-server-queue-api</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -1295,7 +1283,6 @@
                 <artifactId>james-server-queue-jms</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
 
             <dependency>
@@ -1695,7 +1682,6 @@
                 <groupId>jmock</groupId>
                 <artifactId>jmock</artifactId>
                 <version>1.1.0</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>joda-time</groupId>
@@ -1753,7 +1739,6 @@
                 <groupId>org.apache.ant</groupId>
                 <artifactId>ant-antunit</artifactId>
                 <version>1.1</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.camel</groupId>
@@ -1764,7 +1749,6 @@
                 <groupId>org.apache.camel</groupId>
                 <artifactId>camel-spring</artifactId>
                 <version>${camel.version}</version>
-                <scope>runtime</scope>
                 <exclusions>
                     <exclusion>
                         <artifactId>spring-web</artifactId>
@@ -1879,7 +1863,6 @@
                 <artifactId>james-karaf-distribution</artifactId>
                 <version>${project.version}</version>
                 <type>tar.gz</type>
-                <scope>test</scope>
                 <exclusions>
                     <exclusion>
                         <artifactId>org.apache.karaf.client</artifactId>
@@ -1984,7 +1967,6 @@
                 <groupId>org.apache.karaf.tooling.exam</groupId>
                 <artifactId>org.apache.karaf.tooling.exam.container</artifactId>
                 <version>${karaf.tooling.exam.container.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven</groupId>
@@ -2015,7 +1997,6 @@
                 <groupId>org.apache.xbean</groupId>
                 <artifactId>xbean-spring</artifactId>
                 <version>${xbean-spring.version}</version>
-                <scope>runtime</scope>
                 <exclusions>
                     <exclusion>
                         <artifactId>spring-web</artifactId>
@@ -2112,13 +2093,11 @@
                 <groupId>org.ops4j.pax.exam</groupId>
                 <artifactId>pax-exam-junit4</artifactId>
                 <version>${exam.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.ops4j.pax.exam</groupId>
                 <artifactId>pax-exam-link-mvn</artifactId>
                 <version>${exam.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.ops4j.pax.logging</groupId>
@@ -2134,7 +2113,6 @@
                 <groupId>org.ops4j.pax.url</groupId>
                 <artifactId>pax-url-aether</artifactId>
                 <version>${url.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.osgi</groupId>
@@ -2165,7 +2143,6 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-aop</artifactId>
                 <version>${spring.version}</version>
-                <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
@@ -2191,13 +2168,11 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-jms</artifactId>
                 <version>${spring.version}</version>
-                <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-orm</artifactId>
                 <version>${spring.version}</version>
-                <scope>runtime</scope>
                 <exclusions>
                     <exclusion>
                         <artifactId>toplink</artifactId>
@@ -2268,13 +2243,11 @@
                 <groupId>xerces</groupId>
                 <artifactId>xercesImpl</artifactId>
                 <version>${xercesImpl.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>xml-apis</groupId>
                 <artifactId>xml-apis</artifactId>
                 <version>${xml-apis.version}</version>
-                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
