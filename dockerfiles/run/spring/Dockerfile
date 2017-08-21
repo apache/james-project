@@ -2,7 +2,7 @@
 #
 # VERSION	1.0
 
-FROM java:openjdk-8-jdk
+FROM openjdk:8u141-jdk
 
 # Ports that are used
 #
