@@ -31,8 +31,6 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mime4j.MimeException;
-import org.apache.james.mime4j.codec.DecodeMonitor;
-import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.dom.Body;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
@@ -46,6 +44,7 @@ import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.MimeConfig;
+import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.util.OptionalConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -168,11 +167,7 @@ public class MessageParser {
     private Optional<String> name(Optional<ContentTypeField> contentTypeField) {
         return contentTypeField
             .flatMap(field -> Optional.ofNullable(field.getParameter("name"))
-            .map(
-                fieldValue -> {
-                    DecodeMonitor monitor = null;
-                    return DecoderUtil.decodeEncodedWords(fieldValue, monitor);
-                }));
+            .map(MimeUtil::unscrambleHeaderValue));
     }
 
     private Optional<Cid> cid(Optional<ContentIdField> contentIdField) {
