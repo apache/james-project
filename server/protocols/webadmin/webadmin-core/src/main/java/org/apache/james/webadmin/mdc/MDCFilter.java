@@ -22,6 +22,7 @@ package org.apache.james.webadmin.mdc;
 import java.io.Closeable;
 
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.webadmin.authentication.AuthenticationFilter;
 
 import spark.Filter;
 import spark.Request;
@@ -39,6 +40,7 @@ public class MDCFilter implements Filter {
             .addContext(VERB, request.requestMethod())
             .addContext(MDCBuilder.PROTOCOL, "webadmin")
             .addContext(MDCBuilder.ACTION, request.pathInfo())
+            .addContext(MDCBuilder.USER, request.attribute(AuthenticationFilter.LOGIN))
             .build();
         request.attribute(MDC_CLOSEABLE, mdcCloseable);
     }

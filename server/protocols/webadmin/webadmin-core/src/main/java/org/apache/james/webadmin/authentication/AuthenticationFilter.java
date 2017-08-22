@@ -22,4 +22,5 @@ package org.apache.james.webadmin.authentication;
 import spark.Filter;
 
 public interface AuthenticationFilter extends Filter {
+    String LOGIN = "LOGIN";
 }
