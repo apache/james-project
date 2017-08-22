@@ -42,6 +42,10 @@
         </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
+            <artifactId>james-server-util-java8</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
             <artifactId>apache-mime4j-core</artifactId>
         </dependency>
         <dependency>

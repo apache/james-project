@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.Cid;
@@ -44,11 +46,10 @@ import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.MimeConfig;
+import org.apache.james.util.OptionalConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class MessageParser {
@@ -136,10 +137,10 @@ public class MessageParser {
         return MessageAttachment.builder()
                 .attachment(Attachment.builder()
                     .bytes(getBytes(messageWriter, entity.getBody()))
-                    .type(contentType.or(DEFAULT_CONTENT_TYPE))
+                    .type(contentType.orElse(DEFAULT_CONTENT_TYPE))
                     .build())
-                .name(name.orNull())
-                .cid(cid.orNull())
+                .name(name.orElse(null))
+                .cid(cid.orElse(null))
                 .isInline(isInline)
                 .build();
     }
@@ -155,37 +156,35 @@ public class MessageParser {
     @SuppressWarnings("unchecked")
     private <U extends ParsedField> Optional<U> castField(Field field, Class<U> clazz) {
         if (field == null || !clazz.isInstance(field)) {
-            return Optional.absent();
+            return Optional.empty();
         }
         return Optional.of((U) field);
     }
 
     private Optional<String> contentType(Optional<ContentTypeField> contentTypeField) {
-        return contentTypeField.transform(field -> Optional.fromNullable(field.getMimeType()))
-            .or(Optional.<String> absent());
+        return contentTypeField.map(ContentTypeField::getMimeType);
     }
 
     private Optional<String> name(Optional<ContentTypeField> contentTypeField) {
         return contentTypeField
-            .transform(field -> Optional.fromNullable(field.getParameter("name"))
-                .transform(
-                    fieldValue -> {
-                        DecodeMonitor monitor = null;
-                        return DecoderUtil.decodeEncodedWords(fieldValue, monitor);
-                    }))
-            .or(Optional.<String> absent());
+            .flatMap(field -> Optional.ofNullable(field.getParameter("name"))
+            .map(
+                fieldValue -> {
+                    DecodeMonitor monitor = null;
+                    return DecoderUtil.decodeEncodedWords(fieldValue, monitor);
+                }));
     }
 
     private Optional<Cid> cid(Optional<ContentIdField> contentIdField) {
         if (!contentIdField.isPresent()) {
-            return Optional.absent();
+            return Optional.empty();
         }
-        return contentIdField.transform(toCid())
+        return contentIdField.map(toCid())
             .get();
     }
 
     private Function<ContentIdField, Optional<Cid>> toCid() {
-        return contentIdField -> cidParser.parse(contentIdField.getId());
+        return contentIdField -> OptionalConverter.fromGuava(cidParser.parse(contentIdField.getId()));
     }
 
     private boolean isMultipart(Entity entity) {
@@ -193,18 +192,18 @@ public class MessageParser {
     }
 
     private boolean isInline(Optional<ContentDispositionField> contentDispositionField) {
-        return contentDispositionField.transform(ContentDispositionField::isInline)
-            .or(false);
+        return contentDispositionField.map(ContentDispositionField::isInline)
+            .orElse(false);
     }
 
     private boolean isAttachment(Entity part, Context context) {
         if (context == Context.BODY && isTextPart(part)) {
             return false;
         }
-        return Optional.fromNullable(part.getDispositionType())
-                .transform(dispositionType -> ATTACHMENT_CONTENT_DISPOSITIONS.contains(
+        return Optional.ofNullable(part.getDispositionType())
+                .map(dispositionType -> ATTACHMENT_CONTENT_DISPOSITIONS.contains(
                     dispositionType.toLowerCase(Locale.US)))
-            .or(false);
+            .orElse(false);
     }
 
     private boolean isTextPart(Entity part) {
@@ -224,7 +223,7 @@ public class MessageParser {
         return out.toByteArray();
     }
 
-    private static enum Context {
+    private enum Context {
         BODY,
         OTHER;
 
