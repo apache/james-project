@@ -31,6 +31,7 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mime4j.MimeException;
+import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Body;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
@@ -81,6 +82,7 @@ public class MessageParser {
     public List<MessageAttachment> retrieveAttachments(InputStream fullContent) throws MimeException, IOException {
         DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
         defaultMessageBuilder.setMimeEntityConfig(MIME_ENTITY_CONFIG);
+        defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT);
         Message message = defaultMessageBuilder.parseMessage(fullContent);
         Body body = message.getBody();
         try {
@@ -128,8 +130,9 @@ public class MessageParser {
 
     private MessageAttachment retrieveAttachment(MessageWriter messageWriter, Entity entity) throws IOException {
         Optional<ContentTypeField> contentTypeField = getContentTypeField(entity);
+        Optional<ContentDispositionField> contentDispositionField = getContentDispositionField(entity);
         Optional<String> contentType = contentType(contentTypeField);
-        Optional<String> name = name(contentTypeField);
+        Optional<String> name = name(contentTypeField, contentDispositionField);
         Optional<Cid> cid = cid(readHeader(entity, CONTENT_ID, ContentIdField.class));
         boolean isInline = isInline(readHeader(entity, CONTENT_DISPOSITION, ContentDispositionField.class));
 
@@ -152,6 +155,10 @@ public class MessageParser {
         return castField(entity.getHeader().getField(CONTENT_TYPE), ContentTypeField.class);
     }
 
+    private Optional<ContentDispositionField> getContentDispositionField(Entity entity) {
+        return castField(entity.getHeader().getField(CONTENT_DISPOSITION), ContentDispositionField.class);
+    }
+
     @SuppressWarnings("unchecked")
     private <U extends ParsedField> Optional<U> castField(Field field, Class<U> clazz) {
         if (field == null || !clazz.isInstance(field)) {
@@ -164,10 +171,12 @@ public class MessageParser {
         return contentTypeField.map(ContentTypeField::getMimeType);
     }
 
-    private Optional<String> name(Optional<ContentTypeField> contentTypeField) {
+    private Optional<String> name(Optional<ContentTypeField> contentTypeField, Optional<ContentDispositionField> contentDispositionField) {
         return contentTypeField
-            .flatMap(field -> Optional.ofNullable(field.getParameter("name"))
-            .map(MimeUtil::unscrambleHeaderValue));
+            .map(field -> Optional.ofNullable(field.getParameter("name")))
+            .filter(Optional::isPresent)
+            .orElseGet(() -> contentDispositionField.map(ContentDispositionField::getFilename))
+            .map(MimeUtil::unscrambleHeaderValue);
     }
 
     private Optional<Cid> cid(Optional<ContentIdField> contentIdField) {

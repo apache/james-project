@@ -149,6 +149,24 @@ public class MessageParserTest {
     }
 
     @Test
+    public void retrieveAttachmentShouldUseFilenameAsNameWhenNoName() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/filenameOnly.eml"));
+
+        assertThat(attachments).hasSize(1)
+            .extracting(MessageAttachment::getName)
+            .containsExactly(Optional.of("inventory.csv"));
+    }
+
+    @Test
+    public void retrieveAttachmentShouldUseNameWhenBothNameAndFilename() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/filenameAndName.eml"));
+
+        assertThat(attachments).hasSize(1)
+            .extracting(MessageAttachment::getName)
+            .containsExactly(Optional.of("good.csv"));
+    }
+
+    @Test
     public void getAttachmentsShouldRetrieveEmbeddedAttachmentsWhenSome() throws Exception {
         List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/embeddedAttachmentWithInline.eml"));
 
