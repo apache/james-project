@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +47,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,13 +98,21 @@ public class GetMessagesMethod implements Method {
         GetMessagesRequest getMessagesRequest = (GetMessagesRequest) request;
         MessageProperties outputProperties = getMessagesRequest.getProperties().toOutputProperties();
         TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + METHOD_NAME.getName());
-        try {
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.ACTION, "GET_MESSAGES")
+                     .addContext("accountId", getMessagesRequest.getAccountId())
+                     .addContext("ids", getMessagesRequest.getIds())
+                     .addContext("properties", getMessagesRequest.getProperties())
+                     .build()) {
             return Stream.of(JmapResponse.builder().clientId(clientId)
                             .response(getMessagesResponse(mailboxSession, getMessagesRequest))
                             .responseName(RESPONSE_NAME)
                             .properties(outputProperties.getOptionalMessageProperties())
                             .filterProvider(buildOptionalHeadersFilteringFilterProvider(outputProperties))
                             .build());
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
         } finally {
             timeMetric.stopAndPublish();
         }

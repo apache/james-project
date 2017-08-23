@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -45,6 +47,7 @@ import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.MDCBuilder;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
@@ -94,13 +97,28 @@ public class GetMessageListMethod implements Method {
         
         GetMessageListRequest messageListRequest = (GetMessageListRequest) request;
         GetMessageListResponse messageListResponse = getMessageListResponse(messageListRequest, mailboxSession);
-        try {
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.ACTION, "GET_MESSAGE_LIST")
+                     .addContext("accountId", messageListRequest.getAccountId())
+                     .addContext("limit", messageListRequest.getLimit())
+                     .addContext("anchor", messageListRequest.getAnchor())
+                     .addContext("offset", messageListRequest.getAnchorOffset())
+                     .addContext("properties", messageListRequest.getFetchMessageProperties())
+                     .addContext("position", messageListRequest.getPosition())
+                     .addContext("filters", messageListRequest.getFilter())
+                     .addContext("sorts", messageListRequest.getSort())
+                     .addContext("isFetchMessage", messageListRequest.isFetchMessages())
+                     .addContext("isCollapseThread", messageListRequest.isCollapseThreads())
+                     .build()) {
             Stream<JmapResponse> jmapResponse = Stream.of(JmapResponse.builder().clientId(clientId)
                     .response(messageListResponse)
                     .responseName(RESPONSE_NAME)
                     .build());
             return Stream.concat(jmapResponse,
                     processGetMessages(messageListRequest, messageListResponse, clientId, mailboxSession));
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
         } finally {
             timeMetric.stopAndPublish();
         }

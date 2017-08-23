@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -30,9 +32,11 @@ import org.apache.james.jmap.model.SetMessagesResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 
 public class SetMessagesMethod implements Method {
 
@@ -61,13 +65,23 @@ public class SetMessagesMethod implements Method {
     public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof SetMessagesRequest);
         TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + METHOD_NAME.getName());
-        try {
+        SetMessagesRequest setMessagesRequest = (SetMessagesRequest) request;
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.ACTION, "SET_MESSAGES")
+                     .addContext("accountId", setMessagesRequest.getAccountId())
+                     .addContext("create", setMessagesRequest.getCreate())
+                     .addContext("destroy", setMessagesRequest.getDestroy())
+                     .addContext("ifInState", setMessagesRequest.getIfInState())
+                     .build()) {
             Stream<JmapResponse> responses = Stream.of(
                     JmapResponse.builder().clientId(clientId)
-                    .response(setMessagesResponse((SetMessagesRequest) request, mailboxSession))
+                    .response(setMessagesResponse(setMessagesRequest, mailboxSession))
                     .responseName(RESPONSE_NAME)
                     .build());
             return responses;
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
         } finally {
             timeMetric.stopAndPublish();
         }

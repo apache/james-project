@@ -476,4 +476,11 @@ public class CreationMessage {
             return result;
         }
     }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("mailboxIds", mailboxIds)
+            .toString();
+    }
 }

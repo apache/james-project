@@ -45,6 +45,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Throwables;
 
 public class JMAPServlet extends HttpServlet {
 
@@ -67,13 +68,13 @@ public class JMAPServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
         TimeMetric timeMetric = metricFactory.timer("JMAP-request");
         try {
-            List<Object[]> responses = 
+            List<Object[]> responses =
                 requestAsJsonStream(req)
-                .map(ProtocolRequest::deserialize)
-                .map(x -> AuthenticatedProtocolRequest.decorate(x, req))
-                .flatMap(requestHandler::handle)
-                .map(ProtocolResponse::asProtocolSpecification)
-                .collect(Collectors.toList());
+                    .map(ProtocolRequest::deserialize)
+                    .map(x -> AuthenticatedProtocolRequest.decorate(x, req))
+                    .flatMap(this::handle)
+                    .map(ProtocolResponse::asProtocolSpecification)
+                    .collect(Collectors.toList());
 
             resp.setContentType(JSON_CONTENT_TYPE);
             objectMapper.writeValue(resp.getOutputStream(), responses);
@@ -87,7 +88,15 @@ public class JMAPServlet extends HttpServlet {
             timeMetric.stopAndPublish();
         }
     }
-    
+
+    private Stream<? extends ProtocolResponse> handle(AuthenticatedProtocolRequest request) {
+        try {
+            return requestHandler.handle(request);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
     private Stream<JsonNode[]> requestAsJsonStream(HttpServletRequest req) throws IOException, JsonParseException, JsonMappingException {
         return Arrays.stream(
                 objectMapper.readValue(req.getInputStream(), JsonNode[][].class));

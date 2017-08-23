@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -33,9 +35,11 @@ import org.apache.james.jmap.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 
 public class GetVacationResponseMethod implements Method {
 
@@ -71,12 +75,17 @@ public class GetVacationResponseMethod implements Method {
         Preconditions.checkArgument(request instanceof GetVacationRequest);
 
         TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + METHOD_NAME.getName());
-        try {
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.ACTION, "VACATION")
+                     .build()) {
             return Stream.of(JmapResponse.builder()
                 .clientId(clientId)
                 .responseName(RESPONSE_NAME)
                 .response(process(mailboxSession))
                 .build());
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
         } finally {
             timeMetric.stopAndPublish();
         }

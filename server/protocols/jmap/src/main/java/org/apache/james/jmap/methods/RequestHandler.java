@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.methods;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
@@ -33,6 +34,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,11 +54,19 @@ public class RequestHandler {
                 .collect(Collectors.toMap(Method::requestHandled, Function.identity()));
     }
 
-    public Stream<ProtocolResponse> handle(AuthenticatedProtocolRequest request) {
-        return Optional.ofNullable(methods.get(request.getMethodName()))
-                        .map(extractAndProcess(request))
-                        .map(jmapResponseWriter::formatMethodResponse)
-                        .orElseThrow(() -> new IllegalStateException("unknown method " + request.getMethodName()));
+    public Stream<ProtocolResponse> handle(AuthenticatedProtocolRequest request) throws IOException {
+        Optional<MailboxSession> mailboxSession = Optional.ofNullable(request.getMailboxSession());
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.USER, mailboxSession.map(MailboxSession::getUser).map(MailboxSession.User::getUserName))
+                     .addContext(MDCBuilder.SESSION_ID, mailboxSession.map(MailboxSession::getSessionId))
+                     .addContext(MDCBuilder.ACTION, request.getMethodName().getName())
+                     .build()) {
+            return Optional.ofNullable(methods.get(request.getMethodName()))
+                .map(extractAndProcess(request))
+                .map(jmapResponseWriter::formatMethodResponse)
+                .orElseThrow(() -> new IllegalStateException("unknown method " + request.getMethodName()));
+        }
     }
     
     private Function<Method, Stream<JmapResponse>> extractAndProcess(AuthenticatedProtocolRequest request) {

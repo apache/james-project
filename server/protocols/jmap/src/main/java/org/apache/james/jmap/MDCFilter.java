@@ -17,47 +17,40 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model;
+package org.apache.james.jmap;
 
-import java.util.Objects;
+import java.io.Closeable;
+import java.io.IOException;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.base.MoreObjects;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
-public class MailboxCreationId {
+import org.apache.james.util.MDCBuilder;
 
-    public static MailboxCreationId of(String creationId) {
-        return new MailboxCreationId(creationId);
-    }
+public class MDCFilter implements Filter {
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
 
-    private final String creationId;
-
-    private MailboxCreationId(String creationId) {
-        this.creationId = creationId;
-    }
-
-    @JsonValue
-    public String getCreationId() {
-        return creationId;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof MailboxCreationId) {
-            return Objects.equals(creationId, ((MailboxCreationId) obj).creationId);
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "JMAP")
+                     .addContext(MDCBuilder.IP, request.getRemoteAddr())
+                     .addContext(MDCBuilder.HOST, request.getRemoteHost())
+                     .build()) {
+            chain.doFilter(request, response);
         }
-        return false;
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hashCode(creationId);
-    }
+    public void destroy() {
 
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("creationId", creationId)
-            .toString();
     }
 }

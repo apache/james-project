@@ -93,7 +93,7 @@ public class JMAPServletTest {
     }
 
     @Test
-    public void mustReturnInvalidArgumentOnInvalidState() {
+    public void mustReturnInvalidArgumentOnInvalidState() throws Exception {
         ObjectNode json = new ObjectNode(new JsonNodeFactory(false));
         json.put("type", "invalidArgument");
 
@@ -110,7 +110,7 @@ public class JMAPServletTest {
     }
 
     @Test
-    public void mustReturnAccountsOnValidRequest() {
+    public void mustReturnAccountsOnValidRequest() throws Exception {
         ObjectNode json = new ObjectNode(new JsonNodeFactory(false));
         json.put("state", "f6a7e214");
         ArrayNode arrayNode = json.putArray("list");
