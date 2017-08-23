@@ -31,6 +31,8 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
+import org.apache.james.webadmin.mdc.MDCCleanupFilter;
+import org.apache.james.webadmin.mdc.MDCFilter;
 import org.apache.james.webadmin.metric.MetricPostFilter;
 import org.apache.james.webadmin.metric.MetricPreFilter;
 import org.apache.james.webadmin.routes.CORSRoute;
@@ -81,10 +83,16 @@ public class WebAdminServer implements Configurable {
             configureCORS();
             configureMetrics();
             service.before(authenticationFilter);
+            configureMDC();
             routesList.forEach(routes -> routes.define(service));
             service.awaitInitialization();
             LOGGER.info("Web admin server started");
         }
+    }
+
+    private void configureMDC() {
+        service.before(new MDCFilter());
+        service.after(new MDCCleanupFilter());
     }
 
     private void configureMetrics() {
