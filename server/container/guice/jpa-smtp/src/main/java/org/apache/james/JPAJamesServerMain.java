@@ -27,6 +27,7 @@ import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
+import org.apache.james.modules.server.ESMetricReporterModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.WebAdminServerModule;
@@ -49,7 +50,8 @@ public class JPAJamesServerMain {
         new JPADataModule(),
         (binder) -> binder.bind(EntityManagerFactory.class).toProvider(OpenJPAPersistence::getEntityManagerFactory),
         new ActiveMQQueueModule(),
-        new RawPostDequeueDecoratorModule());
+        new RawPostDequeueDecoratorModule(),
+        new ESMetricReporterModule());
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()

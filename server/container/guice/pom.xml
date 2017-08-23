@@ -41,6 +41,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-es-resporter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-imap</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -129,6 +134,7 @@
         <module>cassandra-guice</module>
         <module>cassandra-ldap-guice</module>
         <module>custom-mailets</module>
+        <module>es-metric-reporter</module>
         <module>mailbox</module>
         <module>mailet</module>
         <module>memory-guice</module>

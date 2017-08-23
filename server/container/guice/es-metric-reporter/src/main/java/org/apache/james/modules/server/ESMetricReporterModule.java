@@ -29,7 +29,6 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.metrics.es.ESMetricReporter;
 import org.apache.james.metrics.es.ESReporterConfiguration;
-import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
@@ -43,8 +42,11 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class ESMetricReporterModule extends AbstractModule {
+    private static final String ELASTICSEARCH_CONFIGURATION_NAME = "elasticsearch";
+    private static final String ELASTICSEARCH_MASTER_HOST = "elasticsearch.masterHost";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ESMetricReporterModule.class);
+
     public static final boolean DEFAULT_DISABLE = false;
     public static final int DEFAULT_ES_HTTP_PORT = 9200;
 
@@ -56,7 +58,7 @@ public class ESMetricReporterModule extends AbstractModule {
     @Provides
     public ESReporterConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            PropertiesConfiguration propertiesReader = propertiesProvider.getConfiguration(ElasticSearchMailboxModule.ELASTICSEARCH_CONFIGURATION_NAME);
+            PropertiesConfiguration propertiesReader = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
 
             if (isMetricEnable(propertiesReader)) {
                 return ESReporterConfiguration.builder()
@@ -68,7 +70,7 @@ public class ESMetricReporterModule extends AbstractModule {
                     .build();
             }
         } catch (FileNotFoundException e) {
-            LOGGER.info("Can not locate " + ElasticSearchMailboxModule.ELASTICSEARCH_CONFIGURATION_NAME + " configuration");
+            LOGGER.info("Can not locate " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration");
         }
         return ESReporterConfiguration.builder()
             .disabled()
@@ -77,7 +79,7 @@ public class ESMetricReporterModule extends AbstractModule {
 
     private String locateHost(PropertiesConfiguration propertiesReader) {
         return propertiesReader.getString("elasticsearch.http.host",
-            propertiesReader.getString(ElasticSearchMailboxModule.ELASTICSEARCH_MASTER_HOST));
+            propertiesReader.getString(ELASTICSEARCH_MASTER_HOST));
     }
 
     private boolean isMetricEnable(PropertiesConfiguration propertiesReader) {
