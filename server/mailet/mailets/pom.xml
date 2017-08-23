@@ -33,12 +33,6 @@
     <name>Apache James :: Server :: Mailets</name>
 
     <dependencies>
-        <!--
-               <dependency>
-                   <groupId>${project.groupId}</groupId>
-                   <artifactId>apache-james-imap-processor</artifactId>
-               </dependency>
-        -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
@@ -147,7 +141,6 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>metrics-api</artifactId>
         </dependency>
-        <!-- Test dependencies -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>

@@ -42,14 +42,11 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
         </dependency>
-
-        <!-- RFC2822Headers constants imported from mailet-base (undetected by bytecode analyzers because constants are inlined) -->
         <dependency>
+            <!-- RFC2822Headers constants imported from mailet-base (undetected by bytecode analyzers because constants are inlined) -->
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-base</artifactId>
         </dependency>
-
-        <!-- Test dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-base</artifactId>

@@ -93,8 +93,6 @@
             <artifactId>commons-dbcp</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!-- Test dependencies -->
         <dependency>
             <groupId>info.cukes</groupId>
             <artifactId>cucumber-java</artifactId>

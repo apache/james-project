@@ -35,9 +35,6 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-backends-cassandra</artifactId>
         </dependency>
-
-        <!-- Test dependencies -->
-
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-backends-cassandra</artifactId>

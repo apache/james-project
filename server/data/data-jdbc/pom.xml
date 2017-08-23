@@ -59,7 +59,6 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-filesystem-api</artifactId>
         </dependency>
-
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-filesystem-api</artifactId>
@@ -91,8 +90,6 @@
             <artifactId>commons-dbcp</artifactId>
             <scope>runtime</scope>
         </dependency>
-
-        <!-- Test dependencies -->
         <dependency>
             <groupId>info.cukes</groupId>
             <artifactId>cucumber-java</artifactId>
@@ -108,7 +105,6 @@
             <artifactId>cucumber-picocontainer</artifactId>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
