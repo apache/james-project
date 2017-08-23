@@ -25,14 +25,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.FluentFutureStream;
-import org.apache.james.util.OptionalConverter;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
@@ -80,7 +79,7 @@ public class AttachmentLoader {
         return MessageAttachment.builder()
                 .attachment(attachment)
                 .name(messageAttachmentRepresentation.getName().orElse(null))
-                .cid(OptionalConverter.toGuava(messageAttachmentRepresentation.getCid()))
+                .cid(messageAttachmentRepresentation.getCid())
                 .isInline(messageAttachmentRepresentation.isInline())
                 .build();
     }

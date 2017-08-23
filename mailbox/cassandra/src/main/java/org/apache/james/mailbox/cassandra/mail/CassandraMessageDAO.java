@@ -70,7 +70,6 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
-import org.apache.james.util.OptionalConverter;
 import org.apache.james.util.streams.JamesCollectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -292,8 +291,7 @@ public class CassandraMessageDAO {
         return MessageAttachmentRepresentation.builder()
             .attachmentId(AttachmentId.from(udtValue.getString(Attachments.ID)))
             .name(udtValue.getString(Attachments.NAME))
-            .cid(OptionalConverter.fromGuava(
-                cidParser.parse(udtValue.getString(CassandraMessageV2Table.Attachments.CID))))
+            .cid(cidParser.parse(udtValue.getString(CassandraMessageV2Table.Attachments.CID)))
             .isInline(udtValue.getBool(Attachments.IS_INLINE))
             .build();
     }

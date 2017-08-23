@@ -109,7 +109,7 @@ public class FluentFutureStream<T> {
      */
     public <U> FluentFutureStream<U> flatMapOptional(Function<T, Optional<U>> function) {
         return map(function)
-            .flatMap(OptionalConverter::toStream);
+            .flatMap(OptionalUtils::toStream);
     }
 
     /**

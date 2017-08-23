@@ -24,7 +24,6 @@ import java.util.Optional;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.util.OptionalConverter;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -40,7 +39,7 @@ public class MessageAttachmentRepresentation {
     public static MessageAttachmentRepresentation fromAttachment(MessageAttachment attachment) {
         return builder()
             .attachmentId(attachment.getAttachmentId())
-            .cid(OptionalConverter.fromGuava(attachment.getCid()))
+            .cid(attachment.getCid())
             .isInline(attachment.isInline())
             .name(attachment.getName().orElse(null))
             .build();

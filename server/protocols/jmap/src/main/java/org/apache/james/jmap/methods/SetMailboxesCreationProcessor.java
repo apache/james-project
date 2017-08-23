@@ -20,11 +20,9 @@
 package org.apache.james.jmap.methods;
 
 import static org.apache.james.jmap.methods.Method.JMAP_PREFIX;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.inject.Inject;
 
 import org.apache.james.jmap.exceptions.MailboxParentNotFoundException;
@@ -50,13 +48,12 @@ import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
-import org.apache.james.util.OptionalConverter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
 
@@ -115,7 +112,7 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
         try {
             ensureValidMailboxName(mailboxRequest, mailboxSession);
             MailboxPath mailboxPath = getMailboxPath(mailboxRequest, creationIdsToCreatedMailboxId, mailboxSession);
-            Optional<MailboxId> mailboxId = OptionalConverter.fromGuava(mailboxManager.createMailbox(mailboxPath, mailboxSession));
+            Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, mailboxSession);
             Optional<Mailbox> mailbox = mailboxId.flatMap(id -> mailboxFactory.builder()
                     .id(id)
                     .session(mailboxSession)

@@ -23,16 +23,13 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.BlobId;
@@ -40,9 +37,8 @@ import org.apache.james.mailbox.cassandra.mail.utils.DataChunker;
 import org.apache.james.mailbox.cassandra.table.BlobTable;
 import org.apache.james.mailbox.cassandra.table.BlobTable.BlobParts;
 import org.apache.james.util.FluentFutureStream;
-import org.apache.james.util.OptionalConverter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.james.util.OptionalUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -52,6 +48,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CassandraBlobsDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraBlobsDAO.class);
@@ -169,10 +167,10 @@ public class CassandraBlobsDAO {
 
     private byte[] concatenateDataParts(Stream<BlobPart> blobParts) {
         ImmutableList<byte[]> parts = blobParts
-            .map(blobPart -> OptionalConverter.ifEmpty(
+            .map(blobPart -> OptionalUtils.ifEmpty(
                 blobPart.row,
                 () -> LOGGER.warn("Missing blob part for blobId {} and position {}", blobPart.blobId, blobPart.position)))
-            .flatMap(OptionalConverter::toStream)
+            .flatMap(OptionalUtils::toStream)
             .map(this::rowToData)
             .collect(Guavate.toImmutableList());
 

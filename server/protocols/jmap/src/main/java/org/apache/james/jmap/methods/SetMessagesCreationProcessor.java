@@ -67,7 +67,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
-import org.apache.james.util.OptionalConverter;
+import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
 
 import org.slf4j.Logger;
@@ -315,7 +315,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         ThrowingFunction<Attachment, Optional<MessageAttachment>> toMessageAttachment = att -> messageAttachment(session, att);
         return attachments.stream()
             .map(Throwing.function(toMessageAttachment).sneakyThrow())
-            .flatMap(OptionalConverter::toStream)
+            .flatMap(OptionalUtils::toStream)
             .collect(Guavate.toImmutableList());
     }
 

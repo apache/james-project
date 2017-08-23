@@ -21,7 +21,7 @@ package org.apache.james.util;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class OptionalConverter {
+public class OptionalUtils {
 
     @FunctionalInterface
     public interface Operation {
@@ -33,14 +33,6 @@ public class OptionalConverter {
             operation.perform();
         }
         return optional;
-    }
-
-    public static <T> Optional<T> fromGuava(Optional<T> guava) {
-        return Optional.ofNullable(guava.orElse(null));
-    }
-
-    public static <T> Optional<T> toGuava(Optional<T> java) {
-        return Optional.ofNullable(java.orElse(null));
     }
 
     public static <T> Stream<T> toStream(Optional<T> optional) {

@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.es.search.ScrollIterable;
@@ -38,7 +37,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.apache.james.util.OptionalConverter;
+
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -114,7 +113,7 @@ public class ElasticSearchSearcher {
             Number uidAsNumber = uid.getValue();
             return Optional.of(
                 new MessageSearchIndex.SearchResult(
-                    OptionalConverter.toGuava(id.map(field -> messageIdFactory.fromString(field.getValue()))),
+                    id.map(field -> messageIdFactory.fromString(field.getValue())),
                     mailboxIdFactory.fromString(mailboxId.getValue()),
                     MessageUid.of(uidAsNumber.longValue())));
         } else {

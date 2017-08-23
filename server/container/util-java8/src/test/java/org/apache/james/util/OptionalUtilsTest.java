@@ -28,14 +28,14 @@ import org.junit.rules.ExpectedException;
 
 import com.github.steveash.guavate.Guavate;
 
-public class OptionalConverterTest {
+public class OptionalUtilsTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void ifEmptyShouldPreserveValueOfEmptyOptionals() {
-        Optional<Object> expected = OptionalConverter.ifEmpty(Optional.empty(), () -> { });
+        Optional<Object> expected = OptionalUtils.ifEmpty(Optional.empty(), () -> { });
 
         assertThat(expected).isEmpty();
     }
@@ -43,7 +43,7 @@ public class OptionalConverterTest {
     @Test
     public void ifEmptyShouldPreserveValueOfPresentOptionals() {
         String value = "value";
-        Optional<String> expected = OptionalConverter.ifEmpty(Optional.of(value), () -> { });
+        Optional<String> expected = OptionalUtils.ifEmpty(Optional.of(value), () -> { });
 
         assertThat(expected).contains(value);
     }
@@ -52,7 +52,7 @@ public class OptionalConverterTest {
     public void ifEmptyShouldPerformOperationIfEmpty() {
         AtomicInteger operationCounter = new AtomicInteger(0);
 
-        OptionalConverter.ifEmpty(Optional.empty(), operationCounter::incrementAndGet);
+        OptionalUtils.ifEmpty(Optional.empty(), operationCounter::incrementAndGet);
 
         assertThat(operationCounter.get()).isEqualTo(1);
     }
@@ -61,7 +61,7 @@ public class OptionalConverterTest {
     public void ifEmptyShouldNotPerformOperationIfPresent() {
         AtomicInteger operationCounter = new AtomicInteger(0);
 
-        OptionalConverter.ifEmpty(Optional.of("value"), operationCounter::incrementAndGet);
+        OptionalUtils.ifEmpty(Optional.of("value"), operationCounter::incrementAndGet);
 
         assertThat(operationCounter.get()).isEqualTo(0);
     }
@@ -69,7 +69,7 @@ public class OptionalConverterTest {
     @Test
     public void toStreamShouldConvertEmptyOptionalToEmptyStream() {
         assertThat(
-            OptionalConverter.toStream(Optional.empty())
+            OptionalUtils.toStream(Optional.empty())
                 .collect(Guavate.toImmutableList()))
             .isEmpty();
     }
@@ -78,50 +78,8 @@ public class OptionalConverterTest {
     public void toStreamShouldConvertFullOptionalToStream() {
         long value = 18L;
         assertThat(
-            OptionalConverter.toStream(Optional.of(value))
+            OptionalUtils.toStream(Optional.of(value))
                 .collect(Guavate.toImmutableList()))
             .containsExactly(value);
-    }
-
-    @Test
-    public void fromGuavaShouldThrowWhenGuavaIsNull() {
-        expectedException.expect(NullPointerException.class);
-        OptionalConverter.fromGuava(null);
-    }
-
-    @Test
-    public void fromGuavaShouldReturnEmptyWhenGuavaIsEmpty() {
-        Optional<String> fromGuava = OptionalConverter.fromGuava(Optional.<String> empty());
-
-        assertThat(fromGuava).isEmpty();
-    }
-
-    @Test
-    public void fromGuavaShouldReturnNonEmptyWhenGuavaIsNonEmpty() {
-        String value = "my string";
-        Optional<String> fromGuava = OptionalConverter.fromGuava(Optional.of(value));
-
-        assertThat(fromGuava).contains(value);
-    }
-
-    @Test
-    public void toGuavaShouldThrowWhenGuavaIsNull() {
-        expectedException.expect(NullPointerException.class);
-        OptionalConverter.toGuava(null);
-    }
-
-    @Test
-    public void toGuavaShouldReturnEmptyWhenGuavaIsEmpty() {
-        Optional<String> toGuava = OptionalConverter.toGuava(Optional.<String> empty());
-
-        assertThat(toGuava.isPresent()).isFalse();
-    }
-
-    @Test
-    public void toGuavaShouldReturnNonEmptyWhenGuavaIsNonEmpty() {
-        String value = "my string";
-        Optional<String> toGuava = OptionalConverter.toGuava(Optional.of(value));
-
-        assertThat(toGuava.get()).isEqualTo(value);
     }
 }

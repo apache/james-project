@@ -26,13 +26,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import java.io.InputStream;
 import java.sql.Date;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-
 import javax.mail.Flags;
 
 import org.apache.james.jmap.exceptions.AttachmentsNotFoundException;
@@ -42,7 +40,6 @@ import org.apache.james.jmap.model.BlobId;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
-import org.apache.james.jmap.model.Keyword;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
@@ -68,7 +65,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.apache.james.util.OptionalConverter;
+import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.mailet.Mail;
 import org.junit.Before;
@@ -360,9 +357,9 @@ public class SetMessagesCreationProcessorTest {
         @Override
         public Stream<MessageManager> getMailboxByRole(Role aRole, MailboxSession session) {
             if (aRole.equals(Role.OUTBOX)) {
-                return OptionalConverter.toStream(outboxSupplier.get());
+                return OptionalUtils.toStream(outboxSupplier.get());
             } else if (aRole.equals(Role.DRAFTS)) {
-                return OptionalConverter.toStream(draftsSupplier.get());
+                return OptionalUtils.toStream(draftsSupplier.get());
             }
             return Stream.empty();
         }

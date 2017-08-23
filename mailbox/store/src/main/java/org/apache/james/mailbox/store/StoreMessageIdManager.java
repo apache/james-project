@@ -60,7 +60,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -112,12 +111,12 @@ public class StoreMessageIdManager implements MessageIdManager {
             MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
             final MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
             List<MailboxMessage> messageList = messageIdMapper.find(messageIds, MessageMapper.FetchType.Full);
-            ImmutableSet<MailboxId> mailboxIds = FluentIterable.from(messageList)
-                .transform(MailboxMessage::getMailboxId)
-                .toSet();
-            final ImmutableSet<MailboxId> allowedMailboxIds = mailboxIds.stream()
+
+            final ImmutableSet<MailboxId> allowedMailboxIds = messageList.stream()
+                .map(MailboxMessage::getMailboxId)
                 .filter(mailboxBelongsToUser(mailboxSession, mailboxMapper))
                 .collect(Guavate.toImmutableSet());
+
             return messageList.stream()
                 .filter(inMailboxes(allowedMailboxIds))
                 .map(messageResultConverter(fetchGroup))
@@ -158,19 +157,14 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         List<MailboxMessage> mailboxMessages = messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Full)
             .stream()
-            .filter(new Predicate<MailboxMessage>() {
-                @Override
-                public boolean test(MailboxMessage message) {
-                    return false;
-                }
-            })
             .filter(messageBelongsToUser(mailboxSession, mailboxMapper))
             .collect(Guavate.toImmutableList());
 
         if (!mailboxMessages.isEmpty()) {
-            ImmutableSet<MailboxId> currentMailboxes = FluentIterable.from(mailboxMessages)
-                .transform(MailboxMessage::getMailboxId)
-                .toSet();
+            ImmutableSet<MailboxId> currentMailboxes = mailboxMessages
+                .stream()
+                .map(MailboxMessage::getMailboxId)
+                .collect(Guavate.toImmutableSet());
             HashSet<MailboxId> targetMailboxes = Sets.newHashSet(mailboxIds);
             List<MailboxId> mailboxesToRemove = ImmutableList.copyOf(Sets.difference(currentMailboxes, targetMailboxes));
             SetView<MailboxId> mailboxesToAdd = Sets.difference(targetMailboxes, currentMailboxes);

@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
-
 import javax.inject.Inject;
 
 import org.apache.james.jmap.model.ClientId;
@@ -44,7 +43,7 @@ import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.MDCBuilder;
-import org.apache.james.util.OptionalConverter;
+import org.apache.james.util.OptionalUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -128,7 +127,7 @@ public class GetMailboxesMethod implements Method {
                         .id(mailboxId)
                         .session(mailboxSession)
                         .build())
-                .flatMap(OptionalConverter::toStream);
+                .flatMap(OptionalUtils::toStream);
         } else {
             List<MailboxMetaData> userMailboxes = mailboxManager.search(
                 MailboxQuery.builder(mailboxSession).privateUserMailboxes().build(),
@@ -141,7 +140,7 @@ public class GetMailboxesMethod implements Method {
                         .session(mailboxSession)
                         .usingPreloadedMailboxesMetadata(userMailboxes)
                         .build())
-                .flatMap(OptionalConverter::toStream);
+                .flatMap(OptionalUtils::toStream);
         }
     }
 }

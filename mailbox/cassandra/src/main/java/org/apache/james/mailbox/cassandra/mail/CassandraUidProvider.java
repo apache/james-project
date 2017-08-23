@@ -42,7 +42,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.util.OptionalConverter;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
@@ -124,7 +123,7 @@ public class CassandraUidProvider implements UidProvider {
 
     @Override
     public Optional<MessageUid> lastUid(MailboxSession mailboxSession, Mailbox mailbox) throws MailboxException {
-        return OptionalConverter.toGuava(findHighestUid((CassandraId) mailbox.getMailboxId()).join());
+        return findHighestUid((CassandraId) mailbox.getMailboxId()).join();
     }
 
     private CompletableFuture<Optional<MessageUid>> findHighestUid(CassandraId mailboxId) {

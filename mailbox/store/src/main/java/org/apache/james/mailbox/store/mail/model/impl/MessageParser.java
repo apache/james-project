@@ -46,7 +46,6 @@ import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.util.MimeUtil;
-import org.apache.james.util.OptionalConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -188,7 +187,7 @@ public class MessageParser {
     }
 
     private Function<ContentIdField, Optional<Cid>> toCid() {
-        return contentIdField -> OptionalConverter.fromGuava(cidParser.parse(contentIdField.getId()));
+        return contentIdField -> cidParser.parse(contentIdField.getId());
     }
 
     private boolean isMultipart(Entity entity) {
