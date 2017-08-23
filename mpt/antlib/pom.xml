@@ -84,10 +84,10 @@ to the library requiring no extra coding.</description>
                         <configuration>
                             <tasks>
                                 <ant antfile="src/test/resources/build.xml" inheritAll="false" inheritRefs="false">
-                                    <property location="${project.build.outputDirectory}" name="jar.name"></property>
-                                    <property location="${basedir}" name="base.dir"></property>
-                                    <property name="test.skipped" value="${maven.test.skip}"></property>
-                                    <property name="test.classpath" refid="maven.test.classpath"></property>
+                                    <property location="${project.build.outputDirectory}" name="jar.name" />
+                                    <property location="${basedir}" name="base.dir" />
+                                    <property name="test.skipped" value="${maven.test.skip}" />
+                                    <property name="test.classpath" refid="maven.test.classpath" />
                                 </ant>
                             </tasks>
                         </configuration>
