@@ -21,8 +21,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>james-project</artifactId>
         <groupId>org.apache.james</groupId>
+        <artifactId>james-project</artifactId>
         <version>3.1.0-SNAPSHOT</version>
     </parent>
 
@@ -87,12 +87,13 @@
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
+                <inherited>true</inherited>
                 <executions>
                     <execution>
-                        <phase>verify</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
+                        <phase>verify</phase>
                         <configuration>
                             <excludes>
                                 <exclude>NOTICE.*</exclude>
@@ -114,7 +115,6 @@
                         </configuration>
                     </execution>
                 </executions>
-                <inherited>true</inherited>
             </plugin>
             <!-- Add NOTICE and LICENSE to generated JAR -->
             <plugin>

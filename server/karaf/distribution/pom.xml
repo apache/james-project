@@ -3,8 +3,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>james-server</artifactId>
         <groupId>org.apache.james</groupId>
+        <artifactId>james-server</artifactId>
         <version>3.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
@@ -30,8 +30,8 @@
             <groupId>org.apache.karaf.assemblies.features</groupId>
             <artifactId>standard</artifactId>
             <version>${karaf.version}</version>
-            <type>xml</type>
             <classifier>features</classifier>
+            <type>xml</type>
         </dependency>
     </dependencies>
 
@@ -49,21 +49,21 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>filter</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>resources</goal>
-                        </goals>
-                    </execution>
-                </executions>
                 <configuration>
                     <useDefaultDelimiters>false</useDefaultDelimiters>
                     <delimiters>
                         <delimiter>${*}</delimiter>
                     </delimiters>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>filter</id>
+                        <goals>
+                            <goal>resources</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -72,10 +72,10 @@
                     <execution>
                         <!-- Uncompress the standard Karaf distribution -->
                         <id>unpack</id>
-                        <phase>generate-resources</phase>
                         <goals>
                             <goal>unpack</goal>
                         </goals>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
@@ -96,10 +96,10 @@
                 <executions>
                     <execution>
                         <id>bin</id>
-                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
+                        <phase>package</phase>
                         <configuration>
                             <descriptors>
                                 <descriptor>src/main/assembly/unix.xml</descriptor>
@@ -117,10 +117,10 @@
                 <executions>
                     <execution>
                         <id>add-features-to-repo</id>
-                        <phase>install</phase>
                         <goals>
                             <goal>add-features-to-repo</goal>
                         </goals>
+                        <phase>install</phase>
                         <inherited>false</inherited>
                         <configuration>
                             <descriptors>

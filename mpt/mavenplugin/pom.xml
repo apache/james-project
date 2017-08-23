@@ -21,8 +21,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>apache-james-mpt</artifactId>
         <groupId>org.apache.james</groupId>
+        <artifactId>apache-james-mpt</artifactId>
         <version>3.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -117,11 +117,11 @@ to the library requiring no extra coding.</description>
                 <executions>
                     <execution>
                         <id>create-javadocs</id>
-                        <phase>package</phase>
                         <goals>
                             <goal>javadoc</goal>
                             <goal>jar</goal>
                         </goals>
+                        <phase>package</phase>
                     </execution>
                 </executions>
             </plugin>

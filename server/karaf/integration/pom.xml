@@ -3,8 +3,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>james-server</artifactId>
         <groupId>org.apache.james</groupId>
+        <artifactId>james-server</artifactId>
         <version>3.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
@@ -38,12 +38,12 @@
             <scope>test</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>org.apache.karaf.client</artifactId>
                     <groupId>org.apache.karaf</groupId>
+                    <artifactId>org.apache.karaf.client</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>org.eclipse.osgi</artifactId>
                     <groupId>org.eclipse.osgi</groupId>
+                    <artifactId>org.eclipse.osgi</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

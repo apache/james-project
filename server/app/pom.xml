@@ -22,8 +22,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>james-server</artifactId>
         <groupId>org.apache.james</groupId>
+        <artifactId>james-server</artifactId>
         <version>3.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -77,8 +77,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -88,8 +88,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -99,8 +99,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -110,16 +110,16 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>hbase</artifactId>
                     <groupId>org.apache.hbase</groupId>
+                    <artifactId>hbase</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>hadoop-core</artifactId>
                     <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-core</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -132,8 +132,8 @@
             <artifactId>james-server-core</artifactId>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -142,8 +142,8 @@
             <artifactId>james-server-data-api</artifactId>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -154,8 +154,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -165,24 +165,24 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>jruby-complete</artifactId>
                     <groupId>org.jruby</groupId>
+                    <artifactId>jruby-complete</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>hsqldb</artifactId>
                     <groupId>hsqldb</groupId>
+                    <artifactId>hsqldb</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>hbase</artifactId>
                     <groupId>org.apache.hbase</groupId>
+                    <artifactId>hbase</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>hadoop-core</artifactId>
                     <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-core</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -192,8 +192,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -203,8 +203,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -224,8 +224,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -244,8 +244,8 @@
             <artifactId>james-server-dnsservice-library</artifactId>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -255,8 +255,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -274,8 +274,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -284,8 +284,8 @@
             <artifactId>james-server-mailetcontainer-api</artifactId>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -295,8 +295,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -306,8 +306,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -327,8 +327,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -343,8 +343,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -355,8 +355,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -366,8 +366,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -376,8 +376,8 @@
             <artifactId>james-server-queue-api</artifactId>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -387,8 +387,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -398,8 +398,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -408,16 +408,16 @@
             <artifactId>james-server-spring</artifactId>
             <exclusions>
                 <exclusion>
-                    <artifactId>spring-osgi-extender</artifactId>
                     <groupId>org.springframework.osgi</groupId>
+                    <artifactId>spring-osgi-extender</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>org.osgi.core</artifactId>
                     <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -427,8 +427,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>mail</artifactId>
                     <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -454,8 +454,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>tools</artifactId>
                     <groupId>com.sun</groupId>
+                    <artifactId>tools</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -465,8 +465,8 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>tools</artifactId>
                     <groupId>com.sun</groupId>
+                    <artifactId>tools</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -564,8 +564,8 @@
                     <scope>runtime</scope>
                     <exclusions>
                         <exclusion>
-                            <artifactId>mail</artifactId>
                             <groupId>javax.mail</groupId>
+                            <artifactId>mail</artifactId>
                         </exclusion>
                     </exclusions>
                 </dependency>
@@ -575,8 +575,8 @@
                     <scope>runtime</scope>
                     <exclusions>
                         <exclusion>
-                            <artifactId>mail</artifactId>
                             <groupId>javax.mail</groupId>
+                            <artifactId>mail</artifactId>
                         </exclusion>
                     </exclusions>
                 </dependency>
@@ -600,8 +600,8 @@
                     <scope>runtime</scope>
                     <exclusions>
                         <exclusion>
-                            <artifactId>mail</artifactId>
                             <groupId>javax.mail</groupId>
+                            <artifactId>mail</artifactId>
                         </exclusion>
                     </exclusions>
                 </dependency>
@@ -634,8 +634,8 @@
                     <scope>runtime</scope>
                     <exclusions>
                         <exclusion>
-                            <artifactId>mail</artifactId>
                             <groupId>javax.mail</groupId>
+                            <artifactId>mail</artifactId>
                         </exclusion>
                     </exclusions>
                 </dependency>
@@ -650,20 +650,20 @@
                     <scope>runtime</scope>
                     <exclusions>
                         <exclusion>
-                            <artifactId>mail</artifactId>
                             <groupId>javax.mail</groupId>
+                            <artifactId>mail</artifactId>
                         </exclusion>
                         <exclusion>
+                            <groupId>org.apache.lucene</groupId>
                             <artifactId>lucene-core</artifactId>
-                            <groupId>org.apache.lucene</groupId>
                         </exclusion>
                         <exclusion>
+                            <groupId>org.apache.lucene</groupId>
                             <artifactId>lucene-analyzers</artifactId>
-                            <groupId>org.apache.lucene</groupId>
                         </exclusion>
                         <exclusion>
-                            <artifactId>lucene-smartcn</artifactId>
                             <groupId>org.apache.lucene</groupId>
+                            <artifactId>lucene-smartcn</artifactId>
                         </exclusion>
                     </exclusions>
                 </dependency>
@@ -680,16 +680,6 @@
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>appassembler-maven-plugin</artifactId>
                         <version>1.10</version>
-                        <executions>
-                            <execution>
-                                <id>make-appassemble</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>assemble</goal>
-                                    <goal>generate-daemons</goal>
-                                </goals>
-                            </execution>
-                        </executions>
                         <configuration>
                             <!-- Include etc/ in the beginning of the classpath declaration in the bin scripts -->
                             <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
@@ -928,6 +918,16 @@
                                 </daemon>
                             </daemons>
                         </configuration>
+                        <executions>
+                            <execution>
+                                <id>make-appassemble</id>
+                                <goals>
+                                    <goal>assemble</goal>
+                                    <goal>generate-daemons</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -935,10 +935,10 @@
                         <version>1.2</version>
                         <executions>
                             <execution>
-                                <phase>package</phase>
                                 <goals>
                                     <goal>run</goal>
                                 </goals>
+                                <phase>package</phase>
                                 <configuration>
 
                                     <tasks>
@@ -967,19 +967,19 @@
                     </plugin>
                     <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>make-assembly</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>attached</goal>
-                                </goals>
-                            </execution>
-                        </executions>
                         <configuration>
                             <descriptorSourceDirectory>src/assemble/</descriptorSourceDirectory>
                             <tarLongFileMode>gnu</tarLongFileMode>
                         </configuration>
+                        <executions>
+                            <execution>
+                                <id>make-assembly</id>
+                                <goals>
+                                    <goal>attached</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
                     </plugin>
                     <!--
                     The signing process excludes the artifact created by this plugin.
@@ -990,15 +990,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-war-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>make-war</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>war</goal>
-                                </goals>
-                            </execution>
-                        </executions>
                         <configuration>
                             <webResources>
                                 <resource>
@@ -1047,6 +1038,15 @@
                                 </resource>
                             </webResources>
                         </configuration>
+                        <executions>
+                            <execution>
+                                <id>make-war</id>
+                                <goals>
+                                    <goal>war</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

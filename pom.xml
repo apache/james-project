@@ -24,8 +24,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>apache</artifactId>
         <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
         <version>18</version>
         <relativePath />
     </parent>
@@ -903,8 +903,8 @@
                 <classifier>tests</classifier>
                 <exclusions>
                     <exclusion>
-                        <artifactId>mail</artifactId>
                         <groupId>javax.mail</groupId>
+                        <artifactId>mail</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -914,8 +914,8 @@
                 <version>${project.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>mail</artifactId>
                         <groupId>javax.mail</groupId>
+                        <artifactId>mail</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -926,8 +926,8 @@
                 <classifier>tests</classifier>
                 <exclusions>
                     <exclusion>
-                        <artifactId>mail</artifactId>
                         <groupId>javax.mail</groupId>
+                        <artifactId>mail</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1469,8 +1469,8 @@
                 <version>1.5.4</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>activation</artifactId>
                         <groupId>javax.activation</groupId>
+                        <artifactId>activation</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1505,28 +1505,28 @@
                 <version>${commons-configuration.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>dom4j</artifactId>
                         <groupId>dom4j</groupId>
+                        <artifactId>dom4j</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>servletapi</artifactId>
                         <groupId>servletapi</groupId>
+                        <artifactId>servletapi</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>xerces</artifactId>
                         <groupId>xerces</groupId>
+                        <artifactId>xerces</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>commons-digester</artifactId>
                         <groupId>commons-digester</groupId>
+                        <artifactId>commons-digester</artifactId>
                     </exclusion>
                     <exclusion>
+                        <groupId>commons-beanutils</groupId>
                         <artifactId>commons-beanutils-core</artifactId>
-                        <groupId>commons-beanutils</groupId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>commons-beanutils-bean-collections</artifactId>
                         <groupId>commons-beanutils</groupId>
+                        <artifactId>commons-beanutils-bean-collections</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1541,8 +1541,8 @@
                 <version>${commons-dbcp.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>xercesImpl</artifactId>
                         <groupId>xerces</groupId>
+                        <artifactId>xercesImpl</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1562,20 +1562,20 @@
                 <version>1.1</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>logkit</artifactId>
                         <groupId>logkit</groupId>
+                        <artifactId>logkit</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>avalon-framework</artifactId>
                         <groupId>avalon-framework</groupId>
+                        <artifactId>avalon-framework</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>log4j</artifactId>
                         <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>servlet-api</artifactId>
                         <groupId>javax.servlet</groupId>
+                        <artifactId>servlet-api</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1590,16 +1590,16 @@
                 <version>${commons-pool.version}</version>
                 <exclusions>
                     <exclusion>
+                        <groupId>xerces</groupId>
                         <artifactId>xercesImpl</artifactId>
-                        <groupId>xerces</groupId>
                     </exclusion>
                     <exclusion>
+                        <groupId>xerces</groupId>
                         <artifactId>xerces</artifactId>
-                        <groupId>xerces</groupId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>xml-apis</artifactId>
                         <groupId>xml-apis</groupId>
+                        <artifactId>xml-apis</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1709,18 +1709,18 @@
                 <version>${activemq.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>spring-osgi-core</artifactId>
                         <groupId>org.springframework.osgi</groupId>
+                        <artifactId>spring-osgi-core</artifactId>
                     </exclusion>
                     <!-- exlude this, its only used in the authentication plugin which we don't use -->
                     <exclusion>
-                        <artifactId>icu4j</artifactId>
                         <groupId>com.ibm.icu</groupId>
+                        <artifactId>icu4j</artifactId>
                     </exclusion>
                     <!-- exclude this, we don't use osgi yet -->
                     <exclusion>
-                        <artifactId>org.osgi.core</artifactId>
                         <groupId>org.osgi</groupId>
+                        <artifactId>org.osgi.core</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1750,8 +1750,8 @@
                 <version>${camel.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>spring-web</artifactId>
                         <groupId>org.springframework</groupId>
+                        <artifactId>spring-web</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1827,8 +1827,8 @@
                 <version>${httpclient-osgi.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>commons-logging</artifactId>
                         <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1838,12 +1838,12 @@
                 <version>${jackrabbit.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>pdfbox</artifactId>
                         <groupId>org.apache.pdfbox</groupId>
+                        <artifactId>pdfbox</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>netcdf</artifactId>
                         <groupId>edu.ucar</groupId>
+                        <artifactId>netcdf</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1864,12 +1864,12 @@
                 <type>tar.gz</type>
                 <exclusions>
                     <exclusion>
-                        <artifactId>org.apache.karaf.client</artifactId>
                         <groupId>org.apache.karaf</groupId>
+                        <artifactId>org.apache.karaf.client</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>org.eclipse.osgi</artifactId>
                         <groupId>org.eclipse.osgi</groupId>
+                        <artifactId>org.eclipse.osgi</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1885,21 +1885,21 @@
                 <version>${apache-jspf-resolver.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>log4j</artifactId>
                         <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>dnsjava</artifactId>
                         <groupId>dnsjava</groupId>
+                        <artifactId>dnsjava</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>commons-cli</artifactId>
                         <groupId>commons-cli</groupId>
+                        <artifactId>commons-cli</artifactId>
                     </exclusion>
                     <!-- only used for the asynchronous executors -->
                     <exclusion>
-                        <artifactId>dnsjnio</artifactId>
                         <groupId>uk.nominet</groupId>
+                        <artifactId>dnsjnio</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1998,8 +1998,8 @@
                 <version>${xbean-spring.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>spring-web</artifactId>
                         <groupId>org.springframework</groupId>
+                        <artifactId>spring-web</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -2174,24 +2174,24 @@
                 <version>${spring.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>toplink</artifactId>
                         <groupId>com.oracle.toplink</groupId>
+                        <artifactId>toplink</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>toplink-essentials</artifactId>
                         <groupId>com.oracle</groupId>
+                        <artifactId>toplink-essentials</artifactId>
                     </exclusion>
                     <exclusion>
+                        <groupId>org.hibernate</groupId>
                         <artifactId>hibernate</artifactId>
-                        <groupId>org.hibernate</groupId>
                     </exclusion>
                     <exclusion>
+                        <groupId>org.hibernate</groupId>
                         <artifactId>hibernate-entitymanager</artifactId>
-                        <groupId>org.hibernate</groupId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>spring-web</artifactId>
                         <groupId>org.springframework</groupId>
+                        <artifactId>spring-web</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -2211,20 +2211,20 @@
                 <version>${spring-osgi-extender.version}</version>
                 <exclusions>
                     <exclusion>
+                        <groupId>org.springframework</groupId>
                         <artifactId>org.springframework.core</artifactId>
-                        <groupId>org.springframework</groupId>
                     </exclusion>
                     <exclusion>
+                        <groupId>org.springframework</groupId>
                         <artifactId>org.springframework.aop</artifactId>
-                        <groupId>org.springframework</groupId>
                     </exclusion>
                     <exclusion>
+                        <groupId>org.springframework</groupId>
                         <artifactId>org.springframework.context</artifactId>
-                        <groupId>org.springframework</groupId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>org.springframework.beans</artifactId>
                         <groupId>org.springframework</groupId>
+                        <artifactId>org.springframework.beans</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -2252,14 +2252,6 @@
     </dependencyManagement>
 
     <build>
-        <extensions>
-            <extension>
-                <!-- Adding a Protocol to Deploy the Site (support for ssh/scp) -->
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ssh-external</artifactId>
-                <version>2.0</version>
-            </extension>
-        </extensions>
         <pluginManagement>
             <plugins>
                 <!-- Order by groupId / artifactId / scope -->
@@ -2465,6 +2457,13 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
                     <version>3.3</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.maven.wagon</groupId>
+                            <artifactId>wagon-ssh</artifactId>
+                            <version>2.0</version>
+                        </dependency>
+                    </dependencies>
                     <executions>
                         <execution>
                             <id>attach-descriptor</id>
@@ -2473,13 +2472,6 @@
                             </goals>
                         </execution>
                     </executions>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.apache.maven.wagon</groupId>
-                            <artifactId>wagon-ssh</artifactId>
-                            <version>2.0</version>
-                        </dependency>
-                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -2687,10 +2679,10 @@
                 <executions>
                     <execution>
                         <id>jar</id>
-                        <phase>package</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
+                        <phase>package</phase>
                         <configuration>
                             <archive>
                                 <manifest>
@@ -2702,10 +2694,10 @@
                     </execution>
                     <execution>
                         <id>test-jar</id>
-                        <phase>package</phase>
                         <goals>
                             <goal>test-jar</goal>
                         </goals>
+                        <phase>package</phase>
                         <configuration>
                             <archive>
                                 <manifest>
@@ -2736,24 +2728,16 @@
                 <executions>
                     <execution>
                         <id>site</id>
-                        <phase>site</phase>
                         <goals>
                             <goal>generate</goal>
                         </goals>
+                        <phase>site</phase>
                     </execution>
                 </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
-
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.maven.doxia</groupId>
-                        <artifactId>doxia-module-markdown</artifactId>
-                        <version>1.3</version>
-                    </dependency>
-                </dependencies>
                 <configuration>
                     <inputEncoding>UTF-8</inputEncoding>
                     <outputEncoding>UTF-8</outputEncoding>
@@ -2783,19 +2767,18 @@
                         </plugin>
                     </reportPlugins>
                 </configuration>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.doxia</groupId>
+                        <artifactId>doxia-module-markdown</artifactId>
+                        <version>1.3</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>animal-sniffer-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>check_java_8</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
                 <configuration>
                     <signature>
                         <groupId>org.codehaus.mojo.signature</groupId>
@@ -2803,8 +2786,25 @@
                         <version>1.0</version>
                     </signature>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>check_java_8</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>test</phase>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
+        <extensions>
+            <extension>
+                <!-- Adding a Protocol to Deploy the Site (support for ssh/scp) -->
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh-external</artifactId>
+                <version>2.0</version>
+            </extension>
+        </extensions>
     </build>
 
     <profiles>
@@ -2814,6 +2814,13 @@
         -->
         <profile>
             <id>site-reports</id>
+            <properties>
+                <!--
+                    This property contains the directory where to deploy when running using "-Psite-reports" profile
+                    to avoid accidently overriding the common modules website
+                -->
+                <deployTechnicalSiteDirectory>technical-reports/</deployTechnicalSiteDirectory>
+            </properties>
 
             <build>
                 <pluginManagement>
@@ -2821,13 +2828,6 @@
                         <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-site-plugin</artifactId>
-                            <dependencies>
-                                <dependency>
-                                    <groupId>org.apache.maven.doxia</groupId>
-                                    <artifactId>doxia-module-markdown</artifactId>
-                                    <version>1.3</version>
-                                </dependency>
-                            </dependencies>
                             <configuration>
                                 <siteDirectory>${basedir}/src/reporting-site</siteDirectory>
                                 <reportPlugins combine.children="append">
@@ -3010,17 +3010,17 @@
                                     -->
                                 </reportPlugins>
                             </configuration>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>org.apache.maven.doxia</groupId>
+                                    <artifactId>doxia-module-markdown</artifactId>
+                                    <version>1.3</version>
+                                </dependency>
+                            </dependencies>
                         </plugin>
                     </plugins>
                 </pluginManagement>
             </build>
-            <properties>
-                <!--
-                    This property contains the directory where to deploy when running using "-Psite-reports" profile
-                    to avoid accidently overriding the common modules website
-                -->
-                <deployTechnicalSiteDirectory>technical-reports/</deployTechnicalSiteDirectory>
-            </properties>
         </profile>
     </profiles>
 </project>

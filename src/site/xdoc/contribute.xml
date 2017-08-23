@@ -275,7 +275,7 @@
             Hopefully, some tools are doing this sorting for you:</li>
         </ul>
         <pre>
-          <code>mvn com.github.ekryd.sortpom:sortpom-maven-plugin:sort -Dsort.keepBlankLines -Dsort.sortDependencies=groupId,artifactId -Dsort.nrOfIndentSpace=4 -Dsort.createBackupFile=false -Dsort.sortModules=true -Dsort.expandEmptyElements=false</code>
+          <code>mvn com.github.ekryd.sortpom:sortpom-maven-plugin:sort -Dsort.keepBlankLines -Dsort.sortDependencies=groupId,artifactId -Dsort.nrOfIndentSpace=4 -Dsort.createBackupFile=false -Dsort.sortModules=true -Dsort.expandEmptyElements=false  -Dsort.predefinedSortOrder="recommended_2008_06"</code>
         </pre>
         <p>You should also split multiple attributes each on a new line.</p>
         <p>You should ensure your POM files, as well as sections ordering follows the <a href="http://maven.apache.org/ref/3.0.3/maven-model/maven.html">Maven Model</a></p>
