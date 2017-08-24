@@ -95,14 +95,11 @@ public class CombinedComparator implements Comparator<MailboxMessage>{
 
     @Override
     public int compare(MailboxMessage o1, MailboxMessage o2) {
-        int i = 0;
-        for (Comparator<MailboxMessage> comparator : comparators) {
-            i = comparator.compare(o1, o2);
-            if (i != 0) {
-                break;
-            }
-        }
-        return i;
+        return comparators.stream()
+            .map(comparator -> comparator.compare(o1, o2))
+            .filter(result -> result != 0)
+            .findFirst()
+            .orElse(0);
     }
 
 }

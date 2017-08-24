@@ -267,32 +267,4 @@ public class HeaderCollectionTest {
         HeaderCollection.builder().add(null).build();
     }
 
-    @Test
-    public void sanitizeDateStringHeaderValueShouldRemoveCESTPart() {
-        assertThat(HeaderCollection.builder()
-            .sanitizeDateStringHeaderValue("Thu, 18 Jun 2015 04:09:35 +0200 (CEST)"))
-            .isEqualTo("Thu, 18 Jun 2015 04:09:35 +0200");
-    }
-
-    @Test
-    public void sanitizeDateStringHeaderValueShouldRemoveUTCPart() {
-        assertThat(HeaderCollection.builder()
-            .sanitizeDateStringHeaderValue("Thu, 18 Jun 2015 04:09:35 +0200  (UTC)  "))
-            .isEqualTo("Thu, 18 Jun 2015 04:09:35 +0200");
-    }
-
-    @Test
-    public void sanitizeDateStringHeaderValueShouldNotChangeAcceptableString() {
-        assertThat(HeaderCollection.builder()
-            .sanitizeDateStringHeaderValue("Thu, 18 Jun 2015 04:09:35 +0200"))
-            .isEqualTo("Thu, 18 Jun 2015 04:09:35 +0200");
-    }
-
-    @Test
-    public void sanitizeDateStringHeaderValueShouldNotChangeEmptyString() {
-        assertThat(HeaderCollection.builder()
-            .sanitizeDateStringHeaderValue(""))
-            .isEqualTo("");
-    }
-
 }

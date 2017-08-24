@@ -24,23 +24,18 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.james.mailbox.store.search.SearchUtil;
+import org.apache.james.mailbox.store.search.comparator.SentDateComparator;
 import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.Group;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.util.MimeUtil;
-import org.apache.james.util.date.ImapDateTimeFormatter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMultimap;
@@ -50,14 +45,6 @@ import com.google.common.collect.Multimap;
 public class HeaderCollection {
 
     public static class Builder {
-
-        // Some sent e-mail have this form : Wed,  3 Jun 2015 09:05:46 +0000 (UTC)
-        // Java 8 Time library RFC_1123_DATE_TIME corresponds to Wed,  3 Jun 2015 09:05:46 +0000 only
-        // This REGEXP is here to match ( in order to remove ) the possible invalid end of a header date
-        // Example of matching patterns :
-        //  (UTC)
-        //  (CEST)
-        private static final Pattern DATE_SANITIZING_PATTERN = Pattern.compile(" *\\(.*\\) *");
 
         private final Set<EMailer> toAddressSet;
         private final Set<EMailer> fromAddressSet;
@@ -114,7 +101,7 @@ public class HeaderCollection {
                     subjectSet.add(headerValue);
                     break;
                 case DATE:
-                    sentDate = toISODate(headerValue);
+                    sentDate = SentDateComparator.toISODate(headerValue);
                     break;
             }
         }
@@ -152,29 +139,6 @@ public class HeaderCollection {
             }
             throw new RuntimeException(headerName + " is not a address header name");
         }
-
-        private Optional<ZonedDateTime> toISODate(String value) {
-            try {
-                return Optional.of(ZonedDateTime.parse(
-                    sanitizeDateStringHeaderValue(value),
-                    ImapDateTimeFormatter.rfc5322()));
-            } catch (Exception e) {
-                LOGGER.info("Can not parse receive date " + value);
-                return Optional.empty();
-            }
-        }
-
-        @VisibleForTesting String sanitizeDateStringHeaderValue(String value) {
-            // Some sent e-mail have this form : Wed,  3 Jun 2015 09:05:46 +0000 (UTC)
-            // Java 8 Time library RFC_1123_DATE_TIME corresponds to Wed,  3 Jun 2015 09:05:46 +0000 only
-            // This method is here to convert the first date into something parsable by RFC_1123_DATE_TIME DateTimeFormatter
-            Matcher sanitizerMatcher = DATE_SANITIZING_PATTERN.matcher(value);
-            if (sanitizerMatcher.find()) {
-                return value.substring(0 , sanitizerMatcher.start());
-            }
-            return value;
-        }
-
     }
 
     public static final String TO = "to";
@@ -184,8 +148,6 @@ public class HeaderCollection {
     public static final String REPLY_TO = "reply-to";
     public static final String SUBJECT = "subject";
     public static final String DATE = "date";
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(HeaderCollection.class);
 
     public static Builder builder() {
         return new Builder();

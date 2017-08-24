@@ -18,44 +18,69 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.search.comparator;
 
-import java.io.StringReader;
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Comparator;
-import java.util.Date;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mime4j.dom.datetime.DateTime;
-import org.apache.james.mime4j.field.datetime.parser.DateTimeParser;
-import org.apache.james.mime4j.field.datetime.parser.ParseException;
+import org.apache.james.util.date.ImapDateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * {@link Comparator} which works like stated in RFC5256 2.2 Sent Date
- *
  */
 public class SentDateComparator extends AbstractHeaderComparator {
+
     public final static Comparator<MailboxMessage> SENTDATE = new SentDateComparator();
+    private static final Logger LOGGER = LoggerFactory.getLogger(SentDateComparator.class);
+    // Some sent e-mail have this form : Wed,  3 Jun 2015 09:05:46 +0000 (UTC)
+    // Java 8 Time library RFC_1123_DATE_TIME corresponds to Wed,  3 Jun 2015 09:05:46 +0000 only
+    // This REGEXP is here to match ( in order to remove ) the possible invalid end of a header date
+    // Example of matching patterns :
+    //  (UTC)
+    //  (CEST)
+    private static final Pattern DATE_SANITIZING_PATTERN = Pattern.compile(" *\\(.*\\) *");
+
+    public static Optional<ZonedDateTime> toISODate(String value) {
+        try {
+            return Optional.of(ZonedDateTime.parse(
+                sanitizeDateStringHeaderValue(value),
+                ImapDateTimeFormatter.rfc5322()));
+        } catch (Exception e) {
+            LOGGER.info("Can not parse receive date " + value);
+            return Optional.empty();
+        }
+    }
+
+     @VisibleForTesting
+     static String sanitizeDateStringHeaderValue(String value) {
+        // Some sent e-mail have this form : Wed,  3 Jun 2015 09:05:46 +0000 (UTC)
+        // Java 8 Time library RFC_1123_DATE_TIME corresponds to Wed,  3 Jun 2015 09:05:46 +0000 only
+        // This method is here to convert the first date into something parsable by RFC_1123_DATE_TIME DateTimeFormatter
+        Matcher sanitizerMatcher = DATE_SANITIZING_PATTERN.matcher(value);
+        if (sanitizerMatcher.find()) {
+            return value.substring(0 , sanitizerMatcher.start());
+        }
+        return value;
+    }
 
     @Override
     public int compare(MailboxMessage o1, MailboxMessage o2) {
-        Date date1 = getSentDate(o1);
-        Date date2 = getSentDate(o2);
-        int i = date1.compareTo(date2);
-        
-        // sent date was the same so use the uid as tie-breaker
-        if (i == 0) {
-            return UidComparator.UID.compare(o1, o2);
-        }
-        return 0;
+        Instant date1 = getSentDate(o1);
+        Instant date2 = getSentDate(o2);
+        return date1.compareTo(date2);
     }
     
-    private Date getSentDate(MailboxMessage message) {
+    private Instant getSentDate(MailboxMessage message) {
         final String value = getHeaderValue("Date", message);
-        final StringReader reader = new StringReader(value);
-        try {
-            DateTime dateTime = new DateTimeParser(reader).parseAll();
-            return dateTime.getDate();
-        } catch (ParseException e) {
-            // if we can not parse the date header we should use the internaldate as fallback
-            return message.getInternalDate();
-        }
+        return toISODate(value)
+            .map(ZonedDateTime::toInstant)
+            .orElse(message.getInternalDate().toInstant());
     }
 }
