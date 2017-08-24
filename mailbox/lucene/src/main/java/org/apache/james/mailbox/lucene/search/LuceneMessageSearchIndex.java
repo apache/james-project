@@ -610,6 +610,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                             // This should never happen anyway fallback to the already parsed field
                             sentDate = ((DateTimeField) f).getDate();
                         }
+                        if (sentDate == null) {
+                            sentDate = membership.getInternalDate();
+                        }
 
                     } 
                         String field = null;
