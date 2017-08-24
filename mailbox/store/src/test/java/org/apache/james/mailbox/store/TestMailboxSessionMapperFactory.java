@@ -189,7 +189,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
             public void delete(final MessageId messageId) {
                 messages.removeAll(
                     FluentIterable.from(messages)
-                        .filter(inMailbox(messageId))
+                        .filter(withMessageId(messageId))
                         .toList());
             }
 
@@ -293,10 +293,6 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
     private Predicate<MailboxMessage> withMessageIdOneOf(final List<MessageId> messageIds) {
         return mailboxMessage -> messageIds.contains(mailboxMessage.getMessageId());
-    }
-
-    private Predicate<MailboxMessage> inMailbox(final MessageId messageId) {
-        return mailboxMessage -> mailboxMessage.getMailboxId().equals(messageId);
     }
 
     private Predicate<MailboxMessage> inMailboxes(final List<MailboxId> mailboxIds) {
