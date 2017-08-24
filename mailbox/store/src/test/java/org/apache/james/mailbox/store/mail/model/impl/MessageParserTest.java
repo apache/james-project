@@ -154,7 +154,9 @@ public class MessageParserTest {
 
         assertThat(attachments).hasSize(1)
             .extracting(MessageAttachment::getName)
-            .containsExactly(Optional.of("inventory.csv"));
+            .allMatch(Optional::isPresent)
+            .extracting(Optional::get)
+            .containsExactly("inventory.csv");
     }
 
     @Test
@@ -163,7 +165,9 @@ public class MessageParserTest {
 
         assertThat(attachments).hasSize(1)
             .extracting(MessageAttachment::getName)
-            .containsExactly(Optional.of("good.csv"));
+            .allMatch(Optional::isPresent)
+            .extracting(Optional::get)
+            .containsExactly("good.csv");
     }
 
     @Test

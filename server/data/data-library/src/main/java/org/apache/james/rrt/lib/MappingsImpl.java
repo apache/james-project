@@ -129,6 +129,7 @@ public class MappingsImpl implements Mappings, Serializable {
     }
 
     @Override
+    @SuppressWarnings("unlikely-arg-type")
     public boolean contains(String mapping) {
         return mappings.contains(mapping);
     }
