@@ -43,7 +43,6 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.1.6</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -57,7 +56,6 @@
         <dependency>
             <groupId>com.github.fge</groupId>
             <artifactId>throwing-lambdas</artifactId>
-            <version>0.5.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.steveash.guavate</groupId>
