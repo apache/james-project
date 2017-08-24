@@ -21,6 +21,8 @@ package org.apache.james.mailbox.store.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -29,6 +31,7 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -1142,5 +1145,57 @@ public abstract class AbstractMessageSearchIndexTest {
         SearchQuery searchQuery = new SearchQuery();
 
         assertThat(messageSearchIndex.search(otherSession, mailbox, searchQuery)).isEmpty();
+    }
+
+    @Test
+    public void searchShouldOrderByInternalDateWhenSortOnSentDateAndNoCorrespondingHeader() throws Exception {
+        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, "sentDate");
+        storeMailboxManager.createMailbox(mailboxPath, session);
+
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+        boolean isRecent = false;
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date date1 = simpleDateFormat.parse("2017-08-24");
+        Date date2 = simpleDateFormat.parse("2017-08-23");
+        Date date3 = simpleDateFormat.parse("2017-08-25");
+        ComposedMessageId message1 = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), date1, session, isRecent, new Flags());
+        ComposedMessageId message2 = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), date2, session, isRecent, new Flags());
+        ComposedMessageId message3 = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), date3, session, isRecent, new Flags());
+
+        await();
+
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.SentDate)));
+
+        assertThat(messageManager.search(searchQuery, session))
+            .containsExactly(message2.getUid(),
+                message1.getUid(),
+                message3.getUid());
+    }
+
+    @Test
+    public void searchShouldOrderBySentDateThenInternalDateWhenSortOnSentDateAndNonHomogeneousCorrespondingHeader() throws Exception {
+        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, "sentDate");
+        storeMailboxManager.createMailbox(mailboxPath, session);
+
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+        boolean isRecent = false;
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date date1 = simpleDateFormat.parse("2017-08-24");
+        Date date2 = simpleDateFormat.parse("2017-08-26");
+        Date date3 = simpleDateFormat.parse("2017-08-25");
+        ComposedMessageId message1 = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), date1, session, isRecent, new Flags());
+        ComposedMessageId message2 = messageManager.appendMessage(new ByteArrayInputStream("Date: Wed, 23 Aug 2017 00:00:00 +0200\r\nSubject: test\r\n\r\ntestmail".getBytes()), date2, session, isRecent, new Flags());
+        ComposedMessageId message3 = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), date3, session, isRecent, new Flags());
+
+        await();
+
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.SentDate)));
+
+        assertThat(messageManager.search(searchQuery, session))
+            .containsExactly(message2.getUid(),
+                message1.getUid(),
+                message3.getUid());
     }
 }
