@@ -47,18 +47,15 @@ import org.apache.james.mailbox.model.SimpleMailboxACL.SimpleMailboxACLEntryKey;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * DeleteACLProcessor Test.
  * 
  * @author Peter Palaga
  */
-@RunWith(JMock.class)
 public class DeleteACLProcessorTest {
 
     private static final String MAILBOX_NAME = ImapConstants.INBOX_NAME;

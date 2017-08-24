@@ -37,13 +37,10 @@ import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.mailbox.MessageUid;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(JMock.class)
 public class FetchResponseEncoderNoExtensionsTest  {
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);

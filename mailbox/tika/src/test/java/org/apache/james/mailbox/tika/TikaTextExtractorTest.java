@@ -63,7 +63,7 @@ public class TikaTextExtractorTest {
 
     @Test
     public void textualContentShouldReturnNullWhenInputStreamIsEmpty() throws Exception {
-        assertThat(textExtractor.extractContent(IOUtils.toInputStream(""), "text/plain").getTextualContent())
+        assertThat(textExtractor.extractContent(IOUtils.toInputStream("", Charsets.UTF_8), "text/plain").getTextualContent())
             .isNull();
     }
 

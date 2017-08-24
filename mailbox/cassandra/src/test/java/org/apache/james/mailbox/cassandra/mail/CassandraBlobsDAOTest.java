@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.apache.commons.io.Charsets;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.mailbox.cassandra.ids.BlobId;
@@ -33,6 +32,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 
 public class CassandraBlobsDAOTest {

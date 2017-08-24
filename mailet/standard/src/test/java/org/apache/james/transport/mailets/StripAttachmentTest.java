@@ -53,6 +53,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 
@@ -311,7 +312,7 @@ public class StripAttachmentTest {
         assertThat(saved).hasSize(1);
         assertThat(saved).containsKey(expectedKey);
         MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream(saved.get(expectedKey)));
-        String content = IOUtils.toString(savedBodyPart.getInputStream());
+        String content = IOUtils.toString(savedBodyPart.getInputStream(), Charsets.UTF_8);
         assertThat(content).isEqualTo(EXPECTED_ATTACHMENT_CONTENT);
     }
 
@@ -347,7 +348,7 @@ public class StripAttachmentTest {
         assertThat(saved).hasSize(1);
         assertThat(saved).containsKey(expectedKey);
         MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream(saved.get(expectedKey)));
-        String content = IOUtils.toString(savedBodyPart.getInputStream());
+        String content = IOUtils.toString(savedBodyPart.getInputStream(), Charsets.UTF_8);
         assertThat(content).isEqualTo(EXPECTED_ATTACHMENT_CONTENT);
     }
 

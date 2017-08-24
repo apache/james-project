@@ -24,10 +24,9 @@ import java.util.List;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.ListResponse;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import junit.framework.Assert;
 
 public class ListingEncodingUtilsTest  {
 

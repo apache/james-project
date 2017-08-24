@@ -30,16 +30,12 @@ import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
-import org.apache.james.imap.decode.parser.FetchCommandParser;
 import org.apache.james.protocols.imap.DecodingException;
+import org.jmock.Mockery;
+import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
 
-@RunWith(JMock.class)
 public class FetchCommandParserPartialFetchTest  {
 
     Mockery context = new JUnit4Mockery();

@@ -30,8 +30,6 @@ import java.util.concurrent.Future;
 
 import javax.inject.Inject;
 
-import com.google.common.base.CharMatcher;
-import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Async;
 import org.apache.http.client.fluent.Content;
@@ -43,9 +41,11 @@ import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.util.CountDownConsumeInputStream;
 import org.apache.james.util.ZeroedInputStream;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;

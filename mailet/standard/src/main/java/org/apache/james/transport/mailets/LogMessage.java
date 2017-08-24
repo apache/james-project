@@ -35,6 +35,7 @@ import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 
 /**
@@ -119,7 +120,7 @@ public class LogMessage extends GenericMailet {
     private void logBody(MimeMessage message) throws MessagingException, IOException {
         if (body) {
             InputStream inputStream = ByteStreams.limit(message.getRawInputStream(), lengthToLog(message));
-            logger.info(IOUtils.toString(inputStream));
+            logger.info(IOUtils.toString(inputStream, Charsets.UTF_8));
         }
     }
 

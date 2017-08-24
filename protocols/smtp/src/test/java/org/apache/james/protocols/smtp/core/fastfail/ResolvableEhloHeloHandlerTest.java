@@ -17,13 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.protocols.smtp.core.fastfail;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

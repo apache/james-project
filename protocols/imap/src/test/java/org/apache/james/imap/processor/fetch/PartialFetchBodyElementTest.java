@@ -19,19 +19,15 @@
 
 package org.apache.james.imap.processor.fetch;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.apache.james.imap.message.response.FetchResponse.BodyElement;
-import org.apache.james.imap.processor.fetch.PartialFetchBodyElement;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(JMock.class)
 public class PartialFetchBodyElementTest {
 
     private static final long NUMBER_OF_OCTETS = 100;

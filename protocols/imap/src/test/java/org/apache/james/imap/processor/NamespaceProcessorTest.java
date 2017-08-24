@@ -41,13 +41,10 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(JMock.class)
 public class NamespaceProcessorTest {
 
     private static final String SHARED_PREFIX = "SharedPrefix";

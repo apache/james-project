@@ -70,7 +70,6 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.util.CompletableFutureUtil;
@@ -191,16 +190,6 @@ public class CassandraMessageDAO {
     private ImmutableList<UDTValue> buildAttachmentUdt(MailboxMessage message) {
         return message.getAttachments().stream()
             .map(this::toUDT)
-            .collect(Guavate.toImmutableList());
-    }
-
-    private List<UDTValue> buildPropertiesUdt(List<Property> properties) {
-        return properties.stream()
-            .map(property -> typesProvider.getDefinedUserType(PROPERTIES)
-                .newValue()
-                .setString(Properties.NAMESPACE, property.getNamespace())
-                .setString(Properties.NAME, property.getLocalName())
-                .setString(Properties.VALUE, property.getValue()))
             .collect(Guavate.toImmutableList());
     }
 

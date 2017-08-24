@@ -17,12 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
-
 package org.apache.james.protocols.smtp.core.fastfail;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,8 +30,6 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.junit.Test;
-
-
 
 public class MaxRcptHandlerTest {
     

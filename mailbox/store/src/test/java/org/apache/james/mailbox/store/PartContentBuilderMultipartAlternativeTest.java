@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.store;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -28,10 +28,11 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.model.MessageResult.Header;
-import org.apache.james.mailbox.store.ResultHeader;
 import org.apache.james.mailbox.store.streaming.PartContentBuilder;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.base.Charsets;
 
 public class PartContentBuilderMultipartAlternativeTest {
 
@@ -105,7 +106,7 @@ public class PartContentBuilderMultipartAlternativeTest {
                 .encode(mail).array());
         builder.parse(in);
         builder.to(position);
-        return IOUtils.toString(builder.getFullContent().getInputStream());
+        return IOUtils.toString(builder.getFullContent().getInputStream(), Charsets.UTF_8);
     }
 
     private String bodyContent(String mail, int position) throws Exception {
@@ -113,7 +114,7 @@ public class PartContentBuilderMultipartAlternativeTest {
                 .encode(mail).array());
         builder.parse(in);
         builder.to(position);
-        return IOUtils.toString(builder.getMimeBodyContent().getInputStream());
+        return IOUtils.toString(builder.getMimeBodyContent().getInputStream(), Charsets.UTF_8);
     }
 
     private void checkContentType(String contentType, String mail, int position)

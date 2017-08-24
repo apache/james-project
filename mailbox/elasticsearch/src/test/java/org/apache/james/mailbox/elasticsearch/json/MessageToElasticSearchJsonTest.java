@@ -148,7 +148,7 @@ public class MessageToElasticSearchJsonTest {
         htmlMail.setUid(UID);
         assertThatJson(messageToElasticSearchJson.convertToJson(htmlMail, ImmutableList.of(new MockMailboxSession("username").getUser())))
             .when(IGNORING_ARRAY_ORDER)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/htmlMail.json")));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/htmlMail.json"), CHARSET));
     }
 
     @Test
@@ -168,7 +168,7 @@ public class MessageToElasticSearchJsonTest {
         pgpSignedMail.setUid(UID);
         assertThatJson(messageToElasticSearchJson.convertToJson(pgpSignedMail, ImmutableList.of(new MockMailboxSession("username").getUser())))
             .when(IGNORING_ARRAY_ORDER)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/pgpSignedMail.json")));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/pgpSignedMail.json"), CHARSET));
     }
 
     @Test
@@ -189,7 +189,7 @@ public class MessageToElasticSearchJsonTest {
         assertThatJson(messageToElasticSearchJson.convertToJson(mail,
                 ImmutableList.of(new MockMailboxSession("user1").getUser(), new MockMailboxSession("user2").getUser())))
             .when(IGNORING_ARRAY_ORDER).when(IGNORING_VALUES)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/mail.json")));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/mail.json"), CHARSET));
     }
 
     @Test
@@ -209,7 +209,7 @@ public class MessageToElasticSearchJsonTest {
         recursiveMail.setUid(UID);
         assertThatJson(messageToElasticSearchJson.convertToJson(recursiveMail, ImmutableList.of(new MockMailboxSession("username").getUser())))
             .when(IGNORING_ARRAY_ORDER).when(IGNORING_VALUES)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/recursiveMail.json")));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/recursiveMail.json"), CHARSET));
     }
 
     @Test
@@ -230,7 +230,7 @@ public class MessageToElasticSearchJsonTest {
         assertThatJson(messageToElasticSearchJson.convertToJson(mailWithNoInternalDate, ImmutableList.of(new MockMailboxSession("username").getUser())))
             .when(IGNORING_ARRAY_ORDER)
             .when(IGNORING_VALUES)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/recursiveMail.json")));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/recursiveMail.json"), CHARSET));
     }
 
     @Test
@@ -258,7 +258,7 @@ public class MessageToElasticSearchJsonTest {
         assertThatJson(convertToJson)
             .when(IGNORING_ARRAY_ORDER)
             .when(IGNORING_VALUES)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/recursiveMail.json")));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/recursiveMail.json"), CHARSET));
     }
 
     @Test
@@ -286,7 +286,7 @@ public class MessageToElasticSearchJsonTest {
         assertThatJson(convertToJson)
             .when(IGNORING_ARRAY_ORDER)
             .when(IGNORING_VALUES)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/recursiveMailWithoutAttachments.json")));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/recursiveMailWithoutAttachments.json"), CHARSET));
     }
 
     @Test(expected = NullPointerException.class)
@@ -385,6 +385,6 @@ public class MessageToElasticSearchJsonTest {
         assertThatJson(convertToJsonWithoutAttachment)
             .when(IGNORING_ARRAY_ORDER)
             .when(IGNORING_VALUES)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/emailWithNonIndexableAttachmentWithoutAttachment.json")));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/emailWithNonIndexableAttachmentWithoutAttachment.json"), CHARSET));
     }
 }

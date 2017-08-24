@@ -23,13 +23,12 @@ import static org.junit.Assert.assertEquals;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
-import junit.framework.Assert;
-
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.protocols.imap.DecodingException;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class IdRangeParseTest  {

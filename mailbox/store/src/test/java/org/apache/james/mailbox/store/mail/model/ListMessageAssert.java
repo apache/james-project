@@ -30,6 +30,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -42,7 +43,7 @@ public class ListMessageAssert {
         return FluentIterable.from(messages).transform(message -> {
             try {
                 return new InnerMessage(message.getMessageId(), message.getUid(), message.getMailboxId(), message.getInternalDate(), message.getBodyOctets(),
-                        message.getFullContentOctets(), message.getMediaType(), message.getSubType(), IOUtils.toString(message.getFullContent()));
+                        message.getFullContentOctets(), message.getMediaType(), message.getSubType(), IOUtils.toString(message.getFullContent(), Charsets.UTF_8));
             } catch (IOException e) {
                 Throwables.propagate(e);
                 return null;
