@@ -33,12 +33,8 @@ import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.MailAddress;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class JamesMailetContextTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(JamesMailetContextTest.class);
-
     public static final String DOMAIN_COM = "domain.com";
     public static final String USERNAME = "user";
     public static final String USERMAIL = USERNAME + "@" + DOMAIN_COM;

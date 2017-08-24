@@ -40,7 +40,6 @@ public interface MailRepositoryStore {
      */
     List<String> getUrls();
 
-    @SuppressWarnings("serial")
     class MailRepositoryStoreException extends Exception {
         public MailRepositoryStoreException(String msg, Throwable t) {
             super(msg, t);

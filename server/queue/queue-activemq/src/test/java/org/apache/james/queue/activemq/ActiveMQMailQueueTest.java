@@ -33,8 +33,6 @@ import org.apache.james.queue.jms.AbstractJMSMailQueueTest;
 import org.apache.james.queue.jms.JMSMailQueue;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class ActiveMQMailQueueTest extends AbstractJMSMailQueueTest {
 
@@ -75,8 +73,6 @@ public abstract class ActiveMQMailQueueTest extends AbstractJMSMailQueueTest {
 
     @Override
     protected JMSMailQueue createQueue(ConnectionFactory factory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName) {
-        Logger log = LoggerFactory.getLogger(ActiveMQMailQueueTest.class);
-
         return new ActiveMQMailQueue(factory, mailQueueItemDecoratorFactory, queueName, useBlobMessages(), new NoopMetricFactory());
     }
 

@@ -37,7 +37,6 @@ import java.util.TimeZone;
 
 import javax.mail.Flags;
 
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
@@ -95,12 +94,10 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
     private Iterator<MailboxMessage> messages;
     private SearchQuery query;
-    private MailboxSession session;
 
-    public MessageSearches(Iterator<MailboxMessage> messages, SearchQuery query, MailboxSession session) {
+    public MessageSearches(Iterator<MailboxMessage> messages, SearchQuery query) {
         this.messages = messages;
         this.query = query;
-        this.session = session;
     }
 
     /**

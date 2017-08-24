@@ -140,7 +140,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
             	hitSet.add(m);
             }
         }
-        return ImmutableList.copyOf(new MessageSearches(hitSet.iterator(), query, session).iterator());
+        return ImmutableList.copyOf(new MessageSearches(hitSet.iterator(), query).iterator());
     }
 
     private boolean isMatchingUser(MailboxSession session, Mailbox mailbox) {

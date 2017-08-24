@@ -34,6 +34,7 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.osgi.extender.OsgiBeanFactoryPostProcessor;
 
 
+@SuppressWarnings("deprecation")
 public class OsgiLifecycleBeanFactoryPostProcessor implements OsgiBeanFactoryPostProcessor {
 
 

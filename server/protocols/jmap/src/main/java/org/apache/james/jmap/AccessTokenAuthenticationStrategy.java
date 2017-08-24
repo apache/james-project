@@ -31,14 +31,10 @@ import org.apache.james.jmap.utils.HeadersAuthenticationExtractor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
 public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy {
-
-    private static final Logger LOG = LoggerFactory.getLogger(AccessTokenAuthenticationStrategy.class);
 
     private final AccessTokenManager accessTokenManager;
     private final MailboxManager mailboxManager;

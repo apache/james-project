@@ -53,8 +53,6 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
@@ -65,7 +63,6 @@ public abstract class AbstractSMTPServerTest {
     protected final static String SENDER = "me@sender";
     protected final static String RCPT1 ="rpct1@domain";
     protected final static String RCPT2 ="rpct2@domain";
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSMTPServerTest.class);
 
     @Test
     public void testSimpleDelivery() throws Exception {

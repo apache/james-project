@@ -38,7 +38,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
-import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -148,7 +147,6 @@ public class InstrumentationMailet implements Mailet {
     }
 
     private void printAddresses(Address[] addresses, String prefix) {
-        MailetContext context = config.getMailetContext();
         for (Address address1 : addresses) {
             if (address1 instanceof InternetAddress) {
                 InternetAddress address = (InternetAddress) address1;

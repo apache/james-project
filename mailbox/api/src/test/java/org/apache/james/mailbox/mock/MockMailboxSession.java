@@ -27,8 +27,6 @@ import java.util.Map;
 import java.util.Random;
 
 import org.apache.james.mailbox.MailboxSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MockMailboxSession implements MailboxSession{
 

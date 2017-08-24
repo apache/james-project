@@ -54,9 +54,6 @@ public class TLDLookup {
     /** A set of all known three-part TLDs */
     static private final HashSet<String> threePartTLDs = initThreePartTLDs();
 
-    /** controls testing/debug output */
-    static private final boolean testing = false;
-
     /**
      * Determines if a two-part domain string (xxx.xxx) is contained in the
      * cache of known two-part TLDs.

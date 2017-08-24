@@ -35,8 +35,6 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * JCR implementation of a MailboxManager
@@ -44,8 +42,6 @@ import org.slf4j.LoggerFactory;
  */
 public class JCRMailboxManager extends StoreMailboxManager implements JCRImapConstants {
 
-    private final Logger logger = LoggerFactory.getLogger(JCRMailboxManager.class);
-    
     public JCRMailboxManager(JCRMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, Authorizator authorizator,
             MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, 
             MessageParser messageParser, MessageId.Factory messageIdFactory) {
@@ -72,7 +68,6 @@ public class JCRMailboxManager extends StoreMailboxManager implements JCRImapCon
             (JCRMailbox) mailboxEntity,
             getAclResolver(),
             getGroupMembershipResolver(),
-            logger,
             getQuotaManager(),
             getQuotaRootResolver(),
             getMessageParser(),

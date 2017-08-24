@@ -45,14 +45,11 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 
 public class MailboxManagementTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxManagementTest.class);
     public static final String USER = "user";
     public static final int UID_VALIDITY = 10;
     public static final int LIMIT = 1;

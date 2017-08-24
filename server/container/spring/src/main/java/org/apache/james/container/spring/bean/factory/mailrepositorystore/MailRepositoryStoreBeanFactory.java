@@ -32,7 +32,6 @@ import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.container.spring.bean.factory.AbstractBeanFactory;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.slf4j.Logger;
@@ -193,10 +192,6 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
                 @SuppressWarnings("unchecked")
                 Class<MailRepository> clazz = (Class<MailRepository>) getBeanFactory().getBeanClassLoader().loadClass(repClass);
                 reply = (MailRepository) getBeanFactory().autowire(clazz, ConfigurableListableBeanFactory.AUTOWIRE_AUTODETECT, false);
-
-                if (reply instanceof LogEnabled) {
-                    ((LogEnabled) reply).setLog(LOGGER);
-                }
 
                 if (reply instanceof Configurable) {
                     ((Configurable) reply).configure(config);

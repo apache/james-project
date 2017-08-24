@@ -26,8 +26,6 @@ import org.apache.james.domainlist.jpa.JPADomainList;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -39,8 +37,6 @@ import com.google.inject.multibindings.Multibinder;
 
 public class JPADomainListModule extends AbstractModule {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DomainList.class);
-    
     @Override
     public void configure() {
         bind(JPADomainList.class).in(Scopes.SINGLETON);

@@ -85,6 +85,7 @@ public abstract class AbstractConnectHandlerResultJMXMonitor<R extends Response,
      * @see
      * org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
      */
+    @SuppressWarnings("unlikely-arg-type")
     public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
         if (interfaceName.equals(ConnectHandler.class)) {
             // add stats for all hooks

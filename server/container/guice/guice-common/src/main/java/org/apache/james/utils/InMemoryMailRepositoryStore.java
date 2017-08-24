@@ -31,7 +31,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.repository.api.Initializable;
@@ -135,9 +134,6 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
 
     private MailRepository initialiseNewRepository(MailRepository mailRepository, CombinedConfiguration config) throws MailRepositoryStoreException {
         try {
-            if (mailRepository instanceof LogEnabled) {
-                ((LogEnabled) mailRepository).setLog(LOGGER);
-            }
             if (mailRepository instanceof Configurable) {
                 ((Configurable) mailRepository).configure(config);
             }

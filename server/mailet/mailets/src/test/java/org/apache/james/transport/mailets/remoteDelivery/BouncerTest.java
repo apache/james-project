@@ -39,13 +39,10 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 
 public class BouncerTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BouncerTest.class);
     public static final String HELLO_NAME = "hello_name";
     public static final String BOUNCE_PROCESSOR = "bounce_processor";
 

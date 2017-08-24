@@ -26,7 +26,6 @@ import org.apache.james.smtpserver.fastfail.ResolvableEhloHeloHandler;
 import org.apache.james.smtpserver.fastfail.ReverseEqualsEhloHeloHandler;
 import org.apache.james.smtpserver.fastfail.ValidSenderDomainHandler;
 
-@SuppressWarnings("serial")
 public class SMTPTestConfiguration extends DefaultConfigurationBuilder {
 
     private int m_maxMessageSizeKB = 0;

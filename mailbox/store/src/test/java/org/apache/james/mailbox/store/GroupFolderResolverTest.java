@@ -28,12 +28,10 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Test;
-import org.slf4j.Logger;
 
 public class GroupFolderResolverTest {
 
     private static final long UID_VALIDITY = 9999;
-    private Logger log = null;
     private List<Locale> localePreferences = null;
     private List<String> sharedSpaces = null;
     private char pathSeparator = ' ';

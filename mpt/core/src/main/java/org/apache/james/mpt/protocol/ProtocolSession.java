@@ -679,7 +679,6 @@ public class ProtocolSession implements ProtocolInteractor {
      * An exception which is thrown when the actual response from a server is
      * different from that expected.
      */
-    @SuppressWarnings("serial")
     public static class InvalidServerResponseException extends Exception {
         public InvalidServerResponseException(String message) {
             super(message);

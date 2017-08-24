@@ -37,14 +37,11 @@ import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
 import org.apache.james.protocols.pop3.utils.MockMailbox;
 import org.apache.james.protocols.pop3.utils.TestPassCmdHandler;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class AbstractStartTlsPOP3ServerTest {
 
     private static final String LOCALHOST_IP = "127.0.0.1";
     private static final int RANDOM_PORT = 0;
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractStartTlsPOP3ServerTest.class);
 
     private POP3Protocol createProtocol(AbstractPassCmdHandler handler) throws WiringException {
         return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration());

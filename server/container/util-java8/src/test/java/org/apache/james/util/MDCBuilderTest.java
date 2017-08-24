@@ -87,6 +87,7 @@ public class MDCBuilderTest {
             .containsEntry(KEY_2, VALUE_2);
     }
 
+    @SuppressWarnings("resource")
     @Test
     public void closeablesConstructorShouldThrowOnNullList() {
         expectedException.expect(NullPointerException.class);

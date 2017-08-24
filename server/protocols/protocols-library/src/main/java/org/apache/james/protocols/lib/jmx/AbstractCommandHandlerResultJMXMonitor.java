@@ -73,7 +73,7 @@ public abstract class AbstractCommandHandlerResultJMXMonitor<S extends ProtocolS
      * @see
      * org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked", "rawtypes", "unlikely-arg-type" })
     public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
         if (interfaceName.equals(CommandHandler.class)) {
             // add stats for all hooks

@@ -60,7 +60,6 @@ public interface MailboxListener {
     /**
      * A mailbox event.
      */
-    @SuppressWarnings("serial")
     abstract class Event implements Serializable {
         private final MailboxSession session;
         private final MailboxPath path;

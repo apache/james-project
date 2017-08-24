@@ -70,6 +70,7 @@ public abstract class AbstractLineHandlerResultJMXMonitor<R extends Response, S 
      * @see
      * org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
      */
+    @SuppressWarnings("unlikely-arg-type")
     public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
 
         if (interfaceName.equals(LineHandler.class)) {

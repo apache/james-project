@@ -93,7 +93,6 @@ public interface MailQueue {
      * Exception which will get thrown if any problems occur while working the
      * {@link MailQueue}
      */
-    @SuppressWarnings("serial")
     class MailQueueException extends MessagingException {
         public MailQueueException(String msg, Exception e) {
             super(msg, e);

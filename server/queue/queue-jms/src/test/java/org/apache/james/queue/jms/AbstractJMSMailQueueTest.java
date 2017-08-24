@@ -50,8 +50,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Basic JMS test class. Extend this class and start the JMS broker in the super class,
@@ -68,7 +66,6 @@ public abstract class AbstractJMSMailQueueTest {
     }
     
     protected JMSMailQueue createQueue(ConnectionFactory factory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName) {
-        Logger log = LoggerFactory.getLogger(AbstractJMSMailQueueTest.class);
         return new JMSMailQueue(factory, mailQueueItemDecoratorFactory, queueName, new NoopMetricFactory());
     }
 

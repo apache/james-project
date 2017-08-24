@@ -42,14 +42,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Supplier;
 
 public class DeliveryRunnableTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeliveryRunnableTest.class);
     public static final Date FIXED_DATE = new Date(1159599194961L);
     public static final Supplier<Date> FIXED_DATE_SUPPLIER = () -> FIXED_DATE;
 
