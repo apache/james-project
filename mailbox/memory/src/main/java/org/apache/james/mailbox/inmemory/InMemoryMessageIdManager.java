@@ -21,7 +21,8 @@ package org.apache.james.mailbox.inmemory;
 
 import java.util.HashSet;
 import java.util.List;
-
+import java.util.Optional;
+import java.util.function.Predicate;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
@@ -42,8 +43,6 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -146,9 +145,8 @@ public class InMemoryMessageIdManager implements MessageIdManager {
     }
 
     private void filterOnMailboxSession(List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxNotFoundException {
-        boolean isForbidden = FluentIterable.from(mailboxIds)
-            .firstMatch(findMailboxBelongsToAnotherSession(mailboxSession))
-            .isPresent();
+        boolean isForbidden = mailboxIds.stream()
+            .anyMatch(findMailboxBelongsToAnotherSession(mailboxSession));
 
         if (isForbidden) {
             throw new MailboxNotFoundException("Mailbox does not belong to session");
@@ -172,9 +170,10 @@ public class InMemoryMessageIdManager implements MessageIdManager {
     }
 
     private Optional<MessageResult> findMessageWithId(MailboxId mailboxId, MessageId messageId, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
-        return FluentIterable.from(retrieveAllMessages(mailboxId, fetchGroup, mailboxSession))
+        return retrieveAllMessages(mailboxId, fetchGroup, mailboxSession)
+            .stream()
             .filter(filterByMessageId(messageId))
-            .first();
+            .findFirst();
     }
 
     private Predicate<MessageResult> filterByMessageId(final MessageId messageId) {

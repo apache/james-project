@@ -20,7 +20,7 @@ package org.apache.james.mailbox.inmemory;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
-
+import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxManager;
@@ -38,9 +38,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 
 public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSystem {
 
@@ -55,7 +53,7 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
     public InMemoryMessageIdManagerTestSystem(MailboxManager mailboxManager) {
         super(new InMemoryMessageIdManager(mailboxManager));
         this.mailboxManager = mailboxManager;
-        this.lastMessageIdUsed = Optional.absent();
+        this.lastMessageIdUsed = Optional.empty();
     }
 
     @Override
@@ -80,7 +78,7 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
 
     @Override
     public MessageId createNotUsedMessageId() {
-        return InMemoryMessageId.of(Long.valueOf(lastMessageIdUsed.or(FIRST_MESSAGE_ID).serialize()) + ONE_HUNDRED);
+        return InMemoryMessageId.of(Long.valueOf(lastMessageIdUsed.orElse(FIRST_MESSAGE_ID).serialize()) + ONE_HUNDRED);
     }
 
     @Override
@@ -97,9 +95,10 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
 
     private Optional<MailboxMetaData> retrieveMailbox(final MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
         MailboxQuery userMailboxesQuery = MailboxQuery.builder(mailboxSession).expression("*").build();
-        return FluentIterable.from(mailboxManager.search(userMailboxesQuery, mailboxSession))
+        return mailboxManager.search(userMailboxesQuery, mailboxSession)
+            .stream()
             .filter(mailboxMetaData -> mailboxMetaData.getId().equals(mailboxId))
-            .first();
+            .findFirst();
     }
 
     @Override

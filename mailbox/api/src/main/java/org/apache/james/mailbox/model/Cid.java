@@ -20,10 +20,11 @@
 package org.apache.james.mailbox.model;
 
 
+import java.util.Optional;
+
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
@@ -89,8 +90,8 @@ public class Cid {
         private Optional<CidTransformation> transformation;
 
         private CidParser() {
-            validator = Optional.absent();
-            transformation = Optional.absent();
+            validator = Optional.empty();
+            transformation = Optional.empty();
         }
 
         public CidParser relaxed() {
@@ -109,8 +110,8 @@ public class Cid {
         }
 
         public Optional<Cid> parse(String value) {
-            CidValidator cidValidator = validator.or(DEFAULT_VALIDATOR);
-            CidTransformation cidTransformation = transformation.or(new Identity());
+            CidValidator cidValidator = validator.orElse(DEFAULT_VALIDATOR);
+            CidTransformation cidTransformation = transformation.orElse(new Identity());
             return cidTransformation.apply(cidValidator, value);
         }
     }
@@ -134,7 +135,7 @@ public class Cid {
 
     private static Optional<Cid> toCid(String cidAsString) {
         if (Strings.isNullOrEmpty(cidAsString) || StringUtils.isBlank(cidAsString)) {
-            return Optional.absent();
+            return Optional.empty();
         }
         return Optional.of(new Cid(cidAsString));
     }

@@ -23,12 +23,11 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-
+import java.util.Optional;
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -38,10 +37,10 @@ import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
@@ -61,8 +60,8 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         private Flags flags;
         private PropertyBuilder propertyBuilder;
         private MailboxId mailboxId;
-        private Optional<MessageUid> uid = Optional.absent();
-        private Optional<Long> modseq = Optional.absent();
+        private Optional<MessageUid> uid = Optional.empty();
+        private Optional<Long> modseq = Optional.empty();
         private ImmutableList.Builder<MessageAttachment> attachments = ImmutableList.builder();
 
         public Builder messageId(MessageId messageId) {

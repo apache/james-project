@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.indexer.registrations;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Optional;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.mock.MockMailboxSession;
@@ -28,8 +29,6 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.base.Optional;
 
 public class GlobalRegistrationTest {
     public static final MailboxPath INBOX = new MailboxPath("#private", "btellier@apache.org", "INBOX");
@@ -65,7 +64,7 @@ public class GlobalRegistrationTest {
     public void pathToIndexShouldBeNullifiedByDeletedEvents() {
         MailboxListener.Event event = eventFactory.mailboxDeleted(session, MAILBOX);
         globalRegistration.event(event);
-        assertThat(globalRegistration.getPathToIndex(INBOX)).isEqualTo(Optional.absent());
+        assertThat(globalRegistration.getPathToIndex(INBOX)).isEqualTo(Optional.empty());
     }
 
     @Test

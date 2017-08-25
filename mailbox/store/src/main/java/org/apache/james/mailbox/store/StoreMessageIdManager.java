@@ -25,7 +25,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
@@ -57,10 +59,7 @@ import org.apache.james.mailbox.store.quota.QuotaChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -69,6 +68,14 @@ import com.google.common.collect.Sets.SetView;
 
 public class StoreMessageIdManager implements MessageIdManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreMessageIdManager.class);
+    public static <T, S> Predicate<T> compose(Predicate<S> predicate, Function<T, S> function) {
+        return input -> predicate.test(function.apply(input));
+    }
+
+    static<T> Predicate<T> not(Predicate<T> p) {
+        return t -> !p.test(t);
+    }
+
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MailboxEventDispatcher dispatcher;
     private final MessageId.Factory messageIdFactory;
@@ -108,13 +115,13 @@ public class StoreMessageIdManager implements MessageIdManager {
             ImmutableSet<MailboxId> mailboxIds = FluentIterable.from(messageList)
                 .transform(MailboxMessage::getMailboxId)
                 .toSet();
-            final ImmutableSet<MailboxId> allowedMailboxIds = FluentIterable.from(mailboxIds)
+            final ImmutableSet<MailboxId> allowedMailboxIds = mailboxIds.stream()
                 .filter(mailboxBelongsToUser(mailboxSession, mailboxMapper))
-                .toSet();
-            return FluentIterable.from(messageList)
+                .collect(Guavate.toImmutableSet());
+            return messageList.stream()
                 .filter(inMailboxes(allowedMailboxIds))
-                .transform(messageResultConverter(fetchGroup))
-                .toList();
+                .map(messageResultConverter(fetchGroup))
+                .collect(Guavate.toImmutableList());
         } catch (WrappedException wrappedException) {
             throw wrappedException.unwrap();
         }
@@ -127,12 +134,13 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         allowOnMailboxSession(mailboxIds, mailboxSession, mailboxMapper);
 
-        Iterable<MetadataWithMailboxId> metadatasWithMailbox = FluentIterable
-            .from(messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata))
+        ImmutableList<MetadataWithMailboxId> metadatasWithMailbox = messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
+            .stream()
             .filter(inMailboxes(mailboxIds))
-            .transform(mailboxMessage -> new MetadataWithMailboxId(
+            .map(mailboxMessage -> new MetadataWithMailboxId(
                 new SimpleMessageMetaData(mailboxMessage),
-                mailboxMessage.getMailboxId()));
+                mailboxMessage.getMailboxId()))
+            .collect(Guavate.toImmutableList());
 
         messageIdMapper.delete(messageId, mailboxIds);
 
@@ -148,9 +156,16 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         allowOnMailboxSession(mailboxIds, mailboxSession, mailboxMapper);
 
-        List<MailboxMessage> mailboxMessages = FluentIterable.from(messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Full))
+        List<MailboxMessage> mailboxMessages = messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Full)
+            .stream()
+            .filter(new Predicate<MailboxMessage>() {
+                @Override
+                public boolean test(MailboxMessage message) {
+                    return false;
+                }
+            })
             .filter(messageBelongsToUser(mailboxSession, mailboxMapper))
-            .toList();
+            .collect(Guavate.toImmutableList());
 
         if (!mailboxMessages.isEmpty()) {
             ImmutableSet<MailboxId> currentMailboxes = FluentIterable.from(mailboxMessages)
@@ -209,12 +224,14 @@ public class StoreMessageIdManager implements MessageIdManager {
         Map<QuotaRoot, Integer> messageCountByQuotaRoot = new HashMap<>();
         for (MailboxId mailboxId : mailboxIdsToBeAdded) {
             QuotaRoot quotaRoot = retrieveQuotaRoot(mailboxMapper, mailboxId);
-            int currentCount = Optional.fromNullable(messageCountByQuotaRoot.get(quotaRoot)).or(0);
+            int currentCount = Optional.ofNullable(messageCountByQuotaRoot.get(quotaRoot))
+                .orElse(0);
             messageCountByQuotaRoot.put(quotaRoot, currentCount + 1);
         }
         for (MailboxId mailboxId : mailboxIdsToBeRemove) {
             QuotaRoot quotaRoot = retrieveQuotaRoot(mailboxMapper, mailboxId);
-            int currentCount = Optional.fromNullable(messageCountByQuotaRoot.get(quotaRoot)).or(0);
+            int currentCount = Optional.ofNullable(messageCountByQuotaRoot.get(quotaRoot))
+                .orElse(0);
             messageCountByQuotaRoot.put(quotaRoot, currentCount - 1);
         }
         return messageCountByQuotaRoot;
@@ -269,15 +286,14 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     private Predicate<MailboxMessage> messageBelongsToUser(MailboxSession mailboxSession, MailboxMapper mailboxMapper) {
-        return Predicates.compose(
-            mailboxBelongsToUser(mailboxSession, mailboxMapper),
+        return compose(mailboxBelongsToUser(mailboxSession, mailboxMapper),
             MailboxMessage::getMailboxId);
     }
 
     private void allowOnMailboxSession(List<MailboxId> mailboxIds, MailboxSession mailboxSession, MailboxMapper mailboxMapper) throws MailboxNotFoundException {
-        Optional<MailboxId> mailboxForbidden = FluentIterable.from(mailboxIds)
-            .firstMatch(isMailboxOfOtherUser(mailboxSession, mailboxMapper))
-            .or(Optional.<MailboxId>absent());
+        Optional<MailboxId> mailboxForbidden = mailboxIds.stream()
+            .filter(isMailboxOfOtherUser(mailboxSession, mailboxMapper))
+            .findFirst();
 
         if (mailboxForbidden.isPresent()) {
             throw new MailboxNotFoundException("Mailbox with Id " + mailboxForbidden.get() + " does not belong to session");
@@ -285,7 +301,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     private Predicate<MailboxId> isMailboxOfOtherUser(MailboxSession mailboxSession, MailboxMapper mailboxMapper) {
-        return Predicates.not(mailboxBelongsToUser(mailboxSession, mailboxMapper));
+        return not(mailboxBelongsToUser(mailboxSession, mailboxMapper));
     }
 
     private boolean belongsToCurrentUser(Mailbox mailbox, MailboxSession session) {

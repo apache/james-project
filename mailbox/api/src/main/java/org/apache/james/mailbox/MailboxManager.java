@@ -21,6 +21,7 @@ package org.apache.james.mailbox;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.james.mailbox.exception.AnnotationException;
@@ -40,8 +41,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
-
-import com.google.common.base.Optional;
 
 /**
  * <p>

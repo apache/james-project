@@ -19,8 +19,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
-
+import java.util.Optional;
 import java.util.stream.LongStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -37,7 +36,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Optional;
 
 public class CassandraUidProviderTest {
 
@@ -72,7 +70,7 @@ public class CassandraUidProviderTest {
     public void lastUidShouldRetrieveValueStoredByNextUid() throws Exception {
         int nbEntries = 100;
         Optional<MessageUid> result = uidProvider.lastUid(null, mailbox);
-        assertThat(result).isAbsent();
+        assertThat(result).isEmpty();
         LongStream.range(0, nbEntries)
             .forEach(Throwing.longConsumer(value -> {
                         MessageUid uid = uidProvider.nextUid(null, mailbox);

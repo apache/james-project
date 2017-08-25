@@ -35,13 +35,11 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
@@ -52,10 +50,11 @@ import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
 
 public class MaildirFolder {
     private static final Logger LOGGER = LoggerFactory.getLogger(MaildirFolder.class);
@@ -98,7 +97,7 @@ public class MaildirFolder {
         this.aclFile = new File(rootFolder, ACL_FILE);
         this.locker = locker;
         this.path = path;
-        this.lastUid = Optional.absent();
+        this.lastUid = Optional.empty();
     }
 
     private MaildirMessageName newMaildirMessageName(MaildirFolder folder, String fullName) {
@@ -189,7 +188,7 @@ public class MaildirFolder {
      * Returns the nextUid value and increases it.
      */
     private MessageUid getNextUid() {
-        MessageUid nextUid = lastUid.transform(MessageUid::next).or(MessageUid.MIN_VALUE);
+        MessageUid nextUid = lastUid.map(MessageUid::next).orElse(MessageUid.MIN_VALUE);
         lastUid = Optional.of(nextUid);
         return nextUid;
     }
@@ -546,7 +545,7 @@ public class MaildirFolder {
         try {
             if (!uidList.createNewFile())
                 throw new IOException("Could not create file " + uidList);
-            lastUid = Optional.absent();
+            lastUid = Optional.empty();
             String[] curFiles = curFolder.list();
             String[] newFiles = newFolder.list();
             messageCount = curFiles.length + newFiles.length;
@@ -708,7 +707,7 @@ public class MaildirFolder {
      * @return the line which ought to be the header
      */
     private String createUidListHeader() {
-        Long last = lastUid.transform(MessageUid::asLong).or(0L);
+        Long last = lastUid.map(MessageUid::asLong).orElse(0L);
         return "1 " + String.valueOf(last) + " " + String.valueOf(messageCount);
     }
     

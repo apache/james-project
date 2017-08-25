@@ -20,8 +20,8 @@
 package org.apache.james.mailbox.jpa.mail;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
@@ -147,18 +146,18 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
             getEntityManager().persist(
                 new JPAMailboxAnnotation(jpaId.getRawId(),
                     mailboxAnnotation.getKey().asString(),
-                    mailboxAnnotation.getValue().orNull()));
+                    mailboxAnnotation.getValue().orElse(null)));
         } else {
             getEntityManager().find(JPAMailboxAnnotation.class,
                 new JPAMailboxAnnotationId(jpaId.getRawId(), mailboxAnnotation.getKey().asString()))
-                .setValue(mailboxAnnotation.getValue().orNull());
+                .setValue(mailboxAnnotation.getValue().orElse(null));
         }
     }
 
     @Override
     public boolean exist(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
         JPAId jpaId = (JPAId) mailboxId;
-        Optional<JPAMailboxAnnotation> row = Optional.fromNullable(getEntityManager().find(JPAMailboxAnnotation.class,
+        Optional<JPAMailboxAnnotation> row = Optional.ofNullable(getEntityManager().find(JPAMailboxAnnotation.class,
             new JPAMailboxAnnotationId(jpaId.getRawId(), mailboxAnnotation.getKey().asString())));
         return row.isPresent();
     }

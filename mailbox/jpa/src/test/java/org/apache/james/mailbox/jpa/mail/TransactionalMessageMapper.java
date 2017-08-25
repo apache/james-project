@@ -22,10 +22,9 @@ package org.apache.james.mailbox.jpa.mail;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Optional;
 import javax.mail.Flags;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -36,8 +35,7 @@ import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-
-import com.google.common.base.Optional;
+import org.apache.commons.lang.NotImplementedException;
 
 public class TransactionalMessageMapper implements MessageMapper {
     private final JPAMessageMapper messageMapper;

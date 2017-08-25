@@ -3,7 +3,7 @@ package org.apache.james.mailbox.caching;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
@@ -16,8 +16,6 @@ import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-
-import com.google.common.base.Optional;
 
 /**
  * A MessageMapper implementation that uses a MailboxMetadataCache to cache the information

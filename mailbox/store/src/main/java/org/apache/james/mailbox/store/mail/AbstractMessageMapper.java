@@ -21,7 +21,7 @@ package org.apache.james.mailbox.store.mail;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
+import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
@@ -36,7 +36,6 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Iterators;
 
 /**

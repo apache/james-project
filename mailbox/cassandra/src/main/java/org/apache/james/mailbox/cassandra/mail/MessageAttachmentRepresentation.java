@@ -42,7 +42,7 @@ public class MessageAttachmentRepresentation {
             .attachmentId(attachment.getAttachmentId())
             .cid(OptionalConverter.fromGuava(attachment.getCid()))
             .isInline(attachment.isInline())
-            .name(attachment.getName().orNull())
+            .name(attachment.getName().orElse(null))
             .build();
     }
 

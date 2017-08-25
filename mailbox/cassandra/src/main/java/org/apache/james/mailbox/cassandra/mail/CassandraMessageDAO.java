@@ -38,7 +38,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.M
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.PROPERTIES;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.TEXTUAL_LINE_COUNT;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -47,12 +46,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.inject.Inject;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -76,6 +72,8 @@ import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.OptionalConverter;
 import org.apache.james.util.streams.JamesCollectors;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
@@ -197,8 +195,8 @@ public class CassandraMessageDAO {
         return typesProvider.getDefinedUserType(ATTACHMENTS)
             .newValue()
             .setString(Attachments.ID, messageAttachment.getAttachmentId().getId())
-            .setString(Attachments.NAME, messageAttachment.getName().orNull())
-            .setString(Attachments.CID, messageAttachment.getCid().transform(Cid::getValue).orNull())
+            .setString(Attachments.NAME, messageAttachment.getName().orElse(null))
+            .setString(Attachments.CID, messageAttachment.getCid().map(Cid::getValue).orElse(null))
             .setBool(Attachments.IS_INLINE, messageAttachment.isInline());
     }
 

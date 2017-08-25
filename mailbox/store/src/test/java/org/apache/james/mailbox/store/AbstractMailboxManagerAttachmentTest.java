@@ -20,13 +20,12 @@
 package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-
+import java.util.Optional;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
@@ -47,8 +46,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.base.Optional;
 
 public abstract class AbstractMailboxManagerAttachmentTest {
     private static final String USERNAME = "user@domain.tld";

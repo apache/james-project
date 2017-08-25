@@ -30,14 +30,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedFileInputStream;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.TeeInputStream;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
@@ -91,6 +88,8 @@ import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
 import org.apache.james.util.IteratorWrapper;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.TeeInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -483,8 +482,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         final Flags permanentFlags = getPermanentFlags(mailboxSession);
         final long uidValidity = getMailboxEntity().getUidValidity();
         MessageUid uidNext = mapperFactory.getMessageMapper(mailboxSession).getLastUid(mailbox)
-                .transform(MessageUid::next)
-                .or(MessageUid.MIN_VALUE);
+                .map(MessageUid::next)
+                .orElse(MessageUid.MIN_VALUE);
         final long highestModSeq = mapperFactory.getMessageMapper(mailboxSession).getHighestModSeq(mailbox);
         final long messageCount;
         final long unseenCount;

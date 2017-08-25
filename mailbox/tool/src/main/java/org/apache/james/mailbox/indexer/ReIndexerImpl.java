@@ -22,7 +22,7 @@ package org.apache.james.mailbox.indexer;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-
+import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxManager;
@@ -43,7 +43,6 @@ import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 
 /**

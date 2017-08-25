@@ -18,12 +18,12 @@
  ****************************************************************/
 package org.apache.james.mailbox.store;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class FakeAuthorizator implements Authorizator {
 
     public static FakeAuthorizator defaultReject() {
-        return new FakeAuthorizator(Optional.<String>absent(), Optional.<String>absent());
+        return new FakeAuthorizator(Optional.empty(), Optional.empty());
     }
 
     public static FakeAuthorizator forUserAndAdmin(String admin, String user) {

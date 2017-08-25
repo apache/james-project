@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.jcr.mail;
 
+import java.util.Optional;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -30,8 +31,6 @@ import org.apache.james.mailbox.jcr.MailboxSessionJCRRepository;
 import org.apache.james.mailbox.jcr.mail.model.JCRMailbox;
 import org.apache.james.mailbox.store.mail.AbstractLockingUidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-
-import com.google.common.base.Optional;
 
 public class JCRUidProvider extends AbstractLockingUidProvider {
 
@@ -49,7 +48,7 @@ public class JCRUidProvider extends AbstractLockingUidProvider {
             Node node = s.getNodeByIdentifier(mailbox.getMailboxId().serialize());
             long rawUid = node.getProperty(JCRMailbox.LASTUID_PROPERTY).getLong();
             if (rawUid == 0) {
-                return Optional.absent();
+                return Optional.empty();
             }
             return Optional.of(MessageUid.of(rawUid));
         } catch (RepositoryException e) {

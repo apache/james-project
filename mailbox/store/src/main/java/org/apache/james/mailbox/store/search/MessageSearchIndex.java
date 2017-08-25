@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store.search;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -32,8 +33,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-
-import com.google.common.base.Optional;
 
 /**
  * An index which can be used to search for MailboxMessage UID's that match a {@link SearchQuery}.

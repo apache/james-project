@@ -18,14 +18,15 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail;
 
-import org.apache.commons.lang.NotImplementedException;
+import java.util.Optional;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.commons.lang.NotImplementedException;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.netflix.curator.RetryPolicy;
 import com.netflix.curator.framework.CuratorFramework;
@@ -81,7 +82,7 @@ public class ZooUidProvider implements UidProvider {
                 if (value.succeeded()) {
                     Long postValue = value.postValue();
                     if (postValue == 0) {
-                        return Optional.absent();
+                        return Optional.empty();
                     }
                     return Optional.of(MessageUid.of(value.postValue()));
                 }

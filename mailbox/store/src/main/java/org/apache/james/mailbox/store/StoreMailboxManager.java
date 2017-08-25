@@ -23,9 +23,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
@@ -85,7 +85,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 
@@ -568,10 +567,10 @@ public class StoreMailboxManager implements MailboxManager {
                 }, true);
 
             if (!mailboxIds.isEmpty()) {
-                return Optional.fromNullable(Iterables.getLast(mailboxIds));
+                return Optional.ofNullable(Iterables.getLast(mailboxIds));
             }
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override

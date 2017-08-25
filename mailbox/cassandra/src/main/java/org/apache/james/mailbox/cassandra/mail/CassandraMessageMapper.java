@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
-
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
@@ -349,7 +348,7 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public com.google.common.base.Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
+    public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
         return uidProvider.lastUid(mailboxSession, mailbox);
     }
 

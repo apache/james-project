@@ -1,11 +1,11 @@
 package org.apache.james.mailbox.caching;
 
+import java.util.Optional;
+
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-
-import com.google.common.base.Optional;
 
 /**
  * Caches the simple yet possibly expensive to compute metadata info 

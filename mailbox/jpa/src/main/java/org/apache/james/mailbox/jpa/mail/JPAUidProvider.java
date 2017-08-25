@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa.mail;
 
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -31,8 +32,6 @@ import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.store.mail.AbstractLockingUidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-
-import com.google.common.base.Optional;
 
 public class JPAUidProvider extends AbstractLockingUidProvider {
 
@@ -55,7 +54,7 @@ public class JPAUidProvider extends AbstractLockingUidProvider {
             long uid = (Long) manager.createNamedQuery("findLastUid").setParameter("idParam", mailboxId.getRawId()).getSingleResult();
             manager.getTransaction().commit();
             if (uid == 0) {
-                return Optional.absent();
+                return Optional.empty();
             }
             return Optional.of(MessageUid.of(uid));
         } catch (PersistenceException e) {

@@ -33,8 +33,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.TimeZone;
-
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
@@ -72,7 +72,6 @@ import org.apache.james.mime4j.utils.search.MessageMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

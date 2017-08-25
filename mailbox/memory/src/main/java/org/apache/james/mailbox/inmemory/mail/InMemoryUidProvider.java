@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.inmemory.mail;
 
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -30,8 +31,6 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-
-import com.google.common.base.Optional;
 
 public class InMemoryUidProvider implements UidProvider{
 
@@ -62,7 +61,7 @@ public class InMemoryUidProvider implements UidProvider{
     public Optional<MessageUid> lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         AtomicLong last = getLast((InMemoryId) mailbox.getMailboxId());
         if (last == null) {
-            return Optional.absent();
+            return Optional.empty();
         }
         return Optional.of(MessageUid.of(last.get()));
     }

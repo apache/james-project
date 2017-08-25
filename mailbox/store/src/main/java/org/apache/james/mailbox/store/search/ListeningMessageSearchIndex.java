@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.store.search;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
@@ -33,8 +34,6 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
 
 /**
  * {@link MessageSearchIndex} which needs to get registered as global {@link MailboxListener} and so get
@@ -113,7 +112,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     }
 
     private Optional<MailboxMessage> retrieveMailboxMessage(MailboxSession session, EventFactory.AddedImpl added, Mailbox mailbox, MessageUid next) {
-        Optional<MailboxMessage> firstChoice = Optional.fromNullable(added.getAvailableMessages().get(next));
+        Optional<MailboxMessage> firstChoice = Optional.ofNullable(added.getAvailableMessages().get(next));
         if (firstChoice.isPresent()) {
             return firstChoice;
         } else {
@@ -124,7 +123,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
             } catch (Exception e) {
                 LOGGER.error(String.format("Could not retrieve message %d in mailbox %s",
                     next, mailbox.getMailboxId().serialize()), e);
-                return Optional.absent();
+                return Optional.empty();
             }
         }
     }

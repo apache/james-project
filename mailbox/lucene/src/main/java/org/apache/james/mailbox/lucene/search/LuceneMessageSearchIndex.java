@@ -33,9 +33,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
-
 import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -122,7 +122,6 @@ import org.apache.lucene.util.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -506,7 +505,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 Document doc = searcher.doc(sDoc.doc);
                 MessageUid uid = MessageUid.of(Long.valueOf(doc.get(UID_FIELD)));
                 MailboxId mailboxId = mailboxIdFactory.fromString(doc.get(MAILBOX_ID_FIELD));
-                Optional<MessageId> messageId = toMessageId(Optional.fromNullable(doc.get(MESSAGE_ID_FIELD)));
+                Optional<MessageId> messageId = toMessageId(Optional.ofNullable(doc.get(MESSAGE_ID_FIELD)));
                 results.add(new SearchResult(messageId, mailboxId, uid));
             }
         } catch (IOException e) {
@@ -527,7 +526,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         if (messageIdField.isPresent()) {
             return Optional.of(messageIdFactory.fromString(messageIdField.get()));
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     private Query buildQueryFromMailboxes(ImmutableSet<MailboxId> mailboxIds) {

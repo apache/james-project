@@ -19,13 +19,11 @@
 package org.apache.james.mailbox.elasticsearch.events;
 
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
-
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.es.ElasticSearchIndexer;
@@ -100,7 +98,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         return searcher.search(ImmutableList.of(session.getUser()), searchQuery, Optional.empty())
             .peek(this::logIfNoMessageId)
             .map(SearchResult::getMessageId)
-            .map(com.google.common.base.Optional::get)
+            .map(Optional::get)
             .distinct()
             .limit(limit)
             .collect(Guavate.toImmutableList());

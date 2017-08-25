@@ -23,13 +23,12 @@ import static org.apache.james.mailbox.store.mail.model.ListMessageAssert.assert
 import static org.apache.james.mailbox.store.mail.model.ListMessagePropertiesAssert.assertProperties;
 import static org.apache.james.mailbox.store.mail.model.MessageAssert.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 import javax.mail.util.SharedByteArrayInputStream;
@@ -59,7 +58,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
 public abstract class MessageMapperTest {
@@ -478,14 +476,14 @@ public abstract class MessageMapperTest {
 
     @Test
     public void getLastUidShouldReturnEmptyOnEmptyMailbox() throws MailboxException {
-        assertThat(messageMapper.getLastUid(benwaInboxMailbox)).isEqualTo(Optional.absent());
+        assertThat(messageMapper.getLastUid(benwaInboxMailbox)).isEqualTo(Optional.empty());
     }
 
     @Test
     public void insertingAMessageShouldIncrementLastUid() throws MailboxException {
         messageMapper.add(benwaInboxMailbox, message1);
         Optional<MessageUid> uid = messageMapper.getLastUid(benwaInboxMailbox);
-        assertThat(uid).isNotEqualTo(Optional.absent());
+        assertThat(uid).isNotEqualTo(Optional.empty());
         messageMapper.add(benwaInboxMailbox, message2);
         assertThat(messageMapper.getLastUid(benwaInboxMailbox).get()).isGreaterThan(uid.get());
     }

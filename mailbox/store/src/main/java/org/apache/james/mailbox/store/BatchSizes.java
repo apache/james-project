@@ -19,9 +19,10 @@
 package org.apache.james.mailbox.store;
 
 
+import java.util.Optional;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public class BatchSizes {
@@ -57,12 +58,12 @@ public class BatchSizes {
         private Optional<Integer> moveBatchSize;
 
         private Builder() {
-            fetchMetadata = Optional.absent();
-            fetchHeaders = Optional.absent();
-            fetchBody = Optional.absent();
-            fetchFull = Optional.absent();
-            copyBatchSize = Optional.absent();
-            moveBatchSize = Optional.absent();
+            fetchMetadata = Optional.empty();
+            fetchHeaders = Optional.empty();
+            fetchBody = Optional.empty();
+            fetchFull = Optional.empty();
+            copyBatchSize = Optional.empty();
+            moveBatchSize = Optional.empty();
         }
 
         public Builder fetchMetadata(int batchSize) {
@@ -103,12 +104,12 @@ public class BatchSizes {
 
         public BatchSizes build() {
             return new BatchSizes(
-                    fetchMetadata.or(DEFAULT_BATCH_SIZE),
-                    fetchHeaders.or(DEFAULT_BATCH_SIZE),
-                    fetchBody.or(DEFAULT_BATCH_SIZE),
-                    fetchFull.or(DEFAULT_BATCH_SIZE),
-                    copyBatchSize.or(DEFAULT_BATCH_SIZE),
-                    moveBatchSize.or(DEFAULT_BATCH_SIZE));
+                    fetchMetadata.orElse(DEFAULT_BATCH_SIZE),
+                    fetchHeaders.orElse(DEFAULT_BATCH_SIZE),
+                    fetchBody.orElse(DEFAULT_BATCH_SIZE),
+                    fetchFull.orElse(DEFAULT_BATCH_SIZE),
+                    copyBatchSize.orElse(DEFAULT_BATCH_SIZE),
+                    moveBatchSize.orElse(DEFAULT_BATCH_SIZE));
         }
     }
 

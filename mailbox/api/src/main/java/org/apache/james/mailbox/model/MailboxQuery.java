@@ -19,13 +19,13 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 import org.apache.james.mailbox.MailboxSession;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 
@@ -71,8 +71,8 @@ public final class MailboxQuery {
         @VisibleForTesting Optional<String> namespace;
         
         private Builder() {
-            this.pathName = Optional.absent();
-            this.namespace = Optional.absent();
+            this.pathName = Optional.empty();
+            this.namespace = Optional.empty();
         }
         
         public Builder base(MailboxPath base) {
@@ -121,7 +121,7 @@ public final class MailboxQuery {
             if (base != null) {
                 return base;
             } else {
-                return new MailboxPath(namespace.or(MailboxConstants.USER_NAMESPACE), username, pathName.or(EMPTY_PATH_NAME));
+                return new MailboxPath(namespace.orElse(MailboxConstants.USER_NAMESPACE), username, pathName.orElse(EMPTY_PATH_NAME));
             }
         }
     }

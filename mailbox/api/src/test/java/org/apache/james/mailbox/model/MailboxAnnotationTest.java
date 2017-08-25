@@ -19,10 +19,9 @@
 
 package org.apache.james.mailbox.model;
 
-import org.junit.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
+
+import org.junit.Test;
 
 public class MailboxAnnotationTest {
     private static final MailboxAnnotationKey ANNOTATION_KEY = new MailboxAnnotationKey("/private/comment");
@@ -55,7 +54,7 @@ public class MailboxAnnotationTest {
     public void nilInstanceShouldReturnAbsentValue() throws Exception {
         MailboxAnnotation annotation = MailboxAnnotation.nil(ANNOTATION_KEY);
 
-        assertThat(annotation.getValue()).isAbsent();
+        assertThat(annotation.getValue()).isEmpty();
     }
 
     @Test

@@ -20,13 +20,11 @@
 package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
+import java.util.Optional;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import com.google.common.base.Optional;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -93,7 +91,7 @@ public class CidTest {
         assertThat(Cid.parser()
             .relaxed()
             .parse(null))
-            .isAbsent();
+            .isEmpty();
     }
 
     @Test
@@ -101,7 +99,7 @@ public class CidTest {
         assertThat(Cid.parser()
             .relaxed()
             .parse(""))
-            .isAbsent();
+            .isEmpty();
     }
 
     @Test
@@ -109,7 +107,7 @@ public class CidTest {
         assertThat(Cid.parser()
             .relaxed()
             .parse("     "))
-            .isAbsent();
+            .isEmpty();
     }
 
     @Test
@@ -170,7 +168,7 @@ public class CidTest {
             .relaxed()
             .unwrap()
             .parse(null))
-            .isAbsent();
+            .isEmpty();
     }
 
     @Test
@@ -179,7 +177,7 @@ public class CidTest {
             .relaxed()
             .unwrap()
             .parse(""))
-            .isAbsent();
+            .isEmpty();
     }
 
     @Test
@@ -188,7 +186,7 @@ public class CidTest {
             .relaxed()
             .unwrap()
             .parse("     "))
-            .isAbsent();
+            .isEmpty();
     }
 
     @Test
@@ -197,7 +195,7 @@ public class CidTest {
             .relaxed()
             .unwrap()
             .parse("<>"))
-            .isAbsent();
+            .isEmpty();
     }
 
     @Test
@@ -206,7 +204,7 @@ public class CidTest {
             .relaxed()
             .unwrap()
             .parse("<   >"))
-            .isAbsent();
+            .isEmpty();
     }
 
     @Test
