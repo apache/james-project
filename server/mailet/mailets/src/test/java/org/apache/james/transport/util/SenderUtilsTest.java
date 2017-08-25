@@ -18,26 +18,25 @@
  ****************************************************************/
 package org.apache.james.transport.util;
 
-import static org.assertj.guava.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Optional;
 
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Test;
 
-import com.google.common.base.Optional;
-
 public class SenderUtilsTest {
 
     @Test
     public void getSenderShouldReturnAbsentWhenSenderIsAbsent() throws Exception {
-        SenderUtils testee = SenderUtils.from(Optional.<MailAddress> absent());
+        SenderUtils testee = SenderUtils.from(Optional.empty());
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 
         Optional<MailAddress> sender = testee.getSender(fakeMail);
 
-        assertThat(sender).isAbsent();
+        assertThat(sender).isEmpty();
     }
 
     @Test
@@ -48,7 +47,7 @@ public class SenderUtilsTest {
 
         Optional<MailAddress> sender = testee.getSender(fakeMail);
 
-        assertThat(sender).isAbsent();
+        assertThat(sender).isEmpty();
     }
 
     @Test
@@ -59,7 +58,7 @@ public class SenderUtilsTest {
 
         Optional<MailAddress> sender = testee.getSender(fakeMail);
 
-        assertThat(sender).isAbsent();
+        assertThat(sender).isEmpty();
     }
 
     @Test

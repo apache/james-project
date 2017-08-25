@@ -24,7 +24,6 @@ import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.internet.InternetAddress;
@@ -103,7 +102,7 @@ public class MessageComposer {
         StringWriter sout = new StringWriter();
         PrintWriter out = new PrintWriter(sout, true);
         out.print(permanentAsString(executionResult.isPermanent()) + " exception delivering mail (" + mail.getName()
-            + ")" + retrieveExceptionLog(executionResult.getException().orNull()) + ": " );
+            + ")" + retrieveExceptionLog(executionResult.getException().orElse(null)) + ": " );
         if (configuration.isDebug()) {
             if (executionResult.getException().isPresent())
                 executionResult.getException().get().printStackTrace(out);

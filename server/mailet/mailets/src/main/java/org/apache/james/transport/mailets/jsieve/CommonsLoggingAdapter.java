@@ -18,10 +18,11 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.jsieve;
 
+import java.util.Optional;
+
 import org.apache.commons.logging.Log;
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 /**
@@ -34,8 +35,8 @@ public class CommonsLoggingAdapter implements Log {
     }
 
     public static class Builder {
-        private Optional<Boolean> verbose = Optional.absent();
-        private Optional<Boolean> quiet = Optional.absent();
+        private Optional<Boolean> verbose = Optional.empty();
+        private Optional<Boolean> quiet = Optional.empty();
         private Logger logger;
 
         public Builder wrappedLogger(Logger logger) {
@@ -55,8 +56,8 @@ public class CommonsLoggingAdapter implements Log {
 
         public CommonsLoggingAdapter build() {
             Preconditions.checkNotNull(logger);
-            Boolean quietParameter = quiet.or(false);
-            Boolean verboseParameter = verbose.or(false);
+            Boolean quietParameter = quiet.orElse(false);
+            Boolean verboseParameter = verbose.orElse(false);
             Preconditions.checkState(!(verboseParameter && quietParameter), "You can not specify a logger both verbose and quiet");
             return new CommonsLoggingAdapter(logger, computeLogLevel(quietParameter, verboseParameter));
         }

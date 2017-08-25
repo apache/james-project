@@ -20,8 +20,8 @@ package org.apache.james.transport.util;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -37,8 +37,6 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -95,7 +93,9 @@ public class SpecialAddressesUtils {
             case SENDER:
             case FROM:
             case REVERSE_PATH:
-                return Optional.fromNullable(mail.getSender()).asSet();
+                return Optional.ofNullable(mail.getSender())
+                    .map(sender -> ImmutableSet.of(sender))
+                    .orElse(ImmutableSet.of());
             case REPLY_TO:
                 return getReplyTosFromMail(mail);
             case RECIPIENTS:
@@ -184,7 +184,9 @@ public class SpecialAddressesUtils {
         switch (specialAddressKind) {
             case SENDER:
             case REVERSE_PATH:
-                return Optional.fromNullable(mail.getSender()).asSet();
+                return Optional.ofNullable(mail.getSender())
+                    .map(ImmutableSet::of)
+                    .orElse(ImmutableSet.of());
             case FROM:
                 try {
                     InternetAddress[] fromArray = (InternetAddress[]) mail.getMessage().getFrom();
@@ -254,6 +256,7 @@ public class SpecialAddressesUtils {
                 .withContext(mailet.getMailetContext())
                 .allowedSpecials(allowedSpecials)
                 .extract(givenAddress);
-        return FluentIterable.from(extractAddresses).first();
+        return extractAddresses.stream()
+            .findFirst();
     }
 }

@@ -20,7 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.util.List;
-
+import java.util.Optional;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -55,15 +54,15 @@ public class RecipientRewriteTableProcessor {
 
     private static final Function<RrtExecutionResult, List<MailAddress>> mailAddressesFromMappingData =
         mappingData -> mappingData.getNewRecipients()
-            .or(mappingData.getRecipientWithError()
-                .or(ImmutableList.of()));
+            .orElse(mappingData.getRecipientWithError()
+                .orElse(ImmutableList.of()));
 
     private static final Function<Mapping, Optional<MailAddress>> mailAddressFromMapping =
         addressMapping -> {
             try {
                 return Optional.of(new MailAddress(addressMapping.asString()));
             } catch (AddressException e) {
-                return Optional.absent();
+                return Optional.empty();
             }
         };
 
@@ -116,7 +115,7 @@ public class RecipientRewriteTableProcessor {
 
             if (mappings != null) {
                 List<MailAddress> newMailAddresses = handleMappings(mappings, mail.getSender(), recipient, mail.getMessage());
-                return new RrtExecutionResult(Optional.of(newMailAddresses), Optional.<List<MailAddress>>absent());
+                return new RrtExecutionResult(Optional.of(newMailAddresses), Optional.empty());
             }
             return origin(recipient);
         } catch (ErrorMappingException | RecipientRewriteTableException | MessagingException e) {
@@ -200,11 +199,11 @@ public class RecipientRewriteTableProcessor {
     }
     
     private RrtExecutionResult error(MailAddress mailAddress) {
-        return new RrtExecutionResult(Optional.<List<MailAddress>>absent(), Optional.<List<MailAddress>>of(ImmutableList.of(mailAddress)));
+        return new RrtExecutionResult(Optional.empty(), Optional.<List<MailAddress>>of(ImmutableList.of(mailAddress)));
     }
 
     private RrtExecutionResult origin(MailAddress mailAddress) {
-        return new RrtExecutionResult(Optional.<List<MailAddress>>of(ImmutableList.of(mailAddress)), Optional.<List<MailAddress>>absent());
+        return new RrtExecutionResult(Optional.<List<MailAddress>>of(ImmutableList.of(mailAddress)), Optional.empty());
     }
 
     class RrtExecutionResult {

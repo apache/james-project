@@ -19,7 +19,6 @@
 package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -92,7 +91,7 @@ public class OptionalConverterTest {
 
     @Test
     public void fromGuavaShouldReturnEmptyWhenGuavaIsEmpty() {
-        Optional<String> fromGuava = OptionalConverter.fromGuava(com.google.common.base.Optional.<String> absent());
+        Optional<String> fromGuava = OptionalConverter.fromGuava(Optional.<String> empty());
 
         assertThat(fromGuava).isEmpty();
     }
@@ -100,7 +99,7 @@ public class OptionalConverterTest {
     @Test
     public void fromGuavaShouldReturnNonEmptyWhenGuavaIsNonEmpty() {
         String value = "my string";
-        Optional<String> fromGuava = OptionalConverter.fromGuava(com.google.common.base.Optional.of(value));
+        Optional<String> fromGuava = OptionalConverter.fromGuava(Optional.of(value));
 
         assertThat(fromGuava).contains(value);
     }
@@ -113,7 +112,7 @@ public class OptionalConverterTest {
 
     @Test
     public void toGuavaShouldReturnEmptyWhenGuavaIsEmpty() {
-        com.google.common.base.Optional<String> toGuava = OptionalConverter.toGuava(Optional.<String> empty());
+        Optional<String> toGuava = OptionalConverter.toGuava(Optional.<String> empty());
 
         assertThat(toGuava.isPresent()).isFalse();
     }
@@ -121,7 +120,7 @@ public class OptionalConverterTest {
     @Test
     public void toGuavaShouldReturnNonEmptyWhenGuavaIsNonEmpty() {
         String value = "my string";
-        com.google.common.base.Optional<String> toGuava = OptionalConverter.toGuava(Optional.of(value));
+        Optional<String> toGuava = OptionalConverter.toGuava(Optional.of(value));
 
         assertThat(toGuava.get()).isEqualTo(value);
     }

@@ -20,7 +20,7 @@
 package org.apache.james.transport.mailets.redirect;
 
 import java.util.List;
-
+import java.util.Optional;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
@@ -32,7 +32,6 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 /**

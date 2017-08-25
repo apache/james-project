@@ -21,7 +21,7 @@ package org.apache.james.transport.mailets.redirect;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.List;
-
+import java.util.Optional;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -37,7 +37,6 @@ import org.apache.mailet.base.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public class MailModifier {

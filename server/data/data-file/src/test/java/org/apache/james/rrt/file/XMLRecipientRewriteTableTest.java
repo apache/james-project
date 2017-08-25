@@ -20,8 +20,8 @@ package org.apache.james.rrt.file;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
@@ -29,9 +29,8 @@ import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.lib.MappingsImpl.Builder;
+import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.junit.Before;
-
-import com.google.common.base.Optional;
 
 /**
  * Test the XML Virtual User Table implementation.
@@ -62,7 +61,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
             removeMappingsFromConfig(user, domain, mappings);
         }
 
-        Builder builder = MappingsImpl.from(Optional.fromNullable(mappings).or(MappingsImpl.empty()));
+        Builder builder = MappingsImpl.from(Optional.ofNullable(mappings).orElse(MappingsImpl.empty()));
         
         if (type == ERROR_TYPE) {
             builder.add(RecipientRewriteTable.ERROR_PREFIX + mapping);

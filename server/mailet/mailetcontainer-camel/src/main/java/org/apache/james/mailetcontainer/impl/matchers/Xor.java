@@ -21,14 +21,13 @@ package org.apache.james.mailetcontainer.impl.matchers;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
+import java.util.Optional;
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -46,7 +45,7 @@ public class Xor extends GenericCompositeMatcher {
         Collection<MailAddress> finalResult = null;
         boolean first = true;
         for (Matcher matcher: getMatchers()) {
-            Collection<MailAddress> matchedAddresses = Optional.fromNullable(matcher.match(mail)).or(new ArrayList<>());
+            Collection<MailAddress> matchedAddresses = Optional.ofNullable(matcher.match(mail)).orElse(new ArrayList<>());
 
             if (first) {
                 finalResult = matchedAddresses;

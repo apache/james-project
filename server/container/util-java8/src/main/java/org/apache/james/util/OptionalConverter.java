@@ -35,12 +35,12 @@ public class OptionalConverter {
         return optional;
     }
 
-    public static <T> Optional<T> fromGuava(com.google.common.base.Optional<T> guava) {
-        return Optional.ofNullable(guava.orNull());
+    public static <T> Optional<T> fromGuava(Optional<T> guava) {
+        return Optional.ofNullable(guava.orElse(null));
     }
 
-    public static <T> com.google.common.base.Optional<T> toGuava(Optional<T> java) {
-        return com.google.common.base.Optional.fromNullable(java.orElse(null));
+    public static <T> Optional<T> toGuava(Optional<T> java) {
+        return Optional.ofNullable(java.orElse(null));
     }
 
     public static <T> Stream<T> toStream(Optional<T> optional) {

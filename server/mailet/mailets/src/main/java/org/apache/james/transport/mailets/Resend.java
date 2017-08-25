@@ -20,7 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.util.List;
-
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -45,8 +45,6 @@ import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -367,13 +365,14 @@ public class Resend extends GenericMailet implements RedirectNotify {
     public Optional<MailAddress> getReplyTo() throws MessagingException {
         Optional<String> replyTo = getInitParameters().getReplyTo();
         if (!replyTo.isPresent()) {
-            return Optional.absent();
+            return Optional.empty();
         }
 
-        return FluentIterable.from(AddressExtractor.withContext(getMailetContext())
+        return AddressExtractor.withContext(getMailetContext())
                 .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
-                .extract(replyTo))
-            .first();
+                .extract(replyTo)
+            .stream()
+            .findFirst();
     }
 
     @Override
@@ -409,7 +408,7 @@ public class Resend extends GenericMailet implements RedirectNotify {
         Optional<MailAddress> reversePath = getReversePath();
         if (reversePath.isPresent()) {
             if (MailAddressUtils.isUnalteredOrReversePathOrSender(reversePath.get())) {
-                return Optional.absent();
+                return Optional.empty();
             }
         }
         return reversePath;

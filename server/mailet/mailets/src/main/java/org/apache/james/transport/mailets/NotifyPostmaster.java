@@ -20,7 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.util.List;
-
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -47,7 +47,6 @@ import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -130,7 +129,7 @@ public class NotifyPostmaster extends GenericMailet implements RedirectNotify {
     private static final List<String> ALLOWED_SPECIALS = ImmutableList.of("postmaster", "unaltered");
 
     private final DNSService dns;
-    private Optional<String> to = Optional.absent();
+    private Optional<String> to = Optional.empty();
 
     @Inject
     public NotifyPostmaster(DNSService dns) {
@@ -140,7 +139,7 @@ public class NotifyPostmaster extends GenericMailet implements RedirectNotify {
     @Override
     public void init(MailetConfig mailetConfig) throws MessagingException {
         super.init(mailetConfig);
-        to = Optional.fromNullable(getInitParameter("to"));
+        to = Optional.ofNullable(getInitParameter("to"));
     }
 
     @Override

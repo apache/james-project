@@ -20,13 +20,10 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 import java.net.UnknownHostException;
 import java.util.Properties;
-
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
@@ -233,7 +230,7 @@ public class RedirectTest {
                 .build();
         redirect.init(mailetConfig);
 
-        assertThat(redirect.getReversePath()).isAbsent();
+        assertThat(redirect.getReversePath()).isEmpty();
     }
 
     @Test
@@ -286,7 +283,7 @@ public class RedirectTest {
         message.setText("This is a fake mail");
         FakeMail mail = FakeMail.from(message);
 
-        assertThat(redirect.getReversePath(mail)).isAbsent();
+        assertThat(redirect.getReversePath(mail)).isEmpty();
     }
 
     @Test

@@ -137,7 +137,7 @@ public class DeliveryRunnable implements Runnable {
                 handleTemporaryFailure(mail, executionResult);
                 break;
             case PERMANENT_FAILURE:
-                bouncer.bounce(mail, executionResult.getException().orNull());
+                bouncer.bounce(mail, executionResult.getException().orElse(null));
                 break;
         }
     }
@@ -154,7 +154,7 @@ public class DeliveryRunnable implements Runnable {
             reAttemptDelivery(mail, retries);
         } else {
             LOGGER.debug("Bouncing message {} after {} retries", mail.getName(), retries);
-            bouncer.bounce(mail, new Exception("Too many retries failure. Bouncing after " + retries + " retries.", executionResult.getException().orNull()));
+            bouncer.bounce(mail, new Exception("Too many retries failure. Bouncing after " + retries + " retries.", executionResult.getException().orElse(null)));
         }
     }
 

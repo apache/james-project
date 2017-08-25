@@ -19,7 +19,7 @@
 
 package org.apache.james.transport.mailets.redirect;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public interface InitParameters {
 

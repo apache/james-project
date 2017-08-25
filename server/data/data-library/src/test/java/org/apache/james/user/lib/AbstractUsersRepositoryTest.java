@@ -19,9 +19,9 @@
 package org.apache.james.user.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Optional;
 
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -33,8 +33,6 @@ import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.base.Optional;
 
 
 public abstract class AbstractUsersRepositoryTest {
@@ -331,7 +329,7 @@ public abstract class AbstractUsersRepositoryTest {
 
     @Test
     public void isAdministratorShouldReturnFalseWhenNotConfigured() throws Exception {
-        usersRepository.setAdministratorId(Optional.<String>absent());
+        usersRepository.setAdministratorId(Optional.empty());
 
         assertThat(usersRepository.isAdministrator(admin)).isFalse();
     }

@@ -24,6 +24,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.StringTokenizer;
 
 import org.apache.james.rrt.lib.Mapping.Type;
@@ -31,7 +32,6 @@ import org.apache.james.rrt.lib.Mapping.Type;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -198,7 +198,7 @@ public class MappingsImpl implements Mappings, Serializable {
     @Override
     public Optional<Mappings> toOptional() {
         if (isEmpty()) {
-            return Optional.absent();
+            return Optional.empty();
         }
         return Optional.<Mappings> of(this);
     }

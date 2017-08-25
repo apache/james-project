@@ -22,7 +22,14 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.hbase.def.HRecipientRewriteTable;
+import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.rrt.lib.MappingsImpl;
+import org.apache.james.system.hbase.TablePool;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
@@ -32,16 +39,8 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.rrt.hbase.def.HRecipientRewriteTable;
-import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
-import org.apache.james.rrt.lib.Mappings;
-import org.apache.james.rrt.lib.MappingsImpl;
-import org.apache.james.system.hbase.TablePool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
 
 /**
  * Implementation of the RecipientRewriteTable for a HBase persistence.
@@ -134,9 +133,9 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
                         }
                         Mappings mappings = 
                                 MappingsImpl.from(
-                                    Optional.fromNullable(
+                                    Optional.ofNullable(
                                         map.get(email))
-                                        .or(MappingsImpl.empty()))
+                                        .orElse(MappingsImpl.empty()))
                                 .add(Bytes.toString(keyValue.getRow()))
                                 .build();
                         map.put(email, mappings);

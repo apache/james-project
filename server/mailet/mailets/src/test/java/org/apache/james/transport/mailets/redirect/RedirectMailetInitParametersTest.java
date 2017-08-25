@@ -20,8 +20,7 @@
 package org.apache.james.transport.mailets.redirect;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
-
+import java.util.Optional;
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
@@ -29,8 +28,6 @@ import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.base.Optional;
 
 public class RedirectMailetInitParametersTest {
 
@@ -346,7 +343,7 @@ public class RedirectMailetInitParametersTest {
         InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         Optional<String> recipients = testee.getRecipients();
-        assertThat(recipients).isAbsent();
+        assertThat(recipients).isEmpty();
     }
 
     @Test
@@ -358,7 +355,7 @@ public class RedirectMailetInitParametersTest {
         InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         Optional<String> recipients = testee.getRecipients();
-        assertThat(recipients).isAbsent();
+        assertThat(recipients).isEmpty();
     }
 
     @Test
@@ -384,7 +381,7 @@ public class RedirectMailetInitParametersTest {
         InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         Optional<String> to = testee.getTo();
-        assertThat(to).isAbsent();
+        assertThat(to).isEmpty();
     }
 
     @Test
@@ -396,7 +393,7 @@ public class RedirectMailetInitParametersTest {
         InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         Optional<String> to = testee.getTo();
-        assertThat(to).isAbsent();
+        assertThat(to).isEmpty();
     }
 
     @Test
@@ -422,7 +419,7 @@ public class RedirectMailetInitParametersTest {
         InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         Optional<String> reversePath = testee.getReversePath();
-        assertThat(reversePath).isAbsent();
+        assertThat(reversePath).isEmpty();
     }
 
     @Test
@@ -434,7 +431,7 @@ public class RedirectMailetInitParametersTest {
         InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         Optional<String> reversePath = testee.getReversePath();
-        assertThat(reversePath).isAbsent();
+        assertThat(reversePath).isEmpty();
     }
 
     @Test
@@ -460,7 +457,7 @@ public class RedirectMailetInitParametersTest {
         InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         Optional<String> sender = testee.getSender();
-        assertThat(sender).isAbsent();
+        assertThat(sender).isEmpty();
     }
 
     @Test
@@ -472,7 +469,7 @@ public class RedirectMailetInitParametersTest {
         InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         Optional<String> sender = testee.getSender();
-        assertThat(sender).isAbsent();
+        assertThat(sender).isEmpty();
     }
 
     @Test
@@ -511,7 +508,7 @@ public class RedirectMailetInitParametersTest {
         InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         Optional<String> replyTo = testee.getReplyTo();
-        assertThat(replyTo).isAbsent();
+        assertThat(replyTo).isEmpty();
     }
 
     @Test
@@ -523,7 +520,7 @@ public class RedirectMailetInitParametersTest {
         InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         Optional<String> replyTo = testee.getReplyTo();
-        assertThat(replyTo).isAbsent();
+        assertThat(replyTo).isEmpty();
     }
 
     @Test

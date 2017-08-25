@@ -20,12 +20,10 @@
 package org.apache.james.transport.mailets.redirect;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 import java.util.List;
-
+import java.util.Optional;
 import javax.mail.MessagingException;
 
 import org.apache.mailet.MailAddress;
@@ -35,7 +33,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class AddressExtractorTest {
@@ -103,7 +100,7 @@ public class AddressExtractorTest {
     public void extractShouldReturnEmptyWhenAddressListIsAbsent() throws Exception {
         List<MailAddress> extract = AddressExtractor.withContext(mailetContext)
                 .allowedSpecials(ImmutableList.<String> of())
-                .extract(Optional.<String> absent());
+                .extract(Optional.empty());
 
         assertThat(extract).isEmpty();;
     }
@@ -141,7 +138,7 @@ public class AddressExtractorTest {
         Optional<MailAddress> specialAddress = AddressExtractor.withContext(mailetContext)
                 .allowedSpecials(ImmutableList.<String> of())
                 .getSpecialAddress(null);
-        assertThat(specialAddress).isAbsent();
+        assertThat(specialAddress).isEmpty();
     }
 
     @Test
@@ -149,7 +146,7 @@ public class AddressExtractorTest {
         Optional<MailAddress> specialAddress = AddressExtractor.withContext(mailetContext)
                 .allowedSpecials(ImmutableList.<String> of())
                 .getSpecialAddress("");
-        assertThat(specialAddress).isAbsent();
+        assertThat(specialAddress).isEmpty();
     }
 
     @Test
@@ -157,7 +154,7 @@ public class AddressExtractorTest {
         Optional<MailAddress> specialAddress = AddressExtractor.withContext(mailetContext)
                 .allowedSpecials(ImmutableList.<String> of())
                 .getSpecialAddress("user@james.org");
-        assertThat(specialAddress).isAbsent();
+        assertThat(specialAddress).isEmpty();
     }
 
     @Test

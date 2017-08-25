@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
@@ -30,7 +31,6 @@ import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -103,15 +103,15 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
     @Override
     protected Mappings getUserDomainMappingsInternal(String user, String domain) throws RecipientRewriteTableException {
         return retrieveMappings(user, domain)
-            .orNull();
+            .orElse(null);
     }
 
     @Override
     protected String mapAddressInternal(String user, String domain) throws RecipientRewriteTableException {
         Mappings mappings = retrieveMappings(user, domain)
-            .or(retrieveMappings(WILDCARD, domain)
-                .or(retrieveMappings(user, WILDCARD)
-                    .or(MappingsImpl.empty())));
+            .orElse(retrieveMappings(WILDCARD, domain)
+                .orElse(retrieveMappings(user, WILDCARD)
+                    .orElse(MappingsImpl.empty())));
 
         return !mappings.isEmpty() ? mappings.serialize() : null;
     }

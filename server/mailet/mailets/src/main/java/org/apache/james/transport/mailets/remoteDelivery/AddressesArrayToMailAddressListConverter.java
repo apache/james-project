@@ -21,7 +21,7 @@ package org.apache.james.transport.mailets.remoteDelivery;
 
 import java.util.Arrays;
 import java.util.List;
-
+import java.util.Optional;
 import javax.mail.Address;
 import javax.mail.internet.AddressException;
 
@@ -29,7 +29,6 @@ import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
@@ -52,7 +51,7 @@ public class AddressesArrayToMailAddressListConverter {
             return Optional.of(new MailAddress(address.toString()));
         } catch (AddressException e) {
             LOGGER.debug("Can't parse unsent address " + address, e);
-            return Optional.absent();
+            return Optional.empty();
         }
     }
 

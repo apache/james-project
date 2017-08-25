@@ -20,7 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.util.List;
-
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
@@ -44,7 +44,6 @@ import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
@@ -114,7 +113,7 @@ public class Forward extends GenericMailet implements RedirectNotify {
 
     @Override
     public InitParameters getInitParameters() {
-        return RedirectMailetInitParameters.from(this, Optional.of(TypeCode.NONE), Optional.<TypeCode> absent());
+        return RedirectMailetInitParameters.from(this, Optional.of(TypeCode.NONE), Optional.empty());
     }
 
     @Override
@@ -205,7 +204,7 @@ public class Forward extends GenericMailet implements RedirectNotify {
 
     @Override
     public Optional<MailAddress> getReplyTo() throws MessagingException {
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override
@@ -215,17 +214,17 @@ public class Forward extends GenericMailet implements RedirectNotify {
 
     @Override
     public Optional<MailAddress> getReversePath() throws MessagingException {
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override
     public Optional<MailAddress> getReversePath(Mail originalMail) throws MessagingException {
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override
     public Optional<MailAddress> getSender() throws MessagingException {
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override
@@ -235,7 +234,7 @@ public class Forward extends GenericMailet implements RedirectNotify {
 
     @Override
     public Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override

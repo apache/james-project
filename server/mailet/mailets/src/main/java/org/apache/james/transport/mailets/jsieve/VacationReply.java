@@ -21,7 +21,7 @@ package org.apache.james.transport.mailets.jsieve;
 
 import java.io.IOException;
 import java.util.List;
-
+import java.util.Optional;
 import javax.activation.DataHandler;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
@@ -36,7 +36,6 @@ import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
@@ -93,8 +92,8 @@ public class VacationReply {
         }
 
         private String generateNotificationSubject() {
-            return Optional.fromNullable(subject)
-                .or(context.getRecipient() + " is currently in vacation");
+            return Optional.ofNullable(subject)
+                .orElse(context.getRecipient() + " is currently in vacation");
         }
 
         private Multipart generateNotificationContent() throws MessagingException {
@@ -127,9 +126,9 @@ public class VacationReply {
         }
 
         private MailAddress retrieveOriginalSender() throws AddressException {
-            return Optional.fromNullable(from)
-                .transform(address -> retrieveAddressFromString(address, context))
-                .or(context.getRecipient());
+            return Optional.ofNullable(from)
+                .map(address -> retrieveAddressFromString(address, context))
+                .orElse(context.getRecipient());
         }
 
         private MailAddress retrieveAddressFromString(String address, ActionContext context) {

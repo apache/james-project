@@ -20,6 +20,7 @@ package org.apache.james.jmap;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.james.mailbox.MailboxListener;
@@ -46,7 +47,6 @@ import org.apache.james.mailbox.model.TestId;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Test;
 
-import com.google.common.base.Optional;
 import com.google.testing.threadtester.AnnotatedTestRunner;
 import com.google.testing.threadtester.ThreadedAfter;
 import com.google.testing.threadtester.ThreadedBefore;
