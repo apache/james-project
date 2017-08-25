@@ -69,11 +69,10 @@ MPT is a functional test framework specialised for the ASCII line-base protocols
                 <executions>
                     <execution>
                         <id>make-assembly</id>
-                        <!-- append to the packaging phase. -->
                         <goals>
-                            <goal>attached</goal>
+                            <goal>single</goal>
                         </goals>
-                        <phase>package</phase>
+			<phase>package</phase>
                     </execution>
                 </executions>
             </plugin>
