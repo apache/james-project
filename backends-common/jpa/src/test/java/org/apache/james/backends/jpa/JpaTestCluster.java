@@ -21,14 +21,13 @@ package org.apache.james.backends.jpa;
 
 import java.util.HashMap;
 import java.util.List;
-
+import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import org.apache.openjpa.persistence.OpenJPAPersistence;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 public class JpaTestCluster {
@@ -50,8 +49,9 @@ public class JpaTestCluster {
         properties.put("openjpa.ConnectionFactoryProperties", "PrettyPrint=true, PrettyPrintLineLength=72");
         properties.put("openjpa.MetaDataFactory", "jpa(Types=" +
             Joiner.on(";").join(
-                FluentIterable.from(clazz)
-                    .transform(Class::getName))
+                clazz.stream()
+                    .map(Class::getName)
+                    .collect(Collectors.toList()))
             + ")");
         return new JpaTestCluster(OpenJPAPersistence.getEntityManagerFactory(properties));
     }
