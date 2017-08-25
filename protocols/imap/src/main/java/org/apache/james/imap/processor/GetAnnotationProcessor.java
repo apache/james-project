@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
@@ -45,12 +46,11 @@ import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.apache.commons.lang.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.commons.lang.NotImplementedException;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -113,7 +113,9 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
             .map(maxSizeInput -> (annotation.size() <= maxSizeInput))
             .orElse(true);
 
-        return FluentIterable.from(mailboxAnnotations).filter(lowerPredicate).toList();
+        return mailboxAnnotations.stream()
+            .filter(lowerPredicate)
+            .collect(Guavate.toImmutableList());
     }
 
     private List<MailboxAnnotation> getMailboxAnnotations(ImapSession session, Set<MailboxAnnotationKey> keys, GetAnnotationRequest.Depth depth, MailboxPath mailboxPath) throws MailboxException {
@@ -141,10 +143,10 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     private Optional<Integer> getMaxSizeOfOversizedItems(List<MailboxAnnotation> mailboxAnnotations, final Integer maxsize) {
         Predicate<MailboxAnnotation> filterOverSizedAnnotation = annotation -> annotation.size() > maxsize;
 
-        ImmutableSortedSet<Integer> overLimitSizes = FluentIterable.from(mailboxAnnotations)
+        ImmutableSortedSet<Integer> overLimitSizes = mailboxAnnotations.stream()
             .filter(filterOverSizedAnnotation)
-            .transform(MailboxAnnotation::size)
-            .toSortedSet(Comparator.reverseOrder());
+            .map(MailboxAnnotation::size)
+            .collect(Guavate.toImmutableSortedSet(Comparator.reverseOrder()));
 
         if (overLimitSizes.isEmpty()) {
             return Optional.empty();

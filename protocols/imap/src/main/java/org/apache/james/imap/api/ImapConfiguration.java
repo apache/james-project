@@ -24,10 +24,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
 public class ImapConfiguration {
@@ -97,10 +97,10 @@ public class ImapConfiguration {
         }
 
         public ImapConfiguration build() {
-            ImmutableSet<String> normalizeDisableCaps = FluentIterable.from(disabledCaps)
+            ImmutableSet<String> normalizeDisableCaps = disabledCaps.stream()
                     .filter(Builder::noBlankString)
-                    .transform(StringUtils::normalizeSpace)
-                    .toSet();
+                    .map(StringUtils::normalizeSpace)
+                    .collect(Guavate.toImmutableSet());
             return new ImapConfiguration(
                     enableIdle.orElse(DEFAULT_ENABLE_IDLE),
                     idleTimeInterval.orElse(DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS),
