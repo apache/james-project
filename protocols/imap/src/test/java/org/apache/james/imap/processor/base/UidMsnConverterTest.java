@@ -20,18 +20,16 @@
 package org.apache.james.imap.processor.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
-
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.junit.Before;
+import org.junit.Test;
 
 public class UidMsnConverterTest {
     private UidMsnConverter testee;
@@ -52,13 +50,13 @@ public class UidMsnConverterTest {
     @Test
     public void getUidShouldReturnEmptyIfNoMessageWithTheGivenMessageNumber() {
         assertThat(testee.getUid(1))
-            .isAbsent();
+            .isEmpty();
     }
 
     @Test
     public void getUidShouldReturnEmptyIfZero() {
         assertThat(testee.getUid(0))
-            .isAbsent();
+            .isEmpty();
     }
 
     @Test
@@ -71,12 +69,12 @@ public class UidMsnConverterTest {
 
     @Test
     public void getFirstUidShouldReturnEmptyIfNoMessage() {
-        assertThat(testee.getFirstUid()).isAbsent();
+        assertThat(testee.getFirstUid()).isEmpty();
     }
 
     @Test
     public void getLastUidShouldReturnEmptyIfNoMessage() {
-        assertThat(testee.getLastUid()).isAbsent();
+        assertThat(testee.getLastUid()).isEmpty();
     }
 
     @Test
@@ -99,7 +97,7 @@ public class UidMsnConverterTest {
     public void getMsnShouldReturnAbsentIfNoCorrespondingMessage() {
         testee.addUid(messageUid1);
 
-        assertThat(testee.getMsn(messageUid2)).isAbsent();
+        assertThat(testee.getMsn(messageUid2)).isEmpty();
     }
 
     @Test

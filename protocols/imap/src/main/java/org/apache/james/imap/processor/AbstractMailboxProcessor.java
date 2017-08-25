@@ -22,8 +22,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -67,8 +67,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
 
 abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends AbstractChainedProcessor<M> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailboxProcessor.class);
@@ -435,7 +433,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             }
             // Take care of "*" and "*:*" values by return the last message in
             // the mailbox. See IMAP-289
-            MessageUid lastUid = selected.getLastUid().or(MessageUid.MIN_VALUE);
+            MessageUid lastUid = selected.getLastUid().orElse(MessageUid.MIN_VALUE);
             if (lowVal == Long.MAX_VALUE && highVal == Long.MAX_VALUE) {
                 return MessageRange.one(lastUid);
             } else if (highVal == Long.MAX_VALUE && lastUid.compareTo(MessageUid.of(lowVal)) < 0) {
@@ -517,26 +515,26 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         case ONE:
             return range;
         case ALL:
-            start = selected.getFirstUid().or(MessageUid.MIN_VALUE);
-            end = selected.getLastUid().or(MessageUid.MAX_VALUE);
+            start = selected.getFirstUid().orElse(MessageUid.MIN_VALUE);
+            end = selected.getLastUid().orElse(MessageUid.MAX_VALUE);
             return MessageRange.range(start, end);
         case RANGE:
             start = range.getUidFrom();
-            if (start.equals(MessageUid.MAX_VALUE) || start.compareTo(selected.getFirstUid().or(MessageUid.MIN_VALUE)) < 0) {
-                start = selected.getFirstUid().or(MessageUid.MIN_VALUE);
+            if (start.equals(MessageUid.MAX_VALUE) || start.compareTo(selected.getFirstUid().orElse(MessageUid.MIN_VALUE)) < 0) {
+                start = selected.getFirstUid().orElse(MessageUid.MIN_VALUE);
             }
             end = range.getUidTo();
-            if (end.equals(MessageUid.MAX_VALUE) || end.compareTo(selected.getLastUid().or(MessageUid.MAX_VALUE)) > 0) {
-                end = selected.getLastUid().or(MessageUid.MAX_VALUE);
+            if (end.equals(MessageUid.MAX_VALUE) || end.compareTo(selected.getLastUid().orElse(MessageUid.MAX_VALUE)) > 0) {
+                end = selected.getLastUid().orElse(MessageUid.MAX_VALUE);
             }
             return MessageRange.range(start, end);
         case FROM:
             start = range.getUidFrom();
-            if (start.equals(MessageUid.MAX_VALUE) || start.compareTo(selected.getFirstUid().or(MessageUid.MIN_VALUE)) < 0) {
-                start = selected.getFirstUid().or(MessageUid.MIN_VALUE);
+            if (start.equals(MessageUid.MAX_VALUE) || start.compareTo(selected.getFirstUid().orElse(MessageUid.MIN_VALUE)) < 0) {
+                start = selected.getFirstUid().orElse(MessageUid.MIN_VALUE);
             }
             
-            end = selected.getLastUid().or(MessageUid.MAX_VALUE);
+            end = selected.getLastUid().orElse(MessageUid.MAX_VALUE);
             return MessageRange.range(start, end);
         default:
             throw new MessageRangeException("Unknown message range type: " + rangeType);

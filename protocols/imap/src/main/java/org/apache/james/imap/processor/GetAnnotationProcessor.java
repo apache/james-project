@@ -22,9 +22,9 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
@@ -47,8 +47,8 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.lang.NotImplementedException;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -93,7 +93,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     private void respond(String tag, ImapCommand command, Responder responder, String mailboxName,
                          List<MailboxAnnotation> mailboxAnnotations, Optional<Integer> maxsize, Optional<Integer> maximumOversizedSize) {
         if (maximumOversizedSize.isPresent()) {
-            responder.respond(new AnnotationResponse(mailboxName, filterItemsBySize(responder, mailboxName, mailboxAnnotations, maxsize)));
+            responder.respond(new AnnotationResponse(mailboxName, filterItemsBySize(mailboxAnnotations, maxsize)));
             okComplete(command, tag, ResponseCode.longestMetadataEntry(maximumOversizedSize.get()), responder);
         } else {
             responder.respond(new AnnotationResponse(mailboxName, mailboxAnnotations));
@@ -103,15 +103,15 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
 
     private Optional<Integer> getMaxSizeValue(final List<MailboxAnnotation> mailboxAnnotations, Optional<Integer> maxsize) {
         if (maxsize.isPresent()) {
-            return maxsize.transform(value -> getMaxSizeOfOversizedItems(mailboxAnnotations, value)).get();
+            return maxsize.map(value -> getMaxSizeOfOversizedItems(mailboxAnnotations, value)).get();
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
-    private List<MailboxAnnotation> filterItemsBySize(Responder responder, String mailboxName, List<MailboxAnnotation> mailboxAnnotations, final Optional<Integer> maxsize) {
+    private List<MailboxAnnotation> filterItemsBySize(List<MailboxAnnotation> mailboxAnnotations, final Optional<Integer> maxsize) {
         Predicate<MailboxAnnotation> lowerPredicate = annotation -> maxsize
-            .transform(maxSizeInput -> (annotation.size() <= maxSizeInput))
-            .or(true);
+            .map(maxSizeInput -> (annotation.size() <= maxSizeInput))
+            .orElse(true);
 
         return FluentIterable.from(mailboxAnnotations).filter(lowerPredicate).toList();
     }
@@ -147,7 +147,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
             .toSortedSet(Comparator.reverseOrder());
 
         if (overLimitSizes.isEmpty()) {
-            return Optional.absent();
+            return Optional.empty();
         }
         return Optional.of(overLimitSizes.first());
     }

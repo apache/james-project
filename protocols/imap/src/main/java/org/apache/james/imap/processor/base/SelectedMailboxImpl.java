@@ -24,9 +24,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
@@ -45,7 +45,6 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -393,13 +392,13 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
 
     @Override
     public synchronized int msn(MessageUid uid) {
-        return uidMsnConverter.getMsn(uid).or(NO_SUCH_MESSAGE);
+        return uidMsnConverter.getMsn(uid).orElse(NO_SUCH_MESSAGE);
     }
 
     @Override
     public synchronized Optional<MessageUid> uid(int msn) {
         if (msn == NO_SUCH_MESSAGE) {
-            return Optional.absent();
+            return Optional.empty();
         }
 
         return uidMsnConverter.getUid(msn);

@@ -19,14 +19,14 @@
 
 package org.apache.james.imap.message.request;
 
+import java.util.Optional;
 import java.util.Set;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.mailbox.model.MailboxAnnotationKey;
 
 import com.google.common.base.Preconditions;
-import org.apache.james.mailbox.model.MailboxAnnotationKey;
+import com.google.common.collect.ImmutableSet;
 
 public class GetAnnotationRequest extends AbstractImapRequest {
     public static class Builder {
@@ -39,7 +39,7 @@ public class GetAnnotationRequest extends AbstractImapRequest {
 
         private Builder() {
             this.depth = Depth.ZERO;
-            this.maxsize = Optional.absent();
+            this.maxsize = Optional.empty();
             keys = ImmutableSet.of();
         }
 

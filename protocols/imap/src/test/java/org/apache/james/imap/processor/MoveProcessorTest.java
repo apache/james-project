@@ -26,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import java.util.Optional;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
@@ -50,11 +51,10 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.MailboxMetaData;
 import org.apache.james.metrics.api.NoopMetricFactory;
+
+import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
 
 public class MoveProcessorTest {
 

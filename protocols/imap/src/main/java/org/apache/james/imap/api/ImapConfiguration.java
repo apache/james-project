@@ -19,13 +19,13 @@
 
 package org.apache.james.imap.api;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -53,11 +53,11 @@ public class ImapConfiguration {
         private Optional<Boolean> isCondstoreEnable;
 
         private Builder() {
-            this.idleTimeInterval = Optional.absent();
-            this.idleTimeIntervalUnit = Optional.absent();
-            this.enableIdle = Optional.absent();
+            this.idleTimeInterval = Optional.empty();
+            this.idleTimeIntervalUnit = Optional.empty();
+            this.enableIdle = Optional.empty();
             this.disabledCaps = ImmutableSet.of();
-            this.isCondstoreEnable = Optional.absent();
+            this.isCondstoreEnable = Optional.empty();
         }
 
         public Builder idleTimeInterval(long idleTimeInterval) {
@@ -102,11 +102,11 @@ public class ImapConfiguration {
                     .transform(StringUtils::normalizeSpace)
                     .toSet();
             return new ImapConfiguration(
-                    enableIdle.or(DEFAULT_ENABLE_IDLE),
-                    idleTimeInterval.or(DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS),
-                    idleTimeIntervalUnit.or(DEFAULT_HEARTBEAT_INTERVAL_UNIT),
+                    enableIdle.orElse(DEFAULT_ENABLE_IDLE),
+                    idleTimeInterval.orElse(DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS),
+                    idleTimeIntervalUnit.orElse(DEFAULT_HEARTBEAT_INTERVAL_UNIT),
                     normalizeDisableCaps,
-                    isCondstoreEnable.or(DEFAULT_CONDSTORE_DISABLE));
+                    isCondstoreEnable.orElse(DEFAULT_CONDSTORE_DISABLE));
         }
     }
 

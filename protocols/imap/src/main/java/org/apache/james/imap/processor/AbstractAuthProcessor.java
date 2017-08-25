@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.processor;
 
+import java.util.Optional;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -39,7 +41,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public abstract class AbstractAuthProcessor<M extends ImapRequest> extends AbstractMailboxProcessor<M>{
@@ -169,7 +170,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
     }
 
     protected static AuthenticationAttempt noDelegation(String authenticationId, String password) {
-        return new AuthenticationAttempt(Optional.<String>absent(), authenticationId, password);
+        return new AuthenticationAttempt(Optional.<String>empty(), authenticationId, password);
     }
 
     protected static class AuthenticationAttempt {

@@ -21,6 +21,7 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
@@ -30,8 +31,6 @@ import org.apache.james.imap.message.response.AnnotationResponse;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
 
 public class AnnotationResponseEncoder extends AbstractChainedImapEncoder {
     private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationResponseEncoder.class);
@@ -47,7 +46,7 @@ public class AnnotationResponseEncoder extends AbstractChainedImapEncoder {
         composer.untagged();
         composer.commandName(ImapConstants.ANNOTATION_RESPONSE_NAME);
 
-        composer.quote(Optional.fromNullable(response.getMailboxName()).or(""));
+        composer.quote(Optional.ofNullable(response.getMailboxName()).orElse(""));
         composeAnnotations(composer, session, response.getMailboxAnnotations());
 
         composer.end();
@@ -68,7 +67,7 @@ public class AnnotationResponseEncoder extends AbstractChainedImapEncoder {
             LOGGER.warn("There is nil data of key {} on store: ", annotation.getKey().asString());
         } else {
             composer.message(annotation.getKey().asString());
-            composer.quote(annotation.getValue().or(""));
+            composer.quote(annotation.getValue().orElse(""));
         }
     }
 

@@ -25,8 +25,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.TreeSet;
-
 import javax.mail.Flags.Flag;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -67,7 +67,6 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> implements CapabilityImplementingProcessor {
@@ -398,7 +397,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                 // message in
                 // the mailbox. See IMAP-289
                 if (lowVal == Long.MAX_VALUE && highVal == Long.MAX_VALUE) {
-                    MessageUid highUid = selected.getLastUid().or(MessageUid.MIN_VALUE);
+                    MessageUid highUid = selected.getLastUid().orElse(MessageUid.MIN_VALUE);
 
                     ranges.add(new SearchQuery.UidRange(highUid));
                 } else {
@@ -413,7 +412,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                     // SelectedMailbox.NO_SUCH_MESSAGE but we check for it
                     // just to be safe
                     if (lowUid.isPresent()) {
-                        Optional<MessageUid> highUid = Optional.absent();
+                        Optional<MessageUid> highUid = Optional.empty();
                         if (highVal != Long.MAX_VALUE) {
                             highUid = selected.uid((int) highVal);
                             if (!highUid.isPresent()) {
@@ -426,7 +425,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                         } else {
                             highUid = selected.getLastUid();
                         }
-                        ranges.add(new SearchQuery.UidRange(lowUid.or(MessageUid.MIN_VALUE), highUid.or(MessageUid.MAX_VALUE)));
+                        ranges.add(new SearchQuery.UidRange(lowUid.orElse(MessageUid.MIN_VALUE), highUid.orElse(MessageUid.MAX_VALUE)));
                     }
                 }
             }
@@ -455,13 +454,13 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                 // message in
                 // the mailbox. See IMAP-289
                 if (lowVal.equals(MessageUid.MAX_VALUE) && highVal.equals(MessageUid.MAX_VALUE)) {
-                    ranges.add(new SearchQuery.UidRange(selected.getLastUid().or(MessageUid.MIN_VALUE)));
-                } else if (highVal.equals(MessageUid.MAX_VALUE) && selected.getLastUid().or(MessageUid.MIN_VALUE).compareTo(lowVal) < 0) {
+                    ranges.add(new SearchQuery.UidRange(selected.getLastUid().orElse(MessageUid.MIN_VALUE)));
+                } else if (highVal.equals(MessageUid.MAX_VALUE) && selected.getLastUid().orElse(MessageUid.MIN_VALUE).compareTo(lowVal) < 0) {
                     // Sequence uid ranges which use
                     // *:<uid-higher-then-last-uid>
                     // MUST return at least the highest uid in the mailbox
                     // See IMAP-291
-                    ranges.add(new SearchQuery.UidRange(selected.getLastUid().or(MessageUid.MIN_VALUE)));
+                    ranges.add(new SearchQuery.UidRange(selected.getLastUid().orElse(MessageUid.MIN_VALUE)));
                 } else {
                     ranges.add(new SearchQuery.UidRange(lowVal, highVal));
                 }

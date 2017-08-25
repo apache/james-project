@@ -19,19 +19,19 @@
 package org.apache.james.protocols.netty;
 
 
+import java.util.Optional;
 import javax.net.ssl.SSLContext;
 
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
+
+import com.google.common.base.Preconditions;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.handler.execution.ExecutionHandler;
 import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
-
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 
 /**
@@ -49,8 +49,8 @@ public class NettyServer extends AbstractAsyncServer {
         private Optional<ChannelHandlerFactory> frameHandlerFactory;
 
         private Builder() {
-            secure = Optional.absent();
-            frameHandlerFactory = Optional.absent();
+            secure = Optional.empty();
+            frameHandlerFactory = Optional.empty();
         }
 
         public Builder protocol(Protocol protocol) {
@@ -60,20 +60,20 @@ public class NettyServer extends AbstractAsyncServer {
         }
 
         public Builder secure(Encryption secure) {
-            this.secure = Optional.fromNullable(secure);
+            this.secure = Optional.ofNullable(secure);
             return this;
         }
 
         public Builder frameHandlerFactory(ChannelHandlerFactory frameHandlerFactory) {
-            this.frameHandlerFactory = Optional.fromNullable(frameHandlerFactory);
+            this.frameHandlerFactory = Optional.ofNullable(frameHandlerFactory);
             return this;
         }
 
         public NettyServer build() {
             Preconditions.checkState(protocol != null, "'protocol' is mandatory");
             return new NettyServer(protocol, 
-                    secure.orNull(),
-                    frameHandlerFactory.or(new LineDelimiterBasedChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH)));
+                    secure.orElse(null),
+                    frameHandlerFactory.orElse(new LineDelimiterBasedChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH)));
         }
     }
 

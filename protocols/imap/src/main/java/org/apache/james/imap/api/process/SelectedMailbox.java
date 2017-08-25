@@ -20,13 +20,11 @@
 package org.apache.james.imap.api.process;
 
 import java.util.Collection;
-
+import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
-
-import com.google.common.base.Optional;
 
 /**
  * Interface which represent a selected Mailbox during the selected state

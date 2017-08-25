@@ -242,8 +242,10 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                                     MessageUid knownUid = knownUidsList.get(index);
 
                                     // Check if the uid mathc if not we are done here
-                                    if (selected.uid(msn).asSet().contains(knownUid)) {
-                                        done = true;
+                                    done = selected.uid(msn)
+                                        .filter(selectedUid -> selectedUid.equals(knownUid))
+                                        .isPresent();
+                                    if (done) {
                                         break;
                                     } else {
                                         firstUid = knownUid;
