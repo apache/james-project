@@ -20,18 +20,14 @@
 package org.apache.james.transport.mailets.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
-
+import java.util.Optional;
 import java.util.Properties;
-
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Test;
-
-import com.google.common.base.Optional;
 
 public class MimeMessageUtilsTest {
 
@@ -64,7 +60,7 @@ public class MimeMessageUtilsTest {
 
         Optional<String> subjectWithPrefix = new MimeMessageUtils(message).subjectWithPrefix(subjectPrefix, oldMail, subject);
 
-        assertThat(subjectWithPrefix).isAbsent();
+        assertThat(subjectWithPrefix).isEmpty();
     }
 
     @Test
@@ -77,7 +73,7 @@ public class MimeMessageUtilsTest {
 
         Optional<String> subjectWithPrefix = new MimeMessageUtils(message).subjectWithPrefix(subjectPrefix, oldMail, subject);
 
-        assertThat(subjectWithPrefix).isAbsent();
+        assertThat(subjectWithPrefix).isEmpty();
     }
 
 

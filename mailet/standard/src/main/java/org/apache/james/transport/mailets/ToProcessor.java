@@ -21,6 +21,7 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.Optional;
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
@@ -28,8 +29,6 @@ import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
 
 /**
  * <p>This mailet redirects the mail to the named processor</p>
@@ -58,7 +57,7 @@ public class ToProcessor extends GenericMailet {
         if (processor == null) {
             throw new MailetException("processor parameter is required");
         }
-        noticeText = Optional.fromNullable(getInitParameter("notice"));
+        noticeText = Optional.ofNullable(getInitParameter("notice"));
     }
 
     private boolean isDebug() {

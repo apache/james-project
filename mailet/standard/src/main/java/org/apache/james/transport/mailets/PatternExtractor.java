@@ -26,13 +26,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.StringUtils;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -135,7 +135,7 @@ public class PatternExtractor {
             if (charsetOffset >= 0) {
                 return Optional.of(charsetOffset);
             }
-            return Optional.absent();
+            return Optional.empty();
         }
 
         private static Charset charset(String fileName, int charsetOffset) {
@@ -183,6 +183,6 @@ public class PatternExtractor {
         if (file.isFile()) {
             return Optional.of(new FileInputStream(file));
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 }

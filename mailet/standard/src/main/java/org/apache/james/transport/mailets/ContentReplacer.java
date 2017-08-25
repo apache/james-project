@@ -22,8 +22,8 @@ package org.apache.james.transport.mailets;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
-
 import javax.mail.MessagingException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.ParseException;
@@ -33,7 +33,6 @@ import org.apache.mailet.MailetException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
 public class ContentReplacer {

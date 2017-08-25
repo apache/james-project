@@ -25,8 +25,8 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
-
 import javax.activation.DataHandler;
 import javax.mail.BodyPart;
 import javax.mail.Message;
@@ -44,7 +44,6 @@ import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -89,13 +88,13 @@ public class MimeMessageBuilder {
         public static final String DEFAULT_TEXT_PLAIN_UTF8_TYPE = "text/plain; charset=UTF-8";
         public static final String DEFAULT_VALUE = "";
 
-        private Optional<String> cid = Optional.absent();
-        private Optional<String> filename = Optional.absent();
+        private Optional<String> cid = Optional.empty();
+        private Optional<String> filename = Optional.empty();
         private ImmutableList.Builder<Header> headers = ImmutableList.builder();
-        private Optional<String> disposition = Optional.absent();
-        private Optional<String> dataAsString = Optional.absent();
-        private Optional<byte[]> dataAsBytes = Optional.absent();
-        private Optional<String> type = Optional.absent();
+        private Optional<String> disposition = Optional.empty();
+        private Optional<String> dataAsString = Optional.empty();
+        private Optional<byte[]> dataAsBytes = Optional.empty();
+        private Optional<String> type = Optional.empty();
 
         public BodyPartBuilder cid(String cid) {
             this.cid = Optional.of(cid);
@@ -149,14 +148,14 @@ public class MimeMessageBuilder {
                     new DataHandler(
                         new ByteArrayDataSource(
                             dataAsBytes.get(),
-                            type.or(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
+                            type.orElse(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
                     ));
             } else {
                 bodyPart.setDataHandler(
                     new DataHandler(
                         new ByteArrayDataSource(
-                            dataAsString.or(DEFAULT_VALUE),
-                            type.or(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
+                            dataAsString.orElse(DEFAULT_VALUE),
+                            type.orElse(DEFAULT_TEXT_PLAIN_UTF8_TYPE))
                     ));
             }
             if (filename.isPresent()) {
@@ -208,10 +207,10 @@ public class MimeMessageBuilder {
         return new MimeBodyPart(new ByteArrayInputStream(bytes));
     }
 
-    private Optional<String> text = Optional.absent();
-    private Optional<String> subject = Optional.absent();
-    private Optional<InternetAddress> sender = Optional.absent();
-    private Optional<MimeMultipart> content = Optional.absent();
+    private Optional<String> text = Optional.empty();
+    private Optional<String> subject = Optional.empty();
+    private Optional<InternetAddress> sender = Optional.empty();
+    private Optional<MimeMultipart> content = Optional.empty();
     private ImmutableList.Builder<InternetAddress> from = ImmutableList.builder();
     private ImmutableList.Builder<InternetAddress> cc = ImmutableList.builder();
     private ImmutableList.Builder<InternetAddress> to = ImmutableList.builder();
@@ -229,7 +228,7 @@ public class MimeMessageBuilder {
     }
 
     public MimeMessageBuilder setSubject(String subject) {
-        this.subject = Optional.fromNullable(subject);
+        this.subject = Optional.ofNullable(subject);
         return this;
     }
 

@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-
+import java.util.Optional;
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
@@ -36,7 +36,6 @@ import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
 /**
@@ -84,13 +83,13 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
         if (config == null) {
             throw new NullPointerException("Mailet configuration must be set before getInitParameter is called.");
         }
-        return MailetUtil.getInitParameter(config, name).or(defaultValue);
+        return MailetUtil.getInitParameter(config, name).orElse(defaultValue);
     }
 
     public Optional<String> getInitParameterAsOptional(String name) {
         String value = getInitParameter(name);
         if (Strings.isNullOrEmpty(value)) {
-            return Optional.absent();
+            return Optional.empty();
         }
         return Optional.of(value);
     }

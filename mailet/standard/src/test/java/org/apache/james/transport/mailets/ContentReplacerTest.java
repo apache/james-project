@@ -23,17 +23,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.nio.charset.Charset;
+import java.util.Optional;
 import java.util.regex.Pattern;
-
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class ContentReplacerTest {
@@ -137,7 +134,7 @@ public class ContentReplacerTest {
         ReplaceConfig replaceConfig = ReplaceConfig.builder()
                 .addAllSubjectReplacingUnits(patterns)
                 .build();
-        testee.replaceMailContentAndSubject(mail, replaceConfig, Optional.<Charset> absent());
+        testee.replaceMailContentAndSubject(mail, replaceConfig, Optional.empty());
 
         verify(mimeMessage).setSubject("TEST ee o", Charsets.UTF_8.name());
     }

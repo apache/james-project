@@ -20,7 +20,7 @@ package org.apache.james.transport.mailets.utils;
 
 import java.util.Enumeration;
 import java.util.List;
-
+import java.util.Optional;
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -29,7 +29,6 @@ import org.apache.mailet.Mail;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
@@ -60,7 +59,7 @@ public class MimeMessageUtils {
     @VisibleForTesting Optional<String> buildNewSubject(String subjectPrefix, String originalSubject, String subject) throws MessagingException {
         String nullablePrefix = Strings.emptyToNull(subjectPrefix);
         if (nullablePrefix == null && subject == null) {
-            return Optional.absent();
+            return Optional.empty();
         }
         if (nullablePrefix == null) {
             return Optional.of(subject);
@@ -70,7 +69,7 @@ public class MimeMessageUtils {
     }
 
     private String chooseSubject(String newSubject, String originalSubject) {
-        return Optional.fromNullable(newSubject).or(originalSubject);
+        return Optional.ofNullable(newSubject).orElse(originalSubject);
     }
 
     /**

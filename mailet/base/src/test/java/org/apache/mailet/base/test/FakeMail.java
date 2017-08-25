@@ -28,8 +28,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
-
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
@@ -42,7 +42,6 @@ import org.apache.mailet.PerRecipientHeaders.Header;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -99,17 +98,17 @@ public class FakeMail implements Mail {
         private Optional<String> remoteAddr;
 
         private Builder() {
-            fileName = Optional.absent();
-            mimeMessage = Optional.absent();
+            fileName = Optional.empty();
+            mimeMessage = Optional.empty();
             recipients = Lists.newArrayList();
-            name = Optional.absent();
-            sender = Optional.absent();
-            state = Optional.absent();
-            errorMessage = Optional.absent();
-            lastUpdated = Optional.absent();
+            name = Optional.empty();
+            sender = Optional.empty();
+            state = Optional.empty();
+            errorMessage = Optional.empty();
+            lastUpdated = Optional.empty();
             attributes = Maps.newHashMap();
-            size = Optional.absent();
-            remoteAddr = Optional.absent();
+            size = Optional.empty();
+            remoteAddr = Optional.empty();
         }
 
         public Builder size(long size) {
@@ -183,8 +182,8 @@ public class FakeMail implements Mail {
         }
 
         public FakeMail build() throws MessagingException {
-            return new FakeMail(getMimeMessage(), recipients, name.orNull(), sender.orNull(), state.orNull(), errorMessage.orNull(), lastUpdated.orNull(),
-                    attributes, size.or(0l), remoteAddr.or("127.0.0.1"));
+            return new FakeMail(getMimeMessage(), recipients, name.orElse(null), sender.orElse(null), state.orElse(null), errorMessage.orElse(null), lastUpdated.orElse(null),
+                    attributes, size.orElse(0l), remoteAddr.orElse("127.0.0.1"));
         }
 
         private MimeMessage getMimeMessage() throws MessagingException {
@@ -192,7 +191,7 @@ public class FakeMail implements Mail {
             if (fileName.isPresent()) {
                 return new MimeMessage(Session.getInstance(new Properties()), ClassLoader.getSystemResourceAsStream(fileName.get()));
             }
-            return mimeMessage.orNull();
+            return mimeMessage.orElse(null);
         }
     }
 

@@ -22,7 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
-
+import java.util.Optional;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
@@ -33,7 +33,6 @@ import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 
@@ -95,13 +94,13 @@ public class MimeDecodingMailet extends GenericMailet {
     private Optional<byte[]> extractContent(Object rawMime) throws MessagingException {
         try {
             MimeBodyPart mimeBodyPart = new MimeBodyPart(new ByteArrayInputStream((byte[]) rawMime));
-            return Optional.fromNullable(IOUtils.toByteArray(mimeBodyPart.getInputStream()));
+            return Optional.ofNullable(IOUtils.toByteArray(mimeBodyPart.getInputStream()));
         } catch (IOException e) {
             LOGGER.error("Error while extracting content from mime part", e);
-            return Optional.absent();
+            return Optional.empty();
         } catch (ClassCastException e) {
             LOGGER.error("Invalid map attribute types.", e);
-            return Optional.absent();
+            return Optional.empty();
         }
     }
 

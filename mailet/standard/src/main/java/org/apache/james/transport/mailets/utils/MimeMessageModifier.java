@@ -19,11 +19,11 @@
 
 package org.apache.james.transport.mailets.utils;
 
+import java.util.Optional;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 
 public class MimeMessageModifier {
 

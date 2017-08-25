@@ -31,9 +31,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
-
 import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -42,10 +42,10 @@ import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.DecoderUtil;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
@@ -53,7 +53,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
@@ -409,8 +408,8 @@ public class StripAttachment extends GenericMailet {
         if (patternsAreEquals()) {
             return false;
         }
-        boolean result = isMatchingPattern(name, regExPattern).or(false) 
-                || !isMatchingPattern(name, notRegExPattern).or(true);
+        boolean result = isMatchingPattern(name, regExPattern).orElse(false)
+                || !isMatchingPattern(name, notRegExPattern).orElse(true);
 
         LOGGER.debug("attachment " + name + " " + ((result) ? "matches" : "does not match"));
         return result;
@@ -425,7 +424,7 @@ public class StripAttachment extends GenericMailet {
         if (pattern != null) {
             return Optional.of(pattern.matcher(name).matches());
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     /**
@@ -447,13 +446,13 @@ public class StripAttachment extends GenericMailet {
             return Optional.of(outputFile.getName());
         } catch (Exception e) {
             LOGGER.error("Error while saving contents of", e);
-            return Optional.absent();
+            return Optional.empty();
         }
     }
 
     private File outputFile(Part part, Optional<String> fileName) throws MessagingException, IOException {
-        Optional<String> maybePartFileName = Optional.fromNullable(part.getFileName());
-        return createTempFile(fileName.or(maybePartFileName).orNull());
+        Optional<String> maybePartFileName = Optional.ofNullable(part.getFileName());
+        return createTempFile(fileName.orElse(maybePartFileName.orElse(null)));
     }
 
     private File createTempFile(String originalFileName) throws IOException {

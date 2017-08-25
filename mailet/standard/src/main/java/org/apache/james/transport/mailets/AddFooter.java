@@ -23,9 +23,9 @@ package org.apache.james.transport.mailets;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -37,8 +37,6 @@ import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
 
 /**
  * Takes the message and attaches a footer message to it.  Right now, it only
@@ -154,7 +152,7 @@ public class AddFooter extends GenericMailet {
         } else if (part.isMimeType("text/html")) {
             return Optional.of(attachFooterToHTML(content));
         }
-        return Optional.absent();
+        return Optional.empty();
     }
     
     private boolean attachFooterToFirstPart(MimeMultipart multipart) throws MessagingException, IOException {
