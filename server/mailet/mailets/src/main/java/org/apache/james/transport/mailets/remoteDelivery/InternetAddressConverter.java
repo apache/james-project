@@ -20,21 +20,20 @@
 package org.apache.james.transport.mailets.remoteDelivery;
 
 import java.util.Collection;
-
 import javax.mail.internet.InternetAddress;
 
 import org.apache.mailet.MailAddress;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
+
 
 public class InternetAddressConverter {
 
     public static InternetAddress[] convert(Collection<MailAddress> recipients) {
         Preconditions.checkNotNull(recipients);
-        return FluentIterable.from(recipients)
-            .transform(MailAddress::toInternetAddress)
-            .toArray(InternetAddress.class);
+        return recipients.stream()
+            .map(MailAddress::toInternetAddress)
+            .toArray(InternetAddress[]::new);
     }
 
 }

@@ -29,7 +29,7 @@ import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.FluentIterable;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class AddressesArrayToMailAddressListConverter {
@@ -39,11 +39,12 @@ public class AddressesArrayToMailAddressListConverter {
         if (addresses == null) {
             return ImmutableList.of();
         }
-        return FluentIterable.from(Arrays.asList(addresses))
-            .transform(address -> toMailAddress(address))
+        return Arrays.asList(addresses)
+            .stream()
+            .map(address -> toMailAddress(address))
             .filter(Optional::isPresent)
-            .transform(Optional::get)
-            .toList();
+            .map(Optional::get)
+            .collect(Guavate.toImmutableList());
     }
 
     private static Optional<MailAddress> toMailAddress(Address address) {

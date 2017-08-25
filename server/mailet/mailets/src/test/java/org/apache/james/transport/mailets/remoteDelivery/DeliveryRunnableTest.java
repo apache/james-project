@@ -26,9 +26,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.metrics.api.Metric;
@@ -42,8 +42,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import com.google.common.base.Supplier;
 
 public class DeliveryRunnableTest {
 

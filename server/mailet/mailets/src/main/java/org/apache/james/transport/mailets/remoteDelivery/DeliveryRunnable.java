@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets.remoteDelivery;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -36,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 
 public class DeliveryRunnable implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeliveryRunnable.class);

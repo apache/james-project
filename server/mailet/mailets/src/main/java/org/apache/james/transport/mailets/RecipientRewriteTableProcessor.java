@@ -21,6 +21,10 @@ package org.apache.james.transport.mailets;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
@@ -38,24 +42,23 @@ import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 public class RecipientRewriteTableProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTableProcessor.class);
+    private static final boolean parallel = true;
 
     private final org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore;
     private final DomainList domainList;
     private final MailetContext mailetContext;
 
-    private static final Function<RrtExecutionResult, List<MailAddress>> mailAddressesFromMappingData =
+    private static final Function<RrtExecutionResult, Stream<MailAddress>> mailAddressesFromMappingData =
         mappingData -> mappingData.getNewRecipients()
             .orElse(mappingData.getRecipientWithError()
-                .orElse(ImmutableList.of()));
+                .orElse(ImmutableList.of())).stream();
 
     private static final Function<Mapping, Optional<MailAddress>> mailAddressFromMapping =
         addressMapping -> {
@@ -90,11 +93,12 @@ public class RecipientRewriteTableProcessor {
         mail.setRecipients(newRecipients);
     }
 
+
     private ImmutableList<MailAddress> getRecipientsByCondition(ImmutableList<RrtExecutionResult> mappingDatas, Predicate<RrtExecutionResult> filterCondition) {
-        return FluentIterable.from(mappingDatas)
+        return mappingDatas.stream()
             .filter(filterCondition)
-            .transformAndConcat(mailAddressesFromMappingData)
-            .toList();
+            .flatMap(mailAddressesFromMappingData)
+            .collect(Guavate.toImmutableList());
     }
 
     private ImmutableList<RrtExecutionResult> toMappingDatas(final Mail mail) {
@@ -104,9 +108,10 @@ public class RecipientRewriteTableProcessor {
             return getRrtExecutionResult(mail, recipient);
         };
 
-        return FluentIterable.from(mail.getRecipients())
-            .transform(convertToMappingData)
-            .toList();
+        return mail.getRecipients()
+            .stream()
+            .map(convertToMappingData)
+            .collect(Guavate.toImmutableList());
     }
 
     private RrtExecutionResult getRrtExecutionResult(Mail mail, MailAddress recipient) {
@@ -140,45 +145,45 @@ public class RecipientRewriteTableProcessor {
 
     private ImmutableList<Mapping> convertToNewMappings(final Mappings mappings,
             ImmutableList<Mapping> addressWithoutDomains) {
-        return FluentIterable.from(mappings)
-            .filter(Mapping::hasDomain)
-            .append(addressWithoutDomains)
-            .toList();
+        return Stream.concat(StreamSupport.stream(mappings.spliterator(), parallel)
+                    .filter(Mapping::hasDomain),
+                addressWithoutDomains.stream())
+            .collect(Guavate.toImmutableList());
     }
 
     private ImmutableList<MailAddress> getLocalAddresses(ImmutableList<MailAddress> mailAddresses) {
-        return FluentIterable.from(mailAddresses)
+        return mailAddresses.stream()
             .filter(mailAddress -> mailetContext.isLocalServer(mailAddress.getDomain()))
-            .toList();
+            .collect(Guavate.toImmutableList());
     }
 
     private ImmutableList<MailAddress> buildMailAddressFromMappingAddress(ImmutableList<Mapping> newMappings) {
-        return FluentIterable.from(newMappings)
-            .transform(mailAddressFromMapping)
+        return newMappings.stream()
+            .map(mailAddressFromMapping)
             .filter(Optional::isPresent)
-            .transform(Optional::get)
-            .toList();
+            .map(Optional::get)
+            .collect(Guavate.toImmutableList());
     }
 
     private ImmutableList<Mapping> getAddressWithNoDomain(Mappings mappings, DomainList domainList) throws MessagingException {
-        ImmutableList<Mapping> addressWithoutDomains = FluentIterable.from(mappings)
+        ImmutableList<Mapping> addressWithoutDomains = StreamSupport.stream(mappings.spliterator(), parallel)
             .filter(address -> !address.hasDomain())
-            .toList();
+            .collect(Guavate.toImmutableList());
         
         if (!addressWithoutDomains.isEmpty()) {
             final String defaultDomain = getDefaultDomain(domainList);
 
-            return FluentIterable.from(addressWithoutDomains)
-                .transform(address -> address.appendDomain(defaultDomain))
-                .toList();
+            return addressWithoutDomains.stream()
+                .map(address -> address.appendDomain(defaultDomain))
+                .collect(Guavate.toImmutableList());
         }
         return ImmutableList.of();
     }
 
     private void forwardToRemoteAddress(MailAddress sender, MailAddress recipient, MimeMessage message, ImmutableList<MailAddress> mailAddresses) throws MessagingException {
-        ImmutableList<MailAddress> remoteAddress = FluentIterable.from(mailAddresses)
+        ImmutableList<MailAddress> remoteAddress = mailAddresses.stream()
             .filter(mailAddress -> !mailetContext.isLocalServer(mailAddress.getDomain()))
-            .toList();
+            .collect(Guavate.toImmutableList());
 
         if (!remoteAddress.isEmpty()) {
             try {

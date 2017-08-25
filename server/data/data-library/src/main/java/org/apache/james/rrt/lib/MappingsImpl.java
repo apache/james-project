@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.StringTokenizer;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.apache.james.rrt.lib.Mapping.Type;
 
@@ -33,9 +35,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -63,19 +62,15 @@ public class MappingsImpl implements Mappings, Serializable {
     }
     
     public static MappingsImpl fromCollection(Collection<String> mappings) {
-        Builder builder = builder();
-        for (String mapping: mappings) {
-            builder.add(mapping);
-        }
-        return builder.build();
+        return mappings.stream()
+            .reduce(builder(), (builder, mapping) -> builder.add(mapping), (builder1, builder2) -> builder1.addAll(builder2.build()))
+            .build();
     }
     
-    public static MappingsImpl fromMappings(Iterable<Mapping> mappings) {
-        Builder builder = builder();
-        for (Mapping mapping: mappings) {
-            builder.add(mapping);
-        }
-        return builder.build();
+    private static MappingsImpl fromMappings(Stream<Mapping> mappings) {
+        return mappings
+            .reduce(builder(), (builder, mapping) -> builder.add(mapping), (builder1, builder2) -> builder1.addAll(builder2.build()))
+            .build();
     }
     
     public static Builder from(Mappings from) {
@@ -125,7 +120,8 @@ public class MappingsImpl implements Mappings, Serializable {
     
     @Override
     public Iterable<String> asStrings() {
-        return FluentIterable.from(mappings).transform(Mapping::asString);
+        return mappings.stream()
+            .map(Mapping::asString)::iterator;
     }
 
     @Override
@@ -172,20 +168,23 @@ public class MappingsImpl implements Mappings, Serializable {
     @Override
     public boolean contains(Type type) {
         Preconditions.checkNotNull(type);
-        return FluentIterable.from(mappings).anyMatch(hasType(type));
+        return mappings.stream()
+            .anyMatch(hasType(type));
     }
     
     @Override
     public Mappings select(Type type) {
         Preconditions.checkNotNull(type);
-        return fromMappings(FluentIterable.from(mappings).filter(hasType(type)));
+        return fromMappings(mappings.stream()
+            .filter(hasType(type)));
     }
     
     
     @Override
     public Mappings exclude(Type type) {
         Preconditions.checkNotNull(type);
-        return fromMappings(FluentIterable.from(mappings).filter(Predicates.not(hasType(type))));
+        return fromMappings(mappings.stream()
+            .filter(hasType(type).negate()));
     }
  
     @Override
@@ -200,7 +199,7 @@ public class MappingsImpl implements Mappings, Serializable {
         if (isEmpty()) {
             return Optional.empty();
         }
-        return Optional.<Mappings> of(this);
+        return Optional.of(this);
     }
 
     @Override

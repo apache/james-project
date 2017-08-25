@@ -122,7 +122,6 @@ public class MailetUtil {
 
     public static int getInitParameterAsStrictlyPositiveInteger(String condition, Optional<String> defaultValue) throws MessagingException {
         String value = Optional.ofNullable(condition)
-            .filter(Strings::isNullOrEmpty)
             .orElse(defaultValue.orElse(null));
 
         if (Strings.isNullOrEmpty(value)) {

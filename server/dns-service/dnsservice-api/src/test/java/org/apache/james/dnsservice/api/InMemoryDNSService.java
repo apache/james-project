@@ -25,9 +25,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.net.InetAddresses;
@@ -102,10 +101,10 @@ public class InMemoryDNSService implements DNSService {
     }
 
     private Entry<String, DNSRecord> getDNSEntry(Predicate<? super Entry<String, DNSRecord>> filter) {
-        return FluentIterable.from(records.entrySet())
-                    .filter(filter)
-                    .first()
-                    .get();
+        return records.entrySet().stream()
+            .filter(filter)
+            .findFirst()
+            .get();
     }
 
     private static class DNSRecord {

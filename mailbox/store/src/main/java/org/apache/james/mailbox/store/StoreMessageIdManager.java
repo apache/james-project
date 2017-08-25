@@ -56,6 +56,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.quota.QuotaChecker;
+import org.apache.james.util.PredicateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,13 +68,6 @@ import com.google.common.collect.Sets.SetView;
 
 public class StoreMessageIdManager implements MessageIdManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreMessageIdManager.class);
-    public static <T, S> Predicate<T> compose(Predicate<S> predicate, Function<T, S> function) {
-        return input -> predicate.test(function.apply(input));
-    }
-
-    static<T> Predicate<T> not(Predicate<T> p) {
-        return t -> !p.test(t);
-    }
 
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MailboxEventDispatcher dispatcher;
@@ -280,7 +274,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     private Predicate<MailboxMessage> messageBelongsToUser(MailboxSession mailboxSession, MailboxMapper mailboxMapper) {
-        return compose(mailboxBelongsToUser(mailboxSession, mailboxMapper),
+        return PredicateUtils.compose(mailboxBelongsToUser(mailboxSession, mailboxMapper),
             MailboxMessage::getMailboxId);
     }
 
@@ -295,7 +289,8 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     private Predicate<MailboxId> isMailboxOfOtherUser(MailboxSession mailboxSession, MailboxMapper mailboxMapper) {
-        return not(mailboxBelongsToUser(mailboxSession, mailboxMapper));
+        return mailboxBelongsToUser(mailboxSession, mailboxMapper)
+            .negate();
     }
 
     private boolean belongsToCurrentUser(Mailbox mailbox, MailboxSession session) {
