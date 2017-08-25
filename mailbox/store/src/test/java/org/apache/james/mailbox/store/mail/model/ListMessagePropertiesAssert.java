@@ -20,18 +20,18 @@
 package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.List;
+import java.util.function.Function;
 
-import com.google.common.base.Function;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
-import com.google.common.collect.FluentIterable;
+
 
 public class ListMessagePropertiesAssert {
     private final List<InnerProperty> propertiesToInnerProperties(List<Property> properties) {
-        return FluentIterable.from(properties)
-            .transform(propertyToInnerProperty())
-            .toList();
+        return properties.stream()
+            .map(propertyToInnerProperty())
+            .collect(Guavate.toImmutableList());
     }
 
     private final Function<Property, InnerProperty> propertyToInnerProperty() {

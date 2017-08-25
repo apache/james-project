@@ -22,15 +22,14 @@ package org.apache.james.mailbox.store;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import java.util.function.Function;
+import java.util.function.Predicate;
 import javax.mail.Flags;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
@@ -55,12 +54,11 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
+import org.apache.commons.lang.NotImplementedException;
 
-import com.google.common.base.Function;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 
 public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory {
@@ -162,17 +160,17 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
             @Override
             public List<MailboxMessage> find(final List<MessageId> messageIds, MessageMapper.FetchType fetchType) {
-                return FluentIterable.from(messages)
+                return messages.stream()
                     .filter(withMessageIdOneOf(messageIds))
-                    .toList();
+                    .collect(Guavate.toImmutableList());
             }
 
             @Override
             public List<MailboxId> findMailboxes(final MessageId messageId) {
-                return FluentIterable.from(messages)
+                return messages.stream()
                     .filter(withMessageId(messageId))
-                    .transform(MailboxMessage::getMailboxId)
-                    .toList();
+                    .map(MailboxMessage::getMailboxId)
+                    .collect(Guavate.toImmutableList());
             }
 
             @Override
@@ -188,28 +186,28 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
             @Override
             public void delete(final MessageId messageId) {
                 messages.removeAll(
-                    FluentIterable.from(messages)
+                    messages.stream()
                         .filter(withMessageId(messageId))
-                        .toList());
+                        .collect(Guavate.toImmutableList()));
             }
 
             @Override
             public void delete(final MessageId messageId, final List<MailboxId> mailboxIds) {
                 messages.removeAll(
-                    FluentIterable.from(messages)
+                    messages.stream()
                         .filter(withMessageId(messageId))
                         .filter(inMailboxes(mailboxIds))
-                        .toList());
+                        .collect(Guavate.toImmutableList()));
             }
 
             @Override
             public Map<MailboxId, UpdatedFlags> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException {
-                final List<Map.Entry<MailboxId, UpdatedFlags>> entries = FluentIterable.from(messages)
+                final List<Map.Entry<MailboxId, UpdatedFlags>> entries = messages.stream()
                     .filter(withMessageId(messageId))
                     .filter(inMailboxes(mailboxIds))
-                    .transform(toMapEntryOfUpdatedFlags(newState, updateMode))
+                    .map(toMapEntryOfUpdatedFlags(newState, updateMode))
                     .filter(isChanged())
-                    .toList();
+                    .collect(Guavate.toImmutableList());
                 ImmutableMap.Builder<MailboxId, UpdatedFlags> builder = ImmutableMap.builder();
                 for (Map.Entry<MailboxId, UpdatedFlags> entry : entries) {
                     builder.put(entry);

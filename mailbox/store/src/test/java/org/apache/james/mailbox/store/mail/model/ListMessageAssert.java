@@ -20,35 +20,35 @@
 package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.commons.io.IOUtils;
 
-import com.google.common.base.Charsets;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 
 public class ListMessageAssert {
     private final List<MailboxMessage> actual;
 
     private final List<InnerMessage> messageToInnerMessage(List<MailboxMessage> messages) {
-        return FluentIterable.from(messages).transform(message -> {
-            try {
-                return new InnerMessage(message.getMessageId(), message.getUid(), message.getMailboxId(), message.getInternalDate(), message.getBodyOctets(),
-                        message.getFullContentOctets(), message.getMediaType(), message.getSubType(), IOUtils.toString(message.getFullContent(), Charsets.UTF_8));
-            } catch (IOException e) {
-                Throwables.propagate(e);
-                return null;
-            }
-        }).toList();
+        return messages.stream()
+            .map(message -> {
+                try {
+                    return new InnerMessage(message.getMessageId(), message.getUid(), message.getMailboxId(), message.getInternalDate(), message.getBodyOctets(),
+                            message.getFullContentOctets(), message.getMediaType(), message.getSubType(), IOUtils.toString(message.getFullContent()));
+                } catch (IOException e) {
+                    Throwables.propagate(e);
+                    return null;
+                }
+            })
+            .collect(Guavate.toImmutableList());
     }
 
     private ListMessageAssert(List<MailboxMessage> actual) {

@@ -20,14 +20,15 @@ package org.apache.james.mailbox.store.search.comparator;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.model.SearchQuery.Sort;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.commons.lang.NotImplementedException;
 
-import com.google.common.base.Function;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
+
 
 /**
  * {@link Comparator} which takes a Array of other {@link Comparator}'s and use them to compare two {@link MailboxMessage} instances till one of them
@@ -38,9 +39,9 @@ public class CombinedComparator implements Comparator<MailboxMessage>{
     public static CombinedComparator create(List<Sort> sorts) {
         Preconditions.checkNotNull(sorts);
         Preconditions.checkArgument(!sorts.isEmpty());
-        return new CombinedComparator(FluentIterable.from(sorts)
-            .transform(toComparator())
-            .toList());
+        return new CombinedComparator(sorts.stream()
+            .map(toComparator())
+            .collect(Guavate.toImmutableList()));
     }
 
     private static Function<Sort, Comparator<MailboxMessage>> toComparator() {

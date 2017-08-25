@@ -85,7 +85,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 
 /**
@@ -720,7 +719,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     private boolean hasChildIn(Mailbox parentMailbox, List<Mailbox> mailboxesWithPathLike, MailboxSession mailboxSession) {
-        return FluentIterable.from(mailboxesWithPathLike)
+        return mailboxesWithPathLike.stream()
             .anyMatch(mailbox -> mailbox.isChildOf(parentMailbox, mailboxSession));
     }
 

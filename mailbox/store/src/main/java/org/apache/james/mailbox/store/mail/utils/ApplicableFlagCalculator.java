@@ -19,13 +19,14 @@
 
 package org.apache.james.mailbox.store.mail.utils;
 
+import java.util.stream.StreamSupport;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
+
 
 public class ApplicableFlagCalculator {
 
@@ -37,10 +38,12 @@ public class ApplicableFlagCalculator {
     }
 
     public Flags computeApplicableFlags() {
+        boolean isParallel = true;
+
         return ApplicableFlagBuilder.builder()
-                .add(FluentIterable.from(mailboxMessages)
-                    .transform(MailboxMessage::createFlags)
-                    .toArray(Flags.class))
+                .add(StreamSupport.stream(mailboxMessages.spliterator(), isParallel)
+                    .map(MailboxMessage::createFlags)
+                    .toArray(Flags[]::new))
                 .build();
     }
 }

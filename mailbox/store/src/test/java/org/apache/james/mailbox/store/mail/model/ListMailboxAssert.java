@@ -20,13 +20,12 @@
 package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.List;
 
 import org.apache.james.mailbox.model.MailboxId;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 
 public class ListMailboxAssert {
@@ -34,10 +33,10 @@ public class ListMailboxAssert {
     private final List<Mailbox> actual;
 
     private final List<InnerMailbox> mailboxtoInnerMailbox(List<Mailbox> mailboxes) {
-        return FluentIterable.from(mailboxes)
-            .transform(mailbox ->
+        return mailboxes.stream()
+            .map(mailbox ->
                 new InnerMailbox(mailbox.getMailboxId(), mailbox.getUser(), mailbox.getName(), mailbox.getNamespace()))
-            .toList();
+            .collect(Guavate.toImmutableList());
     }
 
     private ListMailboxAssert(List<Mailbox> actual) {

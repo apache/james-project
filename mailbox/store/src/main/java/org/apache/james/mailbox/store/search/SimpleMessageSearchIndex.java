@@ -18,13 +18,12 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.search;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
+import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
@@ -47,8 +46,9 @@ import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -98,21 +98,13 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     @Override
     public Iterator<MessageUid> search(MailboxSession session, final Mailbox mailbox, SearchQuery query) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
-        return FluentIterable.from(searchResults(session, ImmutableList.of(mailbox), query))
-                .filter(searchResult -> searchResult.getMailboxId().equals(mailbox.getMailboxId()))
-                .transform(SearchResult::getMessageUid)
-                .iterator();
+        return searchResults(session, ImmutableList.of(mailbox).stream(), query)
+            .stream()
+            .filter(searchResult -> searchResult.getMailboxId().equals(mailbox.getMailboxId()))
+            .map(SearchResult::getMessageUid)
+            .iterator();
     }
 
-    private List<SearchResult> searchResults(MailboxSession session, Iterable<Mailbox> mailboxes, SearchQuery query) throws MailboxException {
-        ImmutableList.Builder<SearchResult> builder = ImmutableList.builder();
-        for (Mailbox mailbox: mailboxes) {
-            builder.addAll(searchResults(session, mailbox, query));
-        }
-        return builder.build();
-
-    }
-    
     private List<SearchResult> searchResults(MailboxSession session, Mailbox mailbox, SearchQuery query) throws MailboxException {
         if (!isMatchingUser(session, mailbox)) {
             return ImmutableList.of();
@@ -151,27 +143,35 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     public List<MessageId> search(MailboxSession session, final MultimailboxesSearchQuery searchQuery, long limit) throws MailboxException {
         List<Mailbox> allUserMailboxes = mailboxMapperFactory.getMailboxMapper(session)
                 .findMailboxWithPathLike(new MailboxPath(session.getPersonalSpace(), session.getUser().getUserName(), WILDCARD));
-        FluentIterable<Mailbox> filteredMailboxes = FluentIterable
-            .from(allUserMailboxes)
+        Stream<Mailbox> filteredMailboxes = allUserMailboxes.stream()
             .filter(mailbox -> !searchQuery.getNotInMailboxes().contains(mailbox.getMailboxId()));
+
         if (searchQuery.getInMailboxes().isEmpty()) {
             return getAsMessageIds(searchResults(session, filteredMailboxes, searchQuery.getSearchQuery()), limit);
         }
-        List<Mailbox> queriedMailboxes = new ArrayList<>();
-        for (Mailbox mailbox: filteredMailboxes) {
-            if (searchQuery.getInMailboxes().contains(mailbox.getMailboxId())) {
-                queriedMailboxes.add(mailbox);
+        List<Mailbox> queriedMailboxes = filteredMailboxes
+            .filter(mailbox -> searchQuery.getInMailboxes().contains(mailbox.getMailboxId()))
+            .collect(Guavate.toImmutableList());
+
+        return getAsMessageIds(searchResults(session, queriedMailboxes.stream(), searchQuery.getSearchQuery()), limit);
+    }
+
+    private List<SearchResult> searchResults(MailboxSession session, Stream<Mailbox> mailboxes, SearchQuery query) throws MailboxException {
+        return mailboxes.flatMap(mailbox -> {
+            try {
+                return searchResults(session, mailbox, query).stream();
+            } catch (MailboxException e) {
+                throw Throwables.propagate(e);
             }
-        }
-        return getAsMessageIds(searchResults(session, queriedMailboxes, searchQuery.getSearchQuery()), limit);
+        }).collect(Guavate.toImmutableList());
     }
 
     private List<MessageId> getAsMessageIds(List<SearchResult> temp, long limit) {
-        return FluentIterable.from(temp)
-            .transform(searchResult -> searchResult.getMessageId().get())
+        return temp.stream()
+            .map(searchResult -> searchResult.getMessageId().get())
             .filter(SearchUtil.distinct())
             .limit(Long.valueOf(limit).intValue())
-            .toList();
+            .collect(Guavate.toImmutableList());
     }
 
 }

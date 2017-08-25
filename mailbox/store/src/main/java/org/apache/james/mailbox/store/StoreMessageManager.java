@@ -93,7 +93,6 @@ import org.apache.commons.io.input.TeeInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -443,7 +442,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     }
 
     private boolean hasNonInlinedAttachment(List<MessageAttachment> attachments) {
-        return FluentIterable.from(attachments)
+        return attachments.stream()
             .anyMatch(messageAttachment -> !messageAttachment.isInlinedWithCid());
     }
 

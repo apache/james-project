@@ -22,6 +22,7 @@ import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -34,8 +35,6 @@ import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.util.MimeUtil;
-
-import com.google.common.base.Predicate;
 
 /**
  * Utility class which helps with extracting of data for searches
@@ -478,7 +477,7 @@ public class SearchUtil {
             private final Set<MessageId> set = new HashSet<>();
 
             @Override
-            public boolean apply(MessageId input) {
+            public boolean test(MessageId input) {
                 return set.add(input);
             }
         };

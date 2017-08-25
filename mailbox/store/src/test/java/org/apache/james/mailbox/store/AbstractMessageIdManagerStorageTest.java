@@ -20,11 +20,9 @@
 package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.function.Predicate;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
@@ -46,22 +44,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public abstract class AbstractMessageIdManagerStorageTest {
     public static final Flags FLAGS = new Flags();
 
     private static final MessageUid messageUid1 = MessageUid.of(111);
     private static final MessageUid messageUid2 = MessageUid.of(222);
-
-    private static final Function<MessageResult, Map.Entry<MessageId, Flags>> toMapEntryOfFlags() {
-        return messageResult -> new AbstractMap.SimpleEntry<>(messageResult.getMessageId(), messageResult.getFlags());
-    }
-
 
     private MessageIdManagerTestSystem testingData;
     private MessageIdManager messageIdManager;
@@ -172,11 +162,11 @@ public abstract class AbstractMessageIdManagerStorageTest {
         MessageUid uidMessage1Mailbox1 = messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session)
             .get(0)
             .getUid();
-        MessageUid uidMessage2Mailbox1 = FluentIterable
-            .from(messageIdManager.getMessages(ImmutableList.of(messageId2), FetchGroupImpl.MINIMAL, session))
+        MessageUid uidMessage2Mailbox1 = messageIdManager.getMessages(ImmutableList.of(messageId2), FetchGroupImpl.MINIMAL, session)
+            .stream()
             .filter(inMailbox(mailbox1.getMailboxId()))
-            .toList()
-            .get(0)
+            .findFirst()
+            .get()
             .getUid();
 
         assertThat(uidMessage2Mailbox1).isGreaterThan(uidMessage1Mailbox1);
@@ -192,11 +182,11 @@ public abstract class AbstractMessageIdManagerStorageTest {
         long modSeqMessage1Mailbox1 = messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session)
             .get(0)
             .getModSeq();
-        long modSeqMessage2Mailbox1 = FluentIterable
-            .from(messageIdManager.getMessages(ImmutableList.of(messageId2), FetchGroupImpl.MINIMAL, session))
+        long modSeqMessage2Mailbox1 = messageIdManager.getMessages(ImmutableList.of(messageId2), FetchGroupImpl.MINIMAL, session)
+            .stream()
             .filter(inMailbox(mailbox1.getMailboxId()))
-            .toList()
-            .get(0)
+            .findFirst()
+            .get()
             .getModSeq();
 
         assertThat(modSeqMessage2Mailbox1).isGreaterThan(modSeqMessage1Mailbox1);
@@ -211,11 +201,11 @@ public abstract class AbstractMessageIdManagerStorageTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        MessageResult messageResult2 = FluentIterable
-            .from(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session))
+        MessageResult messageResult2 = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session)
+            .stream()
             .filter(inMailbox(mailbox1.getMailboxId()))
-            .toList()
-            .get(0);
+            .findFirst()
+            .get();
         MessageUid messageUid2 = messageResult2.getUid();
         long modSeq2 = messageResult2.getModSeq();
 
@@ -229,9 +219,10 @@ public abstract class AbstractMessageIdManagerStorageTest {
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox3.getMailboxId()), session);
 
-        List<MailboxId> messageMailboxIds = FluentIterable.from(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session))
-            .transform(MessageResult::getMailboxId)
-            .toList();
+        List<MailboxId> messageMailboxIds = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session)
+            .stream()
+            .map(MessageResult::getMailboxId)
+            .collect(Guavate.toImmutableList());
 
         assertThat(messageMailboxIds).containsOnly(mailbox1.getMailboxId(), mailbox3.getMailboxId());
     }
@@ -245,11 +236,11 @@ public abstract class AbstractMessageIdManagerStorageTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox3.getMailboxId()), session);
 
-        MessageResult messageResult3 = FluentIterable
-            .from(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session))
+        MessageResult messageResult3 = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session)
+            .stream()
             .filter(inMailbox(mailbox3.getMailboxId()))
-            .toList()
-            .get(0);
+            .findFirst()
+            .get();
         assertThat(messageResult3.getFlags()).isEqualTo(newFlags);
     }
 
@@ -389,11 +380,11 @@ public abstract class AbstractMessageIdManagerStorageTest {
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
         messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
-        
-        List<Flags> flags = FluentIterable
-                .from(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session))
-                .transform(MessageResult::getFlags)
-                .toList();
+
+        List<Flags> flags = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session)
+            .stream()
+            .map(MessageResult::getFlags)
+            .collect(Guavate.toImmutableList());
 
         assertThat(flags).hasSize(2);
         assertThat(flags.get(0)).isEqualTo(newFlags);
@@ -407,11 +398,11 @@ public abstract class AbstractMessageIdManagerStorageTest {
         MessageId messageId2 = testingData.persist(mailbox1.getMailboxId(), messageUid2, FLAGS, session);
 
         messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId2, ImmutableList.of(mailbox1.getMailboxId()), session);
-        
-        List<Flags> flags = FluentIterable
-                .from(messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session))
-                .transform(MessageResult::getFlags)
-                .toList();
+
+        List<Flags> flags = messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session)
+            .stream()
+            .map(MessageResult::getFlags)
+            .collect(Guavate.toImmutableList());
 
         assertThat(flags).hasSize(1);
         assertThat(flags.get(0)).isEqualTo(FLAGS);
@@ -422,12 +413,12 @@ public abstract class AbstractMessageIdManagerStorageTest {
         Flags newFlags = new Flags(Flags.Flag.SEEN);
         MessageId messageId1 = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
 
-        messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId1, ImmutableList.<MailboxId>of(), session);
+        messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId1, ImmutableList.of(), session);
 
-        List<Flags> flags = FluentIterable
-            .from(messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session))
-            .transform(MessageResult::getFlags)
-            .toList();
+        List<Flags> flags = messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session)
+            .stream()
+            .map(MessageResult::getFlags)
+            .collect(Guavate.toImmutableList());
 
         assertThat(flags).hasSize(1);
         assertThat(flags.get(0)).isEqualTo(FLAGS);
@@ -440,10 +431,10 @@ public abstract class AbstractMessageIdManagerStorageTest {
 
         messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId1, ImmutableList.of(mailbox2.getMailboxId()), session);
 
-        List<Flags> flags = FluentIterable
-            .from(messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session))
-            .transform(MessageResult::getFlags)
-            .toList();
+        List<Flags> flags = messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session)
+            .stream()
+            .map(MessageResult::getFlags)
+            .collect(Guavate.toImmutableList());
 
         assertThat(flags).hasSize(1);
         assertThat(flags.get(0)).isEqualTo(FLAGS);
@@ -457,14 +448,9 @@ public abstract class AbstractMessageIdManagerStorageTest {
 
         messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId1, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        final List<Map.Entry<MessageId, Flags>> entries = FluentIterable.from(messageIdManager.getMessages(ImmutableList.of(messageId1, messageId2), FetchGroupImpl.MINIMAL, session))
-            .transform(toMapEntryOfFlags())
-            .toList();
-        ImmutableMap.Builder<MessageId, Flags> builder = ImmutableMap.builder();
-        for (Map.Entry<MessageId, Flags> entry : entries) {
-            builder.put(entry);
-        }
-        Map<MessageId, Flags> flags = builder.build();
+        Map<MessageId, Flags> flags = messageIdManager.getMessages(ImmutableList.of(messageId1, messageId2), FetchGroupImpl.MINIMAL, session)
+            .stream()
+            .collect(Guavate.toImmutableMap(MessageResult::getMessageId, MessageResult::getFlags));
 
         assertThat(flags).hasSize(2);
         assertThat(flags.get(messageId1)).isEqualTo(newFlags);

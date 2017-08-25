@@ -39,7 +39,6 @@ import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTE
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_MEDIA_TYPE_NAME;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_MIME_TYPE_SPACE;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_SUB_TYPE_NAME;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -47,11 +46,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Predicate;
 
 import org.apache.james.mailbox.store.mail.model.Property;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Predicate;
 
 /**
  * Builds properties

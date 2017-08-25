@@ -22,6 +22,8 @@ package org.apache.james.mailbox.jpa.mail;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
@@ -37,14 +39,12 @@ import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 public class JPAAnnotationMapper extends JPATransactionalMapper implements AnnotationMapper {
 
@@ -60,9 +60,12 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
     @Override
     public List<MailboxAnnotation> getAllAnnotations(MailboxId mailboxId) {
         JPAId jpaId = (JPAId) mailboxId;
-        return Lists.transform(getEntityManager().createNamedQuery("retrieveAllAnnotations", JPAMailboxAnnotation.class)
-                .setParameter("idParam", jpaId.getRawId()).getResultList(),
-            READ_ROW);
+        return getEntityManager().createNamedQuery("retrieveAllAnnotations", JPAMailboxAnnotation.class)
+            .setParameter("idParam", jpaId.getRawId())
+            .getResultList()
+            .stream()
+            .map(READ_ROW)
+            .collect(Guavate.toImmutableList());
     }
 
     @Override
@@ -100,28 +103,19 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
 
     private List<MailboxAnnotation> getFilteredLikes(final JPAId jpaId, Set<MailboxAnnotationKey> keys, final Function<MailboxAnnotationKey, Predicate<MailboxAnnotation>> predicateFunction) {
         try {
-            return flatMapToList(Iterables.transform(keys,
-                key -> ImmutableList.copyOf(
-                    Iterables.filter(
-                        Iterables.transform(
-                            getEntityManager()
-                                .createNamedQuery("retrieveByKeyLike", JPAMailboxAnnotation.class)
-                                .setParameter("idParam", jpaId.getRawId())
-                                .setParameter("keyParam", key.asString() + '%')
-                                .getResultList(),
-                            READ_ROW),
-                        predicateFunction.apply(key)))));
+            return keys.stream()
+                .flatMap(key -> getEntityManager()
+                    .createNamedQuery("retrieveByKeyLike", JPAMailboxAnnotation.class)
+                    .setParameter("idParam", jpaId.getRawId())
+                    .setParameter("keyParam", key.asString() + '%')
+                    .getResultList()
+                    .stream()
+                    .map(READ_ROW)
+                    .filter(predicateFunction.apply(key)))
+                .collect(Guavate.toImmutableList());
         } catch (NoResultException e) {
             return ImmutableList.of();
         }
-    }
-
-    private List<MailboxAnnotation> flatMapToList(Iterable<List<MailboxAnnotation>> likes) {
-        ImmutableList.Builder<MailboxAnnotation> resultBuilder = ImmutableList.builder();
-        for (List<MailboxAnnotation> mailboxAnnotations: likes) {
-            resultBuilder.addAll(mailboxAnnotations);
-        }
-        return resultBuilder.build();
     }
 
     @Override

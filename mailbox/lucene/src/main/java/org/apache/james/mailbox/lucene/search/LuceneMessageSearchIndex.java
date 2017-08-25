@@ -122,8 +122,8 @@ import org.apache.lucene.util.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -465,19 +465,21 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             .inMailboxes(mailboxId)
             .build();
 
-        return FluentIterable.from(searchMultimap(multimailboxesSearchQuery, session))
-            .transform(SearchResult::getMessageUid)
+        return searchMultimap(multimailboxesSearchQuery, session)
+            .stream()
+            .map(SearchResult::getMessageUid)
             .iterator();
     }
 
     @Override
     public List<MessageId> search(MailboxSession session, MultimailboxesSearchQuery searchQuery, long limit) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
-        return FluentIterable.from(searchMultimap(searchQuery, session))
-            .transform(searchResult -> searchResult.getMessageId().get())
+        return searchMultimap(searchQuery, session)
+            .stream()
+            .map(searchResult -> searchResult.getMessageId().get())
             .filter(SearchUtil.distinct())
             .limit(Long.valueOf(limit).intValue())
-            .toList();
+            .collect(Guavate.toImmutableList());
     }
     
     private List<SearchResult> searchMultimap(MultimailboxesSearchQuery searchQuery, MailboxSession session) throws MailboxException {
@@ -758,7 +760,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     private static boolean hasAttachment(MailboxMessage membership) {
-       return FluentIterable.from(membership.getProperties())
+       return membership.getProperties().stream()
             .anyMatch(PropertyBuilder.isHasAttachmentProperty());
     }
 

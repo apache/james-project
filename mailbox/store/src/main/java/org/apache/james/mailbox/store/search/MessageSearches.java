@@ -72,7 +72,6 @@ import org.apache.james.mime4j.utils.search.MessageMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -118,10 +117,10 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                 LOGGER.error("Unable to search message " + m.getUid(), e);
             }
         }
-        List<MailboxMessage> sortedResults = FluentIterable.from(builder.build())
-            .toSortedList(CombinedComparator.create(query.getSorts()));
-        return FluentIterable.from(sortedResults)
-            .transform(mailboxMessage -> new SimpleMessageSearchIndex.SearchResult(
+        return builder.build()
+            .stream()
+            .sorted(CombinedComparator.create(query.getSorts()))
+            .map(mailboxMessage -> new SimpleMessageSearchIndex.SearchResult(
                 Optional.of(mailboxMessage.getMessageId()),
                 mailboxMessage.getMailboxId(),
                 mailboxMessage.getUid()))
@@ -498,7 +497,8 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
 
     private boolean matches(SearchQuery.AttachmentCriterion criterion, MailboxMessage message) throws UnsupportedSearchException {
-        boolean mailHasAttachments = FluentIterable.from(message.getProperties())
+        boolean mailHasAttachments = message.getProperties()
+            .stream()
             .anyMatch(PropertyBuilder.isHasAttachmentProperty());
         return mailHasAttachments == criterion.getOperator().isSet();
     }
