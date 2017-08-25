@@ -22,7 +22,6 @@ package org.apache.james.transport.mailets;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
-
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
@@ -41,9 +40,9 @@ import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -174,15 +173,10 @@ public class UseHeaderRecipients extends GenericMailet {
         AddressList addressList = LenientAddressParser.DEFAULT
             .parseAddressList(MimeUtil.unfold(headerPart));
 
-        ImmutableList.Builder<Mailbox> mailboxList = ImmutableList.builder();
-
-        for (Address address: addressList) {
-            mailboxList.addAll(convertAddressToMailboxCollection(address));
-        }
-
-        return FluentIterable.from(mailboxList.build())
-            .transform(this::toMailAddress)
-            .toList();
+        return addressList.stream()
+            .flatMap(address -> convertAddressToMailboxCollection(address).stream())
+            .map(this::toMailAddress)
+            .collect(Guavate.toImmutableList());
     }
 
     private MailAddress toMailAddress(Mailbox mailbox) {

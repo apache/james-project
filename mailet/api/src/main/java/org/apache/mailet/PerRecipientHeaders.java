@@ -21,12 +21,12 @@ package org.apache.mailet;
 
 import java.util.Collection;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Multimap;
 
 public class PerRecipientHeaders {
@@ -45,9 +45,10 @@ public class PerRecipientHeaders {
     }
 
     public Collection<String> getHeaderNamesForRecipient(MailAddress recipient) {
-        return FluentIterable.from(headersByRecipient.get(recipient))
-            .transform(Header::getName)
-            .toSet();
+        return headersByRecipient.get(recipient)
+            .stream()
+            .map(Header::getName)
+            .collect(Guavate.toImmutableSet());
     }
 
     public void addHeaderForRecipient(Header header, MailAddress recipient) {

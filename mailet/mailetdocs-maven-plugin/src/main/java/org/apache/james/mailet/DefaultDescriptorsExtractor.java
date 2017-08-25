@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.james.mailet.MailetMatcherDescriptor.Type;
 import org.apache.mailet.Experimental;
@@ -39,7 +40,6 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 
-import com.google.common.collect.FluentIterable;
 import com.thoughtworks.qdox.JavaDocBuilder;
 import com.thoughtworks.qdox.model.JavaClass;
 
@@ -182,7 +182,7 @@ public class DefaultDescriptorsExtractor {
 
 
     private boolean isExperimental(JavaClass javaClass) {
-        return FluentIterable.of(javaClass.getAnnotations())
+        return Stream.of(javaClass.getAnnotations())
             .anyMatch(annotation -> annotation.getType().getValue()
                     .equals(Experimental.class.getName()));
     }

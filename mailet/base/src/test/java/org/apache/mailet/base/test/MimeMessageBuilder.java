@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Function;
 import javax.activation.DataHandler;
 import javax.mail.BodyPart;
 import javax.mail.Message;
@@ -42,11 +43,10 @@ import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.IOUtils;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 public class MimeMessageBuilder {
@@ -258,23 +258,24 @@ public class MimeMessageBuilder {
     }
 
     public MimeMessageBuilder addToRecipient(String... tos) throws AddressException {
-        this.to.addAll(FluentIterable.from(Arrays.asList(tos))
-            .transform(TO_INTERNET_ADDRESS)
-            .toList());
+        this.to.addAll(Arrays.asList(tos).stream()
+            .map(TO_INTERNET_ADDRESS)
+            .collect(Guavate.toImmutableList()));
         return this;
     }
 
     public MimeMessageBuilder addCcRecipient(String... ccs) throws AddressException {
-        this.cc.addAll(FluentIterable.from(Arrays.asList(ccs))
-            .transform(TO_INTERNET_ADDRESS)
-            .toList());
+        this.cc.addAll(Arrays.asList(ccs).stream()
+            .map(TO_INTERNET_ADDRESS)
+            .collect(Guavate.toImmutableList()));
         return this;
     }
 
     public MimeMessageBuilder addBccRecipient(String... bccs) throws AddressException {
-        this.bcc.addAll(FluentIterable.from(Arrays.asList(bccs))
-            .transform(TO_INTERNET_ADDRESS)
-            .toList());
+        this.bcc.addAll(Arrays.asList(bccs)
+            .stream()
+            .map(TO_INTERNET_ADDRESS)
+            .collect(Guavate.toImmutableList()));
         return this;
     }
 

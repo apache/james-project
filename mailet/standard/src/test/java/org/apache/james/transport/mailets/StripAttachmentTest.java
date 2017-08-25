@@ -52,7 +52,6 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.FluentIterable;
 
 public class StripAttachmentTest {
 
@@ -235,9 +234,9 @@ public class StripAttachmentTest {
     }
 
     private String retrieveFilenameStartingWith(Collection<String> savedAttachments, final String filename) {
-        return FluentIterable.from(savedAttachments)
+        return savedAttachments.stream()
                 .filter(attachmentFilename -> attachmentFilename.startsWith(filename))
-                .first()
+                .findFirst()
                 .get();
     }
 
