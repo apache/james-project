@@ -29,6 +29,7 @@ import org.apache.james.modules.mailbox.CassandraMailboxModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
 import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
+import org.apache.james.modules.metrics.CassandraMetricsModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
 import org.apache.james.modules.protocols.JMAPServerModule;
 import org.apache.james.modules.protocols.LMTPServerModule;
@@ -76,6 +77,7 @@ public class CassandraJamesServerMain {
         new TikaMailboxModule(),
         new ActiveMQQueueModule(),
         new ESMetricReporterModule(),
+        new CassandraMetricsModule(),
         new MailboxModule());
 
 
