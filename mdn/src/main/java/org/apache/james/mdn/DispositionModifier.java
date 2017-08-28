@@ -17,13 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.jsieve.mdn;
+package org.apache.james.mdn;
 
 /**
- * Interface <code>DispositionType</code> marks a type encapsulating
- * disposition type information as defined by RFC 2298.
+ * Interface <code>DispositionModifier</code> marks a type encapsulating
+ * disposition modifier information as defined by RFC 2298.
  */
-public interface DispositionType
+public interface DispositionModifier
 {
 
 }

@@ -17,19 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.jsieve.mdn;
+package org.apache.james.mdn;
 
 
 /**
- * Class <code>TypeDeleted</code>
- */
-public class TypeDeleted implements DispositionType
+ * Class <code>ModifierMailboxTerminated</code>
+ */    
+public class ModifierMailboxTerminated implements DispositionModifier
 {
 
     /**
      * Default Constructor
      */
-    public TypeDeleted()
+    public ModifierMailboxTerminated()
     {
         super();
     }
@@ -39,7 +39,7 @@ public class TypeDeleted implements DispositionType
      */
     public String toString()
     {
-        return "deleted";
-    }         
+        return "mailbox-terminated";
+    }        
 
 }

@@ -17,19 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.jsieve.mdn;
+package org.apache.james.mdn;
 
 
 /**
- * Class <code>TypeFailed</code>
+ * Class <code>ModifierWarning</code>
  */    
-public class TypeFailed implements DispositionType
+public class ModifierWarning implements DispositionModifier
 {
 
     /**
      * Default Constructor
      */
-    public TypeFailed()
+    public ModifierWarning()
     {
         super();
     }
@@ -39,6 +39,7 @@ public class TypeFailed implements DispositionType
      */
     public String toString()
     {
-        return "failed";
-    }         
+        return "warning";
+    }        
+
 }

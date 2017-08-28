@@ -17,29 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.jsieve.mdn;
-
+package org.apache.james.mdn;
 
 /**
- * Class <code>ModifierFailed</code>
- */    
-public class ModifierFailed implements DispositionModifier
+ * Interface <code>DispositionSendingMode</code> marks a type encapsulating
+ * disposition sending mode information as defined by RFC 2298.
+ */
+public interface DispositionSendingMode
 {
-
-    /**
-     * Default Constructor
-     */
-    public ModifierFailed()
-    {
-        super();
-    }
-    
-    /**
-     * @see java.lang.Object#toString()
-     */
-    public String toString()
-    {
-        return "failed";
-    }        
 
 }

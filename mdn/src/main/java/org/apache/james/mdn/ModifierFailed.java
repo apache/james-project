@@ -17,28 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.jsieve.mdn;
+package org.apache.james.mdn;
 
 
 /**
- * Class <code>ModifierError</code>
- */
-public class ModifierError implements DispositionModifier
+ * Class <code>ModifierFailed</code>
+ */    
+public class ModifierFailed implements DispositionModifier
 {
 
     /**
      * Default Constructor
      */
-    public ModifierError()
+    public ModifierFailed()
     {
         super();
     }
-
+    
     /**
      * @see java.lang.Object#toString()
      */
     public String toString()
     {
-        return "error";
-    }
+        return "failed";
+    }        
+
 }

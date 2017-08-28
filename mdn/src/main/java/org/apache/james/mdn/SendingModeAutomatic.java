@@ -17,19 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.jsieve.mdn;
+package org.apache.james.mdn;
 
 
 /**
- * Class <code>ModifierExpired</code>
- */    
-public class ModifierExpired implements DispositionModifier
+ * Class <code>SendingModeAutomatic</code>
+ */
+public class SendingModeAutomatic implements DispositionSendingMode
 {
 
     /**
      * Default Constructor
      */
-    public ModifierExpired()
+    public SendingModeAutomatic()
     {
         super();
     }
@@ -39,7 +39,7 @@ public class ModifierExpired implements DispositionModifier
      */
     public String toString()
     {
-        return "expired";
+        return "MDN-sent-automatically";
     }        
 
 }

@@ -17,29 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.jsieve.mdn;
-
+package org.apache.james.mdn;
 
 /**
- * Class <code>SendingModeAutomatic</code>
+ * Interface <code>DispositionType</code> marks a type encapsulating
+ * disposition type information as defined by RFC 2298.
  */
-public class SendingModeAutomatic implements DispositionSendingMode
+public interface DispositionType
 {
-
-    /**
-     * Default Constructor
-     */
-    public SendingModeAutomatic()
-    {
-        super();
-    }
-    
-    /**
-     * @see java.lang.Object#toString()
-     */
-    public String toString()
-    {
-        return "MDN-sent-automatically";
-    }        
 
 }

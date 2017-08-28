@@ -17,18 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.jsieve.mdn;
+package org.apache.james.mdn;
 
 
 /**
- * Class <code>TypeDispatched</code>
- */
-public class TypeDispatched implements DispositionType
+ * Class <code>ModifierExpired</code>
+ */    
+public class ModifierExpired implements DispositionModifier
 {
+
     /**
      * Default Constructor
      */
-    public TypeDispatched()
+    public ModifierExpired()
     {
         super();
     }
@@ -38,6 +39,7 @@ public class TypeDispatched implements DispositionType
      */
     public String toString()
     {
-        return "dispatched";
-    }         
+        return "expired";
+    }        
+
 }

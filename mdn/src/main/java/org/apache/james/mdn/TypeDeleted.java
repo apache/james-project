@@ -17,26 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.jsieve.mdn;
+package org.apache.james.mdn;
 
 
 /**
- * Class <code>ActionModeAutomatic</code>
+ * Class <code>TypeDeleted</code>
  */
-public class ActionModeAutomatic implements DispositionActionMode {
+public class TypeDeleted implements DispositionType
+{
 
     /**
      * Default Constructor
      */
-    public ActionModeAutomatic() {
+    public TypeDeleted()
+    {
         super();
     }
-
+    
     /**
      * @see java.lang.Object#toString()
      */
-    public String toString() {
-        return "automatic-action";
-    }
+    public String toString()
+    {
+        return "deleted";
+    }         
 
 }

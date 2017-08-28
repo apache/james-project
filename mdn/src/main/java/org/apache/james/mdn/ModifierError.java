@@ -17,29 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.jsieve.mdn;
+package org.apache.james.mdn;
 
 
 /**
- * Class <code>ModifierMailboxTerminated</code>
- */    
-public class ModifierMailboxTerminated implements DispositionModifier
+ * Class <code>ModifierError</code>
+ */
+public class ModifierError implements DispositionModifier
 {
 
     /**
      * Default Constructor
      */
-    public ModifierMailboxTerminated()
+    public ModifierError()
     {
         super();
     }
-    
+
     /**
      * @see java.lang.Object#toString()
      */
     public String toString()
     {
-        return "mailbox-terminated";
-    }        
-
+        return "error";
+    }
 }

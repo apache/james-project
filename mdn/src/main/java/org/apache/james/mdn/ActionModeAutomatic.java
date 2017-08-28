@@ -17,13 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.jsieve.mdn;
+package org.apache.james.mdn;
+
 
 /**
- * Interface <code>DispositionModifier</code> marks a type encapsulating
- * disposition modifier information as defined by RFC 2298.
+ * Class <code>ActionModeAutomatic</code>
  */
-public interface DispositionModifier
-{
+public class ActionModeAutomatic implements DispositionActionMode {
+
+    /**
+     * Default Constructor
+     */
+    public ActionModeAutomatic() {
+        super();
+    }
+
+    /**
+     * @see java.lang.Object#toString()
+     */
+    public String toString() {
+        return "automatic-action";
+    }
 
 }
