@@ -28,39 +28,19 @@ import org.apache.mailet.base.mail.MimeMultipartReport;
  * Class <code>MDNFactory</code> creates MimeMultipartReports containing
  * Message Delivery Notifications as specified by RFC 2298.
  */
-public class MDNFactory
-{
-
-    /**
-     * Default Constructor
-     */
-    private MDNFactory()
-    {
-        super();
-    }
+public class MDNFactory {
     
     /**
      * Answers a MimeMultipartReport containing a
      * Message Delivery Notification as specified by RFC 2298.
      * 
      * @param humanText
-     * @param reporting_UA_name
-     * @param reporting_UA_product
-     * @param original_recipient
-     * @param final_recipient
-     * @param original_message_id
-     * @param disposition
+     * @param mdnReport
      * @return MimeMultipartReport
      * @throws MessagingException
      */
-    static public MimeMultipartReport create(String humanText,
-            String reporting_UA_name,
-            String reporting_UA_product,
-            String original_recipient,
-            String final_recipient,
-            String original_message_id,
-            Disposition disposition) throws MessagingException
-    {
+    public static MimeMultipartReport create(String humanText,
+            MDNReport mdnReport) throws MessagingException {
         // Create the message parts. According to RFC 2298, there are two
         // compulsory parts and one optional part...
         MimeMultipartReport multiPart = new MimeMultipartReport();
@@ -72,15 +52,8 @@ public class MDNFactory
         multiPart.addBodyPart(humanPart);
 
         // Part 2: MDN Report Part
-        String mdnReport = generateMDNReport(reporting_UA_name,
-            reporting_UA_product,
-            original_recipient,
-            final_recipient,
-            original_message_id,
-            disposition);
-
         MimeBodyPart mdnPart = new MimeBodyPart();
-        mdnPart.setContent(mdnReport, "message/disposition-notification");
+        mdnPart.setContent(mdnReport.formattedValue(), "message/disposition-notification");
         multiPart.addBodyPart(mdnPart);
 
         // Part 3: The optional third part, the original message is omitted.
@@ -90,38 +63,6 @@ public class MDNFactory
         // includes only the RFC 822 headers of the failed message. This is
         // described in RFC 1892. It would be a useful addition!        
         return multiPart;
-    }
-
-    public static String generateMDNReport(String reporting_UA_name, String reporting_UA_product, String original_recipient,
-                                                   String final_recipient, String original_message_id, Disposition disposition) {
-        // 1) reporting-ua-field
-        StringBuilder mdnReport = new StringBuilder(128);
-        mdnReport.append("Reporting-UA: ");
-        mdnReport.append((reporting_UA_name == null ? "" : reporting_UA_name));
-        mdnReport.append("; ");
-        mdnReport.append((reporting_UA_product == null ? "" : reporting_UA_product));
-        mdnReport.append("\r\n");
-        // 2) original-recipient-field
-        if (null != original_recipient)
-        {
-            mdnReport.append("Original-Recipient: ");
-            mdnReport.append("rfc822; ");
-            mdnReport.append(original_recipient);
-            mdnReport.append("\r\n");
-        }
-        // 3) final-recipient-field
-        mdnReport.append("Final-Recepient: ");
-        mdnReport.append("rfc822; ");
-        mdnReport.append((final_recipient == null ? "" : final_recipient));
-        mdnReport.append("\r\n");
-        // 4) original-message-id-field
-        mdnReport.append("Original-Message-ID: ");
-        mdnReport.append((original_message_id == null ? "" : original_message_id));
-        mdnReport.append("\r\n");
-        // 5) disposition-field
-        mdnReport.append(disposition.toString());
-        mdnReport.append("\r\n");
-        return mdnReport.toString();
     }
 
 }

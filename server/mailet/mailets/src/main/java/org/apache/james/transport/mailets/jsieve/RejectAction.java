@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -29,9 +30,14 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import org.apache.james.mdn.Disposition;
 import org.apache.james.mdn.MDNFactory;
+import org.apache.james.mdn.MDNReport;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
+import org.apache.james.mdn.fields.Disposition;
+import org.apache.james.mdn.fields.FinalRecipient;
+import org.apache.james.mdn.fields.OriginalMessageId;
+import org.apache.james.mdn.fields.OriginalRecipient;
+import org.apache.james.mdn.fields.ReportingUserAgent;
 import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
@@ -108,17 +114,26 @@ public class RejectAction implements MailAction {
         }
 
         MailAddress soleRecipient = ActionUtils.getSoleRecipient(aMail);
-        String final_recipient = soleRecipient.toString();
-
+        String final_recipient = soleRecipient.asString();
         String original_message_id = aMail.getMessage().getMessageID();
 
-        DispositionModifier modifiers[] = {DispositionModifier.Error};
-        Disposition disposition = new Disposition(DispositionActionMode.Automatic,
-                DispositionSendingMode.Automatic, DispositionType.Deleted, modifiers);
-
-        MimeMultipart multiPart = MDNFactory.create(humanText.toString(),
-                reporting_UA_name, reporting_UA_product, original_recipient,
-                final_recipient, original_message_id, disposition);
+        MimeMultipart multiPart = MDNFactory.create(
+            humanText.toString(),
+            MDNReport.builder()
+                .reportingUserAgentField(
+                    new ReportingUserAgent(
+                        Optional.ofNullable(reporting_UA_name),
+                        Optional.ofNullable(reporting_UA_product)))
+                .finalRecipientField(new FinalRecipient(Optional.of(final_recipient)))
+                .originalRecipientField(Optional.ofNullable(original_recipient).map(OriginalRecipient::new))
+                .originalMessageIdField(new OriginalMessageId(Optional.of(original_message_id)))
+                .dispositionField(Disposition.builder()
+                    .actionMode(DispositionActionMode.Automatic)
+                    .sendingMode(DispositionSendingMode.Automatic)
+                    .type(DispositionType.Deleted)
+                    .addModifier(DispositionModifier.Error)
+                    .build())
+                .build());
 
         // Send the message
         MimeMessage reply = (MimeMessage) aMail.getMessage().reply(false);

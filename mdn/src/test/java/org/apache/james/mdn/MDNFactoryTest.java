@@ -21,7 +21,14 @@ package org.apache.james.mdn;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
+
 import org.apache.james.mdn.action.mode.DispositionActionMode;
+import org.apache.james.mdn.fields.Disposition;
+import org.apache.james.mdn.fields.FinalRecipient;
+import org.apache.james.mdn.fields.OriginalMessageId;
+import org.apache.james.mdn.fields.OriginalRecipient;
+import org.apache.james.mdn.fields.ReportingUserAgent;
 import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
@@ -36,12 +43,24 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatAutomaticActions() {
-        Disposition disposition = new Disposition(DispositionActionMode.Automatic, DispositionSendingMode.Automatic, DispositionType.Processed);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Automatic)
+            .sendingMode(DispositionSendingMode.Automatic)
+            .type(DispositionType.Processed)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
 
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -53,12 +72,24 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatManualActions() {
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Processed);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Manual)
+            .type(DispositionType.Processed)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
 
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -70,12 +101,24 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatTypeDenied() {
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Denied);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Manual)
+            .type(DispositionType.Denied)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
 
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -87,12 +130,24 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatTypeDispatcher() {
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Dispatched);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+        .actionMode(DispositionActionMode.Manual)
+        .sendingMode(DispositionSendingMode.Manual)
+        .type(DispositionType.Dispatched)
+        .addModifier(DispositionModifier.Error)
+        .addModifier(DispositionModifier.Failed)
+        .build();
 
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -104,12 +159,24 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatTypeDisplayed() {
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Displayed);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+        .actionMode(DispositionActionMode.Manual)
+        .sendingMode(DispositionSendingMode.Manual)
+        .type(DispositionType.Displayed)
+        .addModifier(DispositionModifier.Error)
+        .addModifier(DispositionModifier.Failed)
+        .build();
 
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -121,12 +188,24 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatTypeFailed() {
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Failed);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Manual)
+            .type(DispositionType.Failed)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
 
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -138,12 +217,24 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatTypeDeleted() {
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Deleted);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Manual)
+            .type(DispositionType.Deleted)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
 
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -155,13 +246,24 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatAllModifier() {
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Deleted);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Expired, DispositionModifier.Failed,
-            DispositionModifier.MailboxTerminated, DispositionModifier.Superseded, DispositionModifier.Warning};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Manual)
+            .type(DispositionType.Deleted)
+            .addModifiers(DispositionModifier.Error, DispositionModifier.Expired, DispositionModifier.Failed,
+                DispositionModifier.MailboxTerminated, DispositionModifier.Superseded, DispositionModifier.Warning)
+            .build();
 
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -172,13 +274,51 @@ public class MDNFactoryTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatNoModifier() {
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Deleted);
-        DispositionModifier[] dispostionModifiers = {};
-        disposition.setDispositionModifiers(dispostionModifiers);
+    public void generateMDNReportShouldFormatOneModifier() {
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Manual)
+            .type(DispositionType.Deleted)
+            .addModifier(DispositionModifier.Error)
+            .build();
 
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
+
+        assertThat(report)
+            .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
+                "Original-Recipient: rfc822; originalRecipient\r\n" +
+                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Original-Message-ID: original_message_id\r\n" +
+                "Disposition: manual-action/MDN-sent-manually;deleted/error\r\n");
+    }
+
+    @Test
+    public void generateMDNReportShouldFormatNoModifier() {
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Manual)
+            .type(DispositionType.Deleted)
+            .build();
+
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -190,13 +330,21 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatNoModifierNullType() {
-        DispositionType type = null;
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, type);
-        DispositionModifier[] dispostionModifiers = {};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Manual)
+            .build();
 
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -208,13 +356,23 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatNullActionMode() {
-        DispositionActionMode actionMode = null;
-        Disposition disposition = new Disposition(actionMode, DispositionSendingMode.Manual, DispositionType.Deleted);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+            .sendingMode(DispositionSendingMode.Manual)
+            .type(DispositionType.Deleted)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
 
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -226,13 +384,23 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatNullSendingMode() {
-        DispositionSendingMode sendingMode = null;
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, sendingMode, DispositionType.Deleted);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .type(DispositionType.Deleted)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
 
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -244,13 +412,24 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatNullUserAgentName() {
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Automatic, DispositionType.Deleted);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Automatic)
+            .type(DispositionType.Deleted)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
 
-        String reporting_ua_name = null;
-        String report = MDNFactory.generateMDNReport(reporting_ua_name, "UA_product", "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.empty(),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: ; UA_product\r\n" +
@@ -262,13 +441,24 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatNullUserAgentProduct() {
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Automatic, DispositionType.Deleted);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Automatic)
+            .type(DispositionType.Deleted)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
 
-        String reporting_ua_product = null;
-        String report = MDNFactory.generateMDNReport("UA_name", reporting_ua_product, "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.empty()))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; \r\n" +
@@ -280,13 +470,23 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatNullOriginalRecipient() {
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Automatic, DispositionType.Deleted);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Automatic)
+            .type(DispositionType.Deleted)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
 
-        String original_recipient = null;
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", original_recipient,
-            "final_recipient", "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -297,13 +497,24 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatNullFinalRecipient() {
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Automatic, DispositionType.Deleted);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Automatic)
+            .type(DispositionType.Deleted)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
 
-        String final_recipient = null;
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            final_recipient, "original_message_id", disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.empty()))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -315,13 +526,24 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatNullOriginalMessageId() {
-        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Automatic, DispositionType.Deleted);
-        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
-        disposition.setDispositionModifiers(dispostionModifiers);
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Automatic)
+            .type(DispositionType.Deleted)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
 
-        String original_message_id = null;
-        String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            "final_recipient", original_message_id, disposition);
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.empty()))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
@@ -334,8 +556,14 @@ public class MDNFactoryTest {
     @Test
     public void generateMDNReportThrowOnNullDisposition() {
         Disposition disposition = null;
-        expectedException.expect(NullPointerException.class);
-        MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
-            "final_recipient", "original_message_id", disposition);
+        expectedException.expect(IllegalStateException.class);
+
+        MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                Optional.of("UA_name"),
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .build();
     }
 }
