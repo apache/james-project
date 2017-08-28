@@ -72,6 +72,28 @@ public class MDNFactory
         multiPart.addBodyPart(humanPart);
 
         // Part 2: MDN Report Part
+        String mdnReport = generateMDNReport(reporting_UA_name,
+            reporting_UA_product,
+            original_recipient,
+            final_recipient,
+            original_message_id,
+            disposition);
+
+        MimeBodyPart mdnPart = new MimeBodyPart();
+        mdnPart.setContent(mdnReport, "message/disposition-notification");
+        multiPart.addBodyPart(mdnPart);
+
+        // Part 3: The optional third part, the original message is omitted.
+        // We don't want to propogate over-sized, virus infected or
+        // other undesirable mail!
+        // There is the option of adding a Text/RFC822-Headers part, which
+        // includes only the RFC 822 headers of the failed message. This is
+        // described in RFC 1892. It would be a useful addition!        
+        return multiPart;
+    }
+
+    public static String generateMDNReport(String reporting_UA_name, String reporting_UA_product, String original_recipient,
+                                                   String final_recipient, String original_message_id, Disposition disposition) {
         // 1) reporting-ua-field
         StringBuilder mdnReport = new StringBuilder(128);
         mdnReport.append("Reporting-UA: ");
@@ -99,17 +121,7 @@ public class MDNFactory
         // 5) disposition-field
         mdnReport.append(disposition.toString());
         mdnReport.append("\r\n");
-        MimeBodyPart mdnPart = new MimeBodyPart();
-        mdnPart.setContent(mdnReport.toString(), "message/disposition-notification");
-        multiPart.addBodyPart(mdnPart);
-
-        // Part 3: The optional third part, the original message is omitted.
-        // We don't want to propogate over-sized, virus infected or
-        // other undesirable mail!
-        // There is the option of adding a Text/RFC822-Headers part, which
-        // includes only the RFC 822 headers of the failed message. This is
-        // described in RFC 1892. It would be a useful addition!        
-        return multiPart;
+        return mdnReport.toString();
     }
 
 }
