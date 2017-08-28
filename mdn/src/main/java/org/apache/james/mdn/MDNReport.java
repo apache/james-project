@@ -22,6 +22,7 @@ package org.apache.james.mdn;
 import java.util.Optional;
 
 import org.apache.james.mdn.fields.Disposition;
+import org.apache.james.mdn.fields.Error;
 import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.OriginalMessageId;
@@ -39,6 +40,7 @@ public class MDNReport {
         private Optional<FinalRecipient> finalRecipientField = Optional.empty();
         private Optional<OriginalMessageId> originalMessageIdField = Optional.empty();
         private Optional<Disposition> dispositionField = Optional.empty();
+        private Optional<Error> errorField = Optional.empty();
 
         public Builder reportingUserAgentField(ReportingUserAgent reportingUserAgentField) {
             this.reportingUserAgentField = Optional.of(reportingUserAgentField);
@@ -65,6 +67,12 @@ public class MDNReport {
             return this;
         }
 
+
+        public Builder errorField(Error errorField) {
+            this.errorField = Optional.of(errorField);
+            return this;
+        }
+
         public Builder finalRecipientField(FinalRecipient finalRecipientField) {
             this.finalRecipientField = Optional.of(finalRecipientField);
             return this;
@@ -88,7 +96,7 @@ public class MDNReport {
                 gatewayField, originalRecipientField,
                 finalRecipientField.get(),
                 originalMessageIdField,
-                dispositionField.get());
+                dispositionField.get(), errorField);
         }
 
     }
@@ -105,15 +113,17 @@ public class MDNReport {
     private final FinalRecipient finalRecipientField;
     private final Optional<OriginalMessageId> originalMessageIdField;
     private final Disposition dispositionField;
+    private final Optional<Error> errorField;
 
     private MDNReport(Optional<ReportingUserAgent> reportingUserAgentField, Optional<Gateway> gatewayField, Optional<OriginalRecipient> originalRecipientField,
-                      FinalRecipient finalRecipientField, Optional<OriginalMessageId> originalMessageIdField, Disposition dispositionField) {
+                      FinalRecipient finalRecipientField, Optional<OriginalMessageId> originalMessageIdField, Disposition dispositionField, Optional<Error> errorField) {
         this.reportingUserAgentField = reportingUserAgentField;
         this.gatewayField = gatewayField;
         this.originalRecipientField = originalRecipientField;
         this.finalRecipientField = finalRecipientField;
         this.originalMessageIdField = originalMessageIdField;
         this.dispositionField = dispositionField;
+        this.errorField = errorField;
     }
 
     public Optional<ReportingUserAgent> getReportingUserAgentField() {
@@ -136,13 +146,22 @@ public class MDNReport {
         return dispositionField;
     }
 
+    public Optional<Gateway> getGatewayField() {
+        return gatewayField;
+    }
+
+    public Optional<Error> getErrorField() {
+        return errorField;
+    }
+
     public String formattedValue() {
         return reportingUserAgentField.map(value -> value.formattedValue() + LINE_END).orElse("")
             + gatewayField.map(value -> value.formattedValue() + LINE_END).orElse("")
             + originalRecipientField.map(value -> value.formattedValue() + LINE_END).orElse("")
             + finalRecipientField.formattedValue() + LINE_END
             + originalMessageIdField.map(value -> value.formattedValue() + LINE_END).orElse("")
-            + dispositionField.formattedValue() + LINE_END;
+            + dispositionField.formattedValue() + LINE_END
+            + errorField.map(value -> value.formattedValue() + LINE_END).orElse("");
 
     }
 }

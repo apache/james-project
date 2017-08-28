@@ -25,11 +25,13 @@ import java.util.Optional;
 
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.Disposition;
+import org.apache.james.mdn.fields.Error;
 import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.OriginalMessageId;
 import org.apache.james.mdn.fields.OriginalRecipient;
 import org.apache.james.mdn.fields.ReportingUserAgent;
+import org.apache.james.mdn.fields.Text;
 import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
@@ -564,5 +566,68 @@ public class MDNFactoryTest {
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build();
+    }
+
+    @Test
+    public void generateMDNReportShouldFormatErrorFields() {
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Automatic)
+            .sendingMode(DispositionSendingMode.Automatic)
+            .type(DispositionType.Processed)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
+
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                "UA_name",
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient("final_recipient"))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
+            .dispositionField(disposition)
+            .errorField(new Error(Text.fromRawText("An error message")))
+            .build()
+            .formattedValue();
+
+        assertThat(report)
+            .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
+                "Original-Recipient: rfc822; originalRecipient\r\n" +
+                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Original-Message-ID: original_message_id\r\n" +
+                "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n" +
+                "Error: An error message\r\n");
+    }
+
+    @Test
+    public void generateMDNReportShouldFormatErrorFieldsOnSeveralLines() {
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Automatic)
+            .sendingMode(DispositionSendingMode.Automatic)
+            .type(DispositionType.Processed)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
+
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                "UA_name",
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient("final_recipient"))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
+            .dispositionField(disposition)
+            .errorField(new Error(Text.fromRawText("An error message\non several lines")))
+            .build()
+            .formattedValue();
+
+        assertThat(report)
+            .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
+                "Original-Recipient: rfc822; originalRecipient\r\n" +
+                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Original-Message-ID: original_message_id\r\n" +
+                "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n" +
+                "Error: An error message\r\n" +
+                " on several lines\r\n");
     }
 }
