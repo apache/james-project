@@ -20,9 +20,11 @@
 package org.apache.james.mdn;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.james.mdn.fields.Disposition;
 import org.apache.james.mdn.fields.Error;
+import org.apache.james.mdn.fields.ExtensionField;
 import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.OriginalMessageId;
@@ -30,8 +32,12 @@ import org.apache.james.mdn.fields.OriginalRecipient;
 import org.apache.james.mdn.fields.ReportingUserAgent;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class MDNReport {
+
+    public static final String LINE_END = "\r\n";
+    public static final String EXTENSION_DELIMITER = LINE_END;
 
     public static class Builder {
         private Optional<ReportingUserAgent> reportingUserAgentField = Optional.empty();
@@ -41,6 +47,7 @@ public class MDNReport {
         private Optional<OriginalMessageId> originalMessageIdField = Optional.empty();
         private Optional<Disposition> dispositionField = Optional.empty();
         private Optional<Error> errorField = Optional.empty();
+        private ImmutableList.Builder<ExtensionField> extensionFields = ImmutableList.builder();
 
         public Builder reportingUserAgentField(ReportingUserAgent reportingUserAgentField) {
             this.reportingUserAgentField = Optional.of(reportingUserAgentField);
@@ -88,6 +95,16 @@ public class MDNReport {
             return this;
         }
 
+        public Builder withExtensionField(ExtensionField extensionField) {
+            this.extensionFields.add(extensionField);
+            return this;
+        }
+
+        public Builder withExtensionFields(ExtensionField... extensionField) {
+            this.extensionFields.add(extensionField);
+            return this;
+        }
+
         public MDNReport build() {
             Preconditions.checkState(finalRecipientField.isPresent());
             Preconditions.checkState(dispositionField.isPresent());
@@ -96,7 +113,9 @@ public class MDNReport {
                 gatewayField, originalRecipientField,
                 finalRecipientField.get(),
                 originalMessageIdField,
-                dispositionField.get(), errorField);
+                dispositionField.get(),
+                errorField,
+                extensionFields.build());
         }
 
     }
@@ -105,8 +124,6 @@ public class MDNReport {
         return new Builder();
     }
 
-    public static final String LINE_END = "\r\n";
-
     private final Optional<ReportingUserAgent> reportingUserAgentField;
     private final Optional<Gateway> gatewayField;
     private final Optional<OriginalRecipient> originalRecipientField;
@@ -114,9 +131,11 @@ public class MDNReport {
     private final Optional<OriginalMessageId> originalMessageIdField;
     private final Disposition dispositionField;
     private final Optional<Error> errorField;
+    private final ImmutableList<ExtensionField> extensionFields;
 
     private MDNReport(Optional<ReportingUserAgent> reportingUserAgentField, Optional<Gateway> gatewayField, Optional<OriginalRecipient> originalRecipientField,
-                      FinalRecipient finalRecipientField, Optional<OriginalMessageId> originalMessageIdField, Disposition dispositionField, Optional<Error> errorField) {
+                      FinalRecipient finalRecipientField, Optional<OriginalMessageId> originalMessageIdField, Disposition dispositionField, Optional<Error> errorField,
+                      ImmutableList<ExtensionField> extensionFields) {
         this.reportingUserAgentField = reportingUserAgentField;
         this.gatewayField = gatewayField;
         this.originalRecipientField = originalRecipientField;
@@ -124,6 +143,7 @@ public class MDNReport {
         this.originalMessageIdField = originalMessageIdField;
         this.dispositionField = dispositionField;
         this.errorField = errorField;
+        this.extensionFields = extensionFields;
     }
 
     public Optional<ReportingUserAgent> getReportingUserAgentField() {
@@ -161,7 +181,16 @@ public class MDNReport {
             + finalRecipientField.formattedValue() + LINE_END
             + originalMessageIdField.map(value -> value.formattedValue() + LINE_END).orElse("")
             + dispositionField.formattedValue() + LINE_END
-            + errorField.map(value -> value.formattedValue() + LINE_END).orElse("");
+            + errorField.map(value -> value.formattedValue() + LINE_END).orElse("")
+            + formattedExtensionValue();
+    }
 
+    private String formattedExtensionValue() {
+        if (extensionFields.isEmpty()) {
+            return "";
+        }
+        return extensionFields.stream()
+            .map(ExtensionField::formattedValue)
+            .collect(Collectors.joining(EXTENSION_DELIMITER)) + LINE_END;
     }
 }
