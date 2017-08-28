@@ -21,19 +21,39 @@ package org.apache.james.mdn.fields;
 
 import org.apache.james.mdn.Constants;
 
+import com.google.common.base.Preconditions;
+
 public class OriginalRecipient implements Field{
+    private static final String UNKNOWN = "unknown";
+
+    public static OriginalRecipient ofUnknown(String address) {
+        return new OriginalRecipient(UNKNOWN, address);
+    }
+
     private final String originalRecipient;
+    private final String addressType;
+
+    public OriginalRecipient(String addressType, String originalRecipient) {
+        Preconditions.checkNotNull(addressType);
+        Preconditions.checkNotNull(originalRecipient);
+        this.addressType = addressType;
+        this.originalRecipient = originalRecipient;
+    }
 
     public OriginalRecipient(String originalRecipient) {
-        this.originalRecipient = originalRecipient;
+        this(Constants.RFC_822, originalRecipient);
     }
 
     public String getOriginalRecipient() {
         return originalRecipient;
     }
 
+    public String getAddressType() {
+        return addressType;
+    }
+
     @Override
     public String formattedValue() {
-        return "Original-Recipient: " + Constants.RFC_822 + "; " + originalRecipient;
+        return "Original-Recipient: " + addressType + "; " + originalRecipient;
     }
 }

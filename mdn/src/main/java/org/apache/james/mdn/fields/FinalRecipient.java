@@ -19,25 +19,33 @@
 
 package org.apache.james.mdn.fields;
 
-import java.util.Optional;
-
 import org.apache.james.mdn.Constants;
+
+import com.google.common.base.Preconditions;
 
 public class FinalRecipient implements Field {
     public static final String FIELD_NAME = "Final-Recepient";
 
-    private final Optional<String> finalRecipient;
+    private final String finalRecipient;
+    private final String addressType;
 
-    public FinalRecipient(Optional<String> finalRecipient) {
+    public FinalRecipient(String addressType, String finalRecipient) {
+        Preconditions.checkNotNull(finalRecipient);
+        Preconditions.checkNotNull(addressType);
         this.finalRecipient = finalRecipient;
+        this.addressType = addressType;
     }
 
-    public Optional<String> getFinalRecipient() {
+    public FinalRecipient(String finalRecipient) {
+        this(Constants.RFC_822, finalRecipient);
+    }
+
+    public String getFinalRecipient() {
         return finalRecipient;
     }
 
     @Override
     public String formattedValue() {
-        return FIELD_NAME + ": " + Constants.RFC_822 + "; " + finalRecipient.orElse("");
+        return FIELD_NAME + ": " + addressType + "; " + finalRecipient;
     }
 }
