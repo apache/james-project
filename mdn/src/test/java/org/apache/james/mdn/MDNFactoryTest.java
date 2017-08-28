@@ -26,6 +26,7 @@ import java.util.Optional;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.Disposition;
 import org.apache.james.mdn.fields.FinalRecipient;
+import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.OriginalMessageId;
 import org.apache.james.mdn.fields.OriginalRecipient;
 import org.apache.james.mdn.fields.ReportingUserAgent;
@@ -536,5 +537,67 @@ public class MDNFactoryTest {
             .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
             .build();
+    }
+
+    @Test
+    public void generateMDNReportShouldFormatGateway() {
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Automatic)
+            .sendingMode(DispositionSendingMode.Automatic)
+            .type(DispositionType.Processed)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
+
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                "UA_name",
+                Optional.of("UA_product")))
+            .gatewayField(new Gateway("host.com"))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
+
+        assertThat(report)
+            .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
+                "MDN-Gateway: dns;host.com\r\n" +
+                "Original-Recipient: rfc822; originalRecipient\r\n" +
+                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Original-Message-ID: original_message_id\r\n" +
+                "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n");
+    }
+    
+    @Test
+    public void generateMDNReportShouldFormatGatewayWithExoticNameType() {
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Automatic)
+            .sendingMode(DispositionSendingMode.Automatic)
+            .type(DispositionType.Processed)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
+
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                "UA_name",
+                Optional.of("UA_product")))
+            .gatewayField(new Gateway("postal", "5 rue Charles mercier"))
+            .finalRecipientField(new FinalRecipient(Optional.of("final_recipient")))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
+
+        assertThat(report)
+            .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
+                "MDN-Gateway: postal;5 rue Charles mercier\r\n" +
+                "Original-Recipient: rfc822; originalRecipient\r\n" +
+                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Original-Message-ID: original_message_id\r\n" +
+                "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n");
     }
 }
