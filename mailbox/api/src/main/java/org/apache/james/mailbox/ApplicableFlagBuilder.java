@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox;
 
+import java.util.List;
 import javax.mail.Flags;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -58,6 +59,11 @@ public class ApplicableFlagBuilder {
     }
 
     public ApplicableFlagBuilder add(Flags... flags) {
+        builder.add(flags);
+        return this;
+    }
+
+    public ApplicableFlagBuilder add(List<Flags> flags) {
         builder.add(flags);
         return this;
     }
