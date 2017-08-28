@@ -31,11 +31,10 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.james.mdn.Disposition;
 import org.apache.james.mdn.MDNFactory;
-import org.apache.james.mdn.action.mode.ActionModeAutomatic;
+import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.modifier.DispositionModifier;
-import org.apache.james.mdn.modifier.ModifierError;
-import org.apache.james.mdn.sending.mode.SendingModeAutomatic;
-import org.apache.james.mdn.type.TypeDeleted;
+import org.apache.james.mdn.sending.mode.DispositionSendingMode;
+import org.apache.james.mdn.type.DispositionType;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionReject;
 import org.apache.mailet.Mail;
@@ -113,9 +112,9 @@ public class RejectAction implements MailAction {
 
         String original_message_id = aMail.getMessage().getMessageID();
 
-        DispositionModifier modifiers[] = {new ModifierError()};
-        Disposition disposition = new Disposition(new ActionModeAutomatic(),
-                new SendingModeAutomatic(), new TypeDeleted(), modifiers);
+        DispositionModifier modifiers[] = {DispositionModifier.Error};
+        Disposition disposition = new Disposition(DispositionActionMode.Automatic,
+                DispositionSendingMode.Automatic, DispositionType.Deleted, modifiers);
 
         MimeMultipart multiPart = MDNFactory.create(humanText.toString(),
                 reporting_UA_name, reporting_UA_product, original_recipient,

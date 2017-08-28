@@ -19,11 +19,30 @@
 
 package org.apache.james.mdn.sending.mode;
 
+import java.util.Optional;
+import java.util.stream.Stream;
+
 /**
  * Interface <code>DispositionSendingMode</code> marks a type encapsulating
  * disposition sending mode information as defined by RFC 2298.
  */
-public interface DispositionSendingMode
-{
+public enum DispositionSendingMode {
+    Manual("MDN-sent-manually"),
+    Automatic("MDN-sent-automatically");
 
+    public static Optional<DispositionSendingMode> fromString(String value) {
+        return Stream.of(values())
+            .filter(sendingMode -> sendingMode.getValue().equalsIgnoreCase(value))
+            .findFirst();
+    }
+
+    private final String value;
+
+    DispositionSendingMode(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }

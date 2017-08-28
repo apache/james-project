@@ -19,11 +19,34 @@
 
 package org.apache.james.mdn.modifier;
 
+import java.util.Optional;
+import java.util.stream.Stream;
+
 /**
  * Interface <code>DispositionModifier</code> marks a type encapsulating
  * disposition modifier information as defined by RFC 2298.
  */
-public interface DispositionModifier
-{
+public enum DispositionModifier {
+    Error("error"),
+    Expired("expired"),
+    Failed("failed"),
+    MailboxTerminated("mailbox-terminated"),
+    Superseded("superseded"),
+    Warning("warning");
 
+    public static Optional<DispositionModifier> fromString(String value) {
+        return Stream.of(values())
+            .filter(sendingMode -> sendingMode.getValue().equalsIgnoreCase(value))
+            .findFirst();
+    }
+
+    private final String value;
+
+    DispositionModifier(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }

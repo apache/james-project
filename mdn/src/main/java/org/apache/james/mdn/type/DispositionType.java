@@ -19,11 +19,34 @@
 
 package org.apache.james.mdn.type;
 
+import java.util.Optional;
+import java.util.stream.Stream;
+
 /**
  * Interface <code>DispositionType</code> marks a type encapsulating
  * disposition type information as defined by RFC 2298.
  */
-public interface DispositionType
-{
+public enum DispositionType {
+    Deleted("deleted"),
+    Denied("denied"),
+    Dispatched("dispatched"),
+    Displayed("displayed"),
+    Failed("failed"),
+    Processed("processed");
 
+    public static Optional<DispositionType> fromString(String value) {
+        return Stream.of(values())
+            .filter(sendingMode -> sendingMode.getValue().equalsIgnoreCase(value))
+            .findFirst();
+    }
+
+    private final String value;
+
+    DispositionType(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }

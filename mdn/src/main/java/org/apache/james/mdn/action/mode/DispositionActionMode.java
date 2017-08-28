@@ -19,11 +19,30 @@
 
 package org.apache.james.mdn.action.mode;
 
+import java.util.Optional;
+import java.util.stream.Stream;
+
 /**
  * Interface <code>DispositionActionMode</code> marks a type encapsulating
  * disposition action mode information as defined by RFC 2298.
  */
-public interface DispositionActionMode
-{
+public enum DispositionActionMode {
+    Manual("manual-action"),
+    Automatic("automatic-action");
 
+    public static Optional<DispositionActionMode> fromString(String value) {
+        return Stream.of(values())
+            .filter(actionMode -> actionMode.getValue().equalsIgnoreCase(value))
+            .findFirst();
+    }
+
+    private final String value;
+
+    DispositionActionMode(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }

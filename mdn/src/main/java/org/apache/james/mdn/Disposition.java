@@ -140,11 +140,11 @@ public class Disposition
     {
         StringBuilder builder = new StringBuilder(64);
         builder.append("Disposition: ");
-        builder.append(getActionMode() == null ? "" : getActionMode().toString());
+        builder.append(getActionMode() == null ? "" : getActionMode().getValue());
         builder.append('/');
-        builder.append(getSendingMode() == null ? "" : getSendingMode().toString());
+        builder.append(getSendingMode() == null ? "" : getSendingMode().getValue());
         builder.append(';');
-        builder.append(getDispositionType() == null ? "" : getDispositionType().toString());
+        builder.append(getDispositionType() == null ? "" : getDispositionType().getValue());
         if (null != getDispositionModifiers()
                 && getDispositionModifiers().length > 0)
         {
@@ -153,7 +153,7 @@ public class Disposition
             {
                 if (i > 0)
                     builder.append(',');
-                builder.append(getDispositionModifiers()[i]);
+                builder.append(getDispositionModifiers()[i].getValue());
             }
         }
         return builder.toString();

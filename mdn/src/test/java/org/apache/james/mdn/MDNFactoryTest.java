@@ -21,26 +21,10 @@ package org.apache.james.mdn;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.mdn.action.mode.ActionModeAutomatic;
-import org.apache.james.mdn.action.mode.ActionModeManual;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.modifier.DispositionModifier;
-import org.apache.james.mdn.modifier.ModifierError;
-import org.apache.james.mdn.modifier.ModifierExpired;
-import org.apache.james.mdn.modifier.ModifierFailed;
-import org.apache.james.mdn.modifier.ModifierMailboxTerminated;
-import org.apache.james.mdn.modifier.ModifierSuperseded;
-import org.apache.james.mdn.modifier.ModifierWarning;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
-import org.apache.james.mdn.sending.mode.SendingModeAutomatic;
-import org.apache.james.mdn.sending.mode.SendingModeManual;
 import org.apache.james.mdn.type.DispositionType;
-import org.apache.james.mdn.type.TypeDeleted;
-import org.apache.james.mdn.type.TypeDenied;
-import org.apache.james.mdn.type.TypeDispatched;
-import org.apache.james.mdn.type.TypeDisplayed;
-import org.apache.james.mdn.type.TypeFailed;
-import org.apache.james.mdn.type.TypeProcessed;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -52,8 +36,8 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatAutomaticActions() {
-        Disposition disposition = new Disposition(new ActionModeAutomatic(), new SendingModeAutomatic(), new TypeProcessed());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierFailed()};
+        Disposition disposition = new Disposition(DispositionActionMode.Automatic, DispositionSendingMode.Automatic, DispositionType.Processed);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
@@ -69,8 +53,8 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatManualActions() {
-        Disposition disposition = new Disposition(new ActionModeManual(), new SendingModeManual(), new TypeProcessed());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierFailed()};
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Processed);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
@@ -86,8 +70,8 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatTypeDenied() {
-        Disposition disposition = new Disposition(new ActionModeManual(), new SendingModeManual(), new TypeDenied());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierFailed()};
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Denied);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
@@ -103,8 +87,8 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatTypeDispatcher() {
-        Disposition disposition = new Disposition(new ActionModeManual(), new SendingModeManual(), new TypeDispatched());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierFailed()};
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Dispatched);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
@@ -120,8 +104,8 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatTypeDisplayed() {
-        Disposition disposition = new Disposition(new ActionModeManual(), new SendingModeManual(), new TypeDisplayed());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierFailed()};
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Displayed);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
@@ -137,8 +121,8 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatTypeFailed() {
-        Disposition disposition = new Disposition(new ActionModeManual(), new SendingModeManual(), new TypeFailed());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierFailed()};
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Failed);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
@@ -154,8 +138,8 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatTypeDeleted() {
-        Disposition disposition = new Disposition(new ActionModeManual(), new SendingModeManual(), new TypeDeleted());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierFailed()};
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Deleted);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
@@ -171,9 +155,9 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatAllModifier() {
-        Disposition disposition = new Disposition(new ActionModeManual(), new SendingModeManual(), new TypeDeleted());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierExpired(), new ModifierFailed(),
-            new ModifierMailboxTerminated(), new ModifierSuperseded(), new ModifierWarning()};
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Deleted);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Expired, DispositionModifier.Failed,
+            DispositionModifier.MailboxTerminated, DispositionModifier.Superseded, DispositionModifier.Warning};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
@@ -189,7 +173,7 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatNoModifier() {
-        Disposition disposition = new Disposition(new ActionModeManual(), new SendingModeManual(), new TypeDeleted());
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, DispositionType.Deleted);
         DispositionModifier[] dispostionModifiers = {};
         disposition.setDispositionModifiers(dispostionModifiers);
 
@@ -207,7 +191,7 @@ public class MDNFactoryTest {
     @Test
     public void generateMDNReportShouldFormatNoModifierNullType() {
         DispositionType type = null;
-        Disposition disposition = new Disposition(new ActionModeManual(), new SendingModeManual(), type);
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Manual, type);
         DispositionModifier[] dispostionModifiers = {};
         disposition.setDispositionModifiers(dispostionModifiers);
 
@@ -225,8 +209,8 @@ public class MDNFactoryTest {
     @Test
     public void generateMDNReportShouldFormatNullActionMode() {
         DispositionActionMode actionMode = null;
-        Disposition disposition = new Disposition(actionMode, new SendingModeManual(), new TypeDeleted());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierFailed()};
+        Disposition disposition = new Disposition(actionMode, DispositionSendingMode.Manual, DispositionType.Deleted);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
@@ -243,8 +227,8 @@ public class MDNFactoryTest {
     @Test
     public void generateMDNReportShouldFormatNullSendingMode() {
         DispositionSendingMode sendingMode = null;
-        Disposition disposition = new Disposition(new ActionModeManual(), sendingMode, new TypeDeleted());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierFailed()};
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, sendingMode, DispositionType.Deleted);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String report = MDNFactory.generateMDNReport("UA_name", "UA_product", "originalRecipient",
@@ -260,8 +244,8 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatNullUserAgentName() {
-        Disposition disposition = new Disposition(new ActionModeManual(), new SendingModeAutomatic(), new TypeDeleted());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierFailed()};
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Automatic, DispositionType.Deleted);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String reporting_ua_name = null;
@@ -278,8 +262,8 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatNullUserAgentProduct() {
-        Disposition disposition = new Disposition(new ActionModeManual(), new SendingModeAutomatic(), new TypeDeleted());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierFailed()};
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Automatic, DispositionType.Deleted);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String reporting_ua_product = null;
@@ -296,8 +280,8 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatNullOriginalRecipient() {
-        Disposition disposition = new Disposition(new ActionModeManual(), new SendingModeAutomatic(), new TypeDeleted());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierFailed()};
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Automatic, DispositionType.Deleted);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String original_recipient = null;
@@ -313,8 +297,8 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatNullFinalRecipient() {
-        Disposition disposition = new Disposition(new ActionModeManual(), new SendingModeAutomatic(), new TypeDeleted());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierFailed()};
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Automatic, DispositionType.Deleted);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String final_recipient = null;
@@ -331,8 +315,8 @@ public class MDNFactoryTest {
 
     @Test
     public void generateMDNReportShouldFormatNullOriginalMessageId() {
-        Disposition disposition = new Disposition(new ActionModeManual(), new SendingModeAutomatic(), new TypeDeleted());
-        DispositionModifier[] dispostionModifiers = {new ModifierError(), new ModifierFailed()};
+        Disposition disposition = new Disposition(DispositionActionMode.Manual, DispositionSendingMode.Automatic, DispositionType.Deleted);
+        DispositionModifier[] dispostionModifiers = {DispositionModifier.Error, DispositionModifier.Failed};
         disposition.setDispositionModifiers(dispostionModifiers);
 
         String original_message_id = null;
