@@ -101,35 +101,6 @@ public class MDNFactoryTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatTypeDenied() {
-        Disposition disposition = Disposition.builder()
-            .actionMode(DispositionActionMode.Manual)
-            .sendingMode(DispositionSendingMode.Manual)
-            .type(DispositionType.Denied)
-            .addModifier(DispositionModifier.Error)
-            .addModifier(DispositionModifier.Failed)
-            .build();
-
-        String report = MDNReport.builder()
-            .reportingUserAgentField(new ReportingUserAgent(
-                "UA_name",
-                Optional.of("UA_product")))
-            .finalRecipientField(new FinalRecipient("final_recipient"))
-            .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId("original_message_id"))
-            .dispositionField(disposition)
-            .build()
-            .formattedValue();
-
-        assertThat(report)
-            .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
-                "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
-                "Original-Message-ID: original_message_id\r\n" +
-                "Disposition: manual-action/MDN-sent-manually;denied/error,failed\r\n");
-    }
-
-    @Test
     public void generateMDNReportShouldFormatTypeDispatcher() {
         Disposition disposition = Disposition.builder()
         .actionMode(DispositionActionMode.Manual)
@@ -185,35 +156,6 @@ public class MDNFactoryTest {
                 "Final-Recepient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: manual-action/MDN-sent-manually;displayed/error,failed\r\n");
-    }
-
-    @Test
-    public void generateMDNReportShouldFormatTypeFailed() {
-        Disposition disposition = Disposition.builder()
-            .actionMode(DispositionActionMode.Manual)
-            .sendingMode(DispositionSendingMode.Manual)
-            .type(DispositionType.Failed)
-            .addModifier(DispositionModifier.Error)
-            .addModifier(DispositionModifier.Failed)
-            .build();
-
-        String report = MDNReport.builder()
-            .reportingUserAgentField(new ReportingUserAgent(
-                "UA_name",
-                Optional.of("UA_product")))
-            .finalRecipientField(new FinalRecipient("final_recipient"))
-            .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId("original_message_id"))
-            .dispositionField(disposition)
-            .build()
-            .formattedValue();
-
-        assertThat(report)
-            .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
-                "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
-                "Original-Message-ID: original_message_id\r\n" +
-                "Disposition: manual-action/MDN-sent-manually;failed/error,failed\r\n");
     }
 
     @Test
@@ -300,6 +242,34 @@ public class MDNFactoryTest {
                 "Final-Recepient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: manual-action/MDN-sent-manually;deleted/error\r\n");
+    }
+
+    @Test
+    public void generateMDNReportShouldFormatUnknownModifier() {
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Manual)
+            .type(DispositionType.Deleted)
+            .addModifier(new DispositionModifier("new"))
+            .build();
+
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                "UA_name",
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient("final_recipient"))
+            .originalRecipientField(new OriginalRecipient("originalRecipient"))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
+            .dispositionField(disposition)
+            .build()
+            .formattedValue();
+
+        assertThat(report)
+            .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
+                "Original-Recipient: rfc822; originalRecipient\r\n" +
+                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Original-Message-ID: original_message_id\r\n" +
+                "Disposition: manual-action/MDN-sent-manually;deleted/new\r\n");
     }
 
     @Test
