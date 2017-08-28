@@ -28,6 +28,7 @@ import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class Disposition implements Field {
@@ -63,7 +64,11 @@ public class Disposition implements Field {
         }
 
         public Disposition build() {
-            return new Disposition(actionMode, sendingMode, type, modifiers.build());
+            Preconditions.checkState(actionMode.isPresent());
+            Preconditions.checkState(sendingMode.isPresent());
+            Preconditions.checkState(type.isPresent());
+
+            return new Disposition(actionMode.get(), sendingMode.get(), type.get(), modifiers.build());
         }
     }
 
@@ -71,27 +76,27 @@ public class Disposition implements Field {
         return new Builder();
     }
 
-    private final Optional<DispositionActionMode> actionMode;
-    private final Optional<DispositionSendingMode> sendingMode;
-    private final Optional<DispositionType> type;
+    private final DispositionActionMode actionMode;
+    private final DispositionSendingMode sendingMode;
+    private final DispositionType type;
     private final List<DispositionModifier> modifiers;
 
-    private Disposition(Optional<DispositionActionMode> actionMode, Optional<DispositionSendingMode> sendingMode, Optional<DispositionType> type, List<DispositionModifier> modifiers) {
+    private Disposition(DispositionActionMode actionMode, DispositionSendingMode sendingMode, DispositionType type, List<DispositionModifier> modifiers) {
         this.actionMode = actionMode;
         this.sendingMode = sendingMode;
         this.type = type;
         this.modifiers = ImmutableList.copyOf(modifiers);
     }
 
-    public Optional<DispositionActionMode> getActionMode() {
+    public DispositionActionMode getActionMode() {
         return actionMode;
     }
 
-    public Optional<DispositionSendingMode> getSendingMode() {
+    public DispositionSendingMode getSendingMode() {
         return sendingMode;
     }
 
-    public Optional<DispositionType> getType() {
+    public DispositionType getType() {
         return type;
     }
 
@@ -102,9 +107,7 @@ public class Disposition implements Field {
     @Override
     public String formattedValue() {
         return "Disposition: "
-            + actionMode.map(DispositionActionMode::getValue).orElse("") + "/"
-            + sendingMode.map(DispositionSendingMode::getValue).orElse("") + ";"
-            + type.map(DispositionType::getValue).orElse("")
+            + actionMode.getValue() + "/" + sendingMode.getValue() + ";" + type.getValue()
             + formattedModifiers();
     }
 
