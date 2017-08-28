@@ -25,6 +25,7 @@ import java.util.Optional;
 import javax.mail.Address;
 import javax.mail.internet.AddressException;
 
+import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,8 +43,7 @@ public class AddressesArrayToMailAddressListConverter {
         return Arrays.asList(addresses)
             .stream()
             .map(address -> toMailAddress(address))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
+            .flatMap(OptionalUtils::toStream)
             .collect(Guavate.toImmutableList());
     }
 

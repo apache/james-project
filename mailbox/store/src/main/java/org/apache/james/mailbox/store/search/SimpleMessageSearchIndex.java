@@ -157,13 +157,16 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     }
 
     private List<SearchResult> searchResults(MailboxSession session, Stream<Mailbox> mailboxes, SearchQuery query) throws MailboxException {
-        return mailboxes.flatMap(mailbox -> {
-            try {
-                return searchResults(session, mailbox, query).stream();
-            } catch (MailboxException e) {
-                throw Throwables.propagate(e);
-            }
-        }).collect(Guavate.toImmutableList());
+        return mailboxes.flatMap(mailbox -> getSearchResultStream(session, query, mailbox))
+            .collect(Guavate.toImmutableList());
+    }
+
+    private Stream<? extends SearchResult> getSearchResultStream(MailboxSession session, SearchQuery query, Mailbox mailbox) {
+        try {
+            return searchResults(session, mailbox, query).stream();
+        } catch (MailboxException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     private List<MessageId> getAsMessageIds(List<SearchResult> temp, long limit) {

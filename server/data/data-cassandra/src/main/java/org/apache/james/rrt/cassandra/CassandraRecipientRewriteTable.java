@@ -174,9 +174,10 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     @Override
     protected String mapAddressInternal(String user, String domain) throws RecipientRewriteTableException {
         Mappings mappings = retrieveMappings(user, domain)
-            .orElse(retrieveMappings(WILDCARD, domain)
-                    .orElse(retrieveMappings(user, WILDCARD)
-                            .orElse(MappingsImpl.empty())));
+            .orElseGet(() -> retrieveMappings(WILDCARD, domain)
+                .orElseGet(() -> retrieveMappings(user, WILDCARD)
+                    .orElseGet(() -> MappingsImpl.empty())));
+
         return !mappings.isEmpty() ? mappings.serialize() : null;
     }
 

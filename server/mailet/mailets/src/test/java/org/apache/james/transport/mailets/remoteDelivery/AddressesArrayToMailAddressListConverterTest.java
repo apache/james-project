@@ -20,7 +20,6 @@
 package org.apache.james.transport.mailets.remoteDelivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
 
@@ -28,6 +27,8 @@ import org.apache.mailet.base.MailAddressFixture;
 import org.junit.Test;
 
 public class AddressesArrayToMailAddressListConverterTest {
+
+    private static final String WRONG_INTERNET_ADDRESS = "!!";
 
     @Test
     public void getAddressesAsMailAddressShouldReturnEmptyOnNull() {
@@ -52,5 +53,13 @@ public class AddressesArrayToMailAddressListConverterTest {
             new InternetAddress(MailAddressFixture.ANY_AT_JAMES.toString()),
             new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.toString())}))
             .containsOnly(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES);
+    }
+
+    @Test
+    public void getAddressesAsMailAddressShouldFilterErrorMailAddress() throws Exception {
+        assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(new Address[]{
+            new InternetAddress(MailAddressFixture.ANY_AT_JAMES.toString()),
+            new InternetAddress(WRONG_INTERNET_ADDRESS)}))
+            .containsOnly(MailAddressFixture.ANY_AT_JAMES);
     }
 }

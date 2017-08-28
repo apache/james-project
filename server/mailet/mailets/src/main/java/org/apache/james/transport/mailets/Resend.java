@@ -369,8 +369,8 @@ public class Resend extends GenericMailet implements RedirectNotify {
         }
 
         return AddressExtractor.withContext(getMailetContext())
-                .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
-                .extract(replyTo)
+            .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
+            .extract(replyTo)
             .stream()
             .findFirst();
     }
@@ -384,8 +384,8 @@ public class Resend extends GenericMailet implements RedirectNotify {
     public List<MailAddress> getRecipients() throws MessagingException {
           ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
           List<MailAddress> mailAddresses = AddressExtractor.withContext(getMailetContext())
-                  .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
-                  .extract(getInitParameters().getRecipients());
+              .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
+              .extract(getInitParameters().getRecipients());
           for (MailAddress address : mailAddresses) {
               builder.add(address);
           }

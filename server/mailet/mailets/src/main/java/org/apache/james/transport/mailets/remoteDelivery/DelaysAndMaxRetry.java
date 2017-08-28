@@ -25,7 +25,6 @@ import javax.mail.MessagingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
@@ -80,11 +79,9 @@ public class DelaysAndMaxRetry {
             return ImmutableList.of(new Delay());
         }
 
-        ImmutableList<String> delayStrings = Splitter.on(',')
+        List<String> delayStrings = Splitter.on(',')
             .omitEmptyStrings()
-            .splitToList(delaysAsString)
-            .stream()
-            .collect(Guavate.toImmutableList());
+            .splitToList(delaysAsString);
 
         ImmutableList.Builder<Delay> builder = ImmutableList.builder();
         try {

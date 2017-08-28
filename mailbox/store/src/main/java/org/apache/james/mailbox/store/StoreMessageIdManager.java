@@ -56,7 +56,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.quota.QuotaChecker;
-import org.apache.james.util.PredicateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -274,8 +273,8 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     private Predicate<MailboxMessage> messageBelongsToUser(MailboxSession mailboxSession, MailboxMapper mailboxMapper) {
-        return PredicateUtils.compose(mailboxBelongsToUser(mailboxSession, mailboxMapper),
-            MailboxMessage::getMailboxId);
+        return mailboxMessage -> mailboxBelongsToUser(mailboxSession, mailboxMapper)
+            .test(mailboxMessage.getMailboxId());
     }
 
     private void allowOnMailboxSession(List<MailboxId> mailboxIds, MailboxSession mailboxSession, MailboxMapper mailboxMapper) throws MailboxNotFoundException {

@@ -170,7 +170,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
     }
 
     protected static AuthenticationAttempt noDelegation(String authenticationId, String password) {
-        return new AuthenticationAttempt(Optional.<String>empty(), authenticationId, password);
+        return new AuthenticationAttempt(Optional.empty(), authenticationId, password);
     }
 
     protected static class AuthenticationAttempt {

@@ -44,16 +44,16 @@ public class MailAddressUtils {
     }
 
     public static List<InternetAddress> toInternetAddresses(List<MailAddress> mailAddresses) {
-        return iterableOfInternetAddress(mailAddresses)
+        return streamOfInternetAddress(mailAddresses)
             .collect(Guavate.toImmutableList());
     }
 
     public static InternetAddress[] toInternetAddressArray(List<MailAddress> mailAddresses) {
-        return iterableOfInternetAddress(mailAddresses)
+        return streamOfInternetAddress(mailAddresses)
             .toArray(InternetAddress[]::new);
     }
 
-    private static Stream<InternetAddress> iterableOfInternetAddress(List<MailAddress> mailAddresses) {
+    private static Stream<InternetAddress> streamOfInternetAddress(List<MailAddress> mailAddresses) {
         return mailAddresses.stream()
             .map(MailAddress::toInternetAddress);
     }

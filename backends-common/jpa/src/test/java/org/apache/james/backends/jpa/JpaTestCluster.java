@@ -27,7 +27,6 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.openjpa.persistence.OpenJPAPersistence;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 public class JpaTestCluster {
@@ -48,10 +47,9 @@ public class JpaTestCluster {
         properties.put("openjpa.Log", "JDBC=WARN, SQL=WARN, Runtime=WARN");
         properties.put("openjpa.ConnectionFactoryProperties", "PrettyPrint=true, PrettyPrintLineLength=72");
         properties.put("openjpa.MetaDataFactory", "jpa(Types=" +
-            Joiner.on(";").join(
                 clazz.stream()
                     .map(Class::getName)
-                    .collect(Collectors.toList()))
+                    .collect(Collectors.joining(";"))
             + ")");
         return new JpaTestCluster(OpenJPAPersistence.getEntityManagerFactory(properties));
     }

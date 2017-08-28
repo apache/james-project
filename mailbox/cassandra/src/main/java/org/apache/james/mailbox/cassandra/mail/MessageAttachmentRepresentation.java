@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
-import org.apache.james.mailbox.model.MessageAttachment;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -34,15 +33,6 @@ public class MessageAttachmentRepresentation {
 
     public static Builder builder() {
         return new Builder();
-    }
-
-    public static MessageAttachmentRepresentation fromAttachment(MessageAttachment attachment) {
-        return builder()
-            .attachmentId(attachment.getAttachmentId())
-            .cid(attachment.getCid())
-            .isInline(attachment.isInline())
-            .name(attachment.getName().orElse(null))
-            .build();
     }
 
     public static class Builder {

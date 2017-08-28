@@ -38,14 +38,16 @@ public class MailAddressCollectionReader {
         return Splitter.onPattern("(,| |\t)").splitToList(condition)
             .stream()
             .filter(s -> !Strings.isNullOrEmpty(s))
-            .map(s -> {
-                try {
-                    return new MailAddress(s);
-                } catch (AddressException e) {
-                    throw Throwables.propagate(e);
-                }
-            })
+            .map(s -> getMailAddress(s))
             .collect(Guavate.toImmutableSet());
+    }
+
+    private static MailAddress getMailAddress(String s) {
+        try {
+            return new MailAddress(s);
+        } catch (AddressException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
 }

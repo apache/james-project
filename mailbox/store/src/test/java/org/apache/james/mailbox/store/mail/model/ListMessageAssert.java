@@ -39,16 +39,18 @@ public class ListMessageAssert {
 
     private final List<InnerMessage> messageToInnerMessage(List<MailboxMessage> messages) {
         return messages.stream()
-            .map(message -> {
-                try {
-                    return new InnerMessage(message.getMessageId(), message.getUid(), message.getMailboxId(), message.getInternalDate(), message.getBodyOctets(),
-                            message.getFullContentOctets(), message.getMediaType(), message.getSubType(), IOUtils.toString(message.getFullContent()));
-                } catch (IOException e) {
-                    Throwables.propagate(e);
-                    return null;
-                }
-            })
+            .map(message -> getInnerMessage(message))
             .collect(Guavate.toImmutableList());
+    }
+
+    private InnerMessage getInnerMessage(MailboxMessage message) {
+        try {
+            return new InnerMessage(message.getMessageId(), message.getUid(), message.getMailboxId(), message.getInternalDate(), message.getBodyOctets(),
+                    message.getFullContentOctets(), message.getMediaType(), message.getSubType(), IOUtils.toString(message.getFullContent()));
+        } catch (IOException e) {
+            Throwables.propagate(e);
+            return null;
+        }
     }
 
     private ListMessageAssert(List<MailboxMessage> actual) {

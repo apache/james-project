@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
+import java.util.stream.Stream;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
@@ -174,7 +175,7 @@ public class UseHeaderRecipients extends GenericMailet {
             .parseAddressList(MimeUtil.unfold(headerPart));
 
         return addressList.stream()
-            .flatMap(address -> convertAddressToMailboxCollection(address).stream())
+            .flatMap(address -> convertAddressToMailboxCollection(address))
             .map(this::toMailAddress)
             .collect(Guavate.toImmutableList());
     }
@@ -187,13 +188,13 @@ public class UseHeaderRecipients extends GenericMailet {
         }
     }
 
-    private Collection<Mailbox> convertAddressToMailboxCollection(Address address) {
+    private Stream<Mailbox> convertAddressToMailboxCollection(Address address) {
         if (address instanceof Mailbox) {
-            return ImmutableList.of((Mailbox) address);
+            return ImmutableList.of((Mailbox) address).stream();
         } else if (address instanceof Group) {
-            return ImmutableList.copyOf(((Group) address).getMailboxes());
+            return ImmutableList.copyOf(((Group) address).getMailboxes()).stream();
         }
-        return ImmutableList.of();
+        return Stream.of();
     }
 
     private String sanitizeHeaderString(String header) throws MessagingException {

@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 
 import org.apache.james.rrt.lib.Mapping.Type;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -121,7 +122,8 @@ public class MappingsImpl implements Mappings, Serializable {
     @Override
     public Iterable<String> asStrings() {
         return mappings.stream()
-            .map(Mapping::asString)::iterator;
+            .map(Mapping::asString)
+            .collect(Guavate.toImmutableList());
     }
 
     @Override

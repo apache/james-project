@@ -27,7 +27,7 @@ import com.google.common.base.Preconditions;
 
 public class MailboxAnnotation {
     public static MailboxAnnotation nil(MailboxAnnotationKey key) {
-        return new MailboxAnnotation(key, Optional.<String> empty());
+        return new MailboxAnnotation(key, Optional.empty());
     }
 
     public static MailboxAnnotation newInstance(MailboxAnnotationKey key, String value) {
