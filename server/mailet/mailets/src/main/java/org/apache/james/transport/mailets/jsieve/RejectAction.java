@@ -122,7 +122,7 @@ public class RejectAction implements MailAction {
             MDNReport.builder()
                 .reportingUserAgentField(
                     new ReportingUserAgent(
-                        Optional.ofNullable(reporting_UA_name),
+                        reporting_UA_name,
                         Optional.ofNullable(reporting_UA_product)))
                 .finalRecipientField(new FinalRecipient(Optional.of(final_recipient)))
                 .originalRecipientField(Optional.ofNullable(original_recipient).map(OriginalRecipient::new))

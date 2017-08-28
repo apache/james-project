@@ -69,12 +69,11 @@ public class MDNReport {
         }
 
         public MDNReport build() {
-            Preconditions.checkState(reportingUserAgentField.isPresent());
             Preconditions.checkState(finalRecipientField.isPresent());
             Preconditions.checkState(originalMessageIdField.isPresent());
             Preconditions.checkState(dispositionField.isPresent());
 
-            return new MDNReport(reportingUserAgentField.get(),
+            return new MDNReport(reportingUserAgentField,
                 originalRecipientField,
                 finalRecipientField.get(),
                 originalMessageIdField.get(),
@@ -89,13 +88,13 @@ public class MDNReport {
 
     public static final String LINE_END = "\r\n";
 
-    private final ReportingUserAgent reportingUserAgentField;
+    private final Optional<ReportingUserAgent> reportingUserAgentField;
     private final Optional<OriginalRecipient> originalRecipientField;
     private final FinalRecipient finalRecipientField;
     private final OriginalMessageId originalMessageIdField;
     private final Disposition dispositionField;
 
-    private MDNReport(ReportingUserAgent reportingUserAgentField, Optional<OriginalRecipient> originalRecipientField,
+    private MDNReport(Optional<ReportingUserAgent> reportingUserAgentField, Optional<OriginalRecipient> originalRecipientField,
                      FinalRecipient finalRecipientField, OriginalMessageId originalMessageIdField, Disposition dispositionField) {
         this.reportingUserAgentField = reportingUserAgentField;
         this.originalRecipientField = originalRecipientField;
@@ -104,7 +103,7 @@ public class MDNReport {
         this.dispositionField = dispositionField;
     }
 
-    public ReportingUserAgent getReportingUserAgentField() {
+    public Optional<ReportingUserAgent> getReportingUserAgentField() {
         return reportingUserAgentField;
     }
 
@@ -125,11 +124,11 @@ public class MDNReport {
     }
 
     public String formattedValue() {
-        return reportingUserAgentField.formattedValue() + LINE_END
-            + originalRecipientField.map(value -> value.formattedValue() + "\r\n").orElse("")
-            + finalRecipientField.formattedValue() + "\r\n"
-            + originalMessageIdField.formattedValue() + "\r\n"
-            + dispositionField.formattedValue() + "\r\n";
+        return reportingUserAgentField.map(value -> value.formattedValue() + LINE_END).orElse("")
+            + originalRecipientField.map(value -> value.formattedValue() + LINE_END).orElse("")
+            + finalRecipientField.formattedValue() + LINE_END
+            + originalMessageIdField.formattedValue() + LINE_END
+            + dispositionField.formattedValue() + LINE_END;
 
     }
 }

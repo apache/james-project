@@ -21,16 +21,20 @@ package org.apache.james.mdn.fields;
 
 import java.util.Optional;
 
+import com.google.common.base.Preconditions;
+
 public class ReportingUserAgent implements Field {
-    private final Optional<String> userAgentName;
+    private final String userAgentName;
     private final Optional<String> userAgentProduct;
 
-    public ReportingUserAgent(Optional<String> userAgentName, Optional<String> userAgentProduct) {
+    public ReportingUserAgent(String userAgentName, Optional<String> userAgentProduct) {
+        Preconditions.checkNotNull(userAgentName);
+        Preconditions.checkNotNull(userAgentProduct);
         this.userAgentName = userAgentName;
         this.userAgentProduct = userAgentProduct;
     }
 
-    public Optional<String> getUserAgentName() {
+    public String getUserAgentName() {
         return userAgentName;
     }
 
@@ -40,7 +44,7 @@ public class ReportingUserAgent implements Field {
 
     @Override
     public String formattedValue() {
-        return "Reporting-UA: " + userAgentName.orElse("") + "; "
+        return "Reporting-UA: " + userAgentName + "; "
             + userAgentProduct.orElse("");
     }
 }
