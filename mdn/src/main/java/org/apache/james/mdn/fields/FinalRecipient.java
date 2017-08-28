@@ -23,6 +23,11 @@ import org.apache.james.mdn.Constants;
 
 import com.google.common.base.Preconditions;
 
+/**
+ * Implements mandatory Final recipient field
+ *
+ * https://tools.ietf.org/html/rfc8098#section-3.2.4
+ */
 public class FinalRecipient implements Field {
     public static final String FIELD_NAME = "Final-Recipient";
 

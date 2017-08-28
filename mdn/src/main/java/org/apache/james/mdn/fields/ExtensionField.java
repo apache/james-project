@@ -19,6 +19,11 @@
 
 package org.apache.james.mdn.fields;
 
+/**
+ * Implements extension fields allowed by RFC-8098
+ *
+ * https://tools.ietf.org/html/rfc8098#section-3.3
+ */
 public class ExtensionField implements Field {
     private final String fieldName;
     private final String rawValue;

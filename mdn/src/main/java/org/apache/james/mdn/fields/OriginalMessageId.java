@@ -19,6 +19,11 @@
 
 package org.apache.james.mdn.fields;
 
+/**
+ * Optional Original-Message−Id as defined in RFC-8098
+ *
+ * https://tools.ietf.org/html/rfc8098#section-3.2.5
+ */
 public class OriginalMessageId implements Field {
     private static final String FIELD_NAME = "Original-Message-ID";
     private final String originalMessageId;

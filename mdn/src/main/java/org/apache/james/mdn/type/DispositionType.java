@@ -24,7 +24,9 @@ import java.util.stream.Stream;
 
 /**
  * Interface <code>DispositionType</code> marks a type encapsulating
- * disposition type information as defined by RFC 2298.
+ * disposition type information as defined by RFC 8098.
+ *
+ * https://tools.ietf.org/html/rfc8098#section-3.2.6.2
  */
 public enum DispositionType {
     Deleted("deleted"),

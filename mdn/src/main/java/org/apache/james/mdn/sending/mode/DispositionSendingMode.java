@@ -24,7 +24,9 @@ import java.util.stream.Stream;
 
 /**
  * Interface <code>DispositionSendingMode</code> marks a type encapsulating
- * disposition sending mode information as defined by RFC 2298.
+ * disposition sending mode information as defined by RFC 8098.
+ *
+ * More information: https://tools.ietf.org/html/rfc8098#section-3.2.6.1
  */
 public enum DispositionSendingMode {
     Manual("MDN-sent-manually"),

@@ -23,6 +23,11 @@ import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 
+/**
+ * Implements optional Reporting-UA header field
+ *
+ * https://tools.ietf.org/html/rfc8098#section-3.2.1
+ */
 public class ReportingUserAgent implements Field {
     private static final String FIELD_NAME = "Reporting-UA";
     private final String userAgentName;

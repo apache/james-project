@@ -31,6 +31,9 @@ import org.apache.james.mdn.type.DispositionType;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+/**
+ * Implements disposition as stated in https://tools.ietf.org/html/rfc8098#section-3.2.6
+ */
 public class Disposition implements Field {
     public static final String FIELD_NAME = "Disposition";
 

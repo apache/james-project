@@ -21,7 +21,9 @@ package org.apache.james.mdn.modifier;
 
 /**
  * Interface <code>DispositionModifier</code> marks a type encapsulating
- * disposition modifier information as defined by RFC 2298.
+ * disposition modifier information as defined by RFC 8098.
+ *
+ * https://tools.ietf.org/html/rfc8098#section-3.2.6.3
  */
 public class DispositionModifier {
     public static DispositionModifier Error = new DispositionModifier("error");

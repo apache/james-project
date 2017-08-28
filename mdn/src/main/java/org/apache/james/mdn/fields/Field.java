@@ -19,6 +19,11 @@
 
 package org.apache.james.mdn.fields;
 
+/**
+ * Interface that defines fields as stated in RFC-8098
+ *
+ * https://tools.ietf.org/html/rfc8098#section-3.1
+ */
 public interface Field {
     String formattedValue();
 }

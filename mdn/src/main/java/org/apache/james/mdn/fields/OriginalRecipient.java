@@ -23,6 +23,11 @@ import org.apache.james.mdn.Constants;
 
 import com.google.common.base.Preconditions;
 
+/**
+ * Implements optional Original-Recipient field defined in:
+ *
+ * https://tools.ietf.org/html/rfc8098#section-3.2.3
+ */
 public class OriginalRecipient implements Field{
     private static final String UNKNOWN = "unknown";
     private static final String FIELD_NAME = "Original-Recipient";

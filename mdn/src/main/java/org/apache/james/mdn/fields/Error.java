@@ -19,6 +19,11 @@
 
 package org.apache.james.mdn.fields;
 
+/**
+ * Implements the optional MDN Error field defined in RFC-8098
+ *
+ * https://tools.ietf.org/html/rfc8098#section-3.2.7
+ */
 public class Error implements Field {
     public static final String FIELD_NAME = "Error";
 
