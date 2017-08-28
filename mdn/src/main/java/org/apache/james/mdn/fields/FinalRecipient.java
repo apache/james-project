@@ -26,26 +26,26 @@ import com.google.common.base.Preconditions;
 public class FinalRecipient implements Field {
     public static final String FIELD_NAME = "Final-Recepient";
 
-    private final String finalRecipient;
+    private final Text finalRecipient;
     private final String addressType;
 
-    public FinalRecipient(String addressType, String finalRecipient) {
+    public FinalRecipient(String addressType, Text finalRecipient) {
         Preconditions.checkNotNull(finalRecipient);
         Preconditions.checkNotNull(addressType);
         this.finalRecipient = finalRecipient;
         this.addressType = addressType;
     }
 
-    public FinalRecipient(String finalRecipient) {
+    public FinalRecipient(Text finalRecipient) {
         this(Constants.RFC_822, finalRecipient);
     }
 
-    public String getFinalRecipient() {
+    public Text getFinalRecipient() {
         return finalRecipient;
     }
 
     @Override
     public String formattedValue() {
-        return FIELD_NAME + ": " + addressType + "; " + finalRecipient;
+        return FIELD_NAME + ": " + addressType + "; " + finalRecipient.formatted();
     }
 }

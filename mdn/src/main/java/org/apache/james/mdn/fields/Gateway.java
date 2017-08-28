@@ -27,27 +27,27 @@ public class Gateway implements Field {
     public static final String FIELD_NAME = "MDN-Gateway";
 
     private final String nameType;
-    private final String name;
+    private final Text name;
 
-    public Gateway(String nameType, String name) {
+    public Gateway(String nameType, Text name) {
         this.nameType = nameType;
         this.name = name;
     }
 
-    public Gateway(String name) {
+    public Gateway(Text name) {
         this(DNS, name);
     }
 
     @Override
     public String formattedValue() {
-        return FIELD_NAME + ": " + nameType + ";" + name;
+        return FIELD_NAME + ": " + nameType + ";" + name.formatted();
     }
 
     public String getNameType() {
         return nameType;
     }
 
-    public String getName() {
+    public Text getName() {
         return name;
     }
 }

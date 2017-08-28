@@ -38,6 +38,7 @@ import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.OriginalMessageId;
 import org.apache.james.mdn.fields.OriginalRecipient;
 import org.apache.james.mdn.fields.ReportingUserAgent;
+import org.apache.james.mdn.fields.Text;
 import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
@@ -124,9 +125,9 @@ public class RejectAction implements MailAction {
                     new ReportingUserAgent(
                         reporting_UA_name,
                         Optional.ofNullable(reporting_UA_product)))
-                .finalRecipientField(new FinalRecipient(Optional.of(final_recipient)))
-                .originalRecipientField(Optional.ofNullable(original_recipient).map(OriginalRecipient::new))
-                .originalMessageIdField(new OriginalMessageId(Optional.of(original_message_id)))
+                .finalRecipientField(new FinalRecipient(Text.fromRawText(final_recipient)))
+                .originalRecipientField(Optional.ofNullable(original_recipient).map(Text::fromRawText).map(OriginalRecipient::new))
+                .originalMessageIdField(new OriginalMessageId(original_message_id))
                 .dispositionField(Disposition.builder()
                     .actionMode(DispositionActionMode.Automatic)
                     .sendingMode(DispositionSendingMode.Automatic)

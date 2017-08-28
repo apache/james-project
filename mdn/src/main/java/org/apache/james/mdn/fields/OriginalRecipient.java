@@ -26,25 +26,25 @@ import com.google.common.base.Preconditions;
 public class OriginalRecipient implements Field{
     private static final String UNKNOWN = "unknown";
 
-    public static OriginalRecipient ofUnknown(String address) {
+    public static OriginalRecipient ofUnknown(Text address) {
         return new OriginalRecipient(UNKNOWN, address);
     }
 
-    private final String originalRecipient;
+    private final Text originalRecipient;
     private final String addressType;
 
-    public OriginalRecipient(String addressType, String originalRecipient) {
+    public OriginalRecipient(String addressType, Text originalRecipient) {
         Preconditions.checkNotNull(addressType);
         Preconditions.checkNotNull(originalRecipient);
         this.addressType = addressType;
         this.originalRecipient = originalRecipient;
     }
 
-    public OriginalRecipient(String originalRecipient) {
+    public OriginalRecipient(Text originalRecipient) {
         this(Constants.RFC_822, originalRecipient);
     }
 
-    public String getOriginalRecipient() {
+    public Text getOriginalRecipient() {
         return originalRecipient;
     }
 
@@ -54,6 +54,6 @@ public class OriginalRecipient implements Field{
 
     @Override
     public String formattedValue() {
-        return "Original-Recipient: " + addressType + "; " + originalRecipient;
+        return "Original-Recipient: " + addressType + "; " + originalRecipient.formatted();
     }
 }
