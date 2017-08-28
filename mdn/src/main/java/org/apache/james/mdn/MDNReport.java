@@ -82,13 +82,12 @@ public class MDNReport {
 
         public MDNReport build() {
             Preconditions.checkState(finalRecipientField.isPresent());
-            Preconditions.checkState(originalMessageIdField.isPresent());
             Preconditions.checkState(dispositionField.isPresent());
 
             return new MDNReport(reportingUserAgentField,
                 gatewayField, originalRecipientField,
                 finalRecipientField.get(),
-                originalMessageIdField.get(),
+                originalMessageIdField,
                 dispositionField.get());
         }
 
@@ -104,11 +103,11 @@ public class MDNReport {
     private final Optional<Gateway> gatewayField;
     private final Optional<OriginalRecipient> originalRecipientField;
     private final FinalRecipient finalRecipientField;
-    private final OriginalMessageId originalMessageIdField;
+    private final Optional<OriginalMessageId> originalMessageIdField;
     private final Disposition dispositionField;
 
     private MDNReport(Optional<ReportingUserAgent> reportingUserAgentField, Optional<Gateway> gatewayField, Optional<OriginalRecipient> originalRecipientField,
-                      FinalRecipient finalRecipientField, OriginalMessageId originalMessageIdField, Disposition dispositionField) {
+                      FinalRecipient finalRecipientField, Optional<OriginalMessageId> originalMessageIdField, Disposition dispositionField) {
         this.reportingUserAgentField = reportingUserAgentField;
         this.gatewayField = gatewayField;
         this.originalRecipientField = originalRecipientField;
@@ -129,7 +128,7 @@ public class MDNReport {
         return finalRecipientField;
     }
 
-    public OriginalMessageId getOriginalMessageIdField() {
+    public Optional<OriginalMessageId> getOriginalMessageIdField() {
         return originalMessageIdField;
     }
 
@@ -142,7 +141,7 @@ public class MDNReport {
             + gatewayField.map(value -> value.formattedValue() + LINE_END).orElse("")
             + originalRecipientField.map(value -> value.formattedValue() + LINE_END).orElse("")
             + finalRecipientField.formattedValue() + LINE_END
-            + originalMessageIdField.formattedValue() + LINE_END
+            + originalMessageIdField.map(value -> value.formattedValue() + LINE_END).orElse("")
             + dispositionField.formattedValue() + LINE_END;
 
     }

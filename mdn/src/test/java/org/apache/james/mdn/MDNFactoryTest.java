@@ -58,7 +58,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -87,7 +87,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -116,7 +116,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -145,7 +145,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -174,7 +174,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -203,7 +203,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -232,7 +232,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -261,7 +261,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -289,7 +289,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -316,7 +316,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -342,7 +342,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -370,7 +370,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -398,7 +398,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -427,7 +427,7 @@ public class MDNFactoryTest {
                 Optional.empty()))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -455,7 +455,7 @@ public class MDNFactoryTest {
                 "UA_name",
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -468,7 +468,7 @@ public class MDNFactoryTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatNullOriginalMessageId() {
+    public void generateMDNReportShouldFormatWhenMissingOriginalMessageId() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Manual)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -483,7 +483,6 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.empty()))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -492,7 +491,6 @@ public class MDNFactoryTest {
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
                 "Final-Recepient: rfc822; final_recipient\r\n" +
-                "Original-Message-ID: \r\n" +
                 "Disposition: manual-action/MDN-sent-automatically;deleted/error,failed\r\n");
     }
 
@@ -526,7 +524,7 @@ public class MDNFactoryTest {
             .gatewayField(new Gateway("host.com"))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -557,7 +555,7 @@ public class MDNFactoryTest {
             .gatewayField(new Gateway("postal", "5 rue Charles mercier"))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -587,7 +585,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(new OriginalRecipient("roomNumber", "385"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -616,7 +614,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("final_recipient"))
             .originalRecipientField(OriginalRecipient.ofUnknown("#$%*"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -645,7 +643,7 @@ public class MDNFactoryTest {
                 Optional.of("UA_product")))
             .finalRecipientField(new FinalRecipient("roomNumber", "781"))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
             .formattedValue();
@@ -675,7 +673,7 @@ public class MDNFactoryTest {
                 "UA_name",
                 Optional.of("UA_product")))
             .originalRecipientField(new OriginalRecipient("originalRecipient"))
-            .originalMessageIdField(new OriginalMessageId(Optional.of("original_message_id")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build();
     }

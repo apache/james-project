@@ -19,21 +19,19 @@
 
 package org.apache.james.mdn.fields;
 
-import java.util.Optional;
-
 public class OriginalMessageId implements Field {
-    private final Optional<String> originalMessageId;
+    private final String originalMessageId;
 
-    public OriginalMessageId(Optional<String> originalMessageId) {
+    public OriginalMessageId(String originalMessageId) {
         this.originalMessageId = originalMessageId;
     }
 
-    public Optional<String> getOriginalMessageId() {
+    public String getOriginalMessageId() {
         return originalMessageId;
     }
 
     @Override
     public String formattedValue() {
-        return "Original-Message-ID: " + originalMessageId.orElse("");
+        return "Original-Message-ID: " + originalMessageId;
     }
 }
