@@ -68,7 +68,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n");
     }
@@ -97,7 +97,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: manual-action/MDN-sent-manually;processed/error,failed\r\n");
     }
@@ -126,7 +126,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: manual-action/MDN-sent-manually;dispatched/error,failed\r\n");
     }
@@ -155,7 +155,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: manual-action/MDN-sent-manually;displayed/error,failed\r\n");
     }
@@ -184,7 +184,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: manual-action/MDN-sent-manually;deleted/error,failed\r\n");
     }
@@ -213,7 +213,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: manual-action/MDN-sent-manually;deleted/error,expired,failed,mailbox-terminated,superseded,warning\r\n");
     }
@@ -241,7 +241,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: manual-action/MDN-sent-manually;deleted/error\r\n");
     }
@@ -269,7 +269,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: manual-action/MDN-sent-manually;deleted/new\r\n");
     }
@@ -296,7 +296,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: manual-action/MDN-sent-manually;deleted\r\n");
     }
@@ -325,7 +325,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; \r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: manual-action/MDN-sent-automatically;deleted/error,failed\r\n");
     }
@@ -352,7 +352,7 @@ public class MDNFactoryTest {
 
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: manual-action/MDN-sent-automatically;deleted/error,failed\r\n");
     }
@@ -380,7 +380,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Disposition: manual-action/MDN-sent-automatically;deleted/error,failed\r\n");
     }
 
@@ -423,7 +423,7 @@ public class MDNFactoryTest {
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "MDN-Gateway: dns;host.com\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n");
     }
@@ -454,7 +454,7 @@ public class MDNFactoryTest {
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "MDN-Gateway: postal;5 rue Charles mercier\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n");
     }
@@ -483,7 +483,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: roomNumber; 385\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n");
     }
@@ -518,7 +518,7 @@ public class MDNFactoryTest {
                 "Original-Recipient: postal; 3 rue Mercier\r\n" +
                 " 36555 Saint Coincoin\r\n" +
                 " France\r\n" +
-                "Final-Recepient: postal; 5 rue Mercier\r\n" +
+                "Final-Recipient: postal; 5 rue Mercier\r\n" +
                 " 36555 Saint Coincoin\r\n" +
                 " France\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
@@ -549,7 +549,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: unknown; #$%*\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n");
     }
@@ -578,7 +578,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: roomNumber; 781\r\n" +
+                "Final-Recipient: roomNumber; 781\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n");
     }
@@ -630,7 +630,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n" +
                 "Error: An error message\r\n");
@@ -661,7 +661,7 @@ public class MDNFactoryTest {
         assertThat(report)
             .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
-                "Final-Recepient: rfc822; final_recipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n" +
                 "Error: An error message\r\n" +

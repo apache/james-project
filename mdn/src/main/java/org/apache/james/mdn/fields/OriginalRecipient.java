@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 
 public class OriginalRecipient implements Field{
     private static final String UNKNOWN = "unknown";
+    private static final String FIELD_NAME = "Original-Recipient";
 
     public static OriginalRecipient ofUnknown(Text address) {
         return new OriginalRecipient(UNKNOWN, address);
@@ -54,6 +55,6 @@ public class OriginalRecipient implements Field{
 
     @Override
     public String formattedValue() {
-        return "Original-Recipient: " + addressType + "; " + originalRecipient.formatted();
+        return FIELD_NAME + ": " + addressType + "; " + originalRecipient.formatted();
     }
 }

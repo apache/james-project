@@ -24,7 +24,7 @@ import org.apache.james.mdn.Constants;
 import com.google.common.base.Preconditions;
 
 public class FinalRecipient implements Field {
-    public static final String FIELD_NAME = "Final-Recepient";
+    public static final String FIELD_NAME = "Final-Recipient";
 
     private final Text finalRecipient;
     private final String addressType;
