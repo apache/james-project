@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
@@ -36,6 +35,7 @@ import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
@@ -49,7 +49,6 @@ import com.google.common.collect.ImmutableList;
 
 public class RecipientRewriteTableProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTableProcessor.class);
-    private static final boolean parallel = true;
 
     private final org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore;
     private final DomainList domainList;
@@ -145,7 +144,7 @@ public class RecipientRewriteTableProcessor {
 
     private ImmutableList<Mapping> convertToNewMappings(final Mappings mappings,
             ImmutableList<Mapping> addressWithoutDomains) {
-        return Stream.concat(StreamSupport.stream(mappings.spliterator(), parallel)
+        return Stream.concat(Iterators.toStream(mappings.iterator())
                     .filter(Mapping::hasDomain),
                 addressWithoutDomains.stream())
             .collect(Guavate.toImmutableList());
@@ -166,7 +165,7 @@ public class RecipientRewriteTableProcessor {
     }
 
     private ImmutableList<Mapping> getAddressWithNoDomain(Mappings mappings, DomainList domainList) throws MessagingException {
-        ImmutableList<Mapping> addressWithoutDomains = StreamSupport.stream(mappings.spliterator(), parallel)
+        ImmutableList<Mapping> addressWithoutDomains = Iterators.toStream(mappings.iterator())
             .filter(address -> !address.hasDomain())
             .collect(Guavate.toImmutableList());
         

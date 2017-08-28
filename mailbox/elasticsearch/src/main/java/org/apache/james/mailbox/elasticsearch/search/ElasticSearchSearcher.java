@@ -22,7 +22,6 @@ package org.apache.james.mailbox.elasticsearch.search;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import javax.inject.Inject;
 
 import org.apache.james.backends.es.search.ScrollIterable;
@@ -37,7 +36,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-
+import org.apache.james.util.streams.Iterators;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -99,7 +98,7 @@ public class ElasticSearchSearcher {
     }
 
     private Stream<MessageSearchIndex.SearchResult> transformResponseToUidStream(SearchResponse searchResponse) {
-        return StreamSupport.stream(searchResponse.getHits().spliterator(), false)
+        return Iterators.toStream(searchResponse.getHits().iterator())
             .map(this::extractContentFromHit)
             .filter(Optional::isPresent)
             .map(Optional::get);

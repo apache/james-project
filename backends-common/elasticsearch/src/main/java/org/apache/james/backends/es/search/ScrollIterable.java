@@ -21,8 +21,8 @@ package org.apache.james.backends.es.search;
 
 import java.util.Iterator;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
+import org.apache.james.util.streams.Iterators;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -46,7 +46,7 @@ public class ScrollIterable implements Iterable<SearchResponse> {
     }
 
     public Stream<SearchResponse> stream() {
-        return StreamSupport.stream(spliterator(), false);
+        return Iterators.toStream(iterator());
     }
 
     public static class ScrollIterator implements Iterator<SearchResponse> {

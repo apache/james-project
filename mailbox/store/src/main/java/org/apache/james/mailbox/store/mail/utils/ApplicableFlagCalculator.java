@@ -19,17 +19,17 @@
 
 package org.apache.james.mailbox.store.mail.utils;
 
-import java.util.stream.StreamSupport;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.util.streams.Iterators;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 
 
 public class ApplicableFlagCalculator {
-
     private final Iterable<MailboxMessage> mailboxMessages;
 
     public ApplicableFlagCalculator(Iterable<MailboxMessage> mailboxMessages) {
@@ -38,12 +38,10 @@ public class ApplicableFlagCalculator {
     }
 
     public Flags computeApplicableFlags() {
-        boolean isParallel = true;
-
         return ApplicableFlagBuilder.builder()
-                .add(StreamSupport.stream(mailboxMessages.spliterator(), isParallel)
-                    .map(MailboxMessage::createFlags)
-                    .toArray(Flags[]::new))
-                .build();
+            .add(Iterators.toStream(mailboxMessages.iterator())
+                .map(MailboxMessage::createFlags)
+                .collect(Guavate.toImmutableList()))
+            .build();
     }
 }

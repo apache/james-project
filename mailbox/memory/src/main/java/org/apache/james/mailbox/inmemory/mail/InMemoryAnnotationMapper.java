@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
-import java.util.stream.StreamSupport;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -32,6 +31,7 @@ import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
+import org.apache.james.util.streams.Iterators;
 import org.apache.commons.lang.StringUtils;
 
 import com.github.steveash.guavate.Guavate;
@@ -84,9 +84,7 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
 
     @Override
     public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxId mailboxId, final Set<MailboxAnnotationKey> keys) {
-        boolean parallel = true;
-
-        return StreamSupport.stream(retrieveAllAnnotations((InMemoryId)mailboxId).spliterator(), parallel)
+        return Iterators.toStream(retrieveAllAnnotations((InMemoryId)mailboxId).iterator())
             .filter(getPredicateFilterByAll(keys))
             .collect(Guavate.toImmutableList());
     }
