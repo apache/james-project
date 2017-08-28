@@ -607,6 +607,37 @@ public class MDNFactoryTest {
     }
 
     @Test
+    public void generateMDNReportShouldFormatErrorField() {
+        Disposition disposition = Disposition.builder()
+            .actionMode(DispositionActionMode.Automatic)
+            .sendingMode(DispositionSendingMode.Automatic)
+            .type(DispositionType.Processed)
+            .addModifier(DispositionModifier.Error)
+            .addModifier(DispositionModifier.Failed)
+            .build();
+
+        String report = MDNReport.builder()
+            .reportingUserAgentField(new ReportingUserAgent(
+                "UA_name",
+                Optional.of("UA_product")))
+            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
+            .originalMessageIdField(new OriginalMessageId("original_message_id"))
+            .dispositionField(disposition)
+            .addErrorField(new Error(Text.fromRawText("An error message")))
+            .build()
+            .formattedValue();
+
+        assertThat(report)
+            .isEqualTo("Reporting-UA: UA_name; UA_product\r\n" +
+                "Original-Recipient: rfc822; originalRecipient\r\n" +
+                "Final-Recipient: rfc822; final_recipient\r\n" +
+                "Original-Message-ID: original_message_id\r\n" +
+                "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n" +
+                "Error: An error message\r\n");
+    }
+
+    @Test
     public void generateMDNReportShouldFormatErrorFields() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
@@ -624,7 +655,9 @@ public class MDNFactoryTest {
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
-            .errorField(new Error(Text.fromRawText("An error message")))
+            .addErrorFields(
+                new Error(Text.fromRawText("An error message")),
+                new Error(Text.fromRawText("A second error message")))
             .build()
             .formattedValue();
 
@@ -634,7 +667,8 @@ public class MDNFactoryTest {
                 "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +
                 "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n" +
-                "Error: An error message\r\n");
+                "Error: An error message\r\n" +
+                "Error: A second error message\r\n");
     }
 
     @Test
@@ -655,7 +689,7 @@ public class MDNFactoryTest {
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
-            .errorField(new Error(Text.fromRawText("An error message\non several lines")))
+            .addErrorField(new Error(Text.fromRawText("An error message\non several lines")))
             .build()
             .formattedValue();
 

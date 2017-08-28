@@ -19,6 +19,7 @@
 
 package org.apache.james.mdn;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -46,7 +47,7 @@ public class MDNReport {
         private Optional<FinalRecipient> finalRecipientField = Optional.empty();
         private Optional<OriginalMessageId> originalMessageIdField = Optional.empty();
         private Optional<Disposition> dispositionField = Optional.empty();
-        private Optional<Error> errorField = Optional.empty();
+        private ImmutableList.Builder<Error> errorField = ImmutableList.builder();
         private ImmutableList.Builder<ExtensionField> extensionFields = ImmutableList.builder();
 
         public Builder reportingUserAgentField(ReportingUserAgent reportingUserAgentField) {
@@ -74,9 +75,13 @@ public class MDNReport {
             return this;
         }
 
+        public Builder addErrorField(Error errorField) {
+            this.errorField.add(errorField);
+            return this;
+        }
 
-        public Builder errorField(Error errorField) {
-            this.errorField = Optional.of(errorField);
+        public Builder addErrorFields(Error... errorField) {
+            this.errorField.add(errorField);
             return this;
         }
 
@@ -114,7 +119,7 @@ public class MDNReport {
                 finalRecipientField.get(),
                 originalMessageIdField,
                 dispositionField.get(),
-                errorField,
+                errorField.build(),
                 extensionFields.build());
         }
 
@@ -130,19 +135,19 @@ public class MDNReport {
     private final FinalRecipient finalRecipientField;
     private final Optional<OriginalMessageId> originalMessageIdField;
     private final Disposition dispositionField;
-    private final Optional<Error> errorField;
+    private final ImmutableList<Error> errorFields;
     private final ImmutableList<ExtensionField> extensionFields;
 
     private MDNReport(Optional<ReportingUserAgent> reportingUserAgentField, Optional<Gateway> gatewayField, Optional<OriginalRecipient> originalRecipientField,
-                      FinalRecipient finalRecipientField, Optional<OriginalMessageId> originalMessageIdField, Disposition dispositionField, Optional<Error> errorField,
-                      ImmutableList<ExtensionField> extensionFields) {
+                      FinalRecipient finalRecipientField, Optional<OriginalMessageId> originalMessageIdField, Disposition dispositionField,
+                      ImmutableList<Error> errorFields, ImmutableList<ExtensionField> extensionFields) {
         this.reportingUserAgentField = reportingUserAgentField;
         this.gatewayField = gatewayField;
         this.originalRecipientField = originalRecipientField;
         this.finalRecipientField = finalRecipientField;
         this.originalMessageIdField = originalMessageIdField;
         this.dispositionField = dispositionField;
-        this.errorField = errorField;
+        this.errorFields = errorFields;
         this.extensionFields = extensionFields;
     }
 
@@ -170,8 +175,8 @@ public class MDNReport {
         return gatewayField;
     }
 
-    public Optional<Error> getErrorField() {
-        return errorField;
+    public List<Error> getErrorFields() {
+        return errorFields;
     }
 
     public String formattedValue() {
@@ -181,8 +186,17 @@ public class MDNReport {
             + finalRecipientField.formattedValue() + LINE_END
             + originalMessageIdField.map(value -> value.formattedValue() + LINE_END).orElse("")
             + dispositionField.formattedValue() + LINE_END
-            + errorField.map(value -> value.formattedValue() + LINE_END).orElse("")
+            + formatErrors()
             + formattedExtensionValue();
+    }
+
+    private String formatErrors() {
+        if (errorFields.isEmpty()) {
+            return "";
+        }
+        return errorFields.stream()
+            .map(Error::formattedValue)
+            .collect(Collectors.joining(LINE_END)) + LINE_END;
     }
 
     private String formattedExtensionValue() {
