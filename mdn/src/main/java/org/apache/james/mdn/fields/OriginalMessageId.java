@@ -20,6 +20,7 @@
 package org.apache.james.mdn.fields;
 
 public class OriginalMessageId implements Field {
+    private static final String FIELD_NAME = "Original-Message-ID";
     private final String originalMessageId;
 
     public OriginalMessageId(String originalMessageId) {
@@ -32,6 +33,6 @@ public class OriginalMessageId implements Field {
 
     @Override
     public String formattedValue() {
-        return "Original-Message-ID: " + originalMessageId;
+        return FIELD_NAME + ": " + originalMessageId;
     }
 }

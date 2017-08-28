@@ -24,6 +24,7 @@ import java.util.Optional;
 import com.google.common.base.Preconditions;
 
 public class ReportingUserAgent implements Field {
+    private static final String FIELD_NAME = "Reporting-UA";
     private final String userAgentName;
     private final Optional<String> userAgentProduct;
 
@@ -44,7 +45,7 @@ public class ReportingUserAgent implements Field {
 
     @Override
     public String formattedValue() {
-        return "Reporting-UA: " + userAgentName + "; "
+        return FIELD_NAME + ": " + userAgentName + "; "
             + userAgentProduct.orElse("");
     }
 }

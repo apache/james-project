@@ -32,6 +32,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class Disposition implements Field {
+    public static final String FIELD_NAME = "Disposition";
+
     public static class Builder {
         private Optional<DispositionActionMode> actionMode = Optional.empty();
         private Optional<DispositionSendingMode> sendingMode = Optional.empty();
@@ -106,7 +108,7 @@ public class Disposition implements Field {
 
     @Override
     public String formattedValue() {
-        return "Disposition: "
+        return FIELD_NAME + ": "
             + actionMode.getValue() + "/" + sendingMode.getValue() + ";" + type.getValue()
             + formattedModifiers();
     }
