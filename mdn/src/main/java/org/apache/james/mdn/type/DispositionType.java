@@ -28,10 +28,8 @@ import java.util.stream.Stream;
  */
 public enum DispositionType {
     Deleted("deleted"),
-    Denied("denied"),
     Dispatched("dispatched"),
     Displayed("displayed"),
-    Failed("failed"),
     Processed("processed");
 
     public static Optional<DispositionType> fromString(String value) {
