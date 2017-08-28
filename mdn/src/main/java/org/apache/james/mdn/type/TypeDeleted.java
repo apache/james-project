@@ -17,13 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
+package org.apache.james.mdn.type;
+
 
 /**
- * Interface <code>DispositionModifier</code> marks a type encapsulating
- * disposition modifier information as defined by RFC 2298.
+ * Class <code>TypeDeleted</code>
  */
-public interface DispositionModifier
+public class TypeDeleted implements DispositionType
 {
+
+    /**
+     * Default Constructor
+     */
+    public TypeDeleted()
+    {
+        super();
+    }
+    
+    /**
+     * @see java.lang.Object#toString()
+     */
+    public String toString()
+    {
+        return "deleted";
+    }         
 
 }

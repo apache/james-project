@@ -17,19 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
+package org.apache.james.mdn.type;
 
 
 /**
- * Class <code>ModifierMailboxTerminated</code>
+ * Class <code>TypeFailed</code>
  */    
-public class ModifierMailboxTerminated implements DispositionModifier
+public class TypeFailed implements DispositionType
 {
 
     /**
      * Default Constructor
      */
-    public ModifierMailboxTerminated()
+    public TypeFailed()
     {
         super();
     }
@@ -39,7 +39,6 @@ public class ModifierMailboxTerminated implements DispositionModifier
      */
     public String toString()
     {
-        return "mailbox-terminated";
-    }        
-
+        return "failed";
+    }         
 }

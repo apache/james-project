@@ -17,19 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
+package org.apache.james.mdn.type;
 
 
 /**
- * Class <code>ModifierWarning</code>
+ * Class <code>TypeDenied</code>
  */    
-public class ModifierWarning implements DispositionModifier
+public class TypeDenied implements DispositionType
 {
 
     /**
      * Default Constructor
      */
-    public ModifierWarning()
+    public TypeDenied()
     {
         super();
     }
@@ -39,7 +39,6 @@ public class ModifierWarning implements DispositionModifier
      */
     public String toString()
     {
-        return "warning";
-    }        
-
+        return "denied";
+    }         
 }

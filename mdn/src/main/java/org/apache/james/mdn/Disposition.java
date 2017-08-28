@@ -19,6 +19,11 @@
 
 package org.apache.james.mdn;
 
+import org.apache.james.mdn.action.mode.DispositionActionMode;
+import org.apache.james.mdn.modifier.DispositionModifier;
+import org.apache.james.mdn.sending.mode.DispositionSendingMode;
+import org.apache.james.mdn.type.DispositionType;
+
 /**
  * Class <code>Disposition</code> encapsulating
  * disposition information as defined by RFC 2298.

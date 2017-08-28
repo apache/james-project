@@ -17,19 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
+package org.apache.james.mdn.modifier;
 
 
 /**
- * Class <code>ModifierExpired</code>
+ * Class <code>ModifierFailed</code>
  */    
-public class ModifierExpired implements DispositionModifier
+public class ModifierFailed implements DispositionModifier
 {
 
     /**
      * Default Constructor
      */
-    public ModifierExpired()
+    public ModifierFailed()
     {
         super();
     }
@@ -39,7 +39,7 @@ public class ModifierExpired implements DispositionModifier
      */
     public String toString()
     {
-        return "expired";
+        return "failed";
     }        
 
 }

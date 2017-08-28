@@ -17,19 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
+package org.apache.james.mdn.sending.mode;
 
 
 /**
- * Class <code>TypeDenied</code>
- */    
-public class TypeDenied implements DispositionType
+ * Class <code>SendingModeAutomatic</code>
+ */
+public class SendingModeAutomatic implements DispositionSendingMode
 {
 
     /**
      * Default Constructor
      */
-    public TypeDenied()
+    public SendingModeAutomatic()
     {
         super();
     }
@@ -39,6 +39,7 @@ public class TypeDenied implements DispositionType
      */
     public String toString()
     {
-        return "denied";
-    }         
+        return "MDN-sent-automatically";
+    }        
+
 }

@@ -17,28 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
+package org.apache.james.mdn.modifier;
 
 
 /**
- * Class <code>TypeFailed</code>
- */    
-public class TypeFailed implements DispositionType
+ * Class <code>ModifierError</code>
+ */
+public class ModifierError implements DispositionModifier
 {
 
     /**
      * Default Constructor
      */
-    public TypeFailed()
+    public ModifierError()
     {
         super();
     }
-    
+
     /**
      * @see java.lang.Object#toString()
      */
     public String toString()
     {
-        return "failed";
-    }         
+        return "error";
+    }
 }

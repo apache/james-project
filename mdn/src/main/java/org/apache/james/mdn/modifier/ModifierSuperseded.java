@@ -17,26 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
+package org.apache.james.mdn.modifier;
 
 
 /**
- * Class <code>ActionModeAutomatic</code>
- */
-public class ActionModeAutomatic implements DispositionActionMode {
+ * Class <code>ModifierSuperseded</code>
+ */    
+public class ModifierSuperseded implements DispositionModifier
+{
 
     /**
      * Default Constructor
      */
-    public ActionModeAutomatic() {
+    public ModifierSuperseded()
+    {
         super();
     }
-
+    
     /**
      * @see java.lang.Object#toString()
      */
-    public String toString() {
-        return "automatic-action";
-    }
+    public String toString()
+    {
+        return "superseded";
+    }        
 
 }

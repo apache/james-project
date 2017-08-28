@@ -17,29 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
-
+package org.apache.james.mdn.action.mode;
 
 /**
- * Class <code>ModifierFailed</code>
- */    
-public class ModifierFailed implements DispositionModifier
+ * Interface <code>DispositionActionMode</code> marks a type encapsulating
+ * disposition action mode information as defined by RFC 2298.
+ */
+public interface DispositionActionMode
 {
-
-    /**
-     * Default Constructor
-     */
-    public ModifierFailed()
-    {
-        super();
-    }
-    
-    /**
-     * @see java.lang.Object#toString()
-     */
-    public String toString()
-    {
-        return "failed";
-    }        
 
 }

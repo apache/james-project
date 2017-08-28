@@ -17,19 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
+package org.apache.james.mdn.type;
 
 
 /**
- * Class <code>ModifierSuperseded</code>
+ * Class <code>TypeProcessed</code>
  */    
-public class ModifierSuperseded implements DispositionModifier
+public class TypeProcessed implements DispositionType
 {
 
     /**
      * Default Constructor
      */
-    public ModifierSuperseded()
+    public TypeProcessed()
     {
         super();
     }
@@ -39,7 +39,6 @@ public class ModifierSuperseded implements DispositionModifier
      */
     public String toString()
     {
-        return "superseded";
-    }        
-
+        return "processed";
+    }         
 }

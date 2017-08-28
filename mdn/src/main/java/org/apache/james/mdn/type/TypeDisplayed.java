@@ -17,13 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
+package org.apache.james.mdn.type;
+
 
 /**
- * Interface <code>DispositionActionMode</code> marks a type encapsulating
- * disposition action mode information as defined by RFC 2298.
+ * Class <code>TypeDisplayed</code>
  */
-public interface DispositionActionMode
+public class TypeDisplayed implements DispositionType
 {
 
+    /**
+     * Default Constructor
+     */
+    public TypeDisplayed()
+    {
+        super();
+    }
+    
+    /**
+     * @see java.lang.Object#toString()
+     */
+    public String toString()
+    {
+        return "displayed";
+    }         
 }

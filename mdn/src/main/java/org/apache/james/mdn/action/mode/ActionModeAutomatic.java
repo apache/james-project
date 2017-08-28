@@ -17,29 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
+package org.apache.james.mdn.action.mode;
 
 
 /**
- * Class <code>SendingModeAutomatic</code>
+ * Class <code>ActionModeAutomatic</code>
  */
-public class SendingModeAutomatic implements DispositionSendingMode
-{
+public class ActionModeAutomatic implements DispositionActionMode {
 
     /**
      * Default Constructor
      */
-    public SendingModeAutomatic()
-    {
+    public ActionModeAutomatic() {
         super();
     }
-    
+
     /**
      * @see java.lang.Object#toString()
      */
-    public String toString()
-    {
-        return "MDN-sent-automatically";
-    }        
+    public String toString() {
+        return "automatic-action";
+    }
 
 }

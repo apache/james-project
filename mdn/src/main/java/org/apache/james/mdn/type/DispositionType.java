@@ -17,28 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
-
+package org.apache.james.mdn.type;
 
 /**
- * Class <code>TypeProcessed</code>
- */    
-public class TypeProcessed implements DispositionType
+ * Interface <code>DispositionType</code> marks a type encapsulating
+ * disposition type information as defined by RFC 2298.
+ */
+public interface DispositionType
 {
 
-    /**
-     * Default Constructor
-     */
-    public TypeProcessed()
-    {
-        super();
-    }
-    
-    /**
-     * @see java.lang.Object#toString()
-     */
-    public String toString()
-    {
-        return "processed";
-    }         
 }

@@ -17,13 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
+package org.apache.james.mdn.modifier;
+
 
 /**
- * Interface <code>DispositionType</code> marks a type encapsulating
- * disposition type information as defined by RFC 2298.
- */
-public interface DispositionType
+ * Class <code>ModifierExpired</code>
+ */    
+public class ModifierExpired implements DispositionModifier
 {
+
+    /**
+     * Default Constructor
+     */
+    public ModifierExpired()
+    {
+        super();
+    }
+    
+    /**
+     * @see java.lang.Object#toString()
+     */
+    public String toString()
+    {
+        return "expired";
+    }        
 
 }

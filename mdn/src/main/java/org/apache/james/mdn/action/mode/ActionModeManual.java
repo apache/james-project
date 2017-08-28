@@ -17,19 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
+package org.apache.james.mdn.action.mode;
 
 
 /**
- * Class <code>TypeDeleted</code>
+ * Class <code>ActionModeManual</code>
  */
-public class TypeDeleted implements DispositionType
+public class ActionModeManual
+        implements
+            DispositionActionMode
 {
 
     /**
      * Default Constructor
      */
-    public TypeDeleted()
+    public ActionModeManual()
     {
         super();
     }
@@ -39,7 +41,7 @@ public class TypeDeleted implements DispositionType
      */
     public String toString()
     {
-        return "deleted";
+        return "manual-action";
     }         
 
 }

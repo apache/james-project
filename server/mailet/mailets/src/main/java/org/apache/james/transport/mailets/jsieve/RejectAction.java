@@ -29,14 +29,13 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-
-import org.apache.james.mdn.ActionModeAutomatic;
 import org.apache.james.mdn.Disposition;
-import org.apache.james.mdn.DispositionModifier;
 import org.apache.james.mdn.MDNFactory;
-import org.apache.james.mdn.ModifierError;
-import org.apache.james.mdn.SendingModeAutomatic;
-import org.apache.james.mdn.TypeDeleted;
+import org.apache.james.mdn.action.mode.ActionModeAutomatic;
+import org.apache.james.mdn.modifier.DispositionModifier;
+import org.apache.james.mdn.modifier.ModifierError;
+import org.apache.james.mdn.sending.mode.SendingModeAutomatic;
+import org.apache.james.mdn.type.TypeDeleted;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionReject;
 import org.apache.mailet.Mail;

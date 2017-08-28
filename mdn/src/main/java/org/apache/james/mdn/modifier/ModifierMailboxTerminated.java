@@ -17,28 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
+package org.apache.james.mdn.modifier;
 
 
 /**
- * Class <code>ModifierError</code>
- */
-public class ModifierError implements DispositionModifier
+ * Class <code>ModifierMailboxTerminated</code>
+ */    
+public class ModifierMailboxTerminated implements DispositionModifier
 {
 
     /**
      * Default Constructor
      */
-    public ModifierError()
+    public ModifierMailboxTerminated()
     {
         super();
     }
-
+    
     /**
      * @see java.lang.Object#toString()
      */
     public String toString()
     {
-        return "error";
-    }
+        return "mailbox-terminated";
+    }        
+
 }

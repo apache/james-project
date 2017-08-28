@@ -17,29 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
-
+package org.apache.james.mdn.modifier;
 
 /**
- * Class <code>SendingModeManual</code>
+ * Interface <code>DispositionModifier</code> marks a type encapsulating
+ * disposition modifier information as defined by RFC 2298.
  */
-public class SendingModeManual implements DispositionSendingMode
+public interface DispositionModifier
 {
-
-    /**
-     * Default Constructor
-     */
-    public SendingModeManual()
-    {
-        super();
-    }
-    
-    /**
-     * @see java.lang.Object#toString()
-     */
-    public String toString()
-    {
-        return "MDN-sent-manually";
-    }         
 
 }

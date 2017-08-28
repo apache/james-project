@@ -17,13 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn;
+package org.apache.james.mdn.sending.mode;
+
 
 /**
- * Interface <code>DispositionSendingMode</code> marks a type encapsulating
- * disposition sending mode information as defined by RFC 2298.
+ * Class <code>SendingModeManual</code>
  */
-public interface DispositionSendingMode
+public class SendingModeManual implements DispositionSendingMode
 {
+
+    /**
+     * Default Constructor
+     */
+    public SendingModeManual()
+    {
+        super();
+    }
+    
+    /**
+     * @see java.lang.Object#toString()
+     */
+    public String toString()
+    {
+        return "MDN-sent-manually";
+    }         
 
 }
