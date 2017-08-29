@@ -107,7 +107,6 @@ public abstract class SetMessagesMethodTest {
     private static final String USERNAME = "username@" + USERS_DOMAIN;
     public static final MailboxPath USER_MAILBOX = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
     private static final String NOT_UPDATED = ARGUMENTS + ".notUpdated";
-    private static final String NOT_CREATED = ARGUMENTS + ".notCreated";
 
     private ConditionFactory calmlyAwait;
 

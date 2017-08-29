@@ -20,18 +20,18 @@
 package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Arrays;
 import java.util.List;
+
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.FlagsBuilder;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import com.google.common.collect.ImmutableMap;
 
 public class UpdateMessagePatchTest {
     private final static String FORWARDED = "forwarded";
@@ -46,7 +46,7 @@ public class UpdateMessagePatchTest {
 
     @Test
     public void builderShouldSetUnreadFalseWhenBuiltWithIsUnreadFalse() {
-        UpdateMessagePatch testee = UpdateMessagePatch.builder().isUnread(false).build();
+        UpdateMessagePatch.builder().isUnread(false).build();
     }
 
     @Test

@@ -527,16 +527,17 @@ public class GetMessagesMethodTest {
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
             .extracting(Message::getKeywords)
-            .containsOnly(
-                ImmutableMap.of(
-                    "$Answered", true,
-                    "$Draft", true),
-                ImmutableMap.of(
-                    "$Answered", true,
-                    "$Draft", true),
-                ImmutableMap.of(
-                    "$Answered", true,
-                    "$Draft", true));
+            .containsOnlyElementsOf(
+                    ImmutableList.of(
+                        ImmutableMap.of(
+                            "$Answered", true,
+                            "$Draft", true),
+                        ImmutableMap.of(
+                            "$Answered", true,
+                            "$Draft", true),
+                        ImmutableMap.of(
+                            "$Answered", true,
+                            "$Draft", true)));
 
     }
 
@@ -575,16 +576,17 @@ public class GetMessagesMethodTest {
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
             .extracting(Message::getKeywords)
-            .containsOnly(
-                ImmutableMap.of(
-                    "$Answered", true,
-                    "$Draft", true),
-                ImmutableMap.of(
-                    "$Answered", true,
-                    "$Draft", true),
-                ImmutableMap.of(
-                    "$Answered", true,
-                    "$Draft", true));
+            .containsOnlyElementsOf(
+                    ImmutableList.of(
+                        ImmutableMap.of(
+                            "$Answered", true,
+                            "$Draft", true),
+                        ImmutableMap.of(
+                            "$Answered", true,
+                            "$Draft", true),
+                        ImmutableMap.of(
+                            "$Answered", true,
+                            "$Draft", true)));
 
     }
 
@@ -611,9 +613,10 @@ public class GetMessagesMethodTest {
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
             .extracting(Message::getKeywords)
-            .containsOnly(
-                ImmutableMap.of(
-                    "$Answered", true,
-                    FORWARDED, true));
+            .containsOnlyElementsOf(
+                    ImmutableList.of(
+                        ImmutableMap.of(
+                            "$Answered", true,
+                            FORWARDED, true)));
     }
 }

@@ -78,7 +78,8 @@ public class MailAttributesListToMimeHeaders extends GenericMailet {
     private void addAttributeToHeader(Mail mail, MimeMessage message, Entry<String, String> entry) {
         Serializable attribute = mail.getAttribute(entry.getKey());
         if (attribute instanceof Collection) {
-            Optional<Collection> values = Optional.of((Collection) attribute);
+            @SuppressWarnings("unchecked")
+            Optional<Collection<Serializable>> values = Optional.of((Collection<Serializable>) attribute);
             addCollectionToHeader(message, entry.getValue(), values);
         } else {
             if (attribute != null) {
@@ -87,7 +88,7 @@ public class MailAttributesListToMimeHeaders extends GenericMailet {
         }
     }
 
-    private void addCollectionToHeader(MimeMessage message, String headerName, Optional<Collection> values) {
+    private void addCollectionToHeader(MimeMessage message, String headerName, Optional<Collection<Serializable>> values) {
         OptionalUtils.toStream(values)
             .flatMap(Collection::stream)
             .forEach(value -> addValueToHeader(message, headerName, value));
