@@ -19,6 +19,8 @@
 
 package org.apache.james.mdn.fields;
 
+import java.util.Objects;
+
 import org.apache.james.mdn.Constants;
 
 import com.google.common.base.Preconditions;
@@ -28,7 +30,7 @@ import com.google.common.base.Preconditions;
  *
  * https://tools.ietf.org/html/rfc8098#section-3.2.3
  */
-public class OriginalRecipient implements Field{
+public class OriginalRecipient implements Field {
     private static final String UNKNOWN = "unknown";
     private static final String FIELD_NAME = "Original-Recipient";
 
@@ -59,7 +61,28 @@ public class OriginalRecipient implements Field{
     }
 
     @Override
+    public final boolean equals(Object o) {
+        if (o instanceof OriginalRecipient) {
+            OriginalRecipient that = (OriginalRecipient) o;
+
+            return Objects.equals(this.originalRecipient, that.originalRecipient)
+                && Objects.equals(this.addressType, that.addressType);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(originalRecipient, addressType);
+    }
+
+    @Override
     public String formattedValue() {
         return FIELD_NAME + ": " + addressType + "; " + originalRecipient.formatted();
+    }
+
+    @Override
+    public String toString() {
+        return formattedValue();
     }
 }

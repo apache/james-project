@@ -19,17 +19,25 @@
 
 package org.apache.james.mdn.fields;
 
+import java.util.Objects;
+
+import com.google.common.base.Preconditions;
+
 /**
  * MDN-Gateway field as specified in https://tools.ietf.org/html/rfc8098#section-3.2.2
  */
 public class Gateway implements Field {
-    private static final String DNS = "dns";
+    public static final String DNS = "dns";
     public static final String FIELD_NAME = "MDN-Gateway";
 
     private final String nameType;
     private final Text name;
 
     public Gateway(String nameType, Text name) {
+        Preconditions.checkNotNull(nameType);
+        Preconditions.checkNotNull(name);
+        Preconditions.checkArgument(!nameType.contains("\n"));
+
         this.nameType = nameType;
         this.name = name;
     }
@@ -49,5 +57,26 @@ public class Gateway implements Field {
 
     public Text getName() {
         return name;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Gateway) {
+            Gateway gateway = (Gateway) o;
+
+            return Objects.equals(nameType, gateway.nameType)
+                && Objects.equals(name, gateway.name);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(nameType, name);
+    }
+
+    @Override
+    public String toString() {
+        return formattedValue();
     }
 }

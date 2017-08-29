@@ -20,6 +20,7 @@
 package org.apache.james.mdn.fields;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,7 @@ import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -86,7 +88,8 @@ public class Disposition implements Field {
     private final DispositionType type;
     private final List<DispositionModifier> modifiers;
 
-    private Disposition(DispositionActionMode actionMode, DispositionSendingMode sendingMode, DispositionType type, List<DispositionModifier> modifiers) {
+    @VisibleForTesting
+    Disposition(DispositionActionMode actionMode, DispositionSendingMode sendingMode, DispositionType type, List<DispositionModifier> modifiers) {
         this.actionMode = actionMode;
         this.sendingMode = sendingMode;
         this.type = type;
@@ -123,5 +126,28 @@ public class Disposition implements Field {
         return "/" + modifiers.stream()
             .map(DispositionModifier::getValue)
             .collect(Collectors.joining(","));
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Disposition) {
+            Disposition that = (Disposition) o;
+
+            return Objects.equals(actionMode, that.actionMode)
+                && Objects.equals(sendingMode, that.sendingMode)
+                && Objects.equals(type, that.type)
+                && Objects.equals(modifiers, that.modifiers);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(actionMode, sendingMode, type, modifiers);
+    }
+
+    @Override
+    public String toString() {
+        return formattedValue();
     }
 }

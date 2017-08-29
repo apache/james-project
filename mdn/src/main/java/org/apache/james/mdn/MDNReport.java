@@ -20,6 +20,7 @@
 package org.apache.james.mdn;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -32,6 +33,7 @@ import org.apache.james.mdn.fields.OriginalMessageId;
 import org.apache.james.mdn.fields.OriginalRecipient;
 import org.apache.james.mdn.fields.ReportingUserAgent;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -138,7 +140,8 @@ public class MDNReport {
     private final ImmutableList<Error> errorFields;
     private final ImmutableList<ExtensionField> extensionFields;
 
-    private MDNReport(Optional<ReportingUserAgent> reportingUserAgentField, Optional<Gateway> gatewayField, Optional<OriginalRecipient> originalRecipientField,
+    @VisibleForTesting
+    MDNReport(Optional<ReportingUserAgent> reportingUserAgentField, Optional<Gateway> gatewayField, Optional<OriginalRecipient> originalRecipientField,
                       FinalRecipient finalRecipientField, Optional<OriginalMessageId> originalMessageIdField, Disposition dispositionField,
                       ImmutableList<Error> errorFields, ImmutableList<ExtensionField> extensionFields) {
         this.reportingUserAgentField = reportingUserAgentField;
@@ -206,5 +209,33 @@ public class MDNReport {
         return extensionFields.stream()
             .map(ExtensionField::formattedValue)
             .collect(Collectors.joining(EXTENSION_DELIMITER)) + LINE_END;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof MDNReport) {
+            MDNReport that = (MDNReport) o;
+
+            return Objects.equals(this.reportingUserAgentField, that.reportingUserAgentField)
+                && Objects.equals(this.dispositionField, that.dispositionField)
+                && Objects.equals(this.errorFields, that.errorFields)
+                && Objects.equals(this.finalRecipientField, that.finalRecipientField)
+                && Objects.equals(this.gatewayField, that.gatewayField)
+                && Objects.equals(this.originalMessageIdField, that.originalMessageIdField)
+                && Objects.equals(this.extensionFields, that.extensionFields)
+                && Objects.equals(this.originalRecipientField, that.originalRecipientField);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(reportingUserAgentField, gatewayField, originalMessageIdField, originalRecipientField,
+            dispositionField, errorFields, extensionFields, finalRecipientField);
+    }
+
+    @Override
+    public String toString() {
+        return formattedValue();
     }
 }

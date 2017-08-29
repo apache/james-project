@@ -20,11 +20,14 @@
 package org.apache.james.mdn.fields;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 
 public class Text {
 
     public static Text fromRawText(String rawText) {
+        Preconditions.checkNotNull(rawText);
         return new Text(replaceLineBreaksByContinuation(rawText));
     }
 
@@ -43,5 +46,20 @@ public class Text {
 
     public String formatted() {
         return content;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Text) {
+            Text that = (Text) o;
+
+            return Objects.equal(this.content, that.content);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hashCode(content);
     }
 }

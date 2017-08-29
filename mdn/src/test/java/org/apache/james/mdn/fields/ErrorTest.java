@@ -19,51 +19,44 @@
 
 package org.apache.james.mdn.fields;
 
-import java.util.Objects;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.base.Preconditions;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-/**
- * Implements the optional MDN Error field defined in RFC-8098
- *
- * https://tools.ietf.org/html/rfc8098#section-3.2.7
- */
-public class Error implements Field {
-    public static final String FIELD_NAME = "Error";
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    private final Text text;
+public class ErrorTest {
 
-    public Error(Text text) {
-        Preconditions.checkNotNull(text);
-        this.text = text;
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
+    @Test
+    public void shouldMatchBeanContract() throws Exception {
+        EqualsVerifier.forClass(Error.class)
+            .allFieldsShouldBeUsed()
+            .verify();
     }
 
-    public Text getText() {
-        return text;
+    @Test
+    public void shouldThrowOnNullText() {
+        expectedException.expect(NullPointerException.class);
+
+        new Error(null);
     }
 
-    @Override
-    public String formattedValue() {
-        return FIELD_NAME + ": " + text.formatted();
+    @Test
+    public void formattedValueShouldDisplayMessage() {
+        assertThat(new Error(Text.fromRawText("Message"))
+            .formattedValue())
+            .isEqualTo("Error: Message");
     }
 
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof Error) {
-            Error error = (Error) o;
-
-            return Objects.equals(text, error.text);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(text);
-    }
-
-    @Override
-    public String toString() {
-        return formattedValue();
+    @Test
+    public void formattedValueShouldDisplayMultiLineMessage() {
+        assertThat(new Error(Text.fromRawText("Multi\nline\nMessage"))
+            .formattedValue())
+            .isEqualTo("Error: Multi\r\n line\r\n Message");
     }
 }

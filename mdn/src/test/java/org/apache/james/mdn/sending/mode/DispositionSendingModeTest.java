@@ -17,53 +17,33 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn.fields;
+package org.apache.james.mdn.sending.mode;
 
-import java.util.Objects;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.base.Preconditions;
+import org.junit.Test;
 
-/**
- * Implements the optional MDN Error field defined in RFC-8098
- *
- * https://tools.ietf.org/html/rfc8098#section-3.2.7
- */
-public class Error implements Field {
-    public static final String FIELD_NAME = "Error";
-
-    private final Text text;
-
-    public Error(Text text) {
-        Preconditions.checkNotNull(text);
-        this.text = text;
+public class DispositionSendingModeTest {
+    @Test
+    public void fromStringShouldReturnEmptyWhenUnknown() {
+        assertThat(DispositionSendingMode.fromString("unknown"))
+            .isEmpty();
     }
 
-    public Text getText() {
-        return text;
+    @Test
+    public void fromStringShouldRetrieveAutomatic() {
+        assertThat(DispositionSendingMode.fromString(DispositionSendingMode.Automatic.getValue()))
+            .contains(DispositionSendingMode.Automatic);
     }
 
-    @Override
-    public String formattedValue() {
-        return FIELD_NAME + ": " + text.formatted();
+    @Test
+    public void fromStringShouldRetrieveManual() {
+        assertThat(DispositionSendingMode.fromString(DispositionSendingMode.Manual.getValue()))
+            .contains(DispositionSendingMode.Manual);
     }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof Error) {
-            Error error = (Error) o;
-
-            return Objects.equals(text, error.text);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(text);
-    }
-
-    @Override
-    public String toString() {
-        return formattedValue();
+    @Test
+    public void fromStringShouldNotBeCaseSensitive() {
+        assertThat(DispositionSendingMode.fromString("mdn-sent-automatically"))
+            .contains(DispositionSendingMode.Automatic);
     }
 }

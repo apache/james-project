@@ -19,6 +19,10 @@
 
 package org.apache.james.mdn.fields;
 
+import java.util.Objects;
+
+import com.google.common.base.Preconditions;
+
 /**
  * Implements extension fields allowed by RFC-8098
  *
@@ -29,6 +33,10 @@ public class ExtensionField implements Field {
     private final String rawValue;
 
     public ExtensionField(String fieldName, String rawValue) {
+        Preconditions.checkNotNull(fieldName);
+        Preconditions.checkNotNull(rawValue);
+        Preconditions.checkArgument(!fieldName.contains("\n"), "Field name can not be multiline");
+
         this.fieldName = fieldName;
         this.rawValue = rawValue;
     }
@@ -36,5 +44,26 @@ public class ExtensionField implements Field {
     @Override
     public String formattedValue() {
         return fieldName + ": " +rawValue;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof ExtensionField) {
+            ExtensionField that = (ExtensionField) o;
+
+            return Objects.equals(fieldName, that.fieldName)
+                && Objects.equals(rawValue, that.rawValue);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(fieldName, rawValue);
+    }
+
+    @Override
+    public String toString() {
+        return formattedValue();
     }
 }

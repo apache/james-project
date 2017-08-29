@@ -19,6 +19,10 @@
 
 package org.apache.james.mdn.fields;
 
+import java.util.Objects;
+
+import com.google.common.base.Preconditions;
+
 /**
  * Optional Original-Message−Id as defined in RFC-8098
  *
@@ -29,6 +33,9 @@ public class OriginalMessageId implements Field {
     private final String originalMessageId;
 
     public OriginalMessageId(String originalMessageId) {
+        Preconditions.checkNotNull(originalMessageId);
+        Preconditions.checkArgument(!originalMessageId.contains("\n"));
+
         this.originalMessageId = originalMessageId;
     }
 
@@ -39,5 +46,25 @@ public class OriginalMessageId implements Field {
     @Override
     public String formattedValue() {
         return FIELD_NAME + ": " + originalMessageId;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof OriginalMessageId) {
+            OriginalMessageId that = (OriginalMessageId) o;
+
+            return Objects.equals(originalMessageId, that.originalMessageId);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(originalMessageId);
+    }
+
+    @Override
+    public String toString() {
+        return formattedValue();
     }
 }

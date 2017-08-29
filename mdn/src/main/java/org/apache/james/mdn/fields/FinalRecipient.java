@@ -19,6 +19,8 @@
 
 package org.apache.james.mdn.fields;
 
+import java.util.Objects;
+
 import org.apache.james.mdn.Constants;
 
 import com.google.common.base.Preconditions;
@@ -37,6 +39,8 @@ public class FinalRecipient implements Field {
     public FinalRecipient(String addressType, Text finalRecipient) {
         Preconditions.checkNotNull(finalRecipient);
         Preconditions.checkNotNull(addressType);
+        Preconditions.checkArgument(!addressType.contains("\n"), "Address type can not be multiline");
+
         this.finalRecipient = finalRecipient;
         this.addressType = addressType;
     }
@@ -52,5 +56,26 @@ public class FinalRecipient implements Field {
     @Override
     public String formattedValue() {
         return FIELD_NAME + ": " + addressType + "; " + finalRecipient.formatted();
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof FinalRecipient) {
+            FinalRecipient that = (FinalRecipient) o;
+
+            return Objects.equals(finalRecipient, that.finalRecipient)
+                && Objects.equals(addressType, that.addressType);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(finalRecipient, addressType);
+    }
+
+    @Override
+    public String toString() {
+        return formattedValue();
     }
 }

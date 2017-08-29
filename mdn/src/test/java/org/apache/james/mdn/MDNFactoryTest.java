@@ -21,8 +21,6 @@ package org.apache.james.mdn;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
-
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.Disposition;
 import org.apache.james.mdn.fields.Error;
@@ -36,14 +34,9 @@ import org.apache.james.mdn.fields.Text;
 import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class MDNFactoryTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void generateMDNReportShouldFormatAutomaticActions() {
@@ -58,7 +51,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -87,7 +80,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -116,7 +109,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -145,7 +138,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -174,7 +167,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -203,7 +196,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -231,7 +224,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -259,7 +252,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -286,7 +279,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -313,9 +306,7 @@ public class MDNFactoryTest {
             .build();
 
         String report = MDNReport.builder()
-            .reportingUserAgentField(new ReportingUserAgent(
-                "UA_name",
-                Optional.empty()))
+            .reportingUserAgentField(new ReportingUserAgent("UA_name"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -344,7 +335,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -371,7 +362,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .dispositionField(disposition)
@@ -383,19 +374,6 @@ public class MDNFactoryTest {
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
                 "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Disposition: manual-action/MDN-sent-automatically;deleted/error,failed\r\n");
-    }
-
-    @Test
-    public void generateMDNReportThrowOnNullDisposition() {
-        expectedException.expect(IllegalStateException.class);
-
-        MDNReport.builder()
-            .reportingUserAgentField(new ReportingUserAgent(
-                "UA_name",
-                Optional.of("UA_product")))
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
-            .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
-            .build();
     }
 
     @Test
@@ -411,7 +389,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .gatewayField(new Gateway(Text.fromRawText("host.com")))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
@@ -442,7 +420,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .gatewayField(new Gateway("postal", Text.fromRawText("5 rue Charles mercier")))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
@@ -473,7 +451,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient("roomNumber", Text.fromRawText("385")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -502,7 +480,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .gatewayField(new Gateway("postal", Text.fromRawText("8 rue Charles mercier\n 36555 Saint Coincoin\n France")))
             .finalRecipientField(new FinalRecipient("postal", Text.fromRawText("5 rue Mercier\n 36555 Saint Coincoin\n France")))
             .originalRecipientField(new OriginalRecipient("postal", Text.fromRawText("3 rue Mercier\n 36555 Saint Coincoin\n France")))
@@ -539,7 +517,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(OriginalRecipient.ofUnknown(Text.fromRawText("#$%*")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -568,7 +546,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient("roomNumber", Text.fromRawText("781")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -585,28 +563,6 @@ public class MDNFactoryTest {
     }
 
     @Test
-    public void generateMDNReportShouldThrowWhenMissingFinalField() {
-        Disposition disposition = Disposition.builder()
-            .actionMode(DispositionActionMode.Automatic)
-            .sendingMode(DispositionSendingMode.Automatic)
-            .type(DispositionType.Processed)
-            .addModifier(DispositionModifier.Error)
-            .addModifier(DispositionModifier.Failed)
-            .build();
-
-        expectedException.expect(IllegalStateException.class);
-
-        MDNReport.builder()
-            .reportingUserAgentField(new ReportingUserAgent(
-                "UA_name",
-                Optional.of("UA_product")))
-            .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
-            .originalMessageIdField(new OriginalMessageId("original_message_id"))
-            .dispositionField(disposition)
-            .build();
-    }
-
-    @Test
     public void generateMDNReportShouldFormatErrorField() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
@@ -619,7 +575,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -650,7 +606,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -684,7 +640,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -716,7 +672,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -748,7 +704,7 @@ public class MDNFactoryTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
-                Optional.of("UA_product")))
+                "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))

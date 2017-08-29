@@ -19,8 +19,10 @@
 
 package org.apache.james.mdn.fields;
 
+import java.util.Objects;
 import java.util.Optional;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 /**
@@ -33,9 +35,19 @@ public class ReportingUserAgent implements Field {
     private final String userAgentName;
     private final Optional<String> userAgentProduct;
 
-    public ReportingUserAgent(String userAgentName, Optional<String> userAgentProduct) {
+    public ReportingUserAgent(String userAgentName) {
+        this(userAgentName, Optional.empty());
+    }
+
+    public ReportingUserAgent(String userAgentName, String userAgentProduct) {
+        this(userAgentName, Optional.of(userAgentProduct));
+    }
+
+    @VisibleForTesting
+    ReportingUserAgent(String userAgentName, Optional<String> userAgentProduct) {
         Preconditions.checkNotNull(userAgentName);
         Preconditions.checkNotNull(userAgentProduct);
+
         this.userAgentName = userAgentName;
         this.userAgentProduct = userAgentProduct;
     }
@@ -52,5 +64,26 @@ public class ReportingUserAgent implements Field {
     public String formattedValue() {
         return FIELD_NAME + ": " + userAgentName + "; "
             + userAgentProduct.orElse("");
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof ReportingUserAgent) {
+            ReportingUserAgent that = (ReportingUserAgent) o;
+
+            return Objects.equals(this.userAgentName, that.userAgentName)
+                && Objects.equals(this.userAgentProduct, that.userAgentProduct);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(userAgentName, userAgentProduct);
+    }
+
+    @Override
+    public String toString() {
+        return formattedValue();
     }
 }

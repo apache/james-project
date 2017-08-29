@@ -124,7 +124,7 @@ public class RejectAction implements MailAction {
                 .reportingUserAgentField(
                     new ReportingUserAgent(
                         reporting_UA_name,
-                        Optional.ofNullable(reporting_UA_product)))
+                        reporting_UA_product))
                 .finalRecipientField(new FinalRecipient(Text.fromRawText(final_recipient)))
                 .originalRecipientField(Optional.ofNullable(original_recipient).map(Text::fromRawText).map(OriginalRecipient::new))
                 .originalMessageIdField(new OriginalMessageId(original_message_id))

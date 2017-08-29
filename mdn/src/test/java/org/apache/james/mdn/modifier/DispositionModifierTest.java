@@ -17,53 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mdn.fields;
+package org.apache.james.mdn.modifier;
 
-import java.util.Objects;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-import com.google.common.base.Preconditions;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-/**
- * Implements the optional MDN Error field defined in RFC-8098
- *
- * https://tools.ietf.org/html/rfc8098#section-3.2.7
- */
-public class Error implements Field {
-    public static final String FIELD_NAME = "Error";
+public class DispositionModifierTest {
 
-    private final Text text;
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
-    public Error(Text text) {
-        Preconditions.checkNotNull(text);
-        this.text = text;
+    @Test
+    public void shouldMatchBeanContract() throws Exception {
+        EqualsVerifier.forClass(DispositionModifier.class)
+            .allFieldsShouldBeUsed()
+            .verify();
     }
 
-    public Text getText() {
-        return text;
+    @Test
+    public void shouldThrowOnNull() {
+        expectedException.expect(NullPointerException.class);
+
+        new DispositionModifier(null);
     }
 
-    @Override
-    public String formattedValue() {
-        return FIELD_NAME + ": " + text.formatted();
-    }
+    @Test
+    public void shouldThrowOnMultiLine() {
+        expectedException.expect(IllegalArgumentException.class);
 
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof Error) {
-            Error error = (Error) o;
-
-            return Objects.equals(text, error.text);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(text);
-    }
-
-    @Override
-    public String toString() {
-        return formattedValue();
+        new DispositionModifier("multi\nline");
     }
 }
