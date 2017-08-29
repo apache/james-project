@@ -16,30 +16,12 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.jmap.cassandra.cucumber;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 
-import cucumber.api.CucumberOptions;
-import cucumber.api.junit.Cucumber;
+public class CucumberCassandraSingleton {
 
-@RunWith(Cucumber.class)
-@CucumberOptions(features="classpath:cucumber/GetMessages.feature",
-                glue={"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber"},
-                strict = true)
-public class CassandraGetMessagesMethodTest {
-
-    @BeforeClass
-    public static void init() {
-        CucumberCassandraSingleton.cassandraServer.start();
-    }
-
-    @AfterClass
-    public static void after() {
-        CucumberCassandraSingleton.cassandraServer.stop();
-    }
+    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
 }

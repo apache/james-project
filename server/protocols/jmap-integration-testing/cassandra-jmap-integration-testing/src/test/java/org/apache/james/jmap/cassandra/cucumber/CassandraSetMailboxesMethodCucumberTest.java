@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.cassandra.cucumber;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 
 import cucumber.api.CucumberOptions;
@@ -29,4 +31,15 @@ import cucumber.api.junit.Cucumber;
                 glue={"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber"},
                 strict = true)
 public class CassandraSetMailboxesMethodCucumberTest {
+
+    @BeforeClass
+    public static void init() {
+        CucumberCassandraSingleton.cassandraServer.start();
+    }
+
+    @AfterClass
+    public static void after() {
+        CucumberCassandraSingleton.cassandraServer.stop();
+    }
+
 }

@@ -47,7 +47,7 @@ public class CassandraStepdefs {
     private final MainStepdefs mainStepdefs;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.MAILBOX_INDEX);
-    private DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    private DockerCassandraRule cassandraServer = CucumberCassandraSingleton.cassandraServer;
 
     @Inject
     private CassandraStepdefs(MainStepdefs mainStepdefs) {
@@ -58,7 +58,6 @@ public class CassandraStepdefs {
     public void init() throws Exception {
         temporaryFolder.create();
         embeddedElasticSearch.before();
-        cassandraServer.start();
         mainStepdefs.messageIdFactory = new CassandraMessageId.Factory();
         mainStepdefs.jmapServer = new GuiceJamesServer()
                 .combineWith(CassandraJamesServerMain.cassandraServerModule, CassandraJamesServerMain.protocols)
@@ -72,8 +71,7 @@ public class CassandraStepdefs {
     public void tearDown() {
         ignoreFailures(mainStepdefs::tearDown,
                 () -> embeddedElasticSearch.after(),
-                () -> temporaryFolder.delete(),
-                () -> cassandraServer.stop());
+                () -> temporaryFolder.delete());
     }
 
     private void ignoreFailures(ThrowingRunnable... cleaners) {
