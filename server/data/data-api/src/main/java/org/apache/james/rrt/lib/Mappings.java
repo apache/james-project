@@ -26,7 +26,7 @@ import org.apache.james.rrt.lib.Mapping.Type;
 
 public interface Mappings extends Iterable<Mapping> {
 
-    boolean contains(String mapping);
+    boolean contains(Mapping mapping);
 
     int size();
 

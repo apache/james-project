@@ -328,6 +328,25 @@ public abstract class AbstractRecipientRewriteTableTest {
                         .build());
     }
 
+    @Test
+    public void addMappingShouldThrowWhenMappingAlreadyExists() throws Exception {
+        String user = "test";
+        String domain = "localhost";
+        String address = "test@localhost2";
+
+        assertThat(addMapping(user, domain, address, ADDRESS_TYPE)).isTrue();
+        assertThat(addMapping(user, domain, address, ADDRESS_TYPE)).isFalse();
+    }
+
+    @Test
+    public void addMappingShouldNotThrowWhenMappingAlreadyExistsWithAnOtherType() throws Exception {
+        String user = "test";
+        String domain = "localhost";
+        String address = "test@localhost2";
+
+        assertThat(addMapping(user, domain, address, ADDRESS_TYPE)).isTrue();
+        assertThat(addMapping(user, domain, address, ERROR_TYPE)).isTrue();
+    }
 
     protected abstract AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception;
 

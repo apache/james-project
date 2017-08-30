@@ -193,7 +193,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             throw new RecipientRewriteTableException("Invalid regex: " + regex, e);
         }
 
-        checkMapping(user, domain, regex);
+        checkMapping(user, domain, MappingImpl.regex(regex));
         LOGGER.info("Add regex mapping => " + regex + " for user: " + user + " domain: " + domain);
         addMappingInternal(user, domain, RecipientRewriteTable.REGEX_PREFIX + regex);
 
@@ -225,7 +225,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         } catch (ParseException e) {
             throw new RecipientRewriteTableException("Invalid emailAddress: " + address, e);
         }
-        checkMapping(user, domain, address);
+        checkMapping(user, domain, MappingImpl.address(address));
         LOGGER.info("Add address mapping => " + address + " for user: " + user + " domain: " + domain);
         addMappingInternal(user, domain, address);
 
@@ -252,7 +252,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      *      java.lang.String, java.lang.String)
      */
     public void addErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException {
-        checkMapping(user, domain, error);
+        checkMapping(user, domain, MappingImpl.error(error));
         LOGGER.info("Add error mapping => " + error + " for user: " + user + " domain: " + domain);
         addMappingInternal(user, domain, RecipientRewriteTable.ERROR_PREFIX + error);
 
@@ -445,7 +445,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         }
     }
 
-    private void checkMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    private void checkMapping(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
         Mappings mappings = getUserDomainMappings(user, domain);
         if (mappings != null && mappings.contains(mapping)) {
             throw new RecipientRewriteTableException("Mapping " + mapping + " for user " + user + " domain " + domain + " already exist!");
