@@ -59,6 +59,8 @@
                     <li>Diverse Response time percentiles, counts and rates for DNS</li>
                     <li>Cassandra Java driver metrics</li>
                 </ul>
+
+                Retrieve <a href="https://github.com/apache/james-project/tree/master/grafana-reporting">available boards</a> for Grafana.
             </p>
 
             <img src="images/performances/metrics.png"/>
