@@ -36,7 +36,7 @@ import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
 import org.junit.Test;
 
-public class MDNFactoryTest {
+public class MDNReportFormattingTest {
 
     @Test
     public void generateMDNReportShouldFormatAutomaticActions() {

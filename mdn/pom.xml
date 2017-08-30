@@ -34,8 +34,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-mailet-base</artifactId>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

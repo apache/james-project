@@ -25,11 +25,11 @@ import java.util.Collection;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 
-import org.apache.james.mdn.MDNFactory;
+import org.apache.james.mdn.MDN;
 import org.apache.james.mdn.MDNReport;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.Disposition;
@@ -112,25 +112,28 @@ public class RejectAction implements MailAction {
         String final_recipient = soleRecipient.asString();
         String original_message_id = aMail.getMessage().getMessageID();
 
-        MimeMultipart multiPart = MDNFactory.create(
-            humanText.toString(),
-            MDNReport.builder()
-                .reportingUserAgentField(reporting_UA_name, reporting_UA_product)
-                .finalRecipientField(final_recipient)
-                .originalRecipientField(original_recipient)
-                .originalMessageIdField(original_message_id)
-                .dispositionField(Disposition.builder()
-                    .actionMode(DispositionActionMode.Automatic)
-                    .sendingMode(DispositionSendingMode.Automatic)
-                    .type(DispositionType.Deleted)
-                    .addModifier(DispositionModifier.Error)
+        Multipart multipart = MDN.builder()
+            .humanReadableText(humanText.toString())
+            .report(
+                MDNReport.builder()
+                    .reportingUserAgentField(reporting_UA_name, reporting_UA_product)
+                    .finalRecipientField(final_recipient)
+                    .originalRecipientField(original_recipient)
+                    .originalMessageIdField(original_message_id)
+                    .dispositionField(Disposition.builder()
+                        .actionMode(DispositionActionMode.Automatic)
+                        .sendingMode(DispositionSendingMode.Automatic)
+                        .type(DispositionType.Deleted)
+                        .addModifier(DispositionModifier.Error)
+                        .build())
                     .build())
-                .build());
+            .build()
+            .asMultipart();
 
         // Send the message
         MimeMessage reply = (MimeMessage) aMail.getMessage().reply(false);
         reply.setFrom(soleRecipient.toInternetAddress());
-        reply.setContent(multiPart);
+        reply.setContent(multipart);
         reply.saveChanges();
         Address[] recipientAddresses = reply.getAllRecipients();
         if (null != recipientAddresses)
