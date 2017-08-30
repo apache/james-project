@@ -24,9 +24,11 @@ Note that you need to run a guice/cassandra version of James.
 
 ## Presentation of the different boards
 
+ - JVM statistics
  - Percentiles for IMAP / JMAP / SMTP commands
  - Requests counts for IMAP / JMAP / SMTP commands
  - Statistics about Mailet / Matcher execution times
  - Statistics about Mail queues
  - Statistics about DNS calls
  - Some other, diverse informations on the James server internals
+ - Cassandra driver statistics
