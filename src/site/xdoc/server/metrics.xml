@@ -40,6 +40,7 @@
             <p>
                 Here are the available metrics :
                 <ul>
+                    <li>James JVM metrics</li>
                     <li>Number of active SMTP connections</li>
                     <li>Number of SMTP commands received</li>
                     <li>Number of active IMAP connections</li>
@@ -56,6 +57,7 @@
                     <li>Diverse Response time percentiles, counts and rates for each JMS message queue</li>
                     <li>Per mailet and per matcher Response time percentiles</li>
                     <li>Diverse Response time percentiles, counts and rates for DNS</li>
+                    <li>Cassandra Java driver metrics</li>
                 </ul>
             </p>
 
