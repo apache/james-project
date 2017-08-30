@@ -22,7 +22,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Optional;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -34,11 +33,6 @@ import org.apache.james.mdn.MDNFactory;
 import org.apache.james.mdn.MDNReport;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.Disposition;
-import org.apache.james.mdn.fields.FinalRecipient;
-import org.apache.james.mdn.fields.OriginalMessageId;
-import org.apache.james.mdn.fields.OriginalRecipient;
-import org.apache.james.mdn.fields.ReportingUserAgent;
-import org.apache.james.mdn.fields.Text;
 import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
@@ -121,13 +115,10 @@ public class RejectAction implements MailAction {
         MimeMultipart multiPart = MDNFactory.create(
             humanText.toString(),
             MDNReport.builder()
-                .reportingUserAgentField(
-                    new ReportingUserAgent(
-                        reporting_UA_name,
-                        reporting_UA_product))
-                .finalRecipientField(new FinalRecipient(Text.fromRawText(final_recipient)))
-                .originalRecipientField(Optional.ofNullable(original_recipient).map(Text::fromRawText).map(OriginalRecipient::new))
-                .originalMessageIdField(new OriginalMessageId(original_message_id))
+                .reportingUserAgentField(reporting_UA_name, reporting_UA_product)
+                .finalRecipientField(final_recipient)
+                .originalRecipientField(original_recipient)
+                .originalMessageIdField(original_message_id)
                 .dispositionField(Disposition.builder()
                     .actionMode(DispositionActionMode.Automatic)
                     .sendingMode(DispositionSendingMode.Automatic)

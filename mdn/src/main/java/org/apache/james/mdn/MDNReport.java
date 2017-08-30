@@ -32,6 +32,7 @@ import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.OriginalMessageId;
 import org.apache.james.mdn.fields.OriginalRecipient;
 import org.apache.james.mdn.fields.ReportingUserAgent;
+import org.apache.james.mdn.fields.Text;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -52,8 +53,20 @@ public class MDNReport {
         private ImmutableList.Builder<Error> errorField = ImmutableList.builder();
         private ImmutableList.Builder<ExtensionField> extensionFields = ImmutableList.builder();
 
+        public Builder reportingUserAgentField(String userAgentName, String userAgentProduct) {
+            this.reportingUserAgentField = Optional.of(new ReportingUserAgent(userAgentName, Optional.ofNullable(userAgentProduct)));
+            return this;
+        }
+
         public Builder reportingUserAgentField(ReportingUserAgent reportingUserAgentField) {
             this.reportingUserAgentField = Optional.of(reportingUserAgentField);
+            return this;
+        }
+
+        public Builder originalRecipientField(String originalRecipient) {
+            this.originalRecipientField = Optional.ofNullable(originalRecipient)
+                .map(Text::fromRawText)
+                .map(OriginalRecipient::new);
             return this;
         }
 
@@ -67,6 +80,11 @@ public class MDNReport {
             return this;
         }
 
+        public Builder gatewayField(String gatewayDns) {
+            this.gatewayField = Optional.of(new Gateway(Text.fromRawText(gatewayDns)));
+            return this;
+        }
+
         public Builder gatewayField(Optional<Gateway> gatewayField) {
             this.gatewayField = gatewayField;
             return this;
@@ -76,6 +94,12 @@ public class MDNReport {
             this.gatewayField = Optional.of(gatewayField);
             return this;
         }
+
+        public Builder addErrorField(String message) {
+            this.errorField.add(new Error(Text.fromRawText(message)));
+            return this;
+        }
+
 
         public Builder addErrorField(Error errorField) {
             this.errorField.add(errorField);
@@ -87,8 +111,18 @@ public class MDNReport {
             return this;
         }
 
+        public Builder finalRecipientField(String finalRecipientField) {
+            this.finalRecipientField = Optional.of(new FinalRecipient(Text.fromRawText(finalRecipientField)));
+            return this;
+        }
+
         public Builder finalRecipientField(FinalRecipient finalRecipientField) {
             this.finalRecipientField = Optional.of(finalRecipientField);
+            return this;
+        }
+
+        public Builder originalMessageIdField(String originalMessageIdField) {
+            this.originalMessageIdField = Optional.of(new OriginalMessageId(originalMessageIdField));
             return this;
         }
 
