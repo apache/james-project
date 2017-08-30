@@ -23,16 +23,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.james.mdn.fields.Disposition;
 import org.apache.james.mdn.fields.Error;
 import org.apache.james.mdn.fields.ExtensionField;
+import org.apache.james.mdn.fields.Field;
 import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.OriginalMessageId;
 import org.apache.james.mdn.fields.OriginalRecipient;
 import org.apache.james.mdn.fields.ReportingUserAgent;
 import org.apache.james.mdn.fields.Text;
+import org.apache.james.util.OptionalUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -217,32 +220,26 @@ public class MDNReport {
     }
 
     public String formattedValue() {
-        return reportingUserAgentField.map(value -> value.formattedValue() + LINE_END).orElse("")
-            + gatewayField.map(value -> value.formattedValue() + LINE_END).orElse("")
-            + originalRecipientField.map(value -> value.formattedValue() + LINE_END).orElse("")
-            + finalRecipientField.formattedValue() + LINE_END
-            + originalMessageIdField.map(value -> value.formattedValue() + LINE_END).orElse("")
-            + dispositionField.formattedValue() + LINE_END
-            + formatErrors()
-            + formattedExtensionValue();
-    }
+        Stream<Optional<? extends Field>> definedFields =
+            Stream.of(
+                reportingUserAgentField,
+                gatewayField,
+                originalRecipientField,
+                Optional.of(finalRecipientField),
+                originalMessageIdField,
+                Optional.of(dispositionField));
+        Stream<Optional<? extends Field>> errors =
+            errorFields.stream().map(Optional::of);
+        Stream<Optional<? extends Field>> extentions =
+            extensionFields.stream().map(Optional::of);
 
-    private String formatErrors() {
-        if (errorFields.isEmpty()) {
-            return "";
-        }
-        return errorFields.stream()
-            .map(Error::formattedValue)
+        return Stream.concat(
+            definedFields,
+            Stream.concat(errors,
+                extentions))
+            .flatMap(OptionalUtils::toStream)
+            .map(Field::formattedValue)
             .collect(Collectors.joining(LINE_END)) + LINE_END;
-    }
-
-    private String formattedExtensionValue() {
-        if (extensionFields.isEmpty()) {
-            return "";
-        }
-        return extensionFields.stream()
-            .map(ExtensionField::formattedValue)
-            .collect(Collectors.joining(EXTENSION_DELIMITER)) + LINE_END;
     }
 
     @Override
