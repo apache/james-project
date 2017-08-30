@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 
@@ -96,8 +97,8 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected void removeMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException {
-        mappingEntries.remove(new InMemoryMappingEntry(getFixedUser(user), getFixedDomain(domain), mapping));
+    protected void removeMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
+        mappingEntries.remove(new InMemoryMappingEntry(getFixedUser(user), getFixedDomain(domain), mapping.asString()));
     }
 
     @Override

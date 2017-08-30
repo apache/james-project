@@ -205,7 +205,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      */
     public void removeRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException {
         LOGGER.info("Remove regex mapping => " + regex + " for user: " + user + " domain: " + domain);
-        removeMappingInternal(user, domain, RecipientRewriteTable.REGEX_PREFIX + regex);
+        removeMappingInternal(user, domain, MappingImpl.regex(regex));
     }
 
     /**
@@ -244,7 +244,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             }
         }
         LOGGER.info("Remove address mapping => " + address + " for user: " + user + " domain: " + domain);
-        removeMappingInternal(user, domain, address);
+        removeMappingInternal(user, domain, MappingImpl.address(address));
     }
 
     /**
@@ -264,7 +264,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      */
     public void removeErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException {
         LOGGER.info("Remove error mapping => " + error + " for user: " + user + " domain: " + domain);
-        removeMappingInternal(user, domain, RecipientRewriteTable.ERROR_PREFIX + error);
+        removeMappingInternal(user, domain, MappingImpl.error(error));
     }
 
     /**
@@ -348,7 +348,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      */
     public void removeAliasDomainMapping(String aliasDomain, String realDomain) throws RecipientRewriteTableException {
         LOGGER.info("Remove domain mapping: " + aliasDomain + " => " + realDomain);
-        removeMappingInternal(null, aliasDomain, RecipientRewriteTable.ALIASDOMAIN_PREFIX + realDomain);
+        removeMappingInternal(null, aliasDomain, MappingImpl.domain(realDomain));
     }
 
     /**
@@ -375,7 +375,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      *            the mapping
      * @throws RecipientRewriteTableException
      */
-    protected abstract void removeMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException;
+    protected abstract void removeMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException;
 
     /**
      * Return Collection of all mappings for the given username and domain

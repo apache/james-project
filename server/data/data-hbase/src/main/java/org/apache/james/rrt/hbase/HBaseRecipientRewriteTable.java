@@ -24,12 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.rrt.hbase.def.HRecipientRewriteTable;
-import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
-import org.apache.james.rrt.lib.Mappings;
-import org.apache.james.rrt.lib.MappingsImpl;
-import org.apache.james.system.hbase.TablePool;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
@@ -39,6 +33,13 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.hbase.def.HRecipientRewriteTable;
+import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.Mapping;
+import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.rrt.lib.MappingsImpl;
+import org.apache.james.system.hbase.TablePool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -206,7 +207,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#removeMappingInternal(String, String, String)
      */
     @Override
-    protected void removeMappingInternal(String user, String domain, String mapping) throws
+    protected void removeMappingInternal(String user, String domain, Mapping mapping) throws
             RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
         String fixedDomain = getFixedDomain(domain);
@@ -215,7 +216,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
             Mappings updatedMappings = map.remove(mapping);
             doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         } else {
-            doRemoveMapping(fixedUser, fixedDomain, mapping);
+            doRemoveMapping(fixedUser, fixedDomain, mapping.asString());
         }
     }
 

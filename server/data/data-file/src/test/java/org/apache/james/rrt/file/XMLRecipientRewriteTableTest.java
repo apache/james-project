@@ -26,6 +26,7 @@ import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
+import org.apache.james.rrt.lib.MappingImpl;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.lib.MappingsImpl.Builder;
@@ -110,13 +111,13 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
         removeMappingsFromConfig(user, domain, mappings);
 
         if (type == ERROR_TYPE) {
-            mappings = mappings.remove(RecipientRewriteTable.ERROR_PREFIX + mapping);
+            mappings = mappings.remove(MappingImpl.error(mapping));
         } else if (type == REGEX_TYPE) {
-            mappings = mappings.remove(RecipientRewriteTable.REGEX_PREFIX + mapping);
+            mappings = mappings.remove(MappingImpl.regex(mapping));
         } else if (type == ADDRESS_TYPE) {
-            mappings = mappings.remove(mapping);
+            mappings = mappings.remove(MappingImpl.address(mapping));
         } else if (type == ALIASDOMAIN_TYPE) {
-            mappings = mappings.remove(RecipientRewriteTable.ALIASDOMAIN_PREFIX + mapping);
+            mappings = mappings.remove(MappingImpl.domain(mapping));
         }
 
         if (mappings.size() > 0) {

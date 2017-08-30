@@ -36,6 +36,7 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 
@@ -99,11 +100,11 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     }
 
     @Override
-    protected void removeMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    protected void removeMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
         executor.executeVoid(deleteStatement.bind()
                 .setString(USER, getFixedUser(user))
                 .setString(DOMAIN, getFixedDomain(domain))
-                .setString(MAPPING, mapping))
+                .setString(MAPPING, mapping.asString()))
             .join();
     }
 

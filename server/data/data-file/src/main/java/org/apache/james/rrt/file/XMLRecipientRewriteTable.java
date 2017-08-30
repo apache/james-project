@@ -25,6 +25,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
@@ -96,7 +97,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected void removeMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    protected void removeMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only implementation");
     }
 }

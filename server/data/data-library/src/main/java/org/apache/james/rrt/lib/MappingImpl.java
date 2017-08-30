@@ -34,7 +34,6 @@ public class MappingImpl implements Mapping, Serializable {
 
     private static final String ADDRESS_PREFIX = "";
 
-
     public static MappingImpl of(String mapping) {
         return new MappingImpl("", mapping);
     }

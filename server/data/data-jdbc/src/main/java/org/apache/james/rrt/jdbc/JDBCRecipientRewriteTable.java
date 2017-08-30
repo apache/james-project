@@ -38,6 +38,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.util.sql.JDBCUtil;
@@ -310,12 +311,8 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
         return null;
     }
 
-    /**
-     * @throws RecipientRewriteTableException
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#removeMappingInternal(String,
-     *      String, String)
-     */
-    protected void removeMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    @Override
+    protected void removeMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
         String fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
@@ -323,7 +320,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             Mappings updatedMappings = map.remove(mapping);
             doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         } else {
-            doRemoveMapping(fixedUser, fixedDomain, mapping);
+            doRemoveMapping(fixedUser, fixedDomain, mapping.asString());
         }
     }
 

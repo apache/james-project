@@ -137,8 +137,7 @@ public class MappingsImpl implements Mappings, Serializable {
     }
 
     @Override
-    public Mappings remove(String mappingAsString) {
-        MappingImpl mapping = MappingImpl.of(mappingAsString);
+    public Mappings remove(Mapping mapping) {
         if (mappings.contains(mapping)) {
             ArrayList<Mapping> updatedMappings = Lists.newArrayList(mappings);
             updatedMappings.remove(mapping);
