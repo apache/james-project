@@ -58,7 +58,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#addMappingInternal(String, String, String)
      */
     @Override
-    protected void addMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    protected void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
         String fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
@@ -66,7 +66,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
             Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
             doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         } else {
-            doAddMapping(fixedUser, fixedDomain, mapping);
+            doAddMapping(fixedUser, fixedDomain, mapping.asString());
         }
     }
 

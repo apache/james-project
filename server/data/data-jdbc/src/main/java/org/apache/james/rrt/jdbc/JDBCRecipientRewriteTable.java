@@ -194,20 +194,16 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     }
 
-    /**
-     * @throws RecipientRewriteTableException
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#addMappingInternal(String,
-     *      String, String)
-     */
-    protected void addMappingInternal(String user, String domain, String regex) throws RecipientRewriteTableException {
+    @Override
+    protected void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
         String fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() != 0) {
-            Mappings updatedMappings = MappingsImpl.from(map).add(regex).build();
+            Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
             doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         }
-        doAddMapping(fixedUser, fixedDomain, regex);
+        doAddMapping(fixedUser, fixedDomain, mapping.asString());
     }
 
     /**

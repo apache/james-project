@@ -61,11 +61,8 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         this.entityManagerFactory = entityManagerFactory;
     }
 
-    /**
-     * @throws RecipientRewriteTableException
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#addMappingInternal(String, String, String)
-     */
-    protected void addMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    @Override
+    protected void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
         String fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
@@ -73,7 +70,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
             doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         } else {
-            doAddMapping(fixedUser, fixedDomain, mapping);
+            doAddMapping(fixedUser, fixedDomain, mapping.asString());
         }
     }
 

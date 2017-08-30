@@ -68,7 +68,7 @@ public class MappingsImpl implements Mappings, Serializable {
             .build();
     }
     
-    private static MappingsImpl fromMappings(Stream<Mapping> mappings) {
+    public static MappingsImpl fromMappings(Stream<Mapping> mappings) {
         return mappings
             .reduce(builder(), (builder, mapping) -> builder.add(mapping), (builder1, builder2) -> builder1.addAll(builder2.build()))
             .build();

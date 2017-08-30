@@ -195,7 +195,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         checkMapping(user, domain, MappingImpl.regex(regex));
         LOGGER.info("Add regex mapping => " + regex + " for user: " + user + " domain: " + domain);
-        addMappingInternal(user, domain, RecipientRewriteTable.REGEX_PREFIX + regex);
+        addMappingInternal(user, domain, MappingImpl.regex(regex));
 
     }
 
@@ -227,7 +227,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         }
         checkMapping(user, domain, MappingImpl.address(address));
         LOGGER.info("Add address mapping => " + address + " for user: " + user + " domain: " + domain);
-        addMappingInternal(user, domain, address);
+        addMappingInternal(user, domain, MappingImpl.address(address));
 
     }
 
@@ -254,7 +254,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     public void addErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException {
         checkMapping(user, domain, MappingImpl.error(error));
         LOGGER.info("Add error mapping => " + error + " for user: " + user + " domain: " + domain);
-        addMappingInternal(user, domain, RecipientRewriteTable.ERROR_PREFIX + error);
+        addMappingInternal(user, domain, MappingImpl.error(error));
 
     }
 
@@ -339,7 +339,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      */
     public void addAliasDomainMapping(String aliasDomain, String realDomain) throws RecipientRewriteTableException {
         LOGGER.info("Add domain mapping: " + aliasDomain + " => " + realDomain);
-        addMappingInternal(null, aliasDomain, RecipientRewriteTable.ALIASDOMAIN_PREFIX + realDomain);
+        addMappingInternal(null, aliasDomain, MappingImpl.domain(realDomain));
     }
 
     /**
@@ -362,7 +362,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      *            the mapping
      * @throws RecipientRewriteTableException
      */
-    protected abstract void addMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException;
+    protected abstract void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException;
 
     /**
      * Remove mapping

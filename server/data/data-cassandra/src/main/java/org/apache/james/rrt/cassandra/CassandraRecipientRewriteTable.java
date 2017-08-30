@@ -91,11 +91,11 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     }
 
     @Override
-    protected void addMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    protected void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
         executor.executeVoid(insertStatement.bind()
             .setString(USER, getFixedUser(user))
             .setString(DOMAIN, getFixedDomain(domain))
-            .setString(MAPPING, mapping))
+            .setString(MAPPING, mapping.asString()))
             .join();
     }
 
