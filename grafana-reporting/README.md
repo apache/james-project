@@ -20,7 +20,7 @@ Import the different dashboards in this directory.
 
 You then need to enable reporting through ElasticSearch. Modify your James ElasticSearch configuration file accordingly.
 To help you doing this, you can take a look to [GitHub](https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/elasticsearch.properties).
-Note that you need to run a guice/cassandra version of James.
+Note that you need to run a guice version of James.
 
 ## Presentation of the different boards
 
