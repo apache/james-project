@@ -52,22 +52,14 @@ public class GatewayTest {
         expectedException.expect(NullPointerException.class);
 
         Text name = null;
-        new Gateway("type", name);
+        new Gateway(new AddressType("type"), name);
     }
 
     @Test
     public void shouldThrowOnNullType() {
         expectedException.expect(NullPointerException.class);
 
-        String nameType = null;
-        new Gateway(nameType, Text.fromRawText("name"));
-    }
-
-    @Test
-    public void shouldThrowOnMultilineType() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        String nameType = "name\ntype";
+        AddressType nameType = null;
         new Gateway(nameType, Text.fromRawText("name"));
     }
 
@@ -75,7 +67,7 @@ public class GatewayTest {
     public void addressTypeSHouldDefaultToDNS() {
         Text address = Text.fromRawText("address");
         assertThat(new Gateway(address))
-            .isEqualTo(new Gateway(Gateway.DNS, address));
+            .isEqualTo(new Gateway(AddressType.DNS, address));
     }
 
     @Test
@@ -95,7 +87,7 @@ public class GatewayTest {
 
     @Test
     public void formattedValueShouldDisplayCustomAddress() {
-        assertThat(new Gateway("custom", Text.fromRawText("address"))
+        assertThat(new Gateway(new AddressType("custom"), Text.fromRawText("address"))
             .formattedValue())
             .isEqualTo("MDN-Gateway: custom;address");
     }

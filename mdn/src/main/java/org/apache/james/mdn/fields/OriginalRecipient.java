@@ -21,8 +21,6 @@ package org.apache.james.mdn.fields;
 
 import java.util.Objects;
 
-import org.apache.james.mdn.Constants;
-
 import com.google.common.base.Preconditions;
 
 /**
@@ -31,32 +29,32 @@ import com.google.common.base.Preconditions;
  * https://tools.ietf.org/html/rfc8098#section-3.2.3
  */
 public class OriginalRecipient implements Field {
-    private static final String UNKNOWN = "unknown";
     private static final String FIELD_NAME = "Original-Recipient";
 
     public static OriginalRecipient ofUnknown(Text address) {
-        return new OriginalRecipient(UNKNOWN, address);
+        return new OriginalRecipient(AddressType.UNKNOWN, address);
     }
 
     private final Text originalRecipient;
-    private final String addressType;
+    private final AddressType addressType;
 
-    public OriginalRecipient(String addressType, Text originalRecipient) {
+    public OriginalRecipient(AddressType addressType, Text originalRecipient) {
         Preconditions.checkNotNull(addressType);
         Preconditions.checkNotNull(originalRecipient);
+
         this.addressType = addressType;
         this.originalRecipient = originalRecipient;
     }
 
     public OriginalRecipient(Text originalRecipient) {
-        this(Constants.RFC_822, originalRecipient);
+        this(AddressType.RFC_822, originalRecipient);
     }
 
     public Text getOriginalRecipient() {
         return originalRecipient;
     }
 
-    public String getAddressType() {
+    public AddressType getAddressType() {
         return addressType;
     }
 
@@ -78,7 +76,7 @@ public class OriginalRecipient implements Field {
 
     @Override
     public String formattedValue() {
-        return FIELD_NAME + ": " + addressType + "; " + originalRecipient.formatted();
+        return FIELD_NAME + ": " + addressType.getType() + "; " + originalRecipient.formatted();
     }
 
     @Override

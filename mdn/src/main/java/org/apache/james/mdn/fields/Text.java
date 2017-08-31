@@ -28,7 +28,10 @@ public class Text {
 
     public static Text fromRawText(String rawText) {
         Preconditions.checkNotNull(rawText);
-        return new Text(replaceLineBreaksByContinuation(rawText));
+        String trimmedText = rawText.trim();
+        Preconditions.checkArgument(!trimmedText.isEmpty(), "Text should not be empty");
+
+        return new Text(replaceLineBreaksByContinuation(trimmedText));
     }
 
     private static String replaceLineBreaksByContinuation(String rawText) {

@@ -27,31 +27,29 @@ import com.google.common.base.Preconditions;
  * MDN-Gateway field as specified in https://tools.ietf.org/html/rfc8098#section-3.2.2
  */
 public class Gateway implements Field {
-    public static final String DNS = "dns";
     public static final String FIELD_NAME = "MDN-Gateway";
 
-    private final String nameType;
+    private final AddressType nameType;
     private final Text name;
 
-    public Gateway(String nameType, Text name) {
+    public Gateway(AddressType nameType, Text name) {
         Preconditions.checkNotNull(nameType);
         Preconditions.checkNotNull(name);
-        Preconditions.checkArgument(!nameType.contains("\n"));
 
         this.nameType = nameType;
         this.name = name;
     }
 
     public Gateway(Text name) {
-        this(DNS, name);
+        this(AddressType.DNS, name);
     }
 
     @Override
     public String formattedValue() {
-        return FIELD_NAME + ": " + nameType + ";" + name.formatted();
+        return FIELD_NAME + ": " + nameType.getType() + ";" + name.formatted();
     }
 
-    public String getNameType() {
+    public AddressType getNameType() {
         return nameType;
     }
 

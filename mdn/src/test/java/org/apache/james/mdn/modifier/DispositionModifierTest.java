@@ -50,4 +50,32 @@ public class DispositionModifierTest {
 
         new DispositionModifier("multi\nline");
     }
+
+    @Test
+    public void shouldThrowOnEndBreakLine() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        new DispositionModifier("multi\n");
+    }
+
+    @Test
+    public void shouldThrowOnBeginningBreakLine() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        new DispositionModifier("\nline");
+    }
+
+    @Test
+    public void shouldThrowOnEmptyValue() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        new DispositionModifier("");
+    }
+
+    @Test
+    public void shouldThrowOnFoldingWhiteSpaceValue() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        new DispositionModifier("    ");
+    }
 }

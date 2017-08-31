@@ -27,71 +27,73 @@ import org.junit.rules.ExpectedException;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class TextTest {
-
+public class AddressTypeTest {
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
     @Test
-    public void shouldMatchBeanContact() {
-        EqualsVerifier.forClass(Text.class)
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(AddressType.class)
             .allFieldsShouldBeUsed()
             .verify();
     }
 
     @Test
-    public void fromRawTextShouldThrowOnNull() {
+    public void constructorShouldThrowOnNull() {
         expectedException.expect(NullPointerException.class);
 
-        Text.fromRawText(null);
+        new AddressType(null);
     }
 
     @Test
-    public void fromRawTextShouldThrowOnEmptyStrings() {
+    public void constructorShouldThrowOnEmpty() {
         expectedException.expect(IllegalArgumentException.class);
 
-        Text.fromRawText("");
+        new AddressType("");
     }
 
     @Test
-    public void formattedShouldKeepSpaces() {
-        Text text = Text.fromRawText("text with spaces");
+    public void constructorShouldThrowOnFoldingWhiteSpaces() {
+        expectedException.expect(IllegalArgumentException.class);
 
-        assertThat(text.formatted()).isEqualTo("text with spaces");
+        new AddressType("   ");
     }
 
     @Test
-    public void formattedShouldWrapLines() {
-        Text text = Text.fromRawText("text with spaces\r\non several lines");
+    public void constructorShouldThrowOnLineBreaks() {
+        expectedException.expect(IllegalArgumentException.class);
 
-        assertThat(text.formatted()).isEqualTo("text with spaces\r\n on several lines");
+        new AddressType("a\nb");
     }
 
     @Test
-    public void formattedShouldPreserveLineWrapping() {
-        Text text = Text.fromRawText("text with spaces\r\n on several lines");
+    public void constructorShouldThrowOnLineBreakAtTheEnd() {
+        expectedException.expect(IllegalArgumentException.class);
 
-        assertThat(text.formatted()).isEqualTo("text with spaces\r\n on several lines");
+        new AddressType("a\n");
     }
 
     @Test
-    public void formattedShouldTrimExtraSpacesAfterWrapping() {
-        Text text = Text.fromRawText("text with spaces\r\n  on several lines");
+    public void constructorShouldThrowOnLineBreakAtTheBeginning() {
+        expectedException.expect(IllegalArgumentException.class);
 
-        assertThat(text.formatted()).isEqualTo("text with spaces\r\n on several lines");
+        new AddressType("\na");
     }
 
     @Test
-    public void formattedShouldTrimExtraSpacesBeforeWrapping() {
-        Text text = Text.fromRawText("text with spaces  \r\non several lines");
+    public void constructorShouldAcceptValidValue() {
+        String type = "ab";
+        AddressType addressType = new AddressType(type);
 
-        assertThat(text.formatted()).isEqualTo("text with spaces\r\n on several lines");
+        assertThat(addressType.getType())
+            .isEqualTo(type);
     }
 
     @Test
-    public void formattedShouldPreserveFoldingSpaces() {
-        Text text = Text.fromRawText("text with folding    spaces");
+    public void typeShouldBeTrimmed() {
+        AddressType addressType = new AddressType("  ab  ");
 
-        assertThat(text.formatted()).isEqualTo("text with folding    spaces");
+        assertThat(addressType.getType())
+            .isEqualTo("ab");
     }
 }

@@ -22,6 +22,7 @@ package org.apache.james.mdn;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mdn.action.mode.DispositionActionMode;
+import org.apache.james.mdn.fields.AddressType;
 import org.apache.james.mdn.fields.Disposition;
 import org.apache.james.mdn.fields.Error;
 import org.apache.james.mdn.fields.ExtensionField;
@@ -421,7 +422,7 @@ public class MDNReportFormattingTest {
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
                 "UA_product"))
-            .gatewayField(new Gateway("postal", Text.fromRawText("5 rue Charles mercier")))
+            .gatewayField(new Gateway(new AddressType("postal"), Text.fromRawText("5 rue Charles mercier")))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -453,7 +454,7 @@ public class MDNReportFormattingTest {
                 "UA_name",
                 "UA_product"))
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
-            .originalRecipientField(new OriginalRecipient("roomNumber", Text.fromRawText("385")))
+            .originalRecipientField(new OriginalRecipient(new AddressType("roomNumber"), Text.fromRawText("385")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
@@ -481,9 +482,9 @@ public class MDNReportFormattingTest {
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
                 "UA_product"))
-            .gatewayField(new Gateway("postal", Text.fromRawText("8 rue Charles mercier\n 36555 Saint Coincoin\n France")))
-            .finalRecipientField(new FinalRecipient("postal", Text.fromRawText("5 rue Mercier\n 36555 Saint Coincoin\n France")))
-            .originalRecipientField(new OriginalRecipient("postal", Text.fromRawText("3 rue Mercier\n 36555 Saint Coincoin\n France")))
+            .gatewayField(new Gateway(new AddressType("postal"), Text.fromRawText("8 rue Charles mercier\n 36555 Saint Coincoin\n France")))
+            .finalRecipientField(new FinalRecipient(new AddressType("postal"), Text.fromRawText("5 rue Mercier\n 36555 Saint Coincoin\n France")))
+            .originalRecipientField(new OriginalRecipient(new AddressType("postal"), Text.fromRawText("3 rue Mercier\n 36555 Saint Coincoin\n France")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
@@ -547,7 +548,7 @@ public class MDNReportFormattingTest {
             .reportingUserAgentField(new ReportingUserAgent(
                 "UA_name",
                 "UA_product"))
-            .finalRecipientField(new FinalRecipient("roomNumber", Text.fromRawText("781")))
+            .finalRecipientField(new FinalRecipient(new AddressType("roomNumber"), Text.fromRawText("781")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)

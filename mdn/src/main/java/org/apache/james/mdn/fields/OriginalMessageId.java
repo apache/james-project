@@ -35,8 +35,10 @@ public class OriginalMessageId implements Field {
     public OriginalMessageId(String originalMessageId) {
         Preconditions.checkNotNull(originalMessageId);
         Preconditions.checkArgument(!originalMessageId.contains("\n"));
+        String trimmedMessageId = originalMessageId.trim();
+        Preconditions.checkArgument(!trimmedMessageId.isEmpty());
 
-        this.originalMessageId = originalMessageId;
+        this.originalMessageId = trimmedMessageId;
     }
 
     public String getOriginalMessageId() {

@@ -21,7 +21,6 @@ package org.apache.james.mdn.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.mdn.Constants;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -51,22 +50,14 @@ public class FinalRecipientTest {
     public void shouldThrowOnNullAddressWithType() {
         expectedException.expect(NullPointerException.class);
 
-        new FinalRecipient("customType", null);
+        new FinalRecipient(new AddressType("customType"), null);
     }
 
     @Test
     public void shouldThrowOnNullType() {
         expectedException.expect(NullPointerException.class);
 
-        String addressType = null;
-        new FinalRecipient(addressType, Text.fromRawText("address"));
-    }
-
-    @Test
-    public void shouldThrowOnMultilineType() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        String addressType = "a\nb";
+        AddressType addressType = null;
         new FinalRecipient(addressType, Text.fromRawText("address"));
     }
 
@@ -74,7 +65,7 @@ public class FinalRecipientTest {
     public void typeShouldDefaultToRfc822() {
         Text address = Text.fromRawText("address");
         assertThat(new FinalRecipient(address))
-            .isEqualTo(new FinalRecipient(Constants.RFC_822, address));
+            .isEqualTo(new FinalRecipient(AddressType.RFC_822, address));
     }
 
     @Test
@@ -86,7 +77,7 @@ public class FinalRecipientTest {
 
     @Test
     public void formattedValueShouldDisplayCustomType() {
-        assertThat(new FinalRecipient("postal", Text.fromRawText("Plop"))
+        assertThat(new FinalRecipient(new AddressType("postal"), Text.fromRawText("Plop"))
             .formattedValue())
             .isEqualTo("Final-Recipient: postal; Plop");
     }

@@ -39,6 +39,14 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class MDNTest {
 
+    public static final MDNReport MINIMAL_REPORT = MDNReport.builder()
+        .finalRecipientField("final@domain.com")
+        .dispositionField(Disposition.builder()
+            .actionMode(DispositionActionMode.Automatic)
+            .sendingMode(DispositionSendingMode.Automatic)
+            .type(DispositionType.Deleted)
+            .build())
+        .build();
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
@@ -53,14 +61,7 @@ public class MDNTest {
     public void asMimeMessageShouldComportExplanationPartAndReportPart() throws Exception {
         MimeMessage mimeMessage = MDN.builder()
             .humanReadableText("Explanation")
-            .report(MDNReport.builder()
-                .finalRecipientField("final@domain.com")
-                .dispositionField(Disposition.builder()
-                    .actionMode(DispositionActionMode.Automatic)
-                    .sendingMode(DispositionSendingMode.Automatic)
-                    .type(DispositionType.Deleted)
-                    .build())
-                .build())
+            .report(MINIMAL_REPORT)
             .build()
             .asMimeMessage();
 
@@ -84,15 +85,8 @@ public class MDNTest {
     @Test
     public void asMimeMessageShouldDisplayEmptyExplanation() throws Exception {
         MimeMessage mimeMessage = MDN.builder()
-            .humanReadableText("")
-            .report(MDNReport.builder()
-                .finalRecipientField("final@domain.com")
-                .dispositionField(Disposition.builder()
-                    .actionMode(DispositionActionMode.Automatic)
-                    .sendingMode(DispositionSendingMode.Automatic)
-                    .type(DispositionType.Deleted)
-                    .build())
-                .build())
+            .humanReadableText("Explanation")
+            .report(MINIMAL_REPORT)
             .build()
             .asMimeMessage();
 
@@ -103,7 +97,8 @@ public class MDNTest {
                 "Content-Type: text/plain; charset=UTF-8\r\n" +
                     "Content-Transfer-Encoding: 7bit\r\n" +
                     "Content-Disposition: inline\r\n" +
-                    "\r\n")
+                    "\r\n" +
+                    "Explanation")
             .contains(
                 "Content-Type: message/disposition-notification\r\n" +
                     "Content-Transfer-Encoding: 7bit\r\n" +
@@ -126,5 +121,48 @@ public class MDNTest {
 
         MDN.builder()
             .humanReadableText(null);
+    }
+
+    @Test
+    public void buildShouldThrowOnEmptyHumanReadableText() {
+        expectedException.expect(IllegalStateException.class);
+
+        MDN.builder()
+            .humanReadableText("")
+            .report(MINIMAL_REPORT)
+            .build();
+    }
+
+    @Test
+    public void buildShouldThrowOnFoldingWhiteHumanReadableText() {
+        expectedException.expect(IllegalStateException.class);
+
+        MDN.builder()
+            .humanReadableText("  ")
+            .report(MINIMAL_REPORT)
+            .build();
+    }
+
+    @Test
+    public void humanReadableTextShouldNotBeTrimmed() throws Exception {
+        MimeMessage mimeMessage = MDN.builder()
+            .humanReadableText("Explanation:\n" +
+                " - We should always write detailed unit tests\n" +
+                " - We should think of all edge cases\n")
+            .report(MINIMAL_REPORT)
+            .build()
+            .asMimeMessage();
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        mimeMessage.writeTo(byteArrayOutputStream);
+        assertThat(new String(byteArrayOutputStream.toByteArray(), Charsets.UTF_8))
+            .contains(
+                "Content-Type: text/plain; charset=UTF-8\r\n" +
+                    "Content-Transfer-Encoding: 7bit\r\n" +
+                    "Content-Disposition: inline\r\n" +
+                    "\r\n" +
+                    "Explanation:\n" +
+                    " - We should always write detailed unit tests\n" +
+                    " - We should think of all edge cases\n");
     }
 }

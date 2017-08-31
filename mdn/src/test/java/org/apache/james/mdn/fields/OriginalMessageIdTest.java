@@ -54,9 +54,46 @@ public class OriginalMessageIdTest {
     }
 
     @Test
+    public void constructorShouldThrowOnEmpty() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        new OriginalMessageId("");
+    }
+
+    @Test
+    public void constructorShouldThrowOnFoldingWhiteSpaces() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        new OriginalMessageId("   ");
+    }
+
+    @Test
+    public void shouldThrowOnNameWithLineBreakAtTheEnd() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        String userAgentName = "a\n";
+        new OriginalMessageId(userAgentName);
+    }
+
+    @Test
+    public void shouldThrowOnNameWithLineBreakAtTheBeginning() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        String userAgentName = "\nb";
+        new OriginalMessageId(userAgentName);
+    }
+
+    @Test
     public void formattedValueShouldDisplayMessageId() {
         assertThat(new OriginalMessageId("msgId")
             .formattedValue())
             .isEqualTo("Original-Message-ID: msgId");
+    }
+
+    @Test
+    public void messageIdShouldBeTrimmed() {
+        assertThat(new OriginalMessageId(" msgId ")
+            .getOriginalMessageId())
+            .isEqualTo("msgId");
     }
 }

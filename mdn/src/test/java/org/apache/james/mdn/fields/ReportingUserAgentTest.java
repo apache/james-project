@@ -80,9 +80,73 @@ public class ReportingUserAgentTest {
     }
 
     @Test
+    public void shouldThrowOnEmptyName() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        String userAgentName = "";
+        new ReportingUserAgent(userAgentName);
+    }
+
+    @Test
+    public void shouldThrowOnFoldingWhiteSpaceName() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        String userAgentName = "   ";
+        new ReportingUserAgent(userAgentName);
+    }
+
+    @Test
+    public void shouldThrowOnNameWithLineBreak() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        String userAgentName = "a\nb";
+        new ReportingUserAgent(userAgentName);
+    }
+
+    @Test
+    public void shouldThrowOnNameWithLineBreakAtTheEnd() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        String userAgentName = "a\n";
+        new ReportingUserAgent(userAgentName);
+    }
+
+    @Test
+    public void shouldThrowOnNameWithLineBreakAtTheBeginning() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        String userAgentName = "\nb";
+        new ReportingUserAgent(userAgentName);
+    }
+
+    @Test
+    public void nameShouldBeTrimmed() {
+        assertThat(new ReportingUserAgent(" name ").getUserAgentName())
+            .isEqualTo(USER_AGENT_NAME);
+    }
+
+    @Test
+    public void productShouldBeTrimmed() {
+        assertThat(new ReportingUserAgent(USER_AGENT_NAME, " product ").getUserAgentProduct())
+            .contains(USER_AGENT_PRODUCT);
+    }
+
+    @Test
     public void formattedValueShouldDisplayNameWhenProductMissing() {
         assertThat(new ReportingUserAgent(USER_AGENT_NAME).formattedValue())
             .isEqualTo("Reporting-UA: name; ");
+    }
+
+    @Test
+    public void emptyProductShouldBeFilteredOut() {
+        assertThat(new ReportingUserAgent(USER_AGENT_NAME, "").getUserAgentProduct())
+            .isEmpty();
+    }
+
+    @Test
+    public void foldingWhiteSpaceProductShouldBeFilteredOut() {
+        assertThat(new ReportingUserAgent(USER_AGENT_NAME, "  ").getUserAgentProduct())
+            .isEmpty();
     }
 
     @Test

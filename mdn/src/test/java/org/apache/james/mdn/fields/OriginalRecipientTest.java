@@ -21,7 +21,6 @@ package org.apache.james.mdn.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.mdn.Constants;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -54,21 +53,21 @@ public class OriginalRecipientTest {
         expectedException.expect(NullPointerException.class);
 
         Text originalRecipient = null;
-        new OriginalRecipient("customType", originalRecipient);
+        new OriginalRecipient(new AddressType("customType"), originalRecipient);
     }
 
     @Test
     public void shouldThrowOnNullAddressType() {
         expectedException.expect(NullPointerException.class);
 
-        String addressType = null;
+        AddressType addressType = null;
         new OriginalRecipient(addressType, ADDRESS);
     }
 
     @Test
     public void addressTypeShouldDefaultToRfc822() {
         assertThat(new OriginalRecipient(ADDRESS))
-            .isEqualTo(new OriginalRecipient(Constants.RFC_822, ADDRESS));
+            .isEqualTo(new OriginalRecipient(AddressType.RFC_822, ADDRESS));
     }
 
     @Test
@@ -80,7 +79,7 @@ public class OriginalRecipientTest {
 
     @Test
     public void formattedValueShouldDisplayCustomType() {
-        assertThat(new OriginalRecipient("custom", ADDRESS)
+        assertThat(new OriginalRecipient(new AddressType("custom"), ADDRESS)
             .formattedValue())
             .isEqualTo("Original-Recipient: custom; address");
     }

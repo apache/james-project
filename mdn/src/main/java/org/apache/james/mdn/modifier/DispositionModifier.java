@@ -42,7 +42,10 @@ public class DispositionModifier {
     public DispositionModifier(String value) {
         Preconditions.checkNotNull(value);
         Preconditions.checkArgument(!value.contains("\n"), "Multiline Disposition modifier are forbiden");
-        this.value = value;
+        String trimmedValue = value.trim();
+        Preconditions.checkArgument(!trimmedValue.isEmpty(), "Disposition modifier can not be empty");
+
+        this.value = trimmedValue;
     }
 
     public String getValue() {

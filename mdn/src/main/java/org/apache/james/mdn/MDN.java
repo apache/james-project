@@ -52,6 +52,8 @@ public class MDN {
         public MDN build() {
             Preconditions.checkState(report != null);
             Preconditions.checkState(humanReadableText != null);
+            Preconditions.checkState(!humanReadableText.trim().isEmpty());
+
             return new MDN(humanReadableText, report);
         }
     }
@@ -63,7 +65,7 @@ public class MDN {
     private final String humanReadableText;
     private final MDNReport report;
 
-    public MDN(String humanReadableText, MDNReport report) {
+    private MDN(String humanReadableText, MDNReport report) {
         this.humanReadableText = humanReadableText;
         this.report = report;
     }

@@ -21,6 +21,7 @@ package org.apache.james.mdn.fields;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import com.google.common.base.Preconditions;
 
@@ -31,6 +32,7 @@ import com.google.common.base.Preconditions;
  */
 public class ReportingUserAgent implements Field {
     private static final String FIELD_NAME = "Reporting-UA";
+    public static final Predicate<String> IS_EMPTY = String::isEmpty;
     private final String userAgentName;
     private final Optional<String> userAgentProduct;
 
@@ -45,9 +47,14 @@ public class ReportingUserAgent implements Field {
     public ReportingUserAgent(String userAgentName, Optional<String> userAgentProduct) {
         Preconditions.checkNotNull(userAgentName);
         Preconditions.checkNotNull(userAgentProduct);
+        Preconditions.checkArgument(!userAgentName.contains("\n"), "Name should not contain line break");
+        String trimmedName = userAgentName.trim();
+        Preconditions.checkArgument(!trimmedName.isEmpty(), "Name should not be empty");
 
-        this.userAgentName = userAgentName;
-        this.userAgentProduct = userAgentProduct;
+        this.userAgentName = trimmedName;
+        this.userAgentProduct = userAgentProduct
+            .map(String::trim)
+            .filter(IS_EMPTY.negate());
     }
 
     public String getUserAgentName() {
