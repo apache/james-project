@@ -34,51 +34,42 @@ public class InMemoryRecipientRewriteTableTest extends AbstractRecipientRewriteT
     }
 
     @Override
-    protected boolean addMapping(String user, String domain, String mapping, int type) throws RecipientRewriteTableException {
-        try {
-            switch (type) {
-            case ERROR_TYPE:
-                virtualUserTable.addErrorMapping(user, domain, mapping);
-                return true;
-            case REGEX_TYPE:
-                virtualUserTable.addRegexMapping(user, domain, mapping);
-                return true;
-            case ADDRESS_TYPE:
-                virtualUserTable.addAddressMapping(user, domain, mapping);
-                return true;
-            case ALIASDOMAIN_TYPE:
-                virtualUserTable.addAliasDomainMapping(domain, mapping);
-                return true;
-            default:
-                return false;
-            }
-        } catch (RecipientRewriteTableException e) {
-            return false;
+    protected void addMapping(String user, String domain, String mapping, int type) throws RecipientRewriteTableException {
+        switch (type) {
+        case ERROR_TYPE:
+            virtualUserTable.addErrorMapping(user, domain, mapping);
+            break;
+        case REGEX_TYPE:
+            virtualUserTable.addRegexMapping(user, domain, mapping);
+            break;
+        case ADDRESS_TYPE:
+            virtualUserTable.addAddressMapping(user, domain, mapping);
+            break;
+        case ALIASDOMAIN_TYPE:
+            virtualUserTable.addAliasDomainMapping(domain, mapping);
+            break;
+        default:
+            throw new RuntimeException("Invalid mapping type: " + type);
         }
     }
 
     @Override
-    protected boolean removeMapping(String user, String domain, String mapping, int type) throws RecipientRewriteTableException {
-        try {
-            switch (type) {
-            case ERROR_TYPE:
-                virtualUserTable.removeErrorMapping(user, domain, mapping);
-                return true;
-            case REGEX_TYPE:
-                virtualUserTable.removeRegexMapping(user, domain, mapping);
-                return true;
-            case ADDRESS_TYPE:
-                virtualUserTable.removeAddressMapping(user, domain, mapping);
-                return true;
-            case ALIASDOMAIN_TYPE:
-                virtualUserTable.removeAliasDomainMapping(domain, mapping);
-                return true;
-            default:
-                return false;
-            }
-        } catch (RecipientRewriteTableException e) {
-            return false;
+    protected void removeMapping(String user, String domain, String mapping, int type) throws RecipientRewriteTableException {
+        switch (type) {
+        case ERROR_TYPE:
+            virtualUserTable.removeErrorMapping(user, domain, mapping);
+            break;
+        case REGEX_TYPE:
+            virtualUserTable.removeRegexMapping(user, domain, mapping);
+            break;
+        case ADDRESS_TYPE:
+            virtualUserTable.removeAddressMapping(user, domain, mapping);
+            break;
+        case ALIASDOMAIN_TYPE:
+            virtualUserTable.removeAliasDomainMapping(domain, mapping);
+            break;
+        default:
+            throw new RuntimeException("Invalid mapping type: " + type);
         }
     }
-
 }

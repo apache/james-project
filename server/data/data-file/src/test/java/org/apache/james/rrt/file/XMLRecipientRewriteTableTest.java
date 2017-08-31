@@ -61,7 +61,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     }
 
     @Override
-    protected boolean addMapping(String user, String domain, String mapping, int type) throws
+    protected void addMapping(String user, String domain, String mapping, int type) throws
             RecipientRewriteTableException {
 
         Mappings mappings = virtualUserTable.getUserDomainMappings(user, domain);
@@ -91,21 +91,21 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
         try {
             virtualUserTable.configure(defaultConfiguration);
         } catch (Exception e) {
-            return updatedMappings.size() <= 0;
+            if (updatedMappings.size() > 0) {
+                throw new RecipientRewriteTableException("Error update mapping", e);
+            }
         }
-
-        return true;
 
     }
 
     @Override
-    protected boolean removeMapping(String user, String domain, String mapping, int type) throws
+    protected void removeMapping(String user, String domain, String mapping, int type) throws
             RecipientRewriteTableException {
 
         Mappings mappings = virtualUserTable.getUserDomainMappings(user, domain);
 
         if (mappings == null) {
-            return false;
+            throw new RecipientRewriteTableException("Cannot remove from null mappings");
         }
 
         removeMappingsFromConfig(user, domain, mappings);
@@ -127,9 +127,10 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
         try {
             virtualUserTable.configure(defaultConfiguration);
         } catch (Exception e) {
-            return mappings.size() <= 0;
+            if (mappings.size() > 0) {
+                throw new RecipientRewriteTableException("Error update mapping", e);
+            }
         }
-        return true;
     }
 
     private void removeMappingsFromConfig(String user, String domain, Mappings mappings) {
