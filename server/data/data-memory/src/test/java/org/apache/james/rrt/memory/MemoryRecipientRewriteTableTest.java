@@ -24,7 +24,7 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 
-public class InMemoryRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
+public class MemoryRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
 
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
