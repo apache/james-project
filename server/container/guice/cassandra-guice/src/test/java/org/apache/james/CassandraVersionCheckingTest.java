@@ -34,6 +34,7 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -44,6 +45,10 @@ public class CassandraVersionCheckingTest {
     private static final int IMAP_PORT = 1143;
     private static final int MIN_VERSION = 2;
     private static final int MAX_VERSION = 4;
+
+
+    @ClassRule
+    public static DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @Rule
     public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
@@ -75,6 +80,7 @@ public class CassandraVersionCheckingTest {
             .thenReturn(CompletableFuture.completedFuture(Optional.of(MAX_VERSION)));
 
         jamesServer = cassandraJmapTestRule.jmapServer(
+            cassandra.getModule(),
             binder -> binder.bind(CassandraSchemaVersionDAO.class)
                 .toInstance(versionDAO),
             binder -> binder.bind(CassandraSchemaVersionManager.class)
@@ -89,6 +95,7 @@ public class CassandraVersionCheckingTest {
             .thenReturn(CompletableFuture.completedFuture(Optional.of(MIN_VERSION + 1)));
 
         jamesServer = cassandraJmapTestRule.jmapServer(
+            cassandra.getModule(),
             binder -> binder.bind(CassandraSchemaVersionDAO.class)
                 .toInstance(versionDAO),
             binder -> binder.bind(CassandraSchemaVersionManager.class)
@@ -103,6 +110,7 @@ public class CassandraVersionCheckingTest {
             .thenReturn(CompletableFuture.completedFuture(Optional.of(MIN_VERSION)));
 
         jamesServer = cassandraJmapTestRule.jmapServer(
+            cassandra.getModule(),
             binder -> binder.bind(CassandraSchemaVersionDAO.class)
                 .toInstance(versionDAO),
             binder -> binder.bind(CassandraSchemaVersionManager.class)
@@ -117,6 +125,7 @@ public class CassandraVersionCheckingTest {
             .thenReturn(CompletableFuture.completedFuture(Optional.of(MIN_VERSION - 1)));
 
         jamesServer = cassandraJmapTestRule.jmapServer(
+            cassandra.getModule(),
             binder -> binder.bind(CassandraSchemaVersionDAO.class)
                 .toInstance(versionDAO),
             binder -> binder.bind(CassandraSchemaVersionManager.class)
@@ -133,6 +142,7 @@ public class CassandraVersionCheckingTest {
             .thenReturn(CompletableFuture.completedFuture(Optional.of(MAX_VERSION + 1)));
 
         jamesServer = cassandraJmapTestRule.jmapServer(
+            cassandra.getModule(),
             binder -> binder.bind(CassandraSchemaVersionDAO.class)
                 .toInstance(versionDAO),
             binder -> binder.bind(CassandraSchemaVersionManager.class)

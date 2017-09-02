@@ -19,30 +19,55 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 
-public class SessionWithInitializedTablesFactory {
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Session;
+
+@Singleton
+public class SessionWithInitializedTablesFactory implements Provider<Session> {
+    
     private final static String DEFAULT_KEYSPACE_NAME = "apache_james";
 
     private final CassandraModule module;
+    private final Session session;
 
-    public SessionWithInitializedTablesFactory(CassandraModule module) {
+    @Inject
+    public SessionWithInitializedTablesFactory(CassandraSessionConfiguration configuration, Cluster cluster, CassandraModule module) throws ConfigurationException {
+        String keyspace = configuration.getConfiguration().getString("cassandra.keyspace", DEFAULT_KEYSPACE_NAME);
         this.module = module;
+        this.session = createSession(cluster, keyspace);
     }
 
     public Session createSession(Cluster cluster, String keyspace) {
         Session session = cluster.connect(keyspace);
-        new CassandraTypesCreator(module, session)
-            .initializeTypes();
-        new CassandraTableManager(module, session)
-            .ensureAllTables();
+        try {
+            new CassandraTypesCreator(module, session)
+                .initializeTypes();
+            new CassandraTableManager(module, session)
+                .ensureAllTables();
+            return session;
+        } catch (Exception e) {
+            session.close();
+            throw e;
+        }
+    }
+
+    @Override
+    public Session get() {
         return session;
     }
 
-    public Session createSession(Cluster cluster) {
-        return createSession(cluster, DEFAULT_KEYSPACE_NAME);
+    @PreDestroy
+    public synchronized void destroy() {
+        session.close();
     }
+
 
 }

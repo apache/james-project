@@ -29,7 +29,7 @@ public class CassandraWithTikaTest extends AbstractJmapJamesServerTest {
     public CassandraJmapTestRule cassandraJmap = new CassandraJmapTestRule(
         AggregateGuiceModuleTestRule.of(
             new EmbeddedElasticSearchRule(),
-            new EmbeddedCassandraRule(),
+            new DockerCassandraRule(),
             guiceTikaRule));
 
     @Override

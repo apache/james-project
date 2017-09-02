@@ -25,7 +25,6 @@ import java.util.function.Supplier;
 import javax.inject.Singleton;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
@@ -34,22 +33,25 @@ import org.junit.rules.TemporaryFolder;
 import com.datastax.driver.core.Session;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.name.Names;
 
 public class CassandraJmapServerModule extends AbstractModule {
 
     private static final int LIMIT_TO_3_MESSAGES = 3;
     private final Supplier<File> fileSupplier;
     private final EmbeddedElasticSearch embeddedElasticSearch;
-    private final EmbeddedCassandra cassandra;
+    private final String cassandraHost;
+    private final int cassandraPort;
 
-    public CassandraJmapServerModule(Supplier<File> fileSupplier, EmbeddedElasticSearch embeddedElasticSearch, EmbeddedCassandra cassandra) {
+    public CassandraJmapServerModule(Supplier<File> fileSupplier, EmbeddedElasticSearch embeddedElasticSearch, String cassandraHost, int cassandraPort) {
         this.fileSupplier = fileSupplier;
         this.embeddedElasticSearch = embeddedElasticSearch;
-        this.cassandra = cassandra;
+        this.cassandraHost = cassandraHost;
+        this.cassandraPort = cassandraPort;
     }
 
-    public CassandraJmapServerModule(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch, EmbeddedCassandra cassandra) {
-        this(temporaryFolder::getRoot, embeddedElasticSearch, cassandra);
+    public CassandraJmapServerModule(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch, String cassandraHost, int cassandraPort) {
+        this(temporaryFolder::getRoot, embeddedElasticSearch, cassandraHost, cassandraPort);
     }
 
 
@@ -59,7 +61,8 @@ public class CassandraJmapServerModule extends AbstractModule {
         install(new TestFilesystemModule(fileSupplier));
         install(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES));
         install(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class));
-        bind(EmbeddedCassandra.class).toInstance(cassandra);
+        install(binder -> binder.bindConstant().annotatedWith(Names.named("cassandraHost")).to(cassandraHost));
+        install(binder -> binder.bindConstant().annotatedWith(Names.named("cassandraPort")).to(cassandraPort));
     }
     
     @Provides

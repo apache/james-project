@@ -50,10 +50,4 @@ public class InMemoryCombinationManagerTestSystem extends CombinationManagerTest
         return new SimpleMailbox(mailboxPath, UID_VALIDITY, messageManager.getId());
     }
 
-    @Override
-    public void clean() {
-
-    }
-
-
 }

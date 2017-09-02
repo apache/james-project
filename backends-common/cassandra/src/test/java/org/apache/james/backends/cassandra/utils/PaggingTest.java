@@ -29,12 +29,14 @@ import java.util.UUID;
 import java.util.stream.IntStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.util.CompletableFutureUtil;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.datastax.driver.core.DataType;
@@ -43,17 +45,20 @@ import com.datastax.driver.core.utils.UUIDs;
 import com.google.common.collect.ImmutableList;
 
 public class PaggingTest {
+    
     private static final String TABLE_NAME = "test";
     private static final String ID = "id";
     private static final String CLUSTERING = "clustering";
     private static final UUID UUID = UUIDs.timeBased();
 
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
     private CassandraCluster cassandra;
     private CassandraAsyncExecutor executor;
 
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraModule() {
+        CassandraModule modules = new CassandraModule() {
             @Override
             public List<CassandraTable> moduleTables() {
                 return ImmutableList.of(new CassandraTable(TABLE_NAME,
@@ -67,14 +72,14 @@ public class PaggingTest {
             public List<CassandraType> moduleTypes() {
                 return ImmutableList.of();
             }
-        });
-        cassandra.ensureAllTables();
+        };
+        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
         executor = new CassandraAsyncExecutor(cassandra.getConf());
     }
 
     @After
     public void tearDown() {
-        cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test

@@ -21,7 +21,7 @@ package org.apache.james.mailbox.cassandra;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.mail.CassandraAnnotationMapper;

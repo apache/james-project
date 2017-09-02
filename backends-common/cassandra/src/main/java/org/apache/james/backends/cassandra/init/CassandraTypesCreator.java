@@ -34,7 +34,7 @@ public class CassandraTypesCreator {
     }
 
     public void initializeTypes() {
-        types.forEach((type) -> session.execute(type.getCreateStatement()));
+        types.parallelStream().forEach((type) -> session.execute(type.getCreateStatement()));
     }
 
 }

@@ -85,11 +85,6 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
         return messageIdFactory.generate();
     }
 
-    @Override
-    public void clean() {
-        mapperFactory.clean();
-    }
-
     private MailboxMessage createMessage(MailboxId mailboxId, Flags flags, MessageId messageId, MessageUid uid) {
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
         when(mailboxMessage.getMessageId()).thenReturn(messageId);

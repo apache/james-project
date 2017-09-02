@@ -16,35 +16,12 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.backends.cassandra;
+package org.apache.james.jmap.cassandra.cucumber;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 
-import org.apache.cassandra.exceptions.ConfigurationException;
-import org.apache.thrift.transport.TTransportException;
-import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
+public class CucumberCassandraSingleton {
 
-import com.google.common.base.Throwables;
+    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-public class EmbeddedCassandra {
-
-    private int port;
-
-    public static EmbeddedCassandra createStartServer() {
-        return new EmbeddedCassandra();
-    }
-
-    private EmbeddedCassandra() {
-        try {
-            EmbeddedCassandraServerHelper.startEmbeddedCassandra(EmbeddedCassandraServerHelper.CASSANDRA_RNDPORT_YML_FILE, TimeUnit.SECONDS.toMillis(20));
-            port = EmbeddedCassandraServerHelper.getNativeTransportPort();
-        } catch (ConfigurationException | TTransportException | IOException e) {
-            Throwables.propagate(e);
-        }
-    }
-
-    public int getPort() {
-        return port;
-    }
 }

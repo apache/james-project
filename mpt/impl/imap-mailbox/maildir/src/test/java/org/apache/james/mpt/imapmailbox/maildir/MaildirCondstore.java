@@ -35,6 +35,7 @@ public class MaildirCondstore extends Condstore {
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new MaildirMailboxTestModule());
         system = injector.getInstance(JamesImapHostSystem.class);
+        system.beforeTest();
         super.setUp();
     }
     

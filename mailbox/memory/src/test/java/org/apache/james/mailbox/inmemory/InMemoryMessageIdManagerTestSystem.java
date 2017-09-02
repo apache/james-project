@@ -102,11 +102,6 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
     }
 
     @Override
-    public void clean() {
-
-    }
-
-    @Override
     public int getConstantMessageSize() {
         return CONTENT.length;
     }

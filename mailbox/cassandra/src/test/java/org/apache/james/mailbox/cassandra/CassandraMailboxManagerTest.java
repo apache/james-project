@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerTest;
@@ -37,37 +38,36 @@ import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Before;
+import org.junit.ClassRule;
 
 public class CassandraMailboxManagerTest extends MailboxManagerTest {
 
-    private static CassandraCluster cassandra;
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
-    @BeforeClass
-    public static void init() {
-        cassandra = CassandraCluster.create(
-                new CassandraModuleComposite(
-                    new CassandraAclModule(),
-                    new CassandraMailboxModule(),
-                    new CassandraMessageModule(),
-                    new CassandraBlobModule(),
-                    new CassandraMailboxCounterModule(),
-                    new CassandraMailboxRecentsModule(),
-                    new CassandraFirstUnseenModule(),
-                    new CassandraUidModule(),
-                    new CassandraModSeqModule(),
-                    new CassandraSubscriptionModule(),
-                    new CassandraAttachmentModule(),
-                    new CassandraDeletedMessageModule(),
-                    new CassandraAnnotationModule(),
-                    new CassandraApplicableFlagsModule()));
+    private CassandraCluster cassandra;
+    
+    @Before
+    public void setup() throws Exception {
+        CassandraModuleComposite modules = new CassandraModuleComposite(
+                new CassandraAclModule(),
+                new CassandraMailboxModule(),
+                new CassandraMessageModule(),
+                new CassandraBlobModule(),
+                new CassandraMailboxCounterModule(),
+                new CassandraMailboxRecentsModule(),
+                new CassandraFirstUnseenModule(),
+                new CassandraUidModule(),
+                new CassandraModSeqModule(),
+                new CassandraSubscriptionModule(),
+                new CassandraAttachmentModule(),
+                new CassandraDeletedMessageModule(),
+                new CassandraAnnotationModule(),
+                new CassandraApplicableFlagsModule());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
+        super.setUp();
     }
-
-    @AfterClass
-    public static void close() {
-        cassandra.close();
-    }
+    
 
     @Override
     protected MailboxManager provideMailboxManager() {
@@ -77,7 +77,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest {
     @After
     public void tearDown() throws Exception {
         super.tearDown();
-        cassandra.clearAllTables();
+        cassandra.close();
     }
 
 }

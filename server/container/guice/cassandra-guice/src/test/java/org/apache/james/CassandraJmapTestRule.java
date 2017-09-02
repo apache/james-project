@@ -34,8 +34,7 @@ public class CassandraJmapTestRule implements TestRule {
     private static final int LIMIT_TO_3_MESSAGES = 3;
 
     public static CassandraJmapTestRule defaultTestRule() {
-        return new CassandraJmapTestRule(
-                AggregateGuiceModuleTestRule.of(new EmbeddedElasticSearchRule(), new EmbeddedCassandraRule()));
+        return new CassandraJmapTestRule(new EmbeddedElasticSearchRule());
     }
 
     private GuiceModuleTestRule guiceModuleTestRule;

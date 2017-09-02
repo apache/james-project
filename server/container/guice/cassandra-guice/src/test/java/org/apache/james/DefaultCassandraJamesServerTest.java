@@ -27,11 +27,15 @@ import org.apache.james.utils.FailingPropertiesProvider;
 import org.apache.james.utils.PropertiesProvider;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class DefaultCassandraJamesServerTest {
 
+    @ClassRule
+    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    
     @Rule
     public CassandraJmapTestRule cassandraJmap = CassandraJmapTestRule.defaultTestRule();
 
@@ -39,7 +43,7 @@ public class DefaultCassandraJamesServerTest {
 
     @Before
     public void setUp() {
-        guiceJamesServer = cassandraJmap.jmapServer()
+        guiceJamesServer = cassandraJmap.jmapServer(cassandra.getModule())
             .overrideWith(binder -> binder.bind(PropertiesProvider.class).to(FailingPropertiesProvider.class))
             .overrideWith(binder -> binder.bind(ConfigurationProvider.class).toInstance(s -> new HierarchicalConfiguration()));
     }

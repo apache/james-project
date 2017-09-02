@@ -24,12 +24,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class CassandraSchemaVersionDAOTest {
+
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     private CassandraCluster cassandra;
 
@@ -37,15 +41,13 @@ public class CassandraSchemaVersionDAOTest {
 
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraSchemaVersionModule());
-        cassandra.ensureAllTables();
+        cassandra = CassandraCluster.create(new CassandraSchemaVersionModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
 
         testee = new CassandraSchemaVersionDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     @After
     public void tearDown() {
-        cassandra.clearAllTables();
         cassandra.close();
     }
 

@@ -31,7 +31,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class KeywordTest {
-    private final static String FORWARDED = "forwarded";
     private final static int FLAG_NAME_MAX_LENTH = 255;
     private final static String ANY_KEYWORD = "AnyKeyword";
 

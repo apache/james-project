@@ -35,6 +35,7 @@ public class JpaAuthenticatedState extends AuthenticatedState {
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new JpaMailboxTestModule());
         system = injector.getInstance(ImapHostSystem.class);
+        system.beforeTest();
         super.setUp();
     }
     

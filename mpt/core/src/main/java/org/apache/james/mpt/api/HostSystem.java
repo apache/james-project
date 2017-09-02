@@ -54,10 +54,6 @@ public interface HostSystem extends SessionFactory {
      */
     Session newSession(Continuation continuation) throws Exception;
 
-    void beforeTests() throws Exception;
-
-    void afterTests() throws Exception;
-
     void beforeTest() throws Exception;
 
     void afterTest() throws Exception;

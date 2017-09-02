@@ -20,22 +20,29 @@
 package org.apache.james.jmap.cassandra;
 
 import org.apache.james.CassandraJmapTestRule;
+import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.jmap.VacationRelayIntegrationTest;
+import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraVacationRelayIntegrationTest extends VacationRelayIntegrationTest {
 
     private final InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
 
+    @ClassRule
+    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    
     @Rule
     public CassandraJmapTestRule jamesServerRule = CassandraJmapTestRule.defaultTestRule();
 
     @Override
     protected GuiceJamesServer getJmapServer() {
-        return jamesServerRule.jmapServer((binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
+        return jamesServerRule.jmapServer(
+                cassandra.getModule(),
+                (binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
     }
 
     @Override

@@ -20,23 +20,36 @@
 package org.apache.james.sieve.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.lib.AbstractSieveRepositoryTest;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
 
 public class CassandraSieveRepositoryTest extends AbstractSieveRepositoryTest {
-    private CassandraCluster cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule());
+    
 
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
+    private CassandraCluster cassandra;
+
+    @Before
+    public void setUp() throws Exception {
+        cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+        super.setUp();
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        cassandra.close();
+    }
+    
     @Override
     protected SieveRepository createSieveRepository() throws Exception {
         return new CassandraSieveRepository(
             new CassandraSieveDAO(cassandra.getConf()),
             new CassandraSieveQuotaDAO(cassandra.getConf()),
             new CassandraActiveScriptDAO(cassandra.getConf()));
-    }
-
-    @Override
-    protected void cleanUp() throws Exception {
-        cassandra.clearAllTables();
-        cassandra.close();
     }
 }

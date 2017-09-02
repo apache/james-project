@@ -20,8 +20,11 @@ package org.apache.james.domainlist.jpa;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.domainlist.lib.AbstractDomainListTest;
+import org.junit.After;
+import org.junit.Before;
 
 /**
  * Test the JPA implementation of the DomainList.
@@ -29,6 +32,19 @@ import org.apache.james.domainlist.lib.AbstractDomainListTest;
 public class JPADomainListTest extends AbstractDomainListTest {
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPADomain.class);
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+    }
+
+    @After
+    public void tearDown() throws DomainListException {
+        DomainList domainList = createDomainList();
+        for (String domain: domainList.getDomains()) {
+            domainList.removeDomain(domain);
+        }
+    }
 
     @Override
     protected DomainList createDomainList() {

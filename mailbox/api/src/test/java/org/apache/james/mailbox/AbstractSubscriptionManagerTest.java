@@ -22,8 +22,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -41,14 +39,12 @@ public abstract class AbstractSubscriptionManagerTest {
 
     public abstract SubscriptionManager createSubscriptionManager();
 
-    @Before
     public void setup() {
         manager = createSubscriptionManager();
         session = new MockMailboxSession(USER1);
         manager.startProcessingRequest(session);
     }
     
-    @After
     public void teardown() throws SubscriptionException {
         manager.unsubscribe(session, MAILBOX1);
         manager.unsubscribe(session, MAILBOX2);

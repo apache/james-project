@@ -35,6 +35,7 @@ public class HBaseNonAuthenticatedState extends NonAuthenticatedState {
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new HBaseMailboxTestModule());
         system = injector.getInstance(ImapHostSystem.class);
+        system.beforeTest();
         super.setUp();
     }
     

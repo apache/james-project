@@ -27,7 +27,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.backends.cassandra.EmbeddedCassandra;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -47,7 +47,7 @@ public class CassandraStepdefs {
     private final MainStepdefs mainStepdefs;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.MAILBOX_INDEX);
-    private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
+    private DockerCassandraRule cassandraServer = CucumberCassandraSingleton.cassandraServer;
 
     @Inject
     private CassandraStepdefs(MainStepdefs mainStepdefs) {
@@ -61,7 +61,7 @@ public class CassandraStepdefs {
         mainStepdefs.messageIdFactory = new CassandraMessageId.Factory();
         mainStepdefs.jmapServer = new GuiceJamesServer()
                 .combineWith(CassandraJamesServerMain.cassandraServerModule, CassandraJamesServerMain.protocols)
-                .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra))
+                .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandraServer.getIp(), cassandraServer.getBindingPort()))
                 .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class));
         mainStepdefs.awaitMethod = () -> embeddedElasticSearch.awaitForElasticSearch();
         mainStepdefs.init();

@@ -37,7 +37,7 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
 
         configuration.addProperty("elasticsearch.masterHost", getIp());
-        configuration.addProperty("elasticsearch.port", ELASTIC_SEARCH_PORT);
+        configuration.addProperty("elasticsearch.port", elasticSearchContainer.getMappedPort(ELASTIC_SEARCH_PORT));
 
         configuration.addProperty("elasticsearch.nb.shards", 1);
         configuration.addProperty("elasticsearch.nb.replica", 0);
@@ -45,7 +45,7 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
         configuration.addProperty("elasticsearch.retryConnection.minDelay", 3000);
         configuration.addProperty("elasticsearch.indexAttachments", false);
         configuration.addProperty("elasticsearch.http.host", getIp());
-        configuration.addProperty("elasticsearch.http.port", ELASTIC_SEARCH_HTTP_PORT);
+        configuration.addProperty("elasticsearch.http.port", elasticSearchContainer.getMappedPort(ELASTIC_SEARCH_HTTP_PORT));
         configuration.addProperty("elasticsearch.metrics.reports.enabled", true);
         configuration.addProperty("elasticsearch.metrics.reports.period", 30);
         configuration.addProperty("elasticsearch.metrics.reports.index", "james-metrics");
@@ -71,10 +71,18 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
     }
 
     public String getIp() {
-        return elasticSearchContainer.getIp();
+        return elasticSearchContainer.getHostIp();
     }
 
     public SwarmGenericContainer getElasticSearchContainer() {
         return elasticSearchContainer;
+    }
+
+    public void pause() {
+        elasticSearchContainer.pause();
+    }
+
+    public void unpause() {
+        elasticSearchContainer.unpause();
     }
 }

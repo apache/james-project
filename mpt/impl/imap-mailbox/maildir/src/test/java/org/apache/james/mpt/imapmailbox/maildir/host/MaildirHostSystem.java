@@ -30,7 +30,6 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.maildir.MaildirMailboxSessionMapperFactory;
 import org.apache.james.mailbox.maildir.MaildirStore;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -53,13 +52,15 @@ public class MaildirHostSystem extends JamesImapHostSystem {
     private static final String MAILDIR_HOME = "target/Maildir";
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of();
     
-    private final StoreMailboxManager mailboxManager;
+    private StoreMailboxManager mailboxManager;
 
     public static JamesImapHostSystem build() throws Exception {
         return new MaildirHostSystem();
     }
     
-    public MaildirHostSystem() throws MailboxException {
+    @Override
+    public void beforeTest() throws Exception {
+        super.beforeTest();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
         MaildirStore store = new MaildirStore(MAILDIR_HOME + "/%user", locker);
         MaildirMailboxSessionMapperFactory mailboxSessionMapperFactory = new MaildirMailboxSessionMapperFactory(store);
@@ -88,7 +89,7 @@ public class MaildirHostSystem extends JamesImapHostSystem {
 
 
     @Override
-    public void resetData() throws Exception {
+    public void afterTest() throws Exception {
         resetUserMetaData();
         try {
         	FileUtils.deleteDirectory(new File(MAILDIR_HOME));

@@ -31,15 +31,24 @@ import org.apache.jsieve.ConfigurationManager;
 
 public abstract class JamesManageSieveHostSystem implements ManageSieveHostSystem {
 
-    private final UsersRepository usersRepository;
-    protected final SieveRepository sieveRepository;
-    private final ManageSieveProcessor processor;
+    private UsersRepository usersRepository;
+    private SieveRepository sieveRepository;
+    private ManageSieveProcessor processor;
 
-    public JamesManageSieveHostSystem(UsersRepository usersRepository, SieveRepository sieveRepository) throws Exception {
-        this.usersRepository = usersRepository;
-        this.sieveRepository = sieveRepository;
+    @Override
+    public void beforeTest() throws Exception {
+        this.usersRepository = createUsersRepository();
+        this.sieveRepository = createSieveRepository();
         this.processor = new ManageSieveProcessor(new ArgumentParser(new CoreProcessor(sieveRepository, usersRepository, new Parser(new ConfigurationManager()))));
     }
+
+    @Override
+    public void afterTest() throws Exception {
+    }
+    
+    protected abstract SieveRepository createSieveRepository() throws Exception;
+
+    protected abstract UsersRepository createUsersRepository();
 
     @Override
     public boolean addUser(String user, String password) throws Exception {
@@ -57,19 +66,4 @@ public abstract class JamesManageSieveHostSystem implements ManageSieveHostSyste
         return new ManageSieveSession(processor, continuation);
     }
 
-    @Override
-    public void beforeTests() throws Exception {}
-
-    @Override
-    public void afterTests() throws Exception {}
-
-    @Override
-    public void beforeTest() throws Exception {}
-
-    @Override
-    public void afterTest() throws Exception {
-        resetData();
-    }
-
-    protected abstract void resetData() throws Exception;
 }

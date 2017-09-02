@@ -80,6 +80,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
     @Override
     public void beforeTest() throws Exception {
+        super.beforeTest();
         this.tempDirectory = Files.createTempDirectory("elasticsearch");
         this.embeddedElasticSearch = new EmbeddedElasticSearch(tempDirectory, MailboxElasticsearchConstants.MAILBOX_INDEX);
         embeddedElasticSearch.before();
@@ -90,11 +91,6 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
     public void afterTest() throws Exception {
         embeddedElasticSearch.after();
         FileUtils.deleteDirectory(tempDirectory.toFile());
-    }
-
-    @Override
-    protected void resetData() throws Exception {
-
     }
 
     private void initFields() {

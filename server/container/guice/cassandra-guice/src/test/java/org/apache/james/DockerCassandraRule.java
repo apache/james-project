@@ -18,42 +18,31 @@
  ****************************************************************/
 
 package org.apache.james;
-import java.util.Arrays;
-
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.modules.mailbox.CassandraSessionConfiguration;
-import org.apache.james.util.streams.SwarmGenericContainer;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.james.backends.cassandra.init.CassandraSessionConfiguration;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import org.testcontainers.containers.GenericContainer;
 
-import com.github.dockerjava.api.model.ExposedPort;
-import com.github.dockerjava.api.model.Ports;
 import com.google.inject.Module;
 
 
 public class DockerCassandraRule implements GuiceModuleTestRule {
 
-    private static final int CASSANDRA_PORT = 9042;
-
-    private static boolean isBindingToEveryThing(Ports.Binding binding) {
-        String bindingIp = binding.getHostIp();
-        return bindingIp == null || bindingIp.equals("0.0.0.0");
-    }
-
-    public PropertiesConfiguration getCassandraConfigurationForDocker() {
+    private org.apache.james.backends.cassandra.DockerCassandraRule cassandraContainer = new org.apache.james.backends.cassandra.DockerCassandraRule();
+    
+    public PropertiesConfiguration getCassandraConfigurationForDocker(String keyspace) {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
 
-        configuration.addProperty("cassandra.nodes", getIp() + ":" + CASSANDRA_PORT);
-        configuration.addProperty("cassandra.keyspace", "apache_james");
+        configuration.addProperty("cassandra.nodes", cassandraContainer.getIp() + ":" + cassandraContainer.getBindingPort());
+        configuration.addProperty("cassandra.keyspace", keyspace);
         configuration.addProperty("cassandra.replication.factor", 1);
         configuration.addProperty("cassandra.retryConnection.maxRetries", 20);
         configuration.addProperty("cassandra.retryConnection.minDelay", 5000);
 
         return configuration;
     }
-
-    private SwarmGenericContainer cassandraContainer = new SwarmGenericContainer("cassandra:2.2")
-        .withExposedPorts(CASSANDRA_PORT);
 
     @Override
     public Statement apply(Statement base, Description description) {
@@ -66,29 +55,36 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
 
     @Override
     public Module getModule() {
-        return (binder) -> binder.bind(CassandraSessionConfiguration.class).toInstance(this::getCassandraConfigurationForDocker);
+        String keyspace = RandomStringUtils.randomAlphabetic(12);
+        return (binder) -> binder.bind(CassandraSessionConfiguration.class).toInstance(() -> getCassandraConfigurationForDocker(keyspace));
     }
 
     public String getIp() {
         return cassandraContainer.getIp();
     }
 
-    public int getBindingPort() {
-        Ports.Binding[] bindings =  cassandraContainer
-                .getContainerInfo()
-                .getNetworkSettings()
-                .getPorts()
-                .getBindings()
-                .get(ExposedPort.tcp(CASSANDRA_PORT));
-
-        return Integer.valueOf(
-                Arrays.stream(bindings)
-                    .filter(DockerCassandraRule::isBindingToEveryThing)
-                    .map(Ports.Binding::getHostPortSpec)
-                    .findFirst().get());
+    public Integer getMappedPort(int originalPort) {
+        return cassandraContainer.getBindingPort();
     }
 
-    public SwarmGenericContainer getCassandraContainer() {
-        return cassandraContainer;
+    public void start() {
+        cassandraContainer.start();
     }
+
+    public void stop() {
+        cassandraContainer.stop();
+    }
+
+    public GenericContainer<?> getRawContainer() {
+        return cassandraContainer.getRawContainer();
+    }
+
+    public void pause() {
+        cassandraContainer.pause();
+    }
+
+    public void unpause() {
+        cassandraContainer.unpause();
+    }
+
 }

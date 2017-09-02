@@ -19,16 +19,20 @@
 
 package org.apache.james;
 
+import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraJamesServerTest extends AbstractJmapJamesServerTest {
 
+    @ClassRule
+    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    
     @Rule
     public CassandraJmapTestRule cassandraJmap = CassandraJmapTestRule.defaultTestRule();
 
     @Override
     protected GuiceJamesServer createJamesServer() {
-        return cassandraJmap.jmapServer();
+        return cassandraJmap.jmapServer(cassandra.getModule());
     }
 
     @Override

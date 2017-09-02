@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.concurrent.CompletionException;
 
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
-import org.junit.Before;
 import org.junit.Test;
 
 public abstract class AccessTokenRepositoryTest {
@@ -38,8 +37,7 @@ public abstract class AccessTokenRepositoryTest {
 
     protected abstract AccessTokenRepository provideAccessTokenRepository();
 
-    @Before
-    public final void setUp() {
+    public void setUp() throws Exception {
         this.accessTokenRepository = provideAccessTokenRepository();
     }
 

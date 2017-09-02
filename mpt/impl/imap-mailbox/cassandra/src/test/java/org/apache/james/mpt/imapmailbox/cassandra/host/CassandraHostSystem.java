@@ -82,12 +82,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         Feature.QUOTA_SUPPORT,
         Feature.ANNOTATION_SUPPORT);
 
-    private final CassandraMailboxManager mailboxManager;
-    private final CassandraCluster cassandra;
-    private final CassandraPerUserMaxQuotaManager perUserMaxQuotaManager;
-
-    public CassandraHostSystem() throws Exception {
-        CassandraModule mailboxModule = new CassandraModuleComposite(
+    private final CassandraModule mailboxModule = new CassandraModuleComposite(
             new CassandraAclModule(),
             new CassandraMailboxModule(),
             new CassandraMessageModule(),
@@ -103,7 +98,22 @@ public class CassandraHostSystem extends JamesImapHostSystem {
             new CassandraAttachmentModule(),
             new CassandraAnnotationModule(),
             new CassandraApplicableFlagsModule());
-        cassandra = CassandraCluster.create(mailboxModule);
+
+    private final String cassandraHost;
+    private final int cassandraPort;
+    private CassandraMailboxManager mailboxManager;
+    private CassandraCluster cassandra;
+    private CassandraPerUserMaxQuotaManager perUserMaxQuotaManager;
+    
+    public CassandraHostSystem(String cassandraHost, int cassandraPort) {
+        this.cassandraHost = cassandraHost;
+        this.cassandraPort = cassandraPort;
+    }
+
+    @Override
+    public void beforeTest() throws Exception {
+        super.beforeTest();
+        cassandra = CassandraCluster.create(mailboxModule, cassandraHost, cassandraPort);
         com.datastax.driver.core.Session session = cassandra.getConf();
         CassandraModSeqProvider modSeqProvider = new CassandraModSeqProvider(session);
         CassandraUidProvider uidProvider = new CassandraUidProvider(session);
@@ -158,7 +168,6 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
                 new DefaultImapEncoderFactory().buildImapEncoder(),
                 DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, subscriptionManager, quotaManager, quotaRootResolver, new DefaultMetricFactory()));
-        cassandra.ensureAllTables();
     }
 
     @Override
@@ -167,11 +176,6 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         cassandra.close();
     }
     
-    @Override
-    protected void resetData() throws Exception {
-        cassandra.clearAllTables();
-    }
-
     @Override
     protected void finalize() throws Throwable {
         super.finalize();

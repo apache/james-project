@@ -136,13 +136,13 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting());
         ldapRepository.test(JAMES_USER_MAIL, PASSWORD);
 
-        ldapContainer.stop();
+        ldapContainer.pause();
         try {
             ldapRepository.test(JAMES_USER_MAIL, PASSWORD);
         } catch (Exception e) {
             LOGGER.info("This exception is expected as we shut down the LDAP and forced its use", e);
         }
-        startLdapContainer();
+        ldapContainer.unpause();
 
         assertThat(ldapRepository.test(JAMES_USER_MAIL, PASSWORD)).isTrue();
     }

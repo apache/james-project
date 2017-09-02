@@ -30,12 +30,6 @@ import org.apache.james.mailrepository.api.MailRepository;
 
 public class JDBCMailRepositoryTest extends AbstractMailRepositoryTest {
 
-    /**
-     * @return
-     * @throws ServiceException
-     * @throws ConfigurationException
-     * @throws Exception
-     */
     @Override
     protected MailRepository getMailRepository() throws Exception {
         MockFileSystem fs = new MockFileSystem();

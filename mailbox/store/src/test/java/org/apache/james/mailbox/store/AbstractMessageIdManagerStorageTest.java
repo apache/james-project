@@ -38,8 +38,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -68,7 +66,6 @@ public abstract class AbstractMessageIdManagerStorageTest {
 
     protected abstract MessageIdManagerTestSystem createTestingData() throws Exception;
 
-    @Before
     public void setUp() throws Exception {
         session = new MockMailboxSession(MailboxManagerFixture.USER);
         otherSession = new MockMailboxSession(MailboxManagerFixture.OTHER_USER);
@@ -80,11 +77,6 @@ public abstract class AbstractMessageIdManagerStorageTest {
         mailbox2 = testingData.createMailbox(MailboxManagerFixture.MAILBOX_PATH2, session);
         mailbox3 = testingData.createMailbox(MailboxManagerFixture.MAILBOX_PATH3, session);
         mailbox4 = testingData.createMailbox(MailboxManagerFixture.MAILBOX_PATH4, otherSession);
-    }
-
-    @After
-    public void tearDown() {
-        testingData.clean();
     }
 
     @Test

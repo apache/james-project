@@ -19,23 +19,26 @@
 
 package org.apache.james.mailbox.cassandra.event.distributed;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.concurrent.TimeUnit;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraRegistrationModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.publisher.Topic;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.concurrent.TimeUnit;
 
 public class CassandraMailboxPathRegistrerMapperTest {
 
-    private static final CassandraCluster cassandra = CassandraCluster.create(new CassandraRegistrationModule());
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
+    private final CassandraCluster cassandra = CassandraCluster.create(new CassandraRegistrationModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
     private static final MailboxPath MAILBOX_PATH_2 = new MailboxPath("namespace2", "user2", "name2");
     private static final Topic TOPIC = new Topic("topic");
@@ -54,11 +57,6 @@ public class CassandraMailboxPathRegistrerMapperTest {
 
     @After
     public void tearDown() {
-        cassandra.clearAllTables();
-    }
-
-    @AfterClass
-    public static void stop() {
         cassandra.close();
     }
 

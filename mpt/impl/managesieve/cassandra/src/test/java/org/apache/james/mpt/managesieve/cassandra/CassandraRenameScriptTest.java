@@ -19,21 +19,25 @@
 
 package org.apache.james.mpt.managesieve.cassandra;
 
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mpt.host.ManageSieveHostSystem;
 import org.apache.james.mpt.testsuite.RenameScriptTest;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 public class CassandraRenameScriptTest extends RenameScriptTest {
 
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
     private ManageSieveHostSystem system;
 
     @Before
     public void setUp() throws Exception {
-        Injector injector = Guice.createInjector(new CassandraModule());
+        Injector injector = Guice.createInjector(new CassandraModule(cassandraServer.getIp(), cassandraServer.getBindingPort()));
         system = injector.getInstance(ManageSieveHostSystem.class);
         system.beforeTest();
         super.setUp();

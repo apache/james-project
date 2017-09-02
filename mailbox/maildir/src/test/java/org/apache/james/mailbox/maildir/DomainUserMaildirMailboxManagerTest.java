@@ -23,6 +23,7 @@ import java.io.UnsupportedEncodingException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
@@ -34,6 +35,11 @@ public class DomainUserMaildirMailboxManagerTest extends MailboxManagerTest {
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+    }
+    
     @Override
     protected MailboxManager provideMailboxManager() {
         try {

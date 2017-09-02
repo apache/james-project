@@ -63,16 +63,9 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
         return new InMemoryHostSystem();
     }
     
-    private InMemoryHostSystem() throws MailboxException {
-        initFields();
-    }
-
     @Override
-    protected void resetData() throws Exception {
-        initFields();
-    }
-    
-    private void initFields() throws MailboxException {
+    public void beforeTest() throws Exception {
+        super.beforeTest();
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();

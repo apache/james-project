@@ -23,11 +23,17 @@ import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailbox.jpa.JPAMailboxFixture;
 import org.apache.james.mailbox.store.mail.model.AnnotationMapperTest;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
+import org.junit.Before;
 
 public class JpaAnnotationMapperTest extends AnnotationMapperTest {
 
     public static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+    }
+    
     @Override
     protected MapperProvider createMapperProvider() {
         return new JPAMapperProvider(JPA_TEST_CLUSTER);

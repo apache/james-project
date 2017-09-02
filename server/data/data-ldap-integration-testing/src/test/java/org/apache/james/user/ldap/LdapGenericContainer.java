@@ -86,9 +86,17 @@ public class LdapGenericContainer extends ExternalResource {
         container.stop();
     }
 
+    public void pause() {
+        container.pause();
+    }
+
+    public void unpause() {
+        container.unpause();
+    }
+
     public String getLdapHost() {
         return "ldap://" +
-                container.getIp() +
+                container.getContainerIp() +
                 ":" +
                 LdapGenericContainer.DEFAULT_LDAP_PORT;
     }

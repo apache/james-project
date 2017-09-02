@@ -24,6 +24,7 @@ import java.util.Date;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
@@ -51,8 +52,8 @@ public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSys
 
     private static final byte[] MESSAGE_CONTENT = "subject: any\n\nbody".getBytes(Charsets.UTF_8);
 
-    public static MessageIdManagerTestSystem createTestingData(QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
-        CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory();
+    public static MessageIdManagerTestSystem createTestingData(CassandraCluster cassandra, QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
+        CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory(cassandra);
 
         return new CassandraMessageIdManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, dispatcher),
             new CassandraMessageId.Factory(),
@@ -60,8 +61,8 @@ public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSys
             CassandraTestSystemFixture.createMailboxManager(mapperFactory));
     }
 
-    public static MessageIdManagerTestSystem createTestingDataWithQuota(QuotaManager quotaManager, CurrentQuotaManager currentQuotaManager) throws Exception {
-        CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory();
+    public static MessageIdManagerTestSystem createTestingDataWithQuota(CassandraCluster cassandra, QuotaManager quotaManager, CurrentQuotaManager currentQuotaManager) throws Exception {
+        CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory(cassandra);
 
         CassandraMailboxManager mailboxManager = CassandraTestSystemFixture.createMailboxManager(mapperFactory);
         ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(
@@ -120,29 +121,12 @@ public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSys
         }
     }
 
-    @Override
-    public void clean() {
-        CassandraTestSystemFixture.clean();
-    }
-
     private static MailboxMessage createMessage(MailboxId mailboxId, Flags flags, MessageId messageId, MessageUid uid) {
         MailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, new Date(), MESSAGE_CONTENT.length, 1256,
             new SharedByteArrayInputStream(MESSAGE_CONTENT), flags, new PropertyBuilder(), mailboxId);
         mailboxMessage.setModSeq(CassandraTestSystemFixture.MOD_SEQ);
         mailboxMessage.setUid(uid);
         return mailboxMessage;
-    }
-
-    public static void init() {
-        CassandraTestSystemFixture.init();
-    }
-
-    public static void initWithQuota() {
-        CassandraTestSystemFixture.initWithQuota();
-    }
-
-    public static void stop() {
-        CassandraTestSystemFixture.stop();
     }
 
     @Override

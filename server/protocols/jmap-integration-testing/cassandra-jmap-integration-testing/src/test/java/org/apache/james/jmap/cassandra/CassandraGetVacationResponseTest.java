@@ -20,19 +20,24 @@
 package org.apache.james.jmap.cassandra;
 
 import org.apache.james.CassandraJmapTestRule;
+import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.methods.integration.GetVacationResponseTest;
 import org.apache.james.util.date.ZonedDateTimeProvider;
+import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraGetVacationResponseTest extends GetVacationResponseTest {
 
+    @ClassRule
+    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    
     @Rule 
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
     
     @Override
     protected GuiceJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) {
-        return rule.jmapServer()
+        return rule.jmapServer(cassandra.getModule())
                 .overrideWith(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
     }
 

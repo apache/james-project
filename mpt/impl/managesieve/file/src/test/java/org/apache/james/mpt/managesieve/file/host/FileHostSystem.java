@@ -30,6 +30,7 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mpt.host.JamesManageSieveHostSystem;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.file.SieveFileRepository;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 
 public class FileHostSystem extends JamesManageSieveHostSystem {
@@ -51,16 +52,19 @@ public class FileHostSystem extends JamesManageSieveHostSystem {
         };
     }
 
-    protected static SieveRepository createSieveRepository() throws Exception {
-        return new SieveFileRepository(fileSystem);
-    }
-
-    public FileHostSystem() throws Exception {
-        super(MemoryUsersRepository.withoutVirtualHosting(), createSieveRepository());
+    @Override
+    protected UsersRepository createUsersRepository() {
+        return MemoryUsersRepository.withoutVirtualHosting();
     }
 
     @Override
-    protected void resetData() throws Exception {
+    protected SieveRepository createSieveRepository() throws Exception {
+        return new SieveFileRepository(fileSystem);
+    }
+    
+    @Override
+    public void afterTest() throws Exception {
+        super.afterTest();
         File root = fileSystem.getFile(SIEVE_ROOT);
         // Remove files from the previous test, if any
         if (root.exists()) {

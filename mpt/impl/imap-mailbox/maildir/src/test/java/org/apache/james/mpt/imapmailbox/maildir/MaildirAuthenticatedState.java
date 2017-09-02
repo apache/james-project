@@ -35,6 +35,7 @@ public class MaildirAuthenticatedState extends AuthenticatedState {
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new MaildirMailboxTestModule());
         system = injector.getInstance(ImapHostSystem.class);
+        system.beforeTest();
         super.setUp();
     }
     

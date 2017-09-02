@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
-import org.apache.james.backends.cassandra.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;

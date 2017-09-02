@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
@@ -46,16 +47,23 @@ import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
 
 public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
 
-    private static CassandraCluster cassandra;
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-    @BeforeClass
-    public static void init() {
-        cassandra = CassandraCluster.create(
+    private CassandraMailboxSessionMapperFactory mailboxSessionMapperFactory;
+    private CassandraMailboxManager mailboxManager;
+    private CassandraMailboxManager parseFailingMailboxManager;
+    private CassandraCluster cassandra;
+
+    @Before
+    public void init() throws Exception {
+        
+        CassandraModuleComposite modules = 
                 new CassandraModuleComposite(
                     new CassandraAclModule(),
                     new CassandraMailboxModule(),
@@ -68,19 +76,19 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
                     new CassandraModSeqModule(),
                     new CassandraUidModule(),
                     new CassandraAttachmentModule(),
-                    new CassandraApplicableFlagsModule()));
+                    new CassandraApplicableFlagsModule());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
+        initSystemUnderTest();
+        super.setUp();
     }
 
-    @AfterClass
-    public static void close() {
+    @After
+    public void tearDown() {
         cassandra.close();
     }
 
-    private CassandraMailboxSessionMapperFactory mailboxSessionMapperFactory;
-    private CassandraMailboxManager mailboxManager;
-    private CassandraMailboxManager parseFailingMailboxManager;
-
-    public CassandraMailboxManagerAttachmentTest() throws Exception {
+    
+    private void initSystemUnderTest() throws Exception {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
         CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
@@ -128,10 +136,5 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
     @Override
     protected MailboxManager getParseFailingMailboxManager() {
         return parseFailingMailboxManager;
-    }
-
-    @Override
-    protected void clean() {
-        cassandra.clearAllTables();
     }
 }

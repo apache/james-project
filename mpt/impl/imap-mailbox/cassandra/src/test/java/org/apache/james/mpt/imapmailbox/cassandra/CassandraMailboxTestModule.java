@@ -30,6 +30,14 @@ import com.google.inject.Singleton;
 
 public class CassandraMailboxTestModule extends AbstractModule {
 
+    private final String cassandraHost;
+    private final int cassandraPort;
+
+    public CassandraMailboxTestModule(String cassandraHost, int cassandraPort) {
+        this.cassandraHost = cassandraHost;
+        this.cassandraPort = cassandraPort;
+    }
+    
     @Override
     protected void configure() {
         bind(HostSystem.class).to(JamesImapHostSystem.class);
@@ -39,6 +47,6 @@ public class CassandraMailboxTestModule extends AbstractModule {
     @Provides
     @Singleton
     public JamesImapHostSystem provideHostSystem() throws Exception {
-        return new CassandraHostSystem();
+        return new CassandraHostSystem(cassandraHost, cassandraPort);
     }
 }

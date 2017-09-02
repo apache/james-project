@@ -26,8 +26,6 @@ import java.util.EnumSet;
 
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.jmap.methods.GetMessageListMethod;
 import org.apache.james.mailbox.MailboxManager;
@@ -41,24 +39,22 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
-import com.datastax.driver.core.Session;
-import com.google.inject.AbstractModule;
 import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 
 public class JamesCapabilitiesServerTest {
 
     private GuiceJamesServer server;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.MAILBOX_INDEX);
-
+    private DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
     @Rule
-    public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
+    public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch).around(cassandraServer);
 
     @After
     public void teardown() {
         server.stop();
+        
     }
     
     private GuiceJamesServer createCassandraJamesServer(final MailboxManager mailboxManager) {
@@ -69,22 +65,9 @@ public class JamesCapabilitiesServerTest {
             .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(new TestElasticSearchModule(embeddedElasticSearch),
                 new TestFilesystemModule(temporaryFolder),
+                cassandraServer.getModule(),
                 new TestJMAPServerModule(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT),
-                mockMailboxManager,
-                new AbstractModule() {
-
-                    @Override
-                    protected void configure() {
-                    }
-
-                    @Provides
-                    @Singleton
-                    Session provideSession(CassandraModule cassandraModule) {
-                        CassandraCluster cassandra = CassandraCluster.create(cassandraModule);
-                        return cassandra.getConf();
-                    }
-
-                });
+                mockMailboxManager);
     }
     
     @Test

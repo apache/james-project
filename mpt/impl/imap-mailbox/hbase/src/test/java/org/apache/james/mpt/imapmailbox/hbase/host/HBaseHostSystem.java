@@ -46,7 +46,7 @@ import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
@@ -63,10 +63,10 @@ public class HBaseHostSystem extends JamesImapHostSystem {
      * cluster on the classpath. 
      */
     public static Boolean useMiniCluster = true;
-    
-    private final HBaseMailboxManager mailboxManager;
+
     private MiniHBaseCluster hbaseCluster;
     private final Configuration conf;
+    private HBaseMailboxManager mailboxManager;
 
     public static synchronized JamesImapHostSystem build() throws Exception {
         if (host == null) {
@@ -88,7 +88,12 @@ public class HBaseHostSystem extends JamesImapHostSystem {
         } else {
             conf = HBaseConfiguration.create();
         }
+    }
 
+
+    @Override
+    public void beforeTest() throws Exception {
+        super.beforeTest();
         final HBaseModSeqProvider modSeqProvider = new HBaseModSeqProvider(conf);
         final HBaseUidProvider uidProvider = new HBaseUidProvider(conf);
         DefaultMessageId.Factory messageIdFactory = new DefaultMessageId.Factory();
@@ -110,7 +115,7 @@ public class HBaseHostSystem extends JamesImapHostSystem {
                         subscriptionManager, 
                         new NoQuotaManager(), 
                         new DefaultQuotaRootResolver(mapperFactory),
-                        new DefaultMetricFactory());
+                        new NoopMetricFactory());
 
         resetUserMetaData();
 
@@ -118,15 +123,17 @@ public class HBaseHostSystem extends JamesImapHostSystem {
                 new DefaultImapEncoderFactory().buildImapEncoder(),
                 defaultImapProcessorFactory);
     }
-
     @Override
-    protected void resetData() throws Exception {
+    public void afterTest() throws Exception {
+        super.afterTest();
         resetUserMetaData();
-        MailboxSession session = mailboxManager.createSystemSession("test");
-        mailboxManager.startProcessingRequest(session);
-        mailboxManager.deleteEverything(session);
-        mailboxManager.endProcessingRequest(session);
-        mailboxManager.logout(session, false);
+        if (mailboxManager != null) {
+            MailboxSession session = mailboxManager.createSystemSession("test");
+            mailboxManager.startProcessingRequest(session);
+            mailboxManager.deleteEverything(session);
+            mailboxManager.endProcessingRequest(session);
+            mailboxManager.logout(session, false);
+        }
     }
 
     public final void resetUserMetaData() throws Exception {

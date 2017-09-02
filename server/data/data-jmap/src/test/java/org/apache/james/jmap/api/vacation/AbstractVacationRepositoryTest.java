@@ -50,7 +50,7 @@ public abstract class AbstractVacationRepositoryTest {
     protected abstract VacationRepository createVacationRepository();
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         vacationRepository = createVacationRepository();
     }
 

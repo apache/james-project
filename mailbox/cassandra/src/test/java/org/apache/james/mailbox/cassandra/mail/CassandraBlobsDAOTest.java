@@ -25,11 +25,13 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.CassandraConfiguration;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.mailbox.cassandra.ids.BlobId;
 import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -38,23 +40,27 @@ import com.google.common.base.Strings;
 public class CassandraBlobsDAOTest {
     private static final int CHUNK_SIZE = 1024;
     private static final int MULTIPLE_CHUNK_SIZE = 3;
+
+    
+
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
     private CassandraCluster cassandra;
     private CassandraBlobsDAO testee;
 
     @Before
-    public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraBlobModule());
-        cassandra.ensureAllTables();
-
+    public void setUp() {
+        cassandra = CassandraCluster.create(
+                new CassandraBlobModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+        
         testee = new CassandraBlobsDAO(cassandra.getConf(),
             CassandraConfiguration.builder()
                 .blobPartSize(CHUNK_SIZE)
-                .build());
+                .build());;
     }
 
     @After
-    public void tearDown() throws Exception {
-        cassandra.clearAllTables();
+    public void tearDown() {
         cassandra.close();
     }
 

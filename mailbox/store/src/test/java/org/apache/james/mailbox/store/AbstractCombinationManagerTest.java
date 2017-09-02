@@ -47,13 +47,12 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractCombinationManagerTest {
+    
     private static final Flags FLAGS = new Flags();
     private static final byte[] MAIL_CONTENT = "Subject: test\r\n\r\ntestmail".getBytes();
     private static final int DEFAULT_MAXIMUM_LIMIT = 256;
@@ -74,7 +73,6 @@ public abstract class AbstractCombinationManagerTest {
 
     public abstract CombinationManagerTestSystem createTestingData() throws Exception ;
 
-    @Before
     public void setUp() throws Exception {
         session = new MockMailboxSession(MailboxManagerFixture.USER);
         testingData = createTestingData();
@@ -88,10 +86,6 @@ public abstract class AbstractCombinationManagerTest {
         messageManager2 = testingData.createMessageManager(mailbox2, session);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        testingData.clean();
-    }
 
     @Test
     public void getMessageCountFromMessageManagerShouldReturnDataSetInMailboxesFromMessageIdManager() throws Exception {

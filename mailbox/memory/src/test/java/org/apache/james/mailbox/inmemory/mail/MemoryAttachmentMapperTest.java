@@ -19,10 +19,18 @@
 
 package org.apache.james.mailbox.inmemory.mail;
 
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.mail.model.AttachmentMapperTest;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
+import org.junit.Before;
 
 public class MemoryAttachmentMapperTest extends AttachmentMapperTest {
+    
+    @Before
+    public void setUp() throws MailboxException {
+        super.setUp();
+    }
+    
     @Override
     protected MapperProvider createMapperProvider() {
         return new InMemoryMapperProvider();

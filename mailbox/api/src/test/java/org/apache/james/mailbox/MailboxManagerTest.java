@@ -38,9 +38,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
-import org.junit.After;
 import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -83,12 +81,10 @@ public abstract class MailboxManagerTest {
 
     protected abstract MailboxManager provideMailboxManager();
 
-    @Before
-    public final void setUp() throws Exception {
+    public void setUp() throws Exception {
         this.mailboxManager = new MockMailboxManager(provideMailboxManager()).getMockMailboxManager();
     }
 
-    @After
     public void tearDown() throws Exception {
         mailboxManager.logout(session, false);
         mailboxManager.endProcessingRequest(session);

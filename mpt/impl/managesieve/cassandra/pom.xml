@@ -30,6 +30,7 @@
 
     <name>Apache James MPT ManageSieve Cassandra</name>
 
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -47,11 +48,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-cassandra</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.cassandraunit</groupId>
-            <artifactId>cassandra-unit</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 

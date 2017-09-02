@@ -31,7 +31,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.CassandraConfiguration;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
@@ -41,6 +42,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.google.common.base.Throwables;
@@ -53,10 +55,11 @@ public class CassandraACLMapperTest {
     private CassandraAsyncExecutor cassandraAsyncExecutor;
     private ExecutorService executor;
 
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraAclModule());
-        cassandra.ensureAllTables();
+        cassandra = CassandraCluster.create(new CassandraAclModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         cassandraAsyncExecutor = new CassandraAsyncExecutor(cassandra.getConf());
         cassandraACLMapper = new CassandraACLMapper(MAILBOX_ID, cassandra.getConf(), cassandraAsyncExecutor, CassandraConfiguration.DEFAULT_CONFIGURATION);
         executor = Executors.newFixedThreadPool(2);
@@ -64,7 +67,6 @@ public class CassandraACLMapperTest {
 
     @After
     public void tearDown() {
-        cassandra.clearAllTables();
         executor.shutdownNow();
         cassandra.close();
     }

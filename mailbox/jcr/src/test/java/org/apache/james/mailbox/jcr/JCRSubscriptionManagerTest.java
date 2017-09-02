@@ -28,7 +28,10 @@ import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.mailbox.exception.SubscriptionException;
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.xml.sax.InputSource;
 
@@ -59,6 +62,16 @@ public class JCRSubscriptionManagerTest extends AbstractSubscriptionManagerTest 
         FileUtils.forceDelete(new File(JACKRABBIT_HOME));
     }
 
+    @Before
+    public void setUp() throws Exception {
+        super.setup();
+    }
+    
+    @After
+    public void tearDown() throws SubscriptionException {
+        super.teardown();
+    }
+    
     @Override
     public SubscriptionManager createSubscriptionManager() {
         MailboxSessionJCRRepository sessionRepos = new GlobalMailboxSessionJCRRepository(repository, workspace, user, pass);

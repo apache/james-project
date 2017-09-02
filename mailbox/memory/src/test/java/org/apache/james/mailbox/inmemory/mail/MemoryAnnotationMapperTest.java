@@ -21,8 +21,15 @@ package org.apache.james.mailbox.inmemory.mail;
 
 import org.apache.james.mailbox.store.mail.model.AnnotationMapperTest;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
+import org.junit.Before;
 
 public class MemoryAnnotationMapperTest extends AnnotationMapperTest {
+    
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+    }
+    
     @Override
     protected MapperProvider createMapperProvider() {
         return new InMemoryMapperProvider();

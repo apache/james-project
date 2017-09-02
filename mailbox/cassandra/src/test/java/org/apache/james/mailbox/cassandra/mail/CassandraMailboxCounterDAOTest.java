@@ -22,6 +22,7 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -29,21 +30,22 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class CassandraMailboxCounterDAOTest {
     public static final int UID_VALIDITY = 15;
     public static final CassandraId MAILBOX_ID = CassandraId.timeBased();
 
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
     private CassandraCluster cassandra;
     private CassandraMailboxCounterDAO testee;
     private SimpleMailbox mailbox;
 
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraMailboxCounterModule());
-        cassandra.ensureAllTables();
-
+        cassandra = CassandraCluster.create(new CassandraMailboxCounterModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         testee = new CassandraMailboxCounterDAO(cassandra.getConf());
 
         mailbox = new SimpleMailbox(new MailboxPath("#private", "user", "name"), UID_VALIDITY, MAILBOX_ID);

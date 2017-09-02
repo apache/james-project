@@ -20,23 +20,34 @@
 package org.apache.james.user.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
 import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
 
 public class CassandraUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
+    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    
     private CassandraCluster cassandra;
 
+    @Before
+    public void setUp() throws Exception {
+        cassandra = CassandraCluster.create(new CassandraUsersRepositoryModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+        super.setUp();
+    }
+    
     @After
-    public void tearDown() {
-        cassandra.clearAllTables();
+    public void tearDown() throws Exception {
+        super.tearDown();
+        cassandra.close();
     }
 
     @Override
     protected AbstractUsersRepository getUsersRepository() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraUsersRepositoryModule());
         return new CassandraUsersRepository(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 }

@@ -21,8 +21,14 @@ package org.apache.james.domainlist.memory;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.AbstractDomainListTest;
+import org.junit.Before;
 
 public class MemoryDomainListTest extends AbstractDomainListTest {
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+    }
 
     @Override
     protected DomainList createDomainList() {

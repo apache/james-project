@@ -21,6 +21,7 @@ package org.apache.james.mailbox.maildir;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerStressTest;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
@@ -29,6 +30,11 @@ import com.google.common.base.Throwables;
 public class FullUserMaildirMailboxManagerStressTest extends MailboxManagerStressTest {
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
+    
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+    }
     
     @Override
     protected MailboxManager provideManager() {
